@@ -1,14 +1,65 @@
-# Project
+# Microsoft Model Context Protocol (MCP) Servers
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+This repository catalogs various Microsoft implementations of the Model Context Protocol (MCP), an open standard that facilitates seamless integration between AI applications and external data sources and tools. MCP enables AI models to access the context they need to perform tasks effectively.
 
-As the maintainer of this project, please make a few updates:
+---
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+## 📘 What is MCP?
+
+**Model Context Protocol (MCP)** is an open protocol that standardizes how applications provide context to large language models (LLMs). It allows AI applications to connect with various data sources and tools in a consistent manner, enhancing their capabilities and flexibility. MCP follows a client-server architecture where:
+
+- **MCP Hosts**: Applications like AI assistants or integrated development environments (IDEs) that initiate connections.
+- **MCP Clients**: Connectors within the host application that maintain 1:1 connections with servers.
+- **MCP Servers**: Services that provide context and capabilities through the standardized MCP.
+
+For more details, visit the [official MCP website](https://modelcontextprotocol.io).
+
+---
+
+## 📂 MCP Server Repositories
+
+Below are Microsoft's official MCP server implementations:
+
+### 🔷 Azure MCP Server
+
+- **Repository**: [azure/azure-mcp](https://github.com/azure/azure-mcp)
+- **Description**: Implements the MCP standard to manage Azure resources, enabling declarative provisioning and integration with AI workflows.
+
+---
+
+### 🧪 Playwright MCP
+
+- **Repository**: [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp)
+- **Description**: An MCP server for orchestrating Playwright test runs, facilitating automated browser testing within AI-driven development pipelines.
+
+---
+
+### 📁 Files MCP Server
+
+- **Repository**: [microsoft/files-mcp-server](https://github.com/microsoft/files-mcp-server)
+- **Description**: Provides a declarative control plane for managing file-based resources, supporting AI workflows that involve static files and documentation synchronization.
+
+---
+
+## 🚀 Contributing
+
+Interested in contributing a new MCP server or enhancing an existing one? Fork the relevant repository and submit a pull request!
+
+---
+
+## 📎 Related Resources
+
+- [MCP Pattern Overview](https://modelcontextprotocol.io/introduction)
+- [MCP SDKs and Building Blocks](https://modelcontextprotocol.io/sdk)
+- [MCP Specification](https://spec.modelcontextprotocol.io/specification/2025-03-26/)
+
+---
+
+## 🛠 Maintainers
+
+This list is curated by Microsoft engineers specializing in AI integrations and infrastructure automation. For suggestions or issues, please open an issue in the respective repository.
+
+
 
 ## Contributing
 
