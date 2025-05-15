@@ -16,7 +16,7 @@ For more details, visit the [official MCP website](https://modelcontextprotocol.
 
 ---
 
-## 📂 MCP Server Repositories
+## 📂 Microsoft MCP Servers
 
 Below are Microsoft's official MCP server implementations:
 
@@ -41,9 +41,17 @@ Below are Microsoft's official MCP server implementations:
 
 ---
 
-## 🚀 Contributing
+### 📝 Markitdown MCP Server
 
-Interested in contributing a new MCP server or enhancing an existing one? Fork the relevant repository and submit a pull request!
+- **Repository**: [microsoft/markitdown](https://github.com/microsoft/markitdown)
+- **Description**: A specialized MCP server for Markdown processing and manipulation. Enables AI models to read, write, and transform Markdown content with robust parsing and formatting capabilities.
+
+---
+
+### 📊 Clarity MCP Server
+
+- **Repository**: [@microsoft/clarity-mcp-server](https://www.npmjs.com/package/@microsoft/clarity-mcp-server)
+- **Description**: An MCP server for Microsoft Clarity analytics integration. Enables AI models to access web analytics data, heatmaps, and session recordings to understand user behavior and site performance.
 
 ---
 
@@ -56,9 +64,15 @@ Interested in contributing a new MCP server or enhancing an existing one? Fork t
 
 ---
 
+## 🏗️ Templates
+
+Looking for starter templates that use MCP? Check out the [Azure Developer CLI (azd) templates](https://azure.github.io/awesome-azd/?tags=mcp) tagged with MCP.
+
+---
+
 ## Contributing
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
+This project welcomes contributions and suggestions. Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
 the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
 
