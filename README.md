@@ -68,6 +68,13 @@ Below are Microsoft's official MCP server implementations:
 
 ---
 
+### 📁 Win32 Registry MCP Server
+
+- **Repository**: [mcp-server-win32-registry](https://github.com/WayneWalterBerry/mcp-server-win32-registry)  
+- **Description**: An MCP server that runs locally and reads Windows registry data from the local machine. Enables AI models to retrieve and search registry keys, values from the local developer's machine.
+
+---
+
 ## 📎 Related Resources
 
 - [Microsoft MCP Resources](https://github.com/microsoft/mcp/tree/main/Resources)
