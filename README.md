@@ -77,7 +77,7 @@ Below are Microsoft's official MCP server implementations:
 
 ### 🛢️Microsoft Fabric Real-Time Intelligence MCP Server
 
-- **Repository**: RTI MCP Server](https://aka.ms/rti.mcp.repo)  
+- **Repository**: [RTI MCP Server](https://aka.ms/rti.mcp.repo)  
 - **Description**: Chat with your real-time data the new agentic way using natural language and AI. MCP server for Fabric Real-Time Intelligence (https://aka.ms/fabricrti) supporting tools for Eventhouse (https://aka.ms/eventhouse), Azure Data Explorer (https://aka.ms/adx, and other RTI services (coming soon)
 
 
