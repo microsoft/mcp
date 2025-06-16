@@ -75,6 +75,13 @@ Below are Microsoft's official MCP server implementations:
 
 ---
 
+### 🔷 Azure MCP Server
+
+- **Repository**: [microsoft/azure-devops-mcp](https://github.com/microsoft/azure-devops-mcp)
+- **Description**: The MCP server for Azure DevOps, enabling standardized access to DevOps resources such as work items, releases, test plans, and search capabilities.
+
+---
+
 ## 📎 Related Resources
 
 - [Microsoft MCP Resources](https://github.com/microsoft/mcp/tree/main/Resources)
