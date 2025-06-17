@@ -80,6 +80,12 @@ Below are Microsoft's official MCP server implementations:
 - **Repository**: RTI MCP Server](https://aka.ms/rti.mcp.repo)  
 - **Description**: Chat with your real-time data the new agentic way using natural language and AI. MCP server for Fabric Real-Time Intelligence (https://aka.ms/fabricrti) supporting tools for Eventhouse (https://aka.ms/eventhouse), Azure Data Explorer (https://aka.ms/adx, and other RTI services (coming soon)
 
+---
+
+### 📅 Azure DevOps MCP Server
+
+- **Documentation**: [Azure DevOps MCP Server - Public Preview](https://github.com/microsoft/azure-devops-mcp)
+- **Description**: The MCP Server for Azure DevOps enables you to bring context into AI workflows and interact with Azure DevOps artifacts such as work items, test plans, builds, releases, and pull requests.
 
 ---
 
