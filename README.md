@@ -84,7 +84,7 @@ Below are Microsoft's official MCP server implementations:
 
 ### 📅 Azure DevOps MCP Server
 
-- **Documentation**: [Azure DevOps MCP Server - Public Preview](https://github.com/microsoft/azure-devops-mcp)
+- **Repository**: [Azure DevOps MCP Server - Public Preview](https://github.com/microsoft/azure-devops-mcp)
 - **Description**: The MCP Server for Azure DevOps enables you to bring context into AI workflows and interact with Azure DevOps artifacts such as work items, test plans, builds, releases, and pull requests.
 
 ---
