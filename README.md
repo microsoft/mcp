@@ -41,7 +41,7 @@ Below are Microsoft's official MCP server implementations:
 
 ---
 
-### Dataverse MCP Server
+### 🗃️ Dataverse MCP Server
 
 - **Documentation**: [Microsoft Dataverse](https://go.microsoft.com/fwlink/?linkid=2320176)
 - **Description**: Chat over your business data using NL - Discover tables, run queries, retrieve data, insert or update records, and execute custom prompts grounded in business knowledge and context.
