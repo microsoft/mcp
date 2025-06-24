@@ -20,6 +20,13 @@ For more details, visit the [official MCP website](https://modelcontextprotocol.
 
 Below are Microsoft's official MCP server implementations:
 
+### 📅 Azure DevOps MCP Server
+
+- **Repository**: [Azure DevOps MCP Server - Public Preview](https://github.com/microsoft/azure-devops-mcp)
+- **Description**: The MCP Server for Azure DevOps enables you to bring context into AI workflows and interact with Azure DevOps artifacts such as work items, test plans, builds, releases, and pull requests.
+
+---
+
 ### 🔷 Azure MCP Server
 
 - **Repository**: [azure/azure-mcp](https://github.com/azure/azure-mcp)
@@ -27,17 +34,17 @@ Below are Microsoft's official MCP server implementations:
 
 ---
 
+### 📊 Clarity MCP Server
+
+- **Repository**: [@microsoft/clarity-mcp-server](https://www.npmjs.com/package/@microsoft/clarity-mcp-server)
+- **Description**: An MCP server for Microsoft Clarity analytics integration. Enables AI models to access web analytics data, heatmaps, and session recordings to understand user behavior and site performance.
+
+---
+
 ### Dataverse MCP Server
 
 - **Documentation**: [Microsoft Dataverse](https://go.microsoft.com/fwlink/?linkid=2320176)
 - **Description**: Chat over your business data using NL - Discover tables, run queries, retrieve data, insert or update records, and execute custom prompts grounded in business knowledge and context.
----
-
-### 🎭 Playwright MCP
-
-- **Repository**: [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp)
-- **Description**: An MCP server for browsing the internet. Enables LLMs to interact with web pages through structured accessibility snapshots. Useful for web navigation and form-filling, data extraction from structured content, automated testing driven by LLMs, and general-purpose browser interaction for agents.
-
 ---
 
 ### 📁 Files MCP Server
@@ -54,24 +61,17 @@ Below are Microsoft's official MCP server implementations:
 
 ---
 
-### 📊 Clarity MCP Server
+### 💻 Microsoft Dev Box MCP
 
-- **Repository**: [@microsoft/clarity-mcp-server](https://www.npmjs.com/package/@microsoft/clarity-mcp-server)
-- **Description**: An MCP server for Microsoft Clarity analytics integration. Enables AI models to access web analytics data, heatmaps, and session recordings to understand user behavior and site performance.
+- **Package**: [@microsoft/devbox-mcp](https://www.npmjs.com/package/@microsoft/devbox-mcp)
+- **Description**: An MCP server for [Microsoft Dev Box](https://azure.microsoft.com/en-us/products/dev-box). Enables natural language interactions for developer-focused operations like managing Dev Boxes, configuring environments, and handling pools. Check out the [README](https://www.npmjs.com/package/@microsoft/devbox-mcp?activeTab=readme) for more details. Use this [one-click link](https://insiders.vscode.dev/redirect/mcp/install?name=Dev%20Box&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40microsoft%2Fdevbox-mcp%40latest%22%5D%7D) to install Dev Box MCP in your VS Code.
 
 ---
 
 ### 📚 Microsoft Docs MCP Server
 
 - **Repository**: [microsoftdocs/mcp](https://github.com/microsoftdocs/mcp)  
-- **Description**: An MCP server that provides structured access to Microsoft’s official documentation. Enables AI models to retrieve accurate, authoritative, and context-aware technical content for code generation, question answering, and workflow grounding.
-
----
-
-### 🛢️Microsoft SQL MCP Server
-
-- **Repository**: [MSSQL MCP Server](https://aka.ms/MssqlMcp)  
-- **Description**: Chat with your business data the new agentic way using natural language and AI. Connect to any SQL database—from ground (on-premises) to Azure cloud to Microsoft Fabric via a simple connection string. Discover and define table schemas, manage tables, and perform CRUD operations through conversational prompts.
+- **Description**: An MCP server that provides structured access to Microsoft's official documentation. Enables AI models to retrieve accurate, authoritative, and context-aware technical content for code generation, question answering, and workflow grounding.
 
 ---
 
@@ -82,20 +82,19 @@ Below are Microsoft's official MCP server implementations:
 
 ---
 
-### 📅 Azure DevOps MCP Server
+### 🛢️Microsoft SQL MCP Server
 
-- **Repository**: [Azure DevOps MCP Server - Public Preview](https://github.com/microsoft/azure-devops-mcp)
-- **Description**: The MCP Server for Azure DevOps enables you to bring context into AI workflows and interact with Azure DevOps artifacts such as work items, test plans, builds, releases, and pull requests.
-
----
-
-### 💻 Microsoft Dev Box MCP
-
-- **Package**: [@microsoft/devbox-mcp](https://www.npmjs.com/package/@microsoft/devbox-mcp)
-- **Description**: An MCP server for [Microsoft Dev Box](https://azure.microsoft.com/en-us/products/dev-box). Enables natural language interactions for developer-focused operations like managing Dev Boxes, configuring environments, and handling pools. Check out the [README](https://www.npmjs.com/package/@microsoft/devbox-mcp?activeTab=readme) for more details. Use this [one-click link](https://insiders.vscode.dev/redirect/mcp/install?name=Dev%20Box&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40microsoft%2Fdevbox-mcp%40latest%22%5D%7D) to install Dev Box MCP in your VS Code.
+- **Repository**: [MSSQL MCP Server](https://aka.ms/MssqlMcp)  
+- **Description**: Chat with your business data the new agentic way using natural language and AI. Connect to any SQL database—from ground (on-premises) to Azure cloud to Microsoft Fabric via a simple connection string. Discover and define table schemas, manage tables, and perform CRUD operations through conversational prompts.
 
 ---
 
+### 🎭 Playwright MCP
+
+- **Repository**: [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp)
+- **Description**: An MCP server for browsing the internet. Enables LLMs to interact with web pages through structured accessibility snapshots. Useful for web navigation and form-filling, data extraction from structured content, automated testing driven by LLMs, and general-purpose browser interaction for agents.
+
+---
 ## 📎 Related Resources
 
 - [Microsoft MCP Resources](https://github.com/microsoft/mcp/tree/main/Resources)
