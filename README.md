@@ -102,6 +102,14 @@ Below are Microsoft's official MCP server implementations:
 - **Description**: An MCP server that enables AI assistants to interact with Azure Kubernetes Service (AKS) clusters. It serves as a bridge between AI tools and AKS, translating natural language requests into AKS operations and returning the results in a format the AI tools can understand.
 
 ---
+
+### 📚 Microsoft 365 Agents Toolkit MCP
+
+- **Repository**: [M365 Agents Toolkit MCP](https://aka.ms/m365agentstoolkit-mcp)
+- **Description**: An MCP server that provides a seamless connection between AI agents and developers for building apps and agents for Microsoft 365 and Microsoft 365 Copilot.
+
+---
+
 ## 📎 Related Resources
 
 - [Microsoft MCP Resources](https://github.com/microsoft/mcp/tree/main/Resources)
