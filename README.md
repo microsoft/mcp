@@ -68,17 +68,17 @@ Below are Microsoft's official MCP server implementations:
 
 ---
 
-### 📚 Microsoft Docs MCP Server
-
-- **Repository**: [microsoftdocs/mcp](https://github.com/microsoftdocs/mcp)
-- **Description**: An MCP server that provides structured access to Microsoft's official documentation. Enables AI models to retrieve accurate, authoritative, and context-aware technical content for code generation, question answering, and workflow grounding.
-
----
-
 ### 🛢️Microsoft Fabric Real-Time Intelligence MCP Server
 
 - **Repository**: [RTI MCP Server](https://aka.ms/rti.mcp.repo)
 - **Description**: Chat with your real-time data the new agentic way using natural language and AI. MCP server for [Fabric Real-Time Intelligence](https://aka.ms/fabricrti) supporting tools for [Eventhouse](https://aka.ms/eventhouse), [Azure Data Explorer](https://aka.ms/adx), and other RTI services (coming soon)
+
+---
+
+### 📚 Microsoft Learn Docs MCP Server
+
+- **Repository**: [microsoftdocs/mcp](https://github.com/microsoftdocs/mcp)
+- **Description**: A remote MCP server that provides structured access to official Microsoft Learn documentation. Enables AI models to retrieve accurate, authoritative, and context-aware technical content for code generation, question answering, and workflow grounding.
 
 ---
 
