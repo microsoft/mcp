@@ -70,21 +70,21 @@ Below are Microsoft's official MCP server implementations:
 
 ### 📚 Microsoft Docs MCP Server
 
-- **Repository**: [microsoftdocs/mcp](https://github.com/microsoftdocs/mcp)  
+- **Repository**: [microsoftdocs/mcp](https://github.com/microsoftdocs/mcp)
 - **Description**: An MCP server that provides structured access to Microsoft's official documentation. Enables AI models to retrieve accurate, authoritative, and context-aware technical content for code generation, question answering, and workflow grounding.
 
 ---
 
 ### 🛢️Microsoft Fabric Real-Time Intelligence MCP Server
 
-- **Repository**: [RTI MCP Server](https://aka.ms/rti.mcp.repo)  
+- **Repository**: [RTI MCP Server](https://aka.ms/rti.mcp.repo)
 - **Description**: Chat with your real-time data the new agentic way using natural language and AI. MCP server for [Fabric Real-Time Intelligence](https://aka.ms/fabricrti) supporting tools for [Eventhouse](https://aka.ms/eventhouse), [Azure Data Explorer](https://aka.ms/adx), and other RTI services (coming soon)
 
 ---
 
 ### 🛢️Microsoft SQL MCP Server
 
-- **Repository**: [MSSQL MCP Server](https://aka.ms/MssqlMcp)  
+- **Repository**: [MSSQL MCP Server](https://aka.ms/MssqlMcp)
 - **Description**: Chat with your business data the new agentic way using natural language and AI. Connect to any SQL database—from ground (on-premises) to Azure cloud to Microsoft Fabric via a simple connection string. Discover and define table schemas, manage tables, and perform CRUD operations through conversational prompts.
 
 ---
@@ -93,6 +93,13 @@ Below are Microsoft's official MCP server implementations:
 
 - **Repository**: [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp)
 - **Description**: An MCP server for browsing the internet. Enables LLMs to interact with web pages through structured accessibility snapshots. Useful for web navigation and form-filling, data extraction from structured content, automated testing driven by LLMs, and general-purpose browser interaction for agents.
+
+---
+
+### ☸️ Azure Kubernetes Service (AKS) MCP Server
+
+- **Repository**: [Azure/aks-mcp](https://github.com/Azure/aks-mcp)
+- **Description**: An MCP server that enables AI assistants to interact with Azure Kubernetes Service (AKS) clusters. It serves as a bridge between AI tools and AKS, translating natural language requests into AKS operations and returning the results in a format the AI tools can understand.
 
 ---
 ## 📎 Related Resources
@@ -126,8 +133,8 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 
 ## Trademarks
 
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
-trademarks or logos is subject to and must follow 
+This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft
+trademarks or logos is subject to and must follow
 [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
 Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
 Any use of third-party trademarks or logos are subject to those third-party's policies.
