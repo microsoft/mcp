@@ -14,11 +14,12 @@ namespace AzureMcp.Areas.Startups
         {
             services.AddSingleton<IStartupsServices, StartupsServices>(); 
         }
+        
         public void RegisterCommands(CommandGroup root, ILoggerFactory loggerFactory)
         {
             var startupsGroup = new CommandGroup("startups", "Commands for Microsoft for Startups");
             root.AddSubGroup(startupsGroup);
-            
+
             // Guidance commands
             startupsGroup.AddCommand("get", new StartupsGuidanceCommand());
         }
