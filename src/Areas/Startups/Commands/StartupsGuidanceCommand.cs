@@ -37,5 +37,6 @@ public sealed class StartupsGuidanceCommand()
 }
 
 // System.Text.Json serialization context for GuidanceCommandResult
+[System.Text.Json.Serialization.JsonSourceGenerationOptions(WriteIndented = false, GenerationMode = System.Text.Json.Serialization.JsonSourceGenerationMode.Default)]
 [System.Text.Json.Serialization.JsonSerializable(typeof(StartupsGuidanceCommand.GuidanceCommandResult))]
-internal partial class GuidanceJsonContext : System.Text.Json.Serialization.JsonSerializerContext { }
+internal partial class GuidanceJsonContext : System.Text.Json.Serialization.JsonSerializerContext;
