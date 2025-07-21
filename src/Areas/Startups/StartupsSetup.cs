@@ -11,12 +11,6 @@ namespace AzureMcp.Areas.Startups
 {
     public class StartupsSetup : IAreaSetup
     {
-        // private readonly IServiceProvider _serviceProvider;
-
-        // public StartupsSetup(IServiceProvider serviceProvider)
-        // {
-        //     _serviceProvider = serviceProvider;
-        // }
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -34,7 +28,7 @@ namespace AzureMcp.Areas.Startups
             startupsGroup.AddCommand("get", ActivatorUtilities.CreateInstance<StartupsGuidanceCommand>(
             serviceProvider));
 
-            // Deploy command - match the primary constructor order
+            // Deploy command
             startupsGroup.AddCommand("deploy", ActivatorUtilities.CreateInstance<StartupsDeployCommand>(
             serviceProvider));
         }
