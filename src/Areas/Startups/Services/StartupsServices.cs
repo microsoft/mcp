@@ -4,10 +4,7 @@ using AzureMcp.Areas.Startups.Commands;
 using AzureMcp.Areas.Startups.Options;
 using Azure.ResourceManager.Storage;
 using Azure.ResourceManager.Storage.Models;
-using Azure.ResourceManager;
 using Azure; // WaitUntil
-using System.Threading;
-using System.Threading.Tasks;
 using AzureMcp.Services.Azure.Subscription;
 using AzureMcp.Services.Azure.Tenant;
 using Azure.Storage.Blobs;
@@ -31,11 +28,11 @@ namespace AzureMcp.Areas.Startups.Services
 
         public async Task<StartupsDeployResources> DeployStaticWebAsync(StartupsDeployOptions options, CancellationToken cancellationToken)
         {
-            // 1. Resolve subscription and resource group
+            // Resolve subscription and resource group
             var subscription = await _subscriptionService.GetSubscription(options.Subscription, options.Tenant, null);
             var resourceGroup = await subscription.GetResourceGroupAsync(options.ResourceGroup, cancellationToken);
 
-            // 2. Get or create storage account
+            // Get or create storage account
             var storageAccounts = resourceGroup.Value.GetStorageAccounts();
             StorageAccountResource storageAccount;
             if (await storageAccounts.ExistsAsync(options.StorageAccount))
@@ -53,7 +50,7 @@ namespace AzureMcp.Areas.Startups.Services
                     WaitUntil.Completed, options.StorageAccount, data, cancellationToken)).Value;
             }
 
-            // 3. Enable static website hosting if not enabled
+            // Enable static website hosting if not enabled
             var blobService = await storageAccount.GetBlobService().GetAsync(cancellationToken);
 
             using (var process = new System.Diagnostics.Process())
@@ -74,32 +71,22 @@ namespace AzureMcp.Areas.Startups.Services
                     throw new InvalidOperationException($"Failed to enable static website hosting: {error}");
                 }
             }
-            // 4. Upload files to $web container
-            var keys = storageAccount.GetKeysAsync(cancellationToken: cancellationToken);
-            string? key = null;
-            await foreach (var storageKey in keys)
-            {
-                key = storageKey.Value;
-                break;
-            }
-            if (key is null)
-                throw new InvalidOperationException("No storage account keys found.");
-
-            var connectionString = $"DefaultEndpointsProtocol=https;AccountName={storageAccount.Data.Name};AccountKey={key};EndpointSuffix=core.windows.net";
-            await UploadFilesAsync(connectionString, options.SourcePath, cancellationToken);
-
             return new StartupsDeployResources(options.StorageAccount, options.Container, "Success");
         }
-
+        // files are uploaded to the $web container in Azure Blob storage, which is used for static website hosting
         private static async Task UploadFilesAsync(string connectionString, string sourcePath, CancellationToken cancellationToken)
         {
+            // creates client to connect to Azure Blob storage
             var blobServiceClient = new BlobServiceClient(connectionString);
+            // gets reference to "$web" container used for static website hosting in Azure storage
             var containerClient = blobServiceClient.GetBlobContainerClient("$web");
+            // creates the container if it does not exist
             await containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
-
             foreach (var file in Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories))
             {
+                // converts full file paths to relative paths and formatting for web URLs
                 var blobName = Path.GetRelativePath(sourcePath, file).Replace("\\", "/");
+                // uploads file to Azure storage
                 await containerClient.UploadBlobAsync(blobName, File.OpenRead(file), cancellationToken);
             }
         }
