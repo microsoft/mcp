@@ -1,27 +1,47 @@
-
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+using AzureMcp.Areas.Startups.Commands;
 using AzureMcp.Areas.Startups.Commands.Guidance;
 using AzureMcp.Areas.Startups.Services;
 using AzureMcp.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 namespace AzureMcp.Areas.Startups
 {
     public class StartupsSetup : IAreaSetup
     {
+        // private readonly IServiceProvider _serviceProvider;
+
+        // public StartupsSetup(IServiceProvider serviceProvider)
+        // {
+        //     _serviceProvider = serviceProvider;
+        // }
+
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<IStartupsServices, StartupsServices>(); 
+            services.AddSingleton<IStartupsServices, StartupsServices>();
+            services.AddTransient<StartupsGuidanceCommand>();
+            services.AddTransient<StartupsDeployCommand>();
         }
-        
-        public void RegisterCommands(CommandGroup root, ILoggerFactory loggerFactory)
+
+        public void RegisterCommands(CommandGroup root, IServiceProvider serviceProvider)
         {
             var startupsGroup = new CommandGroup("startups", "Commands for Microsoft for Startups");
             root.AddSubGroup(startupsGroup);
 
-            // Guidance commands
-            startupsGroup.AddCommand("get", new StartupsGuidanceCommand());
+            // Guidance command
+            startupsGroup.AddCommand("get", ActivatorUtilities.CreateInstance<StartupsGuidanceCommand>(
+            serviceProvider));
+
+            // Deploy command - match the primary constructor order
+            startupsGroup.AddCommand("deploy", ActivatorUtilities.CreateInstance<StartupsDeployCommand>(
+            serviceProvider));
+        }
+
+        public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+        {
+            throw new NotImplementedException();
         }
     }
 }
