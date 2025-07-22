@@ -5,7 +5,7 @@ using Azure.ResourceManager.Storage.Models;
 using AzureMcp.Areas.Startups.Options;
 namespace AzureMcp.Areas.Startups.Services;
 
-public interface IStartupsServices
+public interface IStartupsService
 {
     /// <summary>
     /// Gets Microsoft for Startups guidance information.

@@ -9,10 +9,11 @@ using System.Threading;
 
 using System.Threading.Tasks;
 namespace AzureMcp.Areas.Startups.Commands.Guidance;
-public sealed class StartupsGuidanceCommand()
-    : GlobalCommand<StartupsGuidanceOptions>()
+public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> logger) : GlobalCommand<StartupsGuidanceOptions>()
 {
     private const string GuidanceCommandTitle = "Get Guidance from Microsoft for Startups";
+    private readonly ILogger<StartupsGuidanceCommand> _logger = logger;
+
     private const string GuidanceCommandDescription = "Receive program guidance for building with Microsoft for Startups.";
     private const string GuidanceCommandName = "get";
     public override string Name => GuidanceCommandName;

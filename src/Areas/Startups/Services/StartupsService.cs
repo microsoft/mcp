@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-using AzureMcp.Areas.Startups.Commands;
 using AzureMcp.Areas.Startups.Options;
 using Azure.ResourceManager.Storage;
 using Azure.ResourceManager.Storage.Models;
@@ -8,10 +7,11 @@ using Azure; // WaitUntil
 using AzureMcp.Services.Azure.Subscription;
 using AzureMcp.Services.Azure.Tenant;
 using Azure.Storage.Blobs;
+using AzureMcp.Services.Azure;
 
 namespace AzureMcp.Areas.Startups.Services
 {
-    public sealed class StartupsServices(ISubscriptionService subscriptionService) : IStartupsServices
+    public class StartupsService(ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IStartupsService
     {
         private readonly ISubscriptionService _subscriptionService = subscriptionService;
         // Guidance command
