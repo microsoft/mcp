@@ -26,44 +26,26 @@ public sealed class StartupsDeployCommand(ILogger<StartupsDeployCommand> logger)
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         var options = BindOptions(parseResult);
-        
-        // Validate required parameters
-        if (string.IsNullOrEmpty(options.StorageAccount))
-            throw new ArgumentNullException(nameof(options.StorageAccount), "Storage account name is required");
-        if (string.IsNullOrEmpty(options.SourcePath))
-            throw new ArgumentNullException(nameof(options.SourcePath), "Source path is required");
-        if (string.IsNullOrEmpty(options.ResourceGroup))
-            throw new ArgumentNullException(nameof(options.ResourceGroup), "Resource group is required");
-        if (string.IsNullOrEmpty(options.Subscription))
-            throw new ArgumentNullException(nameof(options.Subscription), "Subscription is required");
-
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             _logger.LogInformation("Starting deployment to storage account {StorageAccount}", options.StorageAccount);
 
             var startupsService = context.GetService<IStartupsService>();
             var result = await startupsService.DeployStaticWebAsync(options, CancellationToken.None);
 
-            if (result != null)
-            {
-                _logger.LogInformation("Successfully deployed to storage account {StorageAccount}", options.StorageAccount);
-                context.Response.Results = ResponseResult.Create(
-                    result,
-                    DeployJsonContext.Default.StartupsDeployResources);
-            }
+            _logger.LogInformation("Successfully deployed to storage account {StorageAccount}", options.StorageAccount);
+            context.Response.Results = ResponseResult.Create(result, DeployJsonContext.Default.StartupsDeployResources);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deploying static website to {StorageAccount}", options.StorageAccount);
             HandleException(context, ex);
         }
-
-        return context.Response;
+    return context.Response;
     }
 }
 
