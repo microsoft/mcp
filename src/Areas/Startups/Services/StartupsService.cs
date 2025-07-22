@@ -28,6 +28,18 @@ namespace AzureMcp.Areas.Startups.Services
         // Deploy command
         public async Task<StartupsDeployResources> DeployStaticWebAsync(StartupsDeployOptions options, CancellationToken cancellationToken)
         {
+            ArgumentNullException.ThrowIfNull(options);
+
+            // Validate individual parameters first for better error messages
+            if (string.IsNullOrEmpty(options.Subscription))
+                throw new ArgumentException("Subscription ID is required", nameof(options.Subscription));
+            if (string.IsNullOrEmpty(options.ResourceGroup))
+                throw new ArgumentException("Resource group is required", nameof(options.ResourceGroup));
+            if (string.IsNullOrEmpty(options.StorageAccount))
+                throw new ArgumentException("Storage account name is required", nameof(options.StorageAccount));
+            if (string.IsNullOrEmpty(options.SourcePath))
+                throw new ArgumentException("Source path is required", nameof(options.SourcePath));
+
             // Validate required parameters
             ValidateRequiredParameters(
                 options.Subscription,
@@ -82,7 +94,7 @@ namespace AzureMcp.Areas.Startups.Services
 
             // Get the website URL
             var websiteUrl = $"https://{options.StorageAccount}.z13.web.core.windows.net";
-            
+
             return new StartupsDeployResources(
                 StorageAccount: options.StorageAccount,
                 Container: "$web",
@@ -93,14 +105,14 @@ namespace AzureMcp.Areas.Startups.Services
         {
             var blobServiceClient = new BlobServiceClient(connectionString);
             var properties = blobServiceClient.GetProperties(cancellationToken).Value;
-            
+
             properties.StaticWebsite.Enabled = true;
             properties.StaticWebsite.IndexDocument = "index.html";
             properties.StaticWebsite.ErrorDocument404Path = "404.html";
 
             await blobServiceClient.SetPropertiesAsync(properties, cancellationToken);
         }
-        
+
         // files are uploaded to the web container in Azure Blob storage, used for static website hosting
         private static async Task UploadFilesAsync(string connectionString, string sourcePath, CancellationToken cancellationToken)
         {
