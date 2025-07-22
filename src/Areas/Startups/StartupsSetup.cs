@@ -34,8 +34,6 @@ namespace AzureMcp.Areas.Startups
         }
 
         public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
-        {
-            throw new NotImplementedException();
-        }
+        {}
     }
 }

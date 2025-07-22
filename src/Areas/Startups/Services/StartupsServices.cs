@@ -11,11 +11,10 @@ using Azure.Storage.Blobs;
 
 namespace AzureMcp.Areas.Startups.Services
 {
-    public sealed class StartupsServices(ISubscriptionService subscriptionService, ITenantService tenantService) : IStartupsServices
+    public sealed class StartupsServices(ISubscriptionService subscriptionService) : IStartupsServices
     {
         private readonly ISubscriptionService _subscriptionService = subscriptionService;
-        private readonly ITenantService _tenantService = tenantService;
-
+        // Guidance command
         public Task<StartupsGuidanceInfo> GetGuidanceAsync()
         {
             var info = new StartupsGuidanceInfo(
@@ -26,9 +25,10 @@ namespace AzureMcp.Areas.Startups.Services
             return Task.FromResult(info);
         }
 
+        // Deploy command
         public async Task<StartupsDeployResources> DeployStaticWebAsync(StartupsDeployOptions options, CancellationToken cancellationToken)
         {
-            // Resolve subscription and resource group
+            // subscription and resource group
             var subscription = await _subscriptionService.GetSubscription(options.Subscription, options.Tenant, null);
             var resourceGroup = await subscription.GetResourceGroupAsync(options.ResourceGroup, cancellationToken);
 
@@ -41,6 +41,7 @@ namespace AzureMcp.Areas.Startups.Services
             }
             else
             {
+                // lrs = locally redundant storage
                 var data = new StorageAccountCreateOrUpdateContent(
                     new StorageSku(StorageSkuName.StandardLrs),
                     StorageKind.StorageV2,
@@ -49,31 +50,9 @@ namespace AzureMcp.Areas.Startups.Services
                 storageAccount = (await storageAccounts.CreateOrUpdateAsync(
                     WaitUntil.Completed, options.StorageAccount, data, cancellationToken)).Value;
             }
-
-            // Enable static website hosting if not enabled
-            var blobService = await storageAccount.GetBlobService().GetAsync(cancellationToken);
-
-            using (var process = new System.Diagnostics.Process())
-            {
-                process.StartInfo.FileName = "az";
-                process.StartInfo.Arguments = $"storage blob service-properties update --account-name {storageAccount.Data.Name} --static-website --index-document index.html --404-document 404.html";
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.CreateNoWindow = true;
-
-                process.Start();
-                await process.WaitForExitAsync(cancellationToken);
-
-                if (process.ExitCode != 0)
-                {
-                    var error = await process.StandardError.ReadToEndAsync();
-                    throw new InvalidOperationException($"Failed to enable static website hosting: {error}");
-                }
-            }
             return new StartupsDeployResources(options.StorageAccount, options.Container, "Success");
         }
-        // files are uploaded to the $web container in Azure Blob storage, which is used for static website hosting
+        // files are uploaded to the web container in Azure Blob storage, used for static website hosting
         private static async Task UploadFilesAsync(string connectionString, string sourcePath, CancellationToken cancellationToken)
         {
             // creates client to connect to Azure Blob storage
