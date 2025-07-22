@@ -1,7 +1,5 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-using System.Threading.Tasks;
-using Azure.ResourceManager.Storage.Models;
 using AzureMcp.Areas.Startups.Options;
 namespace AzureMcp.Areas.Startups.Services;
 
@@ -20,5 +18,5 @@ public interface IStartupsService
 
 }
 
-public sealed record StartupsDeployResources(string storageAccount, string container, string status);
+public sealed record StartupsDeployResources(string StorageAccount, string Container, string Status);
 public sealed record StartupsGuidanceInfo(string Title, string Description, string Link);
