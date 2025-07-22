@@ -6,7 +6,7 @@ namespace AzureMcp.Areas.Startups.Options;
 public sealed class StartupsDeployOptions : AzureMcp.Options.GlobalOptions
 {
     // Match base class but provide default value
-    public new string? ResourceGroup { get; set; }
+    public new string? ResourceGroup { get; set; } = string.Empty;
     
     // Required input parameters without null! 
     public string StorageAccount { get; set; } = string.Empty;
