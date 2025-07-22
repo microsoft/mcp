@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-using Azure.Messaging.ServiceBus.Administration;
 using AzureMcp.Areas.Startups.Options;
 using AzureMcp.Areas.Startups.Services;
 using AzureMcp.Commands;
-using Microsoft.Azure.Cosmos.Serialization.HybridRow;
+using AzureMcp.Models.Option;
 using Microsoft.Extensions.Logging;
 
 namespace AzureMcp.Areas.Startups.Commands;
@@ -15,7 +14,12 @@ public sealed class StartupsDeployCommand(ILogger<StartupsDeployCommand> logger)
     private readonly ILogger<StartupsDeployCommand> _logger = logger;
 
     public override string Name => "deploy";
-    public override string Description => "Deploy static web resources for startups";
+    public override string Description =>
+        $"""
+        Deploy static web resources for startups. Requires subscription {OptionDefinitions.Common.SubscriptionName},
+        resource group, storage account name, and source directory path. Configures static website hosting
+        and uploads content from the specified directory.
+        """;
     public override string Title => CommandTitle;
 
     [McpServerTool(Destructive = false, ReadOnly = true, Title = CommandTitle)]
@@ -23,23 +27,43 @@ public sealed class StartupsDeployCommand(ILogger<StartupsDeployCommand> logger)
     {
         var options = BindOptions(parseResult);
         
+        // Validate required parameters
+        if (string.IsNullOrEmpty(options.StorageAccount))
+            throw new ArgumentNullException(nameof(options.StorageAccount), "Storage account name is required");
+        if (string.IsNullOrEmpty(options.SourcePath))
+            throw new ArgumentNullException(nameof(options.SourcePath), "Source path is required");
+        if (string.IsNullOrEmpty(options.ResourceGroup))
+            throw new ArgumentNullException(nameof(options.ResourceGroup), "Resource group is required");
+        if (string.IsNullOrEmpty(options.Subscription))
+            throw new ArgumentNullException(nameof(options.Subscription), "Subscription is required");
+
         try
         {
-            var startupsService = context.GetService<IStartupsService>();
-            var subscriptions = await startupsService.DeployStaticWebAsync(options, CancellationToken.None);
+            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            {
+                return context.Response;
+            }
 
-            context.Response.Results = ResponseResult.Create<StartupsDeployResources>(
-                subscriptions, DeployJsonContext.Default.StartupsDeployResources);
-            
-            _logger.LogInformation("Successfully deployed static website to {StorageAccount}", options.StorageAccount);
-            
-            return context.Response;
+            _logger.LogInformation("Starting deployment to storage account {StorageAccount}", options.StorageAccount);
+
+            var startupsService = context.GetService<IStartupsService>();
+            var result = await startupsService.DeployStaticWebAsync(options, CancellationToken.None);
+
+            if (result != null)
+            {
+                _logger.LogInformation("Successfully deployed to storage account {StorageAccount}", options.StorageAccount);
+                context.Response.Results = ResponseResult.Create(
+                    result,
+                    DeployJsonContext.Default.StartupsDeployResources);
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to deploy static website to {StorageAccount}", options.StorageAccount);
-            throw;
+            _logger.LogError(ex, "Error deploying static website to {StorageAccount}", options.StorageAccount);
+            HandleException(context, ex);
         }
+
+        return context.Response;
     }
 }
 

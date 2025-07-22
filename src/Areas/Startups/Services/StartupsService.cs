@@ -28,8 +28,22 @@ namespace AzureMcp.Areas.Startups.Services
         // Deploy command
         public async Task<StartupsDeployResources> DeployStaticWebAsync(StartupsDeployOptions options, CancellationToken cancellationToken)
         {
-            // subscription and resource group
-            var subscription = await _subscriptionService.GetSubscription(options.Subscription, options.Tenant, null);
+            // Validate required parameters
+            ValidateRequiredParameters(
+                options.Subscription,
+                options.ResourceGroup,
+                options.StorageAccount,
+                options.SourcePath
+            );
+
+            // Validate source path exists
+            if (!Directory.Exists(options.SourcePath))
+            {
+                throw new ArgumentException($"Source path '{options.SourcePath}' does not exist");
+            }
+
+            // Get subscription and resource group
+            var subscription = await _subscriptionService.GetSubscription(options.Subscription, options.Tenant, new AzureMcp.Options.RetryPolicyOptions());
             var resourceGroup = await subscription.GetResourceGroupAsync(options.ResourceGroup, cancellationToken);
 
             // Get or create storage account
@@ -41,17 +55,52 @@ namespace AzureMcp.Areas.Startups.Services
             }
             else
             {
-                // lrs = locally redundant storage
+                // Create storage account with static website support
                 var data = new StorageAccountCreateOrUpdateContent(
                     new StorageSku(StorageSkuName.StandardLrs),
                     StorageKind.StorageV2,
                     resourceGroup.Value.Data.Location
-                );
+                )
+                {
+                    EnableHttpsTrafficOnly = true,
+                    AllowBlobPublicAccess = true
+                };
                 storageAccount = (await storageAccounts.CreateOrUpdateAsync(
                     WaitUntil.Completed, options.StorageAccount, data, cancellationToken)).Value;
             }
-            return new StartupsDeployResources(options.StorageAccount, options.Container, "Success");
+            // Get storage account connection string
+            var keys = new List<StorageAccountKey>();
+            await foreach (var key in storageAccount.GetKeysAsync())
+            {
+                keys.Add(key);
+            }
+            var connectionString = $"DefaultEndpointsProtocol=https;AccountName={options.StorageAccount};AccountKey={keys.First().Value};EndpointSuffix=core.windows.net";
+
+            // Enable static website hosting and upload files
+            await EnableStaticWebsiteAsync(connectionString, cancellationToken);
+            await UploadFilesAsync(connectionString, options.SourcePath, cancellationToken);
+
+            // Get the website URL
+            var websiteUrl = $"https://{options.StorageAccount}.z13.web.core.windows.net";
+            
+            return new StartupsDeployResources(
+                StorageAccount: options.StorageAccount,
+                Container: "$web",
+                Status: "Success");
         }
+
+        private static async Task EnableStaticWebsiteAsync(string connectionString, CancellationToken cancellationToken)
+        {
+            var blobServiceClient = new BlobServiceClient(connectionString);
+            var properties = blobServiceClient.GetProperties(cancellationToken).Value;
+            
+            properties.StaticWebsite.Enabled = true;
+            properties.StaticWebsite.IndexDocument = "index.html";
+            properties.StaticWebsite.ErrorDocument404Path = "404.html";
+
+            await blobServiceClient.SetPropertiesAsync(properties, cancellationToken);
+        }
+        
         // files are uploaded to the web container in Azure Blob storage, used for static website hosting
         private static async Task UploadFilesAsync(string connectionString, string sourcePath, CancellationToken cancellationToken)
         {
