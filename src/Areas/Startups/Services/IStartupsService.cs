@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 using AzureMcp.Areas.Startups.Options;
+using AzureMcp.Options;
 namespace AzureMcp.Areas.Startups.Services;
 
 public interface IStartupsService
@@ -15,7 +16,6 @@ public interface IStartupsService
     /// Deploys code files to Azure storage account.
     /// </summary>
     Task<StartupsDeployResources> DeployStaticWebAsync(StartupsDeployOptions options, CancellationToken cancellationToken);
-
 }
 
 public sealed record StartupsDeployResources(string StorageAccount, string Container, string Status);
