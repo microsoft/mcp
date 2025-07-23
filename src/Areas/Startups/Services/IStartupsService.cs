@@ -17,13 +17,10 @@ public interface IStartupsService
     /// Deploys code files to Azure storage account.
     /// </summary>
     Task<StartupsDeployResources> DeployStaticWebAsync(
-        string subscriptionId,
+        string subscription,
         string storageAccount,
         string resourceGroup,
-        string sourcePath,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        CancellationToken cancellationToken = default);
+        string sourcePath);
 }
 
 public sealed record StartupsDeployResources(string StorageAccount, string Container, string Status);

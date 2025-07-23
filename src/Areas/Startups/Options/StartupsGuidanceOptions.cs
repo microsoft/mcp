@@ -4,5 +4,4 @@
 using AzureMcp.Options;
 
 namespace AzureMcp.Areas.Startups.Options;
-
 public class StartupsGuidanceOptions : GlobalOptions { }
