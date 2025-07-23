@@ -4,11 +4,11 @@
 using AzureMcp.Areas.Startups.Options.Guidance;
 using AzureMcp.Commands;
 using Microsoft.Extensions.Logging;
-using AzureMcp.Areas.Startups.Services;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AzureMcp.Areas.Startups.Commands.Guidance;
-public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> logger) 
-    : GlobalCommand<StartupsGuidanceOptions>()
+public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> logger)
+    : GlobalCommand<>()
 {
     private const string CommandTitle = "Get Guidance from Microsoft for Startups";
     private readonly ILogger<StartupsGuidanceCommand> _logger = logger;
@@ -29,7 +29,6 @@ public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> log
             GuidanceJsonContext.Default.StartupsGuidanceCommandResult);
         return Task.FromResult(context.Response);
     }
-
     public record StartupsGuidanceInfo(string Title, string Description, string Link);
     public record StartupsGuidanceCommandResult(StartupsGuidanceInfo Info);
 }
