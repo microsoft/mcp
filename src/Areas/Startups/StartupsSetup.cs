@@ -15,7 +15,6 @@ namespace AzureMcp.Areas.Startups
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<IStartupsService, StartupsService>();
-            services.AddSingleton<IStorageService, StorageService>();
         }
 
         public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)

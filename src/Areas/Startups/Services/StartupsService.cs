@@ -55,6 +55,8 @@ namespace AzureMcp.Areas.Startups.Services
             }
 
             // Get subscription and resource group
+            // ====DO WE PASS IN TENANT OR NULL FOR 2ND PARAMETER????=====
+            // REMOVE OPTIONS, SHOULD JUST CALL THE PROPERTIES THEMSELVES
             var subscription = await _subscriptionService.GetSubscription(options.Subscription, options.Tenant, new AzureMcp.Options.RetryPolicyOptions());
             var resourceGroup = await subscription.GetResourceGroupAsync(options.ResourceGroup, cancellationToken);
 
