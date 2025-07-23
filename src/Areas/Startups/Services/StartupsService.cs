@@ -30,15 +30,12 @@ namespace AzureMcp.Areas.Startups.Services
             string subscription,
             string storageAccount,
             string resourceGroup,
-            string sourcePath,
-            string? tenant = null,
-            RetryPolicyOptions? retryPolicy = null,
-            CancellationToken cancellationToken = default)
+            string sourcePath)
         {
 
-            // Validate individual parameters first
-            if (string.IsNullOrEmpty(subscription))
-                throw new ArgumentException("Subscription is required", nameof(subscription));
+            ValidateRequiredParameters(subscription);
+
+            // Validate service-specific validation
             if (string.IsNullOrEmpty(resourceGroup))
                 throw new ArgumentException("Resource group is required", nameof(resourceGroup));
             if (string.IsNullOrEmpty(storageAccount))
@@ -53,15 +50,15 @@ namespace AzureMcp.Areas.Startups.Services
             }
 
             // Get subscription and resource group
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-            var resource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription);
+            var resource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
 
             // Get or create storage account
             var storageAccounts = resource.Value.GetStorageAccounts();
             StorageAccountResource storageAccountResource;
             if (await storageAccounts.ExistsAsync(storageAccount))
             {
-                storageAccountResource = await storageAccounts.GetAsync(storageAccount, null, cancellationToken);
+                storageAccountResource = await storageAccounts.GetAsync(storageAccount, null);
             }
             else
             {
@@ -76,7 +73,7 @@ namespace AzureMcp.Areas.Startups.Services
                     AllowBlobPublicAccess = true
                 };
                 storageAccountResource = (await storageAccounts.CreateOrUpdateAsync(
-                    WaitUntil.Completed, storageAccount, data, cancellationToken)).Value;
+                    WaitUntil.Completed, storageAccount, data)).Value;
             }
             // Get storage account connection string
             var keys = new List<StorageAccountKey>();
@@ -87,8 +84,8 @@ namespace AzureMcp.Areas.Startups.Services
             var connectionString = $"DefaultEndpointsProtocol=https;AccountName={storageAccount};AccountKey={keys.First().Value};EndpointSuffix=core.windows.net";
 
             // Enable static website hosting and upload files
-            await EnableStaticWebsiteAsync(connectionString, cancellationToken);
-            await UploadFilesAsync(connectionString, sourcePath, cancellationToken);
+            await EnableStaticWebsiteAsync(connectionString, cancellationToken: default);
+            await UploadFilesAsync(connectionString, sourcePath, cancellationToken: default);
 
             // Get the website URL
             var websiteUrl = $"https://{storageAccount}.z13.web.core.windows.net";
