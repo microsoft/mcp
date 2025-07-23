@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-using AzureMcp.Areas.Startups.Options;
+using AzureMcp.Options;
 using Azure.ResourceManager.Storage;
 using Azure.ResourceManager.Storage.Models;
 using Azure; // WaitUntil
@@ -11,7 +11,7 @@ using AzureMcp.Services.Azure;
 
 namespace AzureMcp.Areas.Startups.Services
 {
-    public class StartupsService(ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IStartupsService
+    public sealed class StartupsService(ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IStartupsService
     {
         private readonly ISubscriptionService _subscriptionService = subscriptionService;
         // Guidance command
@@ -26,46 +26,42 @@ namespace AzureMcp.Areas.Startups.Services
         }
 
         // Deploy command
-        public async Task<StartupsDeployResources> DeployStaticWebAsync(StartupsDeployOptions options, CancellationToken cancellationToken)
+        public async Task<StartupsDeployResources> DeployStaticWebAsync(
+            string subscription,
+            string storageAccount,
+            string resourceGroup,
+            string sourcePath,
+            string? tenant = null,
+            RetryPolicyOptions? retryPolicy = null,
+            CancellationToken cancellationToken = default)
         {
-            ArgumentNullException.ThrowIfNull(options);
 
-            // Validate individual parameters first for better error messages
-            if (string.IsNullOrEmpty(options.Subscription))
-                throw new ArgumentException("Subscription ID is required", nameof(options.Subscription));
-            if (string.IsNullOrEmpty(options.ResourceGroup))
-                throw new ArgumentException("Resource group is required", nameof(options.ResourceGroup));
-            if (string.IsNullOrEmpty(options.StorageAccount))
-                throw new ArgumentException("Storage account name is required", nameof(options.StorageAccount));
-            if (string.IsNullOrEmpty(options.SourcePath))
-                throw new ArgumentException("Source path is required", nameof(options.SourcePath));
-
-            // Validate required parameters
-            ValidateRequiredParameters(
-                options.Subscription,
-                options.ResourceGroup,
-                options.StorageAccount,
-                options.SourcePath
-            );
+            // Validate individual parameters first
+            if (string.IsNullOrEmpty(subscription))
+                throw new ArgumentException("Subscription is required", nameof(subscription));
+            if (string.IsNullOrEmpty(resourceGroup))
+                throw new ArgumentException("Resource group is required", nameof(resourceGroup));
+            if (string.IsNullOrEmpty(storageAccount))
+                throw new ArgumentException("Storage account name is required", nameof(storageAccount));
+            if (string.IsNullOrEmpty(sourcePath))
+                throw new ArgumentException("Source path is required", nameof(sourcePath));
 
             // Validate source path exists
-            if (!Directory.Exists(options.SourcePath))
+            if (!Directory.Exists(sourcePath))
             {
-                throw new ArgumentException($"Source path '{options.SourcePath}' does not exist");
+                throw new ArgumentException($"Source path '{sourcePath}' does not exist");
             }
 
             // Get subscription and resource group
-            // ====DO WE PASS IN TENANT OR NULL FOR 2ND PARAMETER????=====
-            // REMOVE OPTIONS, SHOULD JUST CALL THE PROPERTIES THEMSELVES
-            var subscription = await _subscriptionService.GetSubscription(options.Subscription, options.Tenant, new AzureMcp.Options.RetryPolicyOptions());
-            var resourceGroup = await subscription.GetResourceGroupAsync(options.ResourceGroup, cancellationToken);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var resource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
             // Get or create storage account
-            var storageAccounts = resourceGroup.Value.GetStorageAccounts();
-            StorageAccountResource storageAccount;
-            if (await storageAccounts.ExistsAsync(options.StorageAccount))
+            var storageAccounts = resource.Value.GetStorageAccounts();
+            StorageAccountResource storageAccountResource;
+            if (await storageAccounts.ExistsAsync(storageAccount))
             {
-                storageAccount = await storageAccounts.GetAsync(options.StorageAccount, null, cancellationToken);
+                storageAccountResource = await storageAccounts.GetAsync(storageAccount, null, cancellationToken);
             }
             else
             {
@@ -73,32 +69,32 @@ namespace AzureMcp.Areas.Startups.Services
                 var data = new StorageAccountCreateOrUpdateContent(
                     new StorageSku(StorageSkuName.StandardLrs),
                     StorageKind.StorageV2,
-                    resourceGroup.Value.Data.Location
+                    resource.Value.Data.Location
                 )
                 {
                     EnableHttpsTrafficOnly = true,
                     AllowBlobPublicAccess = true
                 };
-                storageAccount = (await storageAccounts.CreateOrUpdateAsync(
-                    WaitUntil.Completed, options.StorageAccount, data, cancellationToken)).Value;
+                storageAccountResource = (await storageAccounts.CreateOrUpdateAsync(
+                    WaitUntil.Completed, storageAccount, data, cancellationToken)).Value;
             }
             // Get storage account connection string
             var keys = new List<StorageAccountKey>();
-            await foreach (var key in storageAccount.GetKeysAsync())
+            await foreach (var key in storageAccountResource.GetKeysAsync())
             {
                 keys.Add(key);
             }
-            var connectionString = $"DefaultEndpointsProtocol=https;AccountName={options.StorageAccount};AccountKey={keys.First().Value};EndpointSuffix=core.windows.net";
+            var connectionString = $"DefaultEndpointsProtocol=https;AccountName={storageAccount};AccountKey={keys.First().Value};EndpointSuffix=core.windows.net";
 
             // Enable static website hosting and upload files
             await EnableStaticWebsiteAsync(connectionString, cancellationToken);
-            await UploadFilesAsync(connectionString, options.SourcePath, cancellationToken);
+            await UploadFilesAsync(connectionString, sourcePath, cancellationToken);
 
             // Get the website URL
-            var websiteUrl = $"https://{options.StorageAccount}.z13.web.core.windows.net";
+            var websiteUrl = $"https://{storageAccount}.z13.web.core.windows.net";
 
             return new StartupsDeployResources(
-                StorageAccount: options.StorageAccount,
+                StorageAccount: storageAccount,
                 Container: "$web",
                 Status: "Success");
         }

@@ -9,10 +9,10 @@ namespace AzureMcp.Areas.Startups.Commands;
 
 public sealed class StartupsDeployCommand(ILogger<StartupsDeployCommand> logger) : SubscriptionCommand<StartupsDeployOptions>()
 {
-    private const string CommandTitle = "Deploy static web resources for startups";
+    private const string CommandTitle = "Deploy Static Website for Startups";
     private readonly ILogger<StartupsDeployCommand> _logger = logger;
 
-    private readonly Option<string> _subscription = StartupsOptionDefinitions.SubscriptionId;
+    private readonly Option<string> _subscription = StartupsOptionDefinitions.Subscription;
 
     public override string Name => "deploy";
     public override string Description =>
@@ -41,17 +41,21 @@ public sealed class StartupsDeployCommand(ILogger<StartupsDeployCommand> logger)
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         var options = BindOptions(parseResult);
+        var subscription = parseResult.GetValueForOption<string>(StartupsOptionDefinitions.Subscription);
+        var storageAccount = parseResult.GetValueForOption<string>(StartupsOptionDefinitions.StorageAccount);
+        var resourceGroup = parseResult.GetValueForOption<string>(StartupsOptionDefinitions.ResourceGroup);
+        var sourcePath = parseResult.GetValueForOption<string>(StartupsOptionDefinitions.SourcePath);
     
         try
         {
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {   
+            {
                 return context.Response;
             }
             _logger.LogInformation("Starting deployment to storage account {StorageAccount}", options.StorageAccount);
 
             var startupsService = context.GetService<IStartupsService>();
-            var result = await startupsService.DeployStaticWebAsync(options, CancellationToken.None);
+            var result = await startupsService.DeployStaticWebAsync(subscription, storageAccount, resourceGroup, sourcePath, tenant, retryPolicy, cancellationToken);
 
             _logger.LogInformation("Successfully deployed to storage account {StorageAccount}", options.StorageAccount);
             context.Response.Results = ResponseResult.Create(result, DeployJsonContext.Default.StartupsDeployResources);
