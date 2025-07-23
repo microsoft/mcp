@@ -13,7 +13,7 @@ public static class StartupsOptionDefinitions
 
     public static readonly Option<string> Subscription = new(
         $"--{SubscriptionParam}",
-        "The Id/Name of the subscription"
+        "The Name of the subscription"
     )
     {
         IsRequired = true

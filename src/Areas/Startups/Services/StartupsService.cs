@@ -33,15 +33,7 @@ namespace AzureMcp.Areas.Startups.Services
             string sourcePath)
         {
 
-            ValidateRequiredParameters(subscription);
-
-            // Validate service-specific validation
-            if (string.IsNullOrEmpty(resourceGroup))
-                throw new ArgumentException("Resource group is required", nameof(resourceGroup));
-            if (string.IsNullOrEmpty(storageAccount))
-                throw new ArgumentException("Storage account name is required", nameof(storageAccount));
-            if (string.IsNullOrEmpty(sourcePath))
-                throw new ArgumentException("Source path is required", nameof(sourcePath));
+            ValidateRequiredParameters(subscription, resourceGroup, storageAccount, sourcePath);
 
             // Validate source path exists
             if (!Directory.Exists(sourcePath))

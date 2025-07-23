@@ -13,6 +13,9 @@ public sealed class StartupsDeployCommand(ILogger<StartupsDeployCommand> logger)
 {
     private const string CommandTitle = "Deploy Static Website for Startups";
     private readonly ILogger<StartupsDeployCommand> _logger = logger;
+    private readonly Option<string> _storageAccount = StartupsOptionDefinitions.StorageAccount;
+    // private readonly Option<string> _resourceGroup = StartupsOptionDefinitions.ResourceGroup;
+    private readonly Option<string> _sourcePath = StartupsOptionDefinitions.SourcePath;
 
     private readonly Option<string> _subscription = StartupsOptionDefinitions.Subscription;
 
@@ -25,19 +28,28 @@ public sealed class StartupsDeployCommand(ILogger<StartupsDeployCommand> logger)
         """;
     public override string Title => CommandTitle;
 
-    // protected override void RegisterOptions(Command command)
-    // {
-    //     base.RegisterOptions(command);
-    //     command.AddOption(_subscription);
-    // }
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.AddOption(_subscription);
+        command.AddOption(_storageAccount);
+        // command.AddOption(_resourceGroup);
+        command.AddOption(_sourcePath);
+    }
 
-    // protected override StartupsDeployOptions BindOptions(ParseResult parseResult)
-    // {
-    //     var options = base.BindOptions(parseResult);
-    //     options.SubscriptionId = parseResult.GetValueForOption(_subscription)
-    //         ?? throw new ArgumentNullException(nameof(options.SubscriptionId), "Subscription cannot be null.");
-    //     return options;
-    // }
+    protected override StartupsDeployOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.Subscription = parseResult.GetValueForOption(_subscription);
+        // ?? throw new ArgumentNullException(nameof(options.Subscription), "Subscription cannot be null.");
+        options.StorageAccount = parseResult.GetValueForOption(_storageAccount);
+        // ?? throw new ArgumentNullException(nameof(options.StorageAccount), "Storage account cannot be null.");
+        // options.ResourceGroup = parseResult.GetValueForOption(_resourceGroup);
+        // ?? throw new ArgumentNullException(nameof(options.ResourceGroup), "Resource group cannot be null.");
+        options.SourcePath = parseResult.GetValueForOption(_sourcePath);
+            // ?? throw new ArgumentNullException(nameof(options.SourcePath), "Source path cannot be null.");
+        return options;
+    }
 
     [McpServerTool(Destructive = false, ReadOnly = true, Title = CommandTitle)]
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
@@ -47,14 +59,14 @@ public sealed class StartupsDeployCommand(ILogger<StartupsDeployCommand> logger)
         var resourceGroup = parseResult.GetValueForOption<string>(StartupsOptionDefinitions.ResourceGroup);
         var sourcePath = parseResult.GetValueForOption<string>(StartupsOptionDefinitions.SourcePath);
 
-        if (subscription is null)
-            throw new ArgumentNullException(nameof(subscription), "Subscription cannot be null.");
-        if (storageAccount is null)
-            throw new ArgumentNullException(nameof(storageAccount), "Storage account cannot be null.");
-        if (resourceGroup is null)
-            throw new ArgumentNullException(nameof(resourceGroup), "Resource group cannot be null.");
-        if (sourcePath is null)
-            throw new ArgumentNullException(nameof(sourcePath), "Source path cannot be null.");
+        // if (options.Subscription is null)
+        //     throw new ArgumentNullException(nameof(subscription), "Subscription cannot be null.");
+        // if (storageAccount is null)
+        //     throw new ArgumentNullException(nameof(storageAccount), "Storage account cannot be null.");
+        // if (resourceGroup is null)
+        //     throw new ArgumentNullException(nameof(resourceGroup), "Resource group cannot be null.");
+        // if (sourcePath is null)
+        //     throw new ArgumentNullException(nameof(sourcePath), "Source path cannot be null.");
 
         try
         {
@@ -62,7 +74,7 @@ public sealed class StartupsDeployCommand(ILogger<StartupsDeployCommand> logger)
             {
                 return context.Response;
             }
-            _logger.LogInformation("Starting deployment to storage account {StorageAccount}", storageAccount);
+            _logger.LogInformation("Starting deployment to storage account {StorageAccount}", options.storageAccount);
 
             var startupsService = context.GetService<IStartupsService>();
 
