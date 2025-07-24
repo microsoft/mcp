@@ -27,14 +27,17 @@ namespace AzureMcp.Areas.Startups.Services
 
         // Deploy command
         public async Task<StartupsDeployResources> DeployStaticWebAsync(
+            string tenantId,
             string subscription,
             string storageAccount,
             string resourceGroup,
-            string sourcePath)
+            string sourcePath,
+            RetryPolicyOptions retryPolicy
+            )
         {
 
             ValidateRequiredParameters(subscription, resourceGroup, storageAccount, sourcePath);
-
+            var uri = $"https://{storageAccount}.blob.core.windows.net";
             // Validate source path exists
             if (!Directory.Exists(sourcePath))
             {
@@ -42,7 +45,7 @@ namespace AzureMcp.Areas.Startups.Services
             }
 
             // Get subscription and resource group
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy);
             var resource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
 
             // Get or create storage account
@@ -54,6 +57,10 @@ namespace AzureMcp.Areas.Startups.Services
             }
             else
             {
+
+                var options = ConfigureRetryPolicy(AddDefaultPolicies(new BlobClientOptions()), retryPolicy);
+                var blobClient = new BlobServiceClient(new Uri(uri), await GetCredential(tenantId), options);
+
                 // Create storage account with static website support
                 var data = new StorageAccountCreateOrUpdateContent(
                     new StorageSku(StorageSkuName.StandardLrs),
@@ -62,10 +69,10 @@ namespace AzureMcp.Areas.Startups.Services
                 )
                 {
                     EnableHttpsTrafficOnly = true,
-                    AllowBlobPublicAccess = true
+                    AllowBlobPublicAccess = false
                 };
-                storageAccountResource = (await storageAccounts.CreateOrUpdateAsync(
-                    WaitUntil.Completed, storageAccount, data)).Value;
+
+                storageAccountResource = (await storageAccounts.CreateOrUpdateAsync(WaitUntil.Completed, storageAccount, data)).Value;
             }
             // Get storage account connection string
             var keys = new List<StorageAccountKey>();
