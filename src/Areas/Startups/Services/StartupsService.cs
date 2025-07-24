@@ -36,7 +36,7 @@ namespace AzureMcp.Areas.Startups.Services
             )
         {
 
-            ValidateRequiredParameters(subscription, resourceGroup, storageAccount, sourcePath);
+            ValidateRequiredParameters(subscription, storageAccount, resourceGroup, sourcePath);
             var uri = $"https://{storageAccount}.blob.core.windows.net";
             // Validate source path exists
             if (!Directory.Exists(sourcePath))

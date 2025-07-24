@@ -5,19 +5,9 @@ namespace AzureMcp.Areas.Startups.Options;
 
 public static class StartupsOptionDefinitions
 {
-
-    public const string SubscriptionParam = "subscription";
     public const string ResourceGroupParam = "resource-group";
     public const string StorageAccountParam = "storage-account";
     public const string SourcePathParam = "source-path";
-
-    public static readonly Option<string> Subscription = new(
-        $"--{SubscriptionParam}",
-        "The Name of the subscription"
-    )
-    {
-        IsRequired = true
-    };
 
     public static readonly Option<string> ResourceGroup = new(
         $"--{ResourceGroupParam}",
