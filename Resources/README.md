@@ -30,6 +30,7 @@ A curated collection of videos, blogs, documentation, and code repositories to h
 | [Understanding and Mitigating Security Risks in MCP Implementations](https://techcommunity.microsoft.com/blog/microsoft-security-blog/understanding-and-mitigating-security-risks-in-mcp-implementations/4404667) | Security | Overview of security risks and mitigation strategies for MCP implementations |
 | [Protecting Against Indirect Injection Attacks in MCP](https://devblogs.microsoft.com/blog/protecting-against-indirect-injection-attacks-mcp) | Security | Strategies to prevent indirect injection attacks in MCP implementations |
 | [Microsoft Copilot Studio ❤️ MCP](https://aka.ms/mcsmcp/lab/blog) | Getting Started | Announcement of the Microsoft Copilot Studio ❤️ MCP lab |
+| [Copilot Dev Camp - Lab MCS6 - Consuming an MCP server](https://aka.ms/CopilotDevCamp/maker/mcs6) | Getting Started | Lab module, part of the Copilot Dev Camp training material, to learn how to consume an MCP server in Microsoft Copilot Studio |
 
 ## 💻 Code Repositories
 
