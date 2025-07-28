@@ -9,6 +9,8 @@ public static class StartupsOptionDefinitions
     public const string StorageAccountParam = "storage-account";
     public const string SourcePathParam = "source-path";
 
+    public const string OverwriteParam = "overwrite";
+
     public static readonly Option<string> ResourceGroup = new(
         $"--{ResourceGroupParam}",
         "The name of the Azure resource group"
@@ -28,6 +30,14 @@ public static class StartupsOptionDefinitions
     public static readonly Option<string> SourcePath = new(
         $"--{SourcePathParam}",
         "The path to the source directory containing website files"
+    )
+    {
+        IsRequired = true
+    };
+
+    public static readonly Option<bool> Overwrite = new(
+        $"--{OverwriteParam}",
+        "Overwrite existing files when deploying"
     )
     {
         IsRequired = true

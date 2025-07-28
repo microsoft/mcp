@@ -22,7 +22,8 @@ public interface IStartupsService
         string storageAccount,
         string resourceGroup,
         string sourcePath,
-        RetryPolicyOptions retryPolicy);
+        RetryPolicyOptions retryPolicy,
+        bool overwrite);
 }
 
 public sealed record StartupsDeployResources(string StorageAccount, string Container, string Status);

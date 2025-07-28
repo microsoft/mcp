@@ -32,8 +32,9 @@ namespace AzureMcp.Areas.Startups.Services
             string storageAccount,
             string resourceGroup,
             string sourcePath,
-            RetryPolicyOptions retryPolicy
-            )
+            RetryPolicyOptions retryPolicy,
+            bool overwrite = false
+        )
         {
 
             ValidateRequiredParameters(subscription, storageAccount, resourceGroup, sourcePath);
@@ -84,7 +85,7 @@ namespace AzureMcp.Areas.Startups.Services
 
             // Enable static website hosting and upload files
             await EnableStaticWebsiteAsync(connectionString, cancellationToken: default);
-            await UploadFilesAsync(connectionString, sourcePath, cancellationToken: default);
+            await UploadFilesAsync(connectionString, sourcePath, overwrite, cancellationToken: default);
 
             // Get the website URL
             var websiteUrl = $"https://{storageAccount}.z13.web.core.windows.net";
@@ -108,7 +109,7 @@ namespace AzureMcp.Areas.Startups.Services
         }
 
         // files are uploaded to the web container in Azure Blob storage, used for static website hosting
-        private static async Task UploadFilesAsync(string connectionString, string sourcePath, CancellationToken cancellationToken)
+        private static async Task UploadFilesAsync(string connectionString, string sourcePath, bool overwrite, CancellationToken cancellationToken)
         {
             // creates client to connect to Azure Blob storage
             var blobServiceClient = new BlobServiceClient(connectionString);
@@ -120,8 +121,24 @@ namespace AzureMcp.Areas.Startups.Services
             {
                 // converts full file paths to relative paths and formatting for web URLs
                 var blobName = Path.GetRelativePath(sourcePath, file).Replace("\\", "/");
+                var blobClient = containerClient.GetBlobClient(blobName);
+                using var fileStream = File.OpenRead(file);
+                if (overwrite)
+                {
+                    await blobClient.UploadAsync(fileStream, overwrite: true, cancellationToken: cancellationToken);
+                }
+                // if overwrite is false, only upload if blob doesn't exist
+                else
+                {
+                    var exists = await blobClient.ExistsAsync(cancellationToken);
+                    if (!exists)
+                    {
+                        await blobClient.UploadAsync(fileStream, cancellationToken: cancellationToken);
+                    }
+                }
                 // uploads file to Azure storage
-                await containerClient.UploadBlobAsync(blobName, File.OpenRead(file), cancellationToken);
+                // Correct overload: stream, cancellationToken
+                using var uploadStream = File.OpenRead(file);
             }
         }
     }
