@@ -22,17 +22,8 @@ using Microsoft.Extensions.Logging;
 internal class Program
 {
     private static IAreaSetup[] Areas = RegisterAreas();
-    private static bool AttachDebugger { get; } = true;
     private static async Task<int> Main(string[] args)
     {
-#if DEBUG
-        if (AttachDebugger)
-        {
-            while (!Debugger.IsAttached)
-                Thread.Sleep(1000);
-            Debugger.Break();
-        }
-#endif
         try
         {
             Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand.ConfigureServices = ConfigureServices;
