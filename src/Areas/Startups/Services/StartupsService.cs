@@ -4,16 +4,20 @@ using AzureMcp.Options;
 using Azure.ResourceManager.Storage;
 using Azure.ResourceManager.Storage.Models;
 using Azure; // WaitUntil
+using Azure.ResourceManager;
 using AzureMcp.Services.Azure.Subscription;
 using AzureMcp.Services.Azure.Tenant;
 using Azure.Storage.Blobs;
 using AzureMcp.Services.Azure;
+using Azure.Identity;
+using Azure.ResourceManager.Resources;
 
 namespace AzureMcp.Areas.Startups.Services
 {
     public sealed class StartupsService(ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IStartupsService
     {
         private readonly ISubscriptionService _subscriptionService = subscriptionService;
+
         // Guidance command
         public Task<StartupsGuidanceInfo> GetGuidanceAsync()
         {
@@ -36,9 +40,9 @@ namespace AzureMcp.Areas.Startups.Services
             bool overwrite = false
         )
         {
-
             ValidateRequiredParameters(subscription, storageAccount, resourceGroup, sourcePath);
             var uri = $"https://{storageAccount}.blob.core.windows.net";
+
             // Validate source path exists
             if (!Directory.Exists(sourcePath))
             {
@@ -46,7 +50,13 @@ namespace AzureMcp.Areas.Startups.Services
             }
 
             // Get subscription and resource group
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId, retryPolicy);
+            var credential = new AzureCliCredential(new AzureCliCredentialOptions
+            {
+                TenantId = tenantId
+            });
+
+            var armClient = new ArmClient(credential);
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
 
             // Get or create storage account
@@ -58,9 +68,10 @@ namespace AzureMcp.Areas.Startups.Services
             }
             else
             {
-
-                var options = ConfigureRetryPolicy(AddDefaultPolicies(new BlobClientOptions()), retryPolicy);
-                var blobClient = new BlobServiceClient(new Uri(uri), await GetCredential(tenantId), options);
+                // var credential = new AzureCliCredential(new AzureCliCredentialOptions());
+                
+                // var options = ConfigureRetryPolicy(AddDefaultPolicies(new BlobClientOptions()), retryPolicy);
+                // var blobClient = new BlobServiceClient(new Uri(uri), credential, options);
 
                 // Create storage account with static website support
                 var data = new StorageAccountCreateOrUpdateContent(
@@ -136,9 +147,6 @@ namespace AzureMcp.Areas.Startups.Services
                         await blobClient.UploadAsync(fileStream, cancellationToken: cancellationToken);
                     }
                 }
-                // uploads file to Azure storage
-                // Correct overload: stream, cancellationToken
-                using var uploadStream = File.OpenRead(file);
             }
         }
     }

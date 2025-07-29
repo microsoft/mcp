@@ -15,11 +15,26 @@
             <h2>Test Content</h2>
             <p>This is a test website for Azure Storage static website hosting.</p>
             <button id="testButton">Click Me</button>
+            <div id="imageContainer" style="display: none; margin-top: 20px;">
+                <h3>Configuration Image</h3>
+                <img src="config.png" alt="Configuration" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px;">
+            </div>
         </section>
     </main>
     <footer>
         <p>&copy; 2025 Test Website</p>
     </footer>
-    <script src="js/script.js"></script>
+    <script>
+        document.getElementById('testButton').addEventListener('click', function() {
+            const imageContainer = document.getElementById('imageContainer');
+            if (imageContainer.style.display === 'none') {
+                imageContainer.style.display = 'block';
+                this.textContent = 'Hide Image';
+            } else {
+                imageContainer.style.display = 'none';
+                this.textContent = 'Click Me';
+            }
+        });
+    </script>
 </body>
 </html>
