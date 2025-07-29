@@ -34,6 +34,13 @@ Below are Microsoft's official MCP server implementations:
 
 ---
 
+### ✨ Azure AI Foundry MCP Server
+
+- **Repository**: [azure-ai-foundry/mcp-foundry](https://github.com/azure-ai-foundry/mcp-foundry)
+- **Description**: An experimental MCP server implementation for Azure AI Foundry that exposes unified tools for models, knowledge, evaluation and deployment.
+
+---
+
 ### 📊 Clarity MCP Server
 
 - **Repository**: [@microsoft/clarity-mcp-server](https://www.npmjs.com/package/@microsoft/clarity-mcp-server)
