@@ -1,12 +1,8 @@
-
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 using AzureMcp.Commands;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics.CodeAnalysis;
-using AzureMcp.Areas.LoadTesting.Options;
-using AzureMcp.Commands.Subscription;
-using AzureMcp.Areas.Startups.Options;
 
 namespace AzureMcp.Areas.Startups.Commands.Guidance;
 public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> logger) : BaseCommand
