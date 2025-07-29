@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-using Azure.Core.Pipeline;
-using Azure.ResourceManager.Resources.Models;
+
 using AzureMcp.Areas.Startups.Options;
 using AzureMcp.Areas.Startups.Services;
-using AzureMcp.Areas.Storage.Services;
 using AzureMcp.Commands.Subscription;
-using AzureMcp.Options;
 using Microsoft.Extensions.Logging;
 
 namespace AzureMcp.Areas.Startups.Commands;
@@ -18,7 +15,6 @@ public sealed class StartupsDeployCommand(ILogger<StartupsDeployCommand> logger)
     private readonly Option<string> _storageAccount = StartupsOptionDefinitions.StorageAccount;
     private readonly Option<string> _resourceGroup = StartupsOptionDefinitions.ResourceGroup;
     private readonly Option<string> _sourcePath = StartupsOptionDefinitions.SourcePath;
-
     private readonly Option<bool> _overwrite = StartupsOptionDefinitions.Overwrite;
     public override string Name => "deploy";
     public override string Description =>
