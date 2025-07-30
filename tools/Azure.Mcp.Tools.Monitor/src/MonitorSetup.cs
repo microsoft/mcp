@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Commands.Table;
 using Azure.Mcp.Tools.Monitor.Commands.TableType;
+using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,7 @@ public class MonitorSetup : IAreaSetup
     {
         services.AddSingleton<IMonitorService, MonitorService>();
         services.AddSingleton<IMonitorHealthModelService, MonitorHealthModelService>();
+        services.AddSingleton<IMonitorWebTestService, MonitorWebTestService>();
         services.AddSingleton<IResourceResolverService, ResourceResolverService>();
         services.AddSingleton<IMetricsQueryClientService, MetricsQueryClientService>();
         services.AddSingleton<IMonitorMetricsService, MonitorMetricsService>();
@@ -77,5 +79,13 @@ public class MonitorSetup : IAreaSetup
 
         metrics.AddCommand("query", new MetricsQueryCommand(loggerFactory.CreateLogger<MetricsQueryCommand>()));
         metrics.AddCommand("definitions", new MetricsDefinitionsCommand(loggerFactory.CreateLogger<MetricsDefinitionsCommand>()));
+
+        // Register Monitor.WebTest sub-group commands
+        var webTests = new CommandGroup("webtests", "Azure Monitor Web Test operations - Commands for working with Azure Availability/Web Tests.");
+        monitor.AddSubGroup(webTests);
+
+        webTests.AddCommand("get", new WebTestsGetCommand(loggerFactory.CreateLogger<WebTestsGetCommand>()));
+        webTests.AddCommand("list", new WebTestsListCommand(loggerFactory.CreateLogger<WebTestsListCommand>()));
+        webTests.AddCommand("createorupdate", new WebTestsCreateOrUpdateCommand(loggerFactory.CreateLogger<WebTestsCreateOrUpdateCommand>()));
     }
 }

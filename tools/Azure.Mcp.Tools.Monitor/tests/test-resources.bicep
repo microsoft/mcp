@@ -209,3 +209,14 @@ resource appBlobRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-
     description: 'Blob Contributor for testApplicationOid'
   }
 }
+
+// Application Insights and Availability Tests module
+module webTestsModule 'test-resources.webtests.module.bicep' = {
+  name: 'webtests-module'
+  params: {
+    baseName: baseName
+    location: location
+    workspaceId: workspace.id
+    testApplicationOid: testApplicationOid
+  }
+}

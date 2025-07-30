@@ -201,7 +201,16 @@
                 "vectorizable",
                 "vectorizer",
                 "vsix",
-                "vsixtarget"
+                "vsixtarget",
+                "VSTEST",
+                "Xunit",
+                "webtest",
+                "webtests",
+                "resourcename",
+                "appinsights",
+                "createorupdate",
+                "Multstep",
+                "multistep"
             ]
         }
     ],

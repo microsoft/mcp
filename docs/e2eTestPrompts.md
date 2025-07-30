@@ -297,6 +297,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_monitor_workspace_list | Show me my Log Analytics workspaces |
 | azmcp_monitor_workspace_list | Show me the Log Analytics workspaces in my subscription |
 | azmcp_monitor_workspace_log_query | Show me the logs for the past hour in the Log Analytics workspace <workspace_name> |
+| azmcp_monitor_webtests_list | List all Web Test resources in my subscription |
+| azmcp_-_monitor_webtests_list | List all Web Test resources in my subscription in <resource_group> |
+| azmcp_-_monitor_webtests_get | Get Web Test details for <webtest_resource_name> in my subscription in <resource_group> |
+| azmcp_-_monitor_webtests_createorupdate | Create a new Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
+| azmcp_-_monitor_webtests_createorupdate | Update an existing Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
 
 ## Azure Native ISV
 

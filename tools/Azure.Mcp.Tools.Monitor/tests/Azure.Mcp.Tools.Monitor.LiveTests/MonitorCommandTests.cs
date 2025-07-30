@@ -20,12 +20,16 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     private const string TestLogType = "TestLogs_CL";
     private IMonitorService? _monitorService;
     private string? _storageAccountName;
+    private string? _appInsightsName;
+    private string? _bingWebTestName;
 
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync();
         _monitorService = GetMonitorService();
         _storageAccountName = $"{Settings.ResourceBaseName}mon";
+        _appInsightsName = $"{Settings.ResourceBaseName}-ai";
+        _bingWebTestName = $"{Settings.ResourceBaseName}-bing-test";
         _logHelper = new LogAnalyticsHelper(Settings.ResourceBaseName, Settings.SubscriptionId, _monitorService, Settings.TenantId, TestLogType);
     }
 
@@ -452,5 +456,158 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
             // Don't fail the test if storage activity generation fails
         }
     }
-}
 
+    #region WebTests Integration Tests
+
+    [Fact]
+    public async Task Should_List_WebTests()
+    {
+        var result = await CallToolAsync(
+            "azmcp_monitor_webtests_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId }
+            });
+
+        var webTestsArray = result.AssertProperty("webTests");
+        Assert.Equal(JsonValueKind.Array, webTestsArray.ValueKind);
+
+        // Should have at least 2 web tests (bing and microsoft from test resources)
+        var webTests = webTestsArray.EnumerateArray().ToList();
+        Assert.True(webTests.Count >= 2, $"Expected at least 2 web tests, but found {webTests.Count}");
+
+        foreach (var webTest in webTests)
+        {
+            Assert.True(webTest.TryGetProperty("resourceName", out var resourceName));
+            Assert.Equal(JsonValueKind.String, resourceName.ValueKind);
+            Assert.False(string.IsNullOrEmpty(resourceName.GetString()));
+
+            Assert.True(webTest.TryGetProperty("location", out var location));
+            Assert.Equal(JsonValueKind.String, location.ValueKind);
+            Assert.False(string.IsNullOrEmpty(location.GetString()));
+        }
+    }
+
+    [Fact]
+    public async Task Should_List_WebTests_ByResourceGroup()
+    {
+        var result = await CallToolAsync(
+            "azmcp_monitor_webtests_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName }
+            });
+
+        var webTestsArray = result.AssertProperty("webTests");
+        Assert.Equal(JsonValueKind.Array, webTestsArray.ValueKind);
+
+        // The array can be empty if no web tests exist in the resource group, which is fine for this test
+        foreach (var webTest in webTestsArray.EnumerateArray())
+        {
+            Assert.True(webTest.TryGetProperty("resourceName", out var resourceName));
+            Assert.Equal(JsonValueKind.String, resourceName.ValueKind);
+            Assert.False(string.IsNullOrEmpty(resourceName.GetString()));
+
+            Assert.True(webTest.TryGetProperty("location", out var location));
+            Assert.Equal(JsonValueKind.String, location.ValueKind);
+            Assert.False(string.IsNullOrEmpty(location.GetString()));
+
+            // Verify the resource group matches what was requested
+            if (webTest.TryGetProperty("resourceGroup", out var resourceGroup))
+            {
+                Assert.Equal(Settings.ResourceGroupName, resourceGroup.GetString());
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Should_Get_WebTest_Details()
+    {
+        // Use one of the test availability tests we created - using resource base name pattern
+        var webTestName = _bingWebTestName;
+
+        var result = await CallToolAsync(
+            "azmcp_monitor_webtests_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "webtest-resource", webTestName }
+            });
+
+        var webTest = result.AssertProperty("webTest");
+        Assert.Equal(JsonValueKind.Object, webTest.ValueKind);
+
+        // Verify required properties exist
+        Assert.True(webTest.TryGetProperty("resourceName", out var resourceName));
+        Assert.Equal(webTestName, resourceName.GetString());
+
+        Assert.True(webTest.TryGetProperty("location", out var location));
+        Assert.Equal(JsonValueKind.String, location.ValueKind);
+        Assert.False(string.IsNullOrEmpty(location.GetString()));
+
+        Assert.True(webTest.TryGetProperty("kind", out var webTestKind));
+        Assert.Equal("Standard", webTestKind.GetString());
+
+        Assert.True(webTest.TryGetProperty("isEnabled", out var enabled));
+        Assert.True(enabled.GetBoolean());
+    }
+
+    [Theory]
+    [InlineData("--invalid-param")]
+    [InlineData("--subscription invalidSub")]
+    [InlineData("--subscription sub --resource-group rg")] // Missing required params for get
+    public async Task Should_Return400_WithInvalidWebTestInput(string args)
+    {
+        var result = await CallToolAsync(
+            "azmcp_monitor_webtests_list",
+            new()
+            {
+                { "args", args }
+            });
+
+        Assert.NotEqual(200, result?.GetProperty("status").GetInt32() ?? 500);
+    }
+
+    [Fact]
+    public async Task Should_CreateOrUpdate_WebTest()
+    {
+        // Use the Application Insights component we created in test resources with proper base name pattern
+        var webTestName = $"test-webtest-{DateTime.UtcNow:yyyyMMddHHmmss}";
+        var appInsightsComponentId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Insights/components/{_appInsightsName}";
+
+        var result = await CallToolAsync(
+            "azmcp_monitor_webtests_createorupdate",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "webtest-resource", webTestName },
+                { "appinsights-component", appInsightsComponentId },
+                { "location", "West US" },
+                { "webtest-locations", "us-ca-sjc-azr" },
+                { "request-url", "https://example.com" },
+                { "webtest", "Test Web Test" },
+                { "description", "Integration test web test" },
+                { "enabled", "true" },
+                { "frequency", "300" },
+                { "timeout", "30" }
+            });
+
+        var webTest = result.AssertProperty("webTest");
+        Assert.Equal(JsonValueKind.Object, webTest.ValueKind);
+
+        // Verify the created web test
+        Assert.True(webTest.TryGetProperty("resourceName", out var resourceName));
+        Assert.Equal(webTestName, resourceName.GetString());
+
+        Assert.True(webTest.TryGetProperty("isEnabled", out var enabled));
+        Assert.True(enabled.GetBoolean());
+
+        Assert.True(webTest.TryGetProperty("kind", out var webTestKind));
+        Assert.Equal("Standard", webTestKind.GetString());
+    }
+
+    #endregion
+}
