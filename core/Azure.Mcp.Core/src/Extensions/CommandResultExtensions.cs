@@ -153,6 +153,39 @@ public static class CommandResultExtensions
         return GetValueOrDefault(commandResult, option);
     }
 
+    public static T? GetValueWithoutDefault<T>(this CommandResult commandResult, Option<T> option)
+    {
+        ArgumentNullException.ThrowIfNull(commandResult);
+        ArgumentNullException.ThrowIfNull(option);
+
+        // Find the OptionResult in the parse tree
+        var optionResult = commandResult.GetResult(option);
+
+        // If the option was not provided (null) OR it was implicitly assigned (no token supplied),
+        // return without considering option default values
+        if (optionResult is null || optionResult.Implicit)
+        {
+            return default; // For value types, this is default(T?) => null; for refs => null
+        }
+
+        // At this point it was explicitly supplied by the user; get its value.
+        // Using the System.CommandLine API directly to avoid accidental recursion.
+        return optionResult.GetValueOrDefault<T>();
+    }
+
+    public static T? GetValueWithoutDefault<T>(this CommandResult commandResult, string optionName)
+    {
+        // Find the option by name in the command
+        var option = FindOptionTByName<T>(commandResult, optionName);
+
+        if (option is null)
+        {
+            return default;
+        }
+
+        return GetValueWithoutDefault(commandResult, option);
+    }
+
     private static Option<T>? FindOptionTByName<T>(CommandResult commandResult, string optionName)
         => commandResult.Command.Options.OfType<Option<T>>()
             .FirstOrDefault(o => o.Name == optionName || o.Aliases.Contains(optionName));

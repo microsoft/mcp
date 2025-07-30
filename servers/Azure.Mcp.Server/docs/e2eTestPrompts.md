@@ -458,6 +458,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_monitor_table_list | Show me the tables in the Log Analytics workspace <workspace_name> |
 | azmcp_monitor_table_type_list | List all available table types in the Log Analytics workspace <workspace_name> |
 | azmcp_monitor_table_type_list | Show me the available table types in the Log Analytics workspace <workspace_name> |
+| azmcp_monitor_webtests_create | Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
+| azmcp_monitor_webtests_get | Get Web Test details for <webtest_resource_name> in my subscription in <resource_group> |
+| azmcp_monitor_webtests_list | List all Web Test resources in my subscription |
+| azmcp_monitor_webtests_list | List all Web Test resources in my subscription in <resource_group> |
+| azmcp_monitor_webtests_update | Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
 | azmcp_monitor_workspace_list | List all Log Analytics workspaces in my subscription |
 | azmcp_monitor_workspace_list | Show me my Log Analytics workspaces |
 | azmcp_monitor_workspace_list | Show me the Log Analytics workspaces in my subscription |

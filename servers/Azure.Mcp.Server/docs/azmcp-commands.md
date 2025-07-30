@@ -1394,6 +1394,65 @@ azmcp monitor metrics query --subscription <subscription> \
                             --aggregation "Average"
 ```
 
+#### Web Tests (Availability Tests)
+```bash
+# List all web tests in a subscription or optionally, within a resource group
+azmcp monitor webtests list --subscription <subscription> [--resource-group <resource-group>]
+
+# Get details for a specific web test
+azmcp monitor webtests get --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --webtest-resource <webtest-resource-name>
+
+# Create a new web test in Azure Monitor
+azmcp monitor webtests create --subscription <subscription> \
+                              --resource-group <resource-group> \
+                              --webtest-resource <webtest-resource-name> \
+                              --appinsights-component <component-name> \
+                              --location <location> \
+                              --webtest-locations <locations> \
+                              --request-url <url> \
+                              [--webtest <display-name>] \
+                              [--description <description>] \
+                              [--enabled <true|false>] \
+                              [--expected-status-code <code>] \
+                              [--follow-redirects <true|false>] \
+                              [--frequency <seconds>] \
+                              [--headers <key=value,key2=value2>] \
+                              [--http-verb <get|post|..>] \
+                              [--ignore-status-code <true|false>] \
+                              [--parse-requests <true|false>] \
+                              [--request-body <body>] \
+                              [--retry-enabled <true|false>] \
+                              [--ssl-check <true|false>] \
+                              [--ssl-lifetime-check <days>] \
+                              [--timeout <seconds>]
+
+# Update an existing web test in Azure Monitor
+azmcp monitor webtests update --subscription <subscription> \
+                              --resource-group <resource-group> \
+                              --webtest-resource <webtest-resource-name> \
+                              [--appinsights-component <component-name>] \
+                              [--location <location>] \
+                              [--webtest-locations <locations>] \
+                              [--request-url <url>] \
+                              [--webtest <display-name>] \
+                              [--description <description>] \
+                              [--enabled <true|false>] \
+                              [--expected-status-code <code>] \
+                              [--follow-redirects <true|false>] \
+                              [--frequency <seconds>] \
+                              [--headers <key=value,key2=value2>] \
+                              [--http-verb <get|post|..>] \
+                              [--ignore-status-code <true|false>] \
+                              [--parse-requests <true|false>] \
+                              [--request-body <body>] \
+                              [--retry-enabled <true|false>] \
+                              [--ssl-check <true|false>] \
+                              [--ssl-lifetime-check <days>] \
+                              [--timeout <seconds>]
+```
+
 ### Azure Managed Lustre
 
 ```bash
