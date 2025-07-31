@@ -11,6 +11,7 @@ using Azure.Storage.Blobs;
 using AzureMcp.Services.Azure;
 using Azure.Identity;
 using Azure.ResourceManager.Resources;
+using Azure.Storage.Blobs.Models;
 
 namespace AzureMcp.Areas.Startups.Services
 {
@@ -68,11 +69,6 @@ namespace AzureMcp.Areas.Startups.Services
             }
             else
             {
-                // var credential = new AzureCliCredential(new AzureCliCredentialOptions());
-                
-                // var options = ConfigureRetryPolicy(AddDefaultPolicies(new BlobClientOptions()), retryPolicy);
-                // var blobClient = new BlobServiceClient(new Uri(uri), credential, options);
-
                 // Create storage account with static website support
                 var data = new StorageAccountCreateOrUpdateContent(
                     new StorageSku(StorageSkuName.StandardLrs),
@@ -97,9 +93,6 @@ namespace AzureMcp.Areas.Startups.Services
             // Enable static website hosting and upload files
             await EnableStaticWebsiteAsync(connectionString, cancellationToken: default);
             await UploadFilesAsync(connectionString, sourcePath, overwrite, cancellationToken: default);
-
-            // Get the website URL
-            var websiteUrl = $"https://{storageAccount}.z13.web.core.windows.net";
 
             return new StartupsDeployResources(
                 StorageAccount: storageAccount,
@@ -133,10 +126,17 @@ namespace AzureMcp.Areas.Startups.Services
                 // converts full file paths to relative paths and formatting for web URLs
                 var blobName = Path.GetRelativePath(sourcePath, file).Replace("\\", "/");
                 var blobClient = containerClient.GetBlobClient(blobName);
+
+                var contentType = GetContentType(Path.GetExtension(file));
+                var blobHttpHeaders = new BlobHttpHeaders { ContentType = contentType };
+
                 using var fileStream = File.OpenRead(file);
                 if (overwrite)
                 {
-                    await blobClient.UploadAsync(fileStream, overwrite: true, cancellationToken: cancellationToken);
+                    await blobClient.UploadAsync(fileStream, new BlobUploadOptions
+                    {
+                        HttpHeaders = blobHttpHeaders
+                    }, cancellationToken);
                 }
                 // if overwrite is false, only upload if blob doesn't exist
                 else
@@ -144,10 +144,30 @@ namespace AzureMcp.Areas.Startups.Services
                     var exists = await blobClient.ExistsAsync(cancellationToken);
                     if (!exists)
                     {
-                        await blobClient.UploadAsync(fileStream, cancellationToken: cancellationToken);
+                        await blobClient.UploadAsync(fileStream, new BlobUploadOptions
+                        {
+                            HttpHeaders = blobHttpHeaders
+                        }, cancellationToken: cancellationToken);
                     }
                 }
             }
+        }
+        private static string GetContentType(string extension)
+        {
+            return extension.ToLowerInvariant() switch
+            {
+                ".html" => "text/html",
+                ".css" => "text/css",
+                ".js" => "application/javascript",
+                ".png" => "image/png",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".gif" => "image/gif",
+                ".svg" => "image/svg+xml",
+                ".json" => "application/json",
+                ".xml" => "application/xml",
+                ".txt" => "text/plain",
+                _ => "application/octet-stream"
+            };
         }
     }
 }
