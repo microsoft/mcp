@@ -42,12 +42,21 @@ namespace AzureMcp.Areas.Startups.Services
         )
         {
             ValidateRequiredParameters(subscription, storageAccount, resourceGroup, sourcePath);
-            var uri = $"https://{storageAccount}.blob.core.windows.net";
+            // Storage account name validation
+            if (!IsValidStorageAccountName(storageAccount))
+            {
+                throw new ArgumentException("Storage account name must be between 3-24 characters long and only contain letters and numbers");
+            }
 
-            // Validate source path exists
+            // Source path validation
             if (!Directory.Exists(sourcePath))
             {
-                throw new ArgumentException($"Source path '{sourcePath}' does not exist");
+                throw new DirectoryNotFoundException($"Source directory '{sourcePath}' does not exist");
+            }
+
+            if (!Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories).Any())
+            {
+                throw new ArgumentException($"Source directory '{sourcePath}' is empty");
             }
 
             // Get subscription and resource group
@@ -63,6 +72,13 @@ namespace AzureMcp.Areas.Startups.Services
             // Get or create storage account
             var storageAccounts = resource.Value.GetStorageAccounts();
             StorageAccountResource storageAccountResource;
+
+            var availability = await subscriptionResource.CheckStorageAccountNameAvailabilityAsync(new StorageAccountNameAvailabilityContent(storageAccount));
+
+            if (availability.Value.IsNameAvailable != true)
+            {
+                throw new ArgumentException($"Storage account name '{storageAccount}' is not available globally due to {availability.Value.Reason}. Please choose a different name");
+            }
             if (await storageAccounts.ExistsAsync(storageAccount))
             {
                 storageAccountResource = await storageAccounts.GetAsync(storageAccount, null);
@@ -168,6 +184,47 @@ namespace AzureMcp.Areas.Startups.Services
                 ".txt" => "text/plain",
                 _ => "application/octet-stream"
             };
+        }
+
+        private static bool IsValidStorageAccountName(string name)
+        {
+            return name.Length >= 3 && name.Length <= 24 && name.All(c => char.IsLower(c) || char.IsDigit(c));
+        }
+
+        public async Task<StartupsDeployResources> DeployReactAppAsync(
+            string tenantId,
+            string subscription,
+            string storageAccount,
+            string resourceGroup,
+            string reactProject,
+            RetryPolicyOptions retryPolicy,
+            bool build = true,
+            string? buildPath = null,
+            bool overwrite = true
+        )
+        {
+            if (build)
+            { }
+
+            if (string.IsNullOrEmpty(buildPath))
+            {
+                throw new ArgumentNullException(nameof(buildPath), "Build path cannot be null or empty when deploying a React app.");
+            }
+
+            return await DeployStaticWebAsync(tenantId, subscription, storageAccount,
+            resourceGroup, buildPath, retryPolicy, overwrite);
+        }
+
+        private static async Task EnableSpaRoutingAsync(string connectionString, CancellationToken cancellationToken)
+        {
+            var blobServiceClient = new BlobServiceClient(connectionString);
+            var properties = blobServiceClient.GetProperties(cancellationToken).Value;
+
+            properties.StaticWebsite.Enabled = true;
+            properties.StaticWebsite.IndexDocument = "index.html";
+            properties.StaticWebsite.ErrorDocument404Path = "index.html";
+
+            await blobServiceClient.SetPropertiesAsync(properties, cancellationToken);
         }
     }
 }
