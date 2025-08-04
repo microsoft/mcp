@@ -23,7 +23,8 @@ public interface IStartupsService
         string resourceGroup,
         string sourcePath,
         RetryPolicyOptions retryPolicy,
-        bool overwrite);
+        bool overwrite,
+        IProgress<string>? progress = null);
 }
 
 public sealed record StartupsDeployResources(string StorageAccount, string Container, string Status);
