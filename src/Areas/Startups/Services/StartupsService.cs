@@ -73,7 +73,7 @@ namespace AzureMcp.Areas.Startups.Services
             }
 
             // Get subscription and resource group
-            var credential = new AzureCliCredential(new AzureCliCredentialOptions
+            var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
             {
                 TenantId = tenantId
             });
