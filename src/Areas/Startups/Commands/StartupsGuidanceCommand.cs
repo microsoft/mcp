@@ -96,28 +96,28 @@ public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> log
             new SamplePrompt(
                 Category: "Quick Deployment",
                 Title: "Deploy existing static website",
-                Prompt: "Deploy the 'output' folder to a storage account called 'myawesomesite'",
+                Prompt: "Deploy the output folder to a storage account called myawesomesite",
                 ExpectedResult: "Creates storage account, enables static hosting, uploads files",
                 Prerequisites: ["Azure CLI logged in", "Files in output folder"]
             ),
             new SamplePrompt(
                 Category: "React Development",
                 Title: "Deploy React app with build",
-                Prompt: "Deploy my React app from 'my-startup-app' folder to storage account 'startupapp2024'",
+                Prompt: "Deploy my React app from my-startup-app folder to storage account startupapp2024",
                 ExpectedResult: "Runs npm install, npm build, deploys to Azure with SPA routing",
                 Prerequisites: ["React project with package.json", "Node.js installed"]
             ),
             new SamplePrompt(
                 Category: "Code Generation",
                 Title: "Create and deploy React app",
-                Prompt: "Create a new React app called 'awesome-startup' with TypeScript and deploy it to 'awesomestartup'",
+                Prompt: "Create a new React app called awesome-startup with TypeScript and deploy it to awesomestartup",
                 ExpectedResult: "Generates React app, builds it, and deploys to Azure",
                 Prerequisites: ["Node.js installed", "Azure CLI logged in"]
             ),
             new SamplePrompt(
                 Category: "Static Website",
                 Title: "Create landing page",
-                Prompt: "Create a landing page for 'ArcheryStartup' and deploy to 'techstartuplanding'",
+                Prompt: "Create a landing page for archery-startup and deploy to archerylanding",
                 ExpectedResult: "Generates professional landing page and deploys to Azure",
                 Prerequisites: ["Azure CLI logged in"]
             )
