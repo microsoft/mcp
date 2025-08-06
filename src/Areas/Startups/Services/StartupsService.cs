@@ -18,6 +18,7 @@ namespace AzureMcp.Areas.Startups.Services
 {
     public sealed class StartupsService(ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IStartupsService
     {
+        private const string PREFERRED_REGION = "eastus";
         private readonly ISubscriptionService _subscriptionService = subscriptionService;
 
         // Guidance command
@@ -73,12 +74,9 @@ namespace AzureMcp.Areas.Startups.Services
             }
 
             // Get subscription and resource group
-            var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
-            {
-                TenantId = tenantId
-            });
+            var credential = GetCredential(tenantId);
 
-            var armClient = new ArmClient(credential);
+            var armClient = await CreateArmClientAsync(tenantId, retryPolicy);
             var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
 
@@ -103,7 +101,7 @@ namespace AzureMcp.Areas.Startups.Services
                 var data = new StorageAccountCreateOrUpdateContent(
                     new StorageSku(StorageSkuName.StandardLrs),
                     StorageKind.StorageV2,
-                    resource.Value.Data.Location
+                    PREFERRED_REGION
                 )
                 {
                     EnableHttpsTrafficOnly = true,
