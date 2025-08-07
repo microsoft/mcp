@@ -19,7 +19,7 @@ namespace AzureMcp.Areas.Startups.Services
 {
     public sealed class StartupsService(ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IStartupsService
     {
-        private const string PREFERRED_REGION = "eastus";
+        private const string PREFERRED_REGION = "westus";
         private readonly ISubscriptionService _subscriptionService = subscriptionService;
 
         // Guidance command
