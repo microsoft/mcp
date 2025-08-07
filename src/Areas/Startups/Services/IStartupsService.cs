@@ -25,6 +25,16 @@ public interface IStartupsService
         RetryPolicyOptions retryPolicy,
         bool overwrite,
         IProgress<string>? progress = null);
+    Task<StartupsDeployResources> DeployReactAppAsync(
+        string tenantId,
+        string subscription,
+        string storageAccount,
+        string resourceGroup,
+        string reactProject,     // <- This comes after resourceGroup
+        RetryPolicyOptions retryPolicy,
+        bool build = true,
+        string? buildPath = null,
+        bool overwrite = true);
 }
 
 public sealed record StartupsDeployResources(string StorageAccount, string Container, string Status);
