@@ -62,7 +62,14 @@ public sealed class StartupsDeployCommand(ILogger<StartupsDeployCommand> logger)
             _logger.LogInformation("Starting deployment to storage account {StorageAccount}", options.StorageAccount);
 
             var startupsService = context.GetService<IStartupsService>();
-            var result = await startupsService.DeployStaticWebAsync(options.Tenant!, options.Subscription!, options.StorageAccount!, options.ResourceGroup!, options.SourcePath!, options.RetryPolicy!, options.Overwrite!);
+            var result = await startupsService.DeployStaticWebAsync(
+                options.Tenant!,
+                options.Subscription!,
+                options.StorageAccount!,
+                options.ResourceGroup!,
+                options.SourcePath!,
+                options.RetryPolicy!,
+                options.Overwrite!);
 
             _logger.LogInformation("Successfully deployed to storage account {StorageAccount}", options.StorageAccount);
             context.Response.Results = ResponseResult.Create(result, DeployJsonContext.Default.StartupsDeployResources);

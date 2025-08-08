@@ -13,6 +13,7 @@ using Azure.Identity;
 using Azure.ResourceManager.Resources;
 using Azure.Storage.Blobs.Models;
 using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace AzureMcp.Areas.Startups.Services
 {
@@ -41,7 +42,7 @@ namespace AzureMcp.Areas.Startups.Services
             string sourcePath,
             RetryPolicyOptions retryPolicy,
             bool overwrite = false,
-            IProgress<string>? progress = null // progress reporting
+            IProgress<string>? progress = null
         )
         {
             progress?.Report("Validating source path");
@@ -55,12 +56,14 @@ namespace AzureMcp.Areas.Startups.Services
             progress?.Report("Deployment completed successfully");
 
             ValidateRequiredParameters(subscription, storageAccount, resourceGroup, sourcePath);
-            
+
             // Storage account name validation
             if (!IsValidStorageAccountName(storageAccount))
             {
                 throw new ArgumentException("Storage account name must be between 3-24 characters long and only contain letters and numbers");
             }
+
+            var deployPath = await PrepareDeployAsync(sourcePath, progress);
 
             // Source path validation
             if (!Directory.Exists(sourcePath))
@@ -74,7 +77,7 @@ namespace AzureMcp.Areas.Startups.Services
             }
 
             // Get subscription and resource group
-            var credential = GetCredential(tenantId);
+            // var credential = GetCredential(tenantId);
 
             var armClient = await CreateArmClientAsync(tenantId, retryPolicy);
             var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
@@ -123,10 +126,65 @@ namespace AzureMcp.Areas.Startups.Services
             await EnableStaticWebsiteAsync(connectionString, cancellationToken: default);
             await UploadFilesAsync(connectionString, sourcePath, overwrite, cancellationToken: default);
 
+            if (IsReactProject(sourcePath))
+            {
+                await EnableSpaRoutingAsync(connectionString, default);
+                progress?.Report("Enabled SPA routing for React app");
+            }
+
             return new StartupsDeployResources(
                 StorageAccount: storageAccount,
                 Container: "$web",
                 Status: "Success");
+        }
+
+        private static async Task<string> PrepareDeployAsync(string sourcePath, IProgress<string>? progress = null)
+        {
+            if (IsReactProject(sourcePath))
+            {
+                progress?.Report("Detected React project - building");
+                var buildPath = Path.Combine(sourcePath, "build");
+
+                if (!Directory.Exists(buildPath))
+                {
+                    await BuildReactAppAsync(sourcePath);
+                    progress?.Report("React build completed");
+                }
+                else
+                {
+                    progress?.Report("Using existing React build");
+                }
+                return buildPath;
+            }
+            if (!Directory.Exists(sourcePath))
+            {
+                throw new DirectoryNotFoundException($"Source directory '{sourcePath}' does not exist");
+            }
+            if (!Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories).Any())
+            {
+                throw new ArgumentException($"Source directory '{sourcePath}' is empty");
+            }
+            return sourcePath;
+        }
+
+        private static bool IsReactProject(string path)
+        {
+            var packageJsonPath = Path.Combine(path, "package.json");
+            if (!File.Exists(packageJsonPath))
+                return false;
+            
+            try
+            {
+                var packageJson = File.ReadAllText(packageJsonPath);
+                // Check for React-specific indicators
+                return packageJson.Contains("\"react\"") || 
+                    packageJson.Contains("react-scripts") ||
+                    packageJson.Contains("@vitejs/plugin-react");
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public async Task<StartupsDeployResources> DeployReactAppAsync(
@@ -172,7 +230,7 @@ namespace AzureMcp.Areas.Startups.Services
                 resourceGroup, finalBuildPath, retryPolicy, overwrite);
 
             // Enable SPA routing for React apps
-            var credential = new AzureCliCredential(new AzureCliCredentialOptions { TenantId = tenantId });
+            var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = tenantId });
             var armClient = new ArmClient(credential);
             var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
