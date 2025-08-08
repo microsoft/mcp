@@ -44,7 +44,7 @@ public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> log
                 }
             ),
             new CapabilitySection(
-                Name: "🛠️ Code Generation Capabilities",
+                Name: "Code Generation Capabilities",
                 Description: "Generate and scaffold new applications",
                 Items: new List<Capability>
                 {
@@ -67,7 +67,7 @@ public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> log
                 }
             ),
             new CapabilitySection(
-                Name: "📋 Validation & Helpers",
+                Name: "Validation & Helpers",
                 Description: "Built-in validation and helper functions",
                 Items: new List<Capability>
                 {
@@ -253,12 +253,6 @@ public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> log
     public record StartupsGuidanceCommandResult(StartupsGuidanceInfo Info);
 }
 
-[System.Text.Json.Serialization.JsonSourceGenerationOptions(WriteIndented = false, GenerationMode = System.Text.Json.Serialization.JsonSourceGenerationMode.Default)]
+[System.Text.Json.Serialization.JsonSourceGenerationOptions(WriteIndented = false)]
 [System.Text.Json.Serialization.JsonSerializable(typeof(StartupsGuidanceCommand.StartupsGuidanceCommandResult))]
-[System.Text.Json.Serialization.JsonSerializable(typeof(StartupsGuidanceCommand.StartupsGuidanceInfo))]
-[System.Text.Json.Serialization.JsonSerializable(typeof(StartupsGuidanceCommand.CapabilitySection))]
-[System.Text.Json.Serialization.JsonSerializable(typeof(StartupsGuidanceCommand.Capability))]
-[System.Text.Json.Serialization.JsonSerializable(typeof(StartupsGuidanceCommand.SamplePrompt))]
-[System.Text.Json.Serialization.JsonSerializable(typeof(StartupsGuidanceCommand.ValidationRule))]
-[System.Text.Json.Serialization.JsonSerializable(typeof(StartupsGuidanceCommand.QuickStartStep))]
 internal partial class GuidanceJsonContext : System.Text.Json.Serialization.JsonSerializerContext;
