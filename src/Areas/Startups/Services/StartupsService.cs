@@ -148,9 +148,10 @@ namespace AzureMcp.Areas.Startups.Services
                 progress?.Report("Enabled SPA routing for React app");
             }
 
-            var websiteUrl = $"https://{storageAccount}.z{GetRegionCode(storageAccountResource.Data.Location)}.web.core.windows.net/";
+            var websiteUrl = storageAccountResource.Data.PrimaryEndpoints.WebUri?.ToString() ?? 
+                 $"https://{storageAccount}.web.core.windows.net/";
             var portalUrl = $"https://portal.azure.com/#@{tenantId}/resource/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccount}/staticwebsite";
-            var containerUrl = $"https://portal.azure.com/#@{tenantId}/resource/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccount}/containers";
+            var containerUrl = $"https://portal.azure.com/#view/Microsoft_Azure_Storage/ContainerMenuBlade/~/overview/storageAccountId/%2Fsubscriptions%2F{subscription}%2FresourceGroups%2F{resourceGroup}%2Fproviders%2FMicrosoft.Storage%2FstorageAccounts%2F{storageAccount}/path/%24web";
 
             return new StartupsDeployResources(
                 StorageAccount: storageAccount,
