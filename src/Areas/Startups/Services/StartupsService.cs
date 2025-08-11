@@ -63,8 +63,6 @@ namespace AzureMcp.Areas.Startups.Services
                 throw new ArgumentException("Storage account name must be between 3-24 characters long and only contain letters and numbers");
             }
 
-            var deployPath = await PrepareDeployAsync(sourcePath, progress);
-
             // Source path validation
             if (!Directory.Exists(sourcePath))
             {
@@ -76,9 +74,28 @@ namespace AzureMcp.Areas.Startups.Services
                 throw new ArgumentException($"Source directory '{sourcePath}' is empty");
             }
 
-            // Get subscription and resource group
-            // var credential = GetCredential(tenantId);
+            // Auto-detect React build folder
+            if (IsReactProject(sourcePath))
+            {
+                var buildPath = Path.Combine(sourcePath, "build");
+                if (Directory.Exists(buildPath))
+                {
+                    progress?.Report("Detected React project - using build folder");
+                    sourcePath = buildPath; // Redirect to build folder automatically
+                }
+                else
+                {
+                    progress?.Report("React project detected but no build folder found. Run 'npm run build' first.");
+                    throw new DirectoryNotFoundException($"React build folder not found at '{buildPath}'. Please run 'npm run build' first.");
+                }
+            }
 
+            if (!Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories).Any())
+            {
+                throw new ArgumentException($"Source directory '{sourcePath}' is empty");
+            }
+
+            // Get subscription and resource group
             var armClient = await CreateArmClientAsync(tenantId, retryPolicy);
             var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
             var resource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
@@ -87,19 +104,18 @@ namespace AzureMcp.Areas.Startups.Services
             var storageAccounts = resource.Value.GetStorageAccounts();
             StorageAccountResource storageAccountResource;
 
-            var availability = await subscriptionResource.CheckStorageAccountNameAvailabilityAsync(new StorageAccountNameAvailabilityContent(storageAccount));
-
-            if (availability.Value.IsNameAvailable != true)
-            {
-                throw new ArgumentException($"Storage account name '{storageAccount}' is not available globally due to {availability.Value.Reason}. Please choose a different name");
-            }
-            
             if (await storageAccounts.ExistsAsync(storageAccount))
             {
                 storageAccountResource = await storageAccounts.GetAsync(storageAccount, null);
             }
             else
             {
+                var availability = await subscriptionResource.CheckStorageAccountNameAvailabilityAsync(new StorageAccountNameAvailabilityContent(storageAccount));
+
+                if (availability.Value.IsNameAvailable != true)
+                {
+                    throw new ArgumentException($"Storage account name '{storageAccount}' is not available globally due to {availability.Value.Reason}. Please choose a different name");
+                }
                 // Create storage account with static website support
                 var data = new StorageAccountCreateOrUpdateContent(
                     new StorageSku(StorageSkuName.StandardLrs),
@@ -113,7 +129,7 @@ namespace AzureMcp.Areas.Startups.Services
 
                 storageAccountResource = (await storageAccounts.CreateOrUpdateAsync(WaitUntil.Completed, storageAccount, data)).Value;
             }
-            
+
             // Get storage account connection string
             var keys = new List<StorageAccountKey>();
             await foreach (var key in storageAccountResource.GetKeysAsync())
@@ -132,39 +148,17 @@ namespace AzureMcp.Areas.Startups.Services
                 progress?.Report("Enabled SPA routing for React app");
             }
 
+            var websiteUrl = $"https://{storageAccount}.z{GetRegionCode(storageAccountResource.Data.Location)}.web.core.windows.net/";
+            var portalUrl = $"https://portal.azure.com/#@{tenantId}/resource/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccount}/staticwebsite";
+            var containerUrl = $"https://portal.azure.com/#@{tenantId}/resource/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccount}/containers";
+
             return new StartupsDeployResources(
                 StorageAccount: storageAccount,
                 Container: "$web",
-                Status: "Success");
-        }
-
-        private static async Task<string> PrepareDeployAsync(string sourcePath, IProgress<string>? progress = null)
-        {
-            if (IsReactProject(sourcePath))
-            {
-                progress?.Report("Detected React project - building");
-                var buildPath = Path.Combine(sourcePath, "build");
-
-                if (!Directory.Exists(buildPath))
-                {
-                    await BuildReactAppAsync(sourcePath);
-                    progress?.Report("React build completed");
-                }
-                else
-                {
-                    progress?.Report("Using existing React build");
-                }
-                return buildPath;
-            }
-            if (!Directory.Exists(sourcePath))
-            {
-                throw new DirectoryNotFoundException($"Source directory '{sourcePath}' does not exist");
-            }
-            if (!Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories).Any())
-            {
-                throw new ArgumentException($"Source directory '{sourcePath}' is empty");
-            }
-            return sourcePath;
+                Status: "Success",
+                WebsiteUrl: websiteUrl,
+                PortalUrl: portalUrl,
+                ContainerUrl: containerUrl);
         }
 
         private static bool IsReactProject(string path)
@@ -172,12 +166,12 @@ namespace AzureMcp.Areas.Startups.Services
             var packageJsonPath = Path.Combine(path, "package.json");
             if (!File.Exists(packageJsonPath))
                 return false;
-            
+
             try
             {
                 var packageJson = File.ReadAllText(packageJsonPath);
                 // Check for React-specific indicators
-                return packageJson.Contains("\"react\"") || 
+                return packageJson.Contains("\"react\"") ||
                     packageJson.Contains("react-scripts") ||
                     packageJson.Contains("@vitejs/plugin-react");
             }
@@ -186,68 +180,6 @@ namespace AzureMcp.Areas.Startups.Services
                 return false;
             }
         }
-
-        public async Task<StartupsDeployResources> DeployReactAppAsync(
-            string tenantId,
-            string subscription,
-            string storageAccount,
-            string resourceGroup,
-            string reactProject,
-            RetryPolicyOptions retryPolicy,
-            bool build = true,
-            string? buildPath = null,
-            bool overwrite = true
-        )
-        {
-            // Validate React project directory
-            if (!Directory.Exists(reactProject))
-            {
-                throw new DirectoryNotFoundException($"React project directory '{reactProject}' does not exist");
-            }
-
-            // Check for package.json to confirm it's a React project
-            var packageJsonPath = Path.Combine(reactProject, "package.json");
-            if (!File.Exists(packageJsonPath))
-            {
-                throw new ArgumentException($"No package.json found in '{reactProject}'. Please ensure this is a valid React project.");
-            }
-
-            string finalBuildPath = buildPath ?? Path.Combine(reactProject, "build");
-
-            if (build)
-            {
-                await BuildReactAppAsync(reactProject);
-            }
-
-            // Validate build output exists
-            if (!Directory.Exists(finalBuildPath))
-            {
-                throw new DirectoryNotFoundException($"Build output directory '{finalBuildPath}' does not exist. Please run 'npm run build' first or set build=true.");
-            }
-
-            // Deploy the built React app
-            var result = await DeployStaticWebAsync(tenantId, subscription, storageAccount,
-                resourceGroup, finalBuildPath, retryPolicy, overwrite);
-
-            // Enable SPA routing for React apps
-            var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = tenantId });
-            var armClient = new ArmClient(credential);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
-            var storageAccountResource = await resource.Value.GetStorageAccounts().GetAsync(storageAccount);
-
-            var keys = new List<StorageAccountKey>();
-            await foreach (var key in storageAccountResource.Value.GetKeysAsync())
-            {
-                keys.Add(key);
-            }
-            var connectionString = $"DefaultEndpointsProtocol=https;AccountName={storageAccount};AccountKey={keys.First().Value};EndpointSuffix=core.windows.net";
-
-            await EnableSpaRoutingAsync(connectionString, default);
-
-            return result;
-        }
-
         private static async Task EnableStaticWebsiteAsync(string connectionString, CancellationToken cancellationToken)
         {
             var blobServiceClient = new BlobServiceClient(connectionString);
@@ -336,56 +268,39 @@ namespace AzureMcp.Areas.Startups.Services
             await blobServiceClient.SetPropertiesAsync(properties, cancellationToken);
         }
 
-        private static async Task BuildReactAppAsync(string reactProject)
+        // Returns the region code used in Azure static website URLs
+        private static string GetRegionCode(string location)
         {
-            await Task.Run(async () =>
+            // Azure region codes for static website URLs
+            return location.ToLowerInvariant() switch
             {
-                var installProcess = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "npm",
-                        Arguments = "install",
-                        WorkingDirectory = reactProject,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    }
-                };
-
-                installProcess.Start();
-                installProcess.WaitForExit();
-
-                if (installProcess.ExitCode != 0)
-                {
-                    throw new InvalidOperationException($"npm install failed in '{reactProject}' with exit code {installProcess.ExitCode}");
-                }
-
-                // Run npm run build
-                var buildProcess = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "npm",
-                        Arguments = "run build",
-                        WorkingDirectory = reactProject,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    }
-                };
-
-                buildProcess.Start();
-                await buildProcess.WaitForExitAsync();
-
-                if (buildProcess.ExitCode != 0)
-                {
-                    var error = await buildProcess.StandardError.ReadToEndAsync();
-                    throw new InvalidOperationException($"npm run build failed: {error}");
-                }
-            });
+                "westus2" => "2",
+                "eastus2" => "2",
+                "centralus" => "1",
+                "westus" => "1",
+                "eastus" => "1",
+                "northcentralus" => "1",
+                "southcentralus" => "1",
+                "westeurope" => "1",
+                "northeurope" => "1",
+                "southeastasia" => "1",
+                "australiaeast" => "1",
+                "australiasoutheast" => "1",
+                "uksouth" => "1",
+                "ukwest" => "1",
+                "japaneast" => "1",
+                "japanwest" => "1",
+                "canadacentral" => "1",
+                "canadaeast" => "1",
+                "francecentral" => "1",
+                "francesouth" => "1",
+                "germanywestcentral" => "1",
+                "norwayeast" => "1",
+                "switzerlandnorth" => "1",
+                "uaenorth" => "1",
+                "brazilsouth" => "1",
+                _ => "1"
+            };
         }
     }
 }
