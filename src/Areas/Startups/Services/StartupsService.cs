@@ -1,19 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 using AzureMcp.Options;
 using Azure.ResourceManager.Storage;
 using Azure.ResourceManager.Storage.Models;
 using Azure; // WaitUntil
-using Azure.ResourceManager;
 using AzureMcp.Services.Azure.Subscription;
 using AzureMcp.Services.Azure.Tenant;
 using Azure.Storage.Blobs;
 using AzureMcp.Services.Azure;
-using Azure.Identity;
 using Azure.ResourceManager.Resources;
 using Azure.Storage.Blobs.Models;
-using System.Diagnostics;
-using Microsoft.Extensions.Logging;
 
 namespace AzureMcp.Areas.Startups.Services
 {
