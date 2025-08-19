@@ -86,6 +86,7 @@ internal class Program
             new AzureMcp.Storage.StorageSetup(),
             new AzureMcp.VirtualDesktop.VirtualDesktopSetup(),
             new AzureMcp.Workbooks.WorkbooksSetup(),
+            new AzureMcp.Ai.AiSetup(),
 #if !BUILD_NATIVE
             new AzureMcp.BicepSchema.BicepSchemaSetup(),
             new AzureMcp.Cosmos.CosmosSetup(),

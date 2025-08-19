@@ -332,6 +332,7 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureMcp.Quota.LiveTests", "areas\quota\tests\AzureMcp.Quota.LiveTests\AzureMcp.Quota.LiveTests.csproj", "{1DC07369-9133-4B02-B2DD-A7E277163CB4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureMcp.Quota.UnitTests", "areas\quota\tests\AzureMcp.Quota.UnitTests\AzureMcp.Quota.UnitTests.csproj", "{0DDDCBF8-2DE9-466A-B94F-8A54687E1CC6}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "virtualdesktop", "virtualdesktop", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3F159DE4-1438-4821-AA38-9BC3441661F0}"
@@ -353,6 +354,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{75F7911D-A518-6F54-1978-62BEAF400CFE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureMcp.ResourceHealth.UnitTests", "areas\resourcehealth\tests\AzureMcp.ResourceHealth.UnitTests\AzureMcp.ResourceHealth.UnitTests.csproj", "{2A346B5F-D5FB-4454-ABBB-5E60280CBDF2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ai", "ai", "{47625F0C-E154-82D2-4476-0044D967C5BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -1563,5 +1566,6 @@ Global
 		{FD987DB2-B19B-42EE-99C9-BF743D1288E3} = {74490446-B0E8-F412-A296-BAE0BDC966AF}
 		{75F7911D-A518-6F54-1978-62BEAF400CFE} = {A29DD7BA-996D-C4EA-7CB3-91A08E5445CC}
 		{2A346B5F-D5FB-4454-ABBB-5E60280CBDF2} = {75F7911D-A518-6F54-1978-62BEAF400CFE}
+		{47625F0C-E154-82D2-4476-0044D967C5BA} = {87783708-79E3-AD60-C783-1D52BE7DE4BB}
 	EndGlobalSection
 EndGlobal
