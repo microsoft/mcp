@@ -4,10 +4,10 @@
 using System.Text.Json;
 using Azure.Identity;
 using Azure.Mcp.Core.Services.Http;
-using Azure.Mcp.Tools.Kusto.Services;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tools.Kusto.Services;
 using ModelContextProtocol.Client;
 using Xunit;
 using MsOptions = Microsoft.Extensions.Options.Options;

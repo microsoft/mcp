@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Xml;
-using Azure.Monitor.Query;
-using Azure.Monitor.Query.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Models;
+using Azure.Monitor.Query;
+using Azure.Monitor.Query.Models;
 using MetricDefinition = Azure.Mcp.Tools.Monitor.Models.MetricDefinition;
 using MetricNamespace = Azure.Mcp.Tools.Monitor.Models.MetricNamespace;
 using MetricResult = Azure.Mcp.Tools.Monitor.Models.MetricResult;

@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.ResourceManager;
-using Azure.ResourceManager.Authorization;
-using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.Authorization.Models;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Authorization;
 
 namespace Azure.Mcp.Tools.Authorization.Services;
 

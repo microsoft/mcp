@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Authorization.Models;
 
 namespace Azure.Mcp.Tools.Authorization.Services;
 

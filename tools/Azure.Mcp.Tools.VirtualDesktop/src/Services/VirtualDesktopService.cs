@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.ResourceManager.DesktopVirtualization;
-using Azure.Mcp.Tools.VirtualDesktop.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.VirtualDesktop.Models;
+using Azure.ResourceManager.DesktopVirtualization;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Services;
 

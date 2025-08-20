@@ -4,9 +4,6 @@
 using Azure;
 using Azure.Core;
 using Azure.Developer.LoadTesting;
-using Azure.ResourceManager;
-using Azure.ResourceManager.LoadTesting;
-using Azure.ResourceManager.Resources;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -14,6 +11,9 @@ using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
+using Azure.ResourceManager;
+using Azure.ResourceManager.LoadTesting;
+using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.LoadTesting.Services;
 

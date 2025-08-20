@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Storage.Blobs.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Models;
+using Azure.Storage.Blobs.Models;
 
 namespace Azure.Mcp.Tools.Storage.Services;
 

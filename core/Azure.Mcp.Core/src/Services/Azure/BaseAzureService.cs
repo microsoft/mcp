@@ -4,10 +4,10 @@
 using System.Reflection;
 using System.Runtime.Versioning;
 using Azure.Core;
-using Azure.ResourceManager;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Services.Azure;

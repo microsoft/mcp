@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
+using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Aks.Commands.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
-using Azure.Mcp.Core.Models.Command;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;

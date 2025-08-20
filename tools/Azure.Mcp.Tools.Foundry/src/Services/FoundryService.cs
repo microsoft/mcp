@@ -4,16 +4,16 @@
 using System.Text;
 using Azure;
 using Azure.AI.Projects;
-using Azure.ResourceManager;
-using Azure.ResourceManager.CognitiveServices;
-using Azure.ResourceManager.CognitiveServices.Models;
-using Azure.ResourceManager.Resources;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
+using Azure.ResourceManager;
+using Azure.ResourceManager.CognitiveServices;
+using Azure.ResourceManager.CognitiveServices.Models;
+using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.Foundry.Services;
 

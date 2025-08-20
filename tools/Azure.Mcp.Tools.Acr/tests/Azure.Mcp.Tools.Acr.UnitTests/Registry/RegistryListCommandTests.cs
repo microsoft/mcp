@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
-using Azure.Mcp.Tools.Acr.Commands.Registry;
-using Azure.Mcp.Tools.Acr.Services;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Acr.Commands.Registry;
+using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;

@@ -4,10 +4,10 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
-using Azure.Security.KeyVault.Keys;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Security.KeyVault.Keys;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.LiveTests;

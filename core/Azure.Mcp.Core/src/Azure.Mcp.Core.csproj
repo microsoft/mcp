@@ -19,7 +19,4 @@
     <PackageReference Include="Microsoft.Extensions.Azure" />
     <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Microsoft.Mcp.Core\src\Microsoft.Mcp.Core.csproj" />
-  </ItemGroup>
 </Project>

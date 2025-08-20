@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.ResourceManager.Redis;
-using Azure.ResourceManager.Redis.Models;
-using Azure.ResourceManager.RedisEnterprise;
 using Azure.Mcp.Core.Models.Identity;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
@@ -12,6 +9,9 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Redis.Models.CacheForRedis;
 using Azure.Mcp.Tools.Redis.Models.ManagedRedis;
+using Azure.ResourceManager.Redis;
+using Azure.ResourceManager.Redis.Models;
+using Azure.ResourceManager.RedisEnterprise;
 
 namespace Azure.Mcp.Tools.Redis.Services;
 

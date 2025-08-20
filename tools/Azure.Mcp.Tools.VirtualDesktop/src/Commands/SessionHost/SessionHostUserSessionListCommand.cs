@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using Azure;
+using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.VirtualDesktop.Models;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
-using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;

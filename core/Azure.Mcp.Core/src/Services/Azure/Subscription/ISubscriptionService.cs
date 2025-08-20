@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.ResourceManager.Resources;
 using Azure.Mcp.Core.Options;
+using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Core.Services.Azure.Subscription;
 

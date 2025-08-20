@@ -3,6 +3,12 @@
 
 using Azure;
 using Azure.Data.Tables;
+using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Caching;
+using Azure.Mcp.Tools.Storage.Models;
 using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Storage;
 using Azure.ResourceManager.Storage.Models;
@@ -13,12 +19,6 @@ using Azure.Storage.Files.DataLake;
 using Azure.Storage.Files.Shares;
 using Azure.Storage.Files.Shares.Models;
 using Azure.Storage.Queues;
-using Azure.Mcp.Core.Options;
-using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
-using Azure.Mcp.Tools.Storage.Models;
 
 namespace Azure.Mcp.Tools.Storage.Services;
 

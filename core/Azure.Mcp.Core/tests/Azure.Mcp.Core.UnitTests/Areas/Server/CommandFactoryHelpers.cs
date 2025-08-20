@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
-using Azure.Mcp.Tools.AppConfig;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Areas.Subscription;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Telemetry;
+using Azure.Mcp.Tools.AppConfig;
 using Azure.Mcp.Tools.KeyVault;
 using Azure.Mcp.Tools.Storage;
 using Microsoft.Extensions.DependencyInjection;

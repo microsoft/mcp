@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.ResourceManager.CognitiveServices.Models;
 using Azure.Mcp.Tools.Foundry.Models;
+using Azure.ResourceManager.CognitiveServices.Models;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 

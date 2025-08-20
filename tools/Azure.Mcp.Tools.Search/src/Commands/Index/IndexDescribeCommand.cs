@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Search.Documents.Indexes.Models;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
+using Azure.Search.Documents.Indexes.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Search.Commands.Index;

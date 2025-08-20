@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Messaging.ServiceBus;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ServiceBus.Models;
+using Azure.Messaging.ServiceBus;
 
 namespace Azure.Mcp.Tools.ServiceBus.Services;
 

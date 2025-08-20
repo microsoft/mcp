@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.BicepSchema.Services.ResourceProperties;
 using Azure.Mcp.Tools.BicepSchema.Services.ResourceProperties.Entities;
 using Azure.Mcp.Tools.BicepSchema.Services.Support;
-using Azure.Mcp.Core.Services.Azure;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Azure.Mcp.Tools.BicepSchema.Services

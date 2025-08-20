@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
 using Azure.Mcp.Tools.Acr.Services;
-using Azure.Mcp.Core.Areas;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

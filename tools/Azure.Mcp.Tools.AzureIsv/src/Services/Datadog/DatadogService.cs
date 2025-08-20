@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.ResourceManager.Datadog;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.ResourceManager.Datadog;
 
 namespace Azure.Mcp.Tools.AzureIsv.Services.Datadog;
 

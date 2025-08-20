@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
-using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Models.Option;
+using Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
+using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;

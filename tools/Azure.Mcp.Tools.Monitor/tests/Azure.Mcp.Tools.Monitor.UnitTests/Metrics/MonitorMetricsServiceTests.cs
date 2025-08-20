@@ -3,10 +3,10 @@
 
 using Azure;
 using Azure.Core;
-using Azure.Monitor.Query;
-using Azure.Monitor.Query.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Services;
+using Azure.Monitor.Query;
+using Azure.Monitor.Query.Models;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;

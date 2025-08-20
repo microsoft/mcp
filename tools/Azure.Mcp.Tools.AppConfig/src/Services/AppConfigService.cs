@@ -3,14 +3,14 @@
 
 using Azure.Core;
 using Azure.Data.AppConfiguration;
-using Azure.ResourceManager.AppConfiguration;
-using Azure.ResourceManager.Resources;
-using Azure.Mcp.Tools.AppConfig.Models;
 using Azure.Mcp.Core.Models.Identity;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.AppConfig.Models;
+using Azure.ResourceManager.AppConfiguration;
+using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.AppConfig.Services;
 

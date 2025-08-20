@@ -3,9 +3,9 @@
 
 using Azure;
 using Azure.Core;
-using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Npgsql;
 
 namespace Azure.Mcp.Tools.Postgres.Services;

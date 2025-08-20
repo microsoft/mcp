@@ -4,15 +4,15 @@
 using System.Text.Json.Nodes;
 using Azure;
 using Azure.Core;
-using Azure.Monitor.Query;
-using Azure.Monitor.Query.Models;
-using Azure.ResourceManager.OperationalInsights;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Models;
+using Azure.Monitor.Query;
+using Azure.Monitor.Query.Models;
+using Azure.ResourceManager.OperationalInsights;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 

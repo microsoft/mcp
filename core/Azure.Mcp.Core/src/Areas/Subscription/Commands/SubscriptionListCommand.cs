@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.ResourceManager.Resources;
 using Azure.Mcp.Core.Areas.Subscription.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Areas.Subscription.Commands;

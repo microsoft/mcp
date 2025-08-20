@@ -495,7 +495,7 @@ class Program
         try
         {
             var json = JsonSerializer.Serialize(toolsResult, SourceGenerationContext.Default.ListToolsResult);
-            
+
             await File.WriteAllTextAsync(filePath, EscapeCharactersForJson(json));
         }
         catch (Exception ex)
@@ -805,7 +805,7 @@ class Program
             {
                 await writer.WriteLineAsync("🔴 **Poor** - The tool selection system requires major improvements.");
             }
-            
+
             // Add recommendation based on confidence distribution
             if (metrics.VeryHighConfidencePercentage >= 70)
             {
@@ -859,12 +859,12 @@ class Program
         // Print summary to console for feedback
         Console.WriteLine($"🧪 Tested {promptCount} prompts:");
         Console.WriteLine($"   📊 Top choice: {metricsForConsole.TopChoicePercentage:F1}%");
-    Console.WriteLine($"   💪 Very High confidence (≥0.8): {metricsForConsole.VeryHighConfidencePercentage:F1}%");
-    Console.WriteLine($"   🎯 High confidence (≥0.7): {metricsForConsole.HighConfidencePercentage:F1}%");
-    Console.WriteLine($"   ✅ Good confidence (≥0.6): {metricsForConsole.GoodConfidencePercentage:F1}%");
-    Console.WriteLine($"   👍 Fair confidence (≥0.5): {metricsForConsole.FairConfidencePercentage:F1}%");
-    Console.WriteLine($"   👌 Acceptable confidence (≥0.4): {metricsForConsole.AcceptableConfidencePercentage:F1}%");
-    Console.WriteLine($"   ⭐ Top + acceptable confidence (≥0.4): {metricsForConsole.TopChoiceAcceptableConfidencePercentage:F1}%");
+        Console.WriteLine($"   💪 Very High confidence (≥0.8): {metricsForConsole.VeryHighConfidencePercentage:F1}%");
+        Console.WriteLine($"   🎯 High confidence (≥0.7): {metricsForConsole.HighConfidencePercentage:F1}%");
+        Console.WriteLine($"   ✅ Good confidence (≥0.6): {metricsForConsole.GoodConfidencePercentage:F1}%");
+        Console.WriteLine($"   👍 Fair confidence (≥0.5): {metricsForConsole.FairConfidencePercentage:F1}%");
+        Console.WriteLine($"   👌 Acceptable confidence (≥0.4): {metricsForConsole.AcceptableConfidencePercentage:F1}%");
+        Console.WriteLine($"   ⭐ Top + acceptable confidence (≥0.4): {metricsForConsole.TopChoiceAcceptableConfidencePercentage:F1}%");
     }
 
     private static async Task<SuccessRateMetrics> CalculateSuccessRateAsync(VectorDB db, Dictionary<string, List<string>> toolNameWithPrompts, EmbeddingService embeddingService)

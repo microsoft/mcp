@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Tools.BicepSchema.Options;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.BicepSchema.Options;
 
 namespace Azure.Mcp.Tools.BicepSchema.Commands;
 

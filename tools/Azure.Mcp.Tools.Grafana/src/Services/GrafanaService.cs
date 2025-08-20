@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 // cSpell:ignore Grafanas
 
-using Azure.ResourceManager.Grafana;
 using Azure.Mcp.Core.Models.Identity;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.ResourceManager.Grafana;
 
 namespace Azure.Mcp.Tools.Grafana.Services;
 

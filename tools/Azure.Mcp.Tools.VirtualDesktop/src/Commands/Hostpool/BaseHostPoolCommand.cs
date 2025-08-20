@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
+using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.VirtualDesktop.Options;
 using Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
-using Azure.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 

@@ -4,11 +4,11 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Text.Json;
+using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Aks.Commands;
 using Azure.Mcp.Tools.Aks.Commands.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
