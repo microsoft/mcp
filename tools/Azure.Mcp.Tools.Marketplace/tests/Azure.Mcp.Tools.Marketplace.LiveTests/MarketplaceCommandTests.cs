@@ -9,6 +9,7 @@ using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
 using Microsoft.Extensions.Caching.Memory;
 using Xunit;
+using Azure.Mcp.Tests;
 
 namespace Azure.Mcp.Tools.Marketplace.LiveTests;
 

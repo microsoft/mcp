@@ -2,9 +2,14 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Builder;
+using System.CommandLine.Parsing;
 using System.Diagnostics;
+using System.Text.Json;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models;
+using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;

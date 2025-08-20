@@ -13,6 +13,8 @@ using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.CommandLine.Parsing;
+using System.Text.Json;
 
 internal class Program
 {
