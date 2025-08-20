@@ -1,6 +1,5 @@
 <Project>
   <PropertyGroup>
-    <Version>0.5.7</Version>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>

@@ -1,0 +1,84 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Version>0.5.7</Version>
+    <CliName>azmcp</CliName>
+    <AssemblyTitle>Azure MCP Server</AssemblyTitle>
+    <Description>Azure MCP Server - Model Context Protocol implementation for Azure</Description>
+    <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
+    <BugsUrl>https://github.com/Microsoft/mcp/issues</BugsUrl>
+    <RepositoryUrl>https://github.com/Microsoft/mcp.git</RepositoryUrl>
+    <NpmPackageName>@azure/mcp</NpmPackageName>
+    <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>
+    <DockerImageName>azure-sdk/azure-mcp</DockerImageName>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>$(CliName)</AssemblyName>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Publishing settings -->
+    <IsAotCompatible>true</IsAotCompatible>
+    <PublishSingleFile>false</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <PublishTrimmed>false</PublishTrimmed>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+  <!-- Enable Trim and AOT Analyzers -->
+  <PropertyGroup>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+    <!-- Suppress IL3000 warning in Microsoft.Identity.Client.NativeInterop -->
+    <NoWarn>$(NoWarn);IL3000</NoWarn>
+  </PropertyGroup>
+  <!-- AOT native build flags -->
+  <PropertyGroup Condition="'$(BuildNative)' == 'true'">
+    <IsAotCompatible>true</IsAotCompatible>
+    <PublishAot>true</PublishAot>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>full</TrimMode>
+    <SelfContained>true</SelfContained>
+    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
+    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+  </PropertyGroup>
+  <!-- Debug configuration -->
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <PublishSingleFile>false</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+    <ProjectReference Include="..\..\..\tools\Azure.*\src\*.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- We need a package reference for Cosmos so we have a path to the native assets for exclusion later -->
+    <PackageReference Include="Microsoft.Azure.Cosmos" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="ModelContextProtocol" />
+    <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+  <!-- Remove non-AOT safe projects and packages when building native -->
+  <!-- https://github.com/Azure/azure-mcp-pr/issues/318 -->
+  <ItemGroup Condition="'$(BuildNative)' == 'true'">
+    <ProjectReference Remove="..\..\..\tools\cosmos\src\AzureMcp.Cosmos\AzureMcp.Cosmos.csproj" />
+    <ProjectReference Remove="..\..\..\tools\resourcehealth\src\AzureMcp.ResourceHealth\AzureMcp.ResourceHealth.csproj" />
+    <PackageReference Remove="Microsoft.Azure.Cosmos" />
+  </ItemGroup>
+  <!-- Remove Cosmos native files from the build output directory -->
+  <Target Name="RemoveCosmosNativeFiles" BeforeTargets="GetCopyToOutputDirectoryItems">
+    <ItemGroup>
+      <FilesToRemove Include="@(ContentWithTargetPath)" Condition="$([System.String]::new('%(FullPath)').Contains('$(PkgMicrosoft_Azure_Cosmos)'))" />
+    </ItemGroup>
+    <ItemGroup>
+      <ContentWithTargetPath Remove="@(FilesToRemove)" />
+    </ItemGroup>
+  </Target>
+</Project>
