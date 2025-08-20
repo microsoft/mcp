@@ -3,7 +3,7 @@
 
 [CmdletBinding()]
 param(
-    [switch] $SetDevOpsVariables
+    [switch] $Flat
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
@@ -43,9 +43,14 @@ try {
 
     $projects = Get-ChildItem -Path "$RepoRoot" -Filter "*.csproj" -Recurse | Sort-Object -Property FullName
 
-    foreach ($project in $projects) {
-        dotnet sln add $project
+    if($Flat) {
+        dotnet sln add --in-root $projects
+    } else {
+        foreach ($project in $projects) {
+            dotnet sln add $project
+        }
     }
+
 
     # Read the new project ids from the solution file
     $newProjectIds = Get-ProjectIds 'AzureMcp.sln'

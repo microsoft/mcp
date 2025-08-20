@@ -1,16 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <CliName>azmcp</CliName>
-    <AssemblyTitle>Azure MCP Server</AssemblyTitle>
-    <Description>Azure MCP Server - Model Context Protocol implementation for Azure</Description>
+    <Version>0.0.1</Version>
+    <CliName>mcptmp</CliName>
+    <AssemblyTitle>Template MCP Server</AssemblyTitle>
+    <Description>Template MCP Server - Basic Model Context Protocol implementation</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
     <BugsUrl>https://github.com/Microsoft/mcp/issues</BugsUrl>
     <RepositoryUrl>https://github.com/Microsoft/mcp.git</RepositoryUrl>
 
-    <NpmPackageName>@azure/mcp</NpmPackageName>
+    <NpmPackageName>@azure/mcp-template</NpmPackageName>
     <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>
-    <DockerImageName>azure-sdk/azure-mcp</DockerImageName>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -59,33 +58,16 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\AzureMcp.Core\AzureMcp.Core.csproj" />
-    <ProjectReference Include="..\..\..\areas\*\src\**\AzureMcp.*.csproj" />
+    <ProjectReference Include="..\..\..\core\Template.Mcp.Core\src\Template.Mcp.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\areas\*\src\**\Template.*.csproj" />
   </ItemGroup>
+
   <ItemGroup>
-    <!-- We need a package reference for Cosmos so we have a path to the native assets for exclusion later -->
-    <PackageReference Include="Microsoft.Azure.Cosmos" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 
-  <!-- Remove non-AOT safe projects and packages when building native -->
-  <!-- https://github.com/Azure/azure-mcp-pr/issues/318 -->
-  <ItemGroup Condition="'$(BuildNative)' == 'true'">
-    <ProjectReference Remove="..\..\..\areas\cosmos\src\AzureMcp.Cosmos\AzureMcp.Cosmos.csproj" />
-    <ProjectReference Remove="..\..\..\areas\resourcehealth\src\AzureMcp.ResourceHealth\AzureMcp.ResourceHealth.csproj" />
-    <PackageReference Remove="Microsoft.Azure.Cosmos" />
-  </ItemGroup>
-
-  <!-- Remove Cosmos native files from the build output directory -->
-  <Target Name="RemoveCosmosNativeFiles" BeforeTargets="GetCopyToOutputDirectoryItems">
-    <ItemGroup>
-      <FilesToRemove Include="@(ContentWithTargetPath)" Condition="$([System.String]::new('%(FullPath)').Contains('$(PkgMicrosoft_Azure_Cosmos)'))" />
-    </ItemGroup>
-    <ItemGroup>
-      <ContentWithTargetPath Remove="@(FilesToRemove)" />
-    </ItemGroup>
-  </Target>
 </Project>

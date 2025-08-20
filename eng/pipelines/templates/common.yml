@@ -8,6 +8,9 @@ parameters:
 - name: RunLiveTests
   type: boolean
   default: false
+- name: ServerName
+  type: string
+  default: none
 - name: VsixTargets
   type: object
   default:
@@ -41,7 +44,8 @@ extends:
       jobs:
       - template: /eng/pipelines/templates/jobs/initialize.yml
         parameters:
-          ReleaseRun: ${{ parameters.ReleaseRun }}
+          DynamicPrereleaseVersion: ${{ not(parameters.ReleaseRun) }}
+          ServerName: ${{ parameters.ServerName }}
 
     - stage: Build
       dependsOn:
@@ -53,8 +57,8 @@ extends:
       variables:
       - template: /eng/pipelines/templates/variables/image.yml
       - template: /eng/pipelines/templates/variables/globals.yml
-      - name: Version
-        value: $[ stageDependencies.Initialize.Initialize.outputs['Version.Version'] ]
+      - name: VersionSuffix
+        value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
       jobs:
       - template: /eng/pipelines/templates/jobs/analyze.yml
       - template: /eng/common/pipelines/templates/jobs/generate-job-matrix.yml
@@ -97,8 +101,8 @@ extends:
         variables:
         - template: /eng/pipelines/templates/variables/image.yml
         - template: /eng/pipelines/templates/variables/globals.yml
-        - name: Version
-          value: $[ stageDependencies.Initialize.Initialize.outputs['Version.Version'] ]
+        - name: VersionSuffix
+          value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
         jobs:
         - template: /eng/pipelines/templates/jobs/sign-and-pack.yml
         - ${{ each vsixtarget in parameters.VsixTargets }}:
@@ -106,6 +110,7 @@ extends:
             parameters:
               DependsOn: SignAndPack
               VsixTarget: ${{ vsixtarget }}
+              ServerName: ${{ parameters.ServerName }}
         - job: Verify_Signing
           displayName: "Verify Signing"
           dependsOn: SignAndPack
@@ -152,16 +157,16 @@ extends:
           variables:
           - template: /eng/pipelines/templates/variables/image.yml
           - template: /eng/pipelines/templates/variables/globals.yml
-          - name: Version
-            value: $[ stageDependencies.Initialize.Initialize.outputs['Version.Version'] ]
           jobs:
           - template: /eng/pipelines/templates/jobs/release.yml
             parameters:
               VsixTargets: ${{ parameters.VsixTargets }}
+              ServerName: ${{ parameters.ServerName }}
           - template: /eng/pipelines/templates/jobs/docker.yml
             parameters:
               ContainerRegistry: 'azuresdkimages'
               DeploymentEnvironment: 'public'
+              ServerName: ${{ parameters.ServerName }}
 
       - ${{ else }}:
         - stage: Integration
@@ -175,7 +180,7 @@ extends:
           variables:
           - template: /eng/pipelines/templates/variables/image.yml
           - template: /eng/pipelines/templates/variables/globals.yml
-          - name: Version
-            value: $[ stageDependencies.Initialize.Initialize.outputs['Version.Version'] ]
+          - name: VersionSuffix
+            value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
           jobs:
           - template: /eng/pipelines/templates/jobs/integration.yml

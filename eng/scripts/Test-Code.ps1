@@ -4,7 +4,8 @@
 [CmdletBinding()]
 param(
     [string] $TestResultsPath,
-    [string[]] $Areas,
+    [string[]] $Areas,  # for PR
+    [string] $Server, # for server areas
     [ValidateSet('Live', 'Unit', 'All')]
     [string] $TestType = 'Unit',
     [switch] $CollectCoverage,
@@ -210,12 +211,12 @@ if ($TestNativeBuild) {
     $excludedAreas = Get-NativeExcludedAreas
     $nonNativeAreas = @($areas | Where-Object { $_ -in $excludedAreas })
     $areas = @($areas | Where-Object { $_ -notin $excludedAreas })
-    
+
     if ($areas.Count -eq 0) {
         Write-Warning "All the specified area(s) [$($nonNativeAreas -join ', ')] are native incompatible, specify areas that support native builds or run without -TestNativeBuild."
         exit 0
     }
-    
+
     if ($nonNativeAreas.Count -gt 0) {
         Write-Warning "The following native incompatible areas will be excluded from native tests:"
         Write-Warning "  $($nonNativeAreas -join ', ')"

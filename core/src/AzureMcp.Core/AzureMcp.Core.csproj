@@ -3,10 +3,16 @@
     <IsAotCompatible>true</IsAotCompatible>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="**\Resources\*.txt" />
     <EmbeddedResource Include="**\Resources\*.json" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../Microsoft.Mcp.Core/src/Microsoft.Mcp.Core.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Azure.Core" />
     <PackageReference Include="Azure.Identity" />
@@ -14,14 +20,6 @@
     <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
     <PackageReference Include="Azure.ResourceManager" />
     <PackageReference Include="Microsoft.Extensions.Azure" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" />
-    <PackageReference Include="Microsoft.Identity.Client.Broker" />
-    <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="Newtonsoft.Json" />
-    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
-    <PackageReference Include="System.CommandLine" />
-    <PackageReference Include="System.Linq.AsyncEnumerable" />
   </ItemGroup>
 </Project>

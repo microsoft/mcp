@@ -1,0 +1,11 @@
+<Project>
+  <Target Name="ListProjectReferences">
+    <PropertyGroup>
+      <_ProjectReferences>@(ProjectReference->'&quot;%(FullPath)&quot;', ',%0D  ')</_ProjectReferences>
+      <_ProjectReferencesJson>[%0D  $([System.String]::Copy('$(_ProjectReferences)').Replace('\','\\'))%0D]</_ProjectReferencesJson>
+      <OutputFile Condition="'$(OutputFile)' == ''">$(MSBuildThisFileDirectory).work/project-references.json</OutputFile>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(OutputFile)" Lines="$(_ProjectReferencesJson)" Overwrite="true" />
+    <Message Text="Project references written to: $(OutputFile)" Importance="high"/>
+  </Target>
+</Project>

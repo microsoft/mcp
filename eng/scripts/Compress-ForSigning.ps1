@@ -11,6 +11,23 @@ param(
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
+if(!$ArtifactsPath) {
+    $ArtifactsPath = "$RepoRoot/.work"
+}
+
+if(!$ArtifactPrefix) {
+    $ArtifactPrefix = "build"
+}
+
+if(!$OutputPath) {
+    $OutputPath = "$RepoRoot/.work/signed"
+}
+
+if(!(Test-Path -Path $ArtifactsPath -PathType Container)) {
+    Write-Error "Artifacts path '$ArtifactsPath' does not exist or is not a directory."
+    return
+}
+
 $entitlements = "$RepoRoot/eng/dotnet-executable-entitlements.plist"
 
 $artifactDirectories = Get-ChildItem -Path $ArtifactsPath -Directory
@@ -38,12 +55,12 @@ foreach ($packageJson in $packageJsonFiles) {
 
     Write-Host "`nProcessing $os package in $packageDirectory" -ForegroundColor Yellow
     if ($os -eq 'darwin') {
-        # Only mac binaries need to be compressed. Linux binaries aren't signed and windows are signed uncompressed. 
-        
+        # Only mac binaries need to be compressed. Linux binaries aren't signed and windows are signed uncompressed.
+
         # Mac requires code signing the binary with an entitlements file such that the signed and notarized binary will properly invoke on
         # a mac system. However, the `codesign` command is only available on a MacOS agent. With that being the case, we simply special case
         # this function here to ensure that the script does not fail outside of a MacOS agent.
-        $binaryFilePath = "$packageDirectory/dist/azmcp"
+        $binaryFilePath = Resolve-Path "$packageDirectory/$($package.bin.Values[0])"
 
         if ($IsMacOS) {
             Invoke-LoggedCommand "chmod +x `"$binaryFilePath`""
@@ -52,7 +69,7 @@ foreach ($packageJson in $packageJsonFiles) {
         } else {
             Write-Warning "Mac binaries should be code signed with entitlements, but this is only possible on a mac agent."
         }
-        
+
         $archivePath = "$binaryFilePath.zip"
         Write-Host "Creating $archivePath" -ForegroundColor Yellow
         # We only need to compress the single binary file.

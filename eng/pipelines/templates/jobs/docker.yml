@@ -1,10 +1,10 @@
 parameters:
 - name: ContainerRegistry
   type: string
-  default: 'azuresdkimages'
 - name: DeploymentEnvironment
   type: string
-  default: 'public'
+- name: ServerName
+  type: string
 
 jobs:
 - job: CreateDockerArtifact
@@ -28,6 +28,20 @@ jobs:
       Contents: 'Dockerfile'
       TargetFolder: $(Build.ArtifactStagingDirectory)
 
+  - task: Powershell@2
+    displayName: 'Set Docker Variables'
+    name: SetVariables
+    inputs:
+      targetType: 'inline'
+      script: |
+        $properties = ./eng/scripts/Get-ProjectProperties.ps1 -ProjectName '${{parameters.ServerName}}.csproj'
+        $imageName = $properties.DockerImageName
+        $version = $properties.Version
+        Write-Host "##vso[task.setvariable variable=DockerImageName]$imageName"
+        Write-Host "##vso[task.setvariable variable=DockerImageVersion]$version$VersionSuffix"
+    env:
+      VERSION_SUFFIX: '$(VersionSuffix)'
+
   - task: 1ES.PublishPipelineArtifact@1
     inputs:
       path: $(Build.ArtifactStagingDirectory)
@@ -37,6 +51,9 @@ jobs:
   displayName: "Publish to ACR"
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
   dependsOn: CreateDockerArtifact
+  variables:
+    DockerImageName:  $[ dependencies.CreateDockerArtifact.outputs['SetVariables.DockerImageName'] ]
+    DockerImageVersion:  $[ dependencies.CreateDockerArtifact.outputs['SetVariables.DockerImageVersion'] ]
 
   templateContext:
     inputs:
@@ -48,8 +65,8 @@ jobs:
     - output: containerImage
       image: image:tag
       remoteImage:
-      - ${{ format('{0}.azurecr.io', parameters.ContainerRegistry) }}/${{ format('{0}/{1}', parameters.DeploymentEnvironment, 'azure-sdk/azure-mcp')}}:$(Version)
-      - ${{ format('{0}.azurecr.io', parameters.ContainerRegistry) }}/${{ format('{0}/{1}', parameters.DeploymentEnvironment, 'azure-sdk/azure-mcp')}}:latest
+      - ${{ format('{0}.azurecr.io', parameters.ContainerRegistry) }}/${{ format('{0}/{1}', parameters.DeploymentEnvironment, '$(DockerImageName)')}}:$(DockerImageVersion)
+      - ${{ format('{0}.azurecr.io', parameters.ContainerRegistry) }}/${{ format('{0}/{1}', parameters.DeploymentEnvironment, '$(DockerImageName)')}}:latest
 
   timeoutInMinutes: 120
   pool:
@@ -58,7 +75,6 @@ jobs:
     os: linux
 
   steps:
-
   - task: AzureCLI@2
     condition: succeeded()
     displayName: Login to ${{ parameters.ContainerRegistry }}

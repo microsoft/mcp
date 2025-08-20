@@ -9,7 +9,6 @@ $target = (($os -replace "win", "win32") -replace "osx", "darwin")
 $vsixName = "vscode-azure-mcp-extension-$target-$Version.vsix"
 $ignoreFile = ".vscodeignore"
 
-
 # Update VSIX version in eng/vscode/package.json
 $vsixPackageJsonPath = "./package.json"
 if (Test-Path $vsixPackageJsonPath) {

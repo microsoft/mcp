@@ -4,7 +4,8 @@ parameters:
   default: []
 - name: VsixTarget
   type: string
-  default: not-specified
+- name: ServerName
+  type: string
 
 jobs:
 - job:
@@ -40,7 +41,7 @@ jobs:
     displayName: "Install npm dependencies and vsce"
     workingDirectory: $(VsixServerPath)
 
-  - pwsh: ./ci-package.ps1 -os '$(VsixTarget)' -Version '$(Version)'
+  - pwsh: ./ci-package.ps1 -os '$(VsixTarget)' -VersionSuffix '$(VersionSuffix)'
     workingDirectory: $(VsixServerPath)
     displayName: "Package VS Code Extension"
 

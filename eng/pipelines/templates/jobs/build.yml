@@ -44,7 +44,7 @@ jobs:
       filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
       arguments: >
         -OutputPath '$(Build.ArtifactStagingDirectory)'
-        -Version '$(Version)'
+        -VersionSuffix '$(VersionSuffix)'
         -OperatingSystem '${{ parameters.OSName }}'
         -Architecture '$(Architecture)'
         -SelfContained
@@ -91,7 +91,7 @@ jobs:
       filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
       arguments: >
         -OutputPath '$(Agent.TempDirectory)/native-build'
-        -Version '$(Version)'
+        -VersionSuffix '$(VersionSuffix)'
         -OperatingSystem '${{ parameters.OSName }}'
         -Architecture '$(Architecture)'
         -CleanBuild

@@ -7,7 +7,6 @@ const childProcess = require('child_process')
 // Check if DEBUG environment variable is set
 const isDebugMode = process.env.DEBUG && (
   process.env.DEBUG.toLowerCase() === 'true' ||
-  process.env.DEBUG.includes('azure-mcp') ||
   process.env.DEBUG === '*'
 )
 

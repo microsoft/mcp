@@ -5,23 +5,37 @@
 param(
     [string] $PrereleaseLabel,
     [int] $PrereleaseNumber,
-    [string] $VariableName
+    [string] $VariableName,
+    [string] $ServerName
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
-$projectFile = "$RepoRoot/Directory.Build.props"
-$project = [xml](Get-Content $projectFile)
-$version = $project.Project.PropertyGroup.Version | Select-Object -First 1
-$version = [AzureEngSemanticVersion]::new($version)
+function GetVersion($server) {
+    $properties = & "$PSScriptRoot/Get-ProjectProperties.ps1" -ProjectName "$server.csproj"
+    $version = [AzureEngSemanticVersion]::new($properties.Version)
 
-if ($PrereleaseLabel) {
-    $version.PrereleaseLabel = $PrereleaseLabel
-    $version.PrereleaseNumber = $PrereleaseNumber
+    if ($PrereleaseLabel) {
+        $version.PrereleaseLabel = $PrereleaseLabel
+        $version.PrereleaseNumber = $PrereleaseNumber
+    }
+
+    return $version.ToString()
 }
 
-Write-Output $version.ToString()
-if($VariableName) {
-    Write-Host "##vso[task.setvariable variable=$VariableName;isOutput=true]$version"
+$serverNames = $Server ? @($Server) : @(Get-ChildItem "$RepoRoot/servers" -Directory | Select-Object -ExpandProperty Name)
+
+$versions = @()
+
+foreach ($server in $serverNames) {
+    $version = GetVersion $server
+    $versions += @{ Name = $server; Version = $version }
+
+    if ($VariableName -and $ServerName -eq $server) {
+        # If $ServerName is specified, set the version variable for the specific server
+        Write-Host "##vso[task.setvariable variable=$VariableName]$version"
+    }
 }
+
+$versions | Select-Object Name, Version

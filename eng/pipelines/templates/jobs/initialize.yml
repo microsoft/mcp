@@ -1,7 +1,8 @@
 parameters:
-- name: ReleaseRun
+- name: DynamicPrereleaseVersion
   type: boolean
-  default: false
+- name: ServerName
+  type: string
 
 jobs:
 - job: Initialize
@@ -10,36 +11,39 @@ jobs:
   - checkout: self
     fetchDepth: 0
 
+  - task: UseDotNet@2
+    displayName: "Use .NET SDK from global.json"
+    retryCountOnTaskFailure: 3
+    inputs:
+      useGlobalJson: true
+
   - pwsh: |
       Write-Host "Attaching build reason string to the build for additional tag generation."
       @('$(Build.Reason)') | ConvertTo-Json -AsArray | Out-File -FilePath $(System.DefaultWorkingDirectory)/build-reason.json -Encoding utf8
       Write-Host '##vso[task.addattachment type=AdditionalTags;name=AdditionalTags;]$(System.DefaultWorkingDirectory)/build-reason.json'
     displayName: Tag build reason
 
-  - pwsh: |
-      ./eng/scripts/Get-AreasToTest.ps1 -SetDevOpsVariables -TestType 'Live'
+  - pwsh: >
+      ./eng/scripts/Get-ToolsToTest.ps1
+      -SetDevOpsVariables
+      -TestType 'Live'
+      -ServerName '${{ parameters.ServerName }}'
     name: GetTestAreasLive
     displayName: "Get areas to test (Live)"
     workingDirectory: $(Build.SourcesDirectory)
 
-  - task: Powershell@2
-    name: Version
-    displayName: "Set package version"
-    condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
-    inputs:
-      pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Get-Version.ps1
-      ${{ if eq(parameters.ReleaseRun, true) }}:
-        arguments: >
-          -Variable 'Version'
-      ${{ elseif and(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
-        arguments: >
-          -Variable 'Version'
-          -PrereleaseLabel 'beta'
-          -PrereleaseNumber '$(Build.BuildId)'
-      ${{ else }}:
-        arguments: >
-          -Variable 'Version'
-          -PrereleaseLabel 'alpha'
-          -PrereleaseNumber '$(Build.BuildId)'
+  - pwsh: |
+      $label = $env:PRERELEASE_LABEL
+      $number = $env:PRERELEASE_NUMBER
+      $suffix = ($label -and $number) ? "-$label.$number" : ""
 
+      Write-Host "##vso[task.setvariable variable=VersionSuffix]$suffix"
+    name: GetVersion
+    displayName: "Get version suffix"
+    ${{ if eq(parameters.DynamicPrereleaseVersion, true) }}:
+      env:
+        PRERELEASE_NUMBER: '$(Build.BuildId)'
+        ${{ if and(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+            PRERELEASE_LABEL: 'beta'
+        ${{ else }}:
+            PRERELEASE_LABEL: 'alpha'

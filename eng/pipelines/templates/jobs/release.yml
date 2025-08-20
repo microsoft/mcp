@@ -2,6 +2,8 @@ parameters:
 - name: VsixTargets
   type: object
   default: []
+- name: ServerName
+  type: string
 
 jobs:
 - job: TagRepository
@@ -17,9 +19,14 @@ jobs:
   - template: /eng/common/pipelines/templates/steps/retain-run.yml
 
   - pwsh: |
-      gh release create $(Version) --title "$(Version)"
-      gh release upload $(Version) $(Pipeline.Workspace)/$(PipelineArtifactName)_packed/platform/*.tgz
-      gh release upload $(Version) $(Pipeline.Workspace)/$(PipelineArtifactName)_packed/wrapper/*.tgz
+      $serverName = '${{ parameters.ServerName }}'
+      $versionSuffix = $env:VERSIONSUFFIX
+      $version = (./eng/scripts/Get-Version.ps1 -Server $serverName).Version
+      $tag = "$serverName-$version$versionSuffix"
+
+      gh release create $tag --title "$serverName $version$versionSuffix"
+      gh release upload $tag $(Pipeline.Workspace)/$(PipelineArtifactName)_packed/**/*.tgz
+      gh release upload $tag $(Pipeline.Workspace)/vsix_package_*/**/*.vsix
     displayName: Create GitHub Release and upload artifacts
     env:
       GH_TOKEN: $(azuresdk-github-pat)
@@ -135,6 +142,8 @@ jobs:
     inputs:
       targetType: filePath
       filePath: $(Build.SourcesDirectory)/eng/scripts/Update-Version.ps1
+      arguments: >
+        -ServerName '${{ parameters.ServerName }}'
 
   - template: /eng/common/pipelines/templates/steps/create-pull-request.yml
     parameters:
