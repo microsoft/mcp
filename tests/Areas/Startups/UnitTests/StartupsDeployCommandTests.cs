@@ -62,15 +62,15 @@ public sealed class StartupsDeployCommandTests
     {
         // Arrange
         var htmlFile = Path.Combine(_tempDirectory, "index.html");
-        File.WriteAllText(htmlFile, "<html><body>Test</body></html>");
+        File.WriteAllText(htmlFile, "<html><body></body></html>");
 
         var expectedResult = new StartupsDeployResources(
-            StorageAccount: "teststorage",
+            StorageAccount: "",
             Container: "$web",
             Status: "Success",
             WebsiteUrl: "https://teststorage.z22.web.core.windows.net/",
-            PortalUrl: "https://portal.azure.com/...",
-            ContainerUrl: "https://portal.azure.com/..."
+            PortalUrl: "https:/teststorage.azure.com/...",
+            ContainerUrl: "https://teststorage.azure.com/..."
         );
 
         _startupsService.DeployStaticWebAsync(
@@ -137,13 +137,13 @@ public sealed class StartupsDeployCommandTests
         );
 
         _startupsService.DeployStaticWebAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<string>(), // tenantId
+            Arg.Any<string>(), // subscription
+            Arg.Any<string>(), // storageAccount
+            Arg.Any<string>(), // resourceGroup
+            Arg.Any<string>(), // sourcePath
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<bool>(),
+            Arg.Any<bool>(), // overwrite
             Arg.Any<IProgress<string>>()
         ).Returns(expectedResult);
 

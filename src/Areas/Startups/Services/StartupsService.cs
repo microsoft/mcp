@@ -71,22 +71,6 @@ namespace AzureMcp.Areas.Startups.Services
                 throw new ArgumentException($"Source directory '{sourcePath}' is empty");
             }
 
-            // Auto-detect React build folder
-            if (IsReactProject(sourcePath))
-            {
-                var buildPath = Path.Combine(sourcePath, "build");
-                if (Directory.Exists(buildPath))
-                {
-                    progress?.Report("Detected React project - using build folder");
-                    sourcePath = buildPath; // Redirect to build folder automatically
-                }
-                else
-                {
-                    progress?.Report("React project detected but no build folder found. Run 'npm run build' first.");
-                    throw new DirectoryNotFoundException($"React build folder not found at '{buildPath}'. Please run 'npm run build' first.");
-                }
-            }
-
             if (!Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories).Any())
             {
                 throw new ArgumentException($"Source directory '{sourcePath}' is empty");
@@ -139,13 +123,7 @@ namespace AzureMcp.Areas.Startups.Services
             await EnableStaticWebsiteAsync(connectionString, cancellationToken: default);
             await UploadFilesAsync(connectionString, sourcePath, overwrite, cancellationToken: default);
 
-            if (IsReactProject(sourcePath))
-            {
-                await EnableSpaRoutingAsync(connectionString, default);
-                progress?.Report("Enabled SPA routing for React app");
-            }
-
-            var websiteUrl = storageAccountResource.Data.PrimaryEndpoints.WebUri?.ToString() ?? 
+            var websiteUrl = storageAccountResource.Data.PrimaryEndpoints.WebUri?.ToString() ??
                  $"https://{storageAccount}.web.core.windows.net/";
             var portalUrl = $"https://portal.azure.com/#@{tenantId}/resource/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccount}/staticwebsite";
             var containerUrl = $"https://portal.azure.com/#view/Microsoft_Azure_Storage/ContainerMenuBlade/~/overview/storageAccountId/%2Fsubscriptions%2F{subscription}%2FresourceGroups%2F{resourceGroup}%2Fproviders%2FMicrosoft.Storage%2FstorageAccounts%2F{storageAccount}/path/%24web";
@@ -157,26 +135,6 @@ namespace AzureMcp.Areas.Startups.Services
                 WebsiteUrl: websiteUrl,
                 PortalUrl: portalUrl,
                 ContainerUrl: containerUrl);
-        }
-
-        private static bool IsReactProject(string path)
-        {
-            var packageJsonPath = Path.Combine(path, "package.json");
-            if (!File.Exists(packageJsonPath))
-                return false;
-
-            try
-            {
-                var packageJson = File.ReadAllText(packageJsonPath);
-                // Check for React-specific indicators
-                return packageJson.Contains("\"react\"") ||
-                    packageJson.Contains("react-scripts") ||
-                    packageJson.Contains("@vitejs/plugin-react");
-            }
-            catch
-            {
-                return false;
-            }
         }
         private static async Task EnableStaticWebsiteAsync(string connectionString, CancellationToken cancellationToken)
         {
