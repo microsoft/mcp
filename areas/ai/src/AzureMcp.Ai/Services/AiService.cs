@@ -1,66 +1,94 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using Azure;
 using Azure.AI.OpenAI;
-using Azure.Core;
-using Azure.Identity;
+using Azure.ResourceManager.CognitiveServices;
+using Azure.ResourceManager.CognitiveServices.Models;
+using AzureMcp.Core.Options;
+using AzureMcp.Core.Services.Azure;
+using AzureMcp.Core.Services.Azure.Subscription;
+using AzureMcp.Core.Services.Azure.Tenant;
 using AzureMcp.Ai.Models;
-using AzureMcp.Ai.Options.Completions;
-using Microsoft.Extensions.Logging;
+using OpenAI.Chat;
 
 namespace AzureMcp.Ai.Services;
 
-public sealed class AiService(ILogger<AiService> logger) : IAiService
+public class AiService(ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IAiService
 {
-    private readonly ILogger<AiService> _logger = logger;
+    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
 
-    public async Task<CompletionsCreateResult> CreateCompletionAsync(
-        CompletionsCreateOptions options,
-        CancellationToken cancellationToken = default)
+    public async Task<CompletionResult> CreateCompletionAsync(
+        string resourceName,
+        string deploymentName,
+        string promptText,
+        string subscription,
+        string resourceGroup,
+        int? maxTokens = null,
+        double? temperature = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        if (string.IsNullOrWhiteSpace(options.ResourceName))
-            throw new ArgumentException("resource-name is required.", nameof(options.ResourceName));
-        if (string.IsNullOrWhiteSpace(options.DeploymentName))
-            throw new ArgumentException("deployment-name is required.", nameof(options.DeploymentName));
-        if (string.IsNullOrWhiteSpace(options.PromptText))
-            throw new ArgumentException("prompt-text is required.", nameof(options.PromptText));
+        ValidateRequiredParameters(resourceName, deploymentName, promptText, subscription, resourceGroup);
 
-        var endpoint = new Uri($"https://{options.ResourceName!.Trim()}.openai.azure.com/");
-        TokenCredential credential = new DefaultAzureCredential();
-        var client = new OpenAIClient(endpoint, credential);
-
-        int maxTokens = options.MaxTokens ?? 256;
-        double temperature = options.Temperature ?? 0.7;
-
-        var req = new CompletionsOptions
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+        
+        // Get the Cognitive Services account
+        var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
+        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName);
+        
+        // Get the endpoint and key
+        var accountData = cognitiveServicesAccount.Value.Data;
+        var endpoint = accountData.Properties.Endpoint;
+        
+        if (string.IsNullOrEmpty(endpoint))
         {
-            MaxTokens = maxTokens,
-            Temperature = (float)temperature
-        };
-        req.Prompts.Add(options.PromptText!);
+            throw new InvalidOperationException($"Endpoint not found for resource '{resourceName}'");
+        }
 
-        Response<Completions> response = await client.GetCompletionsAsync(
-            deploymentOrModelName: options.DeploymentName!,
-            req,
-            cancellationToken);
+        // Get the access key
+        var keys = await cognitiveServicesAccount.Value.GetKeysAsync();
+        var key = keys.Value.Key1;
 
-        var completions = response.Value;
-        var choice = completions.Choices.Count > 0 ? completions.Choices[0] : null;
-
-        string? text = choice?.Text;
-        string? finish = choice?.FinishReason?.ToString();
-
-        var usage = completions.Usage;
-        int? promptTokens = usage?.PromptTokens;
-        int? completionTokens = usage?.CompletionTokens;
-        int? totalTokens = usage?.TotalTokens;
-
-        return new CompletionsCreateResult
+        if (string.IsNullOrEmpty(key))
         {
-            Text = text,
-            FinishReason = finish,
-            PromptTokens = promptTokens,
-            CompletionTokens = completionTokens,
-            TotalTokens = totalTokens
+            throw new InvalidOperationException($"Access key not found for resource '{resourceName}'");
+        }
+
+        // Create Azure OpenAI client
+        var client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(key));
+        var chatClient = client.GetChatClient(deploymentName);
+
+        // Set up completion options
+        var chatOptions = new ChatCompletionOptions();
+        
+        if (maxTokens.HasValue)
+        {
+            chatOptions.MaxOutputTokenCount = maxTokens.Value;
+        }
+        
+        if (temperature.HasValue)
+        {
+            chatOptions.Temperature = (float)temperature.Value;
+        }
+
+        // Create the completion request
+        var messages = new List<ChatMessage>
+        {
+            new UserChatMessage(promptText)
         };
+
+        var completion = await chatClient.CompleteChatAsync(messages, chatOptions);
+        
+        var result = completion.Value;
+        var completionText = result.Content[0].Text;
+        
+        var usageInfo = new CompletionUsageInfo(
+            result.Usage.InputTokenCount,
+            result.Usage.OutputTokenCount,
+            result.Usage.TotalTokenCount);
+
+        return new CompletionResult(completionText, usageInfo);
     }
 }

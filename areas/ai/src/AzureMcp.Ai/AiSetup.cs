@@ -1,7 +1,10 @@
-using AzureMcp.Ai.Commands.Completions;
-using AzureMcp.Ai.Services;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using AzureMcp.Core.Areas;
 using AzureMcp.Core.Commands;
+using AzureMcp.Ai.Commands.OpenAi;
+using AzureMcp.Ai.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -16,15 +19,28 @@ public class AiSetup : IAreaSetup
 
     public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
     {
+        // Create AI command group
         var ai = new CommandGroup("ai",
-            "AI operations - Commands that interact with Azure OpenAI and related AI services.");
+            """
+            AI operations - Commands for working with Azure AI services including Azure OpenAI for text generation,
+            chat completions, and other AI-powered capabilities. Use this tool when you need to generate text,
+            create completions, or interact with deployed AI models. This tool focuses on Azure OpenAI service
+            operations and model interactions. This tool is a hierarchical MCP command router where sub-commands
+            are routed to MCP servers that require specific fields inside the "parameters" object. To invoke a
+            command, set "command" and wrap its arguments in "parameters". Set "learn=true" to discover available
+            sub-commands for different Azure AI service operations.
+            """);
         rootGroup.AddSubGroup(ai);
 
-        var completions = new CommandGroup("completions",
-            "Text completions operations for Azure OpenAI deployments.");
-        ai.AddSubGroup(completions);
+        // Create OpenAI subgroup
+        var openai = new CommandGroup("openai", "Azure OpenAI operations - Commands for working with Azure OpenAI deployments and generating completions.");
+        ai.AddSubGroup(openai);
 
-        completions.AddCommand("create",
-            new CompletionsCreateCommand(loggerFactory.CreateLogger<CompletionsCreateCommand>()));
+        var completions = new CommandGroup("completions", "OpenAI completion operations - Commands for generating text completions using deployed models.");
+        openai.AddSubGroup(completions);
+
+        // Register commands
+        var logger = loggerFactory.CreateLogger<OpenAiCompletionsCreateCommand>();
+        completions.AddCommand("create", new OpenAiCompletionsCreateCommand(logger));
     }
 }
