@@ -200,52 +200,5 @@ namespace AzureMcp.Areas.Startups.Services
         {
             return name.Length >= 3 && name.Length <= 24 && name.All(c => char.IsLower(c) || char.IsDigit(c));
         }
-
-        private static async Task EnableSpaRoutingAsync(string connectionString, CancellationToken cancellationToken)
-        {
-            var blobServiceClient = new BlobServiceClient(connectionString);
-            var properties = blobServiceClient.GetProperties(cancellationToken).Value;
-
-            properties.StaticWebsite.Enabled = true;
-            properties.StaticWebsite.IndexDocument = "index.html";
-            properties.StaticWebsite.ErrorDocument404Path = "index.html";
-
-            await blobServiceClient.SetPropertiesAsync(properties, cancellationToken);
-        }
-
-        // Returns the region code used in Azure static website URLs
-        private static string GetRegionCode(string location)
-        {
-            // Azure region codes for static website URLs
-            return location.ToLowerInvariant() switch
-            {
-                "westus2" => "2",
-                "eastus2" => "2",
-                "centralus" => "1",
-                "westus" => "1",
-                "eastus" => "1",
-                "northcentralus" => "1",
-                "southcentralus" => "1",
-                "westeurope" => "1",
-                "northeurope" => "1",
-                "southeastasia" => "1",
-                "australiaeast" => "1",
-                "australiasoutheast" => "1",
-                "uksouth" => "1",
-                "ukwest" => "1",
-                "japaneast" => "1",
-                "japanwest" => "1",
-                "canadacentral" => "1",
-                "canadaeast" => "1",
-                "francecentral" => "1",
-                "francesouth" => "1",
-                "germanywestcentral" => "1",
-                "norwayeast" => "1",
-                "switzerlandnorth" => "1",
-                "uaenorth" => "1",
-                "brazilsouth" => "1",
-                _ => "1"
-            };
-        }
     }
 }
