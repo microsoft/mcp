@@ -25,12 +25,6 @@ jobs:
     inputs:
       versionSpec: '22.x'
 
-  - pwsh: |
-      Get-ChildItem . -Recurse -Directory
-      Get-ChildItem areas/keyvault/tests -Recurse
-    displayName: "List source contents"
-    workingDirectory: $(Build.SourcesDirectory)
-
   - template: /eng/common/TestResources/build-test-resource-config.yml
     parameters:
       EnvVars:
