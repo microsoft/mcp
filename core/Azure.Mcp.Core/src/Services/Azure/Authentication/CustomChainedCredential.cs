@@ -131,12 +131,6 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
         {
             ExcludeWorkloadIdentityCredential = !includeProdCreds,
             ExcludeManagedIdentityCredential = !includeProdCreds,
-            // ExcludeAzureDeveloperCliCredential = true,
-            // ExcludeAzurePowerShellCredential = true,
-            // ExcludeInteractiveBrowserCredential = true,
-            // ExcludeEnvironmentCredential = true,
-            // ExcludeVisualStudioCredential = true,
-            // ExcludeSharedTokenCacheCredential = true
         };
 
         if (!string.IsNullOrEmpty(tenantId))
