@@ -27,7 +27,7 @@ jobs:
       ./eng/scripts/Get-ToolsToTest.ps1
       -SetDevOpsVariables
       -TestType 'Live'
-      -ServerName '${{ parameters.ServerName }}'
+      -ServerName '${{ iif(eq(parameters.ServerName, 'none'), '', parameters.ServerName) }}'
     name: GetTestAreasLive
     displayName: "Get areas to test (Live)"
     workingDirectory: $(Build.SourcesDirectory)
