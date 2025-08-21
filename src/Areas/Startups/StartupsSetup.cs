@@ -19,11 +19,13 @@ namespace AzureMcp.Areas.Startups
 
         public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
         {
-            var startupsGroup = new CommandGroup("startups", "Commands for Microsoft for Startups");
+            var startupsGroup = new CommandGroup("startups", "Interact with Microsoft for Startups through " +
+            "two commands: guidance command to learn about what the program offers and deploy command to " +
+            "deploy static web resources and web apps to a storage account in the Azure portal");
             rootGroup.AddSubGroup(startupsGroup);
 
             // Register guidance command
-            startupsGroup.AddCommand("get", new StartupsGuidanceCommand(loggerFactory.CreateLogger<StartupsGuidanceCommand>()));
+            startupsGroup.AddCommand("guidance", new StartupsGuidanceCommand(loggerFactory.CreateLogger<StartupsGuidanceCommand>()));
 
             // Register deploy command
             startupsGroup.AddCommand("deploy", new StartupsDeployCommand(loggerFactory.CreateLogger<StartupsDeployCommand>()));
