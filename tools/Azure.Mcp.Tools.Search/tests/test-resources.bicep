@@ -1,7 +1,7 @@
 targetScope = 'resourceGroup'
 
-@minLength(4)
-@maxLength(20)
+@minLength(2)
+@maxLength(21)
 @description('The base resource name.')
 param baseName string = resourceGroup().name
 

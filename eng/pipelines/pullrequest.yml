@@ -7,3 +7,5 @@ pr:
 
 extends:
   template: /eng/pipelines/templates/common.yml
+  parameters:
+    RunLiveTests: ${{ eq(variables['System.TeamProject'], 'internal') }}
