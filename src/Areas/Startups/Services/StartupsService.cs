@@ -19,17 +19,6 @@ namespace AzureMcp.Areas.Startups.Services
         private const string PREFERRED_REGION = "westus";
         private readonly ISubscriptionService _subscriptionService = subscriptionService;
 
-        // Guidance command
-        public Task<StartupsGuidanceInfo> GetGuidanceAsync()
-        {
-            var info = new StartupsGuidanceInfo(
-                Title: "Microsoft for Startups Guidance",
-                Description: "Microsoft for Startups is a global program that helps startups succeed with access to technology, coaching, and support. Startups receive free Azure credits, technical resources, expert guidance, and opportunities to connect with Microsoft partners and customers. Learn more and apply at the website.",
-                Link: "https://startups.microsoft.com/"
-            );
-            return Task.FromResult(info);
-        }
-
         // Deploy command
         public async Task<StartupsDeployResources> DeployStaticWebAsync(
             string tenantId,

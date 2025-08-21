@@ -8,12 +8,6 @@ namespace AzureMcp.Areas.Startups.Services;
 public interface IStartupsService
 {
     /// <summary>
-    /// Gets Microsoft for Startups guidance information.
-    /// </summary>
-    /// <returns>Guidance information for startups.</returns>
-    Task<StartupsGuidanceInfo> GetGuidanceAsync();
-
-    /// <summary>
     /// Deploys code files to Azure storage account.
     /// </summary>
     Task<StartupsDeployResources> DeployStaticWebAsync(
