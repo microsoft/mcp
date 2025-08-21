@@ -201,6 +201,7 @@ public sealed class ExampleCommand : BaseCommand
       azure-native/
       fabric/
   ```
+
 - Outputs are not signed or packaged
 
 ## Test

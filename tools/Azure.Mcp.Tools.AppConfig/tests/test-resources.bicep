@@ -12,7 +12,7 @@ param location string = resourceGroup().location
 param tenantId string = '72f988bf-86f1-41af-91ab-2d7cd011db47'
 
 @description('The client OID to grant access to test resources.')
-param testApplicationOid string
+param testApplicationOid string = deployer().objectId
 
 resource appConfig 'Microsoft.AppConfiguration/configurationStores@2022-05-01' = {
   name: baseName
