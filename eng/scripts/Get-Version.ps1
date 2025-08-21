@@ -24,18 +24,26 @@ function GetVersion($server) {
     return $version.ToString()
 }
 
-$serverNames = $Server ? @($Server) : @(Get-ChildItem "$RepoRoot/servers" -Directory | Select-Object -ExpandProperty Name)
 
-$versions = @()
 
-foreach ($server in $serverNames) {
-    $version = GetVersion $server
-    $versions += @{ Name = $server; Version = $version }
+if ($ServerName) {
+    $version = GetVersion $ServerName
 
-    if ($VariableName -and $ServerName -eq $server) {
+    if ($VariableName) {
         # If $ServerName is specified, set the version variable for the specific server
         Write-Host "##vso[task.setvariable variable=$VariableName]$version"
     }
-}
 
-$versions | Select-Object Name, Version
+    $version
+} else {
+    $serverNames = Get-ChildItem "$RepoRoot/servers" -Directory | Select-Object -ExpandProperty Name
+
+    $versions = @()
+
+    foreach ($server in $serverNames) {
+        $version = GetVersion $server
+        $versions += @{ Name = $server; Version = $version }
+    }
+
+    $versions | Select-Object Name, Version
+}

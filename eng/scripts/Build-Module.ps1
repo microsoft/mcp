@@ -67,9 +67,9 @@ function BuildServer($serverName) {
         return
     }
 
-    if(!$Version) {
-        $Version = & "$PSScriptRoot/Get-Version.ps1" -Server $serverName
-    }
+
+    $version = & "$PSScriptRoot/Get-Version.ps1" -ServerName $serverName
+    $version = "$version$VersionSuffix"
 
     [xml]$project = Get-Content $projectFile -Raw
     $cliName = ($project.Project.PropertyGroup.CliName | Select-Object -First 1).Trim()
@@ -83,7 +83,7 @@ function BuildServer($serverName) {
             }
 
             $outputDir = "$OutputPath/$ServerName$($BuildNative ? '-native' : '')/$os-$arch"
-            Write-Host "Building version $Version, $os-$arch in $outputDir" -ForegroundColor Green
+            Write-Host "Building version $version, $os-$arch in $outputDir" -ForegroundColor Green
 
             $configuration = if ($DebugBuild) { 'Debug' } else { 'Release' }
 
@@ -98,7 +98,7 @@ function BuildServer($serverName) {
 
             Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination "$outputDir/dist" -Force
 
-            $command = "dotnet publish '$projectFile' --runtime '$os-$arch' --output '$outputDir/dist' /p:Version=$Version /p:Configuration=$configuration"
+            $command = "dotnet publish '$projectFile' --runtime '$os-$arch' --output '$outputDir/dist' /p:Version=$version /p:Configuration=$configuration"
 
             if($SelfContained) {
                 $command += " --self-contained"
@@ -126,7 +126,7 @@ function BuildServer($serverName) {
             | ConvertFrom-Json -AsHashtable
 
             $package.name += "$($BuildNative ? '-native' : '')-$node_os-$arch"
-            $package.version = $Version
+            $package.version = $version
             $package.description += ", for $node_os on $arch"
             $package.bin = @{ "$cliName-$node_os-$arch" = "./dist/$cliName$extension" }
             $package.os = @($node_os)

@@ -1,5 +1,6 @@
 <Project>
   <PropertyGroup>
+    <Version>0.0.0</Version>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -9,6 +10,7 @@
     <NoWarn>$(NoWarn);SYSLIB0020</NoWarn>
     <BuildNative Condition="'$(BuildNative)' == ''">false</BuildNative>
   </PropertyGroup>
+
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
     <DefineConstants>$(DefineConstants);BUILD_NATIVE</DefineConstants>
   </PropertyGroup>
