@@ -96,29 +96,29 @@ public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> log
             new SamplePrompt(
                 Category: "Quick Deployment",
                 Title: "Deploy existing static website",
-                Prompt: "Deploy the output folder to storage account myawesomesite using startups resource group",
+                Prompt: "Use the startups deploy command: Deploy my static website to Azure using storage account myawesomesite in startups resource group",
                 ExpectedResult: "Creates storage account in startups RG, enables static hosting, uploads files",
                 Prerequisites: ["Azure CLI logged in with az login", "Files in output folder"]
             ),
             new SamplePrompt(
                 Category: "React Development",
                 Title: "Deploy React app with build", 
-                Prompt: "Deploy my React app from my-startup-app folder to storage account startupapp2024 in startups resource group",
+                Prompt: "Use the startups deploy command: Deploy my React app to Azure using storage account startupapp2024 in startups resource group",
                 ExpectedResult: "Runs npm install, npm build, deploys to Azure with SPA routing in startups RG",
                 Prerequisites: ["React project with package.json", "Node.js installed", "Azure CLI logged in with az login"]
             ),
             new SamplePrompt(
                 Category: "Archery Website Example",
                 Title: "Deploy Sophia's Archery website",
-                Prompt: "Deploy archery-web folder to storage account sophiasarchery2025 in startups resource group",
+                Prompt: "Use the startups deploy command: Deploy the archery website to Azure using storage account sophiasarchery2025 in startups resource group",
                 ExpectedResult: "Deploys complete archery website with static hosting enabled",
                 Prerequisites: ["Azure CLI logged in with az login", "archery-web folder with HTML/CSS/JS files"]
             ),
             new SamplePrompt(
                 Category: "Static Website",
-                Title: "Create and deploy landing page",
-                Prompt: "Create a landing page for my-startup and deploy to mystartup2025 in startups resource group", 
-                ExpectedResult: "Generates professional landing page and deploys to Azure in startups RG",
+                Title: "Deploy any web project",
+                Prompt: "Use the startups deploy command: Deploy this app to Azure using storage account mystartup2025 in startups resource group", 
+                ExpectedResult: "Automatically detects project type and deploys to Azure in startups RG",
                 Prerequisites: ["Azure CLI logged in with az login"]
             )
         };
@@ -135,13 +135,13 @@ public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> log
                 Parameter: "source-path",
                 Rule: "Must be an existing directory with files",
                 ErrorMessage: "Source directory does not exist or is empty",
-                Example: "✅ c:\\projects\\my-app\\build  ❌ c:\\nonexistent\\folder"
+                Example: "✅ c./my-app/build  ❌ ./nonexistent/folder"
             ),
             new ValidationRule(
-                Parameter: "react-project",
-                Rule: "Must contain package.json file",
-                ErrorMessage: "Directory must be a valid React project with package.json",
-                Example: "✅ c:\\projects\\my-react-app  ❌ c:\\projects\\static-html"
+                Parameter: "azure-login",
+                Rule: "Must be logged into Azure CLI",
+                ErrorMessage: "Run 'az login' first to authenticate with Azure",
+                Example: "✅ az login  ❌ az account show"
             )
         };
 
@@ -186,7 +186,7 @@ public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> log
 
         var info = new StartupsGuidanceInfo(
             Title: CommandTitle,
-            Description: "Your comprehensive guide to building and deploying web applications with Azure. This service helps startups quickly create, build, and deploy modern web applications to Azure Static Website hosting.",
+            Description: "Microsoft for Startups is a global program that helps startups succeed with access to technology, coaching, and support. Startups receive free Azure credits, technical resources, expert guidance, and opportunities to connect with Microsoft partners and customers. Learn more and apply at the website. This service helps startups quickly create, build, and deploy modern web applications to Azure.",
             Link: "https://startups.microsoft.com/",
             Capabilities: capabilities,
             SamplePrompts: samplePrompts,
