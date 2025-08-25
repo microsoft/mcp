@@ -1,4 +1,6 @@
 parameters:
+- name: ServerName
+  type: string
 - name: TimeoutInMinutes
   type: number
   default: 120
@@ -25,6 +27,7 @@ jobs:
       arguments: >
         -ArtifactsPath '$(Pipeline.Workspace)'
         -ArtifactPrefix '$(PipelineArtifactName)_'
+        -ServerName '${{ parameters.ServerName }}'
         -OutputPath '$(Build.ArtifactStagingDirectory)/signed'
 
   - template: pipelines/steps/binary-signing.yml@azure-sdk-build-tools

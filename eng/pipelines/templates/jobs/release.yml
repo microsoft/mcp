@@ -26,7 +26,6 @@ jobs:
 
       gh release create $tag --title "$serverName $version$versionSuffix"
       gh release upload $tag $(Pipeline.Workspace)/$(PipelineArtifactName)_packed/**/*.tgz
-      gh release upload $tag $(Pipeline.Workspace)/vsix_package_*/**/*.vsix
     displayName: Create GitHub Release and upload artifacts
     env:
       GH_TOKEN: $(azuresdk-github-pat)
@@ -63,7 +62,7 @@ jobs:
             SignCertName: 'azure-sdk-esrp-release-certificate'
             Intent: 'PackageDistribution'
             ContentType: 'npm'
-            FolderLocation: $(Pipeline.Workspace)/drop/platform
+            FolderLocation: $(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform
             Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
@@ -80,7 +79,7 @@ jobs:
             SignCertName: 'azure-sdk-esrp-release-certificate'
             Intent: 'PackageDistribution'
             ContentType: 'npm'
-            FolderLocation: $(Pipeline.Workspace)/drop/wrapper
+            FolderLocation: $(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper
             Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
@@ -88,7 +87,7 @@ jobs:
             ProductState: latest
         - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
           parameters:
-            PathToArtifacts: $(Pipeline.Workspace)/drop
+            PathToArtifacts: $(Pipeline.Workspace)/drop/${{ parameters.ServerName }}
             Registry: https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/
             Tag: latest
 

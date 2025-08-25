@@ -24,7 +24,7 @@ jobs:
     displayName: "Download signed MCP server binaries"
 
   - powershell: |
-      $src = "$(Pipeline.Workspace)/$(PipelineArtifactName)_signed/$(VsixTarget)/dist/*"
+      $src = "$(Pipeline.Workspace)/$(PipelineArtifactName)_signed/${{ parameters.ServerName }}/$(VsixTarget)/dist/*"
       $dest = "$(VsixServerPath)/server"
       New-Item -ItemType Directory -Force -Path $dest
       Copy-Item -Path $src -Destination $dest -Recurse -Force
