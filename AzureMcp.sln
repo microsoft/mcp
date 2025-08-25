@@ -3,199 +3,431 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "core", "core", "{FBF56CC3-7AE6-AD2D-3F14-7F97FD322CD6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Core", "Azure.Mcp.Core", "{60ACCE40-218A-70DA-E578-61113823C3D1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7905BE8B-130A-154F-744E-8F5C373BB4A4}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Core", "core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj", "{8904FD57-96C7-434D-B4CD-99D2A7637ED3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft.Mcp.Core", "Microsoft.Mcp.Core", "{D9C18059-AC6D-4A51-C1D3-5F3385C91125}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{1032D52E-0A23-303A-285B-3E580F3BFBA1}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Mcp.Core", "core\Microsoft.Mcp.Core\src\Microsoft.Mcp.Core.csproj", "{F849CD08-D4E4-4CDA-AB6F-D776EAFCD0E2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{8F8E4A0B-9BF7-9BD7-A493-72F2DCAF9D32}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Core.LiveTests", "core\Azure.Mcp.Core\tests\Azure.Mcp.Core.LiveTests\Azure.Mcp.Core.LiveTests.csproj", "{F9FD0819-F62F-4979-81EF-0093CE31EEA7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tests", "core\Azure.Mcp.Core\tests\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj", "{5EEB08B8-FBBE-45ED-AB55-E5073308226B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "servers", "servers", "{769B9289-B2AF-0079-2183-40A0D5B6CA35}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Server", "Azure.Mcp.Server", "{F7E192D1-DE6C-42A2-B52F-02849D482450}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{143983D8-FD06-8E1F-BA6B-2BC51EF88F6F}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Server", "servers\Azure.Mcp.Server\src\Azure.Mcp.Server.csproj", "{C7A151C3-2C9C-4C0F-8D07-0BB6630E821C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{07C2787E-EAC7-C090-1BA3-A61EC2A24D84}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Acr", "Azure.Mcp.Tools.Acr", "{157D81C5-4B8F-A378-5D75-7BAB039D1DC1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{667E7915-06AD-1B48-0150-8A7F70E56563}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Acr", "tools\Azure.Mcp.Tools.Acr\src\Azure.Mcp.Tools.Acr.csproj", "{6EEBF2DB-8E44-4FB2-9157-2B46E23AD086}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Aks", "Azure.Mcp.Tools.Aks", "{42698EC0-FB39-C569-8E8D-B1280AAEC8EB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{12ABC2B4-C2CC-FC16-AE04-E7611E7F2628}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Aks", "tools\Azure.Mcp.Tools.Aks\src\Azure.Mcp.Tools.Aks.csproj", "{7C89F911-9624-4CC8-9268-57824064FCA7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.AppConfig", "Azure.Mcp.Tools.AppConfig", "{A3A9055D-A201-082F-4C76-F1268653F9BB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{25222008-2AE0-B613-C5A2-1843DE1A0697}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AppConfig", "tools\Azure.Mcp.Tools.AppConfig\src\Azure.Mcp.Tools.AppConfig.csproj", "{AF90B213-1A45-477A-A958-2B9187AEAF54}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Authorization", "Azure.Mcp.Tools.Authorization", "{859FD998-B283-526A-0D29-2BE9DB23F127}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{DDC67B88-003A-BF20-18CC-988992D9F2DA}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Authorization", "tools\Azure.Mcp.Tools.Authorization\src\Azure.Mcp.Tools.Authorization.csproj", "{55FF4834-F1FE-47C1-AA8C-24DC4C3F171A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.AzureBestPractices", "Azure.Mcp.Tools.AzureBestPractices", "{E98DC7CA-7D6E-CD95-7C38-7EC54C49A4BA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9ECC55D0-7405-7BFD-C0DD-D432F1A7556E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AzureBestPractices", "tools\Azure.Mcp.Tools.AzureBestPractices\src\Azure.Mcp.Tools.AzureBestPractices.csproj", "{DFDDA723-3307-4330-A154-A0F337A5E8EF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.AzureIsv", "Azure.Mcp.Tools.AzureIsv", "{527E7737-8178-1F7B-CC32-0B66418AAAE3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{AABD2F22-45E6-D373-CACB-1E42EBBB89E4}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AzureIsv", "tools\Azure.Mcp.Tools.AzureIsv\src\Azure.Mcp.Tools.AzureIsv.csproj", "{51FF959C-5452-4611-B3DF-671D5D2FEF1E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.AzureManagedLustre", "Azure.Mcp.Tools.AzureManagedLustre", "{9B70BA7E-5CCA-8859-C252-AF72C051F264}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{72886DEE-EE65-CAB4-D88E-95639D81D7B4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AzureManagedLustre", "tools\Azure.Mcp.Tools.AzureManagedLustre\src\Azure.Mcp.Tools.AzureManagedLustre.csproj", "{38EF7AE0-C6B0-4809-85EE-27A2C4F8F83B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.AzureTerraformBestPractices", "Azure.Mcp.Tools.AzureTerraformBestPractices", "{3050869B-5B38-A2E1-E211-FDD96922C0D8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9E83E5D7-427F-F90E-BAF8-110976D8882A}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AzureTerraformBestPractices", "tools\Azure.Mcp.Tools.AzureTerraformBestPractices\src\Azure.Mcp.Tools.AzureTerraformBestPractices.csproj", "{F6B9B9A5-3A77-44F6-A349-50A751B46904}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.BicepSchema", "Azure.Mcp.Tools.BicepSchema", "{A6722C15-810E-881D-D81D-B31AFB74E906}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{BBC3EE4A-E86F-DF79-071D-BFF25E371E68}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.BicepSchema", "tools\Azure.Mcp.Tools.BicepSchema\src\Azure.Mcp.Tools.BicepSchema.csproj", "{744989A9-972B-4076-81FE-BFAB39EE899A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.CloudArchitect", "Azure.Mcp.Tools.CloudArchitect", "{9E20BC7A-4871-E449-D7C1-4770293578A3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7C4CD8CB-4CAB-A05D-EBA1-82911CA4C7BB}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.CloudArchitect", "tools\Azure.Mcp.Tools.CloudArchitect\src\Azure.Mcp.Tools.CloudArchitect.csproj", "{E77DA2D5-7AFD-43D6-B77A-C22A1167B856}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Cosmos", "Azure.Mcp.Tools.Cosmos", "{C3450695-99A5-5CF8-F6BD-D2019CEF67AE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5DDB903B-9950-F24C-C972-E88A4AADF5AC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Cosmos", "tools\Azure.Mcp.Tools.Cosmos\src\Azure.Mcp.Tools.Cosmos.csproj", "{C8612FFE-7E8F-4EC4-B158-A4C2167A9AD5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Deploy", "Azure.Mcp.Tools.Deploy", "{19B1C41E-6924-9335-E5C4-0D3E2A03D547}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D9515F83-9B0C-5D25-5D20-CC78FE8837D0}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Deploy", "tools\Azure.Mcp.Tools.Deploy\src\Azure.Mcp.Tools.Deploy.csproj", "{9924AEB8-EEB1-40EC-943B-DA1B9E610767}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Extension", "Azure.Mcp.Tools.Extension", "{0D319E14-6DDE-C12F-A5B0-76EED797D651}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{917EE497-2381-F55E-88F6-47586FC57241}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Extension", "tools\Azure.Mcp.Tools.Extension\src\Azure.Mcp.Tools.Extension.csproj", "{2DF5CFE5-EF8D-4BE4-96D0-C256F2B52011}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Foundry", "Azure.Mcp.Tools.Foundry", "{4179CBCC-D958-52F0-A182-FBFEBF000264}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{70CADE69-D2B1-ED23-4BCD-2FABD273428B}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Foundry", "tools\Azure.Mcp.Tools.Foundry\src\Azure.Mcp.Tools.Foundry.csproj", "{BA7AC885-A065-41F2-98FF-281C82994F7C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.FunctionApp", "Azure.Mcp.Tools.FunctionApp", "{E938B49F-87B3-0DAA-220C-07320FBA6C2A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{BF79F913-D6F2-E657-45D9-277597840EFA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.FunctionApp", "tools\Azure.Mcp.Tools.FunctionApp\src\Azure.Mcp.Tools.FunctionApp.csproj", "{65F5AE53-C77A-4818-ADE1-B2D6973A68B9}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Grafana", "Azure.Mcp.Tools.Grafana", "{0BD17E58-AFC9-6F1A-D335-FEEF8A424ECB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{05E18918-DF6D-B73A-4C4A-4AEF98A73A1A}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Grafana", "tools\Azure.Mcp.Tools.Grafana\src\Azure.Mcp.Tools.Grafana.csproj", "{E13EEC3A-6DEB-403D-98F5-E143A16F6E9D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.KeyVault", "Azure.Mcp.Tools.KeyVault", "{F9BCFF5A-BB96-6495-0B41-71CBBD75CCD0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5C936215-2BB8-E193-B185-29FE7BBEA33F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.KeyVault", "tools\Azure.Mcp.Tools.KeyVault\src\Azure.Mcp.Tools.KeyVault.csproj", "{1DE3EF01-EB07-412F-82C9-9709D1981C77}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Kusto", "Azure.Mcp.Tools.Kusto", "{E4043D9D-4D2E-D8B5-F79E-057177808F38}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FFA8D48E-F9A9-6089-AB62-C90A740EA21E}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Kusto", "tools\Azure.Mcp.Tools.Kusto\src\Azure.Mcp.Tools.Kusto.csproj", "{3025876C-E9AF-4D37-98D2-4A7B56CAD3B1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.LoadTesting", "Azure.Mcp.Tools.LoadTesting", "{2DD519C6-9156-B8C4-11E9-4269216495AD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{96640177-9FE5-9698-15FE-FA6086540707}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.LoadTesting", "tools\Azure.Mcp.Tools.LoadTesting\src\Azure.Mcp.Tools.LoadTesting.csproj", "{19631370-84E9-45A5-B98F-0359499DB2FA}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Marketplace", "Azure.Mcp.Tools.Marketplace", "{EB5334E6-670B-EC92-68F3-634AA8C9020E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{59B172EF-E666-A44A-A88A-206F6A63264A}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Marketplace", "tools\Azure.Mcp.Tools.Marketplace\src\Azure.Mcp.Tools.Marketplace.csproj", "{1F58262C-B95C-4EC3-95BF-469D7A56480E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Monitor", "Azure.Mcp.Tools.Monitor", "{3DC51C40-03E9-5066-4FB5-FF3E41C97E1F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F894982B-4C93-0C62-D6DA-E27C0A3503E4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Monitor", "tools\Azure.Mcp.Tools.Monitor\src\Azure.Mcp.Tools.Monitor.csproj", "{168BAD1F-6D9B-4A41-9A40-CAA2766110EF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.MySql", "Azure.Mcp.Tools.MySql", "{F4CC2172-46F8-04D7-FF11-4F95DDBB59E2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{065991D2-6F8C-6F65-0E72-DC96953B87D8}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.MySql", "tools\Azure.Mcp.Tools.MySql\src\Azure.Mcp.Tools.MySql.csproj", "{916DF4C9-3EB7-4D2B-B727-6EEEBB049A80}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Postgres", "Azure.Mcp.Tools.Postgres", "{898C8C6E-FC1C-58E1-FB62-BBE77ED42888}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C1148A03-1886-DC1A-65F9-2AE3D2752F84}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Postgres", "tools\Azure.Mcp.Tools.Postgres\src\Azure.Mcp.Tools.Postgres.csproj", "{9CF26119-BE08-4C57-945B-2844481F6141}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Quota", "Azure.Mcp.Tools.Quota", "{4CBFCE90-00AC-3F19-DC8C-C81357708F76}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{435A0E5F-27FA-99FA-C842-A91B522B4C1E}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Quota", "tools\Azure.Mcp.Tools.Quota\src\Azure.Mcp.Tools.Quota.csproj", "{A7A089BD-3128-48F8-8B18-E467BBA8C7FB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Redis", "Azure.Mcp.Tools.Redis", "{557B0DD6-D749-3FB3-AE6F-6C9843ACC451}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C6D1966B-40C4-EADA-2021-D62EB362BC5D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Redis", "tools\Azure.Mcp.Tools.Redis\src\Azure.Mcp.Tools.Redis.csproj", "{9A740958-5F01-4121-84E6-6D05B369AE94}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.ResourceHealth", "Azure.Mcp.Tools.ResourceHealth", "{C6CEF4FB-0C38-F8A1-C3A9-84AA43EDFA2E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{050FD842-8358-E96B-7D60-52669EEB9D25}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.ResourceHealth", "tools\Azure.Mcp.Tools.ResourceHealth\src\Azure.Mcp.Tools.ResourceHealth.csproj", "{C484A6D7-7798-4C8B-91DC-EA9909D627C8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Search", "Azure.Mcp.Tools.Search", "{38F57492-853E-43AB-A96A-0D16B88231B6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{6B343355-29B5-2BBE-C966-B4AB2FB51F8E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Search", "tools\Azure.Mcp.Tools.Search\src\Azure.Mcp.Tools.Search.csproj", "{9CCACC42-070F-4BB5-A06C-D5B7A1ABD519}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.ServiceBus", "Azure.Mcp.Tools.ServiceBus", "{1ED11E6E-94A0-E908-ACE4-8E9BD19CC7E1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{075C408B-AC75-B3AA-88FB-1AE42826BD50}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.ServiceBus", "tools\Azure.Mcp.Tools.ServiceBus\src\Azure.Mcp.Tools.ServiceBus.csproj", "{F575C6A0-59AF-455D-8B7A-5421D4BAAA2F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Sql", "Azure.Mcp.Tools.Sql", "{C64ABA23-B3DB-4B75-3019-7CBBB134BB29}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{04A069BA-F670-FF57-4260-3772155E86F2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Sql", "tools\Azure.Mcp.Tools.Sql\src\Azure.Mcp.Tools.Sql.csproj", "{C84A54B1-BFF9-4394-A6BF-135C2FC37A64}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Storage", "Azure.Mcp.Tools.Storage", "{ED9D3D4A-502F-41A4-BBCC-970E65472F33}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0131AD4F-3934-F56E-5081-42129AD09143}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Storage", "tools\Azure.Mcp.Tools.Storage\src\Azure.Mcp.Tools.Storage.csproj", "{DE1B4312-1A4F-4774-B7EB-B1EC77F80D5E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.VirtualDesktop", "Azure.Mcp.Tools.VirtualDesktop", "{B28A9B67-1C09-C756-C02A-7AC1895F9584}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E38B6DEF-57A1-6CCA-498B-5697FF0B466C}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.VirtualDesktop", "tools\Azure.Mcp.Tools.VirtualDesktop\src\Azure.Mcp.Tools.VirtualDesktop.csproj", "{3156A400-78C7-410A-9B79-9CDFFD5B94E3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Workbooks", "Azure.Mcp.Tools.Workbooks", "{90CD12FE-21C2-5151-E041-9FB96A3D0773}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A9F0731A-101C-4664-E960-D159F9998165}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Workbooks", "tools\Azure.Mcp.Tools.Workbooks\src\Azure.Mcp.Tools.Workbooks.csproj", "{FCEFF719-E5F5-4BB6-83EF-17201FB14FF2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Core.UnitTests", "core\Azure.Mcp.Core\tests\Azure.Mcp.Core.UnitTests\Azure.Mcp.Core.UnitTests.csproj", "{AE9E8273-2844-41A7-AE84-36E2F8B1B3DE}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft.Fabric.Mcp.Core", "Microsoft.Fabric.Mcp.Core", "{4BBEE4C4-18FC-AB55-A8B3-4C6BF70DF9AD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{44C29C35-3F02-ECB8-1C42-1E60EABFA6B5}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Fabric.Mcp.Core", "core\Microsoft.Fabric.Mcp.Core\src\Microsoft.Fabric.Mcp.Core.csproj", "{B7418A46-E05D-4605-9BAE-8308BEF25641}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Template.Mcp.Core", "Template.Mcp.Core", "{1D0F574F-F118-FD2E-5A10-1304F36167C2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F04579C5-27C8-AFEE-B183-2AA2B0A14285}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Template.Mcp.Core", "core\Template.Mcp.Core\src\Template.Mcp.Core.csproj", "{E3F17DAA-1EFB-40F3-9F16-F77AF18893F2}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "eng", "eng", "{7525B257-249C-EE79-B10A-65D0BC27ABA9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{DAAE2FFB-70A9-DCEF-23A0-0ABAED0A9720}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToolDescriptionEvaluator", "eng\tools\ToolDescriptionEvaluator\ToolDescriptionEvaluator.csproj", "{1CB18013-ABED-48C1-8576-1E8ABCD70293}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Fabric.Mcp.Server", "Fabric.Mcp.Server", "{F4EFF172-8E25-E6E4-AFDD-640B2A635C0F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{46F805EC-2E15-E63F-1946-C3BCA0EBE9E3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fabric.Mcp.Server", "servers\Fabric.Mcp.Server\src\Fabric.Mcp.Server.csproj", "{56650789-168A-427A-A354-7AF969417C47}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Template.Mcp.Server", "Template.Mcp.Server", "{C761690B-E036-150F-CCBF-007CA2728C9D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C2F07CB4-6560-5C65-21A5-FF4953BB8CD9}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Template.Mcp.Server", "servers\Template.Mcp.Server\src\Template.Mcp.Server.csproj", "{7C56FC56-343A-4C68-AD1A-8C2CBC5DED74}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{15C060E2-796E-E031-E908-89DE5CD569D8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Acr.LiveTests", "tools\Azure.Mcp.Tools.Acr\tests\Azure.Mcp.Tools.Acr.LiveTests\Azure.Mcp.Tools.Acr.LiveTests.csproj", "{8C5CED5B-ECB8-4847-9435-B7954055A530}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Acr.UnitTests", "tools\Azure.Mcp.Tools.Acr\tests\Azure.Mcp.Tools.Acr.UnitTests\Azure.Mcp.Tools.Acr.UnitTests.csproj", "{9131BD5D-B459-46AE-809D-F066B2FD119A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{2F7EC3CB-1734-6B7C-0B17-6303A1B67019}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Aks.LiveTests", "tools\Azure.Mcp.Tools.Aks\tests\Azure.Mcp.Tools.Aks.LiveTests\Azure.Mcp.Tools.Aks.LiveTests.csproj", "{492A0B4A-C7EA-4469-814E-373B3DD90E6E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Aks.UnitTests", "tools\Azure.Mcp.Tools.Aks\tests\Azure.Mcp.Tools.Aks.UnitTests\Azure.Mcp.Tools.Aks.UnitTests.csproj", "{9EB26D07-4530-44BA-BB2F-F5A20B86EF08}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{06C3F726-79B1-E9B3-C592-70534457DCBA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AppConfig.LiveTests", "tools\Azure.Mcp.Tools.AppConfig\tests\Azure.Mcp.Tools.AppConfig.LiveTests\Azure.Mcp.Tools.AppConfig.LiveTests.csproj", "{AACC56D7-3738-4C63-835F-A8373A084CFA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AppConfig.UnitTests", "tools\Azure.Mcp.Tools.AppConfig\tests\Azure.Mcp.Tools.AppConfig.UnitTests\Azure.Mcp.Tools.AppConfig.UnitTests.csproj", "{57C9E70F-2035-4217-8D35-C5498103E52C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D3FC126D-7888-673A-FB5D-D6AF5DE9603B}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Authorization.LiveTests", "tools\Azure.Mcp.Tools.Authorization\tests\Azure.Mcp.Tools.Authorization.LiveTests\Azure.Mcp.Tools.Authorization.LiveTests.csproj", "{55B6007F-5F58-4F33-91A5-677859BAE2D6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Authorization.UnitTests", "tools\Azure.Mcp.Tools.Authorization\tests\Azure.Mcp.Tools.Authorization.UnitTests\Azure.Mcp.Tools.Authorization.UnitTests.csproj", "{1A9485FE-242C-4627-AC8D-9B36512162C4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{53133BE3-FE0F-4EF8-8B39-42F749686075}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AzureBestPractices.UnitTests", "tools\Azure.Mcp.Tools.AzureBestPractices\tests\Azure.Mcp.Tools.AzureBestPractices.UnitTests\Azure.Mcp.Tools.AzureBestPractices.UnitTests.csproj", "{AAF964F7-6902-4A7C-9F52-59FF502920D5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{BEEC386F-2B6A-A601-7DF0-FDB8FC583F0B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AzureIsv.LiveTests", "tools\Azure.Mcp.Tools.AzureIsv\tests\Azure.Mcp.Tools.AzureIsv.LiveTests\Azure.Mcp.Tools.AzureIsv.LiveTests.csproj", "{FFA1F834-6049-474C-9EED-72E1A3F9646E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AzureIsv.UnitTests", "tools\Azure.Mcp.Tools.AzureIsv\tests\Azure.Mcp.Tools.AzureIsv.UnitTests\Azure.Mcp.Tools.AzureIsv.UnitTests.csproj", "{D3348F94-9831-4A3D-8E79-844900B88287}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D80CC604-369B-AC81-8F7A-C731A7ABD68E}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AzureManagedLustre.LiveTests", "tools\Azure.Mcp.Tools.AzureManagedLustre\tests\Azure.Mcp.Tools.AzureManagedLustre.LiveTests\Azure.Mcp.Tools.AzureManagedLustre.LiveTests.csproj", "{75A5A87C-BF04-4ABE-B466-874074D37C8D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AzureManagedLustre.UnitTests", "tools\Azure.Mcp.Tools.AzureManagedLustre\tests\Azure.Mcp.Tools.AzureManagedLustre.UnitTests\Azure.Mcp.Tools.AzureManagedLustre.UnitTests.csproj", "{D1BCD822-AC8A-408F-A71A-9205DB29A9D2}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{A8D0F127-6ACB-380E-8423-B6B6EA1AF2DC}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AzureTerraformBestPractices.UnitTests", "tools\Azure.Mcp.Tools.AzureTerraformBestPractices\tests\Azure.Mcp.Tools.AzureTerraformBestPractices.UnitTests\Azure.Mcp.Tools.AzureTerraformBestPractices.UnitTests.csproj", "{A99D3C27-65B7-4ADF-AB54-6D8649D1E7C7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{18221FA7-BAC2-07BA-D54F-D567400B25DA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.BicepSchema.UnitTests", "tools\Azure.Mcp.Tools.BicepSchema\tests\Azure.Mcp.Tools.BicepSchema.UnitTests\Azure.Mcp.Tools.BicepSchema.UnitTests.csproj", "{88780872-11A6-4014-B575-75C960EC0968}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D03EF84F-1D93-1805-F24E-6781FF2EE6D9}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.CloudArchitect.UnitTests", "tools\Azure.Mcp.Tools.CloudArchitect\tests\Azure.Mcp.Tools.CloudArchitect.UnitTests\Azure.Mcp.Tools.CloudArchitect.UnitTests.csproj", "{2135A527-3910-44B5-A778-C5467D0A6148}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{399EB16B-AE75-8AFC-99AF-1927C5624042}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Cosmos.LiveTests", "tools\Azure.Mcp.Tools.Cosmos\tests\Azure.Mcp.Tools.Cosmos.LiveTests\Azure.Mcp.Tools.Cosmos.LiveTests.csproj", "{F3AD707A-5E2D-4F58-BA21-691B4C7D1BA5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Cosmos.UnitTests", "tools\Azure.Mcp.Tools.Cosmos\tests\Azure.Mcp.Tools.Cosmos.UnitTests\Azure.Mcp.Tools.Cosmos.UnitTests.csproj", "{B73E94EA-256E-4C1C-956B-0D4E67B5C82F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{5629B6E3-0318-880C-B9FB-171A66E3835B}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Deploy.LiveTests", "tools\Azure.Mcp.Tools.Deploy\tests\Azure.Mcp.Tools.Deploy.LiveTests\Azure.Mcp.Tools.Deploy.LiveTests.csproj", "{BBE0307D-17C0-4A0A-9D7A-D8E9328A3CF7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Deploy.UnitTests", "tools\Azure.Mcp.Tools.Deploy\tests\Azure.Mcp.Tools.Deploy.UnitTests\Azure.Mcp.Tools.Deploy.UnitTests.csproj", "{56B04873-1F4B-402E-88C0-528F006E3914}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{81E3F68B-68AA-1E51-D1D2-DE3FA9DB90AD}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Extension.UnitTests", "tools\Azure.Mcp.Tools.Extension\tests\Azure.Mcp.Tools.Extension.UnitTests\Azure.Mcp.Tools.Extension.UnitTests.csproj", "{CE923FCF-F208-4BC5-8C9B-AA54E2930993}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{2BABADA8-D4EC-AEA2-C105-00C894829DE1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Foundry.LiveTests", "tools\Azure.Mcp.Tools.Foundry\tests\Azure.Mcp.Tools.Foundry.LiveTests\Azure.Mcp.Tools.Foundry.LiveTests.csproj", "{EB564D80-A767-4431-9918-16BE87407068}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Foundry.UnitTests", "tools\Azure.Mcp.Tools.Foundry\tests\Azure.Mcp.Tools.Foundry.UnitTests\Azure.Mcp.Tools.Foundry.UnitTests.csproj", "{DCC2034C-2F4A-4C72-A39C-58E108055E70}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{3749EF6E-907A-D4F8-B2FD-A6C27C0C1C55}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.FunctionApp.LiveTests", "tools\Azure.Mcp.Tools.FunctionApp\tests\Azure.Mcp.Tools.FunctionApp.LiveTests\Azure.Mcp.Tools.FunctionApp.LiveTests.csproj", "{E6AD3B7D-5ED5-43E6-A139-607A3F03FF00}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.FunctionApp.UnitTests", "tools\Azure.Mcp.Tools.FunctionApp\tests\Azure.Mcp.Tools.FunctionApp.UnitTests\Azure.Mcp.Tools.FunctionApp.UnitTests.csproj", "{C3327B63-4141-4D49-AE04-FA6A36FBDC9F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{97BD5054-B44C-2CB3-7133-19D3965C6D42}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Grafana.LiveTests", "tools\Azure.Mcp.Tools.Grafana\tests\Azure.Mcp.Tools.Grafana.LiveTests\Azure.Mcp.Tools.Grafana.LiveTests.csproj", "{AE374EE8-1500-46BF-92C1-AA921B679E19}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Grafana.UnitTests", "tools\Azure.Mcp.Tools.Grafana\tests\Azure.Mcp.Tools.Grafana.UnitTests\Azure.Mcp.Tools.Grafana.UnitTests.csproj", "{05C411F3-C725-47EC-9441-650DA9DEB322}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{949474CC-6E94-7345-61BC-6D63A88C0FCD}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.KeyVault.LiveTests", "tools\Azure.Mcp.Tools.KeyVault\tests\Azure.Mcp.Tools.KeyVault.LiveTests\Azure.Mcp.Tools.KeyVault.LiveTests.csproj", "{666D3414-8801-4BB9-B49A-656D5D65ADC9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.KeyVault.UnitTests", "tools\Azure.Mcp.Tools.KeyVault\tests\Azure.Mcp.Tools.KeyVault.UnitTests\Azure.Mcp.Tools.KeyVault.UnitTests.csproj", "{B82ECFF7-7F47-44A8-B947-1AC4E1AAB952}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{5BB0F909-6B8E-7953-568A-56247A9BE7D9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Kusto.LiveTests", "tools\Azure.Mcp.Tools.Kusto\tests\Azure.Mcp.Tools.Kusto.LiveTests\Azure.Mcp.Tools.Kusto.LiveTests.csproj", "{223D1AA3-8756-4394-BDB8-0C20737C36F4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Kusto.UnitTests", "tools\Azure.Mcp.Tools.Kusto\tests\Azure.Mcp.Tools.Kusto.UnitTests\Azure.Mcp.Tools.Kusto.UnitTests.csproj", "{746C9DFE-3D0E-4D4D-9AE2-D85D7250075F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{FB0433B6-88B8-3F40-695F-E02336F620D7}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.LoadTesting.LiveTests", "tools\Azure.Mcp.Tools.LoadTesting\tests\Azure.Mcp.Tools.LoadTesting.LiveTests\Azure.Mcp.Tools.LoadTesting.LiveTests.csproj", "{6B594222-0B9E-4CDE-A49E-C3CCB65815FD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.LoadTesting.UnitTests", "tools\Azure.Mcp.Tools.LoadTesting\tests\Azure.Mcp.Tools.LoadTesting.UnitTests\Azure.Mcp.Tools.LoadTesting.UnitTests.csproj", "{F009F428-7BBE-41FE-AD55-D19B4947E978}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D5394AFD-90BE-8F1D-1BC6-C1A4C372E9EC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Marketplace.LiveTests", "tools\Azure.Mcp.Tools.Marketplace\tests\Azure.Mcp.Tools.Marketplace.LiveTests\Azure.Mcp.Tools.Marketplace.LiveTests.csproj", "{751F96A2-DB60-4B40-A415-0924FEEFFD9C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Marketplace.UnitTests", "tools\Azure.Mcp.Tools.Marketplace\tests\Azure.Mcp.Tools.Marketplace.UnitTests\Azure.Mcp.Tools.Marketplace.UnitTests.csproj", "{4D7B1DE3-D04E-48A2-A904-A3288F0A519C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{33685B87-9DF7-C305-879A-BD3EFDA3A055}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Monitor.LiveTests", "tools\Azure.Mcp.Tools.Monitor\tests\Azure.Mcp.Tools.Monitor.LiveTests\Azure.Mcp.Tools.Monitor.LiveTests.csproj", "{57832DF2-FD7F-4E26-AD7C-5D6608582978}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Monitor.UnitTests", "tools\Azure.Mcp.Tools.Monitor\tests\Azure.Mcp.Tools.Monitor.UnitTests\Azure.Mcp.Tools.Monitor.UnitTests.csproj", "{A3143C31-7C1C-4D7C-8819-3901238942C4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{BE4DDD77-798F-8692-0C2A-2A9637256ED2}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.MySql.UnitTests", "tools\Azure.Mcp.Tools.MySql\tests\Azure.Mcp.Tools.MySql.UnitTests\Azure.Mcp.Tools.MySql.UnitTests.csproj", "{7C1FC1A3-5E52-45A8-B136-0934ADD5580C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{37B0CE47-14C8-F5BF-BDDD-13EEBE580A88}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Postgres.UnitTests", "tools\Azure.Mcp.Tools.Postgres\tests\Azure.Mcp.Tools.Postgres.UnitTests\Azure.Mcp.Tools.Postgres.UnitTests.csproj", "{6CFDFF50-A41A-4A5E-A66A-670DB707495F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{7F099BC4-FAF9-0D5C-A860-45BB7185CE13}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Quota.LiveTests", "tools\Azure.Mcp.Tools.Quota\tests\Azure.Mcp.Tools.Quota.LiveTests\Azure.Mcp.Tools.Quota.LiveTests.csproj", "{2C7B96D1-085F-4BCA-8D7D-3047765E3492}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Quota.UnitTests", "tools\Azure.Mcp.Tools.Quota\tests\Azure.Mcp.Tools.Quota.UnitTests\Azure.Mcp.Tools.Quota.UnitTests.csproj", "{B3167A7D-CF85-4A5F-B1CF-F14013782F1D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1801FC80-908A-890E-88E4-ACF8F9AFE528}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Redis.LiveTests", "tools\Azure.Mcp.Tools.Redis\tests\Azure.Mcp.Tools.Redis.LiveTests\Azure.Mcp.Tools.Redis.LiveTests.csproj", "{73372025-CB29-4EF4-95A9-0CAF91D94439}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Redis.UnitTests", "tools\Azure.Mcp.Tools.Redis\tests\Azure.Mcp.Tools.Redis.UnitTests\Azure.Mcp.Tools.Redis.UnitTests.csproj", "{35D2CE3D-B792-49E1-BB6D-532313196821}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D8A7DFC5-CCD4-4A12-4328-1AC572B64833}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.ResourceHealth.UnitTests", "tools\Azure.Mcp.Tools.ResourceHealth\tests\Azure.Mcp.Tools.ResourceHealth.UnitTests\Azure.Mcp.Tools.ResourceHealth.UnitTests.csproj", "{A2F1FFAF-0BE1-4020-B09B-3DFB91B48816}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{29F1A95F-AE4F-0723-BE37-14C42415E8D9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Search.LiveTests", "tools\Azure.Mcp.Tools.Search\tests\Azure.Mcp.Tools.Search.LiveTests\Azure.Mcp.Tools.Search.LiveTests.csproj", "{3D69D7BE-8C92-4690-B4B2-5EC6F439A2A2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Search.UnitTests", "tools\Azure.Mcp.Tools.Search\tests\Azure.Mcp.Tools.Search.UnitTests\Azure.Mcp.Tools.Search.UnitTests.csproj", "{6233A7A4-85F2-4458-A14A-BF35117347B0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0F04000E-CD22-741D-E99C-16D60B397F54}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.ServiceBus.LiveTests", "tools\Azure.Mcp.Tools.ServiceBus\tests\Azure.Mcp.Tools.ServiceBus.LiveTests\Azure.Mcp.Tools.ServiceBus.LiveTests.csproj", "{9BE18521-31F9-45AD-A6EE-74695754EC0C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.ServiceBus.UnitTests", "tools\Azure.Mcp.Tools.ServiceBus\tests\Azure.Mcp.Tools.ServiceBus.UnitTests\Azure.Mcp.Tools.ServiceBus.UnitTests.csproj", "{F90633BA-133F-42E3-88D5-EE4DE0FB0586}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{AE64BB99-52FC-85C8-81F2-9C84ECFCBB2D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Sql.LiveTests", "tools\Azure.Mcp.Tools.Sql\tests\Azure.Mcp.Tools.Sql.LiveTests\Azure.Mcp.Tools.Sql.LiveTests.csproj", "{8EAD1CA0-DD5D-493A-A6A4-45DD8E6835EA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Sql.UnitTests", "tools\Azure.Mcp.Tools.Sql\tests\Azure.Mcp.Tools.Sql.UnitTests\Azure.Mcp.Tools.Sql.UnitTests.csproj", "{9457321A-9019-41E8-9E80-309D76EF2BAF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E03D2171-C4AB-45A3-681D-A2A2EBBB122A}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Storage.LiveTests", "tools\Azure.Mcp.Tools.Storage\tests\Azure.Mcp.Tools.Storage.LiveTests\Azure.Mcp.Tools.Storage.LiveTests.csproj", "{9A72A0E3-091A-4C64-AE66-ADAA5B46B1E8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Storage.UnitTests", "tools\Azure.Mcp.Tools.Storage\tests\Azure.Mcp.Tools.Storage.UnitTests\Azure.Mcp.Tools.Storage.UnitTests.csproj", "{F3F49C7E-9106-4FF7-A71D-442022D63F7B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D38B6103-E564-8894-9748-4CF0C62984DB}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.VirtualDesktop.LiveTests", "tools\Azure.Mcp.Tools.VirtualDesktop\tests\Azure.Mcp.Tools.VirtualDesktop.LiveTests\Azure.Mcp.Tools.VirtualDesktop.LiveTests.csproj", "{0A09784C-BB49-44E8-B07A-DA4EEEC1184E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.VirtualDesktop.UnitTests", "tools\Azure.Mcp.Tools.VirtualDesktop\tests\Azure.Mcp.Tools.VirtualDesktop.UnitTests\Azure.Mcp.Tools.VirtualDesktop.UnitTests.csproj", "{F5980D17-1A14-4DD9-82DF-6496E0C4B70D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{447CAF13-A1DE-A946-989B-DD6CAA0CDF92}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Workbooks.LiveTests", "tools\Azure.Mcp.Tools.Workbooks\tests\Azure.Mcp.Tools.Workbooks.LiveTests\Azure.Mcp.Tools.Workbooks.LiveTests.csproj", "{4F0C9315-FBE2-4A98-9FD1-66F508398DEF}"
 EndProject
@@ -1402,6 +1634,219 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{60ACCE40-218A-70DA-E578-61113823C3D1} = {FBF56CC3-7AE6-AD2D-3F14-7F97FD322CD6}
+		{7905BE8B-130A-154F-744E-8F5C373BB4A4} = {60ACCE40-218A-70DA-E578-61113823C3D1}
+		{8904FD57-96C7-434D-B4CD-99D2A7637ED3} = {7905BE8B-130A-154F-744E-8F5C373BB4A4}
+		{D9C18059-AC6D-4A51-C1D3-5F3385C91125} = {FBF56CC3-7AE6-AD2D-3F14-7F97FD322CD6}
+		{1032D52E-0A23-303A-285B-3E580F3BFBA1} = {D9C18059-AC6D-4A51-C1D3-5F3385C91125}
+		{F849CD08-D4E4-4CDA-AB6F-D776EAFCD0E2} = {1032D52E-0A23-303A-285B-3E580F3BFBA1}
+		{8F8E4A0B-9BF7-9BD7-A493-72F2DCAF9D32} = {60ACCE40-218A-70DA-E578-61113823C3D1}
+		{F9FD0819-F62F-4979-81EF-0093CE31EEA7} = {8F8E4A0B-9BF7-9BD7-A493-72F2DCAF9D32}
+		{5EEB08B8-FBBE-45ED-AB55-E5073308226B} = {8F8E4A0B-9BF7-9BD7-A493-72F2DCAF9D32}
+		{F7E192D1-DE6C-42A2-B52F-02849D482450} = {769B9289-B2AF-0079-2183-40A0D5B6CA35}
+		{143983D8-FD06-8E1F-BA6B-2BC51EF88F6F} = {F7E192D1-DE6C-42A2-B52F-02849D482450}
+		{C7A151C3-2C9C-4C0F-8D07-0BB6630E821C} = {143983D8-FD06-8E1F-BA6B-2BC51EF88F6F}
+		{157D81C5-4B8F-A378-5D75-7BAB039D1DC1} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{667E7915-06AD-1B48-0150-8A7F70E56563} = {157D81C5-4B8F-A378-5D75-7BAB039D1DC1}
+		{6EEBF2DB-8E44-4FB2-9157-2B46E23AD086} = {667E7915-06AD-1B48-0150-8A7F70E56563}
+		{42698EC0-FB39-C569-8E8D-B1280AAEC8EB} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{12ABC2B4-C2CC-FC16-AE04-E7611E7F2628} = {42698EC0-FB39-C569-8E8D-B1280AAEC8EB}
+		{7C89F911-9624-4CC8-9268-57824064FCA7} = {12ABC2B4-C2CC-FC16-AE04-E7611E7F2628}
+		{A3A9055D-A201-082F-4C76-F1268653F9BB} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{25222008-2AE0-B613-C5A2-1843DE1A0697} = {A3A9055D-A201-082F-4C76-F1268653F9BB}
+		{AF90B213-1A45-477A-A958-2B9187AEAF54} = {25222008-2AE0-B613-C5A2-1843DE1A0697}
+		{859FD998-B283-526A-0D29-2BE9DB23F127} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{DDC67B88-003A-BF20-18CC-988992D9F2DA} = {859FD998-B283-526A-0D29-2BE9DB23F127}
+		{55FF4834-F1FE-47C1-AA8C-24DC4C3F171A} = {DDC67B88-003A-BF20-18CC-988992D9F2DA}
+		{E98DC7CA-7D6E-CD95-7C38-7EC54C49A4BA} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{9ECC55D0-7405-7BFD-C0DD-D432F1A7556E} = {E98DC7CA-7D6E-CD95-7C38-7EC54C49A4BA}
+		{DFDDA723-3307-4330-A154-A0F337A5E8EF} = {9ECC55D0-7405-7BFD-C0DD-D432F1A7556E}
+		{527E7737-8178-1F7B-CC32-0B66418AAAE3} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{AABD2F22-45E6-D373-CACB-1E42EBBB89E4} = {527E7737-8178-1F7B-CC32-0B66418AAAE3}
+		{51FF959C-5452-4611-B3DF-671D5D2FEF1E} = {AABD2F22-45E6-D373-CACB-1E42EBBB89E4}
+		{9B70BA7E-5CCA-8859-C252-AF72C051F264} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{72886DEE-EE65-CAB4-D88E-95639D81D7B4} = {9B70BA7E-5CCA-8859-C252-AF72C051F264}
+		{38EF7AE0-C6B0-4809-85EE-27A2C4F8F83B} = {72886DEE-EE65-CAB4-D88E-95639D81D7B4}
+		{3050869B-5B38-A2E1-E211-FDD96922C0D8} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{9E83E5D7-427F-F90E-BAF8-110976D8882A} = {3050869B-5B38-A2E1-E211-FDD96922C0D8}
+		{F6B9B9A5-3A77-44F6-A349-50A751B46904} = {9E83E5D7-427F-F90E-BAF8-110976D8882A}
+		{A6722C15-810E-881D-D81D-B31AFB74E906} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{BBC3EE4A-E86F-DF79-071D-BFF25E371E68} = {A6722C15-810E-881D-D81D-B31AFB74E906}
+		{744989A9-972B-4076-81FE-BFAB39EE899A} = {BBC3EE4A-E86F-DF79-071D-BFF25E371E68}
+		{9E20BC7A-4871-E449-D7C1-4770293578A3} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{7C4CD8CB-4CAB-A05D-EBA1-82911CA4C7BB} = {9E20BC7A-4871-E449-D7C1-4770293578A3}
+		{E77DA2D5-7AFD-43D6-B77A-C22A1167B856} = {7C4CD8CB-4CAB-A05D-EBA1-82911CA4C7BB}
+		{C3450695-99A5-5CF8-F6BD-D2019CEF67AE} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{5DDB903B-9950-F24C-C972-E88A4AADF5AC} = {C3450695-99A5-5CF8-F6BD-D2019CEF67AE}
+		{C8612FFE-7E8F-4EC4-B158-A4C2167A9AD5} = {5DDB903B-9950-F24C-C972-E88A4AADF5AC}
+		{19B1C41E-6924-9335-E5C4-0D3E2A03D547} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{D9515F83-9B0C-5D25-5D20-CC78FE8837D0} = {19B1C41E-6924-9335-E5C4-0D3E2A03D547}
+		{9924AEB8-EEB1-40EC-943B-DA1B9E610767} = {D9515F83-9B0C-5D25-5D20-CC78FE8837D0}
+		{0D319E14-6DDE-C12F-A5B0-76EED797D651} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{917EE497-2381-F55E-88F6-47586FC57241} = {0D319E14-6DDE-C12F-A5B0-76EED797D651}
+		{2DF5CFE5-EF8D-4BE4-96D0-C256F2B52011} = {917EE497-2381-F55E-88F6-47586FC57241}
+		{4179CBCC-D958-52F0-A182-FBFEBF000264} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{70CADE69-D2B1-ED23-4BCD-2FABD273428B} = {4179CBCC-D958-52F0-A182-FBFEBF000264}
+		{BA7AC885-A065-41F2-98FF-281C82994F7C} = {70CADE69-D2B1-ED23-4BCD-2FABD273428B}
+		{E938B49F-87B3-0DAA-220C-07320FBA6C2A} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{BF79F913-D6F2-E657-45D9-277597840EFA} = {E938B49F-87B3-0DAA-220C-07320FBA6C2A}
+		{65F5AE53-C77A-4818-ADE1-B2D6973A68B9} = {BF79F913-D6F2-E657-45D9-277597840EFA}
+		{0BD17E58-AFC9-6F1A-D335-FEEF8A424ECB} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{05E18918-DF6D-B73A-4C4A-4AEF98A73A1A} = {0BD17E58-AFC9-6F1A-D335-FEEF8A424ECB}
+		{E13EEC3A-6DEB-403D-98F5-E143A16F6E9D} = {05E18918-DF6D-B73A-4C4A-4AEF98A73A1A}
+		{F9BCFF5A-BB96-6495-0B41-71CBBD75CCD0} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{5C936215-2BB8-E193-B185-29FE7BBEA33F} = {F9BCFF5A-BB96-6495-0B41-71CBBD75CCD0}
+		{1DE3EF01-EB07-412F-82C9-9709D1981C77} = {5C936215-2BB8-E193-B185-29FE7BBEA33F}
+		{E4043D9D-4D2E-D8B5-F79E-057177808F38} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{FFA8D48E-F9A9-6089-AB62-C90A740EA21E} = {E4043D9D-4D2E-D8B5-F79E-057177808F38}
+		{3025876C-E9AF-4D37-98D2-4A7B56CAD3B1} = {FFA8D48E-F9A9-6089-AB62-C90A740EA21E}
+		{2DD519C6-9156-B8C4-11E9-4269216495AD} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{96640177-9FE5-9698-15FE-FA6086540707} = {2DD519C6-9156-B8C4-11E9-4269216495AD}
+		{19631370-84E9-45A5-B98F-0359499DB2FA} = {96640177-9FE5-9698-15FE-FA6086540707}
+		{EB5334E6-670B-EC92-68F3-634AA8C9020E} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{59B172EF-E666-A44A-A88A-206F6A63264A} = {EB5334E6-670B-EC92-68F3-634AA8C9020E}
+		{1F58262C-B95C-4EC3-95BF-469D7A56480E} = {59B172EF-E666-A44A-A88A-206F6A63264A}
+		{3DC51C40-03E9-5066-4FB5-FF3E41C97E1F} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{F894982B-4C93-0C62-D6DA-E27C0A3503E4} = {3DC51C40-03E9-5066-4FB5-FF3E41C97E1F}
+		{168BAD1F-6D9B-4A41-9A40-CAA2766110EF} = {F894982B-4C93-0C62-D6DA-E27C0A3503E4}
+		{F4CC2172-46F8-04D7-FF11-4F95DDBB59E2} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{065991D2-6F8C-6F65-0E72-DC96953B87D8} = {F4CC2172-46F8-04D7-FF11-4F95DDBB59E2}
+		{916DF4C9-3EB7-4D2B-B727-6EEEBB049A80} = {065991D2-6F8C-6F65-0E72-DC96953B87D8}
+		{898C8C6E-FC1C-58E1-FB62-BBE77ED42888} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{C1148A03-1886-DC1A-65F9-2AE3D2752F84} = {898C8C6E-FC1C-58E1-FB62-BBE77ED42888}
+		{9CF26119-BE08-4C57-945B-2844481F6141} = {C1148A03-1886-DC1A-65F9-2AE3D2752F84}
+		{4CBFCE90-00AC-3F19-DC8C-C81357708F76} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{435A0E5F-27FA-99FA-C842-A91B522B4C1E} = {4CBFCE90-00AC-3F19-DC8C-C81357708F76}
+		{A7A089BD-3128-48F8-8B18-E467BBA8C7FB} = {435A0E5F-27FA-99FA-C842-A91B522B4C1E}
+		{557B0DD6-D749-3FB3-AE6F-6C9843ACC451} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{C6D1966B-40C4-EADA-2021-D62EB362BC5D} = {557B0DD6-D749-3FB3-AE6F-6C9843ACC451}
+		{9A740958-5F01-4121-84E6-6D05B369AE94} = {C6D1966B-40C4-EADA-2021-D62EB362BC5D}
+		{C6CEF4FB-0C38-F8A1-C3A9-84AA43EDFA2E} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{050FD842-8358-E96B-7D60-52669EEB9D25} = {C6CEF4FB-0C38-F8A1-C3A9-84AA43EDFA2E}
+		{C484A6D7-7798-4C8B-91DC-EA9909D627C8} = {050FD842-8358-E96B-7D60-52669EEB9D25}
+		{38F57492-853E-43AB-A96A-0D16B88231B6} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{6B343355-29B5-2BBE-C966-B4AB2FB51F8E} = {38F57492-853E-43AB-A96A-0D16B88231B6}
+		{9CCACC42-070F-4BB5-A06C-D5B7A1ABD519} = {6B343355-29B5-2BBE-C966-B4AB2FB51F8E}
+		{1ED11E6E-94A0-E908-ACE4-8E9BD19CC7E1} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{075C408B-AC75-B3AA-88FB-1AE42826BD50} = {1ED11E6E-94A0-E908-ACE4-8E9BD19CC7E1}
+		{F575C6A0-59AF-455D-8B7A-5421D4BAAA2F} = {075C408B-AC75-B3AA-88FB-1AE42826BD50}
+		{C64ABA23-B3DB-4B75-3019-7CBBB134BB29} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{04A069BA-F670-FF57-4260-3772155E86F2} = {C64ABA23-B3DB-4B75-3019-7CBBB134BB29}
+		{C84A54B1-BFF9-4394-A6BF-135C2FC37A64} = {04A069BA-F670-FF57-4260-3772155E86F2}
+		{ED9D3D4A-502F-41A4-BBCC-970E65472F33} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{0131AD4F-3934-F56E-5081-42129AD09143} = {ED9D3D4A-502F-41A4-BBCC-970E65472F33}
+		{DE1B4312-1A4F-4774-B7EB-B1EC77F80D5E} = {0131AD4F-3934-F56E-5081-42129AD09143}
+		{B28A9B67-1C09-C756-C02A-7AC1895F9584} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{E38B6DEF-57A1-6CCA-498B-5697FF0B466C} = {B28A9B67-1C09-C756-C02A-7AC1895F9584}
+		{3156A400-78C7-410A-9B79-9CDFFD5B94E3} = {E38B6DEF-57A1-6CCA-498B-5697FF0B466C}
+		{90CD12FE-21C2-5151-E041-9FB96A3D0773} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{A9F0731A-101C-4664-E960-D159F9998165} = {90CD12FE-21C2-5151-E041-9FB96A3D0773}
+		{FCEFF719-E5F5-4BB6-83EF-17201FB14FF2} = {A9F0731A-101C-4664-E960-D159F9998165}
+		{AE9E8273-2844-41A7-AE84-36E2F8B1B3DE} = {8F8E4A0B-9BF7-9BD7-A493-72F2DCAF9D32}
+		{4BBEE4C4-18FC-AB55-A8B3-4C6BF70DF9AD} = {FBF56CC3-7AE6-AD2D-3F14-7F97FD322CD6}
+		{44C29C35-3F02-ECB8-1C42-1E60EABFA6B5} = {4BBEE4C4-18FC-AB55-A8B3-4C6BF70DF9AD}
+		{B7418A46-E05D-4605-9BAE-8308BEF25641} = {44C29C35-3F02-ECB8-1C42-1E60EABFA6B5}
+		{1D0F574F-F118-FD2E-5A10-1304F36167C2} = {FBF56CC3-7AE6-AD2D-3F14-7F97FD322CD6}
+		{F04579C5-27C8-AFEE-B183-2AA2B0A14285} = {1D0F574F-F118-FD2E-5A10-1304F36167C2}
+		{E3F17DAA-1EFB-40F3-9F16-F77AF18893F2} = {F04579C5-27C8-AFEE-B183-2AA2B0A14285}
+		{DAAE2FFB-70A9-DCEF-23A0-0ABAED0A9720} = {7525B257-249C-EE79-B10A-65D0BC27ABA9}
+		{1CB18013-ABED-48C1-8576-1E8ABCD70293} = {DAAE2FFB-70A9-DCEF-23A0-0ABAED0A9720}
+		{F4EFF172-8E25-E6E4-AFDD-640B2A635C0F} = {769B9289-B2AF-0079-2183-40A0D5B6CA35}
+		{46F805EC-2E15-E63F-1946-C3BCA0EBE9E3} = {F4EFF172-8E25-E6E4-AFDD-640B2A635C0F}
+		{56650789-168A-427A-A354-7AF969417C47} = {46F805EC-2E15-E63F-1946-C3BCA0EBE9E3}
+		{C761690B-E036-150F-CCBF-007CA2728C9D} = {769B9289-B2AF-0079-2183-40A0D5B6CA35}
+		{C2F07CB4-6560-5C65-21A5-FF4953BB8CD9} = {C761690B-E036-150F-CCBF-007CA2728C9D}
+		{7C56FC56-343A-4C68-AD1A-8C2CBC5DED74} = {C2F07CB4-6560-5C65-21A5-FF4953BB8CD9}
+		{15C060E2-796E-E031-E908-89DE5CD569D8} = {157D81C5-4B8F-A378-5D75-7BAB039D1DC1}
+		{8C5CED5B-ECB8-4847-9435-B7954055A530} = {15C060E2-796E-E031-E908-89DE5CD569D8}
+		{9131BD5D-B459-46AE-809D-F066B2FD119A} = {15C060E2-796E-E031-E908-89DE5CD569D8}
+		{2F7EC3CB-1734-6B7C-0B17-6303A1B67019} = {42698EC0-FB39-C569-8E8D-B1280AAEC8EB}
+		{492A0B4A-C7EA-4469-814E-373B3DD90E6E} = {2F7EC3CB-1734-6B7C-0B17-6303A1B67019}
+		{9EB26D07-4530-44BA-BB2F-F5A20B86EF08} = {2F7EC3CB-1734-6B7C-0B17-6303A1B67019}
+		{06C3F726-79B1-E9B3-C592-70534457DCBA} = {A3A9055D-A201-082F-4C76-F1268653F9BB}
+		{AACC56D7-3738-4C63-835F-A8373A084CFA} = {06C3F726-79B1-E9B3-C592-70534457DCBA}
+		{57C9E70F-2035-4217-8D35-C5498103E52C} = {06C3F726-79B1-E9B3-C592-70534457DCBA}
+		{D3FC126D-7888-673A-FB5D-D6AF5DE9603B} = {859FD998-B283-526A-0D29-2BE9DB23F127}
+		{55B6007F-5F58-4F33-91A5-677859BAE2D6} = {D3FC126D-7888-673A-FB5D-D6AF5DE9603B}
+		{1A9485FE-242C-4627-AC8D-9B36512162C4} = {D3FC126D-7888-673A-FB5D-D6AF5DE9603B}
+		{53133BE3-FE0F-4EF8-8B39-42F749686075} = {E98DC7CA-7D6E-CD95-7C38-7EC54C49A4BA}
+		{AAF964F7-6902-4A7C-9F52-59FF502920D5} = {53133BE3-FE0F-4EF8-8B39-42F749686075}
+		{BEEC386F-2B6A-A601-7DF0-FDB8FC583F0B} = {527E7737-8178-1F7B-CC32-0B66418AAAE3}
+		{FFA1F834-6049-474C-9EED-72E1A3F9646E} = {BEEC386F-2B6A-A601-7DF0-FDB8FC583F0B}
+		{D3348F94-9831-4A3D-8E79-844900B88287} = {BEEC386F-2B6A-A601-7DF0-FDB8FC583F0B}
+		{D80CC604-369B-AC81-8F7A-C731A7ABD68E} = {9B70BA7E-5CCA-8859-C252-AF72C051F264}
+		{75A5A87C-BF04-4ABE-B466-874074D37C8D} = {D80CC604-369B-AC81-8F7A-C731A7ABD68E}
+		{D1BCD822-AC8A-408F-A71A-9205DB29A9D2} = {D80CC604-369B-AC81-8F7A-C731A7ABD68E}
+		{A8D0F127-6ACB-380E-8423-B6B6EA1AF2DC} = {3050869B-5B38-A2E1-E211-FDD96922C0D8}
+		{A99D3C27-65B7-4ADF-AB54-6D8649D1E7C7} = {A8D0F127-6ACB-380E-8423-B6B6EA1AF2DC}
+		{18221FA7-BAC2-07BA-D54F-D567400B25DA} = {A6722C15-810E-881D-D81D-B31AFB74E906}
+		{88780872-11A6-4014-B575-75C960EC0968} = {18221FA7-BAC2-07BA-D54F-D567400B25DA}
+		{D03EF84F-1D93-1805-F24E-6781FF2EE6D9} = {9E20BC7A-4871-E449-D7C1-4770293578A3}
+		{2135A527-3910-44B5-A778-C5467D0A6148} = {D03EF84F-1D93-1805-F24E-6781FF2EE6D9}
+		{399EB16B-AE75-8AFC-99AF-1927C5624042} = {C3450695-99A5-5CF8-F6BD-D2019CEF67AE}
+		{F3AD707A-5E2D-4F58-BA21-691B4C7D1BA5} = {399EB16B-AE75-8AFC-99AF-1927C5624042}
+		{B73E94EA-256E-4C1C-956B-0D4E67B5C82F} = {399EB16B-AE75-8AFC-99AF-1927C5624042}
+		{5629B6E3-0318-880C-B9FB-171A66E3835B} = {19B1C41E-6924-9335-E5C4-0D3E2A03D547}
+		{BBE0307D-17C0-4A0A-9D7A-D8E9328A3CF7} = {5629B6E3-0318-880C-B9FB-171A66E3835B}
+		{56B04873-1F4B-402E-88C0-528F006E3914} = {5629B6E3-0318-880C-B9FB-171A66E3835B}
+		{81E3F68B-68AA-1E51-D1D2-DE3FA9DB90AD} = {0D319E14-6DDE-C12F-A5B0-76EED797D651}
+		{CE923FCF-F208-4BC5-8C9B-AA54E2930993} = {81E3F68B-68AA-1E51-D1D2-DE3FA9DB90AD}
+		{2BABADA8-D4EC-AEA2-C105-00C894829DE1} = {4179CBCC-D958-52F0-A182-FBFEBF000264}
+		{EB564D80-A767-4431-9918-16BE87407068} = {2BABADA8-D4EC-AEA2-C105-00C894829DE1}
+		{DCC2034C-2F4A-4C72-A39C-58E108055E70} = {2BABADA8-D4EC-AEA2-C105-00C894829DE1}
+		{3749EF6E-907A-D4F8-B2FD-A6C27C0C1C55} = {E938B49F-87B3-0DAA-220C-07320FBA6C2A}
+		{E6AD3B7D-5ED5-43E6-A139-607A3F03FF00} = {3749EF6E-907A-D4F8-B2FD-A6C27C0C1C55}
+		{C3327B63-4141-4D49-AE04-FA6A36FBDC9F} = {3749EF6E-907A-D4F8-B2FD-A6C27C0C1C55}
+		{97BD5054-B44C-2CB3-7133-19D3965C6D42} = {0BD17E58-AFC9-6F1A-D335-FEEF8A424ECB}
+		{AE374EE8-1500-46BF-92C1-AA921B679E19} = {97BD5054-B44C-2CB3-7133-19D3965C6D42}
+		{05C411F3-C725-47EC-9441-650DA9DEB322} = {97BD5054-B44C-2CB3-7133-19D3965C6D42}
+		{949474CC-6E94-7345-61BC-6D63A88C0FCD} = {F9BCFF5A-BB96-6495-0B41-71CBBD75CCD0}
+		{666D3414-8801-4BB9-B49A-656D5D65ADC9} = {949474CC-6E94-7345-61BC-6D63A88C0FCD}
+		{B82ECFF7-7F47-44A8-B947-1AC4E1AAB952} = {949474CC-6E94-7345-61BC-6D63A88C0FCD}
+		{5BB0F909-6B8E-7953-568A-56247A9BE7D9} = {E4043D9D-4D2E-D8B5-F79E-057177808F38}
+		{223D1AA3-8756-4394-BDB8-0C20737C36F4} = {5BB0F909-6B8E-7953-568A-56247A9BE7D9}
+		{746C9DFE-3D0E-4D4D-9AE2-D85D7250075F} = {5BB0F909-6B8E-7953-568A-56247A9BE7D9}
+		{FB0433B6-88B8-3F40-695F-E02336F620D7} = {2DD519C6-9156-B8C4-11E9-4269216495AD}
+		{6B594222-0B9E-4CDE-A49E-C3CCB65815FD} = {FB0433B6-88B8-3F40-695F-E02336F620D7}
+		{F009F428-7BBE-41FE-AD55-D19B4947E978} = {FB0433B6-88B8-3F40-695F-E02336F620D7}
+		{D5394AFD-90BE-8F1D-1BC6-C1A4C372E9EC} = {EB5334E6-670B-EC92-68F3-634AA8C9020E}
+		{751F96A2-DB60-4B40-A415-0924FEEFFD9C} = {D5394AFD-90BE-8F1D-1BC6-C1A4C372E9EC}
+		{4D7B1DE3-D04E-48A2-A904-A3288F0A519C} = {D5394AFD-90BE-8F1D-1BC6-C1A4C372E9EC}
+		{33685B87-9DF7-C305-879A-BD3EFDA3A055} = {3DC51C40-03E9-5066-4FB5-FF3E41C97E1F}
+		{57832DF2-FD7F-4E26-AD7C-5D6608582978} = {33685B87-9DF7-C305-879A-BD3EFDA3A055}
+		{A3143C31-7C1C-4D7C-8819-3901238942C4} = {33685B87-9DF7-C305-879A-BD3EFDA3A055}
+		{BE4DDD77-798F-8692-0C2A-2A9637256ED2} = {F4CC2172-46F8-04D7-FF11-4F95DDBB59E2}
+		{7C1FC1A3-5E52-45A8-B136-0934ADD5580C} = {BE4DDD77-798F-8692-0C2A-2A9637256ED2}
+		{37B0CE47-14C8-F5BF-BDDD-13EEBE580A88} = {898C8C6E-FC1C-58E1-FB62-BBE77ED42888}
+		{6CFDFF50-A41A-4A5E-A66A-670DB707495F} = {37B0CE47-14C8-F5BF-BDDD-13EEBE580A88}
+		{7F099BC4-FAF9-0D5C-A860-45BB7185CE13} = {4CBFCE90-00AC-3F19-DC8C-C81357708F76}
+		{2C7B96D1-085F-4BCA-8D7D-3047765E3492} = {7F099BC4-FAF9-0D5C-A860-45BB7185CE13}
+		{B3167A7D-CF85-4A5F-B1CF-F14013782F1D} = {7F099BC4-FAF9-0D5C-A860-45BB7185CE13}
+		{1801FC80-908A-890E-88E4-ACF8F9AFE528} = {557B0DD6-D749-3FB3-AE6F-6C9843ACC451}
+		{73372025-CB29-4EF4-95A9-0CAF91D94439} = {1801FC80-908A-890E-88E4-ACF8F9AFE528}
+		{35D2CE3D-B792-49E1-BB6D-532313196821} = {1801FC80-908A-890E-88E4-ACF8F9AFE528}
+		{D8A7DFC5-CCD4-4A12-4328-1AC572B64833} = {C6CEF4FB-0C38-F8A1-C3A9-84AA43EDFA2E}
+		{A2F1FFAF-0BE1-4020-B09B-3DFB91B48816} = {D8A7DFC5-CCD4-4A12-4328-1AC572B64833}
+		{29F1A95F-AE4F-0723-BE37-14C42415E8D9} = {38F57492-853E-43AB-A96A-0D16B88231B6}
+		{3D69D7BE-8C92-4690-B4B2-5EC6F439A2A2} = {29F1A95F-AE4F-0723-BE37-14C42415E8D9}
+		{6233A7A4-85F2-4458-A14A-BF35117347B0} = {29F1A95F-AE4F-0723-BE37-14C42415E8D9}
+		{0F04000E-CD22-741D-E99C-16D60B397F54} = {1ED11E6E-94A0-E908-ACE4-8E9BD19CC7E1}
+		{9BE18521-31F9-45AD-A6EE-74695754EC0C} = {0F04000E-CD22-741D-E99C-16D60B397F54}
+		{F90633BA-133F-42E3-88D5-EE4DE0FB0586} = {0F04000E-CD22-741D-E99C-16D60B397F54}
+		{AE64BB99-52FC-85C8-81F2-9C84ECFCBB2D} = {C64ABA23-B3DB-4B75-3019-7CBBB134BB29}
+		{8EAD1CA0-DD5D-493A-A6A4-45DD8E6835EA} = {AE64BB99-52FC-85C8-81F2-9C84ECFCBB2D}
+		{9457321A-9019-41E8-9E80-309D76EF2BAF} = {AE64BB99-52FC-85C8-81F2-9C84ECFCBB2D}
+		{E03D2171-C4AB-45A3-681D-A2A2EBBB122A} = {ED9D3D4A-502F-41A4-BBCC-970E65472F33}
+		{9A72A0E3-091A-4C64-AE66-ADAA5B46B1E8} = {E03D2171-C4AB-45A3-681D-A2A2EBBB122A}
+		{F3F49C7E-9106-4FF7-A71D-442022D63F7B} = {E03D2171-C4AB-45A3-681D-A2A2EBBB122A}
+		{D38B6103-E564-8894-9748-4CF0C62984DB} = {B28A9B67-1C09-C756-C02A-7AC1895F9584}
+		{0A09784C-BB49-44E8-B07A-DA4EEEC1184E} = {D38B6103-E564-8894-9748-4CF0C62984DB}
+		{F5980D17-1A14-4DD9-82DF-6496E0C4B70D} = {D38B6103-E564-8894-9748-4CF0C62984DB}
+		{447CAF13-A1DE-A946-989B-DD6CAA0CDF92} = {90CD12FE-21C2-5151-E041-9FB96A3D0773}
+		{4F0C9315-FBE2-4A98-9FD1-66F508398DEF} = {447CAF13-A1DE-A946-989B-DD6CAA0CDF92}
+		{C031D592-96D6-44D0-BF31-33CCE5CAABA1} = {447CAF13-A1DE-A946-989B-DD6CAA0CDF92}
 	EndGlobalSection
 EndGlobal
 
