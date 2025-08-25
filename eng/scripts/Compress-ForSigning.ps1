@@ -5,6 +5,7 @@
 param(
     [string] $ArtifactsPath,
     [string] $ArtifactPrefix,
+    [string] $ServerName,
     [string] $OutputPath
 )
 
@@ -47,6 +48,10 @@ if($env:TF_BUILD) {
 }
 
 $serverJsonFiles = $artifactDirectories | Get-ChildItem -Filter "wrapper.json" -Recurse
+
+if ($ServerName) {
+    $serverJsonFiles = $serverJsonFiles | Where-Object { $_.Directory.Name -ieq $ServerName }
+}
 
 foreach ($serverJsonFile in $serverJsonFiles) {
     Write-Host "Processing $serverJsonFile" -ForegroundColor Yellow

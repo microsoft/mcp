@@ -105,12 +105,16 @@ extends:
           value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
         jobs:
         - template: /eng/pipelines/templates/jobs/sign-and-pack.yml
+          parameters:
+            ServerName: ${{ parameters.ServerName }}
+
         - ${{ each vsixtarget in parameters.VsixTargets }}:
           - template: /eng/pipelines/templates/jobs/sign-and-pack-vsix.yml
             parameters:
               DependsOn: SignAndPack
               VsixTarget: ${{ vsixtarget }}
               ServerName: ${{ parameters.ServerName }}
+
         - job: Verify_Signing
           displayName: "Verify Signing"
           dependsOn: SignAndPack
