@@ -37,6 +37,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Cosmos", "t
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Deploy", "tools\Azure.Mcp.Tools.Deploy\src\Azure.Mcp.Tools.Deploy.csproj", "{9924AEB8-EEB1-40EC-943B-DA1B9E610767}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.EventGrid", "tools\Azure.Mcp.Tools.EventGrid\src\Azure.Mcp.Tools.EventGrid.csproj", "{E1234567-1234-1234-1234-123456789012}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Extension", "tools\Azure.Mcp.Tools.Extension\src\Azure.Mcp.Tools.Extension.csproj", "{2DF5CFE5-EF8D-4BE4-96D0-C256F2B52011}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Foundry", "tools\Azure.Mcp.Tools.Foundry\src\Azure.Mcp.Tools.Foundry.csproj", "{BA7AC885-A065-41F2-98FF-281C82994F7C}"
@@ -128,6 +130,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Deploy.LiveTests", "tools\Azure.Mcp.Tools.Deploy\tests\Azure.Mcp.Tools.Deploy.LiveTests\Azure.Mcp.Tools.Deploy.LiveTests.csproj", "{BBE0307D-17C0-4A0A-9D7A-D8E9328A3CF7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Deploy.UnitTests", "tools\Azure.Mcp.Tools.Deploy\tests\Azure.Mcp.Tools.Deploy.UnitTests\Azure.Mcp.Tools.Deploy.UnitTests.csproj", "{56B04873-1F4B-402E-88C0-528F006E3914}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.EventGrid.LiveTests", "tools\Azure.Mcp.Tools.EventGrid\tests\Azure.Mcp.Tools.EventGrid.LiveTests\Azure.Mcp.Tools.EventGrid.LiveTests.csproj", "{E1234568-1234-1234-1234-123456789012}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.EventGrid.UnitTests", "tools\Azure.Mcp.Tools.EventGrid\tests\Azure.Mcp.Tools.EventGrid.UnitTests\Azure.Mcp.Tools.EventGrid.UnitTests.csproj", "{E1234569-1234-1234-1234-123456789012}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Extension.UnitTests", "tools\Azure.Mcp.Tools.Extension\tests\Azure.Mcp.Tools.Extension.UnitTests\Azure.Mcp.Tools.Extension.UnitTests.csproj", "{CE923FCF-F208-4BC5-8C9B-AA54E2930993}"
 EndProject
