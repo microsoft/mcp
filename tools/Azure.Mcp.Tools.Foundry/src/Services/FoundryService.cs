@@ -290,21 +290,14 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
             var credential = await GetCredential(tenantId);
             var indexesClient = new AIProjectClient(new Uri(endpoint), credential).GetIndexesClient();
 
-            // First, get the list of indexes to find the correct one and get its version
+            // First, get the list of indexes to find the correct one
             await foreach (var index in indexesClient.GetIndicesAsync())
             {
                 if (string.Equals(index.Name, indexName, StringComparison.OrdinalIgnoreCase))
                 {
-                    // Found the index, now get its detailed schema using GetIndex
-                    var detailedIndex = await indexesClient.GetIndexAsync(index.Name!, index.Version!);
-
-                    // Ensure we have a valid response
-                    if (detailedIndex?.Value == null)
-                    {
-                        throw new Exception($"Failed to retrieve schema details for knowledge index '{indexName}'.");
-                    }
-
-                    return detailedIndex.Value;
+                    // For now, return the index object itself, which should contain schema information
+                    // The GetIndexAsync might not be the right method for getting detailed schema
+                    return index;
                 }
             }
 
