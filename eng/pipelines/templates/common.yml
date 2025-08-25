@@ -67,6 +67,8 @@ extends:
           JobTemplatePath: /eng/pipelines/templates/jobs/build.yml
           AdditionalParameters:
             TestTimeoutInMinutes: 10
+            ${{ if ne(parameters.ServerName, 'none') }}:
+              ServerName: ${{ parameters.ServerName }}
           MatrixConfigs:
             - Name: build_matrix
               Path: eng/pipelines/build-matrix.json
