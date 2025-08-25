@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
+using static Azure.Mcp.Tools.Cosmos.Commands.AccountListCommand;
 
 namespace Azure.Mcp.Tools.Cosmos.UnitTests;
 
@@ -22,16 +23,22 @@ public class AccountListCommandTests
     private readonly IServiceProvider _serviceProvider;
     private readonly ICosmosService _cosmosService;
     private readonly ILogger<AccountListCommand> _logger;
+    private readonly AccountListCommand _command;
+    private readonly CommandContext _context;
+    private readonly Parser _parser;
 
     public AccountListCommandTests()
     {
         _cosmosService = Substitute.For<ICosmosService>();
         _logger = Substitute.For<ILogger<AccountListCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_cosmosService);
+        _command = new(_logger);
+        _parser = new(_command.GetCommand());
 
-        _serviceProvider = collection.BuildServiceProvider();
+        _serviceProvider = new ServiceCollection()
+            .AddSingleton(_cosmosService)
+            .BuildServiceProvider();
+        _context = new(_serviceProvider);
     }
 
     [Fact]
@@ -42,41 +49,52 @@ public class AccountListCommandTests
         _cosmosService.GetCosmosAccounts(Arg.Is("sub123"), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedAccounts);
 
-        var command = new AccountListCommand(_logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123"]);
-        var context = new CommandContext(_serviceProvider);
+        var args = _parser.Parse(["--subscription", "sub123"]);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccountListResult>(json);
+        var result = JsonSerializer.Deserialize<AccountListCommandResult>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+        });
 
         Assert.NotNull(result);
         Assert.Equal(expectedAccounts, result.Accounts);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoAccounts()
+    public async Task ExecuteAsync_ReturnsNull_WhenNoAccountsExist()
     {
         // Arrange
         _cosmosService.GetCosmosAccounts("sub123", null, null)
             .Returns([]);
 
-        var command = new AccountListCommand(_logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123"]);
+        var args = _parser.Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
         Assert.NotNull(response);
         Assert.Null(response.Results);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Returns400_WhenSubscriptionIsMissing()
+    {
+        // Arrange && Act
+        var response = await _command.ExecuteAsync(_context, _parser.Parse([]));
+
+        // Assert
+        Assert.Equal(400, response.Status);
+        Assert.Contains("required", response.Message.ToLower());
     }
 
     [Fact]
@@ -89,12 +107,10 @@ public class AccountListCommandTests
         _cosmosService.GetCosmosAccounts(subscriptionId, null, Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new AccountListCommand(_logger);
-        var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
-        var context = new CommandContext(_serviceProvider);
+        var args = _parser.Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
         Assert.NotNull(response);
@@ -102,9 +118,21 @@ public class AccountListCommandTests
         Assert.StartsWith(expectedError, response.Message);
     }
 
-    private class AccountListResult
+    [Fact]
+    public async Task ExecuteAsync_Returns503_WhenServiceIsUnavailable()
     {
-        [JsonPropertyName("accounts")]
-        public List<string> Accounts { get; set; } = [];
+        // Arrange
+        var subscriptionId = "sub123";
+        _cosmosService.GetCosmosAccounts(subscriptionId, null, Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new HttpRequestException("Service Unavailable", null, System.Net.HttpStatusCode.ServiceUnavailable));
+
+        var args = _parser.Parse(["--subscription", subscriptionId]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(503, response.Status);
+        Assert.Contains("Service Unavailable", response.Message);
     }
 }
