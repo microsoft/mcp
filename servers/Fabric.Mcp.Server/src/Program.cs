@@ -22,6 +22,7 @@ using Microsoft.Extensions.Logging;
 internal class Program
 {
     private static IAreaSetup[] Areas = RegisterAreas();
+
     private static async Task<int> Main(string[] args)
     {
         try
