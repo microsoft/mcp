@@ -10,7 +10,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
-- Fixes issue where client options not passed to ConfigurationClient [[#44](https://github.com/microsoft/mcp/pull/44)]
+- Fix a bug with telemetry collecting related to AppConfig MCP tools. [[#44](https://github.com/microsoft/mcp/pull/44)]
 
 ### Other Changes
 
