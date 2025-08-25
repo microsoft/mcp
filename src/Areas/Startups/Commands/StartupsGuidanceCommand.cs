@@ -109,8 +109,8 @@ public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> log
             ),
             new SamplePrompt(
                 Category: "Archery Website Example",
-                Title: "Deploy Sophia's Archery website",
-                Prompt: "Use the startups deploy command: Deploy the archery website to Azure using storage account sophiasarchery2025 in startups resource group",
+                Title: "Deploy Archery website",
+                Prompt: "Use the startups deploy command: Deploy the archery website to Azure using storage account archery2025 in startups resource group",
                 ExpectedResult: "Deploys complete archery website with static hosting enabled",
                 Prerequisites: ["Azure CLI logged in with az login", "archery-web folder with HTML/CSS/JS files"]
             ),
