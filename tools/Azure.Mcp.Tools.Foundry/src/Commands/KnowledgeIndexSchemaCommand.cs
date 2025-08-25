@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Models;
 using Azure.Mcp.Tools.Foundry.Services;
-using Azure.Mcp.Tools.Foundry.Models;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
