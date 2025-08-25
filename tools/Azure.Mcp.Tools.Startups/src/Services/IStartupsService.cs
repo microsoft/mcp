@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AzureMcp.Options;
+using Azure.Mcp.Core.Options;
 
-namespace AzureMcp.Areas.Startups.Services;
+namespace Azure.Mcp.Tools.Startups.Services;
 
 public interface IStartupsService
 {

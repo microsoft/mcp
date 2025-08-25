@@ -4,16 +4,16 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Text.Json;
-using AzureMcp.Areas.Startups.Commands;
-using AzureMcp.Areas.Startups.Services;
-using AzureMcp.Models.Command;
-using AzureMcp.Options;
+using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Startups.Commands;
+using Azure.Mcp.Tools.Startups.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
-namespace AzureMcp.Tests.Areas.Startups.UnitTests;
+namespace Azure.Mcp.Tools.Startups.UnitTests;
 
 [Trait("Area", "Startups")]
 [Trait("Category", "Unit")]

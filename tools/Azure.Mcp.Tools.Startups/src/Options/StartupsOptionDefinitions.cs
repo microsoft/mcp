@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace AzureMcp.Areas.Startups.Options;
+namespace Azure.Mcp.Tools.Startups.Options;
 
 public static class StartupsOptionDefinitions
 {

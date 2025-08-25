@@ -4,15 +4,15 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Text.Json;
-using AzureMcp.Areas.Startups.Commands.Guidance;
-using AzureMcp.Areas.Startups.Services;
-using AzureMcp.Models.Command;
+using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.Startups.Commands.Guidance;
+using Azure.Mcp.Tools.Startups.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
-namespace AzureMcp.Tests.Areas.Startups.UnitTests;
+namespace Azure.Mcp.Tools.Startups.UnitTests;
 
 [Trait("Area", "Startups")]
 [Trait("Category", "Unit")]
@@ -40,7 +40,7 @@ public sealed class StartupsGuidanceCommandTests
     {
         // Act
         var command = _command.GetCommand();
-        
+
         // Assert
         Assert.Equal("get", command.Name);
         Assert.NotNull(command.Description);
@@ -62,7 +62,7 @@ public sealed class StartupsGuidanceCommandTests
         Assert.Equal(200, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
-        
+
         // Verify the guidance content
         var guidanceJson = JsonSerializer.Serialize(response.Results);
         Assert.Contains("Microsoft for Startups", guidanceJson);

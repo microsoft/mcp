@@ -87,6 +87,7 @@ internal class Program
             new Azure.Mcp.Tools.Search.SearchSetup(),
             new Azure.Mcp.Tools.ServiceBus.ServiceBusSetup(),
             new Azure.Mcp.Tools.Sql.SqlSetup(),
+            new Azure.Mcp.Tools.Startups.StartupsSetup(),
             new Azure.Mcp.Tools.Storage.StorageSetup(),
             new Azure.Mcp.Tools.VirtualDesktop.VirtualDesktopSetup(),
             new Azure.Mcp.Tools.Workbooks.WorkbooksSetup(),
