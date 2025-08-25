@@ -1,19 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AzureMcp.Commands;
+using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
 
-namespace AzureMcp.Areas.Startups.Commands.Guidance;
+namespace Azure.Mcp.Tools.Startups.Commands.Guidance;
 
 public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> logger) : BaseCommand
 {
     private const string CommandTitle = "Get Guidance from Microsoft for Startups";
     private readonly ILogger<StartupsGuidanceCommand> _logger = logger;
-    
+
     public override string Name => "get";
     public override string Description => "Receive program guidance for building with Microsoft for Startups.";
     public override string Title => CommandTitle;
+
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        ReadOnly = true
+    };
 
     [McpServerTool(Destructive = false, ReadOnly = true, Title = CommandTitle)]
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
@@ -34,7 +40,7 @@ public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> log
                         IsImplemented: true
                     ),
                     new Capability(
-                        Name: "React App Deployment", 
+                        Name: "React App Deployment",
                         Description: "Build and deploy React applications with SPA routing",
                         RequiredParameters: ["tenant", "subscription", "storage-account", "resource-group", "react-project"],
                         OptionalParameters: ["build", "build-path", "overwrite"],
@@ -102,7 +108,7 @@ public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> log
             ),
             new SamplePrompt(
                 Category: "React Development",
-                Title: "Deploy React app with build", 
+                Title: "Deploy React app with build",
                 Prompt: "Use the startups deploy command: Deploy my React app to Azure using storage account startupapp2024 in startups resource group",
                 ExpectedResult: "Runs npm install, npm build, deploys to Azure with SPA routing in startups RG",
                 Prerequisites: ["React project with package.json", "Node.js installed", "Azure CLI logged in with az login"]
@@ -117,7 +123,7 @@ public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> log
             new SamplePrompt(
                 Category: "Static Website",
                 Title: "Deploy any web project",
-                Prompt: "Use the startups deploy command: Deploy this app to Azure using storage account mystartup2025 in startups resource group", 
+                Prompt: "Use the startups deploy command: Deploy this app to Azure using storage account mystartup2025 in startups resource group",
                 ExpectedResult: "Automatically detects project type and deploys to Azure in startups RG",
                 Prerequisites: ["Azure CLI logged in with az login"]
             )
@@ -159,7 +165,7 @@ public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> log
                 Description: "Have your website files ready for deployment",
                 Commands: [
                     "For static sites: Put files in a folder",
-                    "For React: Ensure package.json exists", 
+                    "For React: Ensure package.json exists",
                     "Run 'npm run build' if needed"
                 ]
             ),
@@ -197,7 +203,7 @@ public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> log
         context.Response.Results = ResponseResult.Create<StartupsGuidanceCommandResult>(
             new StartupsGuidanceCommandResult(info),
             GuidanceJsonContext.Default.StartupsGuidanceCommandResult);
-        
+
         return Task.FromResult(context.Response);
     }
 
