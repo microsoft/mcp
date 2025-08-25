@@ -42,5 +42,6 @@ public class FoundrySetup : IAreaSetup
         knowledge.AddSubGroup(index);
 
         index.AddCommand("list", new KnowledgeIndexListCommand());
+        index.AddCommand("schema", new KnowledgeIndexSchemaCommand());
     }
 }

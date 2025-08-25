@@ -66,4 +66,57 @@ public class FoundryCommandTests(LiveTestFixture liveTestFixture, ITestOutputHel
         Assert.Equal(JsonValueKind.Object, deploymentResource.ValueKind);
         Assert.NotEmpty(deploymentResource.EnumerateObject());
     }
+
+    [Fact]
+    public async Task Should_list_foundry_knowledge_indexes()
+    {
+        var projectName = $"{Settings.ResourceBaseName}-ai-projects";
+        var accounts = Settings.ResourceBaseName;
+        var result = await CallToolAsync(
+            "azmcp_foundry_knowledge_index_list",
+            new()
+            {
+                { "endpoint", $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}" },
+                { "tenant", Settings.TenantId }
+            });
+
+        var indexesArray = result.AssertProperty("indexes");
+        Assert.Equal(JsonValueKind.Array, indexesArray.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_get_foundry_knowledge_index_schema()
+    {
+        var projectName = $"{Settings.ResourceBaseName}-ai-projects";
+        var accounts = Settings.ResourceBaseName;
+        var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
+
+        // First get list of indexes to find one to test with
+        var listResult = await CallToolAsync(
+            "azmcp_foundry_knowledge_index_list",
+            new()
+            {
+                { "endpoint", endpoint },
+                { "tenant", Settings.TenantId }
+            });
+
+        var indexesArray = listResult.AssertProperty("indexes");
+        if (indexesArray.GetArrayLength() > 0)
+        {
+            var firstIndex = indexesArray[0];
+            var indexName = firstIndex.GetProperty("name").GetString();
+
+            var result = await CallToolAsync(
+                "azmcp_foundry_knowledge_index_schema",
+                new()
+                {
+                    { "endpoint", endpoint },
+                    { "index-name", indexName! },
+                    { "tenant", Settings.TenantId }
+                });
+
+            var schema = result.AssertProperty("schema");
+            Assert.Equal(JsonValueKind.Object, schema.ValueKind);
+        }
+    }
 }

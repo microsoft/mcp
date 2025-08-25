@@ -280,4 +280,33 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
             throw new Exception($"Failed to list knowledge indexes: {ex.Message}", ex);
         }
     }
+
+    public async Task<object> GetKnowledgeIndexSchema(string endpoint, string indexName, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(endpoint, indexName);
+
+        try
+        {
+            var credential = await GetCredential(tenantId);
+            var indexesClient = new AIProjectClient(new Uri(endpoint), credential).GetIndexesClient();
+
+            // First, get the list of indexes to find the correct one and get its version
+            var indexes = new List<KnowledgeIndexInformation>();
+            await foreach (var index in indexesClient.GetIndicesAsync())
+            {
+                if (string.Equals(index.Name, indexName, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Found the index, now get its detailed schema using GetIndex
+                    var detailedIndex = await indexesClient.GetIndexAsync(index.Name!, index.Version!);
+                    return detailedIndex.Value;
+                }
+            }
+
+            throw new Exception($"Knowledge index '{indexName}' not found.");
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to get knowledge index schema: {ex.Message}", ex);
+        }
+    }
 }

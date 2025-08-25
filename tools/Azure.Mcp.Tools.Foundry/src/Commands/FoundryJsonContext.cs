@@ -11,6 +11,7 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 [JsonSerializable(typeof(DeploymentsListCommand.DeploymentsListCommandResult))]
 [JsonSerializable(typeof(ModelDeploymentCommand.ModelDeploymentCommandResult))]
 [JsonSerializable(typeof(KnowledgeIndexListCommand.KnowledgeIndexListCommandResult))]
+[JsonSerializable(typeof(KnowledgeIndexSchemaCommand.KnowledgeIndexSchemaCommandResult))]
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(ModelCatalogFilter))]
 [JsonSerializable(typeof(ModelCatalogRequest))]
