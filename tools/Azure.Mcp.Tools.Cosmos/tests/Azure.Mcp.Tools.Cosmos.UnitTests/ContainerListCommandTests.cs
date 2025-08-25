@@ -30,12 +30,12 @@ public class ContainerListCommandTests
     {
         _cosmosService = Substitute.For<ICosmosService>();
         _logger = Substitute.For<ILogger<ContainerListCommand>>();
-        _command = new (_logger);
-        _parser = new (_command.GetCommand());
+        _command = new(_logger);
+        _parser = new(_command.GetCommand());
         _serviceProvider = new ServiceCollection()
             .AddSingleton(_cosmosService)
             .BuildServiceProvider();
-        _context = new (_serviceProvider);
+        _context = new(_serviceProvider);
     }
 
     [Fact]
