@@ -222,6 +222,7 @@ Here are some cool prompts you can try across our supported Azure services:
 * Deploy foundry models
 * List foundry model deployments
 * List knowledge indexes
+* Get knowledge index schema configuration
 
 ### ☁️ Azure Function App
 

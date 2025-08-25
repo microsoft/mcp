@@ -44,4 +44,11 @@ public interface IFoundryService
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null
     );
+
+    Task<KnowledgeIndexSchema> GetKnowledgeIndexSchema(
+        string endpoint,
+        string indexName,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null
+    );
 }
