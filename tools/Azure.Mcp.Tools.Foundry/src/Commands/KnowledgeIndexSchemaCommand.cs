@@ -69,11 +69,14 @@ public sealed class KnowledgeIndexSchemaCommand : GlobalCommand<KnowledgeIndexSc
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = indexSchema != null ?
-                ResponseResult.Create(
-                    new KnowledgeIndexSchemaCommandResult(indexSchema),
-                    FoundryJsonContext.Default.KnowledgeIndexSchemaCommandResult) :
-                null;
+            if (indexSchema == null)
+            {
+                throw new Exception("Failed to retrieve knowledge index schema - no data returned.");
+            }
+
+            context.Response.Results = ResponseResult.Create(
+                new KnowledgeIndexSchemaCommandResult(indexSchema),
+                FoundryJsonContext.Default.KnowledgeIndexSchemaCommandResult);
         }
         catch (Exception ex)
         {

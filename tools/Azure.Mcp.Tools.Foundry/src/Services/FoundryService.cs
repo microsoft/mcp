@@ -291,13 +291,19 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
             var indexesClient = new AIProjectClient(new Uri(endpoint), credential).GetIndexesClient();
 
             // First, get the list of indexes to find the correct one and get its version
-            var indexes = new List<KnowledgeIndexInformation>();
             await foreach (var index in indexesClient.GetIndicesAsync())
             {
                 if (string.Equals(index.Name, indexName, StringComparison.OrdinalIgnoreCase))
                 {
                     // Found the index, now get its detailed schema using GetIndex
                     var detailedIndex = await indexesClient.GetIndexAsync(index.Name!, index.Version!);
+
+                    // Ensure we have a valid response
+                    if (detailedIndex?.Value == null)
+                    {
+                        throw new Exception($"Failed to retrieve schema details for knowledge index '{indexName}'.");
+                    }
+
                     return detailedIndex.Value;
                 }
             }
