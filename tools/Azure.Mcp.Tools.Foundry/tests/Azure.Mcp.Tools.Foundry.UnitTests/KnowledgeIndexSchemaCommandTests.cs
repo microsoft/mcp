@@ -55,7 +55,14 @@ public class KnowledgeIndexSchemaCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            var mockSchema = new { Name = "test-index", Type = "AzureAISearchIndex", Fields = new[] { new { Name = "content", Type = "string" } } };
+            var mockSchema = new Azure.Mcp.Tools.Foundry.Models.KnowledgeIndexSchema
+            {
+                Name = "test-index",
+                Type = "AzureAISearchIndex",
+                Version = "1.0",
+                Description = "desc",
+                Tags = new Dictionary<string, string?> { { "env", "test" } }
+            };
             _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(mockSchema);
         }
@@ -83,7 +90,7 @@ public class KnowledgeIndexSchemaCommandTests
     {
         // Arrange
         _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromException<object>(new Exception("Test error")));
+            .Returns(Task.FromException<Azure.Mcp.Tools.Foundry.Models.KnowledgeIndexSchema>(new Exception("Test error")));
 
         var parseResult = _parser.Parse(["--endpoint", "https://example.com", "--index-name", "test-index"]);
 
@@ -100,15 +107,11 @@ public class KnowledgeIndexSchemaCommandTests
     public async Task ExecuteAsync_ReturnsExpectedResults()
     {
         // Arrange
-        var expectedSchema = new
+        var expectedSchema = new Azure.Mcp.Tools.Foundry.Models.KnowledgeIndexSchema
         {
             Name = "test-index",
             Type = "AzureAISearchIndex",
-            Fields = new[]
-            {
-                new { Name = "content", Type = "string", Searchable = true },
-                new { Name = "title", Type = "string", Searchable = true }
-            }
+            Version = "1.0"
         };
 
         _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())

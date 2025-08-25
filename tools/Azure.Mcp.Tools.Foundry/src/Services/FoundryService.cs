@@ -281,7 +281,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
         }
     }
 
-    public async Task<object> GetKnowledgeIndexSchema(string endpoint, string indexName, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<KnowledgeIndexSchema> GetKnowledgeIndexSchema(string endpoint, string indexName, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters(endpoint, indexName);
 
@@ -290,14 +290,29 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
             var credential = await GetCredential(tenantId);
             var indexesClient = new AIProjectClient(new Uri(endpoint), credential).GetIndexesClient();
 
-            // First, get the list of indexes to find the correct one
+            // Get the list of indexes to find the correct one
             await foreach (var index in indexesClient.GetIndicesAsync())
             {
                 if (string.Equals(index.Name, indexName, StringComparison.OrdinalIgnoreCase))
                 {
-                    // For now, return the index object itself, which should contain schema information
-                    // The GetIndexAsync might not be the right method for getting detailed schema
-                    return index;
+                    // Map the SDK index to our AOT-safe schema type
+                    string indexType = index switch
+                    {
+                        AzureAISearchIndex => "AzureAISearchIndex",
+                        ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
+                        CosmosDBIndex => "CosmosDBIndex",
+                        _ => index.GetType().Name
+                    };
+
+                    return new KnowledgeIndexSchema
+                    {
+                        Type = indexType,
+                        Id = index.Id,
+                        Name = index.Name,
+                        Version = index.Version,
+                        Description = index.Description,
+                        Tags = index.Tags?.ToDictionary(kvp => kvp.Key, kvp => (string?)kvp.Value)
+                    };
                 }
             }
 

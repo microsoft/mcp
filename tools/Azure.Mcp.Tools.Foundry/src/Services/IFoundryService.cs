@@ -45,7 +45,7 @@ public interface IFoundryService
         RetryPolicyOptions? retryPolicy = null
     );
 
-    Task<object> GetKnowledgeIndexSchema(
+    Task<KnowledgeIndexSchema> GetKnowledgeIndexSchema(
         string endpoint,
         string indexName,
         string? tenantId = null,

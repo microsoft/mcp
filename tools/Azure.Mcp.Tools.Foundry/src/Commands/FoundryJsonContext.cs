@@ -20,6 +20,7 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 [JsonSerializable(typeof(ModelInformation))]
 [JsonSerializable(typeof(ModelDeploymentResult))]
 [JsonSerializable(typeof(KnowledgeIndexInformation))]
+[JsonSerializable(typeof(KnowledgeIndexSchema))]
 [JsonSerializable(typeof(CognitiveServicesAccountSku))]
 [JsonSerializable(typeof(CognitiveServicesAccountDeploymentProperties))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
