@@ -163,6 +163,12 @@ This repository contains core libraries, test frameworks, engineering systems, p
 ## 🏗️ Looking for starter templates that use MCP? 
 Check out the [Azure Developer CLI (azd) templates](https://azure.github.io/awesome-azd/?tags=mcp) tagged with MCP.
 
+### 💻 NuGet MCP Server
+- **Repository**: [NuGet/Home](https://github.com/NuGet/Home)
+- **Description**: This is a Model Context Protocol (MCP) server for NuGet, enabling advanced tooling and automation scenarios for NuGet package management.
+
+---
+
 ## 📎 Related Resources
 - [Microsoft MCP Resources](https://github.com/microsoft/mcp/tree/main/Resources)
 - [MCP Pattern Overview](https://modelcontextprotocol.io/introduction)
