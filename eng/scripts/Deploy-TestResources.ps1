@@ -1,6 +1,8 @@
 param(
-    [Parameter(Mandatory=$true)]
-    [string]$Area,
+    [Parameter(Mandatory=$true, ParameterSetName="ByPath")]
+    [string]$Path,
+    [Parameter(Mandatory=$true, ParameterSetName="ByTool")]
+    [string]$Tool,
     [string]$SubscriptionId,
     [string]$ResourceGroupName,
     [string]$BaseName,
@@ -19,11 +21,42 @@ function New-StringHash([string[]]$strings) {
     return [BitConverter]::ToString($hashBytes) -replace '-', ''
 }
 
-$testResourcesDirectory = Resolve-Path -Path  "$RepoRoot/areas/$($Area.ToLower())/tests" -ErrorAction SilentlyContinue
+switch ($PSCmdlet.ParameterSetName) {
+    'ByPath' {
+        if(!(Test-Path -Path $Path)) {
+            Write-Error "Path '$Path' does not exist."
+            exit 1
+        }
+    }
+    'ByTool' {
+        $tools = Get-ChildItem -Path "$RepoRoot/tools" -Directory
+
+        $match = $tools | Where-Object { $_.Name -ceq $Tool }
+        if ($match) {
+            $Path = $match.FullName
+        } else {
+            $matchingTools = $tools | Where-Object { $_.Name -like "*$Tool*" }
+            if ($matchingTools.Count -eq 1) {
+                $match = $matchingTools[0]
+                Write-Host "Found tool '$($match.Name)'."
+                $Path = $match.FullName
+            } elseif ($matchingTools.Count -gt 1) {
+                $matchNames = $matchingTools | ForEach-Object { $_.Name }
+                Write-Error "Multiple tools match '$Tool':`n  $($matchNames -join "`n  ")`nPlease specify a more specific tool name."
+                exit 1
+            } else {
+                Write-Error "No tool matches '$Tool'. Available tools: $($tools -join ', ')"
+                exit 1
+            }
+        }
+    }
+}
+
+$testResourcesDirectory = Resolve-Path -Path  "$Path/tests" -ErrorAction SilentlyContinue
 $bicepPath = "$testResourcesDirectory/test-resources.bicep"
 if(!(Test-Path -Path $bicepPath)) {
     Write-Error "Test resources bicep template '$bicepPath' does not exist."
-    return
+    exit 1
 }
 
 if($SubscriptionId) {
@@ -42,7 +75,7 @@ $account = $context.Account
 if($Unique) {
     $hash = [guid]::NewGuid().ToString()
 } else {
-    $hash = (New-StringHash $account.Id, $SubscriptionId, $Area)
+    $hash = (New-StringHash $account.Id, $SubscriptionId, $Path)
 }
 
 $suffix = $hash.ToLower().Substring(0, 8)
