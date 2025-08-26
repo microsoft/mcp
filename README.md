@@ -29,7 +29,7 @@ Below are Microsoft's official MCP server implementations:
 
 ### 🔷 Azure MCP Server
 
-- **Repository**: [microsoft/mcp](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server#readme)
+- **Repository**: [Azure/azure-mcp](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server#readme)
 - **Description**: Implements the MCP standard to manage Azure resources, enabling declarative provisioning and integration with AI workflows.
 
 ---
