@@ -264,6 +264,48 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
         }
     }
 
+    public async Task<List<KnowledgeIndexInformation>> ListKnowledgeIndexes(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(endpoint);
+
+        try
+        {
+            var credential = await GetCredential(tenantId);
+            var indexesClient = new AIProjectClient(new Uri(endpoint), credential).GetIndexesClient();
+
+            var indexes = new List<KnowledgeIndexInformation>();
+            await foreach (var index in indexesClient.GetIndicesAsync())
+            {
+                // Determine the type based on the actual type of the index
+                string indexType = index switch
+                {
+                    AzureAISearchIndex => "AzureAISearchIndex",
+                    ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
+                    CosmosDBIndex => "CosmosDBIndex",
+                    _ => index.GetType().Name
+                };
+
+                var knowledgeIndex = new KnowledgeIndexInformation
+                {
+                    Type = indexType,
+                    Id = index.Id,
+                    Name = index.Name,
+                    Version = index.Version,
+                    Description = index.Description,
+                    Tags = index.Tags?.ToDictionary(kvp => kvp.Key, kvp => (string?)kvp.Value) ?? null
+                };
+
+                indexes.Add(knowledgeIndex);
+            }
+
+            return indexes;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to list knowledge indexes: {ex.Message}", ex);
+        }
+    }
+
     public async Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters(endpoint);
@@ -286,7 +328,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to list evaluation agents: {ex.Message}", ex);
+            throw new Exception($"Failed to list agents: {ex.Message}", ex);
         }
     }
 
@@ -781,6 +823,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
                 new Uri(azureOpenAIEndpoint),
                 credential).GetChatClient(azureOpenAIDeployment).AsIChatClient();
             default:
+                return new AzureOpenAIClient(
                 new Uri(azureOpenAIEndpoint),
                 new ApiKeyCredential(azureOpenAIKey)).GetChatClient(azureOpenAIDeployment).AsIChatClient();
         }

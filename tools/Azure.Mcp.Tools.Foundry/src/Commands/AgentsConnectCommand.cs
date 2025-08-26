@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AzureMcp.Core.Commands;
-using AzureMcp.Foundry.Options;
-using AzureMcp.Foundry.Services;
+using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.Foundry.Options;
+using Azure.Mcp.Tools.Foundry.Services;
 
-namespace AzureMcp.Foundry.Commands;
+namespace Azure.Mcp.Tools.Foundry.Commands;
 
 public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
 {
