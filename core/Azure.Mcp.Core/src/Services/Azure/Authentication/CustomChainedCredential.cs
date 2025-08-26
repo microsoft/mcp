@@ -64,24 +64,20 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
         }
 
         var creds = new List<TokenCredential>();
-        var vsCodeCred = CreateVsCodeBrokerCredential(tenantId, logger);
+        var vsCodeCred = CreateVsCodeCredential(tenantId);
 
         // Check if we are running in a VS Code context. VSCODE_PID is set by VS Code when launching processes, and is a reliable indicator for VS Code-hosted processes.
         bool isVsCodeContext = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VSCODE_PID"));
 
         if (isVsCodeContext && vsCodeCred != null)
         {
-            logger?.LogDebug("VS Code context detected (VSCODE_PID set). Prioritizing VS Code Broker Credential in chain.");
+            logger?.LogDebug("VS Code context detected (VSCODE_PID set). Prioritizing VS Code Credential in chain.");
             creds.Add(vsCodeCred);
             creds.Add(CreateDefaultCredential(tenantId));
         }
         else
         {
             creds.Add(CreateDefaultCredential(tenantId));
-            if (vsCodeCred != null)
-            {
-                creds.Add(vsCodeCred);
-            }
         }
         creds.Add(CreateBrowserCredential(tenantId, authRecord));
         return new ChainedTokenCredential([.. creds]);
@@ -141,65 +137,23 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
         return new DefaultAzureCredential(defaultCredentialOptions);
     }
 
-    private static TokenCredential? CreateVsCodeBrokerCredential(string? tenantId, Microsoft.Extensions.Logging.ILogger<CustomChainedCredential>? logger = null)
+    private static TokenCredential? CreateVsCodeCredential(string? tenantId)
     {
-        const string vsCodeClientId = "aebc6443-996d-45c2-90f0-388ff96faa56";
-        string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        if (string.IsNullOrEmpty(userProfile))
+        var options = new VisualStudioCodeCredentialOptions();
+        
+        if (!string.IsNullOrEmpty(tenantId))
         {
-            logger?.LogDebug("VS Code Broker Credential -> User profile directory is null or empty. Cannot locate VS Code authRecord.json.");
-            return null;
-        }
-        string authRecordPath = Path.Combine(userProfile, ".azure", "ms-azuretools.vscode-azureresourcegroups", "authRecord.json");
-        if (!File.Exists(authRecordPath))
-        {
-            // Try .Azure if .azure is not present
-            authRecordPath = Path.Combine(userProfile, ".Azure", "ms-azuretools.vscode-azureresourcegroups", "authRecord.json");
-            if (!File.Exists(authRecordPath))
-            {
-                logger?.LogDebug("VS Code Broker Credential -> authRecord.json not found in either .azure or .Azure directory.");
-                return null;
-            }
+            options.TenantId = tenantId;
         }
 
-        AuthenticationRecord? authRecord;
         try
         {
-            using var stream = File.OpenRead(authRecordPath);
-            authRecord = AuthenticationRecord.Deserialize(stream);
+            return new VisualStudioCodeCredential(options);
         }
-        catch (Exception ex)
+        catch
         {
-            logger?.LogDebug(ex, "VS Code Broker Credential -> Failed to deserialize VS Code authRecord.json");
+            // VS Code credential may not be available if VS Code is not installed or configured
             return null;
         }
-
-        if (authRecord is null)
-        {
-            logger?.LogDebug("VS Code Broker Credential -> Deserialized VS Code AuthenticationRecord is null.");
-            return null;
-        }
-
-        // Validate client ID
-        if (!string.Equals(authRecord.ClientId, vsCodeClientId, StringComparison.OrdinalIgnoreCase))
-        {
-            logger?.LogDebug("VS Code Broker Credential -> VS Code AuthenticationRecord clientId mismatch. Expected {Expected}", vsCodeClientId);
-            return null;
-        }
-
-        // Prefer explicit tenantId, else use from auth record
-        string effectiveTenantId = !string.IsNullOrEmpty(tenantId)
-            ? tenantId
-            : authRecord.TenantId;
-
-        var options = new InteractiveBrowserCredentialBrokerOptions(0)
-        {
-            ClientId = vsCodeClientId,
-            TenantId = effectiveTenantId,
-            AuthenticationRecord = authRecord
-        };
-
-        logger?.LogDebug("VS Code Broker Credential -> Successfully created VS Code Broker Credential");
-        return new InteractiveBrowserCredential(options);
     }
 }
