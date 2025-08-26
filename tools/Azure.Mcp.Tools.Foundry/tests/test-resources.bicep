@@ -113,3 +113,39 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-
     }
   }
 }
+
+resource searchService 'Microsoft.Search/searchServices@2023-11-01' = {
+  name: '${baseName}-search'
+  location: location
+  sku: {
+    name: 'basic'
+  }
+  properties: {
+    replicaCount: 1
+    partitionCount: 1
+    hostingMode: 'default'
+    publicNetworkAccess: 'enabled'
+    networkRuleSet: {
+      ipRules: []
+    }
+    encryptionWithCmk: {
+      enforcement: 'Unspecified'
+    }
+    disableLocalAuth: false
+    authOptions: {
+      apiKeyOnly: {}
+    }
+  }
+  identity: {
+    type: 'SystemAssigned'
+  }
+}
+
+resource searchServiceRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid('f25e0fc2-0c74-4ad8-b6ce-2d41e12d6094', testApplicationOid, searchService.id) // Search Index Data Contributor role
+  scope: searchService
+  properties: {
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', 'f25e0fc2-0c74-4ad8-b6ce-2d41e12d6094')
+    principalId: testApplicationOid
+  }
+}
