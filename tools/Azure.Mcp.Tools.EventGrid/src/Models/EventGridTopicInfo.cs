@@ -13,5 +13,4 @@ public sealed record EventGridTopicInfo(
     [property: JsonPropertyName("endpoint")] string? Endpoint,
     [property: JsonPropertyName("provisioningState")] string? ProvisioningState,
     [property: JsonPropertyName("publicNetworkAccess")] string? PublicNetworkAccess,
-    [property: JsonPropertyName("inputSchema")] string? InputSchema,
-    [property: JsonPropertyName("skuName")] string? SkuName);
+    [property: JsonPropertyName("inputSchema")] string? InputSchema);

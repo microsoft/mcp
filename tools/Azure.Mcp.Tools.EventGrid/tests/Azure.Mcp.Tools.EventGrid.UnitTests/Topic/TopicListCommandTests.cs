@@ -45,8 +45,8 @@ public class TopicListCommandTests
         var subscriptionId = "sub123";
         var expectedTopics = new List<Azure.Mcp.Tools.EventGrid.Models.EventGridTopicInfo>
         {
-            new("topic1", "eastus", "https://topic1.eastus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema", "Basic"),
-            new("topic2", "westus", "https://topic2.westus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema", "Basic")
+            new("topic1", "eastus", "https://topic1.eastus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema"),
+            new("topic2", "westus", "https://topic2.westus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema")
         };
 
         _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
