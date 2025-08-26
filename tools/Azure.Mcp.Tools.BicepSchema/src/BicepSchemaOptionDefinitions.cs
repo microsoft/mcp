@@ -13,6 +13,6 @@ public static class BicepSchemaOptionDefinitions
         "(e.g., 'Microsoft.KeyVault/vaults', 'Microsoft.Storage/storageAccounts', 'Microsoft.Compute/virtualMachines')(e.g., Microsoft.Storage/storageAccounts)."
     )
     {
-        IsRequired = true
+        Required = true
     };
 }

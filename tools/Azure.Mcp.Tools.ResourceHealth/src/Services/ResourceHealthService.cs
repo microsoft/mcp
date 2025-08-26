@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ResourceHealth.Models;
-using Azure.ResourceManager;
 using Azure.ResourceManager.ResourceHealth;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Services;

@@ -23,7 +23,7 @@ public abstract class BaseFileSystemCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.FileSystem = parseResult.GetValueForOption(_fileSystemOption);
+        options.FileSystem = parseResult.GetValue(_fileSystemOption);
         return options;
     }
 }

@@ -45,9 +45,9 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
     protected override CreateWorkbookOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DisplayName = parseResult.GetValueForOption(_displayNameOption);
-        options.SerializedContent = parseResult.GetValueForOption(_serializedContentOption);
-        options.SourceId = parseResult.GetValueForOption(_sourceIdOption);
+        options.DisplayName = parseResult.GetValue(_displayNameOption);
+        options.SerializedContent = parseResult.GetValue(_serializedContentOption);
+        options.SourceId = parseResult.GetValue(_sourceIdOption);
         return options;
     }
 

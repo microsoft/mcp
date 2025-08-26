@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Services.ProcessExecution;
@@ -38,8 +37,8 @@ public sealed class AzdCommandTests
     {
         // Arrange
         var command = new AzdCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--command \"env list\" --cwd test-dir");
+
+        var args = command.GetCommand().Parse("--command \"env list\" --cwd test-dir");
         var context = new CommandContext(_serviceProvider);
 
         var expectedOutput = "env1\nenv2";
@@ -95,8 +94,8 @@ public sealed class AzdCommandTests
     {
         // Arrange
         var command = new AzdCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--command \"env invalid-command\" --cwd test-dir");
+
+        var args = command.GetCommand().Parse("--command \"env invalid-command\" --cwd test-dir");
         var context = new CommandContext(_serviceProvider);
 
         var errorMessage = "Error: azd env: 'invalid-command' is not an azd command.";
@@ -147,8 +146,8 @@ public sealed class AzdCommandTests
     {
         // Arrange
         var command = new AzdCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--command \"env list\" --cwd test-dir");
+
+        var args = command.GetCommand().Parse("--command \"env list\" --cwd test-dir");
         var context = new CommandContext(_serviceProvider);
 
         var exceptionMessage = "Azure Developer CLI executable not found";
@@ -173,8 +172,8 @@ public sealed class AzdCommandTests
     {
         // Arrange
         var command = new AzdCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--command \"env list\"");
+
+        var args = command.GetCommand().Parse("--command \"env list\"");
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -195,8 +194,8 @@ public sealed class AzdCommandTests
     {
         // Arrange
         var command = new AzdCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse($"--command {longRunningCommand} --cwd test-dir");
+
+        var args = command.GetCommand().Parse($"--command {longRunningCommand} --cwd test-dir");
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -213,8 +212,8 @@ public sealed class AzdCommandTests
     {
         // Arrange
         var command = new AzdCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--learn --cwd test-dir");
+
+        var args = command.GetCommand().Parse("--learn --cwd test-dir");
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -231,8 +230,8 @@ public sealed class AzdCommandTests
     {
         // Arrange
         var command = new AzdCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--command \"env list\" --cwd test-dir --environment dev");
+
+        var args = command.GetCommand().Parse("--command \"env list\" --cwd test-dir --environment dev");
         var context = new CommandContext(_serviceProvider);
 
         _processService.ExecuteAsync(
@@ -327,8 +326,8 @@ public sealed class AzdCommandTests
     {
         // Arrange
         var command = new AzdCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--command \"env get-values --output json\" --cwd test-dir");
+
+        var args = command.GetCommand().Parse("--command \"env get-values --output json\" --cwd test-dir");
         var context = new CommandContext(_serviceProvider);
 
         var expectedOutput = """{"AZURE_LOCATION":"eastus","AZURE_SUBSCRIPTION_ID":"12345"}""";
@@ -388,8 +387,8 @@ public sealed class AzdCommandTests
     {
         // Arrange
         var command = new AzdCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse($"--command \"{infoCommand}\" --cwd test-dir");
+
+        var args = command.GetCommand().Parse($"--command \"{infoCommand}\" --cwd test-dir");
         var context = new CommandContext(_serviceProvider);
 
         var expectedOutput = $"Mock output for {infoCommand}";

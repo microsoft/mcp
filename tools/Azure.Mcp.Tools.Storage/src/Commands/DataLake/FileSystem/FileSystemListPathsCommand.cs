@@ -20,7 +20,7 @@ public sealed class FileSystemListPathsCommand(ILogger<FileSystemListPathsComman
     public override string Description =>
         """
         List paths in a Data Lake file system. This command retrieves and displays paths (files and directories)
-        available in the specified Data Lake file system within the storage account. Results include path names, 
+        available in the specified Data Lake file system within the storage account. Results include path names,
         types (file or directory), and metadata, returned as a JSON array.
         """;
 
@@ -38,8 +38,8 @@ public sealed class FileSystemListPathsCommand(ILogger<FileSystemListPathsComman
     protected override ListPathsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.FilterPath = parseResult.GetValueForOption(StorageOptionDefinitions.FilterPath);
-        options.Recursive = parseResult.GetValueForOption(StorageOptionDefinitions.Recursive);
+        options.FilterPath = parseResult.GetValue(StorageOptionDefinitions.FilterPath);
+        options.Recursive = parseResult.GetValue(StorageOptionDefinitions.Recursive);
         return options;
     }
 

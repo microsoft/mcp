@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 
+using System.CommandLine.Parsing;
 using System.Diagnostics;
 using Azure.Mcp.Core.Models.Option;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
@@ -69,26 +70,28 @@ public abstract class BaseCommand : IBaseCommand
     {
         var result = new ValidationResult { IsValid = true };
 
+        // Determine any missing required options using beta5 APIs
         var missingOptions = commandResult.Command.Options
-            .Where(o => o.IsRequired && IsOptionValueMissing(commandResult.GetValueForOption(o)))
+            .Where(o => o.Required && commandResult.Children
+                .OfType<System.CommandLine.Parsing.OptionResult>()
+                .FirstOrDefault(or => ReferenceEquals(or.Option, o)) is null)
             .Select(o => $"--{o.Name}")
             .ToList();
 
-        if (missingOptions.Count > 0 || !string.IsNullOrEmpty(commandResult.ErrorMessage))
+        if (missingOptions.Count > 0)
         {
             result.IsValid = false;
-            result.ErrorMessage = missingOptions.Count > 0
-                ? $"{MissingRequiredOptionsPrefix}{string.Join(", ", missingOptions)}"
-                : commandResult.ErrorMessage;
-
+            result.ErrorMessage = $"{MissingRequiredOptionsPrefix}{string.Join(", ", missingOptions)}";
             SetValidationError(commandResponse, result.ErrorMessage!);
         }
 
         // Check logical requirements (e.g., resource group requirement)
         if (result.IsValid && _requiresResourceGroup)
         {
-            var rg = commandResult.GetValueForOption(OptionDefinitions.Common.ResourceGroup);
-            if (string.IsNullOrWhiteSpace(rg))
+            var hasRg = commandResult.Children
+                .OfType<System.CommandLine.Parsing.OptionResult>()
+                .Any(or => ReferenceEquals(or.Option, OptionDefinitions.Common.ResourceGroup));
+            if (!hasRg)
             {
                 result.IsValid = false;
                 result.ErrorMessage = $"{MissingRequiredOptionsPrefix}--resource-group";
@@ -118,7 +121,7 @@ public abstract class BaseCommand : IBaseCommand
         if (_usesResourceGroup)
             return;
         _usesResourceGroup = true;
-        _command.AddOption(OptionDefinitions.Common.ResourceGroup);
+        _command.Options.Add(OptionDefinitions.Common.ResourceGroup);
     }
 
     protected void RequireResourceGroup()
@@ -128,7 +131,7 @@ public abstract class BaseCommand : IBaseCommand
     }
 
     protected string? GetResourceGroup(ParseResult parseResult) =>
-        _usesResourceGroup ? parseResult.GetValueForOption(OptionDefinitions.Common.ResourceGroup) : null;
+        _usesResourceGroup ? parseResult.GetValue(OptionDefinitions.Common.ResourceGroup) : null;
 
     protected bool UsesResourceGroup => _usesResourceGroup;
 }

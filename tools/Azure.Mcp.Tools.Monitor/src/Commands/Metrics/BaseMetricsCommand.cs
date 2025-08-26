@@ -32,8 +32,8 @@ public abstract class BaseMetricsCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceType = parseResult.GetValueForOption(_resourceTypeOption);
-        options.ResourceName = parseResult.GetValueForOption(_resourceNameOption);
+        options.ResourceType = parseResult.GetValue(_resourceTypeOption);
+        options.ResourceName = parseResult.GetValue(_resourceNameOption);
         return options;
     }
 }

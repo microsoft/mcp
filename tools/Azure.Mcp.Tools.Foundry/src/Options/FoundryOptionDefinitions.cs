@@ -26,7 +26,7 @@ public static class FoundryOptionDefinitions
         "The endpoint URL for the Azure AI service."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> OptionalModelNameOption = new(
@@ -40,7 +40,7 @@ public static class FoundryOptionDefinitions
         "The name of the deployment."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> ModelNameOption = new(
@@ -48,7 +48,7 @@ public static class FoundryOptionDefinitions
         "The name of the model to deploy."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> ModelFormatOption = new(
@@ -56,7 +56,7 @@ public static class FoundryOptionDefinitions
         "The format of the model (e.g., 'OpenAI', 'Meta', 'Microsoft')."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> AzureAiServicesNameOption = new(
@@ -64,7 +64,7 @@ public static class FoundryOptionDefinitions
         "The name of the Azure AI services account to deploy to."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<bool> SearchForFreePlaygroundOption = new(

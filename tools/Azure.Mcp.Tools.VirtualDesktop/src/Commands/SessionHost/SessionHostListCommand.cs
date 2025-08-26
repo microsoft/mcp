@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;

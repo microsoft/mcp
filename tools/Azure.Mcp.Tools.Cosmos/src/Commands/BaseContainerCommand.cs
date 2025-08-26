@@ -22,7 +22,7 @@ public abstract class BaseContainerCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Container = parseResult.GetValueForOption(_containerOption);
+        options.Container = parseResult.GetValue(_containerOption);
         return options;
     }
 }

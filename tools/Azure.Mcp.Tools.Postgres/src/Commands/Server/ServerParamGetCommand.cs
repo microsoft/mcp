@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Server;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -26,13 +25,13 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_paramOption);
+        command.Options.Add(_paramOption);
     }
 
     protected override ServerParamGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Param = parseResult.GetValueForOption(_paramOption);
+        options.Param = parseResult.GetValue(_paramOption);
         return options;
     }
 

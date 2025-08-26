@@ -12,6 +12,6 @@ public static class ResourceHealthOptionDefinitions
         "The Azure resource ID to get health status for (e.g., /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{vm})."
     )
     {
-        IsRequired = true
+        Required = true
     };
 }

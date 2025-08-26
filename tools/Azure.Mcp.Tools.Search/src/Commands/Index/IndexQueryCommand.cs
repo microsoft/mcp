@@ -44,9 +44,9 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : Globa
     protected override IndexQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Service = parseResult.GetValueForOption(_serviceOption);
-        options.Index = parseResult.GetValueForOption(_indexOption);
-        options.Query = parseResult.GetValueForOption(_queryOption);
+        options.Service = parseResult.GetValue(_serviceOption);
+        options.Index = parseResult.GetValue(_indexOption);
+        options.Query = parseResult.GetValue(_queryOption);
         return options;
     }
 

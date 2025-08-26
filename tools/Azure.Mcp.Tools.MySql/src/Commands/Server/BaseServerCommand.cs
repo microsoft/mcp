@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.MySql.Options;
@@ -25,7 +23,7 @@ public abstract class BaseServerCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Server = parseResult.GetValueForOption(_serverOption);
+        options.Server = parseResult.GetValue(_serverOption);
         return options;
     }
 }

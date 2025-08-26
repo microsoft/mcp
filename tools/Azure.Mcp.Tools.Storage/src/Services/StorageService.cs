@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure;
 using Azure.Data.Tables;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;

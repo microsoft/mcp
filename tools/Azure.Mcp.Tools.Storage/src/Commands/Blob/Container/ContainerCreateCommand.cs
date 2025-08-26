@@ -37,7 +37,7 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
     protected override ContainerCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.BlobContainerPublicAccess = parseResult.GetValueForOption(_blobContainerPublicAccessOption);
+        options.BlobContainerPublicAccess = parseResult.GetValue(_blobContainerPublicAccessOption);
         return options;
     }
 

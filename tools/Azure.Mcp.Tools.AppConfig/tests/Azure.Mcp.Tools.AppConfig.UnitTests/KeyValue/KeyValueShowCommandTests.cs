@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -25,7 +25,7 @@ public class KeyValueShowCommandTests
     private readonly ILogger<KeyValueShowCommand> _logger;
     private readonly KeyValueShowCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public KeyValueShowCommandTests()
     {
@@ -33,7 +33,7 @@ public class KeyValueShowCommandTests
         _logger = Substitute.For<ILogger<KeyValueShowCommand>>();
 
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
         _serviceProvider = new ServiceCollection()
             .AddSingleton(_appConfigService)
             .BuildServiceProvider();
@@ -61,7 +61,7 @@ public class KeyValueShowCommandTests
             Arg.Any<string?>())
             .Returns(expectedSetting);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key",
@@ -108,7 +108,7 @@ public class KeyValueShowCommandTests
             Arg.Any<string>())
             .Returns(expectedSetting);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key"
@@ -145,7 +145,7 @@ public class KeyValueShowCommandTests
             Arg.Any<string>())
             .ThrowsAsync(new Exception("Setting not found"));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key"
@@ -166,7 +166,7 @@ public class KeyValueShowCommandTests
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
         // Arrange
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

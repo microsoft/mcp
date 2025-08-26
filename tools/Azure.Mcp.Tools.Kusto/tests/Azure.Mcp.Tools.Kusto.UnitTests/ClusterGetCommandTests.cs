@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -58,8 +57,8 @@ public sealed class ClusterGetCommandTests
             "sub123", "clusterA", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedCluster);
         var command = new ClusterGetCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--subscription sub123 --cluster clusterA");
+
+        var args = command.GetCommand().Parse("--subscription sub123 --cluster clusterA");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -88,8 +87,8 @@ public sealed class ClusterGetCommandTests
             "sub123", "clusterA", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult<KustoClusterResourceProxy?>(null));
         var command = new ClusterGetCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--subscription sub123 --cluster clusterA");
+
+        var args = command.GetCommand().Parse("--subscription sub123 --cluster clusterA");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -107,8 +106,8 @@ public sealed class ClusterGetCommandTests
             "sub123", "clusterA", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception("Test error"));
         var command = new ClusterGetCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--subscription sub123 --cluster clusterA");
+
+        var args = command.GetCommand().Parse("--subscription sub123 --cluster clusterA");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);

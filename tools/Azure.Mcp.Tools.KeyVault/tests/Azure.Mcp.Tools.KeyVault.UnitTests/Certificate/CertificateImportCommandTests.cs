@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
@@ -21,7 +21,7 @@ public class CertificateImportCommandTests
     private readonly ILogger<CertificateImportCommand> _logger;
     private readonly CertificateImportCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     private const string _knownSubscription = "knownSubscription";
     private const string _knownVault = "knownVault";
@@ -39,7 +39,7 @@ public class CertificateImportCommandTests
         _serviceProvider = services.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class CertificateImportCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception("Test error")); // force exception to avoid building return object
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVault,
             "--certificate", _knownCertName,
             "--certificate-data", _fakePfxBase64,
@@ -93,7 +93,7 @@ public class CertificateImportCommandTests
     public async Task ExecuteAsync_ValidatesRequiredArguments(string argLine, bool shouldPassValidation)
     {
         // Arrange
-        var args = _parser.Parse(argLine.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var args = _commandDefinition.Parse(argLine.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         if (shouldPassValidation)
         {
@@ -144,7 +144,7 @@ public class CertificateImportCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception(expected));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVault,
             "--certificate", _knownCertName,
             "--certificate-data", _fakePfxBase64,
@@ -172,7 +172,7 @@ public class CertificateImportCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception("Test error"));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVault,
             "--certificate", _knownCertName,
             "--certificate-data", pem,
@@ -208,7 +208,7 @@ public class CertificateImportCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception("Test error"));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVault,
             "--certificate", _knownCertName,
             "--certificate-data", _fakePfxBase64,
@@ -245,7 +245,7 @@ public class CertificateImportCommandTests
                 _knownSubscription,
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception("Test error"));
-            var args = _parser.Parse([
+            var args = _commandDefinition.Parse([
                 "--vault", _knownVault,
                 "--certificate", _knownCertName,
                 "--certificate-data", tempPath,
@@ -289,7 +289,7 @@ public class CertificateImportCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception(errorMessage));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVault,
             "--certificate", _knownCertName,
             "--certificate-data", invalidData,
@@ -318,7 +318,7 @@ public class CertificateImportCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception(mismatchMessage));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVault,
             "--certificate", _knownCertName,
             "--certificate-data", _fakePfxBase64,

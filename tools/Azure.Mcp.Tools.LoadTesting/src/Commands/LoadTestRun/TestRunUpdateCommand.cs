@@ -42,10 +42,10 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
     protected override TestRunUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestRunId = parseResult.GetValueForOption(_testRunIdOption);
-        options.TestId = parseResult.GetValueForOption(_testIdOption);
-        options.DisplayName = parseResult.GetValueForOption(_displayNameOption);
-        options.Description = parseResult.GetValueForOption(_descriptionOption);
+        options.TestRunId = parseResult.GetValue(_testRunIdOption);
+        options.TestId = parseResult.GetValue(_testIdOption);
+        options.DisplayName = parseResult.GetValue(_displayNameOption);
+        options.Description = parseResult.GetValue(_descriptionOption);
         return options;
     }
 

@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Queue;
 using Azure.Mcp.Tools.ServiceBus.Services;
@@ -49,9 +48,9 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
     protected override QueuePeekOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Name = parseResult.GetValueForOption(_queueOption);
-        options.Namespace = parseResult.GetValueForOption(_namespaceOption);
-        options.MaxMessages = parseResult.GetValueForOption(_maxMessagesOption);
+        options.Name = parseResult.GetValue(_queueOption);
+        options.Namespace = parseResult.GetValue(_namespaceOption);
+        options.MaxMessages = parseResult.GetValue(_maxMessagesOption);
         return options;
     }
 

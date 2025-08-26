@@ -13,7 +13,7 @@ public static class SqlOptionDefinitions
         "The Azure SQL Server name."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Database = new(
@@ -21,6 +21,6 @@ public static class SqlOptionDefinitions
         "The Azure SQL Database name."
     )
     {
-        IsRequired = true
+        Required = true
     };
 }

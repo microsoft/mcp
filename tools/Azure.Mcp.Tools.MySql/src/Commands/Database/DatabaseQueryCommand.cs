@@ -1,11 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
-using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Json;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Options.Database;
@@ -36,7 +32,7 @@ public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) :
     protected override DatabaseQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValueForOption(_queryOption);
+        options.Query = parseResult.GetValue(_queryOption);
         return options;
     }
 

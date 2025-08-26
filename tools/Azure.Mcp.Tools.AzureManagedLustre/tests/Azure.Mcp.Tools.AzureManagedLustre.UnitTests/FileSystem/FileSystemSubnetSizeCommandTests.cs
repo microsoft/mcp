@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -22,7 +22,7 @@ public class FileSystemSubnetSizeCommandTests
     private readonly ILogger<FileSystemSubnetSizeCommand> _logger;
     private readonly FileSystemSubnetSizeCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
     private readonly string _knownSubscriptionId = "sub123";
 
     public FileSystemSubnetSizeCommandTests()
@@ -35,7 +35,7 @@ public class FileSystemSubnetSizeCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public class FileSystemSubnetSizeCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .Returns(21);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--sku", "AMLFS-Durable-Premium-40",
             "--size", "480",
             "--subscription", _knownSubscriptionId
@@ -85,7 +85,7 @@ public class FileSystemSubnetSizeCommandTests
     {
         // Arrange
         _amlfsService.GetRequiredAmlFSSubnetsSize(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).Returns(10);
-        var args = _parser.Parse(["--sku", sku, "--size", "32", "--subscription", _knownSubscriptionId]);
+        var args = _commandDefinition.Parse(["--sku", sku, "--size", "32", "--subscription", _knownSubscriptionId]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -99,7 +99,7 @@ public class FileSystemSubnetSizeCommandTests
     public async Task ExecuteAsync_InvalidSku_Returns400()
     {
         // Arrange: The command validates SKU in BindOptions and throws ArgumentException
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--sku", "INVALID-SKU",
             "--size", "100",
             "--subscription", _knownSubscriptionId
@@ -120,7 +120,7 @@ public class FileSystemSubnetSizeCommandTests
         _amlfsService.GetRequiredAmlFSSubnetsSize(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Exception("boom"));
 
-        var args = _parser.Parse(["--sku", "AMLFS-Durable-Premium-40", "--size", "100", "--subscription", _knownSubscriptionId]);
+        var args = _commandDefinition.Parse(["--sku", "AMLFS-Durable-Premium-40", "--size", "100", "--subscription", _knownSubscriptionId]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);

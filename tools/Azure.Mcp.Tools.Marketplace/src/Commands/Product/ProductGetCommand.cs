@@ -57,15 +57,15 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
     protected override ProductGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ProductId = parseResult.GetValueForOption(_productIdOption);
-        options.IncludeStopSoldPlans = parseResult.GetValueForOption(_includeStopSoldPlansOption);
-        options.Language = parseResult.GetValueForOption(_languageOption);
-        options.Market = parseResult.GetValueForOption(_marketOption);
-        options.LookupOfferInTenantLevel = parseResult.GetValueForOption(_lookupOfferInTenantLevelOption);
-        options.PlanId = parseResult.GetValueForOption(_planIdOption);
-        options.SkuId = parseResult.GetValueForOption(_skuIdOption);
-        options.IncludeServiceInstructionTemplates = parseResult.GetValueForOption(_includeServiceInstructionTemplatesOption);
-        options.PricingAudience = parseResult.GetValueForOption(_pricingAudienceOption);
+        options.ProductId = parseResult.GetValue(_productIdOption);
+        options.IncludeStopSoldPlans = parseResult.GetValue(_includeStopSoldPlansOption);
+        options.Language = parseResult.GetValue(_languageOption);
+        options.Market = parseResult.GetValue(_marketOption);
+        options.LookupOfferInTenantLevel = parseResult.GetValue(_lookupOfferInTenantLevelOption);
+        options.PlanId = parseResult.GetValue(_planIdOption);
+        options.SkuId = parseResult.GetValue(_skuIdOption);
+        options.IncludeServiceInstructionTemplates = parseResult.GetValue(_includeServiceInstructionTemplatesOption);
+        options.PricingAudience = parseResult.GetValue(_pricingAudienceOption);
         return options;
     }
 

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Extensions.Logging;
@@ -34,13 +33,13 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_queryOption);
+        command.Options.Add(_queryOption);
     }
 
     protected override ItemQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValueForOption(_queryOption);
+        options.Query = parseResult.GetValue(_queryOption);
         return options;
     }
 

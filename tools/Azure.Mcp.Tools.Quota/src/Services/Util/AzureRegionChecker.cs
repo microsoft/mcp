@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure;
 using Azure.Core;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.ResourceManager;

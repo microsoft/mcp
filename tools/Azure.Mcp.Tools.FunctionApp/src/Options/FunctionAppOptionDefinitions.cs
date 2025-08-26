@@ -11,6 +11,6 @@ public static class FunctionAppOptionDefinitions
         $"--{FunctionAppName}",
         "The name of the Function App.")
     {
-        IsRequired = true
+        Required = true
     };
 }

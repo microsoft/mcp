@@ -19,8 +19,8 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
     public override string Name => "get";
     public override string Description =>
         $"""
-        Retrieves comprehensive details and status information for a specific load test run execution. 
-        This command provides real-time insights into test performance metrics, execution timeline, 
+        Retrieves comprehensive details and status information for a specific load test run execution.
+        This command provides real-time insights into test performance metrics, execution timeline,
         and final results to help you analyze your application's behavior under load.
         """;
     public override string Title => _commandTitle;
@@ -36,7 +36,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
     protected override TestRunGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestRunId = parseResult.GetValueForOption(_testRunIdOption);
+        options.TestRunId = parseResult.GetValue(_testRunIdOption);
         return options;
     }
 
