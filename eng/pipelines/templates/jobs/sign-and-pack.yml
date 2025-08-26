@@ -104,7 +104,6 @@ jobs:
       arguments: >
         -ArtifactsPath '$(Build.ArtifactStagingDirectory)/topack/dotnet'
         -OutputPath '$(Build.ArtifactStagingDirectory)/packed/dotnet'
-        -Version '$(Version)'
 
   - task: Powershell@2
     displayName: "(Native) Pack modules"
@@ -114,8 +113,6 @@ jobs:
       arguments: >
         -ArtifactsPath '$(Build.ArtifactStagingDirectory)/topack/native'
         -OutputPath '$(Build.ArtifactStagingDirectory)/packed/native'
-        -Version '$(Version)'
-        -IsNative
 
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
