@@ -32,6 +32,26 @@ public sealed class CommandFactoryToolLoader(
 
     public const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
 
+    private static string NormalizeName(string? name) => (name ?? string.Empty).TrimStart('-', '/');
+
+    private static bool IsRawMcpToolInputOption(global::System.CommandLine.Option option)
+    {
+        if (string.Equals(NormalizeName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        foreach (var alias in option.Aliases)
+        {
+            if (string.Equals(NormalizeName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /// <summary>
     /// Lists all tools available from the command factory.
     /// </summary>
@@ -94,7 +114,7 @@ public sealed class CommandFactoryToolLoader(
         var realCommand = command.GetCommand();
         ParseResult? commandOptions = null;
 
-        if (realCommand.Options.Count == 1 && realCommand.Options[0].Name == RawMcpToolInputOptionName)
+        if (realCommand.Options.Count == 1 && IsRawMcpToolInputOption(realCommand.Options[0]))
         {
             commandOptions = realCommand.ParseFromRawMcpToolInput(request.Params.Arguments);
         }
@@ -171,7 +191,7 @@ public sealed class CommandFactoryToolLoader(
 
         if (options != null && options.Count > 0)
         {
-            if (options.Count == 1 && options[0].Name == RawMcpToolInputOptionName)
+            if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
             {
                 var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? new JsonObject();
                 tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
@@ -182,10 +202,11 @@ public sealed class CommandFactoryToolLoader(
                 foreach (var option in options)
                 {
                     // Use the CreatePropertySchema method to properly handle array types with items
-                    schema.Properties.Add(option.Name, TypeToJsonTypeMapper.CreatePropertySchema(option.ValueType, option.Description));
+                    var propName = NormalizeName(option.Name);
+                    schema.Properties.Add(propName, TypeToJsonTypeMapper.CreatePropertySchema(option.ValueType, option.Description));
                 }
 
-                schema.Required = [.. options.Where(p => p.Required).Select(p => p.Name)];
+                schema.Required = [.. options.Where(p => p.Required).Select(p => NormalizeName(p.Name))];
             }
         }
 
