@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using AzureMcp.Tests;
-using AzureMcp.Tests.Client;
-using AzureMcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests;
+using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.LiveTests.Database;
@@ -34,10 +34,10 @@ public class DatabaseAddCommandLiveTests(LiveTestFixture liveTestFixture, ITestO
 
         // In live environment, this will likely fail due to non-existent resources,
         // but we should get a proper error response rather than a system exception
-        if (result.IsError)
+        if (result.IsError())
         {
             // Validate we get expected Azure resource errors, not system/interface errors
-            var errorContent = result.Content?.ToString() ?? "";
+            var errorContent = result.Content()?.ToString() ?? "";
             Assert.True(
                 errorContent.Contains("not found") ||
                 errorContent.Contains("does not exist") ||
@@ -49,23 +49,22 @@ public class DatabaseAddCommandLiveTests(LiveTestFixture liveTestFixture, ITestO
         else
         {
             // If successful, validate the response structure
-            Assert.True(result.IsSuccess);
-            Assert.NotNull(result.Content);
+            Assert.True(result.IsSuccess());
+            Assert.NotNull(result.Content());
         }
     }
 
     [Theory]
-    [InlineData("basic", null, null, null, null, "Command executed and handled properly")]
-    [InlineData("custom-connection-string", "Server=custom;Database=custom;UserId=user;Password=pass;", null, null, null, "Command accepts custom connection string parameter")]
-    [InlineData("tenant", null, "test-tenant-id", null, null, "Command accepts tenant parameter")]
-    [InlineData("retry-policy", null, null, 3, 1.0, "Command accepts retry policy parameters")]
+    [InlineData("basic", null, null, null, null)]
+    [InlineData("custom-connection-string", "Server=custom;Database=custom;UserId=user;Password=pass;", null, null, null)]
+    [InlineData("tenant", null, "test-tenant-id", null, null)]
+    [InlineData("retry-policy", null, null, 3, 1.0)]
     public async Task ExecuteAsync_WithVariousParameters_AcceptsParameters(
         string scenario,
         string? connectionString,
         string? tenant,
         int? retryMaxRetries,
-        double? retryDelay,
-        string expectedMessage)
+        double? retryDelay)
     {
         var parameters = new Dictionary<string, object?>
         {
@@ -96,9 +95,9 @@ public class DatabaseAddCommandLiveTests(LiveTestFixture liveTestFixture, ITestO
         Assert.NotNull(result);
 
         // Validate that parameters are correctly passed and processed
-        if (result.IsError)
+        if (result.IsError())
         {
-            var errorContent = result.Content?.ToString() ?? "";
+            var errorContent = result.Content()?.ToString() ?? "";
 
             // Should not fail due to parameter validation issues for valid scenarios
             Assert.False(
@@ -119,7 +118,7 @@ public class DatabaseAddCommandLiveTests(LiveTestFixture liveTestFixture, ITestO
         else
         {
             // If successful, validate the response has expected structure
-            Assert.True(result.IsSuccess, $"[{scenario}] Command should succeed or fail with proper Azure error");
+            Assert.True(result.IsSuccess(), $"[{scenario}] Command should succeed or fail with proper Azure error");
         }
     }
 
@@ -145,9 +144,9 @@ public class DatabaseAddCommandLiveTests(LiveTestFixture liveTestFixture, ITestO
         Assert.NotNull(result);
 
         // Test that database type validation works correctly
-        if (result.IsError)
+        if (result.IsError())
         {
-            var errorContent = result.Content?.ToString() ?? "";
+            var errorContent = result.Content()?.ToString() ?? "";
 
             // Should not fail due to invalid database type since we're testing valid types
             Assert.False(
@@ -166,7 +165,7 @@ public class DatabaseAddCommandLiveTests(LiveTestFixture liveTestFixture, ITestO
         }
         else
         {
-            Assert.True(result.IsSuccess, $"Command should handle {databaseType} database type correctly");
+            Assert.True(result.IsSuccess(), $"Command should handle {databaseType} database type correctly");
         }
     }
 
@@ -189,9 +188,9 @@ public class DatabaseAddCommandLiveTests(LiveTestFixture liveTestFixture, ITestO
             });
 
         Assert.NotNull(result);
-        Assert.True(result.IsError, $"Invalid database type '{invalidDatabaseType}' should cause validation error");
+        Assert.True(result.IsError(), $"Invalid database type '{invalidDatabaseType}' should cause validation error");
 
-        var errorContent = result.Content?.ToString() ?? "";
+        var errorContent = result.Content()?.ToString() ?? "";
         Assert.True(
             errorContent.Contains("Unsupported database type") ||
             errorContent.Contains("invalid database type") ||
