@@ -194,7 +194,7 @@
 # ServiceOwners:                       @vladimisms
 
 # PRLabel: %area-EventGrid
-/tools/Azure.Mcp.Tools.EventGrid/     @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.EventGrid/     @microsoft/
 
 # ServiceLabel: %area-EventGrid
-# ServiceOwners:                       @microsoft/azure-mcp
+# ServiceOwners:                       @microsoft/
