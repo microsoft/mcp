@@ -19,34 +19,36 @@ public static class ServiceOptionDefinitions
     };
 
     public static readonly Option<string[]?> Namespace = new(
-        $"--{NamespaceName}",
-        "The Azure service namespaces to expose on the MCP server (e.g., storage, keyvault, cosmos)."
+        $"--{NamespaceName}"
     )
     {
+        Description = "The Azure service namespaces to expose on the MCP server (e.g., storage, keyvault, cosmos).",
         Required = false,
         Arity = ArgumentArity.OneOrMore,
         AllowMultipleArgumentsPerToken = true
     };
 
     public static readonly Option<string?> Mode = new Option<string?>(
-        $"--{ModeName}",
-        "Mode for the MCP server. 'single' exposes one azure tool that routes to all services. 'namespace' (default) exposes one tool per service namespace. 'all' exposes all tools individually."
+        $"--{ModeName}"
     )
     {
+        Description = "Mode for the MCP server. 'single' exposes one azure tool that routes to all services. 'namespace' (default) exposes one tool per service namespace. 'all' exposes all tools individually.",
         Required = false,
         Arity = ArgumentArity.ZeroOrOne
     };
 
     public static readonly Option<bool?> ReadOnly = new(
-        $"--{ReadOnlyName}",
-        "Whether the MCP server should be read-only. If true, no write operations will be allowed.");
+        $"--{ReadOnlyName}")
+    {
+        Description = "Whether the MCP server should be read-only. If true, no write operations will be allowed."
+    };
 
     public static readonly Option<bool> EnableInsecureTransports = new(
-        $"--{EnableInsecureTransportsName}",
-        () => false,
-        "Enable insecure transport")
+        $"--{EnableInsecureTransportsName}")
     {
         IsRequired = false,
-        IsHidden = true
+        IsHidden = true,
+        Description = "Enable insecure transport",
+        DefaultValueFactory = () => false
     };
 }

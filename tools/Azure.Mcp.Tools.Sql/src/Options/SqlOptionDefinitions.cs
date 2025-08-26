@@ -12,18 +12,18 @@ public static class SqlOptionDefinitions
     public const string EndIpAddress = "end-ip-address";
 
     public static readonly Option<string> Server = new(
-        $"--{ServerName}",
-        "The Azure SQL Server name."
+        $"--{ServerName}"
     )
     {
+        Description = "The Azure SQL Server name.",
         Required = true
     };
 
     public static readonly Option<string> Database = new(
-        $"--{DatabaseName}",
-        "The Azure SQL Database name."
+        $"--{DatabaseName}"
     )
     {
+        Description = "The Azure SQL Database name.",
         Required = true
     };
 

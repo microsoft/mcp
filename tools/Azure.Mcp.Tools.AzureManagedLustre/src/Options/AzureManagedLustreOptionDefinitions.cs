@@ -8,18 +8,18 @@ public static class AzureManagedLustreOptionDefinitions
     public const string sku = "sku";
     public const string size = "size";
     public static readonly Option<string> SkuOption = new(
-        $"--{sku}",
-        "The AMLFS SKU. Allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500."
+        $"--{sku}"
     )
     {
+        Description = "The AMLFS SKU. Allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
         Required = true
     };
 
     public static readonly Option<int> SizeOption = new(
-        $"--{size}",
-        "The AMLFS size (TiB)."
+        $"--{size}"
     )
     {
+        Description = "The AMLFS size (TiB).",
         Required = true
     };
 }

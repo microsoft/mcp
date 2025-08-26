@@ -9,18 +9,18 @@ public static class RedisOptionDefinitions
     public const string ClusterName = "cluster";
 
     public static readonly Option<string> Cache = new(
-        $"--{CacheName}",
-        "The name of the Redis cache (e.g., my-redis-cache)."
+        $"--{CacheName}"
     )
     {
+        Description = "The name of the Redis cache (e.g., my-redis-cache).",
         Required = true
     };
 
     public static readonly Option<string> Cluster = new(
-        $"--{ClusterName}",
-        "The name of the Redis cluster (e.g., my-redis-cluster)."
+        $"--{ClusterName}"
     )
     {
+        Description = "The name of the Redis cluster (e.g., my-redis-cluster).",
         Required = true
     };
 }
