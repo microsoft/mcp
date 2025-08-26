@@ -120,6 +120,29 @@ azmcp server start \
 ### Azure AI Foundry Operations
 
 ```bash
+
+# Connect to an agent in an AI Foundry project and query it
+azmcp foundry agents connect --agent-id <agent-id> \
+                             --query <query> \
+                             --endpoint <endpoint>
+
+# Evaluate a response from an agent by passing query and response inline
+azmcp foundry agents evaluate --agent-id <agent-id> \
+                                        --query <query> \
+                                        --response <response> \
+                                        --evaluator <evaluator> \
+                                        --azure-openai-endpoint <azure-openai-endpoint> \
+                                        --azure-openai-deployment <azure-openai-deployment> \
+                                        [--tool-definitions <tool-definitions>]
+
+# Query and evaluate an agent in one command
+azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
+                                        --query <query> \
+                                        --endpoint <endpoint> \
+                                        --azure-openai-endpoint <azure-openai-endpoint> \
+                                        --azure-openai-deployment <azure-openai-deployment> \
+                                        [--evaluators <evaluators>]
+
 # List knowledge indexes in an AI Foundry project
 azmcp foundry knowledge index list --endpoint <endpoint>
 
