@@ -69,6 +69,11 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
                 throw new ArgumentException($"Invalid JSON format: {ex.Message}", nameof(rawMcpToolInput), ex);
             }
 
+            context.Activity?
+                .AddTag("ServiceCount", appTopology.Services.Length)
+                .AddTag("ComputeHostResources", string.Join(", ", appTopology.Services.Select(s => s.AzureComputeHost)))
+                .AddTag("BackingServiceResources", string.Join(", ", appTopology.Services.SelectMany(s => s.Dependencies).Select(d => d.ServiceType)));
+
             _logger.LogInformation("Successfully parsed app topology with {ServiceCount} services", appTopology.Services.Length);
 
             if (appTopology.Services.Length == 0)
@@ -84,6 +89,8 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
             {
                 throw new InvalidOperationException("Failed to generate architecture diagram. The chart content is empty.");
             }
+
+            context.Activity?.AddTag("MermaidDiagram", chart);
 
             var usedServiceTypes = appTopology.Services
                 .SelectMany(service => service.Dependencies)

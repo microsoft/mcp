@@ -65,6 +65,12 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
                 return Task.FromResult(context.Response);
             }
 
+            context.Activity?
+                    .AddTag("ProjectName", options.ProjectName)
+                    .AddTag("ComputeHostResources", options.TargetAppService)
+                    .AddTag("DeploymentTool", options.ProvisioningTool)
+                    .AddTag("IacType", options.AzdIacOptions ?? string.Empty);
+
             var planTemplate = DeploymentPlanTemplateUtil.GetPlanTemplate(options.ProjectName, options.TargetAppService, options.ProvisioningTool, options.AzdIacOptions);
 
             context.Response.Message = planTemplate;
