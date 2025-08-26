@@ -11,6 +11,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
     - [Can I select what tools to load in the MCP server?](#can-i-select-what-tools-to-load-in-the-mcp-server)
     - [Why does VS Code only show a subset of tools available?](#why-does-vs-code-only-show-a-subset-of-tools-available)
     - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
+    - [Problems with VS Code Cache](#problems-with-vs-code-cache)
   - [Tool Limitations](#tool-limitations)
     - [128-Tool Limit Issue](#128-tool-limit-issue)
       - [Problem](#problem)
@@ -115,6 +116,36 @@ The dialog shows: "The MCP server 'Azure' has issued a request to make an langua
 - **"Always"** - Permanently allows the server to make language model calls
 
 This permission is required because some Azure MCP tools may need to make additional language model calls to process complex requests or provide enhanced responses.
+
+### Problems with VS Code Cache
+If you encounter issues with stale configurations, reload the VS Code window:
+
+- Press Ctrl+Shift+P (or Cmd+Shift+P on macOS).
+- Select Developer: Reload Window.
+
+If the issue persists, you can take a more aggressive approach by clearing the following folders:
+
+**For Windows:**
+- %APPDATA%\Code\Cache
+- %APPDATA%\Code\CachedData
+- %APPDATA%\Code\User\workspaceStorage
+- %APPDATA%\Code\logs
+
+**For macOS:**
+- ~/Library/Application Support/Code/Cache
+- ~/Library/Application Support/Code/CachedData
+- ~/Library/Application Support/Code/User/workspaceStorage
+- ~/Library/Application Support/Code/logs
+
+**For Linux:**
+- ~/.config/Code/Cache
+- ~/.config/Code/CachedData
+- ~/.config/Code/User/workspaceStorage
+- ~/.config/Code/logs
+
+Clear Node Modules Cache
+
+- npm cache clean --force
 
 ## Tool Limitations
 
