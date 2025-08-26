@@ -60,14 +60,14 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     protected override AccountCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueForOption(_accountCreateOption);
-        options.Location = parseResult.GetValueForOption(_locationOption);
-        options.Sku = parseResult.GetValueForOption(_skuOption);
-        options.Kind = parseResult.GetValueForOption(_kindOption);
-        options.AccessTier = parseResult.GetValueForOption(_accessTierOption);
-        options.EnableHttpsTrafficOnly = parseResult.GetValueForOption(_enableHttpsTrafficOnlyOption);
-        options.AllowBlobPublicAccess = parseResult.GetValueForOption(_allowBlobPublicAccessOption);
-        options.EnableHierarchicalNamespace = parseResult.GetValueForOption(_enableHierarchicalNamespaceOption);
+        options.Account = parseResult.GetValue(_accountCreateOption);
+        options.Location = parseResult.GetValue(_locationOption);
+        options.Sku = parseResult.GetValue(_skuOption);
+        options.Kind = parseResult.GetValue(_kindOption);
+        options.AccessTier = parseResult.GetValue(_accessTierOption);
+        options.EnableHttpsTrafficOnly = parseResult.GetValue(_enableHttpsTrafficOnlyOption);
+        options.AllowBlobPublicAccess = parseResult.GetValue(_allowBlobPublicAccessOption);
+        options.EnableHierarchicalNamespace = parseResult.GetValue(_enableHierarchicalNamespaceOption);
         return options;
     }
 

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models;
@@ -60,8 +59,8 @@ public sealed class SampleCommandTests
                 .Returns(expectedJson);
         }
         var command = new SampleCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(cliArgs);
+
+        var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -101,8 +100,8 @@ public sealed class SampleCommandTests
                 .Returns(new List<JsonElement>());
         }
         var command = new SampleCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(cliArgs);
+
+        var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -132,8 +131,8 @@ public sealed class SampleCommandTests
                 .Returns(Task.FromException<List<JsonElement>>(new Exception("Test error")));
         }
         var command = new SampleCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(cliArgs);
+
+        var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -146,8 +145,8 @@ public sealed class SampleCommandTests
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
     {
         var command = new SampleCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("");
+
+        var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);

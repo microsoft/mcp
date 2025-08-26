@@ -7,7 +7,6 @@ using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Models.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Areas.Group.Commands;

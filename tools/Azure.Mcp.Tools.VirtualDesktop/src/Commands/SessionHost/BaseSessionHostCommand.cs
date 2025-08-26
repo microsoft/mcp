@@ -15,13 +15,13 @@ public abstract class BaseSessionHostCommand
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_sessionHostOption);
+        command.Options.Add(_sessionHostOption);
     }
 
     protected override SessionHostUserSessionListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SessionHostName = parseResult.GetValueForOption(_sessionHostOption);
+        options.SessionHostName = parseResult.GetValue(_sessionHostOption);
         return options;
     }
 }

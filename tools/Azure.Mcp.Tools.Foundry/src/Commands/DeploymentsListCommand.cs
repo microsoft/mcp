@@ -43,7 +43,7 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
     protected override DeploymentsListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValueForOption(_endpointOption);
+        options.Endpoint = parseResult.GetValue(_endpointOption);
 
         return options;
     }

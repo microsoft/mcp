@@ -45,9 +45,9 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
     protected override MetricsDefinitionsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.MetricNamespace = parseResult.GetValueForOption(_metricNamespaceOption);
-        options.SearchString = parseResult.GetValueForOption(_searchStringOption);
-        options.Limit = parseResult.GetValueForOption(_limitOption);
+        options.MetricNamespace = parseResult.GetValue(_metricNamespaceOption);
+        options.SearchString = parseResult.GetValue(_searchStringOption);
+        options.Limit = parseResult.GetValue(_limitOption);
         return options;
     }
 

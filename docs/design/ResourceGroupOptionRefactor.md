@@ -38,14 +38,14 @@ protected override void RegisterOptions(Command command)
 {
    base.RegisterOptions(command);
    RequireResourceGroup();        // RG now logically required
-   command.AddOption(_nameOption); // other options
+   command.Options.Add(_nameOption); // other options
 }
 
 protected override void RegisterOptions(Command command)
 {
    base.RegisterOptions(command);
    UseResourceGroup();            // RG optional filter
-   command.AddOption(_filterOption);
+   command.Options.Add(_filterOption);
 }
 
 protected override MyOptions BindOptions(ParseResult parseResult)

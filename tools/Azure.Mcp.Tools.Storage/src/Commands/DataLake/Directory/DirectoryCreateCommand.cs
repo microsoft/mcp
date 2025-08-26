@@ -41,7 +41,7 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
     protected override DirectoryCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DirectoryPath = parseResult.GetValueForOption(_directoryPathOption);
+        options.DirectoryPath = parseResult.GetValue(_directoryPathOption);
         return options;
     }
 

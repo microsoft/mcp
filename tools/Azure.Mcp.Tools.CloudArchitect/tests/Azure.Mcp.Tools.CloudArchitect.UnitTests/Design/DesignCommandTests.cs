@@ -1,19 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Tools.CloudArchitect;
 using Azure.Mcp.Tools.CloudArchitect.Commands.Design;
-using Azure.Mcp.Tools.CloudArchitect.Options;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using NSubstitute;
-using Xunit;
 
 namespace Azure.Mcp.Tools.CloudArchitect.UnitTests.Design;
 
@@ -23,7 +14,7 @@ public class DesignCommandTests
     private readonly ILogger<DesignCommand> _logger;
     private readonly DesignCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public DesignCommandTests()
     {
@@ -33,7 +24,7 @@ public class DesignCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -87,7 +78,7 @@ public class DesignCommandTests
     public async Task ExecuteAsync_ReturnsArchitectureDesignText(string args)
     {
         // Arrange
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -120,8 +111,8 @@ public class DesignCommandTests
     public async Task ExecuteAsync_ConsistentResults()
     {
         // Arrange
-        var parseResult1 = _parser.Parse(["--question", "test question 1"]);
-        var parseResult2 = _parser.Parse(["--question", "test question 2"]);
+        var parseResult1 = _commandDefinition.Parse(["--question", "test question 1"]);
+        var parseResult2 = _commandDefinition.Parse(["--question", "test question 2"]);
 
         // Act
         var response1 = await _command.ExecuteAsync(_context, parseResult1);
@@ -160,7 +151,7 @@ public class DesignCommandTests
             "--confidence-score", "0.8",
         };
 
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -190,7 +181,7 @@ public class DesignCommandTests
     {
         // Arrange
         var args = new[] { "--question", questionWithQuotes };
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -226,7 +217,7 @@ public class DesignCommandTests
             "--total-questions", "10"
         };
 
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -237,8 +228,8 @@ public class DesignCommandTests
         Assert.Empty(response.Message);
 
         // Verify all options were parsed correctly
-        var questionValue = parseResult.GetValueForOption(_command.GetCommand().Options.First(o => o.Name == "question"));
-        var answerValue = parseResult.GetValueForOption(_command.GetCommand().Options.First(o => o.Name == "answer"));
+        var questionValue = parseResult.GetValue((Option<string>)_command.GetCommand().Options.First(o => o.Name == "question"));
+        var answerValue = parseResult.GetValue((Option<string>)_command.GetCommand().Options.First(o => o.Name == "answer"));
 
         Assert.Equal(complexQuestion, questionValue);
         Assert.Equal(complexAnswer, answerValue);
@@ -275,7 +266,7 @@ public class DesignCommandTests
     {
         // Arrange
         var args = new[] { "--question", "Test question" };
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -298,7 +289,7 @@ public class DesignCommandTests
         // Arrange - Create a simple JSON state object
         var stateJson = "{\"architectureComponents\":[],\"architectureTiers\":{\"infrastructure\":[],\"platform\":[],\"application\":[],\"data\":[],\"security\":[],\"operations\":[]},\"requirements\":{\"explicit\":[],\"implicit\":[],\"assumed\":[]},\"confidenceFactors\":{\"explicitRequirementsCoverage\":0.5,\"implicitRequirementsCertainty\":0.7,\"assumptionRisk\":0.3}}";
         var args = new[] { "--state", stateJson };
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -331,7 +322,7 @@ public class DesignCommandTests
             "--confidence-score", "0.9",
         };
 
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -343,18 +334,18 @@ public class DesignCommandTests
 
         // Verify all options were parsed correctly
         var command = _command.GetCommand();
-        var questionValue = parseResult.GetValueForOption(command.Options.First(o => o.Name == "question"));
-        var questionNumberValue = parseResult.GetValueForOption(command.Options.First(o => o.Name == "question-number"));
-        var totalQuestionsValue = parseResult.GetValueForOption(command.Options.First(o => o.Name == "total-questions"));
-        var answerValue = parseResult.GetValueForOption(command.Options.First(o => o.Name == "answer"));
-        var nextQuestionNeededValue = parseResult.GetValueForOption(command.Options.First(o => o.Name == "next-question-needed"));
-        var confidenceScoreValue = parseResult.GetValueForOption(command.Options.First(o => o.Name == "confidence-score"));
+        var questionValue = parseResult.GetValue((Option<string>)command.Options.First(o => o.Name == "question"));
+        var questionNumberValue = parseResult.GetValue((Option<int>)command.Options.First(o => o.Name == "question-number"));
+        var totalQuestionsValue = parseResult.GetValue((Option<int>)command.Options.First(o => o.Name == "total-questions"));
+        var answerValue = parseResult.GetValue((Option<string>)command.Options.First(o => o.Name == "answer"));
+        var nextQuestionNeededValue = parseResult.GetValue((Option<bool>)command.Options.First(o => o.Name == "next-question-needed"));
+        var confidenceScoreValue = parseResult.GetValue((Option<double>)command.Options.First(o => o.Name == "confidence-score"));
 
         Assert.Equal("What type of application are you building?", questionValue);
         Assert.Equal(3, questionNumberValue);
         Assert.Equal(8, totalQuestionsValue);
         Assert.Equal("A financial trading platform", answerValue);
-        Assert.Equal(false, nextQuestionNeededValue);
+        Assert.False(nextQuestionNeededValue);
         Assert.Equal(0.9, confidenceScoreValue);
 
         // Verify the response structure
@@ -391,7 +382,7 @@ public class DesignCommandTests
         var args = new[] { "--confidence-score", invalidScore.ToString() };
 
         // Act
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Assert
         Assert.NotEmpty(parseResult.Errors);
@@ -410,7 +401,7 @@ public class DesignCommandTests
         var args = new[] { "--confidence-score", validScore.ToString() };
 
         // Act
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Assert
         Assert.Empty(parseResult.Errors);
@@ -426,7 +417,7 @@ public class DesignCommandTests
         var args = new[] { "--question-number", invalidQuestionNumber.ToString() };
 
         // Act
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Assert
         Assert.NotEmpty(parseResult.Errors);
@@ -444,7 +435,7 @@ public class DesignCommandTests
         var args = new[] { "--question-number", validQuestionNumber.ToString() };
 
         // Act
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Assert
         Assert.Empty(parseResult.Errors);
@@ -460,7 +451,7 @@ public class DesignCommandTests
         var args = new[] { "--total-questions", invalidTotalQuestions.ToString() };
 
         // Act
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Assert
         Assert.NotEmpty(parseResult.Errors);
@@ -478,7 +469,7 @@ public class DesignCommandTests
         var args = new[] { "--total-questions", validTotalQuestions.ToString() };
 
         // Act
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Assert
         Assert.Empty(parseResult.Errors);
@@ -499,7 +490,7 @@ public class DesignCommandTests
         };
 
         // Act
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Assert
         Assert.Empty(parseResult.Errors);
@@ -516,7 +507,7 @@ public class DesignCommandTests
         };
 
         // Act
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Assert
         Assert.NotEmpty(parseResult.Errors);
@@ -591,7 +582,7 @@ public class DesignCommandTests
         };
 
         // Act
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
         var result = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
@@ -611,11 +602,27 @@ public class DesignCommandTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_WithInvalidStateJson_HandlesGracefully()
+    {
+        // Arrange
+        var invalidStateJson = "{ invalid json }";
+        var args = new[] { "--state", invalidStateJson };
+        var parseResult = _commandDefinition.Parse(args);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult);
+
+        // Assert - The command should handle the error gracefully and return an error response
+        Assert.NotEqual(200, response.Status);
+        Assert.NotEmpty(response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_WithEmptyState_CreatesDefaultState()
     {
         // Arrange
         var args = new[] { "--state", "" };
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var result = await _command.ExecuteAsync(_context, parseResult);
@@ -638,7 +645,7 @@ public class DesignCommandTests
         // Arrange
         var invalidStateJson = "{ invalid json }";
         var args = new[] { "--state", invalidStateJson };
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act & Assert
         var exception = Assert.Throws<TargetInvocationException>(() =>
@@ -646,7 +653,7 @@ public class DesignCommandTests
             // Access the protected BindOptions method via reflection to test state deserialization
             var command = _command.GetCommand();
             var stateOption = command.Options.First(o => o.Name == "state");
-            var stateValue = parseResult.GetValueForOption((Option<string>)stateOption);
+            var stateValue = parseResult.GetValue((Option<string>)stateOption);
 
             // Manually call the state deserialization that happens in BindOptions
             var deserializeMethod = typeof(DesignCommand).GetMethod("DeserializeState",

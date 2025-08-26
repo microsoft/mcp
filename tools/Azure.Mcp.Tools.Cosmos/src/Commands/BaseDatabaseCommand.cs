@@ -22,7 +22,7 @@ public abstract class BaseDatabaseCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Database = parseResult.GetValueForOption(_databaseOption);
+        options.Database = parseResult.GetValue(_databaseOption);
         return options;
     }
 }

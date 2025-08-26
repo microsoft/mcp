@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -38,7 +37,7 @@ public sealed class SecretListCommand(ILogger<SecretListCommand> logger) : Subsc
     protected override SecretListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValueForOption(_vaultOption);
+        options.VaultName = parseResult.GetValue(_vaultOption);
         return options;
     }
 

@@ -17,23 +17,7 @@ public abstract class SubscriptionCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_subscriptionOption);
-
-        command.AddValidator(result =>
-        {
-            var subscriptionValue = result.GetValueForOption(_subscriptionOption);
-            var envSubscription = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
-
-            // Check if both subscription option and environment variable are missing or invalid
-            var hasValidSubscription = !string.IsNullOrEmpty(subscriptionValue);
-
-            var hasValidEnvVar = !string.IsNullOrEmpty(envSubscription);
-
-            if (!hasValidSubscription && !hasValidEnvVar)
-            {
-                result.ErrorMessage = "Missing Required options: --subscription";
-            }
-        });
+        command.Options.Add(_subscriptionOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
@@ -41,7 +25,7 @@ public abstract class SubscriptionCommand<
         var options = base.BindOptions(parseResult);
 
         // Get subscription from command line option or fallback to environment variable
-        var subscriptionValue = parseResult.GetValueForOption(_subscriptionOption);
+        var subscriptionValue = parseResult.GetValue(_subscriptionOption);
         options.Subscription = (string.IsNullOrEmpty(subscriptionValue)
             || subscriptionValue.Contains("subscription")
             || subscriptionValue.Contains("default"))

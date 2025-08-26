@@ -19,7 +19,7 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
     public override string Name => "get";
     public override string Description =>
         $"""
-        Get the Azure Load Testing test configuration for the specified load test id in the specified load test resource. 
+        Get the Azure Load Testing test configuration for the specified load test id in the specified load test resource.
         This command retrieves the details of a specific load test configuration, including its parameters and settings. Based on this we can see what all parameters were set for the test configuration.
         """;
     public override string Title => _commandTitle;
@@ -35,7 +35,7 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
     protected override TestGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestId = parseResult.GetValueForOption(_loadTestIdOption);
+        options.TestId = parseResult.GetValue(_loadTestIdOption);
         return options;
     }
 

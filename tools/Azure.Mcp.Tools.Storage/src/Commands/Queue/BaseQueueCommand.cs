@@ -24,7 +24,7 @@ public abstract class BaseQueueCommand<
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Queue = parseResult.GetValueForOption(_queueOption);
+        options.Queue = parseResult.GetValue(_queueOption);
         return options;
     }
 }

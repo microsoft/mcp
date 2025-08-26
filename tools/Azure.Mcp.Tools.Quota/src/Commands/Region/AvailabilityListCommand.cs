@@ -3,8 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Quota.Options;
 using Azure.Mcp.Tools.Quota.Options.Region;
 using Azure.Mcp.Tools.Quota.Services;
@@ -35,19 +33,19 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_resourceTypesOption);
-        command.AddOption(_cognitiveServiceModelNameOption);
-        command.AddOption(_cognitiveServiceModelVersionOption);
-        command.AddOption(_cognitiveServiceDeploymentSkuNameOption);
+        command.Options.Add(_resourceTypesOption);
+        command.Options.Add(_cognitiveServiceModelNameOption);
+        command.Options.Add(_cognitiveServiceModelVersionOption);
+        command.Options.Add(_cognitiveServiceDeploymentSkuNameOption);
     }
 
     protected override AvailabilityListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceTypes = parseResult.GetValueForOption(_resourceTypesOption) ?? string.Empty;
-        options.CognitiveServiceModelName = parseResult.GetValueForOption(_cognitiveServiceModelNameOption);
-        options.CognitiveServiceModelVersion = parseResult.GetValueForOption(_cognitiveServiceModelVersionOption);
-        options.CognitiveServiceDeploymentSkuName = parseResult.GetValueForOption(_cognitiveServiceDeploymentSkuNameOption);
+        options.ResourceTypes = parseResult.GetValue(_resourceTypesOption) ?? string.Empty;
+        options.CognitiveServiceModelName = parseResult.GetValue(_cognitiveServiceModelNameOption);
+        options.CognitiveServiceModelVersion = parseResult.GetValue(_cognitiveServiceModelVersionOption);
+        options.CognitiveServiceDeploymentSkuName = parseResult.GetValue(_cognitiveServiceDeploymentSkuNameOption);
         return options;
     }
 

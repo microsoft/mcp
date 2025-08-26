@@ -32,13 +32,13 @@ public sealed class IndexListCommand(ILogger<IndexListCommand> logger) : GlobalC
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_serviceOption);
+        command.Options.Add(_serviceOption);
     }
 
     protected override IndexListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Service = parseResult.GetValueForOption(_serviceOption);
+        options.Service = parseResult.GetValue(_serviceOption);
         return options;
     }
 

@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Services.Util;
-using Azure.Mcp.Tools.Quota.Services.Util.Usage;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
 

@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
-using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Server;
 using Azure.Mcp.Tools.MySql.Json;
 using Azure.Mcp.Tools.MySql.Options.Database;

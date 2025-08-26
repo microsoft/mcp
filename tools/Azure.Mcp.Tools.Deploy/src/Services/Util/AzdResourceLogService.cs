@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Azure.Core;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;

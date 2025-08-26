@@ -22,7 +22,7 @@ public abstract class BaseBicepSchemaCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceType = parseResult.GetValueForOption(_resourceTypeName);
+        options.ResourceType = parseResult.GetValue(_resourceTypeName);
         return options;
     }
 }

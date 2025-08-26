@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -23,7 +22,7 @@ public sealed class ResourceLogQueryCommandTests
     private readonly ILogger<ResourceLogQueryCommand> _logger;
     private readonly ResourceLogQueryCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     private const string _knownSubscription = "knownSubscription";
     private const string _knownResourceId = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/storage1";
@@ -44,7 +43,7 @@ public sealed class ResourceLogQueryCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Theory]
@@ -76,7 +75,7 @@ public sealed class ResourceLogQueryCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _parser.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
 
         // Assert
         Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
@@ -112,7 +111,7 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(mockResults);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", _knownSubscription,
             "--resource-id", _knownResourceId,
             "--table", _knownTable,
@@ -154,7 +153,7 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(mockResults);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", _knownSubscription,
             "--resource-id", _knownResourceId,
             "--table", _knownTable,
@@ -196,7 +195,7 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(mockResults);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", _knownSubscription,
             "--resource-id", _knownResourceId,
             "--table", _knownTable,
@@ -234,7 +233,7 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<List<JsonNode>>(new Exception("Test error")));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", _knownSubscription,
             "--resource-id", _knownResourceId,
             "--table", _knownTable,
@@ -269,7 +268,7 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(mockResults);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", _knownSubscription,
             "--resource-id", complexResourceId,
             "--table", table,

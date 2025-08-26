@@ -20,13 +20,13 @@ public abstract class BaseMonitorCommand<
     {
         base.RegisterOptions(command);
         RequireResourceGroup();
-        command.AddOption(_workspaceOption);
+        command.Options.Add(_workspaceOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Workspace = parseResult.GetValueForOption(_workspaceOption);
+        options.Workspace = parseResult.GetValue(_workspaceOption);
         return options;
     }
 }

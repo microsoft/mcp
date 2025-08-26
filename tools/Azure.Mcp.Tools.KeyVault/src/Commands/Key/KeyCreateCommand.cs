@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Key;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -42,9 +41,9 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : Subscri
     protected override KeyCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValueForOption(_vaultOption);
-        options.KeyName = parseResult.GetValueForOption(_keyOption);
-        options.KeyType = parseResult.GetValueForOption(_keyTypeOption);
+        options.VaultName = parseResult.GetValue(_vaultOption);
+        options.KeyName = parseResult.GetValue(_keyOption);
+        options.KeyType = parseResult.GetValue(_keyTypeOption);
         return options;
     }
 

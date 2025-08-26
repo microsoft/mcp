@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Options;
@@ -56,14 +57,14 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
     protected override MetricsQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.MetricNames = parseResult.GetValueForOption(_metricNamesOption);
-        options.StartTime = parseResult.GetValueForOption(_startTimeOption);
-        options.EndTime = parseResult.GetValueForOption(_endTimeOption);
-        options.Interval = parseResult.GetValueForOption(_intervalOption);
-        options.Aggregation = parseResult.GetValueForOption(_aggregationOption);
-        options.Filter = parseResult.GetValueForOption(_filterOption);
-        options.MetricNamespace = parseResult.GetValueForOption(_metricNamespaceOption);
-        options.MaxBuckets = parseResult.GetValueForOption(_maxBucketsOption);
+        options.MetricNames = parseResult.GetValue(_metricNamesOption);
+        options.StartTime = parseResult.GetValue(_startTimeOption);
+        options.EndTime = parseResult.GetValue(_endTimeOption);
+        options.Interval = parseResult.GetValue(_intervalOption);
+        options.Aggregation = parseResult.GetValue(_aggregationOption);
+        options.Filter = parseResult.GetValue(_filterOption);
+        options.MetricNamespace = parseResult.GetValue(_metricNamespaceOption);
+        options.MaxBuckets = parseResult.GetValue(_maxBucketsOption);
         return options;
     }
 
@@ -73,7 +74,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
 
         if (result.IsValid)
         {
-            string metricNamesValue = commandResult.GetValueForOption(_metricNamesOption)!;
+            string metricNamesValue = commandResult.GetValue(_metricNamesOption)!;
 
             // Validate the metric names
             string[] metricNames = [.. metricNamesValue.Split(',').Select(t => t.Trim())];

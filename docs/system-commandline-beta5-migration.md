@@ -17,8 +17,13 @@ This document describes the exact steps and code changes to migrate this reposit
 
 ## Version Pinning
 - Update `Directory.Packages.props` (preferred) to pin SCL:
-  - Add or update: `<PackageVersion Include="System.CommandLine" Version="2.0.0-beta5" />`
+  - Add or update: `<PackageVersion Include="System.CommandLine" Version="2.0.0-beta5.25277.114" />`
+  - Note: NuGet may resolve a nightly-suffixed build (e.g., `2.0.0-beta5.25277.114`). Pin to the exact resolved version to avoid NU1603 mismatches, or ensure feeds resolve the plain `2.0.0-beta5` tag consistently.
 - If a project uses explicit references, ensure they align with the central version or remove explicit versions in favor of central pin.
+
+## Current Status
+- Central pin updated to `System.CommandLine 2.0.0-beta5.25277.114` and solution builds locally.
+- Next: convert handler wiring to actions in `CommandFactory`, remove entrypoint middleware, and sweep API usages.
 
 ## API Changes Overview (Old → New)
 - Command registration:
@@ -51,6 +56,23 @@ Minimal before/after outline:
 
 ## Core Changes
 
+### Concrete Edits
+- `core/Azure.Mcp.Core/src/Commands/CommandFactory.cs`
+  - Replace `SetHandler(async context => { ... })` with `SetAction(async (ParseResult parseResult, CancellationToken ct) => { ... return status; })` inside `ConfigureCommandHandler`.
+  - Ensure JSON output and exit code mapping are preserved. Return the status code from the action.
+  - Use `parseResult` directly instead of `context.ParseResult`.
+  - Keep telemetry/activity around the action body.
+
+- `core/Azure.Mcp.Core/src/Commands/CommandFactory.cs` (command registration)
+  - In `CreateRootCommand`, replace `rootCommand.Add(subGroup.Command);` with `rootCommand.Subcommands.Add(subGroup.Command);`.
+  - In `ConfigureCommands`, replace `group.Command.Add(cmd);` with `group.Command.Subcommands.Add(cmd);`.
+
+- `core/Azure.Mcp.Core/src/Areas/Server/Commands/ToolLoading/CommandFactoryToolLoader.cs`
+  - Replace any `option.IsRequired` usages with `option.Required` (e.g., `schema.Required = [.. options.Where(p => p.Required).Select(p => p.Name)];`).
+
+- Any place reading options from `ParseResult`
+  - Replace `parseResult.GetValueForOption(option)` with `parseResult.GetValue(option)`.
+
 ### CommandFactory (core/Azure.Mcp.Core)
 - Where we previously set handlers (and possibly wrapped telemetry), replace with `SetAction((ParseResult, CancellationToken) => Task<int>)` on each command.
 - Action responsibilities:
@@ -61,6 +83,67 @@ Minimal before/after outline:
     - On invalid: write response JSON and return `context.Response.Status`.
   - Execute the command logic (existing call-site), catch exceptions and convert to `CommandResponse` consistently (maintain current error mapping), write JSON, and return status.
 - Preserve current exit code mapping and logging strategy.
+
+Example replacement for `ConfigureCommandHandler`:
+
+```csharp
+private void ConfigureCommandHandler(Command command, IBaseCommand implementation)
+{
+  command.SetAction(async (ParseResult parseResult, CancellationToken ct) =>
+  {
+    _logger.LogTrace("Executing '{Command}'.", command.Name);
+
+    using var activity = await _telemetryService.StartActivity(ActivityName.CommandExecuted);
+    var cmdContext = new CommandContext(_serviceProvider, activity);
+    var startTime = DateTime.UtcNow;
+    try
+    {
+      // Optional centralized validators go here (pre-flight)
+
+      // Per-command validation if exposed on implementation; otherwise inside ExecuteAsync
+      // var validation = implementation.Validate(parseResult.CommandResult, cmdContext.Response);
+      // if (!validation.IsValid) { Console.WriteLine(JsonSerializer.Serialize(cmdContext.Response, _srcGenWithOptions.CommandResponse)); return cmdContext.Response.Status; }
+
+      var response = await implementation.ExecuteAsync(cmdContext, parseResult);
+
+      var endTime = DateTime.UtcNow;
+      response.Duration = (long)(endTime - startTime).TotalMilliseconds;
+
+      if (response.Status == 200 && response.Results == null)
+      {
+        response.Results = ResponseResult.Create(new List<string>(), JsonSourceGenerationContext.Default.ListString);
+      }
+
+      var isServiceStartCommand = implementation is Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
+      if (!isServiceStartCommand)
+      {
+        Console.WriteLine(JsonSerializer.Serialize(response, _srcGenWithOptions.CommandResponse));
+      }
+
+      var status = response.Status;
+      if (status < 200 || status >= 300)
+      {
+        activity?.SetStatus(ActivityStatusCode.Error).AddTag(TagName.ErrorDetails, response.Error);
+      }
+
+      return status;
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError("An exception occurred while executing '{Command}'. Exception: {Exception}", command.Name, ex);
+      activity?.SetStatus(ActivityStatusCode.Error)?.AddTag(TagName.ErrorDetails, ex.Message);
+      // Map exception to error response consistently if desired, write JSON, and return mapped status
+      var errorResponse = BaseCommand.HandleException(ex);
+      Console.WriteLine(JsonSerializer.Serialize(errorResponse, _srcGenWithOptions.CommandResponse));
+      return errorResponse.Status;
+    }
+    finally
+    {
+      _logger.LogTrace("Finished running '{Command}'.", command.Name);
+    }
+  });
+}
+```
 
 ### BaseCommand and Helpers
 - Replace any `parseResult.GetValueForOption(...)` with `parseResult.GetValue(...)`.
@@ -127,7 +210,7 @@ command.SetAction(async (ParseResult parseResult, CancellationToken ct) =>
 ## Tools Changes (tools/Azure.Mcp.Tools.*/src)
 For each command implementation across tools:
 - Registration:
-  - Use `command.Options.Add(option)` and `command.Subcommands.Add(subcommand)`.
+  - Use `command.Options.Add(option)` and `command.Subcommands.Add(subcommand)` (replace any `AddOption`/`AddCommand`).
 - Required options:
   - Use `option.Required = true`.
 - Binding:
@@ -277,33 +360,34 @@ dotnet build .\AzureMcp.sln /property:GenerateFullPaths=true /consoleloggerparam
 ## Comprehensive TODO Checklist
 
 1) Package and Tooling
-- [ ] Update `Directory.Packages.props` to pin `System.CommandLine` to `2.0.0-beta5`.
+- [x] Update `Directory.Packages.props` to pin `System.CommandLine` to `2.0.0-beta5`.
 - [ ] Remove/align any project-level SCL package versions with the central pin.
 - [ ] Search and remove any legacy SCL add-ons (e.g., deprecated binders) if present.
 - [ ] Run `./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx` to surface compile errors.
 
 2) Servers (entrypoints)
-- [ ] `servers/Azure.Mcp.Server/src/Program.cs`: remove `CommandLineBuilder`, `.AddMiddleware(...)`, `.UseDefaults()`; invoke `rootCommand.InvokeAsync(args)`; keep JSON writer.
-- [ ] `servers/Fabric.Mcp.Server/src/Program.cs`: same as above.
-- [ ] `servers/Template.Mcp.Server/src/Program.cs`: same as above.
+- [x] `servers/Azure.Mcp.Server/src/Program.cs`: remove `CommandLineBuilder`, `.AddMiddleware(...)`, `.UseDefaults()`; invoke `rootCommand.InvokeAsync(args)`; keep JSON writer.
+- [x] `servers/Fabric.Mcp.Server/src/Program.cs`: same as above.
+- [x] `servers/Template.Mcp.Server/src/Program.cs`: same as above.
 
 3) Core Wiring
-- [ ] `core/Azure.Mcp.Core` CommandFactory: replace handler wiring with `SetAction((ParseResult, CancellationToken) => Task<int>)`.
-- [ ] Start telemetry/activity around action, tag relevant properties.
-- [ ] Introduce centralized validation hook (e.g., `ICommandValidator` chain) executed before per-command validation.
-- [ ] Call per-command `Validate(CommandResult, CommandResponse)` and return early on failure.
-- [ ] Bind options once after validation via `BindOptions(ParseResult)` (create/standardize if needed).
-- [ ] Execute command, write JSON response, and return exit code. Centralize exception → response mapping.
-- [ ] `BaseCommand`: update to use `parseResult.GetValue(...)`; update `.IsRequired` → `.Required`; ensure `BindOptions(ParseResult)` is available and AOT-safe.
+- [x] `core/Azure.Mcp.Core` CommandFactory: replace handler wiring with `SetAction((ParseResult, CancellationToken) => Task<int>)`.
+- [x] Start telemetry/activity around action, tag relevant properties.
+- [x] Introduce centralized validation hook (e.g., `ICommandValidator` chain) executed before per-command validation.
+- [x] Call per-command `Validate(CommandResult, CommandResponse)` and return early on failure.
+- [x] Bind options once after validation via `BindOptions(ParseResult)` (create/standardize if needed).
+- [x] Execute command, write JSON response, and return exit code. Centralize exception → response mapping.
+- [x] `BaseCommand`: update to use `parseResult.GetValue(...)`; update `.IsRequired` → `.Required`; ensure `BindOptions(ParseResult)` is available and AOT-safe.
 - [ ] `SystemCommandLineExtensions`: update helpers to new APIs (`Options.Add`, `Subcommands.Add`, `GetValue`, action model) as needed.
+- [x] `SystemCommandLineExtensions`: update helpers to new APIs (`Options.Add`, `Subcommands.Add`, `GetValue`, action model) as needed. (Implemented via `core/Azure.Mcp.Core/src/Commands/CommandExtensions.cs`.)
 
 4) Mechanical Sweeps (all projects)
 - [ ] Replace `command.AddOption(...)` → `command.Options.Add(...)`.
 - [ ] Replace `command.AddCommand(...)` → `command.Subcommands.Add(...)`.
-- [ ] Replace `parseResult.GetValueForOption(...)` → `parseResult.GetValue(...)`.
-- [ ] Replace `option.IsRequired` → `option.Required`.
-- [ ] Replace `SetHandler(...)` usages → `SetAction((ParseResult, CancellationToken) => Task<int>)`.
-- [ ] Remove `CommandLineBuilder` + `.UseDefaults()` usages.
+- [x] Replace `parseResult.GetValueForOption(...)` → `parseResult.GetValue(...)`.
+- [x] Replace `option.IsRequired` → `option.Required`.
+- [x] Replace `SetHandler(...)` usages → `SetAction((ParseResult, CancellationToken) => Task<int>)`.
+- [x] Remove `CommandLineBuilder` + `.UseDefaults()` usages.
 
 5) Tools sweep (commands and wiring)
 - [ ] Ensure each tool’s commands register options/subcommands with the new collections API.
@@ -380,7 +464,7 @@ Migration checklist (per project):
 - [ ] Package reference resolves to `System.CommandLine 2.0.0-beta5`.
 - [ ] Entrypoint no longer uses `CommandLineBuilder` or `.UseDefaults()`.
 - [ ] All `AddOption` → `Options.Add`; `AddCommand` → `Subcommands.Add`.
-- [ ] All `GetValueForOption` → `GetValue`.
+- [x] All `GetValueForOption` → `GetValue`.
 - [ ] All `.IsRequired` → `.Required`.
 - [ ] Handlers replaced with action-based wiring; telemetry and validation preserved.
 - [ ] JSON serialization uses source-generated contexts and matches previous shape.

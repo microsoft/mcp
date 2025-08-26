@@ -3,7 +3,6 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
 using Azure.Storage.Blobs.Models;

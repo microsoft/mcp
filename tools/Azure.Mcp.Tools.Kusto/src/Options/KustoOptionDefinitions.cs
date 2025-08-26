@@ -18,7 +18,7 @@ public static class KustoOptionDefinitions
         "Kusto Cluster name."
     )
     {
-        IsRequired = false
+        Required = false
     };
 
     public static readonly Option<string> ClusterUri = new(
@@ -26,7 +26,7 @@ public static class KustoOptionDefinitions
         "Kusto Cluster URI."
     )
     {
-        IsRequired = false
+        Required = false
     };
 
     public static readonly Option<string> Database = new(
@@ -34,7 +34,7 @@ public static class KustoOptionDefinitions
         "Kusto Database name."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Table = new(
@@ -42,16 +42,16 @@ public static class KustoOptionDefinitions
         "Kusto Table name."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<int> Limit = new(
         $"--{LimitName}",
-        () => 10,
         "The maximum number of results to return."
     )
     {
-        IsRequired = true
+        DefaultValueFactory = _ => 10,
+        Required = true
     };
 
     public static readonly Option<string> Query = new(
@@ -59,6 +59,6 @@ public static class KustoOptionDefinitions
         "Kusto query to execute. Uses KQL syntax."
     )
     {
-        IsRequired = true
+        Required = true
     };
 }

@@ -28,7 +28,7 @@ public abstract class BaseBlobCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Blob = parseResult.GetValueForOption(_blobOption);
+        options.Blob = parseResult.GetValue(_blobOption);
         return options;
     }
 }

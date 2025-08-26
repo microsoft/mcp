@@ -12,7 +12,7 @@ public static class AzureManagedLustreOptionDefinitions
         "The AMLFS SKU. Allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<int> SizeOption = new(
@@ -20,6 +20,6 @@ public static class AzureManagedLustreOptionDefinitions
         "The AMLFS size (TiB)."
     )
     {
-        IsRequired = true
+        Required = true
     };
 }

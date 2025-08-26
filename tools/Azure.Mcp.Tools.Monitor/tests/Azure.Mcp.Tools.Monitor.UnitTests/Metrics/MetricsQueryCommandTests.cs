@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -93,7 +91,7 @@ public class MetricsQueryCommandTests
         Assert.Contains("max-buckets", options);
 
         // Verify required options are marked as required
-        var requiredOptions = command.Options.Where(o => o.IsRequired).Select(o => o.Name).ToList();
+        var requiredOptions = command.Options.Where(o => o.Required).Select(o => o.Name).ToList();
         Assert.Contains("resource", requiredOptions);
         Assert.Contains("metric-names", requiredOptions);
     }

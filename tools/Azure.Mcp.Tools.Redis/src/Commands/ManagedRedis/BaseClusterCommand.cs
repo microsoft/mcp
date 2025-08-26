@@ -24,7 +24,7 @@ public abstract class BaseClusterCommand<
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Cluster = parseResult.GetValueForOption(_clusterOption);
+        options.Cluster = parseResult.GetValue(_clusterOption);
         return options;
     }
 }

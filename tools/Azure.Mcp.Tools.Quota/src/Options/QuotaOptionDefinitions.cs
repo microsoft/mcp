@@ -15,7 +15,7 @@ public static class QuotaOptionDefinitions
             "The valid Azure region where the resources will be deployed. E.g. 'eastus', 'westus', etc."
         )
         {
-            IsRequired = true
+            Required = true
         };
 
         public static readonly Option<string> ResourceTypes = new(
@@ -23,7 +23,7 @@ public static class QuotaOptionDefinitions
             "The valid Azure resource types that are going to be deployed(comma-separated). E.g. 'Microsoft.App/containerApps,Microsoft.Web/sites,Microsoft.CognitiveServices/accounts', etc."
         )
         {
-            IsRequired = true,
+            Required = true,
             AllowMultipleArgumentsPerToken = true
         };
     }
@@ -40,7 +40,7 @@ public static class QuotaOptionDefinitions
             "Comma-separated list of Azure resource types to check available regions for. The valid Azure resource types. E.g. 'Microsoft.App/containerApps, Microsoft.Web/sites, Microsoft.CognitiveServices/accounts'."
         )
         {
-            IsRequired = true,
+            Required = true,
             AllowMultipleArgumentsPerToken = true
         };
 
@@ -49,7 +49,7 @@ public static class QuotaOptionDefinitions
             "Optional model name for cognitive services. Only needed when Microsoft.CognitiveServices is included in resource types."
         )
         {
-            IsRequired = false
+            Required = false
         };
 
         public static readonly Option<string> CognitiveServiceModelVersion = new(
@@ -57,7 +57,7 @@ public static class QuotaOptionDefinitions
             "Optional model version for cognitive services. Only needed when Microsoft.CognitiveServices is included in resource types."
         )
         {
-            IsRequired = false
+            Required = false
         };
 
         public static readonly Option<string> CognitiveServiceDeploymentSkuName = new(
@@ -65,7 +65,7 @@ public static class QuotaOptionDefinitions
             "Optional deployment SKU name for cognitive services. Only needed when Microsoft.CognitiveServices is included in resource types."
         )
         {
-            IsRequired = false
+            Required = false
         };
     }
 }

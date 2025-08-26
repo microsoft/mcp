@@ -20,10 +20,10 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
 
     public override string Description =>
         """
-        Delete a workbook by its Azure resource ID. 
+        Delete a workbook by its Azure resource ID.
         This command soft deletes the workbook: it will be retained for 90 days.
         If needed, you can restore it from the Recycle Bin through the Azure Portal.
-        
+
         To learn more, visit: https://learn.microsoft.com/azure/azure-monitor/visualize/workbooks-manage
         """;
 
@@ -40,7 +40,7 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
     protected override DeleteWorkbookOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkbookId = parseResult.GetValueForOption(_workbookIdOption);
+        options.WorkbookId = parseResult.GetValue(_workbookIdOption);
         return options;
     }
 

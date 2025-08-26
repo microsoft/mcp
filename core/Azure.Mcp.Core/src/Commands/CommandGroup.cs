@@ -35,7 +35,7 @@ public class CommandGroup(string name, string description)
     public void AddSubGroup(CommandGroup subGroup)
     {
         SubGroup.Add(subGroup);
-        Command.Add(subGroup.Command);
+        Command.Subcommands.Add(subGroup.Command);
     }
 
     public IBaseCommand GetCommand(string path)

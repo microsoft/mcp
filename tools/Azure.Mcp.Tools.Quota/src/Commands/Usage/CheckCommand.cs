@@ -3,13 +3,10 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Quota.Options;
 using Azure.Mcp.Tools.Quota.Options.Usage;
 using Azure.Mcp.Tools.Quota.Services;
 using Azure.Mcp.Tools.Quota.Services.Util;
-using Azure.Mcp.Tools.Quota.Services.Util.Usage;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Usage;
@@ -42,8 +39,8 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
     protected override CheckOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Region = parseResult.GetValueForOption(_regionOption) ?? string.Empty;
-        options.ResourceTypes = parseResult.GetValueForOption(_resourceTypesOption) ?? string.Empty;
+        options.Region = parseResult.GetValue(_regionOption) ?? string.Empty;
+        options.ResourceTypes = parseResult.GetValue(_resourceTypesOption) ?? string.Empty;
         return options;
     }
 

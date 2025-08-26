@@ -3,7 +3,6 @@
 
 using System.Buffers;
 using System.Text;
-using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Core.Commands;
@@ -13,6 +12,18 @@ namespace Azure.Mcp.Core.Commands;
 /// </summary>
 public static class CommandExtensions
 {
+    /// <summary>
+    /// Back-compat: map legacy AddOption to Options.Add in SCL beta5.
+    /// </summary>
+    public static void AddOption(this Command command, Option option)
+        => command.Options.Add(option);
+
+    /// <summary>
+    /// Back-compat: map legacy AddCommand to Subcommands.Add in SCL beta5.
+    /// </summary>
+    public static void AddCommand(this Command command, Command subcommand)
+        => command.Subcommands.Add(subcommand);
+
     /// <summary>
     /// Parse command options directly from a dictionary of arguments
     /// </summary>

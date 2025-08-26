@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 using Azure.Mcp.Tools.Sql.Models;
@@ -20,7 +20,7 @@ public class FirewallRuleListCommandTests
     private readonly ILogger<FirewallRuleListCommand> _logger;
     private readonly FirewallRuleListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public FirewallRuleListCommandTests()
     {
@@ -33,7 +33,7 @@ public class FirewallRuleListCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public class FirewallRuleListCommandTests
         }
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -104,7 +104,7 @@ public class FirewallRuleListCommandTests
             .Returns(firewallRules);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -128,7 +128,7 @@ public class FirewallRuleListCommandTests
             .Returns(new List<SqlServerFirewallRule>());
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -152,7 +152,7 @@ public class FirewallRuleListCommandTests
             .Returns(Task.FromException<List<SqlServerFirewallRule>>(new Exception("Test error")));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -177,7 +177,7 @@ public class FirewallRuleListCommandTests
             .Returns(Task.FromException<List<SqlServerFirewallRule>>(requestException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -201,7 +201,7 @@ public class FirewallRuleListCommandTests
             .Returns(Task.FromException<List<SqlServerFirewallRule>>(requestException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -228,7 +228,7 @@ public class FirewallRuleListCommandTests
             .Returns(new List<SqlServerFirewallRule>());
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse($"--subscription {subscription} --resource-group {resourceGroup} --server {serverName}");
+        var parseResult = _commandDefinition.Parse($"--subscription {subscription} --resource-group {resourceGroup} --server {serverName}");
 
         // Act
         await _command.ExecuteAsync(context, parseResult);
@@ -261,7 +261,7 @@ public class FirewallRuleListCommandTests
             .Returns(firewallRules);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --retry-max-retries 3");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --retry-max-retries 3");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);

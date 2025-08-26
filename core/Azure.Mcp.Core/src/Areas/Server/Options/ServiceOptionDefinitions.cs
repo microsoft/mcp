@@ -11,39 +11,34 @@ public static class ServiceOptionDefinitions
     public const string ReadOnlyName = "read-only";
     public const string EnableInsecureTransportsName = "enable-insecure-transports";
 
-    public static readonly Option<string> Transport = new(
-        $"--{TransportName}",
-        () => TransportTypes.StdIo,
-        "Transport mechanism to use for Azure MCP Server."
-    )
+    public static readonly Option<string> Transport = new($"--{TransportName}")
     {
-        IsRequired = false
+        Description = "Transport mechanism to use for Azure MCP Server.",
+        DefaultValueFactory = _ => TransportTypes.StdIo,
+        Required = false
     };
 
     public static readonly Option<string[]?> Namespace = new(
         $"--{NamespaceName}",
-        () => null,
         "The Azure service namespaces to expose on the MCP server (e.g., storage, keyvault, cosmos)."
     )
     {
-        IsRequired = false,
+        Required = false,
         Arity = ArgumentArity.OneOrMore,
         AllowMultipleArgumentsPerToken = true
     };
 
     public static readonly Option<string?> Mode = new Option<string?>(
         $"--{ModeName}",
-        () => ModeTypes.NamespaceProxy,
         "Mode for the MCP server. 'single' exposes one azure tool that routes to all services. 'namespace' (default) exposes one tool per service namespace. 'all' exposes all tools individually."
     )
     {
-        IsRequired = false,
+        Required = false,
         Arity = ArgumentArity.ZeroOrOne
     };
 
     public static readonly Option<bool?> ReadOnly = new(
         $"--{ReadOnlyName}",
-        () => null,
         "Whether the MCP server should be read-only. If true, no write operations will be allowed.");
 
     public static readonly Option<bool> EnableInsecureTransports = new(

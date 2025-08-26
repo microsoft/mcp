@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
@@ -19,13 +18,13 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_limitOption);
+        command.Options.Add(_limitOption);
     }
 
     protected override SampleOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Limit = parseResult.GetValueForOption(_limitOption);
+        options.Limit = parseResult.GetValue(_limitOption);
         return options;
     }
 

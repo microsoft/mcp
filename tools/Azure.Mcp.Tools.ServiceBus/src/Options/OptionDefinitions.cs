@@ -16,7 +16,7 @@ public static class ServiceBusOptionDefinitions
         "The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)"
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Queue = new(
@@ -24,7 +24,7 @@ public static class ServiceBusOptionDefinitions
         "The queue name to peek messages from."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Subscription = new(
@@ -32,7 +32,7 @@ public static class ServiceBusOptionDefinitions
         "The name of subscription to peek messages from."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Topic = new(
@@ -40,15 +40,13 @@ public static class ServiceBusOptionDefinitions
         "The name of the topic containing the subscription."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
-    public static readonly Option<int> MaxMessages = new(
-        $"--{MaxMessagesName}",
-        () => 1,
-        "The maximum number of messages to return."
-    )
+    public static readonly Option<int> MaxMessages = new($"--{MaxMessagesName}")
     {
-        IsRequired = false
+        Description = "The maximum number of messages to return.",
+        DefaultValueFactory = _ => 1,
+        Required = false
     };
 }

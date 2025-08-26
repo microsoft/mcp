@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Redis.Models.ManagedRedis;
 using Azure.Mcp.Tools.Redis.Options.ManagedRedis;
 using Azure.Mcp.Tools.Redis.Services;

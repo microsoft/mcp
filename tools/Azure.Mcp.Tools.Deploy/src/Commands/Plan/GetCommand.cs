@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Deploy.Options;
 using Azure.Mcp.Tools.Deploy.Options.Plan;
@@ -46,11 +45,11 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
     {
         return new GetOptions
         {
-            WorkspaceFolder = parseResult.GetValueForOption(_workspaceFolderOption) ?? string.Empty,
-            ProjectName = parseResult.GetValueForOption(_projectNameOption) ?? string.Empty,
-            TargetAppService = parseResult.GetValueForOption(_deploymentTargetServiceOption) ?? string.Empty,
-            ProvisioningTool = parseResult.GetValueForOption(_provisioningToolOption) ?? string.Empty,
-            AzdIacOptions = parseResult.GetValueForOption(_azdIacOptionsOption) ?? string.Empty
+            WorkspaceFolder = parseResult.GetValue(_workspaceFolderOption) ?? string.Empty,
+            ProjectName = parseResult.GetValue(_projectNameOption) ?? string.Empty,
+            TargetAppService = parseResult.GetValue(_deploymentTargetServiceOption) ?? string.Empty,
+            ProvisioningTool = parseResult.GetValue(_provisioningToolOption) ?? string.Empty,
+            AzdIacOptions = parseResult.GetValue(_azdIacOptionsOption) ?? string.Empty
         };
     }
 

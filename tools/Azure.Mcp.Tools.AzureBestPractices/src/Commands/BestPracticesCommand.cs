@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using System.Reflection;
 using System.Text;
 using Azure.Mcp.Core.Commands;
@@ -22,12 +23,12 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
     public override string Name => "get";
 
     public override string Description =>
-        @"This tool returns a list of best practices for code generation, operations and deployment 
-        when working with Azure services. It should be called for any code generation, deployment or 
-        operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container 
-        Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory, 
-        Azure App Services, or any other Azure technology or programming language. Only call this function 
-        when you are confident the user is discussing Azure. If this tool needs to be categorized, 
+        @"This tool returns a list of best practices for code generation, operations and deployment
+        when working with Azure services. It should be called for any code generation, deployment or
+        operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container
+        Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory,
+        Azure App Services, or any other Azure technology or programming language. Only call this function
+        when you are confident the user is discussing Azure. If this tool needs to be categorized,
         it belongs to the Azure Best Practices category.";
 
     public override string Title => CommandTitle;
@@ -50,8 +51,8 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
                 return Task.FromResult(context.Response);
             }
 
-            var resource = parseResult.GetValueForOption(_resourceOption);
-            var action = parseResult.GetValueForOption(_actionOption);
+            var resource = parseResult.GetValue(_resourceOption);
+            var action = parseResult.GetValue(_actionOption);
 
             var resourceFileName = GetResourceFileName(resource!, action!);
             var bestPractices = GetBestPracticesText(resourceFileName);
@@ -63,7 +64,7 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting best practices for Resource: {Resource}, Action: {Action}",
-                parseResult.GetValueForOption(_resourceOption), parseResult.GetValueForOption(_actionOption));
+                parseResult.GetValue(_resourceOption), parseResult.GetValue(_actionOption));
             HandleException(context, ex);
         }
 
@@ -74,8 +75,8 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
     {
         var validationResult = new ValidationResult { IsValid = true };
 
-        var resource = commandResult.GetValueForOption(BestPracticesOptionDefinitions.Resource);
-        var action = commandResult.GetValueForOption(BestPracticesOptionDefinitions.Action);
+        var resource = commandResult.GetValue(BestPracticesOptionDefinitions.Resource);
+        var action = commandResult.GetValue(BestPracticesOptionDefinitions.Action);
 
         if (string.IsNullOrEmpty(resource) || string.IsNullOrEmpty(action))
         {

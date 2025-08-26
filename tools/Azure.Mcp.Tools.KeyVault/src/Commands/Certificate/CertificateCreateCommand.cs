@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -40,8 +39,8 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
     protected override CertificateCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValueForOption(_vaultOption);
-        options.CertificateName = parseResult.GetValueForOption(_certificateOption);
+        options.VaultName = parseResult.GetValue(_vaultOption);
+        options.CertificateName = parseResult.GetValue(_certificateOption);
         return options;
     }
 

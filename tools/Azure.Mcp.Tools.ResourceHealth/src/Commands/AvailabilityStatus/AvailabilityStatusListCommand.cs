@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.ResourceHealth.Models;
 using Azure.Mcp.Tools.ResourceHealth.Options.AvailabilityStatus;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Extensions.Logging;

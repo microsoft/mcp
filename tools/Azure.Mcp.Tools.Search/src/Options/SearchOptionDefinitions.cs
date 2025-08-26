@@ -14,7 +14,7 @@ public static class SearchOptionDefinitions
         "The name of the Azure AI Search service (e.g., my-search-service)."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Index = new(
@@ -22,7 +22,7 @@ public static class SearchOptionDefinitions
         "The name of the search index within the Azure AI Search service."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Query = new(
@@ -30,6 +30,6 @@ public static class SearchOptionDefinitions
         "The search query to execute against the Azure AI Search index."
     )
     {
-        IsRequired = true
+        Required = true
     };
 }

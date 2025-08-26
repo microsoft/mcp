@@ -45,9 +45,9 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
     protected override ListWorkbooksOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Kind = parseResult.GetValueForOption(_kindOption);
-        options.Category = parseResult.GetValueForOption(_categoryOption);
-        options.SourceId = parseResult.GetValueForOption(_sourceIdOption);
+        options.Kind = parseResult.GetValue(_kindOption);
+        options.Category = parseResult.GetValue(_categoryOption);
+        options.SourceId = parseResult.GetValue(_sourceIdOption);
         return options;
     }
 

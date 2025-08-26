@@ -37,7 +37,7 @@ public sealed class FileListCommand(ILogger<FileListCommand> logger) : BaseFileC
     protected override FileListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Prefix = parseResult.GetValueForOption(StorageOptionDefinitions.Prefix);
+        options.Prefix = parseResult.GetValue(StorageOptionDefinitions.Prefix);
         return options;
     }
 

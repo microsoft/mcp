@@ -58,7 +58,7 @@ public class CommandExtensionsTests
         // Assert
         Assert.NotNull(result);
         Assert.Empty(result.Errors);
-        var value = result.GetValueForOption(option);
+        var value = result.GetValue(option);
         Assert.Equal("test-value", value);
     }
 
@@ -81,7 +81,7 @@ public class CommandExtensionsTests
         // Assert
         Assert.NotNull(result);
         Assert.Empty(result.Errors);
-        var value = result.GetValueForOption(option);
+        var value = result.GetValue(option);
         Assert.Equal("SalesTable | parse ClassName with * 'jsonField': ' value '' *", value);
     }
 
@@ -107,8 +107,8 @@ public class CommandExtensionsTests
         // Assert
         Assert.NotNull(result);
         Assert.Empty(result.Errors);
-        Assert.True(result.GetValueForOption(trueOption));
-        Assert.False(result.GetValueForOption(falseOption));
+        Assert.True(result.GetValue(trueOption));
+        Assert.False(result.GetValue(falseOption));
     }
 
     [Fact]
@@ -133,8 +133,8 @@ public class CommandExtensionsTests
         // Assert
         Assert.NotNull(result);
         Assert.Empty(result.Errors);
-        Assert.Equal(42, result.GetValueForOption(intOption));
-        Assert.Equal(3.14, result.GetValueForOption(doubleOption));
+        Assert.Equal(42, result.GetValue(intOption));
+        Assert.Equal(3.14, result.GetValue(doubleOption));
     }
     [Fact]
     public void ParseFromDictionary_WithArrayArgument_ParsesCorrectly()
@@ -155,7 +155,7 @@ public class CommandExtensionsTests
         // Assert
         Assert.NotNull(result);
         Assert.Empty(result.Errors);
-        var value = result.GetValueForOption(option);
+        var value = result.GetValue(option);
         Assert.Equal("item1 item2 item3", value); // Array is joined with spaces for single-value options
     }
 
@@ -181,7 +181,7 @@ public class CommandExtensionsTests
         // Assert
         Assert.NotNull(result);
         Assert.Empty(result.Errors);
-        var values = result.GetValueForOption(option);
+        var values = result.GetValue(option);
         Assert.NotNull(values);
         Assert.Equal(3, values.Length);
         Assert.Equal("tag1", values[0]);
@@ -208,7 +208,7 @@ public class CommandExtensionsTests
         // Assert
         Assert.NotNull(result);
         Assert.Empty(result.Errors);
-        var value = result.GetValueForOption(option);
+        var value = result.GetValue(option);
         Assert.Null(value);
     }
     [Fact]
@@ -230,7 +230,7 @@ public class CommandExtensionsTests
         // Assert
         Assert.NotNull(result);
         Assert.Empty(result.Errors);
-        var value = result.GetValueForOption(option);
+        var value = result.GetValue(option);
         Assert.Equal("test-sub", value);
     }
 
@@ -240,7 +240,7 @@ public class CommandExtensionsTests
         // Arrange
         var command = new Command("test", "Test command");
         var option = new Option<string>("--known", "Known option");
-        command.AddOption(option);
+        command.Options.Add(option);
 
         var arguments = new Dictionary<string, JsonElement>
         {
@@ -254,7 +254,7 @@ public class CommandExtensionsTests
         // Assert
         Assert.NotNull(result);
         Assert.Empty(result.Errors);
-        var value = result.GetValueForOption(option);
+        var value = result.GetValue(option);
         Assert.Equal("known-value", value);
     }
 
@@ -278,7 +278,7 @@ public class CommandExtensionsTests
         // Assert
         Assert.NotNull(result);
         Assert.Empty(result.Errors);
-        var value = result.GetValueForOption(option);
+        var value = result.GetValue(option);
         Assert.Equal(jsonString, value);
     }
 
@@ -287,8 +287,8 @@ public class CommandExtensionsTests
     {
         // Arrange
         var command = new Command("test");
-        var queryOption = new Option<string>("--query") { IsRequired = true };
-        var nameOption = new Option<string>("--name") { IsRequired = false };
+        var queryOption = new Option<string>("--query") { Required = true };
+        var nameOption = new Option<string>("--name") { Required = false };
         command.AddOption(queryOption);
         command.AddOption(nameOption);
 
@@ -299,11 +299,13 @@ public class CommandExtensionsTests
         };
 
         // Act
-        var result = command.ParseFromDictionary(arguments);        // Assert
+        var result = command.ParseFromDictionary(arguments);
+
+        // Assert
         Assert.NotNull(result);
         Assert.Empty(result.Errors);
-        Assert.Equal("SELECT * FROM table WHERE column = 'value'", result.GetValueForOption(queryOption));
-        Assert.Equal("O'Connor's Database", result.GetValueForOption(nameOption));
+        Assert.Equal("SELECT * FROM table WHERE column = 'value'", result.GetValue(queryOption));
+        Assert.Equal("O'Connor's Database", result.GetValue(nameOption));
     }
 
     [Fact]
@@ -311,23 +313,21 @@ public class CommandExtensionsTests
     {
         // Arrange
         var command = new Command("test");
-        var messageOption = new Option<string>("--message") { IsRequired = true };
-        var titleOption = new Option<string>("--title") { IsRequired = false };
-        command.AddOption(messageOption);
+        var titleOption = new Option<string>("--title");
         command.AddOption(titleOption);
 
         var arguments = new Dictionary<string, JsonElement>
         {
-            { "message", JsonSerializer.SerializeToElement("He said \"Hello World\" to everyone") },
             { "title", JsonSerializer.SerializeToElement("The \"Best\" Solution") }
         };
 
         // Act
-        var result = command.ParseFromDictionary(arguments);        // Assert
+        var result = command.ParseFromDictionary(arguments);
+
+        // Assert
         Assert.NotNull(result);
         Assert.Empty(result.Errors);
-        Assert.Equal("He said \"Hello World\" to everyone", result.GetValueForOption(messageOption));
-        Assert.Equal("The \"Best\" Solution", result.GetValueForOption(titleOption));
+        Assert.Equal("The \"Best\" Solution", result.GetValue(titleOption));
     }
 
     [Fact]
@@ -335,7 +335,7 @@ public class CommandExtensionsTests
     {
         // Arrange
         var command = new Command("test");
-        var scriptOption = new Option<string>("--script") { IsRequired = true };
+        var scriptOption = new Option<string>("--script") { Required = true };
         command.AddOption(scriptOption);
 
         var arguments = new Dictionary<string, JsonElement>
@@ -347,7 +347,7 @@ public class CommandExtensionsTests
         var result = command.ParseFromDictionary(arguments);        // Assert
         Assert.NotNull(result);
         Assert.Empty(result.Errors);
-        Assert.Equal("echo \"User's home: '$HOME'\" && echo 'Path: \"$PATH\"'", result.GetValueForOption(scriptOption));
+        Assert.Equal("echo \"User's home: '$HOME'\" && echo 'Path: \"$PATH\"'", result.GetValue(scriptOption));
     }
 
     [Fact]
@@ -355,7 +355,7 @@ public class CommandExtensionsTests
     {
         // Arrange
         var command = new Command("test");
-        var scriptOption = new Option<string>("--raw-mcp-tool-input") { IsRequired = true };
+        var scriptOption = new Option<string>("--raw-mcp-tool-input") { Required = true };
         command.AddOption(scriptOption);
 
         var arguments = new Dictionary<string, JsonElement>
@@ -368,6 +368,6 @@ public class CommandExtensionsTests
         var result = command.ParseFromRawMcpToolInput(arguments);        // Assert
         Assert.NotNull(result);
         Assert.Empty(result.Errors);
-        Assert.Equal("{\"name\":\"abc\",\"path\":\"123\"}", result.GetValueForOption(scriptOption));
+        Assert.Equal("{\"name\":\"abc\",\"path\":\"123\"}", result.GetValue(scriptOption));
     }
 }

@@ -14,7 +14,7 @@ public static class ExtensionOptionDefinitions
             "The Azure CLI command to execute (without the 'az' prefix). For example: 'group list'."
         )
         {
-            IsRequired = true
+            Required = true
         };
     }
 
@@ -33,7 +33,7 @@ public static class ExtensionOptionDefinitions
                 """
         )
         {
-            IsRequired = false
+            Required = false
         };
 
 
@@ -44,7 +44,7 @@ public static class ExtensionOptionDefinitions
             "The current working directory for the command. This is the directory where the command will be executed."
         )
         {
-            IsRequired = true
+            Required = true
         };
 
         public const string EnvironmentName = "environment";
@@ -56,20 +56,18 @@ public static class ExtensionOptionDefinitions
                 """
         )
         {
-            IsRequired = false
+            Required = false
         };
 
         public const string LearnName = "learn";
-        public static readonly Option<bool> Learn = new(
-            $"--{LearnName}",
-            () => false,
-            """
+        public static readonly Option<bool> Learn = new($"--{LearnName}")
+        {
+            Description = """
                 Flag to indicate whether to learn best practices and usage patterns for azd tool.
                 Always run this command with learn=true and empty command on first run.
-                """
-        )
-        {
-            IsRequired = false
+                """,
+            DefaultValueFactory = _ => false,
+            Required = false
         };
     }
 }

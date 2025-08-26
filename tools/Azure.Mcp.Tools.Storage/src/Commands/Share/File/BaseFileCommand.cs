@@ -23,7 +23,7 @@ public abstract class BaseFileCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DirectoryPath = parseResult.GetValueForOption(_directoryPathOption);
+        options.DirectoryPath = parseResult.GetValue(_directoryPathOption);
         return options;
     }
 }

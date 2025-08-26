@@ -1,11 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Reflection;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
 using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Options;
@@ -43,7 +39,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
     private DiagramGenerateOptions BindOptions(ParseResult parseResult)
     {
         var options = new DiagramGenerateOptions();
-        options.RawMcpToolInput = parseResult.GetValueForOption(_rawMcpToolInputOption);
+        options.RawMcpToolInput = parseResult.GetValue(_rawMcpToolInputOption);
         return options;
     }
 

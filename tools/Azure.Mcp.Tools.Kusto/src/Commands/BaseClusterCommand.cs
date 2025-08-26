@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
@@ -20,15 +21,18 @@ public abstract class BaseClusterCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_clusterUriOption);
-        command.AddOption(_clusterNameOption);
+        command.Options.Add(_clusterUriOption);
+        command.Options.Add(_clusterNameOption);
 
-        command.AddValidator(result =>
+        command.Validators.Add(result =>
         {
             var validationResult = Validate(result);
             if (!validationResult.IsValid)
             {
-                result.ErrorMessage = validationResult.ErrorMessage;
+                if (!string.IsNullOrEmpty(validationResult.ErrorMessage))
+                {
+                    result.AddError(validationResult.ErrorMessage);
+                }
                 return;
             }
         });
@@ -37,8 +41,8 @@ public abstract class BaseClusterCommand<
     public override ValidationResult Validate(CommandResult parseResult, CommandResponse? commandResponse = null)
     {
         var validationResult = new ValidationResult { IsValid = true };
-        var clusterUri = parseResult.GetValueForOption(_clusterUriOption);
-        var clusterName = parseResult.GetValueForOption(_clusterNameOption);
+        var clusterUri = parseResult.GetValue(_clusterUriOption);
+        var clusterName = parseResult.GetValue(_clusterNameOption);
         if (!string.IsNullOrEmpty(clusterUri))
         {
             // If clusterUri is provided, subscription becomes optional
@@ -46,7 +50,7 @@ public abstract class BaseClusterCommand<
         }
         else
         {
-            var subscription = parseResult.GetValueForOption(_subscriptionOption);
+            var subscription = parseResult.GetValue(_subscriptionOption);
 
             // clusterUri not provided, require both subscription and clusterName
             if (string.IsNullOrEmpty(subscription) || string.IsNullOrEmpty(clusterName))
@@ -71,8 +75,8 @@ public abstract class BaseClusterCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ClusterUri = parseResult.GetValueForOption(_clusterUriOption);
-        options.ClusterName = parseResult.GetValueForOption(_clusterNameOption);
+        options.ClusterUri = parseResult.GetValue(_clusterUriOption);
+        options.ClusterName = parseResult.GetValue(_clusterNameOption);
 
         return options;
     }

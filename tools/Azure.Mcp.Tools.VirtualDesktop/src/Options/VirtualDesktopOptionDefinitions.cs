@@ -25,7 +25,7 @@ public static class VirtualDesktopOptionDefinitions
         "The name of the session host. This is the computer name of the virtual machine in the host pool."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> ResourceGroup = new(

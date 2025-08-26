@@ -51,13 +51,13 @@ Your job is to answer questions about an Azure environment by executing Azure CL
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_commandOption);
+        command.Options.Add(_commandOption);
     }
 
     protected override AzOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Command = parseResult.GetValueForOption(_commandOption);
+        options.Command = parseResult.GetValue(_commandOption);
         return options;
     }
 

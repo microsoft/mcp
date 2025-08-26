@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
@@ -71,8 +69,7 @@ public class CacheListCommandTests
         _redisService.ListCachesAsync("sub123").Returns([]);
 
         var command = new CacheListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(["--subscription", "sub123"]);
+        var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
 
@@ -88,8 +85,8 @@ public class CacheListCommandTests
             .ThrowsAsync(new Exception("Test error"));
 
         var command = new CacheListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(["--subscription", "sub123"]);
+
+        var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);

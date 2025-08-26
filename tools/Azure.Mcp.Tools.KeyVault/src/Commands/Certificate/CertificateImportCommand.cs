@@ -46,10 +46,10 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
     protected override CertificateImportOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValueForOption(_vaultOption);
-        options.CertificateName = parseResult.GetValueForOption(_certificateOption);
-        options.CertificateData = parseResult.GetValueForOption(_certificateDataOption);
-        options.Password = parseResult.GetValueForOption(_passwordOption);
+        options.VaultName = parseResult.GetValue(_vaultOption);
+        options.CertificateName = parseResult.GetValue(_certificateOption);
+        options.CertificateData = parseResult.GetValue(_certificateDataOption);
+        options.Password = parseResult.GetValue(_passwordOption);
         return options;
     }
 

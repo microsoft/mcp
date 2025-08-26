@@ -13,7 +13,7 @@ public static class RedisOptionDefinitions
         "The name of the Redis cache (e.g., my-redis-cache)."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Cluster = new(
@@ -21,6 +21,6 @@ public static class RedisOptionDefinitions
         "The name of the Redis cluster (e.g., my-redis-cluster)."
     )
     {
-        IsRequired = true
+        Required = true
     };
 }

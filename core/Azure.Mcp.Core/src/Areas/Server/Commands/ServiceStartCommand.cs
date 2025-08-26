@@ -75,17 +75,17 @@ public sealed class ServiceStartCommand : BaseCommand
     /// <returns>A command response indicating the result of the operation.</returns>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        var namespaces = parseResult.GetValueForOption(_namespaceOption) == default
+        var namespaces = parseResult.GetValue(_namespaceOption) == default
             ? ServiceOptionDefinitions.Namespace.GetDefaultValue()
-            : parseResult.GetValueForOption(_namespaceOption);
+            : parseResult.GetValue(_namespaceOption);
 
-        var mode = parseResult.GetValueForOption(_modeOption) == default
+        var mode = parseResult.GetValue(_modeOption) == default
             ? ServiceOptionDefinitions.Mode.GetDefaultValue()
-            : parseResult.GetValueForOption(_modeOption);
+            : parseResult.GetValue(_modeOption);
 
-        var readOnly = parseResult.GetValueForOption(_readOnlyOption) == default
+        var readOnly = parseResult.GetValue(_readOnlyOption) == default
             ? ServiceOptionDefinitions.ReadOnly.GetDefaultValue()
-            : parseResult.GetValueForOption(_readOnlyOption);
+            : parseResult.GetValue(_readOnlyOption);
 
         if (!IsValidMode(mode))
         {
@@ -105,7 +105,7 @@ public sealed class ServiceStartCommand : BaseCommand
 
         var serverOptions = new ServiceStartOptions
         {
-            Transport = parseResult.GetValueForOption(_transportOption) ?? TransportTypes.StdIo,
+            Transport = parseResult.GetValue(_transportOption) ?? TransportTypes.StdIo,
             Namespace = namespaces,
             Mode = mode,
             ReadOnly = readOnly,

@@ -27,7 +27,7 @@ public abstract class BasePostgresCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.User = parseResult.GetValueForOption(_userOption);
+        options.User = parseResult.GetValue(_userOption);
         return options;
     }
 }

@@ -17,7 +17,7 @@ public static class WorkbooksOptionDefinitions
         "The Azure Resource ID of the workbook to retrieve."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> DisplayName = new(
@@ -25,7 +25,7 @@ public static class WorkbooksOptionDefinitions
         "The display name of the workbook."
     )
     {
-        IsRequired = false
+        Required = false
     };
 
     public static readonly Option<string> SerializedContent = new(
@@ -33,7 +33,7 @@ public static class WorkbooksOptionDefinitions
         "The JSON serialized content/data of the workbook."
     )
     {
-        IsRequired = false
+        Required = false
     };
 
     public static readonly Option<string> SourceId = new(
@@ -41,7 +41,7 @@ public static class WorkbooksOptionDefinitions
         "The linked resource ID for the workbook. By default, this is 'azure monitor'."
     )
     {
-        IsRequired = false,
+        Required = false,
     };
 
     // Command-specific variations for required fields
@@ -49,14 +49,14 @@ public static class WorkbooksOptionDefinitions
         $"--{DisplayNameText}",
         "The display name of the workbook.")
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> SerializedContentRequired = new(
         $"--{SerializedContentText}",
         "The serialized JSON content of the workbook.")
     {
-        IsRequired = true
+        Required = true
     };
 
     // Filter options for listing workbooks
@@ -65,7 +65,7 @@ public static class WorkbooksOptionDefinitions
         "Filter workbooks by kind (e.g., 'shared', 'user'). If not specified, all kinds will be returned."
     )
     {
-        IsRequired = false
+        Required = false
     };
 
     public static readonly Option<string> Category = new(
@@ -73,7 +73,7 @@ public static class WorkbooksOptionDefinitions
         "Filter workbooks by category (e.g., 'workbook', 'sentinel', 'TSG'). If not specified, all categories will be returned."
     )
     {
-        IsRequired = false
+        Required = false
     };
 
     public static readonly Option<string> SourceIdFilter = new(
@@ -81,6 +81,6 @@ public static class WorkbooksOptionDefinitions
         "Filter workbooks by source resource ID (e.g., Application Insights resource, Log Analytics workspace). If not specified, all workbooks will be returned."
     )
     {
-        IsRequired = false
+        Required = false
     };
 }

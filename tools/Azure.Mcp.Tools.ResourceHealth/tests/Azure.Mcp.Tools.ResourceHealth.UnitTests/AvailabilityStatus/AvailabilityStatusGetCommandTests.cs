@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
-using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
@@ -85,8 +82,8 @@ public class AvailabilityStatusGetCommandTests
             .ThrowsAsync(new Exception("Test error"));
 
         var command = new AvailabilityStatusGetCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
+
+        var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);

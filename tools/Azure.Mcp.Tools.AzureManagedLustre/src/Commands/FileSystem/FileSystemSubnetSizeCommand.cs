@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.AzureManagedLustre.Options;
 using Azure.Mcp.Tools.AzureManagedLustre.Options.FileSystem;
@@ -45,8 +46,8 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
     protected override FileSystemSubnetSizeOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Sku = parseResult.GetValueForOption(_skuOption);
-        options.Size = parseResult.GetValueForOption(_sizeOption);
+        options.Sku = parseResult.GetValue(_skuOption);
+        options.Size = parseResult.GetValue(_sizeOption);
         return options;
     }
 
@@ -56,7 +57,7 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
 
         if (result.IsValid)
         {
-            string skuName = commandResult.GetValueForOption(_skuOption)!;
+            string skuName = commandResult.GetValue(_skuOption)!;
 
 
             if (!AllowedSkus.Contains(skuName))

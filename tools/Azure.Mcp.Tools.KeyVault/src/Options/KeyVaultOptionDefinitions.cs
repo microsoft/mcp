@@ -20,7 +20,7 @@ public static class KeyVaultOptionDefinitions
         "The name of the Key Vault."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> KeyName = new(
@@ -28,7 +28,7 @@ public static class KeyVaultOptionDefinitions
         "The name of the key to retrieve/modify from the Key Vault."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> KeyType = new(
@@ -36,7 +36,7 @@ public static class KeyVaultOptionDefinitions
         "The type of key to create (RSA, EC)."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<bool> IncludeManagedKeys = new(
@@ -44,7 +44,7 @@ public static class KeyVaultOptionDefinitions
         "Whether or not to include managed keys in results."
     )
     {
-        IsRequired = false
+        Required = false
     };
 
     public static readonly Option<string> SecretName = new(
@@ -52,7 +52,7 @@ public static class KeyVaultOptionDefinitions
         "The name of the secret."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> SecretValue = new(
@@ -60,7 +60,7 @@ public static class KeyVaultOptionDefinitions
         "The value to set for the secret."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> CertificateName = new(
@@ -68,7 +68,7 @@ public static class KeyVaultOptionDefinitions
         "The name of the certificate."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> CertificateData = new(
@@ -76,7 +76,7 @@ public static class KeyVaultOptionDefinitions
         "The certificate content: path to a PFX/PEM file, a base64 encoded PFX, or raw PEM text beginning with -----BEGIN."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> CertificatePassword = new(
@@ -84,6 +84,6 @@ public static class KeyVaultOptionDefinitions
         "Optional password for a protected PFX being imported."
     )
     {
-        IsRequired = false
+        Required = false
     };
 }
