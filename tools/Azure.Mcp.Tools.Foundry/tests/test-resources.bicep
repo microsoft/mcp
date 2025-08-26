@@ -6,7 +6,7 @@ targetScope = 'resourceGroup'
 param baseName string = resourceGroup().name
 
 @description('The location of the resource. By default, this is the same as the resource group.')
-param location string = 'eastus2'
+param location string = resourceGroup().location
 
 @description('The tenant ID to which the application and resources belong.')
 param tenantId string = '72f988bf-86f1-41af-91ab-2d7cd011db47'
@@ -142,10 +142,10 @@ resource searchService 'Microsoft.Search/searchServices@2023-11-01' = {
 }
 
 resource searchServiceRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid('f25e0fc2-0c74-4ad8-b6ce-2d41e12d6094', testApplicationOid, searchService.id) // Search Index Data Contributor role
+  name: guid('8ebe5a00-799e-43f5-93ac-243d3dce84a7', testApplicationOid, searchService.id) // Search Index Data Contributor role
   scope: searchService
   properties: {
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', 'f25e0fc2-0c74-4ad8-b6ce-2d41e12d6094')
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '8ebe5a00-799e-43f5-93ac-243d3dce84a7')
     principalId: testApplicationOid
   }
 }
