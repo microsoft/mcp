@@ -97,7 +97,7 @@ jobs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
       arguments: >
-        -OutputPath '$(Agent.TempDirectory)/native-build'
+        -OutputPath '$(Build.ArtifactStagingDirectory)'
         -VersionSuffix '$(VersionSuffix)'
         -OperatingSystem '${{ parameters.OSName }}'
         -Architecture '$(Architecture)'

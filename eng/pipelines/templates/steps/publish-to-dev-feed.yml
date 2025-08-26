@@ -15,14 +15,25 @@ steps:
       registryUrl: ${{parameters.Registry}}
 
   - pwsh: |
-      $platformFiles = Get-ChildItem -Path ./platform -Filter *.tgz
-      $wrapperFiles = Get-ChildItem -Path ./wrapper -Filter *.tgz
-      $tgzFiles = $platformFiles + $wrapperFiles
+      $dotnetPlatformFiles = Get-ChildItem -Path ./dotnet/Azure.Mcp.Server/platform -Filter *.tgz
+      $dotnetWrapperFiles = Get-ChildItem -Path ./dotnet/Azure.Mcp.Server/wrapper -Filter *.tgz
+      $tgzDotnetFiles = $dotnetPlatformFiles + $dotnetWrapperFiles
 
-      if ($tgzFiles.Count -eq 0) {
-        Write-Host "No .tgz files found in ${{parameters.PathToArtifacts}}"
+      if ($tgzDotnetFiles.Count -eq 0) {
+        Write-Host "No dotnet .tgz files found in ${{parameters.PathToArtifacts}}"
         exit 1
       }
+
+      $nativePlatformFiles = Get-ChildItem -Path ./native/Azure.Mcp.Server-native/platform -Filter *.tgz
+      $nativeWrapperFiles = Get-ChildItem -Path ./native/Azure.Mcp.Server-native/wrapper -Filter *.tgz
+      $tgzNativeFiles = $nativePlatformFiles + $nativeWrapperFiles
+
+      if ($tgzNativeFiles.Count -eq 0) {
+        Write-Host "No native .tgz files found in ${{parameters.PathToArtifacts}}"
+        exit 1
+      }
+
+      $tgzFiles = $tgzDotnetFiles + $tgzNativeFiles
 
       Write-Host "Publishing the following files to ${{parameters.Registry}}:"
       foreach ($file in $tgzFiles) {
@@ -56,20 +67,36 @@ steps:
       $markdown = @"
       $connectInstructions
       To run the dev version of the package, you can use the following command:
+
       ``````bash
+      # dotnet variant
       npx --yes --registry '$registryUrl' @azure/mcp@$version --version
       ``````
 
-      You can also globally install the package and run it like:
       ``````bash
+      # Native AOT variant
+      npx --yes --registry '$registryUrl' @azure/mcp-native@$version --version
+      ``````
+
+      You can also globally install either package and run it like:
+
+      ``````bash
+      # dotnet variant
       npm install --registry '$registryUrl' -g @azure/mcp@$version
+
+      azmcp --version
+      ``````
+
+      ``````bash
+      # Native AOT variant
+      npm install --registry '$registryUrl' -g @azure/mcp-native@$version
 
       azmcp --version
       ``````
 
       ## mcp.json
 
-      Configure the server in ``.vscode/mcp.json`` with:
+      Configure the server in ``.vscode/mcp.json`` with dotnet variant:
       ``````json
       {
         "servers": {
@@ -80,6 +107,25 @@ steps:
               "--registry",
               "$registryUrl",
               "@azure/mcp@$version",
+              "server",
+              "start"
+            ]
+          }
+        }
+      }
+      ``````
+
+      Or with native AOT variant:
+      ``````json
+      {
+        "servers": {
+          "Azure MCP Server (Native)": {
+            "command": "npx",
+            "args": [
+              "-y",
+              "--registry",
+              "$registryUrl",
+              "@azure/mcp-native@$version",
               "server",
               "start"
             ]
