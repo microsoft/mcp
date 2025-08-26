@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Search.Options.Service;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.Logging;

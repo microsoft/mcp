@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -68,8 +66,8 @@ public class DatabaseQueryCommandTests
             .Returns(expectedResults);
 
         var command = new DatabaseQueryCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server1", "--database", "db123", "--query", "SELECT * FROM test;"]);
+
+        var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server1", "--database", "db123", "--query", "SELECT * FROM test;"]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
 

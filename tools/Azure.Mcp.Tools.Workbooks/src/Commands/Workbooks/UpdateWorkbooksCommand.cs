@@ -42,9 +42,9 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
     protected override UpdateWorkbooksOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkbookId = parseResult.GetValueForOption(_workbookIdOption);
-        options.DisplayName = parseResult.GetValueForOption(_displayNameOption);
-        options.SerializedContent = parseResult.GetValueForOption(_serializedContentOption);
+        options.WorkbookId = parseResult.GetValue(_workbookIdOption);
+        options.DisplayName = parseResult.GetValue(_displayNameOption);
+        options.SerializedContent = parseResult.GetValue(_serializedContentOption);
         return options;
     }
 

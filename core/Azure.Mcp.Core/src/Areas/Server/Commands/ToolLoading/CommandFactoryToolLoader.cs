@@ -185,7 +185,7 @@ public sealed class CommandFactoryToolLoader(
                     schema.Properties.Add(option.Name, TypeToJsonTypeMapper.CreatePropertySchema(option.ValueType, option.Description));
                 }
 
-                schema.Required = [.. options.Where(p => p.IsRequired).Select(p => p.Name)];
+                schema.Required = [.. options.Where(p => p.Required).Select(p => p.Name)];
             }
         }
 

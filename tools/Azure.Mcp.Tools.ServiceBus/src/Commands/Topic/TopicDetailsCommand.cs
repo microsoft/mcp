@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Topic;
@@ -45,8 +44,8 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
     protected override BaseTopicOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TopicName = parseResult.GetValueForOption(_topicOption);
-        options.Namespace = parseResult.GetValueForOption(_namespaceOption);
+        options.TopicName = parseResult.GetValue(_topicOption);
+        options.Namespace = parseResult.GetValue(_namespaceOption);
         return options;
     }
 

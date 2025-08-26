@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -66,8 +64,8 @@ public class IndexQueryCommandTests
             .Returns(expectedResults);
 
         var command = new IndexQueryCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse($"--service {serviceName} --index {indexName} --query \"{queryText}\"");
+
+        var args = command.GetCommand().Parse($"--service {serviceName} --index {indexName} --query \"{queryText}\"");
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -101,8 +99,8 @@ public class IndexQueryCommandTests
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new IndexQueryCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse($"--service {serviceName} --index {indexName} --query \"{queryText}\"");
+
+        var args = command.GetCommand().Parse($"--service {serviceName} --index {indexName} --query \"{queryText}\"");
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -119,8 +117,8 @@ public class IndexQueryCommandTests
     {
         // Arrange
         var command = new IndexQueryCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(""); // Missing required options
+
+        var args = command.GetCommand().Parse(""); // Missing required options
         var context = new CommandContext(_serviceProvider);
 
         // Act

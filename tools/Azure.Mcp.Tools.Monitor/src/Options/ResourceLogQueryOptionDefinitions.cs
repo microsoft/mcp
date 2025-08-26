@@ -12,6 +12,6 @@ public static class ResourceLogQueryOptionDefinitions
         "The Azure Resource ID to query logs. Example: /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.OperationalInsights/workspaces/<ws>"
     )
     {
-        IsRequired = true
+        Required = true
     };
 }

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Acr.Options.Registry;
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.Logging;

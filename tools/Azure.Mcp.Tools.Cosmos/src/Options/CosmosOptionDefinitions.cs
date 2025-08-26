@@ -15,7 +15,7 @@ public static class CosmosOptionDefinitions
         "The name of the Cosmos DB account to query (e.g., my-cosmos-account)."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Database = new(
@@ -23,7 +23,7 @@ public static class CosmosOptionDefinitions
         "The name of the database to query (e.g., my-database)."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Container = new(
@@ -31,15 +31,15 @@ public static class CosmosOptionDefinitions
         "The name of the container to query (e.g., my-container)."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Query = new(
         $"--{QueryText}",
-        () => "SELECT * FROM c",
         "SQL query to execute against the container. Uses Cosmos DB SQL syntax."
     )
     {
-        IsRequired = false
+        Required = false,
+        DefaultValueFactory = _ => "SELECT * FROM c"
     };
 }

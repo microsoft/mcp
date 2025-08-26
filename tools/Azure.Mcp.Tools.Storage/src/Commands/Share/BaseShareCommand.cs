@@ -23,7 +23,7 @@ public abstract class BaseShareCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Share = parseResult.GetValueForOption(_shareOption);
+        options.Share = parseResult.GetValue(_shareOption);
         return options;
     }
 }

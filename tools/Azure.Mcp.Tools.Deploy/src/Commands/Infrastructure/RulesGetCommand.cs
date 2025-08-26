@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Options;
 using Azure.Mcp.Tools.Deploy.Options.Infrastructure;
 using Azure.Mcp.Tools.Deploy.Services.Util;
@@ -41,9 +39,9 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
     private RulesGetOptions BindOptions(ParseResult parseResult)
     {
         var options = new RulesGetOptions();
-        options.DeploymentTool = parseResult.GetValueForOption(_deploymentToolOption) ?? string.Empty;
-        options.IacType = parseResult.GetValueForOption(_iacTypeOption) ?? string.Empty;
-        options.ResourceTypes = parseResult.GetValueForOption(_resourceTypesOption) ?? string.Empty;
+        options.DeploymentTool = parseResult.GetValue(_deploymentToolOption) ?? string.Empty;
+        options.IacType = parseResult.GetValue(_iacTypeOption) ?? string.Empty;
+        options.ResourceTypes = parseResult.GetValue(_resourceTypesOption) ?? string.Empty;
 
         return options;
     }

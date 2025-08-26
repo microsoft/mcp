@@ -18,7 +18,7 @@ public static class PostgresOptionDefinitions
         "The user name to access PostgreSQL server."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Server = new(
@@ -26,7 +26,7 @@ public static class PostgresOptionDefinitions
         "The PostgreSQL server to be accessed."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Database = new(
@@ -34,7 +34,7 @@ public static class PostgresOptionDefinitions
         "The PostgreSQL database to be access."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Table = new(
@@ -42,7 +42,7 @@ public static class PostgresOptionDefinitions
         "The PostgreSQL table to be access."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Query = new(
@@ -50,7 +50,7 @@ public static class PostgresOptionDefinitions
         "Query to be executed against a PostgreSQL database."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Param = new(
@@ -58,7 +58,7 @@ public static class PostgresOptionDefinitions
         "The PostgreSQL parameter to be accessed."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Value = new(
@@ -66,6 +66,6 @@ public static class PostgresOptionDefinitions
         "The value to set for the PostgreSQL parameter."
     )
     {
-        IsRequired = true
+        Required = true
     };
 }

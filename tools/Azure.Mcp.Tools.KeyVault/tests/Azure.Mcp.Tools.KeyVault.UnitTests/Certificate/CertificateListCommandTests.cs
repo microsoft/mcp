@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -23,7 +23,7 @@ public class CertificateListCommandTests
     private readonly ILogger<CertificateListCommand> _logger;
     private readonly CertificateListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     private const string _knownSubscriptionId = "knownSubscriptionId";
     private const string _knownVaultName = "knownVaultName";
@@ -39,7 +39,7 @@ public class CertificateListCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class CertificateListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(expectedCertificates);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVaultName,
             "--subscription", _knownSubscriptionId
         ]);
@@ -85,7 +85,7 @@ public class CertificateListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns([]);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVaultName,
             "--subscription", _knownSubscriptionId
         ]);
@@ -111,7 +111,7 @@ public class CertificateListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVaultName,
             "--subscription", _knownSubscriptionId
         ]);

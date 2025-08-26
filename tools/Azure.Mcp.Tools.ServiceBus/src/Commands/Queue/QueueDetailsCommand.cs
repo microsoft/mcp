@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Queue;
@@ -45,8 +44,8 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
     protected override BaseQueueOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Name = parseResult.GetValueForOption(_queueOption);
-        options.Namespace = parseResult.GetValueForOption(_namespaceOption);
+        options.Name = parseResult.GetValue(_queueOption);
+        options.Namespace = parseResult.GetValue(_namespaceOption);
         return options;
     }
 

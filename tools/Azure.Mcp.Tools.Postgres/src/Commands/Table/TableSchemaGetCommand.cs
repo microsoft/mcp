@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Table;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -30,7 +29,7 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
     protected override TableSchemaGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Table = parseResult.GetValueForOption(_tableOption);
+        options.Table = parseResult.GetValue(_tableOption);
         return options;
     }
 

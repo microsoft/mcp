@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-
 namespace Azure.Mcp.Tools.MySql.Options;
 
 public static class MySqlOptionDefinitions
@@ -20,7 +18,7 @@ public static class MySqlOptionDefinitions
         "The user name to access MySQL server."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Server = new(
@@ -28,7 +26,7 @@ public static class MySqlOptionDefinitions
         "The MySQL server to be accessed."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Database = new(
@@ -36,7 +34,7 @@ public static class MySqlOptionDefinitions
         "The MySQL database to be accessed."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Table = new(
@@ -44,7 +42,7 @@ public static class MySqlOptionDefinitions
         "The MySQL table to be accessed."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Query = new(
@@ -52,7 +50,7 @@ public static class MySqlOptionDefinitions
         "Query to be executed against a MySQL database."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Param = new(
@@ -60,7 +58,7 @@ public static class MySqlOptionDefinitions
         "The MySQL parameter to be accessed."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Value = new(
@@ -68,6 +66,6 @@ public static class MySqlOptionDefinitions
         "The value to set for the MySQL parameter."
     )
     {
-        IsRequired = true
+        Required = true
     };
 }

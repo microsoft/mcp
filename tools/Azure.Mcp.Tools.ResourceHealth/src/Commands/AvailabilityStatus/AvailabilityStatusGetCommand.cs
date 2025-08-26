@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.ResourceHealth.Models;
 using Azure.Mcp.Tools.ResourceHealth.Options.AvailabilityStatus;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Extensions.Logging;
@@ -22,7 +21,7 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
 
     public override string Description =>
         $"""
-        Get the current availability status of an Azure resource to diagnose health issues. 
+        Get the current availability status of an Azure resource to diagnose health issues.
         Provides detailed information about resource availability state, potential issues, and timestamps.
         Equivalent to Azure Resource Health availability status API.
         """;
@@ -40,7 +39,7 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
     protected override AvailabilityStatusGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceId = parseResult.GetValueForOption(ResourceHealthOptionDefinitions.ResourceId);
+        options.ResourceId = parseResult.GetValue(ResourceHealthOptionDefinitions.ResourceId);
         return options;
     }
 

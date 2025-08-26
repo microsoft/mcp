@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Deploy.Options;
 using Azure.Mcp.Tools.Deploy.Options.Pipeline;
 using Azure.Mcp.Tools.Deploy.Services.Util;
@@ -44,10 +43,10 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
     protected override GuidanceGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.UseAZDPipelineConfig = parseResult.GetValueForOption(_useAZDPipelineConfigOption);
-        options.OrganizationName = parseResult.GetValueForOption(_organizationNameOption);
-        options.RepositoryName = parseResult.GetValueForOption(_repositoryNameOption);
-        options.GithubEnvironmentName = parseResult.GetValueForOption(_githubEnvironmentNameOption);
+        options.UseAZDPipelineConfig = parseResult.GetValue(_useAZDPipelineConfigOption);
+        options.OrganizationName = parseResult.GetValue(_organizationNameOption);
+        options.RepositoryName = parseResult.GetValue(_repositoryNameOption);
+        options.GithubEnvironmentName = parseResult.GetValue(_githubEnvironmentNameOption);
         return options;
     }
 

@@ -16,13 +16,13 @@ public abstract class BaseTableCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_tableOption);
+        command.Options.Add(_tableOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Table = parseResult.GetValueForOption(_tableOption);
+        options.Table = parseResult.GetValue(_tableOption);
         return options;
     }
 }

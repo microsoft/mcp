@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models;
@@ -57,8 +56,8 @@ public sealed class DatabaseListCommandTests
                 .Returns(expectedDatabases);
         }
         var command = new DatabaseListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(cliArgs);
+
+        var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -92,8 +91,8 @@ public sealed class DatabaseListCommandTests
                 .Returns([]);
         }
         var command = new DatabaseListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(cliArgs);
+
+        var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -124,8 +123,8 @@ public sealed class DatabaseListCommandTests
                 .Returns(Task.FromException<List<string>>(new Exception("Test error")));
         }
         var command = new DatabaseListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(cliArgs);
+
+        var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -141,8 +140,8 @@ public sealed class DatabaseListCommandTests
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
     {
         var command = new DatabaseListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(""); // No arguments
+
+        var args = command.GetCommand().Parse(""); // No arguments
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -156,8 +155,8 @@ public sealed class DatabaseListCommandTests
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingAllRequiredOptions()
     {
         var command = new DatabaseListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(""); // No arguments
+
+        var args = command.GetCommand().Parse(""); // No arguments
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);

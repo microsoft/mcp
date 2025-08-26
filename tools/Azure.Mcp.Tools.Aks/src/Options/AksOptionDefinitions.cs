@@ -12,6 +12,6 @@ public static class AksOptionDefinitions
         "AKS Cluster name."
     )
     {
-        IsRequired = true
+        Required = true
     };
 }

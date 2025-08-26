@@ -89,19 +89,19 @@ public sealed class AzdCommand(ILogger<AzdCommand> logger, int processTimeoutSec
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_commandOption);
-        command.AddOption(_cwdOption);
-        command.AddOption(_environmentOption);
-        command.AddOption(_learnOption);
+        command.Options.Add(_commandOption);
+        command.Options.Add(_cwdOption);
+        command.Options.Add(_environmentOption);
+        command.Options.Add(_learnOption);
     }
 
     protected override AzdOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Command = parseResult.GetValueForOption(_commandOption);
-        options.Cwd = parseResult.GetValueForOption(_cwdOption);
-        options.Environment = parseResult.GetValueForOption(_environmentOption);
-        options.Learn = parseResult.GetValueForOption(_learnOption);
+        options.Command = parseResult.GetValue(_commandOption);
+        options.Cwd = parseResult.GetValue(_cwdOption);
+        options.Environment = parseResult.GetValue(_environmentOption);
+        options.Learn = parseResult.GetValue(_learnOption);
 
         return options;
     }

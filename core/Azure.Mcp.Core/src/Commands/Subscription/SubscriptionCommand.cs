@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 
@@ -17,21 +19,26 @@ public abstract class SubscriptionCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_subscriptionOption);
+        command.Options.Add(_subscriptionOption);
 
-        command.AddValidator(result =>
+        // Command-level validation for presence: allow either --subscription or AZURE_SUBSCRIPTION_ID
+        // This mirrors the prior behavior that preferred the explicit option but fell back to env var.
+        command.Validators.Add(commandResult =>
         {
-            var subscriptionValue = result.GetValueForOption(_subscriptionOption);
+            // Look for an explicit option result among the command's children
+            var optionResult = commandResult.Children.OfType<OptionResult>().FirstOrDefault(r => r.Option == _subscriptionOption);
+            var subscriptionValue = optionResult != null && optionResult.Tokens.Count > 0
+                ? optionResult.Tokens[0].Value
+                : null;
+
             var envSubscription = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
 
-            // Check if both subscription option and environment variable are missing or invalid
             var hasValidSubscription = !string.IsNullOrEmpty(subscriptionValue);
-
             var hasValidEnvVar = !string.IsNullOrEmpty(envSubscription);
 
             if (!hasValidSubscription && !hasValidEnvVar)
             {
-                result.ErrorMessage = "Missing Required options: --subscription";
+                commandResult.AddError("Missing Required options: --subscription");
             }
         });
     }
@@ -41,7 +48,7 @@ public abstract class SubscriptionCommand<
         var options = base.BindOptions(parseResult);
 
         // Get subscription from command line option or fallback to environment variable
-        var subscriptionValue = parseResult.GetValueForOption(_subscriptionOption);
+        var subscriptionValue = parseResult.GetValue(_subscriptionOption);
         options.Subscription = (string.IsNullOrEmpty(subscriptionValue)
             || subscriptionValue.Contains("subscription")
             || subscriptionValue.Contains("default"))

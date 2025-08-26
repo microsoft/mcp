@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -23,7 +23,7 @@ public class FileSystemListCommandTests
     private readonly ILogger<FileSystemListCommand> _logger;
     private readonly FileSystemListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
     private readonly string _knownSubscriptionId = "sub123";
     private readonly string _knownResourceIdRg1 = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Lustre/amlfs/fs1";
     private readonly string _knownResourceIdRg2 = "/subscriptions/sub123/resourceGroups/rg2/providers/Microsoft.Lustre/amlfs/fs2";
@@ -38,7 +38,7 @@ public class FileSystemListCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public class FileSystemListCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .Returns(expected);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", _knownSubscriptionId
         ]);
 
@@ -153,7 +153,7 @@ public class FileSystemListCommandTests
 
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -189,7 +189,7 @@ public class FileSystemListCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .Returns([]);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", _knownSubscriptionId
         ]);
 
@@ -209,7 +209,7 @@ public class FileSystemListCommandTests
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Azure.RequestFailedException(404, "not found"));
 
-        var args = _parser.Parse(["--subscription", _knownSubscriptionId]);
+        var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
@@ -225,7 +225,7 @@ public class FileSystemListCommandTests
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Azure.RequestFailedException(403, "forbidden"));
 
-        var args = _parser.Parse(["--subscription", _knownSubscriptionId]);
+        var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
@@ -45,10 +44,10 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
     protected override WorkspaceLogQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TableName = parseResult.GetValueForOption(_tableNameOption);
-        options.Query = parseResult.GetValueForOption(_queryOption);
-        options.Hours = parseResult.GetValueForOption(_hoursOption);
-        options.Limit = parseResult.GetValueForOption(_limitOption);
+        options.TableName = parseResult.GetValue(_tableNameOption);
+        options.Query = parseResult.GetValue(_queryOption);
+        options.Hours = parseResult.GetValue(_hoursOption);
+        options.Limit = parseResult.GetValue(_limitOption);
         return options;
     }
 

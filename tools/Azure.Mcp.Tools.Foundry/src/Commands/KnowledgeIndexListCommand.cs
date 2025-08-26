@@ -44,7 +44,7 @@ public sealed class KnowledgeIndexListCommand : GlobalCommand<KnowledgeIndexList
     protected override KnowledgeIndexListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValueForOption(_endpointOption);
+        options.Endpoint = parseResult.GetValue(_endpointOption);
 
         return options;
     }

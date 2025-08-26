@@ -39,19 +39,19 @@ public sealed class ModelsListCommand : GlobalCommand<ModelsListOptions>
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_searchForFreePlaygroundOption);
-        command.AddOption(_publisherNameOption);
-        command.AddOption(_licenseNameOption);
-        command.AddOption(_optionalModelNameOption);
+        command.Options.Add(_searchForFreePlaygroundOption);
+        command.Options.Add(_publisherNameOption);
+        command.Options.Add(_licenseNameOption);
+        command.Options.Add(_optionalModelNameOption);
     }
 
     protected override ModelsListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SearchForFreePlayground = parseResult.GetValueForOption(_searchForFreePlaygroundOption);
-        options.PublisherName = parseResult.GetValueForOption(_publisherNameOption);
-        options.LicenseName = parseResult.GetValueForOption(_licenseNameOption);
-        options.ModelName = parseResult.GetValueForOption(_optionalModelNameOption);
+        options.SearchForFreePlayground = parseResult.GetValue(_searchForFreePlaygroundOption);
+        options.PublisherName = parseResult.GetValue(_publisherNameOption);
+        options.LicenseName = parseResult.GetValue(_licenseNameOption);
+        options.ModelName = parseResult.GetValue(_optionalModelNameOption);
 
         return options;
     }

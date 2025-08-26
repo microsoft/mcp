@@ -38,7 +38,7 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
     protected override ShowWorkbooksOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkbookId = parseResult.GetValueForOption(_workbookIdOption);
+        options.WorkbookId = parseResult.GetValue(_workbookIdOption);
         return options;
     }
 

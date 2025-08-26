@@ -44,8 +44,8 @@ public sealed class IndexDescribeCommand(ILogger<IndexDescribeCommand> logger) :
     protected override IndexDescribeOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Service = parseResult.GetValueForOption(_serviceOption);
-        options.Index = parseResult.GetValueForOption(_indexOption);
+        options.Service = parseResult.GetValue(_serviceOption);
+        options.Index = parseResult.GetValue(_indexOption);
         return options;
     }
 

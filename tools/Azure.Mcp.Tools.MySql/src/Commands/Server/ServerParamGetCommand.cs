@@ -1,11 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
-using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Json;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Options.Server;
@@ -30,13 +26,13 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_paramOption);
+        command.Options.Add(_paramOption);
     }
 
     protected override ServerParamGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Param = parseResult.GetValueForOption(_paramOption);
+        options.Param = parseResult.GetValue(_paramOption);
         return options;
     }
 

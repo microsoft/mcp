@@ -15,11 +15,11 @@ public static class MonitorOptionDefinitions
 
     public static readonly Option<string> TableType = new(
         $"--{TableTypeName}",
-        () => "CustomLog",
         "The type of table to query. Options: 'CustomLog', 'AzureMetrics', etc."
     )
     {
-        IsRequired = true
+        DefaultValueFactory = _ => "CustomLog",
+        Required = true
     };
 
     public static readonly Option<string> TableName = new(
@@ -27,7 +27,7 @@ public static class MonitorOptionDefinitions
         "The name of the table to query. This is the specific table within the workspace."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<string> Query = new(
@@ -38,25 +38,25 @@ public static class MonitorOptionDefinitions
         "Otherwise, provide a custom KQL query."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public static readonly Option<int> Hours = new(
         $"--{HoursName}",
-        () => 24,
         "The number of hours to query back from now."
     )
     {
-        IsRequired = true
+        DefaultValueFactory = _ => 24,
+        Required = true
     };
 
     public static readonly Option<int> Limit = new(
         $"--{LimitName}",
-        () => 20,
         "The maximum number of results to return."
     )
     {
-        IsRequired = true
+        DefaultValueFactory = _ => 20,
+        Required = true
     };
 
     public static class Metrics
@@ -84,7 +84,7 @@ public static class MonitorOptionDefinitions
             "The metric namespace to query. Obtain this value from the azmcp-monitor-metrics-definitions command."
         )
         {
-            IsRequired = false
+            Required = false
         };
 
         public static readonly Option<string> MetricNamespace = new(
@@ -92,7 +92,7 @@ public static class MonitorOptionDefinitions
             "The metric namespace to query. Obtain this value from the azmcp-monitor-metrics-definitions command."
         )
         {
-            IsRequired = true
+            Required = true
         };
 
         public static readonly Option<string> MetricNames = new(
@@ -100,21 +100,25 @@ public static class MonitorOptionDefinitions
             "The names of metrics to query (comma-separated)."
         )
         {
-            IsRequired = true,
+            Required = true,
             AllowMultipleArgumentsPerToken = true
         };
 
         public static readonly Option<string> StartTime = new(
             $"--{StartTimeName}",
-            () => DateTime.UtcNow.AddHours(-24).ToString("o"),
             "The start time for the query in ISO format (e.g., 2023-01-01T00:00:00Z). Defaults to 24 hours ago."
-        );
+        )
+        {
+            DefaultValueFactory = _ => DateTime.UtcNow.AddHours(-24).ToString("o")
+        };
 
         public static readonly Option<string> EndTime = new(
             $"--{EndTimeName}",
-            () => DateTime.UtcNow.ToString("o"),
             "The end time for the query in ISO format (e.g., 2023-01-01T00:00:00Z). Defaults to now."
-        );
+        )
+        {
+            DefaultValueFactory = _ => DateTime.UtcNow.ToString("o")
+        };
 
         public static readonly Option<string> Interval = new(
             $"--{IntervalName}",
@@ -136,34 +140,34 @@ public static class MonitorOptionDefinitions
             "A string to filter the metric definitions by. Helpful for reducing the number of records returned. Performs case-insensitive matching on metric name and description fields."
         )
         {
-            IsRequired = false
+            Required = false
         };
 
         public static readonly Option<int> DefinitionsLimit = new(
             $"--limit",
-            () => 10,
             "The maximum number of metric definitions to return. Defaults to 10."
         )
         {
-            IsRequired = false
+            DefaultValueFactory = _ => 10,
+            Required = false
         };
 
         public static readonly Option<int> NamespacesLimit = new(
             $"--limit",
-            () => 10,
             "The maximum number of metric namespaces to return. Defaults to 10."
         )
         {
-            IsRequired = false
+            DefaultValueFactory = _ => 10,
+            Required = false
         };
 
         public static readonly Option<int> MaxBuckets = new(
             $"--{MaxBucketsName}",
-            () => 50,
             "The maximum number of time buckets to return. Defaults to 50."
         )
         {
-            IsRequired = false
+            DefaultValueFactory = _ => 50,
+            Required = false
         };
 
 
@@ -172,7 +176,7 @@ public static class MonitorOptionDefinitions
             "The Azure resource type (e.g., 'Microsoft.Storage/storageAccounts', 'Microsoft.Compute/virtualMachines'). If not specified, will attempt to infer from resource name."
         )
         {
-            IsRequired = false
+            Required = false
         };
 
         public static readonly Option<string> ResourceName = new(
@@ -180,7 +184,7 @@ public static class MonitorOptionDefinitions
             "The name of the Azure resource to query metrics for."
         )
         {
-            IsRequired = true
+            Required = true
         };
     }
 
@@ -191,7 +195,7 @@ public static class MonitorOptionDefinitions
             "The entity to get health for."
         )
         {
-            IsRequired = true
+            Required = true
         };
 
         public static readonly Option<string> HealthModel = new(
@@ -199,7 +203,7 @@ public static class MonitorOptionDefinitions
             "The name of the health model for which to get the health."
         )
         {
-            IsRequired = true
+            Required = true
         };
     }
 }
