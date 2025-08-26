@@ -781,8 +781,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
                 new Uri(azureOpenAIEndpoint),
                 credential).GetChatClient(azureOpenAIDeployment).AsIChatClient();
             default:
-                return new AzureOpenAIClient(
-                new Uri(azureOpenAIDeployment),
+                new Uri(azureOpenAIEndpoint),
                 new ApiKeyCredential(azureOpenAIKey)).GetChatClient(azureOpenAIDeployment).AsIChatClient();
         }
     }
