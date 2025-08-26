@@ -511,8 +511,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
                 };
             }
 
-            var loadedStringQuery = JsonSerializer.Deserialize(query, (JsonTypeInfo<string>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(string)));
-            var loadedQuery = JsonSerializer.Deserialize(loadedStringQuery!, (JsonTypeInfo<List<ChatMessage>>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(List<ChatMessage>)));
+            var loadedQuery = JsonSerializer.Deserialize(query, (JsonTypeInfo<List<ChatMessage>>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(List<ChatMessage>)));
             var loadedAgentResponse = JsonSerializer.Deserialize(agentResponse, (JsonTypeInfo<List<ChatMessage>>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(List<ChatMessage>)));
             var loadedToolDefinitions = ConvertToolDefinitionsFromString(toolDefinitions);
 
