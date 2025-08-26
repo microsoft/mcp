@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 
@@ -18,6 +20,27 @@ public abstract class SubscriptionCommand<
     {
         base.RegisterOptions(command);
         command.Options.Add(_subscriptionOption);
+
+        // Command-level validation for presence: allow either --subscription or AZURE_SUBSCRIPTION_ID
+        // This mirrors the prior behavior that preferred the explicit option but fell back to env var.
+        command.Validators.Add(commandResult =>
+        {
+            // Look for an explicit option result among the command's children
+            var optionResult = commandResult.Children.OfType<OptionResult>().FirstOrDefault(r => r.Option == _subscriptionOption);
+            var subscriptionValue = optionResult != null && optionResult.Tokens.Count > 0
+                ? optionResult.Tokens[0].Value
+                : null;
+
+            var envSubscription = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
+
+            var hasValidSubscription = !string.IsNullOrEmpty(subscriptionValue);
+            var hasValidEnvVar = !string.IsNullOrEmpty(envSubscription);
+
+            if (!hasValidSubscription && !hasValidEnvVar)
+            {
+                commandResult.AddError("Missing Required options: --subscription");
+            }
+        });
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
