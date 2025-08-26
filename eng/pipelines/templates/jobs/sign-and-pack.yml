@@ -67,13 +67,55 @@ jobs:
       SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
 
   - task: Powershell@2
-    displayName: "Pack modules"
+    displayName: "Organize signed dotnet and native artifacts for packaging"
+    inputs:
+      pwsh: true
+      targetType: 'inline'
+      script: |
+        $signedPath = "$(Build.ArtifactStagingDirectory)/signed"
+        $toPackPath = "$(Build.ArtifactStagingDirectory)/topack"
+
+        New-Item -ItemType Directory -Force -Path "$toPackPath/dotnet" | Out-Null
+        New-Item -ItemType Directory -Force -Path "$toPackPath/native" | Out-Null
+
+        $directories = Get-ChildItem -Path $signedPath -Directory
+
+        foreach ($packageDir in $directories) {
+            $packageJsonPath = Join-Path $packageDir.FullName "package.json"
+            if (Test-Path $packageJsonPath) {
+                $packageName = $packageDir.Name
+                Write-Host "Processing platform package: $packageName"
+                if ($packageName.EndsWith("-native")) {
+                    $destinationPath = Join-Path "$toPackPath/native" $packageName
+                    Write-Host "  → Moving to native artifacts folder"
+                } else {
+                    $destinationPath = Join-Path "$toPackPath/dotnet" $packageName
+                    Write-Host "  → Moving to dotnet artifacts folder"
+                }
+                Copy-Item -Path $packageDir.FullName -Destination $destinationPath -Recurse -Force
+            }
+        }
+
+  - task: Powershell@2
+    displayName: "(Dotnet) Pack modules"
     inputs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Modules.ps1
       arguments: >
-        -ArtifactsPath '$(Build.ArtifactStagingDirectory)/signed'
-        -OutputPath '$(Build.ArtifactStagingDirectory)/packed'
+        -ArtifactsPath '$(Build.ArtifactStagingDirectory)/topack/dotnet'
+        -OutputPath '$(Build.ArtifactStagingDirectory)/packed/dotnet'
+        -Version '$(Version)'
+
+  - task: Powershell@2
+    displayName: "(Native) Pack modules"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Modules.ps1
+      arguments: >
+        -ArtifactsPath '$(Build.ArtifactStagingDirectory)/topack/native'
+        -OutputPath '$(Build.ArtifactStagingDirectory)/packed/native'
+        -Version '$(Version)'
+        -IsNative
 
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
