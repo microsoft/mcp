@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using AzureMcp.AppService.Options;
-using AzureMcp.Core.Commands;
-using AzureMcp.Core.Commands.Subscription;
+using Azure.Mcp.Tools.AppService.Options;
+using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Commands.Subscription;
 
-namespace AzureMcp.AppService.Commands;
+namespace Azure.Mcp.Tools.AppService.Commands;
 
 public abstract class BaseAppServiceCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>

@@ -4,10 +4,10 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using AzureMcp.AppService.Commands.Database;
-using AzureMcp.AppService.Models;
+using Azure.Mcp.Tools.AppService.Commands.Database;
+using Azure.Mcp.Tools.AppService.Models;
 
-namespace AzureMcp.AppService.Commands;
+namespace Azure.Mcp.Tools.AppService.Commands;
 
 [JsonSerializable(typeof(DatabaseAddCommand.Result))]
 [JsonSerializable(typeof(DatabaseConnectionInfo))]

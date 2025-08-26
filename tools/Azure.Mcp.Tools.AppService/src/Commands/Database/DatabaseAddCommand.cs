@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AzureMcp.AppService.Models;
-using AzureMcp.AppService.Options;
-using AzureMcp.AppService.Options.Database;
-using AzureMcp.AppService.Services;
-using AzureMcp.Core.Commands;
-using AzureMcp.Core.Models.Option;
-using AzureMcp.Core.Services.Telemetry;
+using Azure.Mcp.Tools.AppService.Models;
+using Azure.Mcp.Tools.AppService.Options;
+using Azure.Mcp.Tools.AppService.Options.Database;
+using Azure.Mcp.Tools.AppService.Services;
+using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Models.Option;
+using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 
-namespace AzureMcp.AppService.Commands.Database;
+namespace Azure.Mcp.Tools.AppService.Commands.Database;
 
 public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : BaseAppServiceCommand<DatabaseAddOptions>()
 {
@@ -61,7 +61,7 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
                 return context.Response;
             }
 
-            context.Activity?.WithSubscriptionTag(options);
+            context.Activity?.AddTag("subscription", options.Subscription);
 
             var appServiceService = context.GetService<IAppServiceService>();
             var connectionInfo = await appServiceService.AddDatabaseAsync(

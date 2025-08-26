@@ -5,11 +5,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\core\tests\AzureMcp.Tests\AzureMcp.Tests.csproj" />
-    <ProjectReference Include="..\..\src\AzureMcp.AppService\AzureMcp.AppService.csproj" />
+    <ProjectReference Include="..\..\src\Azure.Mcp.Tools.AppService\Azure.Mcp.Tools.AppService.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NSubstitute" />
-    <PackageReference Include="NSubstitute.Analyzers.CSharp" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="coverlet.collector" />

@@ -7,8 +7,7 @@ using AzureMcp.Tests.Client;
 using AzureMcp.Tests.Client.Helpers;
 using Xunit;
 
-namespace AzureMcp.AppService.LiveTests.Commands.Database;
-
+namespace Azure.Mcp.Tools.AppService.LiveTests.Database;
 [Trait("Area", "AppService")]
 [Trait("Command", "DatabaseAddCommand")]
 public class DatabaseAddCommandLiveTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)

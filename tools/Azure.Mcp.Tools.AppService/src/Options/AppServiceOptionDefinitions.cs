@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace AzureMcp.AppService.Options;
+namespace Azure.Mcp.Tools.AppService.Options;
 
 public static class AppServiceOptionDefinitions
 {

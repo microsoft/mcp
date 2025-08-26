@@ -1,17 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AzureMcp.AppService.Commands.Database;
-using AzureMcp.AppService.Services;
-using AzureMcp.Core.Areas;
-using AzureMcp.Core.Commands;
+using Azure.Mcp.Tools.AppService.Commands.Database;
+using Azure.Mcp.Tools.AppService.Services;
+using Azure.Mcp.Core.Areas;
+using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace AzureMcp.AppService;
+namespace Azure.Mcp.Tools.AppService;
 
 public class AppServiceSetup : IAreaSetup
 {
+    public string Name => "AppService";
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAppServiceService, AppServiceService>();

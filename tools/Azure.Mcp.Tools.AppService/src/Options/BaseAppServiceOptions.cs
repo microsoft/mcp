@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 using System.Text.Json.Serialization;
-using AzureMcp.Core.Options;
-namespace AzureMcp.AppService.Options;
+using Azure.Mcp.Core.Options;
+namespace Azure.Mcp.Tools.AppService.Options;
 
 public class BaseAppServiceOptions : SubscriptionOptions
 {
