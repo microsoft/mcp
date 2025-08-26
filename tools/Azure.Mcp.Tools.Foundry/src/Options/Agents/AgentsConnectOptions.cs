@@ -11,10 +11,10 @@ public class AgentsConnectOptions : GlobalOptions
 {
     [JsonPropertyName(FoundryOptionDefinitions.AgentId)]
     public string? AgentId { get; set; }
+
     [JsonPropertyName(FoundryOptionDefinitions.Query)]
-
     public string? Query { get; set; }
-    [JsonPropertyName(FoundryOptionDefinitions.Endpoint)]
 
+    [JsonPropertyName(FoundryOptionDefinitions.Endpoint)]
     public string? Endpoint { get; set; }
 }
