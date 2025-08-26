@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace AzureMcp.AppService.Models;
+namespace Azure.Mcp.Tools.AppService.Models;
 
 /// <summary>
 /// Represents a database connection configured for an Azure App Service.

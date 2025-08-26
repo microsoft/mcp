@@ -4,17 +4,17 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
-using AzureMcp.AppService.Commands.Database;
-using AzureMcp.AppService.Models;
-using AzureMcp.AppService.Services;
-using AzureMcp.Core.Models.Command;
-using AzureMcp.Core.Options;
+using Azure.Mcp.Tools.AppService.Commands.Database;
+using Azure.Mcp.Tools.AppService.Models;
+using Azure.Mcp.Tools.AppService.Services;
+using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
-namespace AzureMcp.AppService.UnitTests.Commands.Database;
+namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Database;
 
 [Trait("Area", "AppService")]
 [Trait("Command", "DatabaseAdd")]

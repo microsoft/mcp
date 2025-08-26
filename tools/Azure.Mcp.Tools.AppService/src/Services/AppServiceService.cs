@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AzureMcp.AppService.Models;
-using AzureMcp.Core.Options;
-using AzureMcp.Core.Services.Azure;
-using AzureMcp.Core.Services.Azure.Subscription;
-using AzureMcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.AppService.Models;
+using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.AppService;
 using Azure.ResourceManager.AppService.Models;
 using Microsoft.Extensions.Logging;
 
-namespace AzureMcp.AppService.Services;
+namespace Azure.Mcp.Tools.AppService.Services;
 
 public class AppServiceService(
     ISubscriptionService subscriptionService,

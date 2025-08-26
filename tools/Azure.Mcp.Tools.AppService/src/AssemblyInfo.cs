@@ -3,5 +3,5 @@
 
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("AzureMcp.AppService.UnitTests")]
-[assembly: InternalsVisibleTo("AzureMcp.AppService.LiveTests")]
+[assembly: InternalsVisibleTo("Azure.Mcp.Tools.AppService.UnitTests")]
+[assembly: InternalsVisibleTo("Azure.Mcp.Tools.AppService.LiveTests")]

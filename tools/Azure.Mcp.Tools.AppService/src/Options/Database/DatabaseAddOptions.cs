@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace AzureMcp.AppService.Options.Database;
+namespace Azure.Mcp.Tools.AppService.Options.Database;
 
 public class DatabaseAddOptions : BaseAppServiceOptions
 {

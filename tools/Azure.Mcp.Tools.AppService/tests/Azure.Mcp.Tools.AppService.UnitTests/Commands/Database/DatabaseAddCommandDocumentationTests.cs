@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AzureMcp.AppService.Commands.Database;
-using AzureMcp.AppService.Options;
+using Azure.Mcp.Tools.AppService.Commands.Database;
+using Azure.Mcp.Tools.AppService.Options;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using System.CommandLine;
 using Xunit;
 
-namespace AzureMcp.AppService.UnitTests.Commands.Database;
+namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Database;
 
 [Trait("Area", "AppService")]
 [Trait("Command", "DatabaseAdd")]

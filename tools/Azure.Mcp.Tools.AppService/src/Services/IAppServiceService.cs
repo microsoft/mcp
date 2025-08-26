@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AzureMcp.AppService.Models;
-using AzureMcp.Core.Options;
+using Azure.Mcp.Tools.AppService.Models;
+using Azure.Mcp.Core.Options;
 
-namespace AzureMcp.AppService.Services;
+namespace Azure.Mcp.Tools.AppService.Services;
 
 public interface IAppServiceService
 {
