@@ -1,0 +1,44 @@
+jobs:
+- job: Create_Agnostic_Nuget_Packages
+  displayName: "Create Agnostic Nuget Packages"
+  pool:
+    name: $(WINDOWSPOOL)
+    image: $(WINDOWSVMIMAGE)
+    os: windows
+
+  steps:
+  - checkout: self
+
+  - task: UseDotNet@2
+    displayName: "Use .NET SDK from global.json"
+    retryCountOnTaskFailure: 3
+    inputs:
+      useGlobalJson: true
+
+  - task: UseDotNet@2
+    displayName: "Use .NET SDK 9.0.x"
+    retryCountOnTaskFailure: 3
+    inputs:
+      packageType: sdk
+      version: 9.0.x
+
+  - task: Powershell@2
+    displayName: "Build module"
+    condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
+      arguments: >
+        -OutputPath '$(Build.ArtifactStagingDirectory)'
+        -VersionSuffix '$(VersionSuffix)'
+        -ProduceNugetPackages 'agnostic'
+        -SkipBuildServer
+
+  - task: ComponentGovernanceComponentDetection@0
+    displayName: "Component Governance Detection"
+
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactPath: $(Build.ArtifactStagingDirectory)
+      ArtifactName: $(PipelineArtifactName)_os_agnostic
+      SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}

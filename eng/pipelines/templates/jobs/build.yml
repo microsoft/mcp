@@ -54,6 +54,7 @@ jobs:
         -VersionSuffix '$(VersionSuffix)'
         -OperatingSystem '${{ parameters.OSName }}'
         -Architecture '$(Architecture)'
+        -ProduceNugetPackages 'runtime'
         -SelfContained
 
   - task: Powershell@2

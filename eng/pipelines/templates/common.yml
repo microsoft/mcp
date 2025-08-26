@@ -72,6 +72,7 @@ extends:
               Path: eng/pipelines/build-matrix.json
               Selection: all
               GenerateVMJobs: true
+      - template: /eng/pipelines/templates/jobs/build-runtime-agnostic.yml
 
     - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
       - stage: Test

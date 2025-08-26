@@ -12,6 +12,7 @@ param(
     [switch] $DebugBuild,
     [switch] $CleanBuild,
     [switch] $BuildNative,
+    [switch] $SkipBuildServer,
     [string] $ServerName,
     [Parameter(Mandatory=$true, ParameterSetName='Named')]
     [ValidateSet('windows','linux','macOS')]
@@ -23,6 +24,7 @@ param(
     [switch] $AllPlatforms,
     [ValidateSet('none','runtime','agnostic')]
     [string] $ProduceNugetPackages = 'none'
+
 
 )
 
@@ -61,6 +63,7 @@ if($Architecture) {
 } else {
     $architectures = $AllPlatforms ? @('x64', 'arm64') : @($runtime[1])
 }
+
 
 function Get-ProjectInfo ($serverName) {
     $serverDirectory = Join-Path $RepoRoot "servers" $serverName
@@ -191,10 +194,12 @@ function BuildServer($serverName, $serverDirectory, $projectFile, $packageOutput
     }
 }
 
-function CreateRuntimePackages($serverName, $serverDirectory, $projectFile, $packageOutputDir) {
+function CreateRuntimeNugetPackage($serverName, $serverDirectory, $projectFile, $packageOutputDir) {
     if (-not (Test-Path -Path $packageOutputDir)) {
         New-Item -Path $packageOutputDir -ItemType Directory -Force | Out-Null
     }
+    $properties = & "$PSScriptRoot/Get-ProjectProperties.ps1" -ProjectName "$serverName.csproj"
+    $version = $properties.Version
     foreach ($os in $operatingSystems) {
         foreach ($arch in $architectures) {
             $outputDir = "$packageOutputDir/$os-$arch"
@@ -210,16 +215,18 @@ function CreateRuntimePackages($serverName, $serverDirectory, $projectFile, $pac
             # Clear and recreate the package output directory
             Remove-Item -Path $outputDir -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
             New-Item -Path "$outputDir" -ItemType Directory -Force | Out-Null
-            $command = "dotnet pack '$projectFile' --runtime '$os-$arch' --output '$outputDir' /p:Version=$Version /p:Configuration=$configuration /p:BuildNative=true"
+            $command = "dotnet pack '$projectFile' --runtime '$os-$arch' --output '$outputDir' /p:Version=$version /p:Configuration=$configuration /p:BuildNative=true"
             Invoke-LoggedCommand $command -GroupOutput
         }
     }
 }
 
-function CreateAgnosticPackages($serverName, $serverDirectory, $projectFile, $packageOutputDir) {
+function CreateAgnosticNugetPackage($serverName, $serverDirectory, $projectFile, $packageOutputDir) {
     if (-not (Test-Path -Path $packageOutputDir)) {
         New-Item -Path $packageOutputDir -ItemType Directory -Force | Out-Null
     }
+    $properties = & "$PSScriptRoot/Get-ProjectProperties.ps1" -ProjectName "$serverName.csproj"
+    $version = $properties.Version
     Write-Host "Packing version $version, agnostic in $packageOutputDir" -ForegroundColor Green
 
     $configuration = if ($DebugBuild) { 'Debug' } else { 'Release' }
@@ -231,7 +238,7 @@ function CreateAgnosticPackages($serverName, $serverDirectory, $projectFile, $pa
 
     # Clear and recreate the package output directory
     Remove-Item -Path $packageOutputDir -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
-    $command = "dotnet pack '$projectFile' --output '$packageOutputDir' /p:Version=$Version /p:Configuration=$configuration /p:BuildNative=true"
+    $command = "dotnet pack '$projectFile' --output '$packageOutputDir' /p:Version=$version /p:Configuration=$configuration /p:BuildNative=true"
     Invoke-LoggedCommand $command -GroupOutput
 }
 
@@ -249,21 +256,24 @@ try {
             Write-Warning "Skipping $serverName (project file missing)"
             continue
         }
-        BuildServer -serverName $serverName `
-            -serverDirectory $info.ServerDirectory `
-            -projectFile $info.ProjectFile `
-            -packageOutputDir (Join-Path $info.serverOutputDir "npm")
+
+        if (-not $SkipBuildServer) {
+            BuildServer -serverName $serverName `
+                -serverDirectory $info.ServerDirectory `
+                -projectFile $info.ProjectFile `
+                -packageOutputDir (Join-Path $info.ServerOutputDir "npm")
+        }
 
         if ($ProduceNugetPackages -eq 'runtime') {
-            CreateRuntimePackages -serverName $serverName `
+            CreateRuntimeNugetPackage -serverName $serverName `
                 -serverDirectory $info.ServerDirectory `
                 -projectFile $info.ProjectFile `
-                -packageOutputDir (Join-Path $info.serverOutputDir "nuget")
+                -packageOutputDir (Join-Path $info.ServerOutputDir "nuget")
         } elseif ($ProduceNugetPackages -eq 'agnostic') {
-            CreateAgnosticPackages -serverName $serverName `
+            CreateAgnosticNugetPackage -serverName $serverName `
                 -serverDirectory $info.ServerDirectory `
                 -projectFile $info.ProjectFile `
-                -packageOutputDir (Join-Path $info.serverOutputDir "nuget")
+                -packageOutputDir (Join-Path $info.ServerOutputDir "nuget")
         }
     }
 }
