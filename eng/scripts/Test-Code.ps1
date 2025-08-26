@@ -32,8 +32,8 @@ Remove-Item -Recurse -Force $TestResultsPath -ErrorAction SilentlyContinue
 
 # Gets all area projects those are excluded using BuildNative condition.
 function Get-NativeExcludedAreas {
-    $areaPathPattern = 'areas[/\\]([^/\\]+)[/\\]src'
-    $ProjectFile = "$RepoRoot/core/src/AzureMcp.Cli/AzureMcp.Cli.csproj"
+    $areaPathPattern = '(tools[/\\][^/\\]+)[/\\]src'
+    $ProjectFile = "$RepoRoot/servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj"
 
     if (!(Test-Path $ProjectFile)) {
         Write-Error "$ProjectFile not found"
@@ -51,7 +51,7 @@ function Get-NativeExcludedAreas {
     $excludedAreas = @()
     foreach ($ref in $buildNativeGroup.ProjectReference) {
         if ($ref.Remove -match $areaPathPattern) {
-            $excludedAreas += $matches[1].ToLower()
+            $excludedAreas += $matches[1]
         }
     }
 
@@ -93,7 +93,7 @@ function BuildNativeBinaryAndPrepareTests {
     # Native AOT compilation only occurs during 'dotnet publish', not 'dotnet build'
     $nativeBinaryPath = PublishNativeBinary
 
-    Write-Host "Building test project(s)"
+    Write-Host "ç"
     Invoke-LoggedCommand `
         -Command "dotnet build" `
         -AllowedExitCodes @(0)
@@ -105,10 +105,10 @@ function PublishNativeBinary {
     $runtimeId = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier
     Write-Host "Publishing AzureMcp as native binary for $runtimeId"
 
-    $cliProjectDir = "$RepoRoot/core/src/AzureMcp.Cli"
+    $cliProjectDir = "$RepoRoot/servers/Azure.Mcp.Server/src"
 
     Invoke-LoggedCommand `
-        -Command "dotnet publish '$cliProjectDir/AzureMcp.Cli.csproj' -c Release -r $runtimeId /p:BuildNative=true" `
+        -Command "dotnet publish '$cliProjectDir/Azure.Mcp.Server.csproj' -c Release -r $runtimeId /p:BuildNative=true" `
         -AllowedExitCodes @(0) | Out-Null
 
     $exeName = if ($runtimeId.StartsWith('win-')) { "azmcp.exe" } else { "azmcp" }

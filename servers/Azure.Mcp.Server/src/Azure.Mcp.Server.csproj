@@ -96,7 +96,7 @@
        https://github.com/Azure/azure-mcp/blob/main/docs/aot-compatibility.md
        Do not add ProjectReference removals in this ItemGroup. -->
   <ItemGroup Condition="'$(BuildNative)' == 'true'">
-    <ProjectReference Remove="..\..\..\tools\azuremanagedlustre\src\AzureMcp.AzureManagedLustre\AzureMcp.AzureManagedLustre.csproj" />
+    <ProjectReference Remove="..\..\..\tools\Azure.Mcp.Tools.AzureManagedLustre\src\Azure.Mcp.Tools.AzureManagedLustre.csproj" />
   </ItemGroup>
   <Import Project="PackServerJson.targets" />
 </Project>

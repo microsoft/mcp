@@ -75,6 +75,35 @@ jobs:
       testResultsFormat: "VSTest"
       mergeTestResults: true
 
+  - task: AzurePowershell@5
+    displayName: "(Native AOT) Run tests - az pwsh"
+    env:
+      AZURE_TEST_MODE: 'live'
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    inputs:
+      azureSubscription: azure-sdk-tests-public
+      azurePowerShellVersion: 'LatestVersion'
+      scriptType: InlineScript
+      Inline: |
+        ./eng/scripts/Test-Code.ps1 `
+          -TestType 'Live' `
+          -Area $(Area) `
+          -TestResultsPath '$(Build.ArtifactStagingDirectory)/native/testResults' `
+          -TestNativeBuild
+
+        exit $LastExitCode
+      pwsh: true
+      workingDirectory: $(Build.SourcesDirectory)
+
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    displayName: "(Native AOT) Publish Results"
+    inputs:
+      testResultsFiles: "$(Build.ArtifactStagingDirectory)/native/testResults/*.trx"
+      testRunTitle: "live-$(Area)"
+      testResultsFormat: "VSTest"
+      mergeTestResults: true
+
   - template: /eng/common/TestResources/remove-test-resources.yml
     parameters:
       ServiceConnection: azure-sdk-tests-public
