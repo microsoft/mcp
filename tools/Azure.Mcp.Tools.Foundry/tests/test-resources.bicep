@@ -149,3 +149,117 @@ resource searchServiceRoleAssignment 'Microsoft.Authorization/roleAssignments@20
     principalId: testApplicationOid
   }
 }
+
+resource searchIndexDeploymentScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  name: '${baseName}-create-search-index'
+  location: location
+  kind: 'AzurePowerShell'
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentity.id}': {}
+    }
+  }
+  properties: {
+    azPowerShellVersion: '11.0'
+    retentionInterval: 'P1D'
+    timeout: 'PT30M'
+    cleanupPreference: 'OnSuccess'
+    scriptContent: '''
+      param(
+        [string]$searchServiceName,
+        [string]$resourceGroupName,
+        [string]$subscriptionId
+      )
+
+      # Set the context
+      Set-AzContext -SubscriptionId $subscriptionId
+
+      # Get search service admin key
+      $adminKeys = Get-AzSearchAdminKeyPair -ResourceGroupName $resourceGroupName -ServiceName $searchServiceName
+      $adminKey = $adminKeys.Primary
+
+      # Define the index schema
+      $indexSchema = @{
+        name = "test-knowledge-index"
+        fields = @(
+          @{
+            name = "id"
+            type = "Edm.String"
+            key = $true
+            searchable = $false
+            filterable = $true
+            retrievable = $true
+          },
+          @{
+            name = "content"
+            type = "Edm.String"
+            searchable = $true
+            filterable = $false
+            retrievable = $true
+            analyzer = "standard.lucene"
+          },
+          @{
+            name = "title"
+            type = "Edm.String"
+            searchable = $true
+            filterable = $true
+            retrievable = $true
+            sortable = $true
+          },
+          @{
+            name = "metadata"
+            type = "Edm.String"
+            searchable = $false
+            filterable = $true
+            retrievable = $true
+          }
+        )
+      } | ConvertTo-Json -Depth 10
+
+      # Create the index
+      $uri = "https://$searchServiceName.search.windows.net/indexes?api-version=2023-11-01"
+      $headers = @{
+        'Content-Type' = 'application/json'
+        'api-key' = $adminKey
+      }
+
+      try {
+        $response = Invoke-RestMethod -Uri $uri -Method POST -Body $indexSchema -Headers $headers
+        Write-Output "Successfully created search index: test-knowledge-index"
+        Write-Output "Index response: $($response | ConvertTo-Json)"
+      } catch {
+        if ($_.Exception.Response.StatusCode -eq 409) {
+          Write-Output "Search index 'test-knowledge-index' already exists"
+        } else {
+          Write-Error "Failed to create search index: $($_.Exception.Message)"
+          throw
+        }
+      }
+    '''
+    arguments: '-searchServiceName "${searchService.name}" -resourceGroupName "${resourceGroup().name}" -subscriptionId "${subscription().subscriptionId}"'
+  }
+  dependsOn: [
+    searchServiceRoleAssignment
+    managedIdentityRoleAssignment
+  ]
+}
+
+resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: '${baseName}-deployment-identity'
+  location: location
+}
+
+resource managedIdentityRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid('7ca78c08-252a-4471-8644-bb5ff32d4ba0', managedIdentity.id, searchService.id) // Search Service Contributor role
+  scope: searchService
+  properties: {
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '7ca78c08-252a-4471-8644-bb5ff32d4ba0')
+    principalId: managedIdentity.properties.principalId
+  }
+}
+
+output searchServiceName string = searchService.name
+output searchServiceEndpoint string = 'https://${searchService.name}.search.windows.net'
+output knowledgeIndexName string = 'test-knowledge-index'
+output aiProjectsEndpoint string = 'https://${aiServicesAccount.name}.services.ai.azure.com/api/projects/${aiProjects.name}'
