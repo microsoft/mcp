@@ -51,7 +51,6 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             Endpoint: topicData.Endpoint?.ToString(),
             ProvisioningState: topicData.ProvisioningState?.ToString(),
             PublicNetworkAccess: topicData.PublicNetworkAccess?.ToString(),
-            InputSchema: topicData.InputSchema?.ToString(),
-            SkuName: null); // SKU information not available in this SDK version
+            InputSchema: topicData.InputSchema?.ToString());
     }
 }

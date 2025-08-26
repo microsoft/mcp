@@ -43,7 +43,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "List my App Configuration stores"
 * "Show my key-value pairs in App Config"
 
-### 📦 Azure Container Registry (ACR)
+### �📦 Azure Container Registry (ACR)
 
 * "List all my Azure Container Registries"
 * "Show me my container registries in the 'myproject' resource group"
@@ -63,6 +63,12 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * "Get Azure Data Explorer databases in cluster 'mycluster'"
 * "Sample 10 rows from table 'StormEvents' in Azure Data Explorer database 'db1'"
+
+### � Azure Event Grid
+
+* "List all Event Grid topics in subscription 'mysubscription'"
+* "Show me the Event Grid topics in my subscription"
+* "List all Event Grid topics in resource group 'mygroup' in my subscription"
 
 ### ⚡ Azure Managed Lustre
 
@@ -169,7 +175,13 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * Support for template discovery, template initialization, provisioning and deployment
 * Cross-platform compatibility
 
-### 🚀 Azure Deploy
+### � Azure Event Grid
+
+* List Event Grid topics in subscription or resource group
+* View topic configuration and status information
+* Access endpoint and key details for event publishing
+
+### �🚀 Azure Deploy
 
 * Generate Azure service architecture diagrams from source code
 * Create a deploy plan for provisioning and deploying the application
