@@ -182,7 +182,7 @@ public class FoundryCommandTests(LiveTestFixture liveTestFixture, ITestOutputHel
     public async Task Should_evaluate_agent(string evaluatorName, string evaluationMetric)
     {
         // to be filled in
-        var query = "[{\"$type\":\"text\",\"text\":\"What is the weather in NYC today?\"}],\"messageId\":\"msg_fakeMessageHash1\"}]";
+        var query = "[{\"role\":\"user\",\"contents\":[{\"$type\":\"text\",\"text\":\"What is the weather in NYC today?\"}],\"messageId\":\"msg_fakeMessageHash1\"}]";
         var agentResponse = "[{\"role\":\"user\",\"contents\":[{\"$type\":\"text\",\"text\":\"What is the weather in NYC today?\"}],\"messageId\":\"msg_fakeMessageHash1\"},{\"authorName\":\"asst_XNa6yxvWUvRhCpWmE3kxk09u\",\"role\":\"assistant\",\"contents\":[{\"$type\":\"functionCall\",\"callId\":\"call_fakeCallHash1\",\"name\":\"bing_grounding\",\"arguments\":{\"requesturl\":\"https://api.bing.microsoft.com/v7.0/search?q=NewYorkCityweatherAugust42025\"}}],\"messageId\":\"step_fakeRunStepHash1\"},{\"authorName\":\"asst_XNa6yxvWUvRhCpWmE3kxk09u\",\"role\":\"assistant\",\"contents\":[{\"$type\":\"text\",\"text\":\"The weather in New York City today, August 4, 2025, is expected to have a high of 88°F during the day and a low of 70°F at night. There is a 25% chance of precipitation, with light winds at about 7 mph.\\u30103:2\\u2020source\\u3011.\"}],\"messageId\":\"msg_fakeMessageHash2\"}]";
         var toolDefinitions = "[{\"name\": \"bing_grounding\", \"description\": \"Enhance model output with web data.\", \"jsonSchema\": {\"type\": \"object\",\"properties\": {\"requesturl\": {\"type\": \"string\",\"description\": \"URL used in Bing Search API.”}}}}]";
         var accounts = Settings.ResourceBaseName;
