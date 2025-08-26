@@ -419,7 +419,10 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
                 { "agent_id", agentId },
                 { "response", convertedResponse },
                 { "query", convertedRequestMessages },
-                { "tool_definitions", JsonSerializer.Serialize(toolDefinitions, (JsonTypeInfo<List<ToolDefinitionAIFunction>>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(List<ToolDefinitionAIFunction>))) },
+                { "tool_definitions", JsonSerializer.Serialize(toolDefinitions.Select(td => td.SerializeToolDefinition()), (JsonTypeInfo<List<string>>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(List<string>))) },
+                { "run_steps", runSteps },
+                { "run_details", run.Value },
+                //{ "tool_definitions", JsonSerializer.Serialize(toolDefinitions, (JsonTypeInfo<List<ToolDefinitionAIFunction>>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(List<ToolDefinitionAIFunction>))) },
                 { "citations", citations }
             };
         }
@@ -847,6 +850,21 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
             string description = json.GetProperty("description").GetString() ?? "";
             JsonElement? schema = json.TryGetProperty("jsonSchema", out JsonElement schemaElement) ? schemaElement.Clone() : null;
             return new ToolDefinitionAIFunction(name, description, schema);
+        }
+        
+        public string SerializeToolDefinition()
+        {
+            MemoryStream bytes = new();
+            using (Utf8JsonWriter writer = new(bytes))
+            {
+                writer.WriteStartObject();
+                writer.WriteString("name", Name);
+                writer.WriteString("description", Description);
+                writer.WritePropertyName("jsonSchema");
+                JsonSchema.WriteTo(writer);
+                writer.WriteEndObject();
+            }
+            return Encoding.UTF8.GetString(bytes.GetBuffer(), 0, (int)bytes.Length);
         }
     }
 }
