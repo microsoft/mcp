@@ -10,10 +10,10 @@ public static class ExtensionOptionDefinitions
         public const string CommandName = "command";
 
         public static readonly Option<string> Command = new(
-            $"--{CommandName}",
-            "The Azure CLI command to execute (without the 'az' prefix). For example: 'group list'."
+            $"--{CommandName}"
         )
         {
+            Description = "The Azure CLI command to execute (without the 'az' prefix). For example: 'group list'.",
             Required = true
         };
     }
@@ -23,16 +23,16 @@ public static class ExtensionOptionDefinitions
         public const string CommandName = "command";
 
         public static readonly Option<string> Command = new(
-            $"--{CommandName}",
-            """
+            $"--{CommandName}"
+        )
+        {
+            Description = """
                 The Azure Developer CLI command and arguments to execute (without the 'azd' prefix).
                 Examples:
                 - up
                 - env list
                 - env get-values
-                """
-        )
-        {
+                """,
             Required = false
         };
 
@@ -40,22 +40,19 @@ public static class ExtensionOptionDefinitions
         public const string CwdName = "cwd";
 
         public static readonly Option<string> Cwd = new(
-            $"--{CwdName}",
-            "The current working directory for the command. This is the directory where the command will be executed."
+            $"--{CwdName}"
         )
         {
+            Description = "The current working directory for the command. This is the directory where the command will be executed.",
             Required = true
         };
 
         public const string EnvironmentName = "environment";
         public static readonly Option<string> Environment = new(
-            $"--{EnvironmentName}",
-            """
-                The name of the azd environment to use. This is typically the name of the Azure environment (e.g., 'prod', 'dev', 'test', 'staging').
-                Always set environments for azd commands that support -e, --environment argument.
-                """
+            $"--{EnvironmentName}"
         )
         {
+            Description = "The name of the azd environment to use. This is typically the name of the Azure environment (e.g., 'prod', 'dev', 'test', 'staging'). Always set environments for azd commands that support -e, --environment argument.",
             Required = false
         };
 

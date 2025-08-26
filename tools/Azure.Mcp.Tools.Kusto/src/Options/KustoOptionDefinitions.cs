@@ -14,51 +14,51 @@ public static class KustoOptionDefinitions
 
 
     public static readonly Option<string> Cluster = new(
-        $"--{ClusterName}",
-        "Kusto Cluster name."
+        $"--{ClusterName}"
     )
     {
+        Description = "Kusto Cluster name.",
         Required = false
     };
 
     public static readonly Option<string> ClusterUri = new(
-        $"--{ClusterUriName}",
-        "Kusto Cluster URI."
+        $"--{ClusterUriName}"
     )
     {
+        Description = "Kusto Cluster URI.",
         Required = false
     };
 
     public static readonly Option<string> Database = new(
-        $"--{DatabaseName}",
-        "Kusto Database name."
+        $"--{DatabaseName}"
     )
     {
+        Description = "Kusto Database name.",
         Required = true
     };
 
     public static readonly Option<string> Table = new(
-        $"--{TableName}",
-        "Kusto Table name."
+        $"--{TableName}"
     )
     {
+        Description = "Kusto Table name.",
         Required = true
     };
 
     public static readonly Option<int> Limit = new(
-        $"--{LimitName}",
-        "The maximum number of results to return."
+        $"--{LimitName}"
     )
     {
+        Description = "The maximum number of results to return.",
         DefaultValueFactory = _ => 10,
         Required = true
     };
 
     public static readonly Option<string> Query = new(
-        $"--{QueryText}",
-        "Kusto query to execute. Uses KQL syntax."
+        $"--{QueryText}"
     )
     {
+        Description = "Kusto query to execute. Uses KQL syntax.",
         Required = true
     };
 }

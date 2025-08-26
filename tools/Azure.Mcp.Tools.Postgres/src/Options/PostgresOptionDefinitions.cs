@@ -14,58 +14,58 @@ public static class PostgresOptionDefinitions
     public const string ValueName = "value";
 
     public static readonly Option<string> User = new(
-        $"--{UserName}",
-        "The user name to access PostgreSQL server."
+        $"--{UserName}"
     )
     {
+        Description = "The user name to access PostgreSQL server.",
         Required = true
     };
 
     public static readonly Option<string> Server = new(
-        $"--{ServerName}",
-        "The PostgreSQL server to be accessed."
+        $"--{ServerName}"
     )
     {
+        Description = "The PostgreSQL server to be accessed.",
         Required = true
     };
 
     public static readonly Option<string> Database = new(
-        $"--{DatabaseName}",
-        "The PostgreSQL database to be access."
+        $"--{DatabaseName}"
     )
     {
+        Description = "The PostgreSQL database to be accessed.",
         Required = true
     };
 
     public static readonly Option<string> Table = new(
-        $"--{TableName}",
-        "The PostgreSQL table to be access."
+        $"--{TableName}"
     )
     {
+        Description = "The PostgreSQL table to be accessed.",
         Required = true
     };
 
     public static readonly Option<string> Query = new(
-        $"--{QueryText}",
-        "Query to be executed against a PostgreSQL database."
+        $"--{QueryText}"
     )
     {
+        Description = "Query to be executed against a PostgreSQL database.",
         Required = true
     };
 
     public static readonly Option<string> Param = new(
-        $"--{ParamName}",
-        "The PostgreSQL parameter to be accessed."
+        $"--{ParamName}"
     )
     {
+        Description = "The PostgreSQL parameter to be accessed.",
         Required = true
     };
 
     public static readonly Option<string> Value = new(
-        $"--{ValueName}",
-        "The value to set for the PostgreSQL parameter."
+        $"--{ValueName}"
     )
     {
+        Description = "The value to set for the PostgreSQL parameter.",
         Required = true
     };
 }
