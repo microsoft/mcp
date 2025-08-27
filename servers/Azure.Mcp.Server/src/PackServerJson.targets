@@ -17,7 +17,7 @@
 
   <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
     <!--
-    This dependency is already in the runtime graph via AzureMcp.Core.
+    This dependency is already in the runtime graph via Azure.Mcp.Core.
     Use it at pack time in SerializePropertiesToJson to fill in .mcp/server.json placeholders.
     -->
     <PackageReference Include="System.Text.Json" GeneratePathProperty="true" />
