@@ -29,15 +29,15 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var appConfigService = context.GetService<IAppConfigService>();
             var accounts = await appConfigService.GetAppConfigAccounts(
                 options.Subscription!,

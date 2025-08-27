@@ -46,13 +46,13 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            return context.Response;
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-                return context.Response;
-
             var service = context.GetService<IFunctionAppService>();
             var functionApp = await service.GetFunctionApp(
                 options.Subscription!,

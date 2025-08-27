@@ -48,14 +48,15 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return Task.FromResult(context.Response);
+        }
+
         var options = BindOptions(parseResult);
+
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return Task.FromResult(context.Response);
-            }
-
             var resourceTypes = options.ResourceTypes.Split(',')
                 .Select(rt => rt.Trim())
                 .Where(rt => !string.IsNullOrWhiteSpace(rt))

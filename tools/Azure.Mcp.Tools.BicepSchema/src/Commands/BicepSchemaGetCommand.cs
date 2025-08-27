@@ -47,14 +47,15 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands
 
         public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
         {
+            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            {
+                return Task.FromResult(context.Response);
+            }
+
             BicepSchemaOptions options = BindOptions(parseResult);
+
             try
             {
-                if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-                {
-                    return Task.FromResult(context.Response);
-                }
-
                 TypesDefinitionResult result = SchemaGenerator.GetResourceTypeDefinitions(s_serviceProvider.Value, options.ResourceType!);
                 List<ComplexType> response = SchemaGenerator.GetResponse(result);
 

@@ -48,15 +48,15 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger) : Bas
     [McpServerTool(Destructive = true, ReadOnly = false, Title = CommandTitle)]
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var appConfigService = context.GetService<IAppConfigService>();
             await appConfigService.SetKeyValue(
                 options.Account!,

@@ -52,14 +52,15 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return Task.FromResult(context.Response);
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return Task.FromResult(context.Response);
-            }
             var result = PipelineGenerationUtil.GeneratePipelineGuidelines(options);
 
             context.Response.Message = result;

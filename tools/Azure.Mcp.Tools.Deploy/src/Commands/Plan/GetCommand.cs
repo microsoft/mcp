@@ -55,15 +55,15 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return Task.FromResult(context.Response);
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return Task.FromResult(context.Response);
-            }
-
             var planTemplate = DeploymentPlanTemplateUtil.GetPlanTemplate(options.ProjectName, options.TargetAppService, options.ProvisioningTool, options.AzdIacOptions);
 
             context.Response.Message = planTemplate;

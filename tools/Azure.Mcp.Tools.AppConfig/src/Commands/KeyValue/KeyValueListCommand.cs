@@ -49,15 +49,15 @@ public sealed class KeyValueListCommand(ILogger<KeyValueListCommand> logger) : B
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var appConfigService = context.GetService<IAppConfigService>();
             var settings = await appConfigService.ListKeyValues(
                 options.Account!,

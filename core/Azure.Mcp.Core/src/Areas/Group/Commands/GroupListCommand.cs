@@ -31,15 +31,15 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : Subscri
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var resourceGroupService = context.GetService<IResourceGroupService>();
             var groups = await resourceGroupService.GetResourceGroups(
                 options.Subscription!,

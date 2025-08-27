@@ -133,15 +133,15 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return Task.FromResult(context.Response);
+        }
+        
+        var options = BindOptions(parseResult);
+
         try
         {
-            var options = BindOptions(parseResult);
-
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return Task.FromResult(context.Response);
-            }
-
             var designArchitecture = GetArchitectureDesignText();
             var responseObject = new CloudArchitectResponseObject
             {
