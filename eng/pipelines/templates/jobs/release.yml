@@ -8,7 +8,7 @@ parameters:
 jobs:
 - job: TagRepository
   displayName: "Create release tag"
-  condition: and(succeeded(), ne(variables['Skip.TagRepository'], 'true'))
+  condition: false
   steps:
   - checkout: self
 
@@ -95,7 +95,7 @@ jobs:
 - ${{ each VsixTarget in parameters.VsixTargets }}:
   - deployment: PublishVSIX_${{ replace(VsixTarget, '-', '_') }}
     displayName: "Publish VSIX Artifact to Marketplace - ${{ VsixTarget }}"
-    dependsOn: Publish
+    # dependsOn: Publish
     condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
     templateContext:
       type: releaseJob
