@@ -62,10 +62,10 @@ public sealed class StartupsDeployCommandTests
     {
         // Arrange
         var htmlFile = Path.Combine(_tempDirectory, "index.html");
-        File.WriteAllText(htmlFile, "<html><body></body></html>");
+        File.WriteAllText(htmlFile, "<html><body>Test content</body></html>");
 
         var expectedResult = new StartupsDeployResources(
-            StorageAccount: "",
+            StorageAccount: "teststorage",
             Container: "$web",
             Status: "Success",
             WebsiteUrl: "https://teststorage.z22.web.core.windows.net/",
@@ -74,17 +74,17 @@ public sealed class StartupsDeployCommandTests
         );
 
         _startupsService.DeployStaticWebAsync(
-            Arg.Any<string>(), // tenantId
-            Arg.Any<string>(), // subscription
-            Arg.Any<string>(), // storageAccount
-            Arg.Any<string>(), // resourceGroup
-            Arg.Any<string>(), // sourcePath
+            "tenant123", // tenantId
+            "sub123", // subscription
+            "teststorage", // storageAccount
+            "test-rg", // resourceGroup 
+            _tempDirectory, // sourcePath
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<bool>(), // overwrite
+            false, // overwrite
             Arg.Any<IProgress<string>>()
         ).Returns(expectedResult);
 
-        var args = $"--storage-account teststorage --resource-group test-rg --source-path {_tempDirectory} --subscription sub123 --tenant tenant123";
+        var args = $"--storage-account teststorage --resource-group test-rg --source-path {_tempDirectory} --subscription sub123 --tenant tenant123 --overwrite false";
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse(args);
 
@@ -96,6 +96,17 @@ public sealed class StartupsDeployCommandTests
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
+        // Verify service was called with correct parameters
+        await _startupsService.Received(1).DeployStaticWebAsync(
+            "tenant123",
+            "sub123",
+            "teststorage",
+            "test-rg",
+            _tempDirectory,
+            Arg.Any<RetryPolicyOptions>(),
+            false,
+            Arg.Any<IProgress<string>>());
+
         var result = JsonSerializer.Deserialize<StartupsDeployResources>(
             JsonSerializer.Serialize(response.Results));
         Assert.NotNull(result);
@@ -105,49 +116,33 @@ public sealed class StartupsDeployCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReactProject_AutoDetectsAndDeploys()
+    public async Task ExecuteAsync_WithOverwriteEnabled_DeploysWithOverwrite()
     {
         // Arrange
-        var packageJsonContent = """
-        {
-          "name": "test-react-app",
-          "dependencies": {
-            "react": "^18.0.0"
-          },
-          "scripts": {
-            "build": "react-scripts build"
-          }
-        }
-        """;
-
-        var packageJsonFile = Path.Combine(_tempDirectory, "package.json");
-        File.WriteAllText(packageJsonFile, packageJsonContent);
-
-        var buildDir = Path.Combine(_tempDirectory, "build");
-        Directory.CreateDirectory(buildDir);
-        File.WriteAllText(Path.Combine(buildDir, "index.html"), "<html>React App</html>");
+        var htmlFile = Path.Combine(_tempDirectory, "index.html");
+        File.WriteAllText(htmlFile, "<html><body>Test content</body></html>");
 
         var expectedResult = new StartupsDeployResources(
-            StorageAccount: "reactstorage",
+            StorageAccount: "teststorage",
             Container: "$web",
             Status: "Success",
-            WebsiteUrl: "https://reactstorage.z22.web.core.windows.net/",
-            PortalUrl: "https://portal.azure.com/...",
-            ContainerUrl: "https://portal.azure.com/..."
+            WebsiteUrl: "https://teststorage.z22.web.core.windows.net/",
+            PortalUrl: "https:/teststorage.azure.com/...",
+            ContainerUrl: "https://teststorage.azure.com/..."
         );
 
         _startupsService.DeployStaticWebAsync(
-            Arg.Any<string>(), // tenantId
-            Arg.Any<string>(), // subscription
-            Arg.Any<string>(), // storageAccount
-            Arg.Any<string>(), // resourceGroup
-            Arg.Any<string>(), // sourcePath
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<bool>(), // overwrite
+            true, // overwrite
             Arg.Any<IProgress<string>>()
         ).Returns(expectedResult);
 
-        var args = $"--storage-account reactstorage --resource-group test-rg --source-path {_tempDirectory} --subscription sub123 --tenant tenant123";
+        var args = $"--storage-account teststorage --resource-group test-rg --source-path {_tempDirectory} --subscription sub123 --overwrite true";
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse(args);
 
@@ -157,21 +152,90 @@ public sealed class StartupsDeployCommandTests
         // Assert
         Assert.Equal(200, response.Status);
 
-        // Verify service was called
+        // Verify overwrite flag was passed correctly
         await _startupsService.Received(1).DeployStaticWebAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            "reactstorage",
-            "test-rg",
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            true,
+            Arg.Any<IProgress<string>>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_InvalidSourcePath_ThrowsError()
+    {
+        // Arrange
+        var nonExistentPath = Path.Combine(_tempDirectory, "does-not-exist");
+        var args = $"--storage-account teststorage --resource-group test-rg --source-path {nonExistentPath} --subscription sub123 --overwrite false";
+        var context = new CommandContext(_serviceProvider);
+        var parseResult = _command.GetCommand().Parse(args);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<Exception>(() => _command.ExecuteAsync(context, parseResult));
+        Assert.Contains("Source path does not exist", exception.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_EmptySourceDirectory_ThrowsError()
+    {
+        // Arrange
+        var args = $"--storage-account teststorage --resource-group test-rg --source-path {_tempDirectory} --subscription sub123 --overwrite false";
+        var context = new CommandContext(_serviceProvider);
+        var parseResult = _command.GetCommand().Parse(args);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<Exception>(() => _command.ExecuteAsync(context, parseResult));
+        Assert.Contains("Source directory is empty", exception.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceThrowsError_ReturnsError()
+    {
+        // Arrange
+        var htmlFile = Path.Combine(_tempDirectory, "index.html");
+        File.WriteAllText(htmlFile, "<html><body>Test content</body></html>");
+
+        var errorMessage = "Failed to upload files to storage account: Access denied";
+        _startupsService.DeployStaticWebAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<bool>(),
             Arg.Any<IProgress<string>>()
-        );
+        ).ThrowsAsync(new Exception(errorMessage));
+
+        var args = $"--storage-account teststorage --resource-group test-rg --source-path {_tempDirectory} --subscription sub123 --overwrite false";
+        var context = new CommandContext(_serviceProvider);
+        var parseResult = _command.GetCommand().Parse(args);
+
+        // Act
+        var response = await _command.ExecuteAsync(context, parseResult);
+
+        // Assert
+        Assert.Equal(500, response.Status);
+        Assert.Contains(errorMessage, response.Message);
     }
-    // validation tests
-    // required options missing
-    // invalid storage account naming
-    // azure services
-    // overwrite
+
+    [Fact]
+    public async Task ExecuteAsync_InvalidStorageAccountName_ThrowsError()
+    {
+        // Arrange
+        var htmlFile = Path.Combine(_tempDirectory, "index.html");
+        File.WriteAllText(htmlFile, "<html><body>Test content</body></html>");
+
+        // Storage account names must be between 3 and 24 characters and use only lowercase letters and numbers
+        var args = $"--storage-account Test-Storage! --resource-group test-rg --source-path {_tempDirectory} --subscription sub123 --overwrite false";
+        var context = new CommandContext(_serviceProvider);
+        var parseResult = _command.GetCommand().Parse(args);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<Exception>(() => _command.ExecuteAsync(context, parseResult));
+        Assert.Contains("Invalid storage account name", exception.Message);
+    }
 }
