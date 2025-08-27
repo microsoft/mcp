@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Services;
@@ -14,7 +15,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using Azure.Mcp.TestUtilities;
 using static Azure.Mcp.Tools.ServiceBus.Commands.Topic.TopicDetailsCommand;
 
 namespace Azure.Mcp.Tools.ServiceBus.UnitTests.Topic;
@@ -165,7 +165,7 @@ public class TopicDetailsCommandTests
                 .Returns(expectedDetails);
         }
 
-    var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
+        var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

@@ -3,13 +3,13 @@
 
 using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Aks.Commands.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
-using Azure.Mcp.TestUtilities;
 
 namespace Azure.Mcp.Tools.Aks.UnitTests.Cluster;
 
@@ -71,7 +71,7 @@ public class ClusterGetCommandTests
                 .Returns(testCluster);
         }
 
-    var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
+        var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

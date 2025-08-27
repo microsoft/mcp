@@ -4,6 +4,7 @@
 using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Sql.Commands.ElasticPool;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
@@ -12,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using Azure.Mcp.TestUtilities;
 
 namespace Azure.Mcp.Tools.Sql.UnitTests.ElasticPool;
 
@@ -209,7 +209,7 @@ public class ElasticPoolListCommandTests
                 .Returns(new List<SqlElasticPool>());
         }
 
-    var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
+        var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

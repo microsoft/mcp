@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Storage.Commands.Queue.Message;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
@@ -11,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using Azure.Mcp.TestUtilities;
 
 namespace Azure.Mcp.Tools.Storage.UnitTests.Queue.Message;
 

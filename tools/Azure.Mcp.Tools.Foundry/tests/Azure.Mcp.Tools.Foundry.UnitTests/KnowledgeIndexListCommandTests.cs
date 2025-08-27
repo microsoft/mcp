@@ -4,6 +4,7 @@
 using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Services;
@@ -11,7 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
-using Azure.Mcp.TestUtilities;
 
 namespace Azure.Mcp.Tools.Foundry.UnitTests;
 
@@ -60,7 +60,7 @@ public class KnowledgeIndexListCommandTests
                 });
         }
 
-    var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
+        var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

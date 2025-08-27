@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Batch;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +14,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using Azure.Mcp.TestUtilities;
 
 namespace Azure.Mcp.Tools.Storage.UnitTests.Blob.Batch;
 
@@ -168,7 +168,7 @@ public class BatchSetTierCommandTests
                 Arg.Any<RetryPolicyOptions>()).Returns(expectedResult);
         }
 
-    var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
+        var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
