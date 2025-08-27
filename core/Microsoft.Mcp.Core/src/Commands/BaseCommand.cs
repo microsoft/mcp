@@ -14,9 +14,6 @@ public abstract class BaseCommand : IBaseCommand
     private const string TroubleshootingUrl = "https://aka.ms/azmcp/troubleshooting";
 
     private readonly Command _command;
-    private bool _usesResourceGroup;
-    private bool _requiresResourceGroup;
-
     protected BaseCommand()
     {
         _command = new Command(Name, Description);
