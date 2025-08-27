@@ -45,7 +45,7 @@ switch ($PSCmdlet.ParameterSetName) {
                 Write-Error "Multiple tools match '$Tool':`n  $($matchNames -join "`n  ")`nPlease specify a more specific tool name."
                 exit 1
             } else {
-                Write-Error "No tool matches '$Tool'. Available tools: $($tools -join ', ')"
+                Write-Error "No tool matches '*$Tool*'."
                 exit 1
             }
         }
