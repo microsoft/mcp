@@ -18,8 +18,8 @@ public sealed class EntraAdminListCommand(ILogger<EntraAdminListCommand> logger)
 
     public override string Description =>
         """
-        Gets a list of Microsoft Entra ID administrators for a SQL server. This command retrieves all 
-        Entra ID administrators configured for the specified SQL server, including their display names, object IDs, 
+        Gets a list of Microsoft Entra ID administrators for a SQL server. This command retrieves all
+        Entra ID administrators configured for the specified SQL server, including their display names, object IDs,
         and tenant information. Returns an array of Entra ID administrator objects with their properties.
         """;
 

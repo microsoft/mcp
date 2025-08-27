@@ -18,7 +18,7 @@ public sealed class BlobDetailsCommand(ILogger<BlobDetailsCommand> logger) : Bas
 
     public override string Description =>
         $"""
-        Get blob properties, metadata, and general information. This tool retrieves blob configuration including metadata properties, 
+        Get blob properties, metadata, and general information. This tool retrieves blob configuration including metadata properties,
         approximate size, and last modification time information. Returns blob properties as JSON.
         """;
 
