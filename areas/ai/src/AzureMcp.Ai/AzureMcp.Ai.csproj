@@ -7,7 +7,7 @@
     <EmbeddedResource Include="**\Resources\*.json" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\core\src\AzureMcp.Core\AzureMcp.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Azure.AI.OpenAI" />

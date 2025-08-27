@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using AzureMcp.Core.Commands;
-using AzureMcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Commands.Subscription;
 using AzureMcp.Ai.Options;
 
 namespace AzureMcp.Ai.Commands;

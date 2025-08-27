@@ -5,10 +5,10 @@ using Azure;
 using Azure.AI.OpenAI;
 using Azure.ResourceManager.CognitiveServices;
 using Azure.ResourceManager.CognitiveServices.Models;
-using AzureMcp.Core.Options;
-using AzureMcp.Core.Services.Azure;
-using AzureMcp.Core.Services.Azure.Subscription;
-using AzureMcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using AzureMcp.Ai.Models;
 using OpenAI.Chat;
 

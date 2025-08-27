@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using AzureMcp.Core.Options;
+using Azure.Mcp.Core.Options;
 
 namespace AzureMcp.Ai.Options;
 

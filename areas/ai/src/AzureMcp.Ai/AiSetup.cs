@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AzureMcp.Core.Areas;
-using AzureMcp.Core.Commands;
+using Azure.Mcp.Core.Areas;
+using Azure.Mcp.Core.Commands;
 using AzureMcp.Ai.Commands.OpenAi;
 using AzureMcp.Ai.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +12,8 @@ namespace AzureMcp.Ai;
 
 public class AiSetup : IAreaSetup
 {
+    public string Name => "ai";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAiService, AiService>();

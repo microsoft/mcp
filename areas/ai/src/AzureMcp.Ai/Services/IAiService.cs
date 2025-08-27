@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AzureMcp.Core.Options;
+using Azure.Mcp.Core.Options;
 using AzureMcp.Ai.Models;
 
 namespace AzureMcp.Ai.Services;

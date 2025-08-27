@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using AzureMcp.Tests;
-using AzureMcp.Tests.Client;
-using AzureMcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests;
+using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace AzureMcp.Ai.LiveTests

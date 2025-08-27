@@ -3,8 +3,8 @@
 
 using System.CommandLine.Parsing;
 using System.Text.Json;
-using AzureMcp.Core.Models.Command;
-using AzureMcp.Core.Options;
+using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Options;
 using AzureMcp.Ai.Commands.OpenAi;
 using AzureMcp.Ai.Models;
 using AzureMcp.Ai.Services;
