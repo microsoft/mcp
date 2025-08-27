@@ -15,18 +15,7 @@ jobs:
     os: linux
 
   steps:
-  - task: DownloadPipelineArtifact@2
-    displayName: 'Download signed packages'
-    inputs:
-      buildType: 'current'
-      artifactName: $(PipelineArtifactName)_signed
-      targetPath: $(Build.ArtifactStagingDirectory)
-
-  - task: CopyFiles@2
-    displayName: 'Copy Dockerfile'
-    inputs:
-      Contents: 'Dockerfile'
-      TargetFolder: $(Build.ArtifactStagingDirectory)
+  - checkout: self
 
   - task: Powershell@2
     displayName: 'Set Docker Variables'
@@ -42,11 +31,6 @@ jobs:
     env:
       VERSION_SUFFIX: '$(VersionSuffix)'
 
-  - task: 1ES.PublishPipelineArtifact@1
-    inputs:
-      path: $(Build.ArtifactStagingDirectory)
-      artifact: docker_drops
-
 - job: PublishACR
   displayName: "Publish to ACR"
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
@@ -60,6 +44,11 @@ jobs:
     - input: pipelineArtifact
       artifactName: docker_drops
       targetPath: $(Pipeline.Workspace)/docker_drops
+      buildType: specific
+      project: internal
+      definition: 7866
+      runVersion: specific
+      runId: 5265897
 
     outputs:
     - output: containerImage
