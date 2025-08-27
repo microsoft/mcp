@@ -58,16 +58,15 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
-        {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
             {
-                return context.Response;
-            }
-
             // Get the storage service from DI
             var service = context.GetService<IStorageService>();
 

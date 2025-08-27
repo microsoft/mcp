@@ -53,15 +53,15 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var workbooksService = context.GetService<IWorkbooksService>();
             var createdWorkbook = await workbooksService.CreateWorkbook(
                 options.Subscription!,

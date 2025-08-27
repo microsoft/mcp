@@ -46,14 +46,14 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        var options = BindOptions(parseResult);
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
+            var options = BindOptions(parseResult);
 
             var ResourceTypes = options.ResourceTypes.Split(',')
                 .Select(rt => rt.Trim())

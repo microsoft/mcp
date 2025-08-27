@@ -38,13 +38,14 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger)
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         try
         {
             var options = BindOptions(parseResult);
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
 
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
             string paramValue = await mysqlService.GetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!);

@@ -46,15 +46,15 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var workbooksService = context.GetService<IWorkbooksService>();
             var deleted = await workbooksService.DeleteWorkbook(options.WorkbookId!, options.RetryPolicy, options.Tenant);
 

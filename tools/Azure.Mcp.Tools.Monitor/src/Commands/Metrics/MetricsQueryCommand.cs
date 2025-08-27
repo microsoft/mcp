@@ -100,7 +100,6 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
 
         try
         {
-            // Required validation step
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
             {
                 return context.Response;
