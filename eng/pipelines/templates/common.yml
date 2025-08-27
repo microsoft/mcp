@@ -89,6 +89,8 @@ extends:
         - template: /eng/pipelines/templates/variables/globals.yml
         jobs:
         - template: /eng/pipelines/templates/jobs/live-test.yml
+          parameters:
+            ServerName: ${{ parameters.ServerName }}
 
     - ${{ if eq(parameters.PublishPackages, 'true') }}:
       - stage: Sign

@@ -9,7 +9,8 @@ param(
     [string] $TestType = 'Unit',
     [switch] $CollectCoverage,
     [switch] $OpenReport,
-    [switch] $TestNativeBuild
+    [switch] $TestNativeBuild,
+    [string] $ServerName
 )
 
 $ErrorActionPreference = 'Stop'
@@ -34,8 +35,13 @@ Remove-Item -Recurse -Force $TestResultsPath -ErrorAction SilentlyContinue
 
 # Gets all area projects those are excluded using BuildNative condition.
 function Get-NativeExcludedAreas {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$ServerName
+    )
+    
     $areaPathPattern = '(tools[/\\][^/\\]+)[/\\]src'
-    $ProjectFile = "$RepoRoot/servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj"
+    $ProjectFile = "$RepoRoot/servers/$ServerName/src/$ServerName.csproj"
 
     if (!(Test-Path $ProjectFile)) {
         Write-Error "$ProjectFile not found"
@@ -57,7 +63,7 @@ function Get-NativeExcludedAreas {
         }
     }
 
-    Write-Host "Areas excluded in Azure.Mcp.Server.csproj: $($excludedAreas -join ', ')"
+    Write-Host "Areas excluded in $ServerName.csproj: $($excludedAreas -join ', ')"
     return $excludedAreas
 }
 
@@ -76,7 +82,6 @@ function GetTestsRootDirs {
 
     foreach ($area in $areas) {
         $rootedPath = "$RepoRoot/$area"
-        Write-Host "Checking rootedPath: $rootedPath" -ForegroundColor Magenta
         if (Test-Path $rootedPath) {
             $testsRootDirs += $rootedPath
         } else {
@@ -91,13 +96,15 @@ function GetTestsRootDirs {
 function BuildNativeBinaryAndPrepareTests {
     param(
         [Parameter(Mandatory=$true)]
-        [string[]]$testsRootDirs
+        [string[]]$testsRootDirs,
+        [Parameter(Mandatory=$true)]
+        [string]$ServerName
     )
 
     # Native AOT compilation only occurs during 'dotnet publish', not 'dotnet build'
-    $nativeBinaryPath = PublishNativeBinary
+    $nativeBinaryPath = PublishNativeBinary -ServerName $ServerName
 
-    Write-Host "ç"
+    Write-Host "Building test project(s)"
     Invoke-LoggedCommand `
         -Command "dotnet build" `
         -AllowedExitCodes @(0)
@@ -106,17 +113,22 @@ function BuildNativeBinaryAndPrepareTests {
 }
 
 function PublishNativeBinary {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$ServerName
+    )
+    
     $runtimeId = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier
-    Write-Host "Publishing AzureMcp as native binary for $runtimeId"
+    Write-Host "Publishing $ServerName as native binary for $runtimeId"
 
-    $cliProjectDir = "$RepoRoot/servers/Azure.Mcp.Server/src"
+    $projectDir = "$RepoRoot/servers/$ServerName/src"
 
     Invoke-LoggedCommand `
-        -Command "dotnet publish '$cliProjectDir/Azure.Mcp.Server.csproj' -c Release -r $runtimeId /p:BuildNative=true" `
+        -Command "dotnet publish '$projectDir/$ServerName.csproj' -c Release -r $runtimeId /p:BuildNative=true" `
         -AllowedExitCodes @(0) | Out-Null
 
     $exeName = if ($runtimeId.StartsWith('win-')) { "azmcp.exe" } else { "azmcp" }
-    $nativeExePath = "$cliProjectDir/bin/Release/net9.0/$runtimeId/publish/$exeName"
+    $nativeExePath = "$projectDir/bin/Release/net9.0/$runtimeId/publish/$exeName"
 
     if (-not (Test-Path $nativeExePath)) {
         Write-Error "Native binary not found at $nativeExePath"
@@ -132,7 +144,7 @@ function CopyNativeBinaryToTestDirs {
         [string]$nativeBinaryPath,
         [string[]]$testsRootDirs
     )
-    Write-Host "Copying native AzureMcp to test directories"
+    Write-Host "Copying native $nativeBinaryPath to test directories"
 
     $testsRootDirs | ForEach-Object {
         Get-ChildItem -Path $_ -Recurse -Filter "*.LiveTests" -Directory
@@ -192,12 +204,14 @@ function CreateTestSolution {
 # main
 
 if ($TestNativeBuild) {
-    $excludedAreas = Get-NativeExcludedAreas
+    if ([string]::IsNullOrWhiteSpace($ServerName) -or $ServerName -eq "none") {
+        Write-Error "ServerName parameter is required when TestNativeBuild is specified."
+        exit 1
+    }
+
+    $excludedAreas = Get-NativeExcludedAreas -ServerName $ServerName
     $nonNativeAreas = @($areas | Where-Object { $_ -in $excludedAreas })
     $areas = @($areas | Where-Object { $_ -notin $excludedAreas })
-
-    Write-Host "nonNativeAreas: $($nonNativeAreas -join ', ')" -ForegroundColor Yellow
-    Write-Host "areas (after filtering): $($areas -join ', ')" -ForegroundColor Green
 
     if ($areas.Count -eq 0) {
         Write-Warning "All the specified area(s) [$($nonNativeAreas -join ', ')] are native incompatible, specify areas that support native builds or run without -TestNativeBuild."
@@ -225,7 +239,7 @@ if (!$solutionPath) {
 Push-Location $workPath
 try {
     if ($TestNativeBuild) {
-        BuildNativeBinaryAndPrepareTests -testsRootDirs $testsRootDirs
+        BuildNativeBinaryAndPrepareTests -testsRootDirs $testsRootDirs -ServerName $ServerName
     }
 
     if($debugLogs) {
