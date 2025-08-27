@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
+using System.Text;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Deploy.Options;
 using Azure.Mcp.Tools.Deploy.Options.Plan;
@@ -65,8 +67,12 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
                 return Task.FromResult(context.Response);
             }
 
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(options.ProjectName));
+                context.Activity?.AddTag("ProjectName", BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant());
+            }
             context.Activity?
-                    .AddTag("ProjectName", options.ProjectName)
                     .AddTag("ComputeHostResources", options.TargetAppService)
                     .AddTag("DeploymentTool", options.ProvisioningTool)
                     .AddTag("IacType", options.AzdIacOptions ?? string.Empty);
