@@ -25,7 +25,7 @@ jobs:
       $tag = "$serverName-$version$versionSuffix"
 
       gh release create $tag --title "$serverName $version$versionSuffix"
-      gh release upload $tag $(Pipeline.Workspace)/$(PipelineArtifactName)_packed/**/*.tgz
+      gh release upload $tag $(Pipeline.Workspace)/$(PipelineArtifactName)_packed/*/*.tgz
     displayName: Create GitHub Release and upload artifacts
     env:
       GH_TOKEN: $(azuresdk-github-pat)
