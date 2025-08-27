@@ -26,9 +26,9 @@ $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 Write-Host "Running Event Grid post-deployment setup..." -ForegroundColor Yellow
 
 try {
-    # Extract outputs from deployment (note: keys are UPPERCASE)
-    $eventGridTopicName = $DeploymentOutputs['EVENTGRIDTOPICNAME']
-    $eventGridTopicEndpoint = $DeploymentOutputs['EVENTGRIDTOPICENDPOINT']
+    # Extract outputs from deployment (keys are UPPERCASE with underscores)
+    $eventGridTopicName = $DeploymentOutputs['EVENT_GRID_TOPIC_NAME']
+    $eventGridTopicEndpoint = $DeploymentOutputs['EVENT_GRID_TOPIC_ENDPOINT']
 
     Write-Host "Event Grid Topic created: $eventGridTopicName" -ForegroundColor Green
     Write-Host "Event Grid Topic Endpoint: $eventGridTopicEndpoint" -ForegroundColor Green
