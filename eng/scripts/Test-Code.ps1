@@ -53,7 +53,7 @@ function Get-NativeExcludedAreas {
     $excludedAreas = @()
     foreach ($ref in $buildNativeGroup.ProjectReference) {
         if ($ref.Remove -match $areaPathPattern) {
-            $excludedAreas += $matches[1]
+            $excludedAreas += $matches[1].Replace('\', '/')
         }
     }
 
