@@ -55,5 +55,5 @@ resource readerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-0
 }
 
 // Outputs for test consumption
-output eventGridTopicName string = eventGridTopic.name
-output eventGridTopicEndpoint string = eventGridTopic.properties.endpoint
+output Event_Grid_Topic_Name string = eventGridTopic.name
+output Event_Grid_Topic_Endpoint string = eventGridTopic.properties.endpoint
