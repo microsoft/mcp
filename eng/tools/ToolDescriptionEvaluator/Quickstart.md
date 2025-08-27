@@ -34,7 +34,7 @@ Or copy `.env.example` to `.env` and fill in your credentials.
 ### Typical Workflow
 
 1. Add or update a tool description in the project
-2. Add test prompts for your tool to `/docs/e2eTestPrompts.md`
+2. Add test prompts for your tool to `../../../docs/e2eTestPrompts.md`
 3. Run the analyzer using PowerShell
 
     ```pwsh
