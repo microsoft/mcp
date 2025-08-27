@@ -17,6 +17,8 @@ $ErrorActionPreference = 'Stop'
 
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
+Write-Host "Input Areas: $($Areas -join ', ')" -ForegroundColor Cyan
+
 $debugLogs = $env:SYSTEM_DEBUG -eq 'true' -or $DebugPreference -eq 'Continue'
 
 $workPath = "$RepoRoot/.work/tests"
@@ -55,6 +57,7 @@ function Get-NativeExcludedAreas {
         }
     }
 
+    Write-Host "Areas excluded in Azure.Mcp.Server.csproj: $($excludedAreas -join ', ')"
     return $excludedAreas
 }
 
@@ -73,6 +76,7 @@ function GetTestsRootDirs {
 
     foreach ($area in $areas) {
         $rootedPath = "$RepoRoot/$area"
+        Write-Host "Checking rootedPath: $rootedPath" -ForegroundColor Magenta
         if (Test-Path $rootedPath) {
             $testsRootDirs += $rootedPath
         } else {
@@ -191,6 +195,9 @@ if ($TestNativeBuild) {
     $excludedAreas = Get-NativeExcludedAreas
     $nonNativeAreas = @($areas | Where-Object { $_ -in $excludedAreas })
     $areas = @($areas | Where-Object { $_ -notin $excludedAreas })
+
+    Write-Host "nonNativeAreas: $($nonNativeAreas -join ', ')" -ForegroundColor Yellow
+    Write-Host "areas (after filtering): $($areas -join ', ')" -ForegroundColor Green
 
     if ($areas.Count -eq 0) {
         Write-Warning "All the specified area(s) [$($nonNativeAreas -join ', ')] are native incompatible, specify areas that support native builds or run without -TestNativeBuild."

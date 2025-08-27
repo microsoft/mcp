@@ -59,7 +59,7 @@ jobs:
       Inline: |
         ./eng/scripts/Test-Code.ps1 `
           -TestType 'Live' `
-          -Area $(Area) `
+          -Areas @('$(Area)') `
           -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
 
         exit $LastExitCode
@@ -87,7 +87,7 @@ jobs:
       Inline: |
         ./eng/scripts/Test-Code.ps1 `
           -TestType 'Live' `
-          -Area $(Area) `
+          -Areas @('$(Area)') `
           -TestResultsPath '$(Build.ArtifactStagingDirectory)/native/testResults' `
           -TestNativeBuild
 
