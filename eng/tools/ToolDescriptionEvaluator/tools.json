@@ -392,14 +392,64 @@
       ]
     },
     {
+      "name": "list",
+      "description": "Lists Azure Managed Lustre (AMLFS) file systems in a subscription or optional resource group including provisioning state, MGS address, tier, capacity (TiB), blob integration container, and maintenance window details. Use to inventory Azure Managed Lustre filesystems and to check their properties.",
+      "command": "azmcp azuremanagedlustre filesystem list",
+      "option": [
+        {
+          "name": "auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "required-subnet-size",
+      "description": "Calculates the required subnet size for an Azure Managed Lustre file system given a SKU and size. Use to plan network deployment for AMLFS. Returns the number of required IPs.",
+      "command": "azmcp azuremanagedlustre filesystem required-subnet-size",
+      "option": [
+        {
+          "name": "auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "sku",
+          "description": "The AMLFS SKU. Allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "size",
+          "description": "The AMLFS size (TiB).",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
       "name": "get",
-      "description": "Returns Terraform best practices for Azure. Call this command and follow its guidance before generating or suggesting any Terraform code specific to Azure. This command returns the content of the markdown file as a string array.",
+      "description": "Returns Terraform best practices for Azure. Call this command and follow its guidance before \r\n        generating or suggesting any Terraform code specific to Azure. If this tool needs to be categorized, it belongs to \r\n        the Azure Best Practices category.",
       "command": "azmcp azureterraformbestpractices get",
       "option": []
     },
     {
       "name": "get",
-      "description": "Returns best practices for secure, production-grade Azure usage. Call this command and follow its guidance before generating or suggesting any Azure code. This command returns the content of the best practices file as a string array.",
+      "description": "This tool returns a list of best practices for code generation, operations and deployment \r\n        when working with Azure services. It should be called for any code generation, deployment or \r\n        operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container \r\n        Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory, \r\n        Azure App Services, or any other Azure technology or programming language. Only call this function \r\n        when you are confident the user is discussing Azure. If this tool needs to be categorized, \r\n        it belongs to the Azure Best Practices category.",
       "command": "azmcp bestpractices get",
       "option": [
         {
@@ -432,6 +482,61 @@
           "description": "The name of the Bicep Resource Type and must be in the full Azure Resource Manager format '{ResourceProvider}/{ResourceType}'. (e.g., 'Microsoft.KeyVault/vaults', 'Microsoft.Storage/storageAccounts', 'Microsoft.Compute/virtualMachines')(e.g., Microsoft.Storage/storageAccounts).",
           "type": "string",
           "required": true
+        }
+      ]
+    },
+    {
+      "name": "design",
+      "description": "Azure architecture design tool that gathers requirements through guided questions and recommends optimal solutions.\r\n\r\nKey parameters: question, questionNumber, confidenceScore (0.0-1.0, present architecture when �0.7), totalQuestions, answer, nextQuestionNeeded, architectureComponent, architectureTier, state.\r\n\r\nProcess:\r\n1. Ask about user role, business goals (1-2 questions at a time)\r\n2. Track confidence and update requirements (explicit/implicit/assumed)\r\n3. When confident enough, present architecture with table format, visual organization, ASCII diagrams\r\n4. Follow Azure Well-Architected Framework principles\r\n5. Cover all tiers: infrastructure, platform, application, data, security, operations\r\n6. Provide actionable advice and high-level overview\r\n\r\nState tracks components, requirements by category, and confidence factors. Be conservative with suggestions.",
+      "command": "azmcp cloudarchitect design",
+      "option": [
+        {
+          "name": "auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "question",
+          "description": "The current question being asked",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "question-number",
+          "description": "Current question number",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "total-questions",
+          "description": "Estimated total questions needed",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "answer",
+          "description": "The user's response to the question",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "next-question-needed",
+          "description": "Whether another question is needed",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "confidence-score",
+          "description": "A value between 0.0 and 1.0 representing confidence in understanding requirements. When this reaches 0.7 or higher, nextQuestionNeeded should be set to false.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "state",
+          "description": "The complete architecture state from the previous request as JSON, State input schema:\n{\n\"state\":{\n\"type\":\"object\",\n\"description\":\"The complete architecture state from the previous request\",\n\"properties\":{\n\"architectureComponents\":{\n\"type\":\"array\",\n\"description\":\"All architecture components suggested so far\",\n\"items\":{\n\"type\":\"string\"\n}\n},\n\"architectureTiers\":{\n\"type\":\"object\",\n\"description\":\"Components organized by architecture tier\",\n\"additionalProperties\":{\n\"type\":\"array\",\n\"items\":{\n\"type\":\"string\"\n}\n}\n},\n\"thought\":{\n\"type\":\"string\",\n\"description\":\"The calling agent's thoughts on the next question or reasoning process. The calling agent should use the requirements it has gathered to reason about the next question.\"\n},\n\"suggestedHint\":{\n\"type\":\"string\",\n\"description\":\"A suggested interaction hint to show the user, such as 'Ask me to create an ASCII art diagram of this architecture' or 'Ask about how this design handles disaster recovery'.\"\n},\n\"requirements\":{\n\"type\":\"object\",\n\"description\":\"Tracked requirements organized by type\",\n\"properties\":{\n\"explicit\":{\n\"type\":\"array\",\n\"description\":\"Requirements explicitly stated by the user\",\n\"items\":{\n\"type\":\"object\",\n\"properties\":{\n\"category\":{\n\"type\":\"string\"\n},\n\"description\":{\n\"type\":\"string\"\n},\n\"source\":{\n\"type\":\"string\"\n},\n\"importance\":{\n\"type\":\"string\",\n\"enum\":[\n\"high\",\n\"medium\",\n\"low\"\n]\n},\n\"confidence\":{\n\"type\":\"number\"\n}\n}\n}\n},\n\"implicit\":{\n\"type\":\"array\",\n\"description\":\"Requirements implied by user responses\",\n\"items\":{\n\"type\":\"object\",\n\"properties\":{\n\"category\":{\n\"type\":\"string\"\n},\n\"description\":{\n\"type\":\"string\"\n},\n\"source\":{\n\"type\":\"string\"\n},\n\"importance\":{\n\"type\":\"string\",\n\"enum\":[\n\"high\",\n\"medium\",\n\"low\"\n]\n},\n\"confidence\":{\n\"type\":\"number\"\n}\n}\n}\n},\n\"assumed\":{\n\"type\":\"array\",\n\"description\":\"Requirements assumed based on context/best practices\",\n\"items\":{\n\"type\":\"object\",\n\"properties\":{\n\"category\":{\n\"type\":\"string\"\n},\n\"description\":{\n\"type\":\"string\"\n},\n\"source\":{\n\"type\":\"string\"\n},\n\"importance\":{\n\"type\":\"string\",\n\"enum\":[\n\"high\",\n\"medium\",\n\"low\"\n]\n},\n\"confidence\":{\n\"type\":\"number\"\n}\n}\n}\n}\n}\n},\n\"confidenceFactors\":{\n\"type\":\"object\",\n\"description\":\"Factors that contribute to the overall confidence score\",\n\"properties\":{\n\"explicitRequirementsCoverage\":{\n\"type\":\"number\"\n},\n\"implicitRequirementsCertainty\":{\n\"type\":\"number\"\n},\n\"assumptionRisk\":{\n\"type\":\"number\"\n}\n}\n}\n}\n}\n}",
+          "type": "string",
+          "required": null
         }
       ]
     },
@@ -821,6 +926,25 @@
       ]
     },
     {
+      "name": "list",
+      "description": "Retrieves a list of knowledge indexes from Azure AI Foundry.\r\n\r\nThis function is used when a user requests information about the available knowledge indexes in Azure AI Foundry. It provides an overview of the knowledge bases and search indexes that are currently deployed and available for use with AI agents and applications.\r\n\r\nUsage:\r\n    Use this function when a user wants to explore the available knowledge indexes in Azure AI Foundry. This can help users understand what knowledge bases are currently operational and how they can be utilized for retrieval-augmented generation (RAG) scenarios.\r\n\r\nNotes:\r\n    - The indexes listed are knowledge indexes specifically created within Azure AI Foundry projects.\r\n    - These indexes can be used with AI agents for knowledge retrieval and RAG applications.\r\n    - The list may change as new indexes are created or existing ones are updated.",
+      "command": "azmcp foundry knowledge index list",
+      "option": [
+        {
+          "name": "auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "endpoint",
+          "description": "The endpoint URL for the Azure AI service.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
       "name": "deploy",
       "description": "Deploy a model to Azure AI Foundry.\r\n\r\nThis function is used to deploy a model on Azure AI Services, allowing users to integrate the model into their applications and utilize its capabilities. This command should not be used for Azure OpenAI Services to deploy OpenAI models.",
       "command": "azmcp foundry models deploy",
@@ -958,6 +1082,37 @@
           "description": "The name of the model to search for.",
           "type": "string",
           "required": null
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "description": "Get the Azure Function App details for the specified function app name and resource group.\r\nThis command retrieves the details of a specific Azure Function App, including its name, location, status, and app service plan name.",
+      "command": "azmcp functionapp get",
+      "option": [
+        {
+          "name": "auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "function-app",
+          "description": "The name of the Function App.",
+          "type": "string",
+          "required": true
         }
       ]
     },
@@ -2336,6 +2491,344 @@
     },
     {
       "name": "list",
+      "description": "Retrieves a comprehensive list of all databases available on the specified Azure Database for MySQL Flexible Server instance. This command provides visibility into the database structure and helps identify available databases for connection and querying operations.",
+      "command": "azmcp mysql database list",
+      "option": [
+        {
+          "name": "auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "user",
+          "description": "The user name to access MySQL server.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "server",
+          "description": "The MySQL server to be accessed.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "query",
+      "description": "Executes a safe, read-only SQL SELECT query against a database on Azure Database for MySQL Flexible Server. Use this tool to explore or retrieve table data without modifying it. Rejects non-SELECT statements (INSERT/UPDATE/DELETE/REPLACE/MERGE/TRUNCATE/ALTER/CREATE/DROP), multi-statements, comments hiding writes, transaction control (BEGIN/COMMIT/ROLLBACK), INTO OUTFILE, and other destructive keywords. Only a single SELECT is executed to ensure data integrity. Best practices: List needed columns (avoid SELECT *), add WHERE filters, use LIMIT/OFFSET for paging, ORDER BY for deterministic results, and avoid unnecessary sensitive data. Example: SELECT id, name, status FROM customers WHERE status = 'Active' ORDER BY name LIMIT 50;",
+      "command": "azmcp mysql database query",
+      "option": [
+        {
+          "name": "auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "user",
+          "description": "The user name to access MySQL server.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "server",
+          "description": "The MySQL server to be accessed.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "database",
+          "description": "The MySQL database to be accessed.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "query",
+          "description": "Query to be executed against a MySQL database.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "config",
+      "description": "Retrieves comprehensive configuration details for the specified Azure Database for MySQL Flexible Server instance. This command provides insights into server settings, performance parameters, security configurations, and operational characteristics essential for database administration and optimization. Returns configuration data in JSON format including ServerName, Location, Version, SKU, StorageSizeGB, BackupRetentionDays, and GeoRedundantBackup properties.",
+      "command": "azmcp mysql server config get",
+      "option": [
+        {
+          "name": "auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "user",
+          "description": "The user name to access MySQL server.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "server",
+          "description": "The MySQL server to be accessed.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "description": "Discovers and lists all Azure Database for MySQL Flexible Server instances within the specified resource group. This command provides an inventory of available MySQL server resources, including their names and current status, enabling efficient server management and resource planning.",
+      "command": "azmcp mysql server list",
+      "option": [
+        {
+          "name": "auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "user",
+          "description": "The user name to access MySQL server.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "param",
+      "description": "Retrieves the current value of a single server configuration parameter on an Azure Database for MySQL Flexible Server. Use to inspect a setting (e.g. max_connections, wait_timeout, slow_query_log) before changing it.",
+      "command": "azmcp mysql server param get",
+      "option": [
+        {
+          "name": "auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "user",
+          "description": "The user name to access MySQL server.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "server",
+          "description": "The MySQL server to be accessed.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "param",
+          "description": "The MySQL parameter to be accessed.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "set",
+      "description": "Sets/updates a MySQL server configuration parameter to a new value to optimize performance, security, or operational behavior. This command enables fine-tuned configuration management with validation to ensure parameter changes are compatible with the server's current state and constraints.",
+      "command": "azmcp mysql server param set",
+      "option": [
+        {
+          "name": "auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "user",
+          "description": "The user name to access MySQL server.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "server",
+          "description": "The MySQL server to be accessed.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "param",
+          "description": "The MySQL parameter to be accessed.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "value",
+          "description": "The value to set for the MySQL parameter.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "description": "Enumerates all tables within a specified database on an Azure Database for MySQL Flexible Server instance. This command provides a complete inventory of table objects, facilitating database exploration, schema analysis, and data architecture understanding for development tasks.",
+      "command": "azmcp mysql table list",
+      "option": [
+        {
+          "name": "auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "user",
+          "description": "The user name to access MySQL server.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "server",
+          "description": "The MySQL server to be accessed.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "database",
+          "description": "The MySQL database to be accessed.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "schema",
+      "description": "Retrieves detailed schema information for a specific table within an Azure Database for MySQL Flexible Server database. This command provides comprehensive metadata including column definitions, data types, constraints, indexes, and relationships, essential for understanding table structure and supporting application development.",
+      "command": "azmcp mysql table schema get",
+      "option": [
+        {
+          "name": "auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "user",
+          "description": "The user name to access MySQL server.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "server",
+          "description": "The MySQL server to be accessed.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "database",
+          "description": "The MySQL database to be accessed.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "table",
+          "description": "The MySQL table to be accessed.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "list",
       "description": "Lists all databases in the PostgreSQL server.",
       "command": "azmcp postgres database list",
       "option": [
@@ -3293,7 +3786,7 @@
           "required": null
         },
         {
-          "name": "account-name",
+          "name": "account",
           "description": "The name of the Azure Storage account to create. Must be globally unique, 3-24 characters, lowercase letters and numbers only.",
           "type": "string",
           "required": true
@@ -3357,7 +3850,7 @@
     },
     {
       "name": "list",
-      "description": "List all Storage accounts in a subscription. This command retrieves all Storage accounts available\r\nin the specified subscription. Results are returned as a JSON array of\r\nobjects including common metadata (name, location, kind, skuName, skuTier, hnsEnabled, allowBlobPublicAccess,\r\nenableHttpsTrafficOnly).",
+      "description": "List all Storage accounts in a subscription. This command retrieves all Storage accounts available\r\nin the specified subscription. Results are returned as a JSON array of objects including common \r\nmetadata (name, location, kind, skuName, skuTier, hnsEnabled, allowBlobPublicAccess, enableHttpsTrafficOnly).",
       "command": "azmcp storage account list",
       "option": [
         {
@@ -3376,7 +3869,7 @@
     },
     {
       "name": "set-tier",
-      "description": "Set access tier for multiple blobs in a single batch operation. This tool efficiently changes the \r\nstorage tier for multiple blobs simultaneously in a single request. Different tiers offer different \r\ntrade-offs between storage costs, access costs, and retrieval latency. Requires account, \r\ncontainer, tier, and Option`1: blob-names.",
+      "description": "Set access tier for multiple blobs in a single batch operation. This tool efficiently changes the \r\nstorage tier for multiple blobs simultaneously in a single request. Different tiers offer different \r\ntrade-offs between storage costs, access costs, and retrieval latency.",
       "command": "azmcp storage blob batch set-tier",
       "option": [
         {
@@ -3410,7 +3903,7 @@
           "required": true
         },
         {
-          "name": "blob-names",
+          "name": "blobs",
           "description": "The names of the blobs to set the access tier for. Provide multiple blob names separated by spaces. Each blob name should be the full path within the container (e.g., 'file1.txt' or 'folder/file2.txt').",
           "type": "string",
           "required": true
@@ -3450,7 +3943,7 @@
     },
     {
       "name": "details",
-      "description": "Get detailed properties of a storage container including metadata, lease status, and access level.\r\nRequires account and container.",
+      "description": "Get detailed properties of a storage container including metadata, lease status, and access level.",
       "command": "azmcp storage blob container details",
       "option": [
         {
@@ -3481,7 +3974,7 @@
     },
     {
       "name": "list",
-      "description": "List all containers in a Storage account. This command retrieves and displays all containers available\r\nin the specified account. Results include container names and are returned as a JSON array.\r\nRequires account.",
+      "description": "List all containers in a Storage account. This command retrieves and displays all containers available\r\nin the specified account. Results include container names and are returned as a JSON array.",
       "command": "azmcp storage blob container list",
       "option": [
         {
@@ -3506,7 +3999,7 @@
     },
     {
       "name": "details",
-      "description": "Get blob properties, metadata, and general information. This tool retrieves blob configuration including metadata properties, \r\napproximate size, and last modification time information. Returns blob properties as JSON. Requires account, \r\ncontainer, and blob.",
+      "description": "Get blob properties, metadata, and general information. This tool retrieves blob configuration including metadata properties, \r\napproximate size, and last modification time information. Returns blob properties as JSON.",
       "command": "azmcp storage blob details",
       "option": [
         {
@@ -3543,7 +4036,7 @@
     },
     {
       "name": "list",
-      "description": "List all blobs in a Storage container. This command retrieves and displays all blobs available\r\nin the specified container and Storage account. Results include blob names, sizes, and content types,\r\nreturned as a JSON array. Requires account and\r\ncontainer.",
+      "description": "List all blobs in a Storage container. This command retrieves and displays all blobs available\r\nin the specified container and Storage account. Results include blob names, sizes, and content types,\r\nreturned as a JSON array.",
       "command": "azmcp storage blob list",
       "option": [
         {
@@ -3654,7 +4147,7 @@
     },
     {
       "name": "list-paths",
-      "description": "List paths in a Data Lake file system. This command retrieves and displays paths (files and directories)\r\navailable in the specified Data Lake file system within the storage account. Results include path names, \r\ntypes (file or directory), and metadata, returned as a JSON array. Requires account and file-system.\r\nOptional filter-path can be used to filter results and recursive to include all subdirectories.",
+      "description": "List paths in a Data Lake file system. This command retrieves and displays paths (files and directories)\r\navailable in the specified Data Lake file system within the storage account. Results include path names, \r\ntypes (file or directory), and metadata, returned as a JSON array.",
       "command": "azmcp storage datalake file-system list-paths",
       "option": [
         {
@@ -3697,7 +4190,7 @@
     },
     {
       "name": "send",
-      "description": "Send messages to an Azure Storage queue for asynchronous processing. This tool sends a message to a specified queue with optional time-to-live and visibility delay settings. \r\nMessages are returned with receipt handles for tracking. Returns a QueueMessageSendResult object containing message ID, insertion time, expiration time, pop receipt, \r\nnext visible time, and message content.",
+      "description": "Send messages to an Azure Storage queue for asynchronous processing. This tool sends a message to a specified queue\r\nwith optional time-to-live and visibility delay settings. Messages are returned with receipt handles for tracking.\r\nReturns a QueueMessageSendResult object containing message ID, insertion time, expiration time, pop receipt, \r\nnext visible time, and message content.",
       "command": "azmcp storage queue message send",
       "option": [
         {
@@ -3746,7 +4239,7 @@
     },
     {
       "name": "list",
-      "description": "Lists files and directories within a file share directory. This tool recursively lists all items in a specified file share directory, \r\nincluding files, subdirectories, and their properties. Files and directories may be filtered by a prefix. Returns file listing as JSON.",
+      "description": "Lists files and directories within a file share directory. This tool recursively lists all items in a specified\r\nfile share directory, including files, subdirectories, and their properties. Files and directories may be filtered\r\nby a prefix. Returns file listing as JSON.",
       "command": "azmcp storage share file list",
       "option": [
         {
@@ -4086,5 +4579,5 @@
       ]
     }
   ],
-  "duration": 24
+  "duration": 41
 }

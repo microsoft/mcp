@@ -1,4 +1,8 @@
 {
+  "azmcp_foundry_knowledge_index_list": [
+    "List all knowledge indexes in my AI Foundry project",
+    "Show me the knowledge indexes in my AI Foundry project"
+  ],
   "azmcp_foundry_models_deploy": [
     "Deploy a GPT4o instance on my resource <resource-name>"
   ],
@@ -108,6 +112,34 @@
   "azmcp_kusto_table_schema": [
     "Show me the schema for table <table_name> in the Data Explorer database <database_name> in cluster <cluster_name>"
   ],
+  "azmcp_mysql_database_list": [
+    "List all MySQL databases in server <server>",
+    "Show me the MySQL databases in server <server>"
+  ],
+  "azmcp_mysql_database_query": [
+    "Show me all items that contain the word <search_term> in the MySQL database <database> in server <server>"
+  ],
+  "azmcp_mysql_server_config_get": [
+    "Show me the configuration of MySQL server <server>"
+  ],
+  "azmcp_mysql_server_list": [
+    "List all MySQL servers in my subscription",
+    "Show me my MySQL servers",
+    "Show me the MySQL servers in my subscription"
+  ],
+  "azmcp_mysql_server_param_get": [
+    "Show me the value of connection timeout in seconds in my MySQL server <server>"
+  ],
+  "azmcp_mysql_server_param_set": [
+    "Set connection timeout to 20 seconds for my MySQL server <server>"
+  ],
+  "azmcp_mysql_table_list": [
+    "List all tables in the MySQL database <database> in server <server>",
+    "Show me the tables in the MySQL database <database> in server <server>"
+  ],
+  "azmcp_mysql_table_schema_get": [
+    "Show me the schema of table <table> in the MySQL database <database> in server <server>"
+  ],
   "azmcp_postgres_database_list": [
     "List all PostgreSQL databases in server <server>",
     "Show me the PostgreSQL databases in server <server>"
@@ -155,7 +187,7 @@
   "azmcp_deploy_plan_get": [
     "Create a plan to deploy this application to azure"
   ],
-  "azmcp-functionapp_get": [
+  "azmcp_functionapp_get": [
     "Describe the function app <function_app_name> in resource group <resource_group_name>",
     "Get configuration for function app <function_app_name>",
     "Get function app status for <function_app_name>",
@@ -166,7 +198,7 @@
     "Show plan and region for function app <function_app_name>",
     "What is the status of function app <function_app_name>?"
   ],
-  "azmcp-functionapp_list": [
+  "azmcp_functionapp_list": [
     "List all function apps in my subscription",
     "Show me my Azure function apps",
     "What function apps do I have?"
@@ -237,6 +269,13 @@
   ],
   "azmcp_grafana_list": [
     "List all Azure Managed Grafana in one subscription"
+  ],
+  "azmcp_azuremanagedlustre_filesystem_list": [
+    "List the Azure Managed Lustre filesystems in my subscription <subscription_name>",
+    "List the Azure Managed Lustre filesystems in my resource group <resource_group_name>"
+  ],
+  "azmcp_azuremanagedlustre_filesystem_required-subnet-size": [
+    "Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku>"
   ],
   "azmcp_marketplace_product_get": [
     "Get details about marketplace product <product_name>"
@@ -475,5 +514,11 @@
   ],
   "azmcp_bicepschema_get": [
     "How can I use Bicep to create an Azure OpenAI service?"
+  ],
+  "azmcp_cloudarchitect_design": [
+    "Please help me design an architecture for a large-scale file upload, storage, and retrieval service",
+    "Help me create a cloud service that will serve as ATM for users",
+    "I want to design a cloud app for ordering groceries",
+    "How can I design a cloud service in Azure that will store and present videos for users?"
   ]
 }
