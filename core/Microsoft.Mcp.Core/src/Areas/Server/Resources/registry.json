@@ -1,0 +1,8 @@
+{
+    "servers": {
+        "documentation": {
+            "url": "https://learn.microsoft.com/api/mcp",
+            "description": "Search official Microsoft/Azure documentation to find the most relevant and trustworthy content for a user's query. This tool returns up to 10 high-quality content chunks (each max 500 tokens), extracted from Microsoft Learn and other official sources. Each result includes the article title, URL, and a self-contained content excerpt optimized for fast retrieval and reasoning. Always use this tool to quickly ground your answers in accurate, first-party Microsoft/Azure knowledge."
+        }
+    }
+}
