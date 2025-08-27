@@ -2,12 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
-using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
-using Microsoft.Mcp.Core.Areas.Server.Options;
-using Microsoft.Mcp.Core.Models.Option;
-using Microsoft.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
 using static Microsoft.Mcp.Core.Services.Telemetry.TelemetryConstants;
 

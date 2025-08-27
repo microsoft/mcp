@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Reflection;
-using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
@@ -319,7 +317,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task ShouldDiscoverServers()
     {
         var commandFactory = new MockCommandFactory();
-        var options =   Options.Create(new ServiceStartOptions());
+        var options = Options.Create(new ServiceStartOptions());
         var logger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
         var strategy = new CommandGroupDiscoveryStrategy(commandFactory, options, logger);
         var result = await strategy.DiscoverServersAsync();
