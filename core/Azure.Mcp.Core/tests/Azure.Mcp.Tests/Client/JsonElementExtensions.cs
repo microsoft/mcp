@@ -14,7 +14,7 @@ public static class JsonElementExtensions
             return true;
         }
 
-        return element.Value.TryGetProperty("error", out var errorProperty) && 
+        return element.Value.TryGetProperty("error", out var errorProperty) &&
                errorProperty.ValueKind != JsonValueKind.Null;
     }
 
@@ -30,7 +30,7 @@ public static class JsonElementExtensions
             return null;
         }
 
-        if (element.Value.TryGetProperty("content", out var contentProperty) && 
+        if (element.Value.TryGetProperty("content", out var contentProperty) &&
             contentProperty.ValueKind != JsonValueKind.Null)
         {
             return contentProperty;
