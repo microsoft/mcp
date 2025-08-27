@@ -98,11 +98,9 @@ public abstract class BaseCommand : IBaseCommand
     {
         var result = new ValidationResult { IsValid = true };
 
-        // Determine any missing required options using beta5 APIs first. System.CommandLine
-        // may populate `commandResult.Errors` for missing params; we want to override that
-        // and return a standardized 400 with the required-params message instead.
         var missingOptions = commandResult.Command.Options
             .Where(o => o.Required && !HasOptionResult(commandResult, o))
+            .Where(o => !o.HasDefaultValue)
             .Select(o => $"--{NormalizeName(o.Name)}")
             .ToList();
 
@@ -198,6 +196,9 @@ public abstract class BaseCommand : IBaseCommand
                 // Treat option as present only if it has tokens (a provided value)
                 if (or.Tokens == null || or.Tokens.Count == 0)
                     return false;
+                // If all tokens are empty/whitespace treat the option as not provided
+                if (or.Tokens.All(t => string.IsNullOrWhiteSpace(t.Value)))
+                    return false;
                 // OptionResult.Option may have a name and aliases; compare normalized names/aliases
                 var orName = NormalizeName(or.Option.Name);
                 if (string.Equals(orName, normalizedOptionName, StringComparison.OrdinalIgnoreCase))
@@ -234,24 +235,7 @@ public abstract class BaseCommand : IBaseCommand
     }
 
     protected string? GetResourceGroup(ParseResult parseResult) =>
-        _usesResourceGroup ? TryGetValue(parseResult, OptionDefinitions.Common.ResourceGroup, out string? rg) ? rg : null : null;
-
-    // Safe getter: System.CommandLine may throw when attempting to GetValue for a missing required option.
-    // Use this helper to avoid exceptions and treat missing/invalid values as absent.
-    protected static bool TryGetValue<T>(ParseResult parseResult, Option<T> option, out T? value)
-    {
-        try
-        {
-            // If the option was not supplied, GetValue may throw for required options; catch and return false.
-            value = parseResult.GetValue(option);
-            return true;
-        }
-        catch
-        {
-            value = default;
-            return false;
-        }
-    }
+        _usesResourceGroup ? parseResult.TryGetValue(OptionDefinitions.Common.ResourceGroup, out string? rg) ? rg : null : null;
 
     protected bool UsesResourceGroup => _usesResourceGroup;
 }

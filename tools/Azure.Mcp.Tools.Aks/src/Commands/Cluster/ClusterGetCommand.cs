@@ -33,7 +33,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
     {
         base.RegisterOptions(command);
         RequireResourceGroup();
-        command.AddOption(_clusterNameOption);
+        command.Options.Add(_clusterNameOption);
     }
 
     protected override ClusterGetOptions BindOptions(ParseResult parseResult)

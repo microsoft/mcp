@@ -137,7 +137,7 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
         {
             return Task.FromResult(context.Response);
         }
-        
+
         var options = BindOptions(parseResult);
 
         try

@@ -30,7 +30,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_testRunIdOption);
+        command.Options.Add(_testRunIdOption);
     }
 
     protected override TestRunGetOptions BindOptions(ParseResult parseResult)
@@ -42,13 +42,15 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
+
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
             // Get the appropriate service from DI
             var service = context.GetService<ILoadTestingService>();
             // Call service operation(s)

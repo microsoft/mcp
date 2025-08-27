@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
+using Azure.Mcp.TestUtilities;
 using static Azure.Mcp.Tools.AppConfig.Commands.KeyValue.KeyValueLockCommand;
 
 namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue;
@@ -141,7 +142,7 @@ public class KeyValueLockCommandTests
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(string args)
     {
         // Arrange
-        var parsedArgs = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    var parsedArgs = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parsedArgs);

@@ -26,7 +26,7 @@ public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) :
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_queryOption);
+        command.Options.Add(_queryOption);
     }
 
     protected override DatabaseQueryOptions BindOptions(ParseResult parseResult)
@@ -38,14 +38,15 @@ public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) :
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
+        var options = BindOptions(parseResult);
+
         try
         {
-            var options = BindOptions(parseResult);
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
             List<string> result = await mysqlService.ExecuteQueryAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!, options.Query!);
             context.Response.Results = result?.Count > 0 ?

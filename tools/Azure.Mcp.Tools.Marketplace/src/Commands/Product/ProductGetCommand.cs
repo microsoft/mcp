@@ -43,15 +43,15 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_productIdOption);
-        command.AddOption(_includeStopSoldPlansOption);
-        command.AddOption(_languageOption);
-        command.AddOption(_marketOption);
-        command.AddOption(_lookupOfferInTenantLevelOption);
-        command.AddOption(_planIdOption);
-        command.AddOption(_skuIdOption);
-        command.AddOption(_includeServiceInstructionTemplatesOption);
-        command.AddOption(_pricingAudienceOption);
+        command.Options.Add(_productIdOption);
+        command.Options.Add(_includeStopSoldPlansOption);
+        command.Options.Add(_languageOption);
+        command.Options.Add(_marketOption);
+        command.Options.Add(_lookupOfferInTenantLevelOption);
+        command.Options.Add(_planIdOption);
+        command.Options.Add(_skuIdOption);
+        command.Options.Add(_includeServiceInstructionTemplatesOption);
+        command.Options.Add(_pricingAudienceOption);
     }
 
     protected override ProductGetOptions BindOptions(ParseResult parseResult)

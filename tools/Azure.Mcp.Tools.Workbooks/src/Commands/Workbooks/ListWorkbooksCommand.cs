@@ -37,9 +37,9 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
     {
         base.RegisterOptions(command);
         RequireResourceGroup();
-        command.AddOption(_kindOption);
-        command.AddOption(_categoryOption);
-        command.AddOption(_sourceIdOption);
+        command.Options.Add(_kindOption);
+        command.Options.Add(_categoryOption);
+        command.Options.Add(_sourceIdOption);
     }
 
     protected override ListWorkbooksOptions BindOptions(ParseResult parseResult)

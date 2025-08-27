@@ -351,7 +351,7 @@ protected override void RegisterOptions(Command command)
 {
     base.RegisterOptions(command);
     RequireResourceGroup();   // Command cannot run without a resource group
-    command.AddOption(_clusterNameOption);
+    command.Options.Add(_clusterNameOption);
 }
 
 protected override void RegisterOptions(Command command)
@@ -652,7 +652,7 @@ public class {Resource}{Operation}CommandTests
                 .Returns(new List<ResultType>());
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    var parseResult = _parser.Parse(Azure.Mcp.TestUtilities.ArgSplitter.SplitArgs(args));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -1385,7 +1385,7 @@ protected override void RegisterOptions(Command command)
 {
     base.RegisterOptions(command);
     UseResourceGroup(); // or RequireResourceGroup();
-    command.AddOption(_otherOption);
+    command.Options.Add(_otherOption);
 }
 
 protected override MyOptions BindOptions(ParseResult parseResult)

@@ -19,7 +19,7 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
     public override string Description =>
         $"""
         List all Storage accounts in a subscription. This command retrieves all Storage accounts available
-        in the specified subscription. Results are returned as a JSON array of objects including common 
+        in the specified subscription. Results are returned as a JSON array of objects including common
         metadata (name, location, kind, skuName, skuTier, hnsEnabled, allowBlobPublicAccess, enableHttpsTrafficOnly).
         """;
 
@@ -29,15 +29,15 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var storageService = context.GetService<IStorageService>();
             var accounts = await storageService.GetStorageAccounts(
                 options.Subscription!,

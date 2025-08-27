@@ -35,7 +35,7 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_directoryPathOption);
+        command.Options.Add(_directoryPathOption);
     }
 
     protected override DirectoryCreateOptions BindOptions(ParseResult parseResult)
@@ -47,15 +47,15 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var storageService = context.GetService<IStorageService>();
 
             var directory = await storageService.CreateDirectory(

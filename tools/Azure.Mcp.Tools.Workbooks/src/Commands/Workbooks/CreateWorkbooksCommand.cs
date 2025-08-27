@@ -37,9 +37,9 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
     {
         base.RegisterOptions(command);
         RequireResourceGroup();
-        command.AddOption(_displayNameOption);
-        command.AddOption(_serializedContentOption);
-        command.AddOption(_sourceIdOption);
+        command.Options.Add(_displayNameOption);
+        command.Options.Add(_serializedContentOption);
+        command.Options.Add(_sourceIdOption);
     }
 
     protected override CreateWorkbookOptions BindOptions(ParseResult parseResult)

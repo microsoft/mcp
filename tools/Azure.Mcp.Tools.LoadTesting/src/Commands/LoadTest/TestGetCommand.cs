@@ -29,7 +29,7 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_loadTestIdOption);
+        command.Options.Add(_loadTestIdOption);
     }
 
     protected override TestGetOptions BindOptions(ParseResult parseResult)

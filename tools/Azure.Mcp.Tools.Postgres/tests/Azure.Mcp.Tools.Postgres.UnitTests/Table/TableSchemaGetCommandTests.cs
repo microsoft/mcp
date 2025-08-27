@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
+using Azure.Mcp.TestUtilities;
 
 namespace Azure.Mcp.Tools.Postgres.UnitTests.Table;
 
@@ -77,15 +78,14 @@ public class TableSchemaGetCommandTests
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
         var command = new TableSchemaGetCommand(_logger);
-        var args = command.GetCommand().Parse(new string[]
-        {
-            missingParameter == "--subscription" ? "" : "--subscription", "sub123",
-            missingParameter == "--resource-group" ? "" : "--resource-group", "rg1",
-            missingParameter == "--user" ? "" : "--user", "user1",
-            missingParameter == "--server" ? "" : "--server", "server123",
-            missingParameter == "--database" ? "" : "--database", "db123",
-            missingParameter == "--table" ? "" : "--table", "table123"
-        });
+        var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
+            ("--subscription", "sub123"),
+            ("--resource-group", "rg1"),
+            ("--user", "user1"),
+            ("--server", "server123"),
+            ("--database", "db123"),
+            ("--table", "table123")
+        ));
 
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);

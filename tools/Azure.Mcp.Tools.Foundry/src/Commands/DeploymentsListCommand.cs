@@ -37,7 +37,7 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_endpointOption);
+        command.Options.Add(_endpointOption);
     }
 
     protected override DeploymentsListOptions BindOptions(ParseResult parseResult)

@@ -137,7 +137,6 @@ public class CommandFactory
         {
             var cmd = command.GetCommand();
 
-            // Configure action for every command (action model in SCL beta5)
             ConfigureCommandHandler(cmd, command);
 
             group.Command.Subcommands.Add(cmd);

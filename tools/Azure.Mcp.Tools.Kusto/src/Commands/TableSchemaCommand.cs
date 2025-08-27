@@ -27,15 +27,15 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger) : Bas
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var kusto = context.GetService<IKustoService>();
             string tableSchema;
 

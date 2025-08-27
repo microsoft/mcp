@@ -100,10 +100,14 @@ public class ClusterListCommandTests
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
         var command = new ClusterListCommand(_logger);
-        var args = command.GetCommand().Parse(
-        [
-            missingParameter == "--subscription" ? "" : "--subscription", "sub123",
-        ]);
+        var argsList = new List<string>();
+        if (missingParameter != "--subscription")
+        {
+            argsList.Add("--subscription");
+            argsList.Add("sub123");
+        }
+
+        var args = command.GetCommand().Parse(argsList.ToArray());
 
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);

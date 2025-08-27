@@ -24,14 +24,15 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
+        var options = BindOptions(parseResult);
+
         try
         {
-            var options = BindOptions(parseResult);
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
             List<string> databases = await mysqlService.ListDatabasesAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!);
             context.Response.Results = databases?.Count > 0 ?

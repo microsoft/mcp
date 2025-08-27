@@ -31,8 +31,8 @@ public sealed class FileSystemListPathsCommand(ILogger<FileSystemListPathsComman
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(StorageOptionDefinitions.FilterPath);
-        command.AddOption(StorageOptionDefinitions.Recursive);
+        command.Options.Add(StorageOptionDefinitions.FilterPath);
+        command.Options.Add(StorageOptionDefinitions.Recursive);
     }
 
     protected override ListPathsOptions BindOptions(ParseResult parseResult)
@@ -54,7 +54,6 @@ public sealed class FileSystemListPathsCommand(ILogger<FileSystemListPathsComman
 
         try
         {
-
             var storageService = context.GetService<IStorageService>();
             var paths = await storageService.ListDataLakePaths(
                 options.Account!,

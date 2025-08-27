@@ -35,13 +35,13 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_loadTestIdOption);
-        command.AddOption(_loadTestDescriptionOption);
-        command.AddOption(_loadTestDisplayNameOption);
-        command.AddOption(_loadTestEndpointOption);
-        command.AddOption(_loadTestVirtualUsersOption);
-        command.AddOption(_loadTestDurationOption);
-        command.AddOption(_loadTestRampUpTimeOption);
+        command.Options.Add(_loadTestIdOption);
+        command.Options.Add(_loadTestDescriptionOption);
+        command.Options.Add(_loadTestDisplayNameOption);
+        command.Options.Add(_loadTestEndpointOption);
+        command.Options.Add(_loadTestVirtualUsersOption);
+        command.Options.Add(_loadTestDurationOption);
+        command.Options.Add(_loadTestRampUpTimeOption);
     }
 
     protected override TestCreateOptions BindOptions(ParseResult parseResult)
@@ -60,6 +60,7 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         var options = BindOptions(parseResult);
+
         try
         {
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)

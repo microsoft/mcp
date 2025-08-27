@@ -32,8 +32,8 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_regionOption);
-        command.AddOption(_resourceTypesOption);
+        command.Options.Add(_regionOption);
+        command.Options.Add(_resourceTypesOption);
     }
 
     protected override CheckOptions BindOptions(ParseResult parseResult)
@@ -51,17 +51,17 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
             return context.Response;
         }
 
+        var options = BindOptions(parseResult);
+
         try
         {
-            var options = BindOptions(parseResult);
-
-            var ResourceTypes = options.ResourceTypes.Split(',')
+            var resourceTypes = options.ResourceTypes.Split(',')
                 .Select(rt => rt.Trim())
                 .Where(rt => !string.IsNullOrWhiteSpace(rt))
                 .ToList();
             var quotaService = context.GetService<IQuotaService>();
             Dictionary<string, List<UsageInfo>> toolResult = await quotaService.GetAzureQuotaAsync(
-                ResourceTypes,
+                resourceTypes,
                 options.Subscription!,
                 options.Region);
 

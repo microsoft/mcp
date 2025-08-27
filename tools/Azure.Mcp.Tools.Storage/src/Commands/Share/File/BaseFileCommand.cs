@@ -17,7 +17,7 @@ public abstract class BaseFileCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_directoryPathOption);
+        command.Options.Add(_directoryPathOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)

@@ -9,6 +9,18 @@ public static class ParseResultExtensions
 {
     public static bool HasAnyRetryOptions(this System.CommandLine.ParseResult parseResult)
     {
+        // Compare normalized names (trim leading '-' or '/') so we don't depend on alias formatting
+        static string Normalize(string s) => (s ?? string.Empty).TrimStart('-', '/');
+
+        var retryNames = new[]
+        {
+            Models.Option.OptionDefinitions.RetryPolicy.DelayName,
+            Models.Option.OptionDefinitions.RetryPolicy.MaxDelayName,
+            Models.Option.OptionDefinitions.RetryPolicy.MaxRetriesName,
+            Models.Option.OptionDefinitions.RetryPolicy.ModeName,
+            Models.Option.OptionDefinitions.RetryPolicy.NetworkTimeoutName,
+        };
+
         foreach (var child in parseResult.CommandResult.Children)
         {
             if (child is OptionResult optionResult)
@@ -19,15 +31,13 @@ public static class ParseResultExtensions
                     continue;
                 }
 
-                var aliases = option.Aliases;
-                if (aliases.Any(a => string.Equals(a, $"--{Models.Option.OptionDefinitions.RetryPolicy.DelayName}", StringComparison.OrdinalIgnoreCase)) ||
-                    aliases.Any(a => string.Equals(a, $"--{Models.Option.OptionDefinitions.RetryPolicy.MaxDelayName}", StringComparison.OrdinalIgnoreCase)) ||
-                    aliases.Any(a => string.Equals(a, $"--{Models.Option.OptionDefinitions.RetryPolicy.MaxRetriesName}", StringComparison.OrdinalIgnoreCase)) ||
-                    aliases.Any(a => string.Equals(a, $"--{Models.Option.OptionDefinitions.RetryPolicy.ModeName}", StringComparison.OrdinalIgnoreCase)) ||
-                    aliases.Any(a => string.Equals(a, $"--{Models.Option.OptionDefinitions.RetryPolicy.NetworkTimeoutName}", StringComparison.OrdinalIgnoreCase)))
-                {
+                var name = Normalize(option.Name);
+                if (retryNames.Any(rn => string.Equals(rn, name, StringComparison.OrdinalIgnoreCase)))
                     return true;
-                }
+
+                var aliases = option.Aliases ?? Array.Empty<string>();
+                if (aliases.Any(a => retryNames.Any(rn => string.Equals(rn, Normalize(a), StringComparison.OrdinalIgnoreCase))))
+                    return true;
             }
         }
 

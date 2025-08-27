@@ -37,8 +37,8 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_namespaceOption);
-        command.AddOption(_queueOption);
+        command.Options.Add(_namespaceOption);
+        command.Options.Add(_queueOption);
     }
 
     protected override BaseQueueOptions BindOptions(ParseResult parseResult)
@@ -51,15 +51,15 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var service = context.GetService<IServiceBusService>();
             var details = await service.GetQueueDetails(
                 options.Namespace!,

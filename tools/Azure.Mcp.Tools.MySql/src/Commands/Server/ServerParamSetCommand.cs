@@ -46,10 +46,10 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
             return context.Response;
         }
 
+        var options = BindOptions(parseResult);
+
         try
         {
-            var options = BindOptions(parseResult);
-
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
             string result = await mysqlService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, options.Value!);
             context.Response.Results = !string.IsNullOrEmpty(result) ?

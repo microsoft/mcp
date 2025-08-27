@@ -28,10 +28,10 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger) : BaseM
             return context.Response;
         }
 
+        var options = BindOptions(parseResult);
+
         try
         {
-            var options = BindOptions(parseResult);
-
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
             List<string> servers = await mysqlService.ListServersAsync(options.Subscription!, options.ResourceGroup!, options.User!);
             context.Response.Results = servers?.Count > 0 ?

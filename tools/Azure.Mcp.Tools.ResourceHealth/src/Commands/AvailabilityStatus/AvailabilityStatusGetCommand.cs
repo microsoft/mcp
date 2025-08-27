@@ -33,7 +33,7 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(ResourceHealthOptionDefinitions.ResourceId);
+        command.Options.Add(ResourceHealthOptionDefinitions.ResourceId);
     }
 
     protected override AvailabilityStatusGetOptions BindOptions(ParseResult parseResult)
@@ -45,15 +45,15 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var resourceHealthService = context.GetService<IResourceHealthService>() ??
                 throw new InvalidOperationException("Resource Health service is not available.");
 

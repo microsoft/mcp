@@ -17,7 +17,7 @@ public abstract class BaseClusterCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_clusterOption);
+        command.Options.Add(_clusterOption);
         RequireResourceGroup();
     }
 

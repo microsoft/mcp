@@ -46,15 +46,15 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_accountCreateOption);
+        command.Options.Add(_accountCreateOption);
         RequireResourceGroup();
-        command.AddOption(_locationOption);
-        command.AddOption(_skuOption);
-        command.AddOption(_kindOption);
-        command.AddOption(_accessTierOption);
-        command.AddOption(_enableHttpsTrafficOnlyOption);
-        command.AddOption(_allowBlobPublicAccessOption);
-        command.AddOption(_enableHierarchicalNamespaceOption);
+        command.Options.Add(_locationOption);
+        command.Options.Add(_skuOption);
+        command.Options.Add(_kindOption);
+        command.Options.Add(_accessTierOption);
+        command.Options.Add(_enableHttpsTrafficOnlyOption);
+        command.Options.Add(_allowBlobPublicAccessOption);
+        command.Options.Add(_enableHierarchicalNamespaceOption);
     }
 
     protected override AccountCreateOptions BindOptions(ParseResult parseResult)
@@ -73,15 +73,16 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             // Get the storage service from DI
             var storageService = context.GetService<IStorageService>();
 

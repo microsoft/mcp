@@ -40,9 +40,9 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_namespaceOption);
-        command.AddOption(_queueOption);
-        command.AddOption(_maxMessagesOption);
+        command.Options.Add(_namespaceOption);
+        command.Options.Add(_queueOption);
+        command.Options.Add(_maxMessagesOption);
     }
 
     protected override QueuePeekOptions BindOptions(ParseResult parseResult)
@@ -56,15 +56,15 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var service = context.GetService<IServiceBusService>();
             var messages = await service.PeekQueueMessages(
                 options.Namespace!,

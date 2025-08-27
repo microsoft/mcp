@@ -34,11 +34,11 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_workspaceFolderOption);
-        command.AddOption(_projectNameOption);
-        command.AddOption(_deploymentTargetServiceOption);
-        command.AddOption(_provisioningToolOption);
-        command.AddOption(_azdIacOptionsOption);
+        command.Options.Add(_workspaceFolderOption);
+        command.Options.Add(_projectNameOption);
+        command.Options.Add(_deploymentTargetServiceOption);
+        command.Options.Add(_provisioningToolOption);
+        command.Options.Add(_azdIacOptionsOption);
     }
 
     private GetOptions BindOptions(ParseResult parseResult)

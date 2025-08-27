@@ -33,7 +33,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_rawMcpToolInputOption);
+        command.Options.Add(_rawMcpToolInputOption);
     }
 
     private DiagramGenerateOptions BindOptions(ParseResult parseResult)

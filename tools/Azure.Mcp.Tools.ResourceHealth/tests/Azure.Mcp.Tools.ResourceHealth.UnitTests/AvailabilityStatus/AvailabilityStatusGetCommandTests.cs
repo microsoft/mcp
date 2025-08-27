@@ -99,11 +99,20 @@ public class AvailabilityStatusGetCommandTests
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
         var command = new AvailabilityStatusGetCommand(_logger);
-        var args = command.GetCommand().Parse(new string[]
+        var argsList = new List<string>();
+        if (missingParameter != "--subscription")
         {
-            missingParameter == "--subscription" ? "" : "--subscription", "12345678-1234-1234-1234-123456789012",
-            missingParameter == "--resourceId" ? "" : "--resourceId", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm",
-        });
+            argsList.Add("--subscription");
+            argsList.Add("12345678-1234-1234-1234-123456789012");
+        }
+
+        if (missingParameter != "--resourceId")
+        {
+            argsList.Add("--resourceId");
+            argsList.Add("/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm");
+        }
+
+        var args = command.GetCommand().Parse([.. argsList]);
 
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);

@@ -23,7 +23,7 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_tableOption);
+        command.Options.Add(_tableOption);
     }
 
     protected override TableSchemaGetOptions BindOptions(ParseResult parseResult)
@@ -35,14 +35,16 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
+        var options = BindOptions(parseResult);
+
         try
         {
-            var options = BindOptions(parseResult);
 
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
 
             IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
             List<string> schema = await pgService.GetTableSchemaAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!, options.Table!);

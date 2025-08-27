@@ -38,7 +38,6 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
 
         try
         {
-
             var virtualDesktopService = context.GetService<IVirtualDesktopService>();
             IReadOnlyList<UserSession> userSessions;
 

@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
+using Azure.Mcp.TestUtilities;
 
 namespace Azure.Mcp.Tools.Postgres.UnitTests.Server;
 
@@ -93,12 +94,11 @@ public class ServerListCommandTests
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
         var command = new ServerListCommand(_logger);
-        var args = command.GetCommand().Parse(new string[]
-        {
-            missingParameter == "--subscription" ? "" : "--subscription", "sub123",
-            missingParameter == "--resource-group" ? "" : "--resource-group", "rg1",
-            missingParameter == "--user" ? "" : "--user", "user1",
-        });
+        var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
+            ("--subscription", "sub123"),
+            ("--resource-group", "rg1"),
+            ("--user", "user1")
+        ));
 
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);

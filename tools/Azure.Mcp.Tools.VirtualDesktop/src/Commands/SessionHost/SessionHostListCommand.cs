@@ -39,7 +39,6 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
 
         try
         {
-
             var virtualDesktopService = context.GetService<IVirtualDesktopService>();
             IReadOnlyList<Models.SessionHost> sessionHosts;
 

@@ -137,7 +137,7 @@ public class AccessPolicyListCommandTests
             options.AddRange(["--cache", "cache1"]);
 
 
-        var parseResult = command.GetCommand().Parse(options.ToArray());
+        var parseResult = command.GetCommand().Parse([.. options]);
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, parseResult);

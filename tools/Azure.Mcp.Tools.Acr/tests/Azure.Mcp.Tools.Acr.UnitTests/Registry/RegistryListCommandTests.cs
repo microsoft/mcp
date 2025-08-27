@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
+using Azure.Mcp.TestUtilities;
 
 namespace Azure.Mcp.Tools.Acr.UnitTests.Registry;
 
@@ -62,7 +63,7 @@ public class RegistryListCommandTests
                 });
         }
 
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

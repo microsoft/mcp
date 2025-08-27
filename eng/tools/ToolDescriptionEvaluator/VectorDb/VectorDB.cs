@@ -97,7 +97,7 @@ public class VectorDB(IDistanceMetric distanceMetric, IEnumerable<Entry>? entrie
 
     private int BinarySearch(string id)
     {
-        return _entries.BinarySearch(new Entry(id, null, Array.Empty<float>()),
+        return _entries.BinarySearch(new Entry(id, null, []),
             Comparer<Entry>.Create((a, b) => string.Compare(a.Id, b.Id, StringComparison.Ordinal)));
     }
 
