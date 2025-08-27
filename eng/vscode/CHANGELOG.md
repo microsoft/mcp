@@ -1,6 +1,14 @@
 
 # Release History
 
+## 0.5.10 - Unreleased
+
+### Added
+
+### Changed
+
+### Fixed
+
 ## 0.5.9 - 2025-08-26
 
 ### Changed
