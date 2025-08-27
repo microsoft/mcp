@@ -37,8 +37,8 @@ jobs:
         $properties = ./eng/scripts/Get-ProjectProperties.ps1 -ProjectName '${{parameters.ServerName}}.csproj'
         $imageName = $properties.DockerImageName
         $version = $properties.Version
-        Write-Host "##vso[task.setvariable variable=DockerImageName]$imageName"
-        Write-Host "##vso[task.setvariable variable=DockerImageVersion]$version$VersionSuffix"
+        Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$imageName"
+        Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version$VersionSuffix"
     env:
       VERSION_SUFFIX: '$(VersionSuffix)'
 
