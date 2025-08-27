@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
