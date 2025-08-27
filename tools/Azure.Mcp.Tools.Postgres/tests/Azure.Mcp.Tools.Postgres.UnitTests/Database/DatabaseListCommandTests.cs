@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
+using Azure.Mcp.TestUtilities;
 
 namespace Azure.Mcp.Tools.Postgres.UnitTests.Database;
 
@@ -37,8 +38,8 @@ public class DatabaseListCommandTests
         var expectedDatabases = new List<string> { "db1", "db2" };
         _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns(expectedDatabases);
 
-        var command = new DatabaseListCommand(_logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server1"]);
+    var command = new DatabaseListCommand(_logger);
+    var args = command.GetCommand().Parse(ArgSplitter.SplitArgs("--subscription sub123 --resource-group rg1 --user user1 --server server1"));
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -57,10 +58,10 @@ public class DatabaseListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsMessage_WhenNoDatabasesExist()
     {
-        _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns([]);
+    _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns(new List<string>());
 
-        var command = new DatabaseListCommand(_logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server1"]);
+    var command = new DatabaseListCommand(_logger);
+    var args = command.GetCommand().Parse(ArgSplitter.SplitArgs("--subscription sub123 --resource-group rg1 --user user1 --server server1"));
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -76,8 +77,8 @@ public class DatabaseListCommandTests
     {
         _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").ThrowsAsync(new Exception("Test exception"));
 
-        var command = new DatabaseListCommand(_logger);
-        var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server1"]);
+    var command = new DatabaseListCommand(_logger);
+    var args = command.GetCommand().Parse(ArgSplitter.SplitArgs("--subscription sub123 --resource-group rg1 --user user1 --server server1"));
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
 
@@ -94,13 +95,12 @@ public class DatabaseListCommandTests
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
         var command = new DatabaseListCommand(_logger);
-        var args = command.GetCommand().Parse(new string[]
-        {
-            missingParameter == "--subscription" ? "" : "--subscription", "sub123",
-            missingParameter == "--resource-group" ? "" : "--resource-group", "rg1",
-            missingParameter == "--user" ? "" : "--user", "user1",
-            missingParameter == "--server" ? "" : "--server", "server123",
-        });
+        var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
+            ("--subscription", "sub123"),
+            ("--resource-group", "rg1"),
+            ("--user", "user1"),
+            ("--server", "server123")
+        ));
 
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);

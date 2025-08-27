@@ -17,7 +17,7 @@ public abstract class BaseShareCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_shareOption);
+        command.Options.Add(_shareOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)

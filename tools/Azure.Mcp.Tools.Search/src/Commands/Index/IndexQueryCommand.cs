@@ -36,9 +36,9 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : Globa
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_serviceOption);
-        command.AddOption(_indexOption);
-        command.AddOption(_queryOption);
+        command.Options.Add(_serviceOption);
+        command.Options.Add(_indexOption);
+        command.Options.Add(_queryOption);
     }
 
     protected override IndexQueryOptions BindOptions(ParseResult parseResult)
@@ -52,15 +52,15 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : Globa
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var searchService = context.GetService<ISearchService>();
 
             var results = await searchService.QueryIndex(

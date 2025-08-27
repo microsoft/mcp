@@ -32,8 +32,8 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_vaultOption);
-        command.AddOption(_certificateOption);
+        command.Options.Add(_vaultOption);
+        command.Options.Add(_certificateOption);
     }
 
     protected override CertificateGetOptions BindOptions(ParseResult parseResult)
@@ -46,15 +46,15 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var keyVaultService = context.GetService<IKeyVaultService>();
             var certificate = await keyVaultService.GetCertificate(
                 options.VaultName!,

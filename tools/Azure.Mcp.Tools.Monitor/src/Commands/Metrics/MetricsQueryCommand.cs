@@ -3,6 +3,7 @@
 
 using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Options.Metrics;
@@ -44,14 +45,14 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_metricNamesOption);
-        command.AddOption(_startTimeOption);
-        command.AddOption(_endTimeOption);
-        command.AddOption(_intervalOption);
-        command.AddOption(_aggregationOption);
-        command.AddOption(_filterOption);
-        command.AddOption(_metricNamespaceOption);
-        command.AddOption(_maxBucketsOption);
+        command.Options.Add(_metricNamesOption);
+        command.Options.Add(_startTimeOption);
+        command.Options.Add(_endTimeOption);
+        command.Options.Add(_intervalOption);
+        command.Options.Add(_aggregationOption);
+        command.Options.Add(_filterOption);
+        command.Options.Add(_metricNamespaceOption);
+        command.Options.Add(_maxBucketsOption);
     }
 
     protected override MetricsQueryOptions BindOptions(ParseResult parseResult)
@@ -74,12 +75,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
 
         if (result.IsValid)
         {
-            string metricNamesValue = commandResult.GetValue(_metricNamesOption)!;
-
-            // Validate the metric names
-            string[] metricNames = [.. metricNamesValue.Split(',').Select(t => t.Trim())];
-
-            if (metricNames.Length == 0 || metricNames.Any(s => string.IsNullOrWhiteSpace(s)))
+            if (!commandResult.TryGetValue(_metricNamesOption, out var metricNamesValue) || string.IsNullOrWhiteSpace(metricNamesValue))
             {
                 result.IsValid = false;
                 result.ErrorMessage = $"Invalid format for --{_metricNamesOption.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).";
@@ -90,21 +86,36 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
                     commandResponse.Message = result.ErrorMessage!;
                 }
             }
+            else
+            {
+                // Validate the metric names
+                string[] metricNames = [.. metricNamesValue.Split(',').Select(t => t.Trim())];
+
+                if (metricNames.Length == 0 || metricNames.Any(s => string.IsNullOrWhiteSpace(s)))
+                {
+                    result.IsValid = false;
+                    result.ErrorMessage = $"Invalid format for --{_metricNamesOption.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).";
+
+                    if (commandResponse != null)
+                    {
+                        commandResponse.Status = 400;
+                        commandResponse.Message = result.ErrorMessage!;
+                    }
+                }
+            }
         }
         return result;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            return context.Response;
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             string[] metricNames = [.. options.MetricNames!.Split(',').Select(t => t.Trim())];
 
             // Get the metrics service from DI

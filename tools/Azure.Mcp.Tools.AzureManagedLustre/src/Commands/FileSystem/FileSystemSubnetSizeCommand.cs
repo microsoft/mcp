@@ -3,6 +3,7 @@
 
 using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureManagedLustre.Options;
 using Azure.Mcp.Tools.AzureManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.AzureManagedLustre.Services;
@@ -39,8 +40,8 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_skuOption);
-        command.AddOption(_sizeOption);
+        command.Options.Add(_skuOption);
+        command.Options.Add(_sizeOption);
     }
 
     protected override FileSystemSubnetSizeOptions BindOptions(ParseResult parseResult)
@@ -57,18 +58,18 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
 
         if (result.IsValid)
         {
-            string skuName = commandResult.GetValue(_skuOption)!;
-
-
-            if (!AllowedSkus.Contains(skuName))
+            if (commandResult.TryGetValue(_skuOption, out var skuName) && !string.IsNullOrWhiteSpace(skuName))
             {
-                result.IsValid = false;
-                result.ErrorMessage = $"Invalid SKU '{skuName}'. Allowed values: {string.Join(", ", AllowedSkus)}";
-
-                if (commandResponse != null)
+                if (!AllowedSkus.Contains(skuName))
                 {
-                    commandResponse.Status = 400;
-                    commandResponse.Message = result.ErrorMessage!;
+                    result.IsValid = false;
+                    result.ErrorMessage = $"Invalid SKU '{skuName}'. Allowed values: {string.Join(", ", AllowedSkus)}";
+
+                    if (commandResponse != null)
+                    {
+                        commandResponse.Status = 400;
+                        commandResponse.Message = result.ErrorMessage!;
+                    }
                 }
             }
         }

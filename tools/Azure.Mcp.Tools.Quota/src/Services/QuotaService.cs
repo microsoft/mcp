@@ -63,7 +63,7 @@ public class QuotaService(ILoggerFactory? loggerFactory = null, IHttpClientServi
             .ToList();
 
         List<string> commonValidRegions = availableRegions.Values
-            .Aggregate((current, next) => current.Intersect(next).ToList());
+            .Aggregate((current, next) => [.. current.Intersect(next)]);
 
         return commonValidRegions;
     }

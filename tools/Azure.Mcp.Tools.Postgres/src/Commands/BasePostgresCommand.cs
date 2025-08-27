@@ -21,7 +21,7 @@ public abstract class BasePostgresCommand<
     {
         base.RegisterOptions(command);
         RequireResourceGroup();
-        command.AddOption(_userOption);
+        command.Options.Add(_userOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)

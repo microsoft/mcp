@@ -38,7 +38,6 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger) : B
 
         try
         {
-
             var virtualDesktopService = context.GetService<IVirtualDesktopService>();
 
             IReadOnlyList<Models.HostPool> hostpools;

@@ -45,7 +45,7 @@ public class CommandExtensionsTests
         // Arrange
         var command = new Command("test", "Test command");
         var option = new Option<string>("--name") { Description = "Name option" };
-        command.AddOption(option);
+        command.Options.Add(option);
 
         var arguments = new Dictionary<string, JsonElement>
         {
@@ -68,7 +68,7 @@ public class CommandExtensionsTests
         // Arrange
         var command = new Command("test", "Test command");
         var option = new Option<string>("--query") { Description = "Query option" };
-        command.AddOption(option);
+        command.Options.Add(option);
 
         var arguments = new Dictionary<string, JsonElement>
         {
@@ -92,8 +92,8 @@ public class CommandExtensionsTests
         var command = new Command("test", "Test command");
         var trueOption = new Option<bool>("--enabled") { Description = "Enabled option" };
         var falseOption = new Option<bool>("--disabled") { Description = "Disabled option" };
-        command.AddOption(trueOption);
-        command.AddOption(falseOption);
+        command.Options.Add(trueOption);
+        command.Options.Add(falseOption);
 
         var arguments = new Dictionary<string, JsonElement>
         {
@@ -124,8 +124,8 @@ public class CommandExtensionsTests
         {
             Description = "Rate option"
         };
-        command.AddOption(intOption);
-        command.AddOption(doubleOption);
+        command.Options.Add(intOption);
+        command.Options.Add(doubleOption);
 
         var arguments = new Dictionary<string, JsonElement>
         {
@@ -151,7 +151,7 @@ public class CommandExtensionsTests
         {
             Description = "Items option"
         };
-        command.AddOption(option);
+        command.Options.Add(option);
 
         var arguments = new Dictionary<string, JsonElement>
         {
@@ -178,7 +178,7 @@ public class CommandExtensionsTests
             Description = "Tags option",
             AllowMultipleArgumentsPerToken = true
         };
-        command.AddOption(option);
+        command.Options.Add(option);
 
         var arguments = new Dictionary<string, JsonElement>
         {
@@ -208,7 +208,7 @@ public class CommandExtensionsTests
         {
             Description = "Name option"
         };
-        command.AddOption(option);
+        command.Options.Add(option);
 
         var arguments = new Dictionary<string, JsonElement>
         {
@@ -233,7 +233,7 @@ public class CommandExtensionsTests
         {
             Description = "Subscription option"
         };
-        command.AddOption(option);
+        command.Options.Add(option);
 
         var arguments = new Dictionary<string, JsonElement>
         {
@@ -280,7 +280,7 @@ public class CommandExtensionsTests
         // Arrange
         var command = new Command("test", "Test command");
         var option = new Option<string>("--json-data") { Description = "JSON data option" };
-        command.AddOption(option);
+        command.Options.Add(option);
 
         var jsonString = "{\"key\": \"value with 'single' and \\\"double\\\" quotes\"}";
         var arguments = new Dictionary<string, JsonElement>
@@ -305,8 +305,8 @@ public class CommandExtensionsTests
         var command = new Command("test");
         var queryOption = new Option<string>("--query") { Required = true };
         var nameOption = new Option<string>("--name") { Required = false };
-        command.AddOption(queryOption);
-        command.AddOption(nameOption);
+        command.Options.Add(queryOption);
+        command.Options.Add(nameOption);
 
         var arguments = new Dictionary<string, JsonElement>
         {
@@ -330,7 +330,7 @@ public class CommandExtensionsTests
         // Arrange
         var command = new Command("test");
         var titleOption = new Option<string>("--title");
-        command.AddOption(titleOption);
+        command.Options.Add(titleOption);
 
         var arguments = new Dictionary<string, JsonElement>
         {
@@ -352,7 +352,7 @@ public class CommandExtensionsTests
         // Arrange
         var command = new Command("test");
         var scriptOption = new Option<string>("--script") { Required = true };
-        command.AddOption(scriptOption);
+        command.Options.Add(scriptOption);
 
         var arguments = new Dictionary<string, JsonElement>
         {
@@ -372,7 +372,7 @@ public class CommandExtensionsTests
         // Arrange
         var command = new Command("test");
         var scriptOption = new Option<string>("--raw-mcp-tool-input") { Required = true };
-        command.AddOption(scriptOption);
+        command.Options.Add(scriptOption);
 
         var arguments = new Dictionary<string, JsonElement>
         {

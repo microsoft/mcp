@@ -31,7 +31,7 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_blobContainerPublicAccessOption);
+        command.Options.Add(_blobContainerPublicAccessOption);
     }
 
     protected override ContainerCreateOptions BindOptions(ParseResult parseResult)

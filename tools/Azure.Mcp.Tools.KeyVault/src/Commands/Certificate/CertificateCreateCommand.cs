@@ -32,8 +32,8 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_vaultOption);
-        command.AddOption(_certificateOption);
+        command.Options.Add(_vaultOption);
+        command.Options.Add(_certificateOption);
     }
 
     protected override CertificateCreateOptions BindOptions(ParseResult parseResult)
@@ -46,15 +46,15 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var keyVaultService = context.GetService<IKeyVaultService>();
             var operation = await keyVaultService.CreateCertificate(
                 options.VaultName!,

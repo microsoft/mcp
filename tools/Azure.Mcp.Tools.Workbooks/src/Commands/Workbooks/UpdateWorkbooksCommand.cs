@@ -34,9 +34,9 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_workbookIdOption);
-        command.AddOption(_displayNameOption);
-        command.AddOption(_serializedContentOption);
+        command.Options.Add(_workbookIdOption);
+        command.Options.Add(_displayNameOption);
+        command.Options.Add(_serializedContentOption);
     }
 
     protected override UpdateWorkbooksOptions BindOptions(ParseResult parseResult)

@@ -37,9 +37,9 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_metricNamespaceOption);
-        command.AddOption(_searchStringOption);
-        command.AddOption(_limitOption);
+        command.Options.Add(_metricNamespaceOption);
+        command.Options.Add(_searchStringOption);
+        command.Options.Add(_limitOption);
     }
 
     protected override MetricsDefinitionsOptions BindOptions(ParseResult parseResult)
@@ -53,15 +53,15 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             // Get the metrics service from DI
             var service = context.GetService<IMonitorMetricsService>();
             // Call service operation with required parameters

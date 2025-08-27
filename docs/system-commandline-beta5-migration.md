@@ -27,7 +27,7 @@ This document describes the exact steps and code changes to migrate this reposit
 
 ## API Changes Overview (Old → New)
 - Command registration:
-  - `command.AddOption(option)` → `command.Options.Add(option)`
+  - `command.Options.Add(option)` → `command.Options.Add(option)`
   - `command.AddCommand(subcommand)` → `command.Subcommands.Add(subcommand)`
 - Option requiredness/defaults:
   - `option.IsRequired = true` → `option.Required = true`
@@ -299,7 +299,7 @@ var sub = parseResult.GetValue(_subscriptionOption);
 Registration change:
 ```csharp
 // Before
-command.AddOption(_subscriptionOption);
+command.Options.Add(_subscriptionOption);
 command.AddCommand(_deployCommand);
 
 // After
@@ -382,7 +382,7 @@ dotnet build .\AzureMcp.sln /property:GenerateFullPaths=true /consoleloggerparam
 - [x] `SystemCommandLineExtensions`: update helpers to new APIs (`Options.Add`, `Subcommands.Add`, `GetValue`, action model) as needed. (Implemented via `core/Azure.Mcp.Core/src/Commands/CommandExtensions.cs`.)
 
 4) Mechanical Sweeps (all projects)
-- [ ] Replace `command.AddOption(...)` → `command.Options.Add(...)`.
+- [ ] Replace `command.Options.Add(...)` → `command.Options.Add(...)`.
 - [ ] Replace `command.AddCommand(...)` → `command.Subcommands.Add(...)`.
 - [x] Replace `parseResult.GetValueForOption(...)` → `parseResult.GetValue(...)`.
 - [x] Replace `option.IsRequired` → `option.Required`.

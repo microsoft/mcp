@@ -43,15 +43,15 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var kusto = context.GetService<IKustoService>();
             List<JsonElement> results;
             var query = $"{options.Table} | sample {options.Limit}";

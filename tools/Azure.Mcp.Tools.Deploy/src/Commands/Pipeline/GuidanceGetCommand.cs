@@ -34,10 +34,10 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_useAZDPipelineConfigOption);
-        command.AddOption(_organizationNameOption);
-        command.AddOption(_repositoryNameOption);
-        command.AddOption(_githubEnvironmentNameOption);
+        command.Options.Add(_useAZDPipelineConfigOption);
+        command.Options.Add(_organizationNameOption);
+        command.Options.Add(_repositoryNameOption);
+        command.Options.Add(_githubEnvironmentNameOption);
     }
 
     protected override GuidanceGetOptions BindOptions(ParseResult parseResult)

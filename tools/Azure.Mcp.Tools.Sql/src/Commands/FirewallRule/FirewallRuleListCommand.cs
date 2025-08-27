@@ -38,7 +38,6 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
 
         try
         {
-
             var sqlService = context.GetService<ISqlService>();
 
             var firewallRules = await sqlService.ListFirewallRulesAsync(

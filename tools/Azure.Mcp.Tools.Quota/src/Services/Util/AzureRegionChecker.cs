@@ -59,9 +59,7 @@ public class DefaultRegionChecker(ArmClient armClient, string subscriptionId, IL
                 return [];
             }
 
-            return resourceTypeInfo.Locations
-                .Select(location => location.Replace(" ", "").ToLowerInvariant())
-                .ToList();
+            return [.. resourceTypeInfo.Locations.Select(location => location.Replace(" ", "").ToLowerInvariant())];
         }
         catch (Exception error)
         {

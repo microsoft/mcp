@@ -33,9 +33,9 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger) : S
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_vaultOption);
-        command.AddOption(_secretOption);
-        command.AddOption(_valueOption);
+        command.Options.Add(_vaultOption);
+        command.Options.Add(_secretOption);
+        command.Options.Add(_valueOption);
     }
 
     protected override SecretCreateOptions BindOptions(ParseResult parseResult)
@@ -49,15 +49,15 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger) : S
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var keyVaultService = context.GetService<IKeyVaultService>();
             var secret = await keyVaultService.CreateSecret(
                 options.VaultName!,

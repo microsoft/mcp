@@ -42,15 +42,15 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseMon
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var monitorService = context.GetService<IMonitorService>();
             var tables = await monitorService.ListTables(
                 options.Subscription!,

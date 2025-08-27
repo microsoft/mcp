@@ -32,7 +32,7 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_workbookIdOption);
+        command.Options.Add(_workbookIdOption);
     }
 
     protected override ShowWorkbooksOptions BindOptions(ParseResult parseResult)

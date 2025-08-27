@@ -33,9 +33,9 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : Subscri
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_vaultOption);
-        command.AddOption(_keyOption);
-        command.AddOption(_keyTypeOption);
+        command.Options.Add(_vaultOption);
+        command.Options.Add(_keyOption);
+        command.Options.Add(_keyTypeOption);
     }
 
     protected override KeyCreateOptions BindOptions(ParseResult parseResult)
@@ -49,15 +49,15 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : Subscri
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var keyVaultService = context.GetService<IKeyVaultService>();
             var key = await keyVaultService.CreateKey(
                 options.VaultName!,

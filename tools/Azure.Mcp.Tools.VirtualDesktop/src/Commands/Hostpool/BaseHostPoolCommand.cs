@@ -4,6 +4,7 @@
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.VirtualDesktop.Options;
 using Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
 
@@ -20,8 +21,8 @@ public abstract class BaseHostPoolCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_hostPoolOption);
-        command.AddOption(_hostPoolResourceIdOption);
+        command.Options.Add(_hostPoolOption);
+        command.Options.Add(_hostPoolResourceIdOption);
     }
 
     protected override T BindOptions(ParseResult parseResult)
@@ -40,8 +41,8 @@ public abstract class BaseHostPoolCommand<
             return result;
         }
 
-        var hostPoolName = commandResult.GetValue(_hostPoolOption);
-        var hostPoolResourceId = commandResult.GetValue(_hostPoolResourceIdOption);
+        _ = commandResult.TryGetValue(_hostPoolOption, out string? hostPoolName);
+        _ = commandResult.TryGetValue(_hostPoolResourceIdOption, out string? hostPoolResourceId);
 
         // Validate that either hostpool or hostpool-resource-id is provided, but not both
         if (string.IsNullOrEmpty(hostPoolName) && string.IsNullOrEmpty(hostPoolResourceId))

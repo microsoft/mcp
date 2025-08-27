@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
+using Azure.Mcp.TestUtilities;
 
 namespace Azure.Mcp.Tools.Sql.UnitTests.ElasticPool;
 
@@ -208,7 +209,7 @@ public class ElasticPoolListCommandTests
                 .Returns(new List<SqlElasticPool>());
         }
 
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

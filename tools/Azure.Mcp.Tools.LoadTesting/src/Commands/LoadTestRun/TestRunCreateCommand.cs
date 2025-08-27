@@ -34,11 +34,11 @@ public sealed class TestRunCreateCommand(ILogger<TestRunCreateCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_testRunIdOption);
-        command.AddOption(_testIdOption);
-        command.AddOption(_displayNameOption);
-        command.AddOption(_descriptionOption);
-        command.AddOption(_oldTestRunIdOption);
+        command.Options.Add(_testRunIdOption);
+        command.Options.Add(_testIdOption);
+        command.Options.Add(_displayNameOption);
+        command.Options.Add(_descriptionOption);
+        command.Options.Add(_oldTestRunIdOption);
     }
 
     protected override TestRunCreateOptions BindOptions(ParseResult parseResult)
@@ -54,13 +54,15 @@ public sealed class TestRunCreateCommand(ILogger<TestRunCreateCommand> logger)
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
+
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
             // Get the appropriate service from DI
             var service = context.GetService<ILoadTestingService>();
             // Call service operation(s)

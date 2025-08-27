@@ -60,11 +60,11 @@ public sealed class ServiceStartCommand : BaseCommand
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_transportOption);
-        command.AddOption(_namespaceOption);
-        command.AddOption(_modeOption);
-        command.AddOption(_readOnlyOption);
-        command.AddOption(_enableInsecureTransportsOption);
+        command.Options.Add(_transportOption);
+        command.Options.Add(_namespaceOption);
+        command.Options.Add(_modeOption);
+        command.Options.Add(_readOnlyOption);
+        command.Options.Add(_enableInsecureTransportsOption);
     }
 
     /// <summary>

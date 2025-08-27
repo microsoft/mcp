@@ -18,7 +18,7 @@ public abstract class BaseStorageCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_accountOption);
+        command.Options.Add(_accountOption);
     }
 
     protected override T BindOptions(ParseResult parseResult)

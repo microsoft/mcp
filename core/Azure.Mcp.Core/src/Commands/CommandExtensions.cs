@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Buffers;
-using System.Text;
-using System.Linq;
-using System.CommandLine;
-using System.Text.Json;
 using System.Collections.Generic;
+using System.CommandLine;
+using System.CommandLine.Parsing;
+using System.Linq;
+using System.Text;
+using System.Text.Json;
 using Azure.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Core.Commands;
@@ -16,18 +17,6 @@ namespace Azure.Mcp.Core.Commands;
 /// </summary>
 public static class CommandExtensions
 {
-    /// <summary>
-    /// Back-compat: map legacy AddOption to Options.Add in SCL beta5.
-    /// </summary>
-    public static void AddOption(this Command command, Option option)
-        => command.Options.Add(option);
-
-    /// <summary>
-    /// Back-compat: map legacy AddCommand to Subcommands.Add in SCL beta5.
-    /// </summary>
-    public static void AddCommand(this Command command, Command subcommand)
-        => command.Subcommands.Add(subcommand);
-
     /// <summary>
     /// Parse command options directly from a dictionary of arguments
     /// </summary>
@@ -171,5 +160,22 @@ public static class CommandExtensions
             JsonValueKind.Array => string.Join(" ", element.EnumerateArray().Select(e => e.GetString() ?? string.Empty)),
             _ => element.GetRawText()
         };
+    }
+
+    /// <summary>
+    /// Safe TryGetValue for ParseResult to avoid System.CommandLine throwing when options are missing.
+    /// </summary>
+    public static bool TryGetValue<T>(this ParseResult parseResult, Option<T> option, out T? value)
+    {
+        try
+        {
+            value = parseResult.GetValue(option);
+            return true;
+        }
+        catch
+        {
+            value = default;
+            return false;
+        }
     }
 }

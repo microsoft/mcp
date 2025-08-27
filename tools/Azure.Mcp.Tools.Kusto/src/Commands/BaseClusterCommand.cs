@@ -5,6 +5,7 @@ using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Kusto.Options;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
@@ -41,8 +42,12 @@ public abstract class BaseClusterCommand<
     public override ValidationResult Validate(CommandResult parseResult, CommandResponse? commandResponse = null)
     {
         var validationResult = new ValidationResult { IsValid = true };
-        var clusterUri = parseResult.GetValue(_clusterUriOption);
-        var clusterName = parseResult.GetValue(_clusterNameOption);
+
+        // Try to obtain clusterUri, clusterName and subscription using safe TryGetValue
+        _ = parseResult.TryGetValue(_clusterUriOption, out string? clusterUri);
+        _ = parseResult.TryGetValue(_clusterNameOption, out string? clusterName);
+        _ = parseResult.TryGetValue(_subscriptionOption, out string? subscription);
+
         if (!string.IsNullOrEmpty(clusterUri))
         {
             // If clusterUri is provided, subscription becomes optional
@@ -50,8 +55,6 @@ public abstract class BaseClusterCommand<
         }
         else
         {
-            var subscription = parseResult.GetValue(_subscriptionOption);
-
             // clusterUri not provided, require both subscription and clusterName
             if (string.IsNullOrEmpty(subscription) || string.IsNullOrEmpty(clusterName))
             {

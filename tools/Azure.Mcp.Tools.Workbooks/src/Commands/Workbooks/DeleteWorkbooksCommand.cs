@@ -34,7 +34,7 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_workbookIdOption);
+        command.Options.Add(_workbookIdOption);
     }
 
     protected override DeleteWorkbookOptions BindOptions(ParseResult parseResult)

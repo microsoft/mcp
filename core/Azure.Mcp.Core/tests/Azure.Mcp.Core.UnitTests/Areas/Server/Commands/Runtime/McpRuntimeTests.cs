@@ -255,17 +255,17 @@ public class McpRuntimeTests
         Assert.Equal(expectedResult, result);
         await mockToolLoader.Received(1).CallToolHandler(request, Arg.Any<CancellationToken>());
 
-    await mockTelemetry.Received(1).StartActivity(TelemetryConstants.ActivityName.ToolExecuted, Arg.Any<Implementation?>());
-    Assert.Equal(ActivityStatusCode.Ok, activity.Status);
+        await mockTelemetry.Received(1).StartActivity(TelemetryConstants.ActivityName.ToolExecuted, Arg.Any<Implementation?>());
+        Assert.Equal(ActivityStatusCode.Ok, activity.Status);
 
-    // The runtime may or may not surface telemetry tags on the Activity depending on the
-    // telemetry implementation. Assert the request and response contents instead.
-    Assert.NotNull(request.Params);
-    Assert.Equal(toolName, request.Params.Name);
-    var subscriptionArgument = request.Params.Arguments?[OptionDefinitions.Common.SubscriptionName];
-    Assert.NotNull(subscriptionArgument);
-    Assert.Equal(JsonValueKind.String, subscriptionArgument.Value.ValueKind);
-    Assert.Equal("test-subscription", subscriptionArgument.Value.GetString());
+        // The runtime may or may not surface telemetry tags on the Activity depending on the
+        // telemetry implementation. Assert the request and response contents instead.
+        Assert.NotNull(request.Params);
+        Assert.Equal(toolName, request.Params.Name);
+        var subscriptionArgument = request.Params.Arguments?[OptionDefinitions.Common.SubscriptionName];
+        Assert.NotNull(subscriptionArgument);
+        Assert.Equal(JsonValueKind.String, subscriptionArgument.Value.ValueKind);
+        Assert.Equal("test-subscription", subscriptionArgument.Value.GetString());
     }
 
     [Fact]
@@ -419,7 +419,7 @@ public class McpRuntimeTests
         var options3 = CreateOptions(new ServiceStartOptions
         {
             ReadOnly = true,
-            Namespace = Array.Empty<string>()
+            Namespace = []
         });
         var runtime3 = new McpRuntime(mockToolLoader, options3, CreateMockTelemetryService(), logger);
         Assert.NotNull(runtime3);
@@ -759,21 +759,21 @@ public class McpRuntimeTests
         // Act
         var result = await runtime.CallToolHandler(request, CancellationToken.None);
 
-    await mockTelemetry.Received(1).StartActivity(TelemetryConstants.ActivityName.ToolExecuted, Arg.Any<Implementation?>());
-    Assert.Equal(ActivityStatusCode.Error, activity.Status);
+        await mockTelemetry.Received(1).StartActivity(TelemetryConstants.ActivityName.ToolExecuted, Arg.Any<Implementation?>());
+        Assert.Equal(ActivityStatusCode.Error, activity.Status);
 
-    // Error details are present in the CallToolResult content; assert that instead of relying
-    // on telemetry tag propagation which is dependent on the telemetry implementation.
-    Assert.True(result.IsError.HasValue && result.IsError.Value);
-    var textContent = result.Content?.FirstOrDefault() as TextContentBlock;
-    Assert.NotNull(textContent);
-    Assert.Contains(errorText, textContent!.Text);
+        // Error details are present in the CallToolResult content; assert that instead of relying
+        // on telemetry tag propagation which is dependent on the telemetry implementation.
+        Assert.True(result.IsError.HasValue && result.IsError.Value);
+        var textContent = result.Content?.FirstOrDefault() as TextContentBlock;
+        Assert.NotNull(textContent);
+        Assert.Contains(errorText, textContent!.Text);
 
-    Assert.NotNull(request.Params);
-    Assert.Equal(toolName, request.Params.Name);
-    var subscriptionArg = request.Params.Arguments?[OptionDefinitions.Common.SubscriptionName];
-    Assert.NotNull(subscriptionArg);
-    Assert.Equal(JsonValueKind.String, subscriptionArg.Value.ValueKind);
-    Assert.Equal("test-subscription", subscriptionArg.Value.GetString());
+        Assert.NotNull(request.Params);
+        Assert.Equal(toolName, request.Params.Name);
+        var subscriptionArg = request.Params.Arguments?[OptionDefinitions.Common.SubscriptionName];
+        Assert.NotNull(subscriptionArg);
+        Assert.Equal(JsonValueKind.String, subscriptionArg.Value.ValueKind);
+        Assert.Equal("test-subscription", subscriptionArg.Value.GetString());
     }
 }

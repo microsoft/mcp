@@ -34,8 +34,8 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_entityOption);
-        command.AddOption(_healthModelOption);
+        command.Options.Add(_entityOption);
+        command.Options.Add(_healthModelOption);
         RequireResourceGroup();
     }
 
@@ -49,15 +49,15 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var service = context.GetService<IMonitorHealthModelService>();
             var result = await service.GetEntityHealth(
                 options.Entity!,

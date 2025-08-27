@@ -22,7 +22,7 @@ public abstract class BaseBlobCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_blobOption);
+        command.Options.Add(_blobOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)

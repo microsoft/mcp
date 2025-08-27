@@ -24,8 +24,8 @@ public abstract class BaseMetricsCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_resourceTypeOption);
-        command.AddOption(_resourceNameOption);
+        command.Options.Add(_resourceTypeOption);
+        command.Options.Add(_resourceNameOption);
         UseResourceGroup();
     }
 

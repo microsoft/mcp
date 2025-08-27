@@ -37,10 +37,10 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_vaultOption);
-        command.AddOption(_certificateOption);
-        command.AddOption(_certificateDataOption);
-        command.AddOption(_passwordOption);
+        command.Options.Add(_vaultOption);
+        command.Options.Add(_certificateOption);
+        command.Options.Add(_certificateDataOption);
+        command.Options.Add(_passwordOption);
     }
 
     protected override CertificateImportOptions BindOptions(ParseResult parseResult)

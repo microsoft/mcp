@@ -42,10 +42,10 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_namespaceOption);
-        command.AddOption(_topicOption);
-        command.AddOption(_subscriptionNameOption);
-        command.AddOption(_maxMessagesOption);
+        command.Options.Add(_namespaceOption);
+        command.Options.Add(_topicOption);
+        command.Options.Add(_subscriptionNameOption);
+        command.Options.Add(_maxMessagesOption);
     }
 
     protected override SubscriptionPeekOptions BindOptions(ParseResult parseResult)
@@ -60,14 +60,15 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
 
             var service = context.GetService<IServiceBusService>();
             var messages = await service.PeekSubscriptionMessages(

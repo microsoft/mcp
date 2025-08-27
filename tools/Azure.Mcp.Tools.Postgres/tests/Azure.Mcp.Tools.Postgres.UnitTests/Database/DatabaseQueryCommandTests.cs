@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
+using Azure.Mcp.TestUtilities;
 
 namespace Azure.Mcp.Tools.Postgres.UnitTests.Database;
 
@@ -86,15 +87,14 @@ public class DatabaseQueryCommandTests
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
         var command = new DatabaseQueryCommand(_logger);
-        var args = command.GetCommand().Parse(new string[]
-        {
-            missingParameter == "--subscription" ? "" : "--subscription", "sub123",
-            missingParameter == "--resource-group" ? "" : "--resource-group", "rg1",
-            missingParameter == "--user" ? "" : "--user", "user1",
-            missingParameter == "--server" ? "" : "--server", "server123",
-            missingParameter == "--database" ? "" : "--database", "db123",
-            missingParameter == "--query" ? "" : "--query", "SELECT * FROM test;"
-        });
+        var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
+            ("--subscription", "sub123"),
+            ("--resource-group", "rg1"),
+            ("--user", "user1"),
+            ("--server", "server123"),
+            ("--database", "db123"),
+            ("--query", "SELECT * FROM test;")
+        ));
 
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);

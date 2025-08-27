@@ -31,7 +31,7 @@ public sealed class FileListCommand(ILogger<FileListCommand> logger) : BaseFileC
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(StorageOptionDefinitions.Prefix);
+        command.Options.Add(StorageOptionDefinitions.Prefix);
     }
 
     protected override FileListOptions BindOptions(ParseResult parseResult)
@@ -43,15 +43,15 @@ public sealed class FileListCommand(ILogger<FileListCommand> logger) : BaseFileC
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var storageService = context.GetService<IStorageService>();
             var filesAndDirectories = await storageService.ListFilesAndDirectories(
                 options.Account!,

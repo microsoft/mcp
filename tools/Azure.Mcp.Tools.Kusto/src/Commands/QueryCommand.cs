@@ -42,15 +42,15 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             List<JsonElement> results = [];
             var kusto = context.GetService<IKustoService>();
 

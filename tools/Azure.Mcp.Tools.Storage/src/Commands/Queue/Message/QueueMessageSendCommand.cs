@@ -42,9 +42,9 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_messageOption);
-        command.AddOption(_timeToLiveOption);
-        command.AddOption(_visibilityTimeoutOption);
+        command.Options.Add(_messageOption);
+        command.Options.Add(_timeToLiveOption);
+        command.Options.Add(_visibilityTimeoutOption);
     }
 
     protected override QueueMessageSendOptions BindOptions(ParseResult parseResult)
@@ -66,7 +66,7 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
         var options = BindOptions(parseResult);
 
         try
-            {
+        {
             // Get the storage service from DI
             var service = context.GetService<IStorageService>();
 

@@ -17,7 +17,7 @@ public abstract class BaseCacheCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_cacheOption);
+        command.Options.Add(_cacheOption);
         RequireResourceGroup();
     }
 

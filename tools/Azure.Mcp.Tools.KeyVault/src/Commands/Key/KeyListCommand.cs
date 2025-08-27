@@ -32,8 +32,8 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_vaultOption);
-        command.AddOption(_includeManagedKeysOption);
+        command.Options.Add(_vaultOption);
+        command.Options.Add(_includeManagedKeysOption);
     }
 
     protected override KeyListOptions BindOptions(ParseResult parseResult)
@@ -46,15 +46,15 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var keyVaultService = context.GetService<IKeyVaultService>();
             var keys = await keyVaultService.ListKeys(
                 options.VaultName!,

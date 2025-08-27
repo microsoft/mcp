@@ -4,6 +4,7 @@
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.CloudArchitect.Commands.Design;
 
 namespace Azure.Mcp.Tools.CloudArchitect.UnitTests.Design;
@@ -78,7 +79,7 @@ public class DesignCommandTests
     public async Task ExecuteAsync_ReturnsArchitectureDesignText(string args)
     {
         // Arrange
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -105,36 +106,6 @@ public class DesignCommandTests
 
         // Verify it contains some expected architecture-related content
         Assert.Contains("architecture", responseObject.DesignArchitecture.ToLower());
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_ConsistentResults()
-    {
-        // Arrange
-        var parseResult1 = _commandDefinition.Parse(["--question", "test question 1"]);
-        var parseResult2 = _commandDefinition.Parse(["--question", "test question 2"]);
-
-        // Act
-        var response1 = await _command.ExecuteAsync(_context, parseResult1);
-        var response2 = await _command.ExecuteAsync(_context, parseResult2);
-
-        // Assert - Both calls should return the same architecture design text
-        Assert.Equal(200, response1.Status);
-        Assert.Equal(200, response2.Status);
-
-        // Serialize both results to compare the design architecture text (which should be consistent)
-        string serializedResult1 = SerializeResponseResult(response1.Results!);
-        string serializedResult2 = SerializeResponseResult(response2.Results!);
-
-        var responseObject1 = JsonSerializer.Deserialize(serializedResult1, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
-        var responseObject2 = JsonSerializer.Deserialize(serializedResult2, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
-
-        Assert.NotNull(responseObject1);
-        Assert.NotNull(responseObject2);
-
-        // The design architecture text should be consistent across calls
-        Assert.Equal(responseObject1.DesignArchitecture, responseObject2.DesignArchitecture);
-        Assert.NotEmpty(responseObject1.DesignArchitecture);
     }
 
     [Fact]

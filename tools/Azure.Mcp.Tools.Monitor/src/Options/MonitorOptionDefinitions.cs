@@ -47,7 +47,7 @@ public static class MonitorOptionDefinitions
     {
         Description = "The number of hours to query back from now.",
         DefaultValueFactory = _ => 24,
-        Required = true
+        Required = false
     };
 
     public static readonly Option<int> Limit = new(
@@ -56,7 +56,7 @@ public static class MonitorOptionDefinitions
     {
         Description = "The maximum number of results to return.",
         DefaultValueFactory = _ => 20,
-        Required = true
+        Required = false
     };
 
     public static class Metrics

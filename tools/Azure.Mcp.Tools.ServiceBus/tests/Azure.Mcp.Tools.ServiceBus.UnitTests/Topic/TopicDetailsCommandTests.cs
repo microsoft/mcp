@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
+using Azure.Mcp.TestUtilities;
 using static Azure.Mcp.Tools.ServiceBus.Commands.Topic.TopicDetailsCommand;
 
 namespace Azure.Mcp.Tools.ServiceBus.UnitTests.Topic;
@@ -164,7 +165,7 @@ public class TopicDetailsCommandTests
                 .Returns(expectedDetails);
         }
 
-        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

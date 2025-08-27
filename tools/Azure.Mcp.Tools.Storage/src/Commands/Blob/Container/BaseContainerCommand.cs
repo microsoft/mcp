@@ -21,7 +21,7 @@ public abstract class BaseContainerCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_containerOption);
+        command.Options.Add(_containerOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)

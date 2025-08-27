@@ -161,8 +161,8 @@ public class IndexDescribeCommandTests
         Assert.NotEmpty(cmd.Description!);
 
         // Verify options
-        var serviceOption = cmd.Options.FirstOrDefault(o => o.Name == "service");
-        var indexOption = cmd.Options.FirstOrDefault(o => o.Name == "index");
+        var serviceOption = cmd.Options.FirstOrDefault(o => o.Name == "--service");
+        var indexOption = cmd.Options.FirstOrDefault(o => o.Name == "--index");
 
         Assert.NotNull(serviceOption);
         Assert.NotNull(indexOption);
