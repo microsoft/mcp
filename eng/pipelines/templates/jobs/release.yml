@@ -131,7 +131,7 @@ jobs:
 - job: UpdatePackageVersion
   displayName: "Update Package Versions"
   condition: and(succeeded(), ne(variables['Skip.UpdatePackageVersion'], 'true'))
-  dependsOn: Publish
+  # dependsOn: Publish
   steps:
   - checkout: self
 
