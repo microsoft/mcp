@@ -18,7 +18,7 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
 
     public override string Description =>
         """
-        Gets a list of firewall rules for a SQL server. This command retrieves all 
+        Gets a list of firewall rules for a SQL server. This command retrieves all
         firewall rules configured for the specified SQL server, including their IP address ranges
         and rule names. Returns an array of firewall rule objects with their properties.
         """;
