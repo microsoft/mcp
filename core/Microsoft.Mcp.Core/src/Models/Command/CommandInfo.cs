@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Models.Option;
+using Microsoft.Mcp.Core.Models.Option;
 
-namespace Azure.Mcp.Core.Models.Command;
+namespace Microsoft.Mcp.Core.Models.Command;
 
 public class CommandInfo
 {

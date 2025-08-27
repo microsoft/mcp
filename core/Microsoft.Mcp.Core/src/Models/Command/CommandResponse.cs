@@ -4,7 +4,7 @@
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
-namespace Azure.Mcp.Core.Models.Command;
+namespace Microsoft.Mcp.Core.Models.Command;
 
 public class CommandResponse
 {
