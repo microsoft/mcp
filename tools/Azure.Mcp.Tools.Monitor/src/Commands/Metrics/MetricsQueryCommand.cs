@@ -78,7 +78,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
             if (!commandResult.TryGetValue(_metricNamesOption, out var metricNamesValue) || string.IsNullOrWhiteSpace(metricNamesValue))
             {
                 result.IsValid = false;
-                result.ErrorMessage = $"Invalid format for --{_metricNamesOption.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).";
+                result.ErrorMessage = $"Invalid format for {_metricNamesOption.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).";
 
                 if (commandResponse != null)
                 {
@@ -94,7 +94,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
                 if (metricNames.Length == 0 || metricNames.Any(s => string.IsNullOrWhiteSpace(s)))
                 {
                     result.IsValid = false;
-                    result.ErrorMessage = $"Invalid format for --{_metricNamesOption.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).";
+                    result.ErrorMessage = $"Invalid format for {_metricNamesOption.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).";
 
                     if (commandResponse != null)
                     {

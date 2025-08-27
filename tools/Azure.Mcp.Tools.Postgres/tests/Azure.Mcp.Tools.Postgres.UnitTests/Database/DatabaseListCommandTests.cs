@@ -4,6 +4,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Postgres.Commands.Database;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using Azure.Mcp.TestUtilities;
 
 namespace Azure.Mcp.Tools.Postgres.UnitTests.Database;
 
@@ -38,8 +38,8 @@ public class DatabaseListCommandTests
         var expectedDatabases = new List<string> { "db1", "db2" };
         _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns(expectedDatabases);
 
-    var command = new DatabaseListCommand(_logger);
-    var args = command.GetCommand().Parse(ArgSplitter.SplitArgs("--subscription sub123 --resource-group rg1 --user user1 --server server1"));
+        var command = new DatabaseListCommand(_logger);
+        var args = command.GetCommand().Parse(ArgSplitter.SplitArgs("--subscription sub123 --resource-group rg1 --user user1 --server server1"));
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -58,10 +58,10 @@ public class DatabaseListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsMessage_WhenNoDatabasesExist()
     {
-    _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns(new List<string>());
+        _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns(new List<string>());
 
-    var command = new DatabaseListCommand(_logger);
-    var args = command.GetCommand().Parse(ArgSplitter.SplitArgs("--subscription sub123 --resource-group rg1 --user user1 --server server1"));
+        var command = new DatabaseListCommand(_logger);
+        var args = command.GetCommand().Parse(ArgSplitter.SplitArgs("--subscription sub123 --resource-group rg1 --user user1 --server server1"));
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -77,8 +77,8 @@ public class DatabaseListCommandTests
     {
         _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").ThrowsAsync(new Exception("Test exception"));
 
-    var command = new DatabaseListCommand(_logger);
-    var args = command.GetCommand().Parse(ArgSplitter.SplitArgs("--subscription sub123 --resource-group rg1 --user user1 --server server1"));
+        var command = new DatabaseListCommand(_logger);
+        var args = command.GetCommand().Parse(ArgSplitter.SplitArgs("--subscription sub123 --resource-group rg1 --user user1 --server server1"));
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
 
