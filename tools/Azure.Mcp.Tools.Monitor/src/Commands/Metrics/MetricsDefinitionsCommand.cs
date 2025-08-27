@@ -57,7 +57,6 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
 
         try
         {
-            // Required validation step
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
             {
                 return context.Response;

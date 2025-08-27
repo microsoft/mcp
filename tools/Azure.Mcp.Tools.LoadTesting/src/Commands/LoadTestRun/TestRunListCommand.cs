@@ -45,7 +45,6 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
         var options = BindOptions(parseResult);
         try
         {
-            // Required validation step using the base Validate method
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
             {
                 return context.Response;

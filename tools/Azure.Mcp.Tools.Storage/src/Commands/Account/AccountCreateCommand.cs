@@ -77,7 +77,6 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
 
         try
         {
-            // Required validation step
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
             {
                 return context.Response;

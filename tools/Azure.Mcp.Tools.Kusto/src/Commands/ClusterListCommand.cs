@@ -29,15 +29,15 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var kusto = context.GetService<IKustoService>();
             var clusterNames = await kusto.ListClusters(
                 options.Subscription!,
@@ -53,6 +53,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
             _logger.LogError(ex, "An exception occurred listing Kusto clusters. Subscription: {Subscription}.", options.Subscription);
             HandleException(context, ex);
         }
+
         return context.Response;
     }
 
