@@ -1,8 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using NSubstitute;
 using Xunit;
 
 namespace Microsoft.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
@@ -11,8 +14,8 @@ public class RegistryDiscoveryStrategyTests
 {
     private static RegistryDiscoveryStrategy CreateStrategy(ServiceStartOptions? options = null)
     {
-        var serviceOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<RegistryDiscoveryStrategy>>();
+        var serviceOptions = Options.Create(options ?? new ServiceStartOptions());
+        var logger = Substitute.For<ILogger<RegistryDiscoveryStrategy>>();
         return new RegistryDiscoveryStrategy(serviceOptions, logger);
     }
 

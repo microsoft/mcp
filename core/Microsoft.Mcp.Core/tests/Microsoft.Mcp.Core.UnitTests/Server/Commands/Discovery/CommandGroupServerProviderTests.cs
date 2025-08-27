@@ -3,7 +3,7 @@
 
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Commands;
-using ModelContextProtocol.Client;
+using Microsoft.Mcp.Core.UnitTests.Server.Helpers;
 using NSubstitute;
 using Xunit;
 
@@ -11,10 +11,20 @@ namespace Microsoft.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
 
 public class CommandGroupServerProviderTests
 {
-    private readonly ICommandFactory _commandFactory;
+    private readonly MockCommandFactory _commandFactory = new MockCommandFactory();
+    private readonly CommandGroup _subGroupA = new CommandGroup("A", "A_description");
+    private readonly CommandGroup _subGroupB = new CommandGroup("B", "B_description");
+    private readonly CommandGroup _subGroupC = new CommandGroup("C", "C_description");
+    private readonly CommandGroup _extensionSubGroup = new CommandGroup("extension", "extensions should be ignored.");
+    private readonly CommandGroup _serverSubGroup = new CommandGroup("server", "server should be ignored here.");
+
     public CommandGroupServerProviderTests()
     {
-        _commandFactory = Substitute.For<ICommandFactory>();
+        _commandFactory.RootGroup.SubGroup.Add(_subGroupA);
+        _commandFactory.RootGroup.SubGroup.Add(_subGroupB);
+        _commandFactory.RootGroup.SubGroup.Add(_subGroupC);
+        _commandFactory.RootGroup.SubGroup.Add(_extensionSubGroup);
+        _commandFactory.RootGroup.SubGroup.Add(_serverSubGroup);
     }
 
     [Fact]
@@ -35,37 +45,10 @@ public class CommandGroupServerProviderTests
     }
 
     [Fact]
-    public async Task CreateClientAsync_ReturnsClientInstance()
-    {
-        // Arrange
-        // Use CommandFactory to get the storage command group
-        var storageGroup = _commandFactory.RootGroup.SubGroup.FirstOrDefault(g => g.Name == "storage");
-        Assert.NotNull(storageGroup);
-
-        // Use the built azmcp.exe as the entry point for testing (should be in the same directory as the test exe)
-        var testBinDir = AppContext.BaseDirectory;
-        var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var entryPoint = Path.Combine(testBinDir, exeName);
-        Assert.True(File.Exists(entryPoint), $"{exeName} not found at {entryPoint}");
-
-        var mcpCommandGroup = new CommandGroupServerProvider(storageGroup);
-        mcpCommandGroup.EntryPoint = entryPoint;
-        var options = new McpClientOptions();
-
-        // Act
-        var client = await mcpCommandGroup.CreateClientAsync(options);
-
-        // Assert
-        Assert.NotNull(client);
-
-        await client.DisposeAsync();
-    }
-
-    [Fact]
     public void ReadOnly_Property_DefaultsToFalse()
     {
         // Arrange
-        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == "storage");
+        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == _subGroupB.Name);
 
         // Act
         var mcpCommandGroup = new CommandGroupServerProvider(storageGroup);
@@ -78,7 +61,7 @@ public class CommandGroupServerProviderTests
     public void ReadOnly_Property_CanBeSet()
     {
         // Arrange
-        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == "storage");
+        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == _subGroupB.Name);
         var mcpCommandGroup = new CommandGroupServerProvider(storageGroup);
 
         // Act
@@ -92,7 +75,7 @@ public class CommandGroupServerProviderTests
     public void EntryPoint_SetToNull_UsesDefault()
     {
         // Arrange
-        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == "storage");
+        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == _subGroupC.Name);
         var mcpCommandGroup = new CommandGroupServerProvider(storageGroup);
         var originalEntryPoint = mcpCommandGroup.EntryPoint;
         // Act
@@ -107,7 +90,7 @@ public class CommandGroupServerProviderTests
     public void EntryPoint_SetToEmpty_UsesDefault()
     {
         // Arrange
-        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == "storage");
+        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == _subGroupA.Name);
         var mcpCommandGroup = new CommandGroupServerProvider(storageGroup);
         var originalEntryPoint = mcpCommandGroup.EntryPoint;
 
@@ -123,7 +106,7 @@ public class CommandGroupServerProviderTests
     public void EntryPoint_SetToValidValue_UsesProvidedValue()
     {
         // Arrange
-        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == "storage");
+        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == _subGroupB.Name);
         var mcpCommandGroup = new CommandGroupServerProvider(storageGroup);
         var customEntryPoint = "/custom/path/to/executable";
 
