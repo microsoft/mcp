@@ -108,15 +108,15 @@ public sealed class AzdCommand(ILogger<AzdCommand> logger, int processTimeoutSec
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             // If the agent is asking for help, return the best practices text
             if (options.Learn && string.IsNullOrWhiteSpace(options.Command))
             {

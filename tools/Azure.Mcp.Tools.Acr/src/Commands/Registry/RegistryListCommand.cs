@@ -34,15 +34,15 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger) : B
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var acrService = context.GetService<IAcrService>();
             var registries = await acrService.ListRegistries(
                 options.Subscription!,

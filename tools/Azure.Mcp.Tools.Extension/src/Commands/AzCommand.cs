@@ -161,15 +161,15 @@ Your job is to answer questions about an Azure environment by executing Azure CL
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             ArgumentNullException.ThrowIfNull(options.Command);
             var command = options.Command;
             var processService = context.GetService<IExternalProcessService>();

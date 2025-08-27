@@ -433,16 +433,16 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        // Required validation step
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             context.Activity?.WithSubscriptionTag(options);
 
             // Get the appropriate service from DI

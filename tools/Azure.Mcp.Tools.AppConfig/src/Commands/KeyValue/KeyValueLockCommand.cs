@@ -28,15 +28,15 @@ public sealed class KeyValueLockCommand(ILogger<KeyValueLockCommand> logger) : B
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var appConfigService = context.GetService<IAppConfigService>();
             await appConfigService.LockKeyValue(
                 options.Account!,

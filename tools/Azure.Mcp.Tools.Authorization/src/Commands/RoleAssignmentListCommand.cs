@@ -45,15 +45,15 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var authService = context.GetService<IAuthorizationService>();
             var assignments = await authService.ListRoleAssignments(
                 options.Scope,

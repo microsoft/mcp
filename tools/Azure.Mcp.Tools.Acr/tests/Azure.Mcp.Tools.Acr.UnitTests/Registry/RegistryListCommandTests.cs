@@ -49,6 +49,8 @@ public class RegistryListCommandTests
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
+        // Ensure environment variable fallback does not interfere with validation tests
+        Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", null);
         // Arrange
         if (shouldSucceed)
         {

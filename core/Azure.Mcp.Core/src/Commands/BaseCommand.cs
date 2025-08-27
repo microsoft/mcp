@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 
+using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using Azure.Mcp.Core.Models.Option;
@@ -43,8 +44,35 @@ public abstract class BaseCommand : IBaseCommand
         context.Activity?.SetStatus(ActivityStatusCode.Error)?.AddTag(TagName.ErrorDetails, ex.Message);
 
         var response = context.Response;
+
+        // Map System.CommandLine "Option '--x' is required." exceptions to a 400 validation response
+        // with a standardized missing-options message so callers don't receive a 500.
+        if (ex is InvalidOperationException && ex.Message != null && ex.Message.IndexOf("is required", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            try
+            {
+                // Extract option tokens like --cluster from the exception message
+                var missing = System.Text.RegularExpressions.Regex.Matches(ex.Message, "--[A-Za-z0-9\\-]+")
+                    .Select(m => m.Value)
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .ToList();
+
+                if (missing.Count > 0)
+                {
+                    response.Status = ValidationErrorStatusCode;
+                    response.Message = $"{MissingRequiredOptionsPrefix}{string.Join(", ", missing)}";
+                    response.Results = null;
+                    return;
+                }
+            }
+            catch
+            {
+                // Fall through to default behavior if parsing fails
+            }
+        }
+
         var result = new ExceptionResult(
-            Message: ex.Message,
+            Message: ex.Message ?? string.Empty,
 #if DEBUG
             StackTrace: ex.StackTrace,
 #else
@@ -70,12 +98,12 @@ public abstract class BaseCommand : IBaseCommand
     {
         var result = new ValidationResult { IsValid = true };
 
-        // Determine any missing required options using beta5 APIs
+        // Determine any missing required options using beta5 APIs first. System.CommandLine
+        // may populate `commandResult.Errors` for missing params; we want to override that
+        // and return a standardized 400 with the required-params message instead.
         var missingOptions = commandResult.Command.Options
-            .Where(o => o.Required && commandResult.Children
-                .OfType<System.CommandLine.Parsing.OptionResult>()
-                .FirstOrDefault(or => ReferenceEquals(or.Option, o)) is null)
-            .Select(o => $"--{o.Name}")
+            .Where(o => o.Required && !HasOptionResult(commandResult, o))
+            .Select(o => $"--{NormalizeName(o.Name)}")
             .ToList();
 
         if (missingOptions.Count > 0)
@@ -83,14 +111,60 @@ public abstract class BaseCommand : IBaseCommand
             result.IsValid = false;
             result.ErrorMessage = $"{MissingRequiredOptionsPrefix}{string.Join(", ", missingOptions)}";
             SetValidationError(commandResponse, result.ErrorMessage!);
+            return result;
+        }
+
+        // If no missing required options, check for other parse/validation errors produced
+        // by the parser or command validators. System.CommandLine sometimes reports missing
+        // required options via commandResult.Errors (e.g., "Option '--cluster' is required.")
+        // — detect that case and return a standardized missing-options message instead of
+        // surfacing SCL's raw errors.
+        if (commandResult.Errors != null && commandResult.Errors.Any())
+        {
+            // Look for "is required" style messages and extract option tokens like "--cluster"
+            var requiredFromErrors = new List<string>();
+            foreach (var e in commandResult.Errors)
+            {
+                var msg = e.Message ?? string.Empty;
+                if (msg.IndexOf("is required", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    try
+                    {
+                        var matches = System.Text.RegularExpressions.Regex.Matches(msg, "--[A-Za-z0-9\\-]+");
+                        foreach (System.Text.RegularExpressions.Match m in matches)
+                        {
+                            var token = m.Value;
+                            if (!string.IsNullOrWhiteSpace(token) && !requiredFromErrors.Contains(token))
+                                requiredFromErrors.Add(token);
+                        }
+                    }
+                    catch
+                    {
+                        // ignore parse failures and continue
+                    }
+                }
+            }
+
+            if (requiredFromErrors.Count > 0)
+            {
+                result.IsValid = false;
+                result.ErrorMessage = $"{MissingRequiredOptionsPrefix}{string.Join(", ", requiredFromErrors)}";
+                SetValidationError(commandResponse, result.ErrorMessage);
+                return result;
+            }
+
+            // Fall back to propagating parser/validator errors as before
+            result.IsValid = false;
+            var combined = string.Join(", ", commandResult.Errors.Select(e => e.Message));
+            result.ErrorMessage = combined;
+            SetValidationError(commandResponse, result.ErrorMessage);
+            return result;
         }
 
         // Check logical requirements (e.g., resource group requirement)
         if (result.IsValid && _requiresResourceGroup)
         {
-            var hasRg = commandResult.Children
-                .OfType<System.CommandLine.Parsing.OptionResult>()
-                .Any(or => ReferenceEquals(or.Option, OptionDefinitions.Common.ResourceGroup));
+            var hasRg = HasOptionResult(commandResult, OptionDefinitions.Common.ResourceGroup);
             if (!hasRg)
             {
                 result.IsValid = false;
@@ -109,6 +183,35 @@ public abstract class BaseCommand : IBaseCommand
                 response.Message = errorMessage;
             }
         }
+    }
+
+    private static string NormalizeName(string? name) => (name ?? string.Empty).TrimStart('-', '/');
+
+    private static bool HasOptionResult(CommandResult commandResult, Option option)
+    {
+        var normalizedOptionName = NormalizeName(option.Name);
+
+        return commandResult.Children
+            .OfType<System.CommandLine.Parsing.OptionResult>()
+            .Any(or =>
+            {
+                // Treat option as present only if it has tokens (a provided value)
+                if (or.Tokens == null || or.Tokens.Count == 0)
+                    return false;
+                // OptionResult.Option may have a name and aliases; compare normalized names/aliases
+                var orName = NormalizeName(or.Option.Name);
+                if (string.Equals(orName, normalizedOptionName, StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                if (or.Option.Aliases != null && or.Option.Aliases.Any(a => string.Equals(NormalizeName(a), normalizedOptionName, StringComparison.OrdinalIgnoreCase)))
+                    return true;
+
+                // Also compare against the target option's aliases
+                if (option.Aliases != null && option.Aliases.Any(a => string.Equals(NormalizeName(a), NormalizeName(or.Option.Name), StringComparison.OrdinalIgnoreCase)))
+                    return true;
+
+                return false;
+            });
     }
 
     private static bool IsOptionValueMissing(object? value)
@@ -131,7 +234,24 @@ public abstract class BaseCommand : IBaseCommand
     }
 
     protected string? GetResourceGroup(ParseResult parseResult) =>
-        _usesResourceGroup ? parseResult.GetValue(OptionDefinitions.Common.ResourceGroup) : null;
+        _usesResourceGroup ? TryGetValue(parseResult, OptionDefinitions.Common.ResourceGroup, out string? rg) ? rg : null : null;
+
+    // Safe getter: System.CommandLine may throw when attempting to GetValue for a missing required option.
+    // Use this helper to avoid exceptions and treat missing/invalid values as absent.
+    protected static bool TryGetValue<T>(ParseResult parseResult, Option<T> option, out T? value)
+    {
+        try
+        {
+            // If the option was not supplied, GetValue may throw for required options; catch and return false.
+            value = parseResult.GetValue(option);
+            return true;
+        }
+        catch
+        {
+            value = default;
+            return false;
+        }
+    }
 
     protected bool UsesResourceGroup => _usesResourceGroup;
 }

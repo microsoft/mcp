@@ -51,15 +51,15 @@ public sealed class KnowledgeIndexListCommand : GlobalCommand<KnowledgeIndexList
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        var options = BindOptions(parseResult);
-
-        try
-        {
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
             {
                 return context.Response;
             }
 
+        var options = BindOptions(parseResult);
+
+        try
+        {
             var service = context.GetService<IFoundryService>();
             var indexes = await service.ListKnowledgeIndexes(
                 options.Endpoint!,
