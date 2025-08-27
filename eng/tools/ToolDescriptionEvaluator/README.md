@@ -141,28 +141,12 @@ export TEXT_EMBEDDING_API_KEY="your_api_key_here"
 
 The tool generates detailed analysis reports in two formats:
 
-### Plain Text Output (Default)
-
-Results are written to `results.md`:
-
-```bash
-dotnet run
-```
-
-- Compact, simple format for quick review
-- Includes confidence scores and success rates
-- Shows top matching tools for each prompt
-
-### Markdown Output (Documentation)
+### Markdown Output (Default)
 
 Generate structured markdown reports:
 
 ```bash
-# Using environment variable
-output=md dotnet run
-
-# Using command line flag  
-dotnet run -- --text
+dotnet run
 ```
 
 Results are written to `results.md` with:
@@ -172,6 +156,18 @@ Results are written to `results.md` with:
 - 📈 **Results tables** with visual indicators (✅/❌)
 - 📊 **Success rate analysis** with performance ratings
 - 🕐 **Execution timing** and statistics
+
+### Plain Text Output
+
+Results are written to `results.txt`:
+
+```bash
+dotnet run -- --text
+```
+
+- Compact, simple format for quick review
+- Includes confidence scores and success rates
+- Shows top matching tools for each prompt
 
 ### Analysis Metrics
 
