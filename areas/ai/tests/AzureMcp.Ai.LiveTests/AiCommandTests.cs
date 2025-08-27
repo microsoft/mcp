@@ -14,20 +14,24 @@ namespace AzureMcp.Ai.LiveTests
     public class AiCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
         : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
     {
+        // Expected static resource names for live testing
+        // These should match the actual deployed Azure OpenAI resources in the test environment
+        private const string OpenAiResourceSuffix = "openai";
+        private const string DefaultDeploymentName = "gpt-35-turbo";
+
+        private string OpenAiResourceName => $"{Settings.ResourceBaseName}{OpenAiResourceSuffix}";
+
         [Fact]
-        [Trait("Category", "LiveSkip")] // Skip until test infrastructure is ready
         public async Task Should_create_openai_completion()
         {
-            // This test would require Azure OpenAI resource deployment
-            // For now, we'll skip this until test infrastructure is ready
             var result = await CallToolAsync(
                 "azmcp_ai_openai_completions_create",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "resource-name", "test-openai" },
-                    { "deployment-name", "gpt-35-turbo" },
+                    { "resource-name", OpenAiResourceName },
+                    { "deployment-name", DefaultDeploymentName },
                     { "prompt-text", "What is Azure in one sentence?" },
                     { "max-tokens", 50 }
                 });
@@ -41,6 +45,56 @@ namespace AzureMcp.Ai.LiveTests
             
             var totalTokens = usageInfo.GetProperty("totalTokens");
             Assert.True(totalTokens.GetInt32() > 0);
+        }
+
+        [Fact]
+        public async Task Should_create_openai_completion_with_custom_parameters()
+        {
+            var result = await CallToolAsync(
+                "azmcp_ai_openai_completions_create",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "resource-name", OpenAiResourceName },
+                    { "deployment-name", DefaultDeploymentName },
+                    { "prompt-text", "Explain cloud computing briefly." },
+                    { "max-tokens", 100 },
+                    { "temperature", 0.7 }
+                });
+
+            var completionText = result.AssertProperty("completionText");
+            Assert.Equal(JsonValueKind.String, completionText.ValueKind);
+            Assert.False(string.IsNullOrEmpty(completionText.GetString()));
+
+            var usageInfo = result.AssertProperty("usageInfo");
+            Assert.Equal(JsonValueKind.Object, usageInfo.ValueKind);
+            
+            var inputTokens = usageInfo.GetProperty("inputTokens");
+            Assert.True(inputTokens.GetInt32() > 0);
+            
+            var outputTokens = usageInfo.GetProperty("outputTokens");
+            Assert.True(outputTokens.GetInt32() > 0);
+            
+            var totalTokens = usageInfo.GetProperty("totalTokens");
+            Assert.True(totalTokens.GetInt32() > 0);
+        }
+
+        [Fact]
+        public async Task Should_validate_required_parameters()
+        {
+            // Test with missing deployment name
+            await Assert.ThrowsAsync<ArgumentException>(async () =>
+                await CallToolAsync(
+                    "azmcp_ai_openai_completions_create",
+                    new()
+                    {
+                        { "subscription", Settings.SubscriptionId },
+                        { "resource-group", Settings.ResourceGroupName },
+                        { "resource-name", OpenAiResourceName },
+                        { "prompt-text", "Test prompt" }
+                        // Missing deployment-name
+                    }));
         }
     }
 }
