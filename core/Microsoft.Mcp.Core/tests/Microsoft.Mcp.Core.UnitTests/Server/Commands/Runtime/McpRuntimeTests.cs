@@ -3,14 +3,15 @@
 
 using System.Diagnostics;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Mcp.Core.Services.Telemetry;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.UnitTests.Server.Helpers;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using NSubstitute;
@@ -25,7 +26,7 @@ public class McpRuntimeTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddSingleton<ITelemetryService, CommandFactoryHelpers.NoOpTelemetryService>();
+        services.AddSingleton<ITelemetryService, MockTelemetryService>();
 
         return services.BuildServiceProvider();
     }

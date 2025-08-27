@@ -1,10 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Reflection;
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Options;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.UnitTests.Server.Helpers;
 using NSubstitute;
 using Xunit;
 
@@ -12,39 +16,32 @@ namespace Microsoft.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
 
 public class CommandGroupDiscoveryStrategyTests
 {
-    private static string GetAzmcpExecutablePath()
+    private readonly IOptions<ServiceStartOptions> _defaultStartOptions;
+    private readonly ILogger<CommandGroupDiscoveryStrategy> _logger;
+    private readonly MockCommandFactory _commandFactory;
+    private readonly CommandGroup _subGroupA = new CommandGroup("A", "A_description");
+    private readonly CommandGroup _subGroupB = new CommandGroup("B", "B_description");
+    private readonly CommandGroup _subGroupC = new CommandGroup("C", "C_description");
+    private readonly CommandGroup _extensionSubGroup = new CommandGroup("extension", "extensions should be ignored.");
+    private readonly CommandGroup _serverSubGroup = new CommandGroup("server", "server should be ignored here.");
+
+    public CommandGroupDiscoveryStrategyTests()
     {
-        // Get the directory where the test binary is located
-        var testAssemblyPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-        var testDirectory = Path.GetDirectoryName(testAssemblyPath);
-
-        // On Windows, use .exe extension; on other OS, no extension
-        var executableName = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
-            System.Runtime.InteropServices.OSPlatform.Windows) ? "azmcp.exe" : "azmcp";
-
-        return Path.Combine(testDirectory!, executableName);
-    }
-
-    private static CommandGroupDiscoveryStrategy CreateStrategy(
-        ICommandFactory commandFactory,
-        ServiceStartOptions? options = null,
-        string? entryPoint = null)
-    {
-        var startOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
-        var logger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
-        var strategy = new CommandGroupDiscoveryStrategy(commandFactory, startOptions, logger);
-        if (entryPoint != null)
-        {
-            strategy.EntryPoint = entryPoint;
-        }
-        return strategy;
+        _defaultStartOptions = Options.Create(new ServiceStartOptions());
+        _logger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
+        _commandFactory = new MockCommandFactory();
+        _commandFactory.RootGroup.SubGroup.Add(_subGroupA);
+        _commandFactory.RootGroup.SubGroup.Add(_subGroupB);
+        _commandFactory.RootGroup.SubGroup.Add(_subGroupC);
+        _commandFactory.RootGroup.SubGroup.Add(_extensionSubGroup);
+        _commandFactory.RootGroup.SubGroup.Add(_serverSubGroup);
     }
 
     [Fact]
     public void Constructor_WithNullCommandFactory_DoesNotThrow()
     {
         // Arrange
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
+        var options = Options.Create(new ServiceStartOptions());
         var logger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
 
         // Act & Assert
@@ -71,7 +68,7 @@ public class CommandGroupDiscoveryStrategyTests
     {
         // Arrange
         var commandFactory = Substitute.For<ICommandFactory>();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
+        var options = Options.Create(new ServiceStartOptions());
         var logger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
 
         // Act
@@ -86,35 +83,17 @@ public class CommandGroupDiscoveryStrategyTests
     public void EntryPoint_DefaultsToNull()
     {
         // Arrange
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory);
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, _defaultStartOptions, _logger);
 
         // Act & Assert
         Assert.Null(strategy.EntryPoint);
     }
 
     [Fact]
-    public void EntryPoint_CanBeSetAndRetrieved()
-    {
-        // Arrange
-
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory);
-        var azmcpPath = GetAzmcpExecutablePath();
-
-        // Act
-        strategy.EntryPoint = azmcpPath;
-
-        // Assert
-        Assert.Equal(azmcpPath, strategy.EntryPoint);
-    }
-
-    [Fact]
     public void EntryPoint_WhenSetToEmpty_RemainsEmpty()
     {
         // Arrange
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory);
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, _defaultStartOptions, _logger);
 
         // Act
         strategy.EntryPoint = "";
@@ -129,8 +108,7 @@ public class CommandGroupDiscoveryStrategyTests
     public void EntryPoint_WhenSetToWhitespace_RemainsWhitespace()
     {
         // Arrange
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory);
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, _defaultStartOptions, _logger);
 
         // Act
         strategy.EntryPoint = "   ";
@@ -145,8 +123,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithDefaultOptions_ReturnsNonEmptyCollection()
     {
         // Arrange
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory);
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, _defaultStartOptions, _logger);
 
         // Act
         var result = await strategy.DiscoverServersAsync();
@@ -162,8 +139,7 @@ public class CommandGroupDiscoveryStrategyTests
     {
         // Arrange
         var options = new ServiceStartOptions { ReadOnly = false };
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory, options: options);
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, Options.Create(options), _logger);
 
         // Act
         var result = await strategy.DiscoverServersAsync();
@@ -179,8 +155,7 @@ public class CommandGroupDiscoveryStrategyTests
     {
         // Arrange
         var options = new ServiceStartOptions { ReadOnly = true };
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory, options: options);
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, Options.Create(options), _logger);
 
         // Act
         var result = await strategy.DiscoverServersAsync();
@@ -196,8 +171,7 @@ public class CommandGroupDiscoveryStrategyTests
     {
         // Arrange
         var options = new ServiceStartOptions { ReadOnly = null };
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory, options: options);
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, Options.Create(options), _logger);
 
         // Act
         var result = await strategy.DiscoverServersAsync();
@@ -209,97 +183,13 @@ public class CommandGroupDiscoveryStrategyTests
     }
 
     [Fact]
-    public async Task DiscoverServersAsync_WithCustomEntryPoint_SetsEntryPointOnAllProviders()
-    {
-        // Arrange
-        Assert.Fail("This tests azmcp. Put back into Azure.Mcp.Core.Tests");
-        var customEntryPoint = GetAzmcpExecutablePath();
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory, entryPoint: customEntryPoint);
-
-        // Act
-        var result = await strategy.DiscoverServersAsync();
-
-        // Assert
-        Assert.NotEmpty(result);
-        Assert.All(result, provider =>
-            Assert.Equal(customEntryPoint, ((CommandGroupServerProvider)provider).EntryPoint));
-    }
-
-    [Fact]
-    public async Task DiscoverServersAsync_WithNullEntryPoint_UsesCurrentProcessExecutable()
-    {
-        // Arrange
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory, entryPoint: null);
-
-        // Act
-        var result = await strategy.DiscoverServersAsync();
-
-        // Assert
-        Assert.NotEmpty(result);
-        // When EntryPoint is set to null, CommandGroupServerProvider defaults to current process executable
-        var currentProcessPath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
-        Assert.All(result, provider =>
-        {
-            var actualEntryPoint = ((CommandGroupServerProvider)provider).EntryPoint;
-            Assert.NotNull(actualEntryPoint);
-            // Should be the current test process executable
-            Assert.Equal(currentProcessPath, actualEntryPoint);
-        });
-    }
-
-    [Fact]
-    public async Task DiscoverServersAsync_WithEmptyEntryPoint_ProvidersDefaultToCurrentProcess()
-    {
-        // Arrange
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory, entryPoint: "");
-
-        // Act
-        var result = await strategy.DiscoverServersAsync();
-
-        // Assert
-        Assert.NotEmpty(result);
-        var currentProcessPath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
-        Assert.All(result, provider =>
-        {
-            var actualEntryPoint = ((CommandGroupServerProvider)provider).EntryPoint;
-            // CommandGroupServerProvider defaults empty/null to current process
-            Assert.Equal(currentProcessPath, actualEntryPoint);
-        });
-    }
-
-    [Fact]
-    public async Task DiscoverServersAsync_WithWhitespaceEntryPoint_ProvidersDefaultToCurrentProcess()
-    {
-        // Arrange
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory, entryPoint: "   ");
-
-        // Act
-        var result = await strategy.DiscoverServersAsync();
-
-        // Assert
-        Assert.NotEmpty(result);
-        var currentProcessPath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
-        Assert.All(result, provider =>
-        {
-            var actualEntryPoint = ((CommandGroupServerProvider)provider).EntryPoint;
-            // CommandGroupServerProvider defaults whitespace to current process
-            Assert.Equal(currentProcessPath, actualEntryPoint);
-        });
-    }
-
-    [Fact]
     public async Task DiscoverServersAsync_ExcludesIgnoredGroups()
     {
         // Arrange
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory);
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, _defaultStartOptions, _logger);
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = (await strategy.DiscoverServersAsync()).ToList();
 
         // Assert
         var names = result.Select(p => p.CreateMetadata().Name).ToList();
@@ -315,8 +205,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_EachProviderHasCorrectMetadata()
     {
         // Arrange
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory);
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, _defaultStartOptions, _logger);
 
         // Act
         var result = await strategy.DiscoverServersAsync();
@@ -340,8 +229,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_ProvidersAreCommandGroupServerProviderType()
     {
         // Arrange
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory);
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, _defaultStartOptions, _logger);
 
         // Act
         var result = await strategy.DiscoverServersAsync();
@@ -356,7 +244,7 @@ public class CommandGroupDiscoveryStrategyTests
     {
         // Arrange
         var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory);
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, _defaultStartOptions, _logger);
 
         // Act
         var result = await strategy.DiscoverServersAsync();
@@ -371,8 +259,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_CanBeCalledMultipleTimes()
     {
         // Arrange
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory);
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, _defaultStartOptions, _logger);
 
         // Act
         var result1 = await strategy.DiscoverServersAsync();
@@ -393,63 +280,10 @@ public class CommandGroupDiscoveryStrategyTests
     }
 
     [Fact]
-    public async Task DiscoverServersAsync_WithRealCommandFactory_IncludesKnownGroups()
-    {
-        // Arrange
-        Assert.Fail("This tests real command factory. Put back into Azure.Mcp.Core");
-        var strategy = CreateStrategy(null!); // Uses real command factory
-
-        // Act
-        var result = await strategy.DiscoverServersAsync();
-
-        // Assert
-        var providers = result.ToList();
-        var names = providers.Select(p => p.CreateMetadata().Name).ToList();
-
-        // Should include at least some known groups (based on actual implementation)
-        Assert.Contains("storage", names, StringComparer.OrdinalIgnoreCase);
-
-        // Should not include ignored groups
-        var ignoredGroups = new[] { "extension", "server", "tools" };
-        foreach (var ignored in ignoredGroups)
-        {
-            Assert.DoesNotContain(ignored, names, StringComparer.OrdinalIgnoreCase);
-        }
-    }
-
-    [Fact]
-    public async Task DiscoverServersAsync_RespectsServiceStartOptionsValues()
-    {
-        // Arrange
-        Assert.Fail("This tests azmcp. Put back into Azure.Mcp.Core.Tests");
-        var options = new ServiceStartOptions
-        {
-            ReadOnly = true,
-        };
-        var azmcpEntryPoint = GetAzmcpExecutablePath();
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory, options: options, entryPoint: azmcpEntryPoint);
-
-        // Act
-        var result = await strategy.DiscoverServersAsync();
-
-        // Assert
-        Assert.NotEmpty(result);
-        foreach (var provider in result)
-        {
-            var serverProvider = (CommandGroupServerProvider)provider;
-            Assert.True(serverProvider.ReadOnly);
-            Assert.Equal(azmcpEntryPoint, serverProvider.EntryPoint);
-        }
-    }
-
-    [Fact]
     public async Task DiscoverServersAsync_IgnoredGroupsAreCaseInsensitive()
     {
-        Assert.Fail("This tests real command factory. Put back into Azure.Mcp.Core.Tests");
-
         // Arrange - Test with real factory since we can't easily mock the command groups
-        var strategy = CreateStrategy(null!);
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, _defaultStartOptions, _logger);
 
         // Act
         var result = await strategy.DiscoverServersAsync();
@@ -467,7 +301,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_ResultCountIsConsistent()
     {
         // Arrange
-        var strategy = CreateStrategy(null!);
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, _defaultStartOptions, _logger);
 
         // Act
         var result1 = await strategy.DiscoverServersAsync();
@@ -484,8 +318,8 @@ public class CommandGroupDiscoveryStrategyTests
     [Fact]
     public async Task ShouldDiscoverServers()
     {
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
+        var commandFactory = new MockCommandFactory();
+        var options =   Options.Create(new ServiceStartOptions());
         var logger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
         var strategy = new CommandGroupDiscoveryStrategy(commandFactory, options, logger);
         var result = await strategy.DiscoverServersAsync();
@@ -493,73 +327,19 @@ public class CommandGroupDiscoveryStrategyTests
     }
 
     [Fact]
-    public async Task ShouldDiscoverServers_ExcludesIgnoredGroupsAndSetsProperties()
-    {
-        Assert.Fail("This tests azmcp. Put back into Azure.Mcp.Core.Tests");
-
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { ReadOnly = true });
-        var azmcpEntryPoint = GetAzmcpExecutablePath();
-        var logger = Substitute.For<ILogger<CommandGroupDiscoveryStrategy>>();
-        var strategy = new CommandGroupDiscoveryStrategy(commandFactory, options, logger)
-        {
-            EntryPoint = azmcpEntryPoint
-        };
-        var result = (await strategy.DiscoverServersAsync()).ToList();
-        Assert.NotEmpty(result);
-        // Should not include ignored groups
-        var ignored = new[] { "extension", "server", "tools" };
-        Assert.DoesNotContain(result, p => ignored.Contains(p.CreateMetadata().Name, StringComparer.OrdinalIgnoreCase));
-        // Should include at least one known group (e.g. storage)
-        Assert.Contains(result, p => p.CreateMetadata().Name == "storage");
-        // Should set ReadOnly and EntryPoint as expected
-        foreach (var provider in result)
-        {
-            Assert.True(((CommandGroupServerProvider)provider).ReadOnly);
-            Assert.Equal(azmcpEntryPoint, ((CommandGroupServerProvider)provider).EntryPoint);
-        }
-    }
-
-    [Fact]
-    public void GetAzmcpExecutablePath_ReturnsCorrectPathForCurrentOS()
-    {
-        // Arrange & Act
-        Assert.Fail("This tests azmcp. Put back into Azure.Mcp.Core.Tests");
-        var azmcpPath = GetAzmcpExecutablePath();
-
-        // Assert
-        Assert.NotNull(azmcpPath);
-        Assert.NotEmpty(azmcpPath);
-
-        // Should end with the correct executable name for the current OS
-        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
-            System.Runtime.InteropServices.OSPlatform.Windows))
-        {
-            Assert.EndsWith("azmcp.exe", azmcpPath);
-        }
-        else
-        {
-            Assert.EndsWith("azmcp", azmcpPath);
-            Assert.False(azmcpPath.EndsWith("azmcp.exe"));
-        }
-
-        // Should be in the same directory as the test assembly
-        var testAssemblyPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-        var testDirectory = Path.GetDirectoryName(testAssemblyPath);
-        var expectedDirectory = Path.GetDirectoryName(azmcpPath);
-        Assert.Equal(testDirectory, expectedDirectory);
-    }
-
-    [Fact]
     public async Task DiscoverServersAsync_WithNamespaceFilter_ReturnsOnlySpecifiedNamespaces()
     {
         // Arrange
+        var commandGroup = new CommandGroup("B", "B_Second_Group");
+        commandGroup.Commands.Add("test", Substitute.For<IBaseCommand>());
+
+        _commandFactory.RootGroup.SubGroup.Add(commandGroup);
+
         var options = new ServiceStartOptions
         {
-            Namespace = new[] { "storage", "keyvault" }
+            Namespace = new[] { "A", "B" }
         };
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory, options: options);
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, Options.Create(options), _logger);
 
         // Act
         var servers = await strategy.DiscoverServersAsync();
@@ -567,13 +347,11 @@ public class CommandGroupDiscoveryStrategyTests
 
         // Assert
         Assert.NotNull(servers);
-        Assert.Equal(2, serverNames.Count);
-        Assert.Contains("storage", serverNames);
-        Assert.Contains("keyvault", serverNames);
+        Assert.Equal(3, serverNames.Count);
 
         // Should not contain other namespaces
-        Assert.DoesNotContain("cosmos", serverNames);
-        Assert.DoesNotContain("monitor", serverNames);
+        Assert.DoesNotContain(_subGroupC.Name, serverNames);
+        Assert.DoesNotContain(_extensionSubGroup.Name, serverNames);
     }
 
     [Fact]
@@ -584,8 +362,7 @@ public class CommandGroupDiscoveryStrategyTests
         {
             Namespace = Array.Empty<string>()
         };
-        var commandFactory = Substitute.For<ICommandFactory>();
-        var strategy = CreateStrategy(commandFactory, options: options);
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, Options.Create(options), _logger);
 
         // Act
         var servers = await strategy.DiscoverServersAsync();
@@ -593,25 +370,29 @@ public class CommandGroupDiscoveryStrategyTests
 
         // Assert
         Assert.NotNull(servers);
-        Assert.True(serverNames.Count > 2); // Should have more than just storage and keyvault
+        Assert.Equal(3, servers.Count());
 
         // Should contain expected namespaces (but not ignored ones)
-        Assert.Contains("storage", serverNames);
-        Assert.Contains("keyvault", serverNames);
-        Assert.DoesNotContain("server", serverNames); // Should be ignored
-        Assert.DoesNotContain("extension", serverNames); // Should be ignored
+        Assert.Contains(_subGroupA.Name, serverNames);
+        Assert.Contains(_subGroupB.Name, serverNames);
+        Assert.DoesNotContain(_extensionSubGroup.Name, serverNames); // Should be ignored
+        Assert.DoesNotContain(_serverSubGroup.Name, serverNames); // Should be ignored
     }
 
     [Fact]
     public async Task DiscoverServersAsync_WithNullNamespaceFilter_ReturnsAllNamespaces()
     {
         // Arrange
-        var commandFactory = Substitute.For<ICommandFactory>();
         var options = new ServiceStartOptions
         {
             Namespace = null
         };
-        var strategy = CreateStrategy(commandFactory, options: options);
+        var commandGroup = new CommandGroup("B", "B_Second_Group");
+        commandGroup.Commands.Add("test", Substitute.For<IBaseCommand>());
+
+        _commandFactory.RootGroup.SubGroup.Add(commandGroup);
+
+        var strategy = new CommandGroupDiscoveryStrategy(_commandFactory, Options.Create(options), _logger);
 
         // Act
         var servers = await strategy.DiscoverServersAsync();
@@ -619,12 +400,12 @@ public class CommandGroupDiscoveryStrategyTests
 
         // Assert
         Assert.NotNull(servers);
-        Assert.True(serverNames.Count > 2); // Should have more than just storage and keyvault
+        Assert.Equal(4, serverNames.Count);
 
         // Should contain expected namespaces (but not ignored ones)
-        Assert.Contains("storage", serverNames);
-        Assert.Contains("keyvault", serverNames);
-        Assert.DoesNotContain("server", serverNames); // Should be ignored
+        Assert.Contains("A", serverNames);
+        Assert.Contains("B", serverNames);
+        Assert.Contains("C", serverNames);
         Assert.DoesNotContain("extension", serverNames); // Should be ignored
     }
 

@@ -3,14 +3,14 @@
 
 using System.CommandLine.Parsing;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Areas.Tools.Commands;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Services.Telemetry;
-using Microsoft.Mcp.Core.UnitTests.Areas.Server;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.UnitTests.Server.Helpers;
 using NSubstitute;
 using Xunit;
 
@@ -20,21 +20,21 @@ public class ToolsListCommandTests
 {
     private const int SuccessStatusCode = 200;
     private const int ErrorStatusCode = 500;
-    private const int MinimumExpectedCommands = 3;
 
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ToolsListCommand> _logger;
     private readonly CommandContext _context;
     private readonly ToolsListCommand _command;
     private readonly Parser _parser;
+    private readonly MockCommandFactory _commandFactory;
 
     public ToolsListCommandTests()
     {
         var collection = new ServiceCollection();
         collection.AddLogging();
 
-        var commandFactory = Substitute.For<ICommandFactory>();
-        collection.AddSingleton(commandFactory);
+        _commandFactory = new MockCommandFactory();
+        collection.AddSingleton<ICommandFactory>(_commandFactory);
 
         _serviceProvider = collection.BuildServiceProvider();
         _context = new(_serviceProvider);
@@ -75,13 +75,15 @@ public class ToolsListCommandTests
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
+        // Number of hidden commands in MockCommandFactory is 1.
+        var expected = _commandFactory.AllCommands.Count - 1;
+        Assert.Equal(expected, result.Count);
+
         foreach (var command in result)
         {
             Assert.False(string.IsNullOrWhiteSpace(command.Name), "Command name should not be empty");
             Assert.False(string.IsNullOrWhiteSpace(command.Description), "Command description should not be empty");
             Assert.False(string.IsNullOrWhiteSpace(command.Command), "Command path should not be empty");
-
-            Assert.StartsWith("azmcp ", command.Command);
 
             if (command.Options != null && command.Options.Count > 0)
             {
@@ -142,10 +144,9 @@ public class ToolsListCommandTests
 
         Assert.NotNull(result);
 
-        Assert.DoesNotContain(result, cmd => cmd.Name == "list" && cmd.Command.Contains("tool"));
+        Assert.DoesNotContain(result, cmd => cmd.Name.Equals(_commandFactory.HiddenCommand.Name));
 
         Assert.Contains(result, cmd => !string.IsNullOrEmpty(cmd.Name));
-
     }
 
     /// <summary>
@@ -158,6 +159,13 @@ public class ToolsListCommandTests
         // Arrange
         var args = _parser.Parse([]);
 
+        var commandName = "command_with_options";
+        var optionName = "option1";
+        var mockCommand = new MockCommand(commandName);
+
+        mockCommand.AddOption(optionName);
+        _commandFactory.AddCommand(commandName, mockCommand);
+
         // Act
         var response = await _command.ExecuteAsync(_context, args);
 
@@ -169,12 +177,17 @@ public class ToolsListCommandTests
 
         Assert.NotNull(result);
 
-        var commandWithOptions = result.FirstOrDefault(cmd => cmd.Options?.Count > 0);
-        Assert.NotNull(commandWithOptions);
-        Assert.NotNull(commandWithOptions.Options);
-        Assert.NotEmpty(commandWithOptions.Options);
+        var commandWithOptions = result.Where(cmd => cmd.Options?.Count > 0).ToList();
 
-        var option = commandWithOptions.Options.First();
+        Assert.Single(commandWithOptions);
+
+        var first = commandWithOptions.First();
+
+        Assert.NotNull(first);
+        Assert.NotNull(first.Options);
+        Assert.NotEmpty(first.Options);
+
+        var option = first.Options.First();
         Assert.NotNull(option.Name);
         Assert.NotNull(option.Description);
     }
@@ -221,63 +234,6 @@ public class ToolsListCommandTests
         Assert.NotNull(response);
         Assert.Equal(ErrorStatusCode, response.Status);
         Assert.Contains("Corrupted command factory", response.Message);
-    }
-
-    /// <summary>
-    /// Verifies that the command returns specific known commands from different areas
-    /// and validates the structure and content of returned commands.
-    /// </summary>
-    [Fact]
-    public async Task ExecuteAsync_ReturnsSpecificKnownCommands()
-    {
-        // Arrange
-        var args = _parser.Parse([]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-
-        var result = DeserializeResults(response.Results);
-
-        Assert.NotNull(result);
-        Assert.NotEmpty(result);
-
-        Assert.True(result.Count >= MinimumExpectedCommands, $"Expected at least {MinimumExpectedCommands} commands, got {result.Count}");
-
-        var allCommands = result.Select(cmd => cmd.Command).ToList();
-
-        // Should have subscription commands (commands include 'azmcp' prefix)
-        var subscriptionCommands = result.Where(cmd => cmd.Command.Contains("subscription")).ToList();
-        Assert.True(subscriptionCommands.Count > 0, $"Expected subscription commands. All commands: {string.Join(", ", allCommands)}");
-
-        // Should have keyvault commands  
-        var keyVaultCommands = result.Where(cmd => cmd.Command.Contains("keyvault")).ToList();
-        Assert.True(keyVaultCommands.Count > 0, $"Expected keyvault commands. All commands: {string.Join(", ", allCommands)}");
-
-        // Should have storage commands
-        var storageCommands = result.Where(cmd => cmd.Command.Contains("storage")).ToList();
-        Assert.True(storageCommands.Count > 0, $"Expected storage commands. All commands: {string.Join(", ", allCommands)}");
-
-        // Should have appconfig commands  
-        var appConfigCommands = result.Where(cmd => cmd.Command.Contains("appconfig")).ToList();
-        Assert.True(appConfigCommands.Count > 0, $"Expected appconfig commands. All commands: {string.Join(", ", allCommands)}");
-
-        // Verify specific known commands exist
-        Assert.Contains(result, cmd => cmd.Command == "azmcp subscription list");
-        Assert.Contains(result, cmd => cmd.Command == "azmcp keyvault key list");
-        Assert.Contains(result, cmd => cmd.Command == "azmcp storage account list");
-        Assert.Contains(result, cmd => cmd.Command == "azmcp appconfig account list");
-
-        // Verify that each command has proper structure
-        foreach (var cmd in result.Take(4))
-        {
-            Assert.NotEmpty(cmd.Name);
-            Assert.NotEmpty(cmd.Description);
-            Assert.NotEmpty(cmd.Command);
-        }
     }
 
     /// <summary>
