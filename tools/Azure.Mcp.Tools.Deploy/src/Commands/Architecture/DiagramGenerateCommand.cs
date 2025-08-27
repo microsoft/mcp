@@ -90,8 +90,6 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
                 throw new InvalidOperationException("Failed to generate architecture diagram. The chart content is empty.");
             }
 
-            context.Activity?.AddTag("MermaidDiagram", chart);
-
             var usedServiceTypes = appTopology.Services
                 .SelectMany(service => service.Dependencies)
                 .Select(dep => dep.ServiceType)
