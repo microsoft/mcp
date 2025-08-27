@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Models.Option;
+namespace Microsoft.Mcp.Core.Models.Option;
 
 public class OptionInfo(
     string name,
