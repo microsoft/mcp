@@ -4,6 +4,7 @@
 using System.Collections;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands;
 

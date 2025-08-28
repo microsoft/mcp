@@ -11,6 +11,7 @@ using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Extensions;
 using ModelContextProtocol.Protocol;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands;
