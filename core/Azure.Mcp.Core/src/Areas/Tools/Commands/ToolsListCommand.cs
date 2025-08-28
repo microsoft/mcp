@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Models.Option;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Core.Areas.Tools.Commands;
 
