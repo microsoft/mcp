@@ -175,22 +175,22 @@ resource keyVaultCryptoUser 'Microsoft.Authorization/roleAssignments@2022-04-01'
   }
 }
 
-resource keyvaultSecret 'Microsoft.KeyVault/vaults/keys@2024-11-01' = {
+resource keyVaultKey 'Microsoft.KeyVault/vaults/keys@2024-11-01' = {
   parent: keyVault
   name: 'encryption-key'
   properties: {
     kty: 'RSA'
     keySize: 2048
   }
-  dependsOn: [ keyVault ]
 }
 
 // Outputs for tests
-output storageAccountId string = storageAccount.id
-output hsmContainerId string = hsmContainer.id
-output hsmLogsContainerId string = hsmLogsContainer.id
-output keyVaultId string = keyVault.id
-output keyVaultKeyId string = keyvaultSecret.id
-output userAssignedIdentityId string = userAssignedIdentity.id
-output amlfsId string = amlfs.id
-output amlfsSubnetId string = filesystemSubnetId
+output storage_account_id string = storageAccount.id
+output hsm_container_id string = hsmContainer.id
+output hsm_logs_container_id string = hsmLogsContainer.id
+output key_vault_resource_id string = keyVault.id
+output key_vault_name string = keyVault.name
+output user_assigned_identity_resource_id string = userAssignedIdentity.id
+output amlfs_id string = amlfs.id
+output amlfs_subnet_id string = filesystemSubnetId
+output key_uri_with_version string = keyVaultKey.properties.keyUriWithVersion

@@ -51,17 +51,20 @@ public static class AzureManagedLustreOptionDefinitions
 
     public static readonly Option<string> LocationOption = new(
         $"--{location}",
-        "Azure region/region short name (use Azure location token, lowercase). Examples: uaenorth, swedencentral, eastus.\n") { IsRequired = true };
+        "Azure region/region short name (use Azure location token, lowercase). Examples: uaenorth, swedencentral, eastus.\n")
+    { IsRequired = true };
 
     public static readonly Option<string> SubnetIdOption = new(
         $"--{subnetId}",
         "Full subnet resource ID. Required format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}.\n" +
-        "Example: --subnet-id /subscriptions/0000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001\n") { IsRequired = true };
+        "Example: --subnet-id /subscriptions/0000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001\n")
+    { IsRequired = true };
 
     public static readonly Option<string> ZoneOption = new(
         $"--{zone}",
         "Availability zone identifier. Use a single digit string matching the region's AZ labels (e.g. '1').\n" +
-        "Example: --zone 1") { IsRequired = true };
+        "Example: --zone 1")
+    { IsRequired = true };
 
     public static readonly Option<string> HsmContainerOption = new(
         $"--{hsmContainer}",
@@ -80,11 +83,13 @@ public static class AzureManagedLustreOptionDefinitions
 
     public static readonly Option<string> MaintenanceDayOption = new(
         $"--{maintenanceDay}",
-        "Preferred maintenance day. Allowed values: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.\n") { IsRequired = true };
+        "Preferred maintenance day. Allowed values: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.\n")
+    { IsRequired = true };
 
     public static readonly Option<string> MaintenanceTimeOption = new(
         $"--{maintenanceTime}",
-        "Preferred maintenance time in UTC. Format: HH:MM (24-hour). Examples: 00:00, 23:00.\n") { IsRequired = true };
+        "Preferred maintenance time in UTC. Format: HH:MM (24-hour). Examples: 00:00, 23:00.\n")
+    { IsRequired = true };
 
     public static readonly Option<string> RootSquashModeOption = new(
         $"--{rootSquashMode}",

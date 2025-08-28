@@ -40,5 +40,54 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
             var ips = result.AssertProperty("numberOfRequiredIPs");
             Assert.Equal(JsonValueKind.Number, ips.ValueKind);
         }
+
+        [Fact]
+        public async Task Should_create_azure_maanged_lustre_no_blob_no_cmk()
+        {
+            var fsName = $"amlfs-{Guid.NewGuid().ToString("N")[..8]}";
+            var subnetId = Environment.GetEnvironmentVariable("AMLFS_SUBNET_ID");
+            var location = Environment.GetEnvironmentVariable("LOCATION");
+
+            // Calculate CMK required variables
+
+            var keyUri =Environment.GetEnvironmentVariable("KEY_URI_WITH_VERSION");
+            var keyVaultResourceId = Environment.GetEnvironmentVariable("KEY_VAULT_RESOURCE_ID");
+            var userAssignedIdentityId = Environment.GetEnvironmentVariable("USER_ASSIGNED_IDENTITY_RESOURCE_ID");
+                
+            // Calculate HSM required variables
+            var storageAccountName = Settings.ResourceBaseName;
+            var hsmDataContainerId = Environment.GetEnvironmentVariable("HSM_CONTAINER_ID");
+            var hsmLogContainerId = Environment.GetEnvironmentVariable("HSM_LOGS_CONTAINER_ID");
+
+            var result = await CallToolAsync(
+                "azmcp_azuremanagedlustre_filesystem_create",
+                new()
+                {
+                        { "subscription", Settings.SubscriptionId },
+                        { "resource-group", Settings.ResourceGroupName },
+                        { "location", location },
+                        { "name", fsName },
+                        { "sku", "AMLFS-Durable-Premium-40" },
+                        { "size", 480 },
+                        { "zone", 1 },
+                        { "subnet-id", subnetId },
+                        { "hsm-container", hsmDataContainerId },
+                        { "hsm-log-container", hsmLogContainerId },
+                        { "custom-encryption", true },
+                        { "key-url", keyUri },
+                        { "source-vault", keyVaultResourceId },
+                        { "user-assigned-identity-id", userAssignedIdentityId },
+                        { "maintenance-day", "Monday" },
+                        { "maintenance-time", "01:00" },
+                        { "root-squash-mode", "All" },
+                        { "no-squash-nid-list", "10.0.0.4"},
+                        { "squash-uid", 1000 },
+                        { "squash-gid", 1000 }
+                });
+
+            var fileSystem = result.AssertProperty("fileSystem");
+            Assert.Equal(JsonValueKind.Array, fileSystem.ValueKind);
+        }
+     
     }
 }

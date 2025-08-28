@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureManagedLustre.Models;
+using Azure.ResourceManager.Models;
+using Azure.ResourceManager.Resources.Models;
 using Azure.ResourceManager.StorageCache;
 using Azure.ResourceManager.StorageCache.Models;
-using Azure.Core;
-using Azure.ResourceManager.Resources.Models;
-using Azure.ResourceManager.Models;
 
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.Services;
@@ -99,7 +99,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             throw new Exception($"Error retrieving required subnet size: {ex.Message}", ex);
         }
     }
-    
+
     public async Task<LustreFileSystem> CreateFileSystemAsync(
         string subscription,
         string resourceGroup,
@@ -165,7 +165,8 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             {
                 throw new Exception($"Location '{location}' does not support availability zones; only zone '1' is allowed.");
             }
-            if ( supportsZones == true ) {
+            if (supportsZones == true)
+            {
                 // Zone is required by command; add to zones
                 data.Zones.Add(zone);
             }
@@ -183,17 +184,17 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         {
             if (string.IsNullOrWhiteSpace(hsmContainer) || string.IsNullOrWhiteSpace(hsmLogContainer))
             {
-            throw new Exception("Both hsm-container and hsm-log-container must be provided when specifying HSM settings.");
+                throw new Exception("Both hsm-container and hsm-log-container must be provided when specifying HSM settings.");
             }
-            
+
             var hsmSettings = new AmlFileSystemHsmSettings(hsmContainer, hsmLogContainer);
             if (!string.IsNullOrWhiteSpace(importPrefix))
             {
-            hsmSettings.ImportPrefix = importPrefix;
+                hsmSettings.ImportPrefix = importPrefix;
             }
             data.Hsm = new AmlFileSystemPropertiesHsm
             {
-            Settings = hsmSettings
+                Settings = hsmSettings
             };
         }
 
@@ -235,7 +236,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
                 {
                     throw new Exception("squash-gid must be a non-negative integer.");
                 }
-                
+
                 data.RootSquashSettings = new AmlFileSystemRootSquashSettings
                 {
                     Mode = modeParsed,
@@ -244,7 +245,9 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
                     SquashGID = modeParsed == AmlFileSystemSquashMode.None ? null : squashGid
                 };
             }
-        } else {
+        }
+        else
+        {
             data.RootSquashSettings = new AmlFileSystemRootSquashSettings
             {
                 Mode = AmlFileSystemSquashMode.None
