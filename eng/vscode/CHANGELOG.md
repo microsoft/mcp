@@ -1,13 +1,11 @@
 
 # Release History
 
-## 0.5.10 - Unreleased
-
-### Added
-
-### Changed
+## 0.5.10 - 2025-08-28
 
 ### Fixed
+
+- Fixed a bug with telemetry collection related to AppConfig tools. [[#44](https://github.com/microsoft/mcp/pull/44)]
 
 ## 0.5.9 - 2025-08-26
 
