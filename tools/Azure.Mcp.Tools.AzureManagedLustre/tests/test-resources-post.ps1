@@ -50,11 +50,6 @@ $rolesToAssign = @(
 $HPCCacheResourceProviderApplicationId = '4392ab71-2ce2-4b0d-8770-b352745c73f5'
 
 foreach ($role in $rolesToAssign) {
-    $existing = Get-AzRoleAssignment -Scope $scope -RoleDefinitionName $role -ApplicationId $HPCCacheResourceProviderApplicationId  -ErrorAction SilentlyContinue
-    if (-not $existing) {
-        Write-Host "Assigning role '$role' to principal 'HPC Cache Resource Provider'on scope '$scope'..." -ForegroundColor Yellow
-        New-AzRoleAssignment -Scope $scope -RoleDefinitionName $role -ApplicationId $HPCCacheResourceProviderApplicationId  | Out-Null
-    } else {
-        Write-Host "Role '$role' already assigned to principal 'HPC Cache Resource Provider' on scope '$scope'." -ForegroundColor Gray
-    }
+    Write-Host "Assigning role '$role' to principal 'HPC Cache Resource Provider'on scope '$scope'..." -ForegroundColor Yellow
+    New-AzRoleAssignment -Scope $scope -RoleDefinitionName $role -ApplicationId $HPCCacheResourceProviderApplicationId  | Out-Null
 }

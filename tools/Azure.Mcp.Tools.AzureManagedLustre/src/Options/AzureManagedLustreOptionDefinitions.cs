@@ -46,7 +46,7 @@ public static class AzureManagedLustreOptionDefinitions
         $"--{name}")
     {
         Required = true,
-        Description = "The AMLFS resource name. Must be DNS-friendly (letters, numbers, hyphens). Example: --name uae-amlfs-001"
+        Description = "The AMLFS resource name. Must be DNS-friendly (letters, numbers, hyphens). Example: --name amlfs-001"
     }
 
     public static readonly Option<string> LocationOption = new(
@@ -115,12 +115,12 @@ public static class AzureManagedLustreOptionDefinitions
     public static readonly Option<string> KeyUrlOption = new(
         $"--{keyUrl}",
         "Full Key Vault key URL. Format: https://{vaultName}.vault.azure.net/keys/{keyName}/{keyVersion}.\n" +
-        "Example: --key-url https://kv-uae-amlfs-001.vault.azure.net/keys/key-uae-amlfs-001/0000\n");
+        "Example: --key-url https://kv-amlfs-001.vault.azure.net/keys/key-amlfs-001/0000\n");
 
     public static readonly Option<string> SourceVaultOption = new(
         $"--{sourceVault}",
         "Full Key Vault resource ID. Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}.\n" +
-        "Example: --source-vault /subscriptions/0000/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv-uae-amlfs-001\n");
+        "Example: --source-vault /subscriptions/0000/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv-amlfs-001\n");
 
     public static readonly Option<string> UserAssignedIdentityIdOption = new(
         $"--{userAssignedIdentityId}",
