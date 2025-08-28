@@ -4,7 +4,7 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace Azure.Mcp.Core.Services.Caching;
+namespace Microsoft.Mcp.Core.Services.Caching;
 
 public class CacheService(IMemoryCache memoryCache) : ICacheService
 {
