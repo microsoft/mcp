@@ -58,8 +58,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\core\Microsoft.Fabric.Mcp.Core\src\Microsoft.Fabric.Mcp.Core.csproj" />
-    <ProjectReference Include="..\..\..\..\areas\*\src\**\Fabric.*.csproj" />
+    <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+    <ProjectReference Include="..\..\..\tools\Fabric.*\src\*.csproj" />
   </ItemGroup>
 
   <ItemGroup>
