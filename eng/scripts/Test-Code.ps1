@@ -32,8 +32,8 @@ if (!$TestResultsPath) {
 # Clean previous results
 Remove-Item -Recurse -Force $TestResultsPath -ErrorAction SilentlyContinue
 
-# Groups areas by their server based on naming convention.
-function groupAreasByServer {
+# Analyzes for native compatibility and returns native-compatible mcp servers, native-compatible areas, and incompatible areas.
+function Get-NativeCompatibleAreasAndServers {
     param(
         [Parameter(Mandatory=$true)]
         [string[]]$areas
@@ -51,6 +51,7 @@ function groupAreasByServer {
         }
     }
 
+    # group areas by their server based on naming convention.
     $serverAreasMap = @{}
     foreach ($area in $areas) {
         if ($area -match '^(tools|core|servers)/([^/]+)') {
@@ -76,7 +77,23 @@ function groupAreasByServer {
             $serverAreasMap[$serverName] += $area
         }
     }
-    return $serverAreasMap
+
+    $servers = @($serverAreasMap.Keys)
+    $nonNativeAreas = @()
+    $nativeAreas = @()
+    
+    foreach ($server in $servers) {
+        $serverAreas = $serverAreasMap[$server]
+        $excludedAreas = Get-NativeExcludedAreas -ServerName $server
+        $nonNativeAreas += @($serverAreas | Where-Object { $_ -in $excludedAreas })
+        $nativeAreas += @($serverAreas | Where-Object { $_ -notin $excludedAreas })
+    }
+
+    return @{
+        Servers = $servers
+        NativeAreas = $nativeAreas
+        NonNativeAreas = $nonNativeAreas
+    }
 }
 
 # Gets all area projects those are excluded using BuildNative condition.
@@ -113,34 +130,6 @@ function Get-NativeExcludedAreas {
     return $excludedAreas
 }
 
-# Analyzes areas for native compatibility and returns servers, native-compatible areas, and incompatible areas.
-function Get-NativeCompatibleAreasAndServers {
-    param(
-        [Parameter(Mandatory=$true)]
-        [string[]]$areas
-    )
-
-    $serverAreasMap = groupAreasByServer -areas $areas
-
-    $servers = @($serverAreasMap.Keys)
-    $nonNativeAreas = @()
-    $nativeAreas = @()
-    
-    foreach ($server in $servers) {
-        $serverAreas = $serverAreasMap[$server]
-        $excludedAreas = Get-NativeExcludedAreas -ServerName $server
-        $nonNativeAreas += @($serverAreas | Where-Object { $_ -in $excludedAreas })
-        $nativeAreas += @($serverAreas | Where-Object { $_ -notin $excludedAreas })
-    }
-
-    return @{
-        Servers = $servers
-        NativeAreas = $nativeAreas
-        NonNativeAreas = $nonNativeAreas
-    }
-}
-
-
 # Identifies the root directories to be recursively scanned for tests in the specified areas.
 function GetTestsRootDirs {
     param(
@@ -174,11 +163,11 @@ function BuildNativeServersAndPrepareTests {
         [string[]]$servers
     )
 
-    $nativeBinaryPaths = @()
+    $nativeServerPaths = @()
     foreach ($server in $servers) {
         # Native AOT compilation only occurs during 'dotnet publish', not 'dotnet build'
-        $nativeBinaryPath = PublishNativeBinary -ServerName $server
-        $nativeBinaryPaths += $nativeBinaryPath
+        $nativeServerPath = PublishNativeServer -ServerName $server
+        $nativeServerPaths += $nativeServerPath
     }
 
     Write-Host "Building test project(s)"
@@ -186,12 +175,43 @@ function BuildNativeServersAndPrepareTests {
         -Command "dotnet build" `
         -AllowedExitCodes @(0)
     
-    foreach ($nativeBinaryPath in $nativeBinaryPaths) {
-        CopyNativeBinaryToTestDirs -nativeBinaryPath $nativeBinaryPath -testsRootDirs $testsRootDirs
+    foreach ($nativeServerPath in $nativeServerPaths) {
+        CopyNativeServerToTestDirs -nativeServerPath $nativeServerPath -testsRootDirs $testsRootDirs
     }
 }
 
-function PublishNativeBinary {
+function GetCliName {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$ServerName
+    )
+    
+    $projectFile = "$RepoRoot/servers/$ServerName/src/$ServerName.csproj"
+    
+    if (!(Test-Path $projectFile)) {
+        Write-Error "$projectFile not found"
+        exit 1
+    }
+    
+    [xml]$xml = Get-Content $projectFile
+    
+    $cliName = $null
+    foreach ($propertyGroup in $xml.Project.PropertyGroup) {
+        if ($propertyGroup.CliName) {
+            $cliName = $propertyGroup.CliName
+            break
+        }
+    }
+    
+    if (-not $cliName) {
+        Write-Error "CliName property not found in the server project file $projectFile"
+        exit 1
+    }
+    
+    return $cliName
+}
+
+function PublishNativeServer {
     param(
         [Parameter(Mandatory=$true)]
         [string]$ServerName
@@ -206,7 +226,9 @@ function PublishNativeBinary {
         -Command "dotnet publish '$projectDir/$ServerName.csproj' -c Release -r $runtimeId /p:BuildNative=true" `
         -AllowedExitCodes @(0) | Out-Null
 
-    $exeName = if ($runtimeId.StartsWith('win-')) { "azmcp.exe" } else { "azmcp" }
+    $cliName = GetCliName -ServerName $ServerName
+    
+    $exeName = if ($runtimeId.StartsWith('win-')) { "$cliName.exe" } else { $cliName }
     $nativeExePath = "$projectDir/bin/Release/net9.0/$runtimeId/publish/$exeName"
 
     if (-not (Test-Path $nativeExePath)) {
@@ -217,19 +239,19 @@ function PublishNativeBinary {
     return $nativeExePath
 }
 
-function CopyNativeBinaryToTestDirs {
+function CopyNativeServerToTestDirs {
     param(
         [Parameter(Mandatory=$true)]
-        [string]$nativeBinaryPath,
+        [string]$nativeServerPath,
         [string[]]$testsRootDirs
     )
-    Write-Host "Copying native $nativeBinaryPath to test directories"
+    Write-Host "Copying native $nativeServerPath to test directories"
 
     $testsRootDirs | ForEach-Object {
         Get-ChildItem -Path $_ -Recurse -Filter "*.LiveTests" -Directory
     } | ForEach-Object {
         $targetDirectory = "$($_.FullName)/bin/Debug/net9.0"
-        Copy-Item $nativeBinaryPath $targetDirectory -Force
+        Copy-Item $nativeServerPath $targetDirectory -Force
     }
 }
 
