@@ -6,7 +6,7 @@ using Microsoft.Mcp.Core.Commands;
 
 namespace Microsoft.Mcp.Core.Helpers;
 
-internal static class CommandHelper
+public static class CommandHelper
 {
     public static IEnumerable<KeyValuePair<string, IBaseCommand>> GetVisibleCommands(IReadOnlyDictionary<string, IBaseCommand> commands)
     {
