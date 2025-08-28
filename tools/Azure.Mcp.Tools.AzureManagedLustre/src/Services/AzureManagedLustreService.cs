@@ -9,6 +9,10 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AzureManagedLustre.Models;
 using Azure.ResourceManager.StorageCache;
 using Azure.ResourceManager.StorageCache.Models;
+using Azure.Core;
+using Azure.ResourceManager.Resources.Models;
+using Azure.ResourceManager.Models;
+
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.Services;
 
@@ -93,6 +97,199 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         catch (Exception ex)
         {
             throw new Exception($"Error retrieving required subnet size: {ex.Message}", ex);
+        }
+    }
+    
+    public async Task<LustreFileSystem> CreateFileSystemAsync(
+        string subscription,
+        string resourceGroup,
+        string name,
+        string location,
+        string sku,
+        int sizeTiB,
+        string subnetId,
+        string zone,
+        string maintenanceDay,
+        string maintenanceTime,
+        string? hsmContainer = null,
+        string? hsmLogContainer = null,
+        string? importPrefix = null,
+        string? rootSquashMode = null,
+        string? noSquashNidLists = null,
+        long? squashUid = null,
+        long? squashGid = null,
+        bool enableCustomEncryption = false,
+        string? keyUrl = null,
+        string? sourceVaultId = null,
+        string? userAssignedIdentityId = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null
+    )
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
+        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(location);
+        ArgumentException.ThrowIfNullOrWhiteSpace(sku);
+        ArgumentException.ThrowIfNullOrWhiteSpace(subnetId);
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        var data = new AmlFileSystemData(new AzureLocation(location))
+        {
+            SkuName = sku,
+            StorageCapacityTiB = sizeTiB,
+            FilesystemSubnet = subnetId
+        };
+
+        // Validate zone support for the specified location before adding
+        try
+        {
+            var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy)
+            ?? throw new Exception($"Subscription '{subscription}' not found");
+
+            bool? supportsZones = null;
+
+            await foreach (var loc in sub.GetLocationsAsync())
+            {
+                if (loc.Name.Equals(location, StringComparison.OrdinalIgnoreCase) ||
+                    loc.DisplayName.Equals(location, StringComparison.OrdinalIgnoreCase))
+                {
+                    supportsZones = (loc.AvailabilityZoneMappings?.Count ?? 0) > 0;
+                    break;
+                }
+            }
+
+            if (supportsZones == false && !string.Equals(zone, "1", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new Exception($"Location '{location}' does not support availability zones; only zone '1' is allowed.");
+            }
+            if ( supportsZones == true ) {
+                // Zone is required by command; add to zones
+                data.Zones.Add(zone);
+            }
+
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to validate availability zones for location '{location}': {ex.Message}", ex);
+        }
+
+
+
+        // HSM settings if provided
+        if (!string.IsNullOrWhiteSpace(hsmContainer) || !string.IsNullOrWhiteSpace(hsmLogContainer) || !string.IsNullOrWhiteSpace(importPrefix))
+        {
+            if (string.IsNullOrWhiteSpace(hsmContainer) || string.IsNullOrWhiteSpace(hsmLogContainer))
+            {
+            throw new Exception("Both hsm-container and hsm-log-container must be provided when specifying HSM settings.");
+            }
+            
+            var hsmSettings = new AmlFileSystemHsmSettings(hsmContainer, hsmLogContainer);
+            if (!string.IsNullOrWhiteSpace(importPrefix))
+            {
+            hsmSettings.ImportPrefix = importPrefix;
+            }
+            data.Hsm = new AmlFileSystemPropertiesHsm
+            {
+            Settings = hsmSettings
+            };
+        }
+
+        MaintenanceDayOfWeekType dayEnum;
+
+        if (!Enum.TryParse<MaintenanceDayOfWeekType>(maintenanceDay, true, out dayEnum))
+        {
+            throw new Exception($"Invalid maintenance day '{maintenanceDay}'. Allowed values: Monday..Sunday");
+        }
+
+        data.MaintenanceWindow = new AmlFileSystemPropertiesMaintenanceWindow
+        {
+            DayOfWeek = dayEnum,
+            TimeOfDayUTC = maintenanceTime
+        };
+
+        // Root squash: default to None if not provided; when not None, ensure required squash parameters are provided
+
+        if (!string.IsNullOrWhiteSpace(rootSquashMode))
+        {
+            AmlFileSystemSquashMode modeParsed = rootSquashMode;
+
+            // When a squash mode other than None is specified, UID and GID must be provided
+            if (modeParsed != AmlFileSystemSquashMode.None)
+            {
+                if (!squashUid.HasValue)
+                {
+                    throw new Exception("squash-uid must be provided when root-squash-mode is not None.");
+                }
+                if (!squashGid.HasValue)
+                {
+                    throw new Exception("squash-gid must be provided when root-squash-mode is not None.");
+                }
+                if (squashUid.Value < 0)
+                {
+                    throw new Exception("squash-uid must be a non-negative integer.");
+                }
+                if (squashGid.Value < 0)
+                {
+                    throw new Exception("squash-gid must be a non-negative integer.");
+                }
+                
+                data.RootSquashSettings = new AmlFileSystemRootSquashSettings
+                {
+                    Mode = modeParsed,
+                    NoSquashNidLists = modeParsed == AmlFileSystemSquashMode.None ? "" : noSquashNidLists,
+                    SquashUID = modeParsed == AmlFileSystemSquashMode.None ? null : squashUid,
+                    SquashGID = modeParsed == AmlFileSystemSquashMode.None ? null : squashGid
+                };
+            }
+        } else {
+            data.RootSquashSettings = new AmlFileSystemRootSquashSettings
+            {
+                Mode = AmlFileSystemSquashMode.None
+            };
+        }
+
+        // Encryption
+        if (enableCustomEncryption)
+        {
+            if (string.IsNullOrWhiteSpace(keyUrl) || string.IsNullOrWhiteSpace(sourceVaultId))
+            {
+                throw new Exception("Both key-url and source-vault must be provided when custom-encryption is enabled.");
+            }
+            data.KeyEncryptionKey = new StorageCacheEncryptionKeyVaultKeyReference(
+                new Uri(keyUrl!),
+                new WritableSubResource { Id = new ResourceIdentifier(sourceVaultId!) });
+
+            // Assign user-assigned managed identity for Key Vault access
+            if (!string.IsNullOrWhiteSpace(userAssignedIdentityId))
+            {
+                data.Identity = new ManagedServiceIdentity(ManagedServiceIdentityType.UserAssigned)
+                {
+                    UserAssignedIdentities =
+                    {
+                        [new ResourceIdentifier(userAssignedIdentityId)] = new UserAssignedIdentity()
+                    }
+                };
+
+            }
+        }
+
+        try
+        {
+            var collection = rg.GetAmlFileSystems();
+            var createOperationResult = await collection.CreateOrUpdateAsync(WaitUntil.Completed, name, data);
+            var fileSystemResource = createOperationResult.Value;
+            return Map(fileSystemResource);
+        }
+        catch (RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to create AML file system '{name}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to create AML file system '{name}': {ex.Message}", ex);
         }
     }
 }

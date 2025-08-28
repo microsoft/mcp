@@ -31,6 +31,11 @@ param amlfsSku string = 'AMLFS-Durable-Premium-500'
 @minValue(4)
 param amlfsCapacityTiB int = 4
 
+var kvCryptoUserRoleDefinitionId = '14b46e9e-c2b7-41b4-b07b-48a6ebf60603'
+
+var userAssignedName = '${baseName}-uai'
+
+
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
   name: '${baseName}-vnet'
   location: location
@@ -99,5 +104,93 @@ resource amlfs 'Microsoft.StorageCache/amlFilesystems@2024-07-01' = {
   }
 }
 
+
+resource storageAccount 'Microsoft.Storage/storageAccounts@2025-01-01' = {
+  name: baseName
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  kind: 'StorageV2'
+  properties: {
+    allowBlobPublicAccess: false
+    minimumTlsVersion: 'TLS1_2'
+    supportsHttpsTrafficOnly: true
+  }
+}
+
+resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2025-01-01' existing = {
+  parent: storageAccount
+  name: 'default'
+}
+
+resource hsmContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2025-01-01' = {
+  parent : blobService
+  name: 'hsmdata'
+  properties: {
+    publicAccess: 'None'
+  }
+  dependsOn: [ blobService ]
+}
+
+resource hsmLogsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2025-01-01' = {
+  parent : blobService
+  name: 'hsmlogs'
+  properties: {
+    publicAccess: 'None'
+  }
+  dependsOn: [ blobService ]
+}
+
+
+resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
+  name: userAssignedName
+  location: location
+}
+
+
+resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' = {
+  name: baseName
+  location: location
+  properties: {
+    tenantId: tenant().tenantId
+    sku: {
+      family: 'A'
+      name: 'standard'
+    }
+    enableRbacAuthorization: true
+    enablePurgeProtection: true
+    softDeleteRetentionInDays: 90
+    publicNetworkAccess: 'Enabled'
+  }
+}
+
+resource keyVaultCryptoUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(keyVault.id, 'kv-crypto-user', userAssignedIdentity.id)
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', kvCryptoUserRoleDefinitionId)
+    principalId: userAssignedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource keyvaultSecret 'Microsoft.KeyVault/vaults/keys@2024-11-01' = {
+  parent: keyVault
+  name: 'encryptionkey'
+  properties: {
+    kty: 'RSA'
+    keySize: 2048
+  }
+  dependsOn: [ keyVault ]
+}
+
+// Outputs for tests
+output storageAccountId string = storageAccount.id
+output hsmContainerId string = hsmContainer.id
+output hsmLogsContainerId string = hsmLogsContainer.id
+output keyVaultId string = keyVault.id
+output keyVaultKeyId string = keyvaultSecret.id
+output userAssignedIdentityId string = userAssignedIdentity.id
 output amlfsId string = amlfs.id
 output amlfsSubnetId string = filesystemSubnetId
