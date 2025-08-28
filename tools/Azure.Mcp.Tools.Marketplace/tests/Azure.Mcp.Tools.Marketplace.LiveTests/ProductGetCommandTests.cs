@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Text.Json;
@@ -14,7 +14,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.Marketplace.LiveTests;
 
 [Trait("Area", "Marketplace")]
-public class MarketplaceCommandTests : CommandTestsBase,
+public class ProductGetCommandTests : CommandTestsBase,
     IClassFixture<LiveTestFixture>
 {
     private const string ProductKey = "product";
@@ -24,7 +24,7 @@ public class MarketplaceCommandTests : CommandTestsBase,
     private readonly MarketplaceService _marketplaceService;
     private readonly string _subscriptionId;
 
-    public MarketplaceCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : base(liveTestFixture, output)
+    public ProductGetCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : base(liveTestFixture, output)
     {
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new CacheService(memoryCache);

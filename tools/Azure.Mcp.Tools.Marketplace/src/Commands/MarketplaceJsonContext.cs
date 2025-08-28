@@ -8,6 +8,10 @@ using Azure.Mcp.Tools.Marketplace.Models;
 namespace Azure.Mcp.Tools.Marketplace.Commands;
 
 [JsonSerializable(typeof(ProductGetCommand.ProductGetCommandResult))]
+[JsonSerializable(typeof(ProductListCommand.ProductListCommandResult))]
+[JsonSerializable(typeof(ProductListResponseWithNextCursor))]
+[JsonSerializable(typeof(ProductsListResponse))]
+[JsonSerializable(typeof(List<ProductSummary>))]
 [JsonSerializable(typeof(ProductDetails))]
 [JsonSerializable(typeof(ProductSummary))]
 [JsonSerializable(typeof(PlanDetails))]
@@ -75,5 +79,7 @@ namespace Azure.Mcp.Tools.Marketplace.Commands;
 [JsonSerializable(typeof(IDictionary<string, string>))]
 [JsonSerializable(typeof(Dictionary<string, int[]>))]
 [JsonSerializable(typeof(IReadOnlyList<PlanSkuRelation>))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, UseStringEnumConverter = true)]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+ UseStringEnumConverter = true,
+  DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal sealed partial class MarketplaceJsonContext : JsonSerializerContext;
