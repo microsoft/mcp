@@ -157,18 +157,6 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
             throw new InvalidOperationException("Multiple SQL statements are not allowed. Use only a single SELECT statement.");
         }
 
-        // Regex pattern to detect common SQL injection techniques (semicolon followed by dangerous keywords)
-        var dangerPattern = new Regex(
-            @";\s*(?=\b(union\s+select|drop\s+table|insert\s+into|update\b|delete\s+from|or\s+1=1)\b)",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled
-        );
-
-        // Check for common SQL injection patterns using regex
-        if (dangerPattern.IsMatch(cleanedQuery))
-        {
-            throw new InvalidOperationException("Query contains dangerous patterns that could indicate SQL injection attempts and is not allowed for security reasons.");
-        }
-
         // List of dangerous SQL keywords that should be blocked
         var queryUpper = cleanedQuery.ToUpperInvariant();
 

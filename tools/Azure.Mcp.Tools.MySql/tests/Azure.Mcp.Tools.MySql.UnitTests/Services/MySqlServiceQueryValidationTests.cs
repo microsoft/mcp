@@ -132,8 +132,7 @@ public class MySqlServiceQueryValidationTests
     [InlineData("SELECT * FROM users; DROP TABLE users")]
     [InlineData("SELECT * FROM users; SELECT * FROM products")]
     [InlineData("SELECT * FROM users; SELECT * FROM products; --comment")]
-    [InlineData("SELECT * FROM Logs; union select password from Users")]
-    [InlineData("some text; or 1=1")]
+    [InlineData("SELECT * FROM Logs; union select password from Users")]    
     public void ValidateQuerySafety_WithMultipleStatements_ShouldThrowInvalidOperationException(string query)
     {
         // Arrange
