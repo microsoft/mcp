@@ -415,7 +415,11 @@ class Program
                         break;
                     }
                 }
-                if (cliArtifact != null) break;
+
+                if (cliArtifact != null)
+                {
+                    break;
+                }
             }
 
             if (cliArtifact == null)
