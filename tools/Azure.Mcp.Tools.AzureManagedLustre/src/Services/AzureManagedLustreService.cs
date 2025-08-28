@@ -165,7 +165,8 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             {
                 throw new Exception($"Location '{location}' does not support availability zones; only zone '1' is allowed.");
             }
-            if (supportsZones == true) {
+            if (supportsZones == true)
+            {
                 // Zone is required by command; add to zones
                 data.Zones.Add(zone);
             }
