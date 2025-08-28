@@ -19,19 +19,27 @@ public class AzureManagedLustreSetup : IAreaSetup
 
         services.AddSingleton<FileSystemListCommand>();
         services.AddSingleton<FileSystemSubnetSizeCommand>();
+        services.AddSingleton<FileSystemCreateCommand>();
+        services.AddSingleton<FileSystemUpdateCommand>();
         services.AddSingleton<SkuGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var azureManagedLustre = new CommandGroup(Name,
-            "Azure Managed Lustre operations - Commands for listing and inspecting Azure Managed Lustre file systems (AMLFS) used for high-performance computing workloads.");
+            "Azure Managed Lustre operations - Commands for creating, updating, listing and inspecting Azure Managed Lustre file systems (AMLFS) used for high-performance computing workloads. The tool focuses on managing all the aspects related to Azure Managed Lustre filesystem instances, import and export jobs from Azure Blob Storage.");
 
         var fileSystem = new CommandGroup("filesystem", "Azure Managed Lustre file system operations - Commands for listing managed Lustre file systems.");
         azureManagedLustre.AddSubGroup(fileSystem);
 
         var list = serviceProvider.GetRequiredService<FileSystemListCommand>();
         fileSystem.AddCommand(list.Name, list);
+
+        var create = serviceProvider.GetRequiredService<FileSystemCreateCommand>();
+        fileSystem.AddCommand(create.Name, create);
+
+        var update = serviceProvider.GetRequiredService<FileSystemUpdateCommand>();
+        fileSystem.AddCommand(update.Name, update);
 
         var subnetSize = serviceProvider.GetRequiredService<FileSystemSubnetSizeCommand>();
         fileSystem.AddCommand(subnetSize.Name, subnetSize);
