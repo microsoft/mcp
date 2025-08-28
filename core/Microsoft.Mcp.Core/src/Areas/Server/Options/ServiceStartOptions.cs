@@ -37,4 +37,10 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("readOnly")]
     public bool? ReadOnly { get; set; } = null;
+
+    /// <summary>
+    /// Gets or sets optional server instructions to send to clients.
+    /// </summary>
+    [JsonPropertyName("serverInstructions")]
+    public string? ServerInstructions { get; set; }
 }
