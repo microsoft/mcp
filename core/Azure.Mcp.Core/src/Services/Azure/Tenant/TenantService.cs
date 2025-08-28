@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Core.Services.Azure.Tenant;
 
