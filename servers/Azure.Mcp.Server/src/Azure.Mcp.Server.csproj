@@ -21,6 +21,7 @@
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <DebugType>embedded</DebugType>
+    <DebugSymbols>false</DebugType>
   </PropertyGroup>
   <!-- Enable Trim and AOT Analyzers -->
   <PropertyGroup>

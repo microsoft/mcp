@@ -107,7 +107,7 @@ jobs:
               MainPublisher: 'ESRPRELPACMANTEST'
               ProductState: latest
           - task: EsrpRelease@9
-            displayName: Publish wrapper package to npmjs.com
+            displayName: Publish native wrapper package to npmjs.com
             inputs:
               ConnectedServiceName: 'Azure SDK PME Managed Identity'
               ClientId: '5f81938c-2544-4f1f-9251-dd9de5b8a81b'
