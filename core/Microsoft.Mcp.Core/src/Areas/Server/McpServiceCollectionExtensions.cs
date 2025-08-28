@@ -23,7 +23,7 @@ using Options = Microsoft.Extensions.Options.Options;
 /// </summary>
 public static class McpServiceCollectionExtensions
 {
-    private const string DefaultServerName = "Azure MCP Server";
+    private const string DefaultServerName = "Microsoft MCP Server";
 
     /// <summary>
     /// Adds the MCP server services to the specified <see cref="IServiceCollection"/>.
