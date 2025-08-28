@@ -131,24 +131,6 @@ public class MySqlServiceQueryValidationTests
     [Theory]
     [InlineData("SELECT * FROM users; DROP TABLE users")]
     [InlineData("SELECT * FROM users; SELECT * FROM products")]
-    [InlineData("SELECT * FROM Logs; union select password from Users")]
-    [InlineData("some text; or 1=1")]    
-    public void ValidateQuerySafety_WithMultipleStatements_ShouldThrowInvalidOperationException(string query)
-    {
-        // Arrange
-        var validateMethod = GetValidateQuerySafetyMethod();
-
-        // Act & Assert
-        var exception = Assert.Throws<TargetInvocationException>(() =>
-            validateMethod.Invoke(null, new object[] { query }));
-
-        Assert.IsType<InvalidOperationException>(exception.InnerException);
-        Assert.Contains("Query contains dangerous patterns that could indicate SQL injection attempts", exception.InnerException!.Message);
-    }
-
-    [Theory]
-    [InlineData("SELECT * FROM users; DROP TABLE users")]
-    [InlineData("SELECT * FROM users; SELECT * FROM products")]
     [InlineData("SELECT * FROM users; SELECT * FROM products; --comment")]
     [InlineData("SELECT * FROM Logs; union select password from Users")]
     [InlineData("some text; or 1=1")]
