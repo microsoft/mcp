@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Services.Http;
+namespace Microsoft.Mcp.Core.Services.Http;
 
 /// <summary>
 /// Service for providing configured HttpClient instances with centralized proxy and configuration management.
