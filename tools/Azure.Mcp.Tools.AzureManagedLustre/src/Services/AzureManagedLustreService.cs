@@ -165,8 +165,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             {
                 throw new Exception($"Location '{location}' does not support availability zones; only zone '1' is allowed.");
             }
-            if (supportsZones == true)
-            {
+            if (supportsZones == true) {
                 // Zone is required by command; add to zones
                 data.Zones.Add(zone);
             }
@@ -184,7 +183,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         {
             if (string.IsNullOrWhiteSpace(hsmContainer) || string.IsNullOrWhiteSpace(hsmLogContainer))
             {
-                throw new Exception("Both hsm-container and hsm-log-container must be provided when specifying HSM settings.");
+                throw new ArgumentException("Both hsm-container and hsm-log-container must be provided when specifying HSM settings.");
             }
 
             var hsmSettings = new AmlFileSystemHsmSettings(hsmContainer, hsmLogContainer);
@@ -202,7 +201,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
 
         if (!Enum.TryParse<MaintenanceDayOfWeekType>(maintenanceDay, true, out dayEnum))
         {
-            throw new Exception($"Invalid maintenance day '{maintenanceDay}'. Allowed values: Monday..Sunday");
+            throw new ArgumentException($"Invalid maintenance day '{maintenanceDay}'. Allowed values: Monday..Sunday");
         }
 
         data.MaintenanceWindow = new AmlFileSystemPropertiesMaintenanceWindow
@@ -222,19 +221,19 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             {
                 if (!squashUid.HasValue)
                 {
-                    throw new Exception("squash-uid must be provided when root-squash-mode is not None.");
+                    throw new ArgumentException("squash-uid must be provided when root-squash-mode is not None.");
                 }
                 if (!squashGid.HasValue)
                 {
-                    throw new Exception("squash-gid must be provided when root-squash-mode is not None.");
+                    throw new ArgumentException("squash-gid must be provided when root-squash-mode is not None.");
                 }
                 if (squashUid.Value < 0)
                 {
-                    throw new Exception("squash-uid must be a non-negative integer.");
+                    throw new ArgumentException("squash-uid must be a non-negative integer.");
                 }
                 if (squashGid.Value < 0)
                 {
-                    throw new Exception("squash-gid must be a non-negative integer.");
+                    throw new ArgumentException("squash-gid must be a non-negative integer.");
                 }
 
                 data.RootSquashSettings = new AmlFileSystemRootSquashSettings
