@@ -36,15 +36,7 @@ if ($amlfsCluster) {
 # Retrieve principal ID for "HPC Cache Resource Provider" and assign roles on the storage account
 # This is not easy to do in Bicep and at the resource group scope
 Write-Host "Resolving 'HPC Cache Resource Provider' service principal..." -ForegroundColor Yellow
-$sp = Get-AzADServicePrincipal -DisplayName "HPC Cache Resource Provider" | Select-Object -First 1
-if (-not $sp) {
-    throw "Service principal 'HPC Cache Resource Provider' not found in tenant '$TenantId'."
-}
 
-$principalId = $sp.Id
-
-$storageAccountName = $testSettings.ResourceBaseName
-Write-Host "Locating storage account '$storageAccountName' in resource group '$rgName'..." -ForegroundColor Yellow
 $sa = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $storageAccountName -ErrorAction Stop
 $scope = $sa.Id
 
@@ -54,11 +46,11 @@ $rolesToAssign = @(
 )
 
 foreach ($role in $rolesToAssign) {
-    $existing = Get-AzRoleAssignment -Scope $scope -RoleDefinitionName $role -ObjectId $principalId -ErrorAction SilentlyContinue
+    $existing = Get-AzRoleAssignment -Scope $scope -RoleDefinitionName $role -ApplicationId $ApplicationId  -ErrorAction SilentlyContinue
     if (-not $existing) {
-        Write-Host "Assigning role '$role' to principal '$($sp.DisplayName)' on scope '$scope'..." -ForegroundColor Yellow
-        New-AzRoleAssignment -Scope $scope -RoleDefinitionName $role -ObjectId $principalId | Out-Null
+        Write-Host "Assigning role '$role' to principal 'HPC Cache Resource Provider'on scope '$scope'..." -ForegroundColor Yellow
+        New-AzRoleAssignment -Scope $scope -RoleDefinitionName $role -ApplicationId $ApplicationId  | Out-Null
     } else {
-        Write-Host "Role '$role' already assigned to principal '$($sp.DisplayName)' on scope '$scope'." -ForegroundColor Gray
+        Write-Host "Role '$role' already assigned to principal 'HPC Cache Resource Provider' on scope '$scope'." -ForegroundColor Gray
     }
 }

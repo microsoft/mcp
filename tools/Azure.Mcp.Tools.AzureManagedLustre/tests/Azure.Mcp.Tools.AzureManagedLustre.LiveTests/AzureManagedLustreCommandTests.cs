@@ -50,10 +50,10 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
 
             // Calculate CMK required variables
 
-            var keyUri =Environment.GetEnvironmentVariable("KEY_URI_WITH_VERSION");
+            var keyUri = Environment.GetEnvironmentVariable("KEY_URI_WITH_VERSION");
             var keyVaultResourceId = Environment.GetEnvironmentVariable("KEY_VAULT_RESOURCE_ID");
             var userAssignedIdentityId = Environment.GetEnvironmentVariable("USER_ASSIGNED_IDENTITY_RESOURCE_ID");
-                
+
             // Calculate HSM required variables
             var storageAccountName = Settings.ResourceBaseName;
             var hsmDataContainerId = Environment.GetEnvironmentVariable("HSM_CONTAINER_ID");
@@ -88,6 +88,6 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
             var fileSystem = result.AssertProperty("fileSystem");
             Assert.Equal(JsonValueKind.Array, fileSystem.ValueKind);
         }
-     
+
     }
 }
