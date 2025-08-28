@@ -632,6 +632,15 @@ azmcp grafana list --subscription <subscription>
 ### Azure Marketplace Operations
 
 ```bash
+# List marketplace products available to a subscription
+azmcp marketplace product list --subscription <subscription> \
+                               [--language <language-code>] \
+                               [--search <search-terms>] \
+                               [--filter <odata-filter>] \
+                               [--orderby <odata-orderby>] \
+                               [--select <odata-select>] \
+                               [--next-cursor <pagination-cursor>]
+
 # Get details about an Azure Marketplace product
 azmcp marketplace product get --subscription <subscription> \
                               --product-id <product-id> \

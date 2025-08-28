@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization.Metadata;
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Options;
@@ -58,8 +59,92 @@ public class MarketplaceService(ITenantService tenantService)
         string productUrl = BuildProductUrl(subscription, productId, includeStopSoldPlans, language, market,
             lookupOfferInTenantLevel, planId, skuId, includeServiceInstructionTemplates);
 
-        return await GetMarketplaceResponseAsync(productUrl, pricingAudience, tenant, retryPolicy);
+        return await GetMarketplaceSingleProductResponseAsync(productUrl, pricingAudience, tenant, retryPolicy);
     }
+
+    /// <summary>
+    /// Retrieves private products (offers) that a subscription has access to in the Azure Marketplace.
+    /// </summary>
+    /// <param name="subscription">The Azure subscription ID.</param>
+    /// <param name="language">Product language (default: en).</param>
+    /// <param name="search">Search by display name, publisher name, or keywords.</param>
+    /// <param name="filter">OData filter expression.</param>
+    /// <param name="orderBy">OData orderby expression.</param>
+    /// <param name="select">OData select expression.</param>
+    /// <param name="nextCursor">Pagination cursor.</param>
+    /// <param name="tenant">Optional. The Azure tenant ID for authentication.</param>
+    /// <param name="retryPolicy">Optional. Policy parameters for retrying failed requests.</param>
+    /// <returns>A list of ProductSummary objects containing the marketplace products.</returns>
+    /// <exception cref="ArgumentException">Thrown when required parameters are missing or invalid.</exception>
+    /// <exception cref="Exception">Thrown when parsing the products response fails.</exception>
+    public async Task<ProductListResponseWithNextCursor> ListProducts(
+        string subscription,
+        string? language = null,
+        string? search = null,
+        string? filter = null,
+        string? orderBy = null,
+        string? select = null,
+        string? nextCursor = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(subscription);
+
+        string productsUrl = BuildProductsListUrl(subscription, language, search, filter, orderBy, select, nextCursor);
+
+        return await GetMarketplaceListProductsResponseAsync(productsUrl, tenant, retryPolicy);
+    }
+
+    private static string BuildProductsListUrl(
+        string subscription,
+        string? language,
+        string? search,
+        string? filter,
+        string? orderBy,
+        string? select,
+        string? nextCursor)
+    {
+        var queryParams = new List<string>
+        {
+            $"api-version={ApiVersion}"
+        };
+
+        if (!string.IsNullOrEmpty(language))
+            queryParams.Add($"language={Uri.EscapeDataString(language)}");
+
+        if (!string.IsNullOrEmpty(search))
+            queryParams.Add($"$search={Uri.EscapeDataString(search)}");
+
+        // Add OData query parameters
+        if (!string.IsNullOrEmpty(filter))
+            queryParams.Add($"$filter={Uri.EscapeDataString(filter)}");
+
+        if (!string.IsNullOrEmpty(orderBy))
+            queryParams.Add($"$orderby={Uri.EscapeDataString(orderBy)}");
+
+        if (!string.IsNullOrEmpty(select))
+            queryParams.Add($"$select={Uri.EscapeDataString(select)}");
+
+        if (!string.IsNullOrEmpty(nextCursor))
+            queryParams.Add($"$skiptoken={Uri.EscapeDataString(nextCursor)}");
+
+        string queryString = string.Join("&", queryParams);
+        return $"{ManagementApiBaseUrl}/subscriptions/{subscription}/providers/Microsoft.Marketplace/products?{queryString}";
+    }
+
+    private async Task<ProductListResponseWithNextCursor> GetMarketplaceListProductsResponseAsync(string url, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    {
+        var productsListResponse = await ExecuteMarketplaceRequestAsync<ProductsListResponse>(
+            url, MarketplaceJsonContext.Default.ProductsListResponse, retryPolicy);
+
+        var result = new ProductListResponseWithNextCursor
+        {
+            Items = productsListResponse?.Items ?? [],
+            NextCursor = ExtractSkipTokenFromUrl(productsListResponse?.NextPageLink)
+        };
+        return result;
+    }
+
 
     private static string BuildProductUrl(
         string subscription,
@@ -102,7 +187,68 @@ public class MarketplaceService(ITenantService tenantService)
         return $"{ManagementApiBaseUrl}/subscriptions/{subscription}/providers/Microsoft.Marketplace/products/{productId}?{queryString}";
     }
 
-    private async Task<ProductDetails> GetMarketplaceResponseAsync(string url, string? pricingAudience, string? tenant, RetryPolicyOptions? retryPolicy = null)
+    private async Task<ProductDetails> GetMarketplaceSingleProductResponseAsync(string url, string? pricingAudience, string? tenant, RetryPolicyOptions? retryPolicy = null)
+    {
+        var headers = new Dictionary<string, string>();
+        var productDetails = await ExecuteMarketplaceRequestAsync<ProductDetails>(
+            url,
+            MarketplaceJsonContext.Default.ProductDetails,
+            retryPolicy,
+            headers,
+            tenant
+        );
+        if (!string.IsNullOrEmpty(pricingAudience))
+        {
+            headers["PricingAudience"] = pricingAudience;
+        }
+
+        return productDetails ?? throw new JsonException("Failed to deserialize marketplace response to ProductDetails.");
+    }
+
+    private async Task<string> GetAccessTokenAsync(string? tenant = null)
+    {
+        if (_cachedAccessToken != null && DateTimeOffset.UtcNow < _tokenExpiryTime)
+        {
+            return _cachedAccessToken;
+        }
+
+        AccessToken accessToken = await GetEntraIdAccessTokenAsync(ManagementApiBaseUrl, tenant);
+        _cachedAccessToken = accessToken.Token;
+        _tokenExpiryTime = accessToken.ExpiresOn.AddSeconds(-TokenExpirationBuffer);
+
+        return _cachedAccessToken;
+    }
+
+    private async Task<AccessToken> GetEntraIdAccessTokenAsync(string resource, string? tenant = null)
+    {
+        var tokenRequestContext = new TokenRequestContext([$"{resource}/.default"]);
+        var tokenCredential = await GetCredential(tenant);
+        return await tokenCredential
+            .GetTokenAsync(tokenRequestContext, CancellationToken.None);
+    }
+
+    private static void ValidateRequiredParameters(string subscription)
+    {
+        if (string.IsNullOrWhiteSpace(subscription))
+            throw new ArgumentException("Subscription ID cannot be null or empty.", nameof(subscription));
+    }
+
+    private static void ValidateRequiredParameters(string productId, string subscription)
+    {
+        if (string.IsNullOrWhiteSpace(productId))
+            throw new ArgumentException("Product ID cannot be null or empty.", nameof(productId));
+
+        if (string.IsNullOrWhiteSpace(subscription))
+            throw new ArgumentException("Subscription ID cannot be null or empty.", nameof(subscription));
+    }
+
+    private async Task<T> ExecuteMarketplaceRequestAsync<T>(
+        string url,
+        JsonTypeInfo<T> jsonTypeInfo,
+        RetryPolicyOptions? retryPolicy = null,
+        Dictionary<string, string>? headers = null,
+        string? tenant = null
+    )
     {
         // Use Azure Core pipeline approach consistently
         var clientOptions = AddDefaultPolicies(new MarketplaceClientOptions());
@@ -127,9 +273,14 @@ public class MarketplaceService(ITenantService tenantService)
         request.Uri.Reset(new Uri(url));
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
-        // Add optional headers as specified in the API
-        if (!string.IsNullOrEmpty(pricingAudience))
-            request.Headers.Add("PricingAudience", pricingAudience);
+        // Add any additional headers
+        if (headers != null && headers.Count > 0)
+        {
+            foreach (var header in headers)
+            {
+                request.Headers.Add(header.Key, header.Value);
+            }
+        }
 
         var response = await pipeline.SendRequestAsync(request, CancellationToken.None);
 
@@ -137,8 +288,7 @@ public class MarketplaceService(ITenantService tenantService)
         {
             try
             {
-                var productDetails = JsonSerializer.Deserialize(response.Content.ToStream(), MarketplaceJsonContext.Default.ProductDetails);
-                return productDetails ?? throw new JsonException("Failed to deserialize marketplace response to ProductDetails.");
+                return JsonSerializer.Deserialize(response.Content.ToStream(), jsonTypeInfo)!;
             }
             catch (JsonException ex)
             {
@@ -149,25 +299,23 @@ public class MarketplaceService(ITenantService tenantService)
         throw new HttpRequestException($"Request failed with status {response.Status}: {response.ReasonPhrase}");
     }
 
-    private async Task<string> GetAccessTokenAsync(string? tenant = null)
+    private static string? ExtractSkipTokenFromUrl(string? url)
     {
-        if (_cachedAccessToken != null && DateTimeOffset.UtcNow < _tokenExpiryTime)
+        if (url == null)
         {
-            return _cachedAccessToken;
+            return null;
         }
 
-        AccessToken accessToken = await GetEntraIdAccessTokenAsync(ManagementApiBaseUrl, tenant);
-        _cachedAccessToken = accessToken.Token;
-        _tokenExpiryTime = accessToken.ExpiresOn.AddSeconds(-TokenExpirationBuffer);
-
-        return _cachedAccessToken;
-    }
-
-    private async Task<AccessToken> GetEntraIdAccessTokenAsync(string resource, string? tenant = null)
-    {
-        var tokenRequestContext = new TokenRequestContext([$"{resource}/.default"]);
-        var tokenCredential = await GetCredential(tenant);
-        return await tokenCredential
-            .GetTokenAsync(tokenRequestContext, CancellationToken.None);
+        try
+        {
+            var uri = new Uri(url);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            return query["$skiptoken"];
+        }
+        catch
+        {
+            // If we can't parse the URL or extract the token, return null
+            return null;
+        }
     }
 }
