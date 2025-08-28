@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
+using Azure.Mcp.TestUtilities;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.Log;
 
@@ -48,9 +49,9 @@ public sealed class WorkspaceLogQueryCommandTests
     }
 
     [Theory]
-    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query {_knownQuery}", true)]
-    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query {_knownQuery} --hours {_knownHours} --limit {_knownLimit}", true)]
-    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --table {_knownTable} --query {_knownQuery}", false)] // missing resource-group
+    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query \"{_knownQuery}\"", true)]
+    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query \"{_knownQuery}\" --hours {_knownHours} --limit {_knownLimit}", true)]
+    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --table {_knownTable} --query \"{_knownQuery}\"", false)] // missing resource-group
     [InlineData($"--subscription {_knownSubscription}", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
@@ -76,7 +77,7 @@ public sealed class WorkspaceLogQueryCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
+    var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(ArgSplitter.SplitArgs(args)));
 
         // Assert
         Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
@@ -112,13 +113,7 @@ public sealed class WorkspaceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(mockResults);
 
-        var args = _commandDefinition.Parse([
-            "--subscription", _knownSubscription,
-            "--workspace", _knownWorkspace,
-            "--resource-group", _knownResourceGroup,
-            "--table", _knownTable,
-            "--query", _knownQuery
-        ]);
+        var args = _commandDefinition.Parse(ArgSplitter.SplitArgs($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query \"{_knownQuery}\""));
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -155,16 +150,7 @@ public sealed class WorkspaceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(mockResults);
 
-        var args = _commandDefinition.Parse([
-            "--subscription", _knownSubscription,
-            "--workspace", _knownWorkspace,
-            "--resource-group", _knownResourceGroup,
-            "--table", _knownTable,
-            "--query", _knownQuery,
-            "--hours", _knownHours,
-            "--limit", _knownLimit,
-            "--tenant", _knownTenant
-        ]);
+        var args = _commandDefinition.Parse(ArgSplitter.SplitArgs($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query \"{_knownQuery}\" --hours {_knownHours} --limit {_knownLimit} --tenant {_knownTenant}"));
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -198,13 +184,7 @@ public sealed class WorkspaceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(mockResults);
 
-        var args = _commandDefinition.Parse([
-            "--subscription", _knownSubscription,
-            "--workspace", _knownWorkspace,
-            "--resource-group", _knownResourceGroup,
-            "--table", _knownTable,
-            "--query", _knownQuery
-        ]);
+        var args = _commandDefinition.Parse(ArgSplitter.SplitArgs($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query \"{_knownQuery}\""));
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -237,13 +217,7 @@ public sealed class WorkspaceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<List<JsonNode>>(new Exception("Test error")));
 
-        var args = _commandDefinition.Parse([
-            "--subscription", _knownSubscription,
-            "--workspace", _knownWorkspace,
-            "--resource-group", _knownResourceGroup,
-            "--table", _knownTable,
-            "--query", _knownQuery
-        ]);
+        var args = _commandDefinition.Parse(ArgSplitter.SplitArgs($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query \"{_knownQuery}\""));
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);

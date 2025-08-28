@@ -13,7 +13,7 @@ public static class ArgSplitter
     public static string[] SplitArgs(string commandLine)
     {
         if (string.IsNullOrWhiteSpace(commandLine))
-            return [];
+            return Array.Empty<string>();
 
         var args = new List<string>();
         var current = new StringBuilder();
@@ -24,6 +24,20 @@ public static class ArgSplitter
             var c = commandLine[i];
             if (c == '"')
             {
+                // Determine if this quote is escaped by an odd number of backslashes
+                int backslashCount = 0;
+                for (int j = i - 1; j >= 0 && commandLine[j] == '\\'; j--)
+                    backslashCount++;
+
+                if (backslashCount % 2 == 1)
+                {
+                    // Escaped quote: remove one escaping backslash already appended (if any)
+                    if (current.Length > 0 && current[current.Length - 1] == '\\')
+                        current.Length--;
+                    current.Append('"');
+                    continue;
+                }
+
                 inQuotes = !inQuotes;
                 continue;
             }
@@ -45,6 +59,6 @@ public static class ArgSplitter
         if (current.Length > 0)
             args.Add(current.ToString());
 
-        return [.. args];
+        return args.ToArray();
     }
 }

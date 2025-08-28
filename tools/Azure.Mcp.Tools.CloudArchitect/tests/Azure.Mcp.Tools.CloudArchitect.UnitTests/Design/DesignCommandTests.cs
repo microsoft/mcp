@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.CloudArchitect.Commands.Design;
+using Azure.Mcp.Tools.CloudArchitect.Options;
 
 namespace Azure.Mcp.Tools.CloudArchitect.UnitTests.Design;
 
@@ -58,13 +59,13 @@ public class DesignCommandTests
         // Check that the command has the expected options
         var optionNames = command.Options.Select(o => o.Name).ToList();
 
-        Assert.Contains("question", optionNames);
-        Assert.Contains("question-number", optionNames);
-        Assert.Contains("total-questions", optionNames);
-        Assert.Contains("answer", optionNames);
-        Assert.Contains("next-question-needed", optionNames);
-        Assert.Contains("confidence-score", optionNames);
-        Assert.Contains("state", optionNames);
+        Assert.Contains("--question", optionNames);
+        Assert.Contains("--question-number", optionNames);
+        Assert.Contains("--total-questions", optionNames);
+        Assert.Contains("--answer", optionNames);
+        Assert.Contains("--next-question-needed", optionNames);
+        Assert.Contains("--confidence-score", optionNames);
+        Assert.Contains("--state", optionNames);
     }
 
     [Theory]
@@ -180,30 +181,27 @@ public class DesignCommandTests
         var complexQuestion = "What is your \"primary\" application 'type' and how \"big\" will it be?";
         var complexAnswer = "It's a \"web application\" with 'high' scalability requirements";
 
-        var args = new[]
-        {
-            "--question", complexQuestion,
-            "--answer", complexAnswer,
-            "--question-number", "2",
-            "--total-questions", "10"
-        };
+        // Build a single command line and use ArgSplitter to emulate shell quoting
+        var cmdLine = $"--question \"{complexQuestion.Replace("\"", "\\\"")}\" --answer \"{complexAnswer.Replace("\"", "\\\"")}\" --question-number 2 --total-questions 10";
+    var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(cmdLine));
 
-        var parseResult = _commandDefinition.Parse(args);
+    // Ensure there were no parse/validation errors
+    Assert.True(!parseResult.Errors.Any(), string.Join("; ", parseResult.Errors.Select(e => e.Message)));
 
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+    // Act
+    var response = await _command.ExecuteAsync(_context, parseResult);
 
-        // Assert
-        Assert.Equal(200, response.Status);
-        Assert.NotNull(response.Results);
-        Assert.Empty(response.Message);
+    // Assert
+    Assert.Equal(200, response.Status);
+    Assert.NotNull(response.Results);
+    Assert.Empty(response.Message);
 
-        // Verify all options were parsed correctly
-        var questionValue = parseResult.GetValue((Option<string>)_command.GetCommand().Options.First(o => o.Name == "question"));
-        var answerValue = parseResult.GetValue((Option<string>)_command.GetCommand().Options.First(o => o.Name == "answer"));
+    // Verify all options were parsed correctly using the canonical option definitions
+    var questionValue = parseResult.GetValue(CloudArchitectOptionDefinitions.Question);
+    var answerValue = parseResult.GetValue(CloudArchitectOptionDefinitions.Answer);
 
-        Assert.Equal(complexQuestion, questionValue);
-        Assert.Equal(complexAnswer, answerValue);
+    Assert.Equal(complexQuestion, questionValue);
+    Assert.Equal(complexAnswer, answerValue);
     }
 
     [Fact]
@@ -305,12 +303,12 @@ public class DesignCommandTests
 
         // Verify all options were parsed correctly
         var command = _command.GetCommand();
-        var questionValue = parseResult.GetValue((Option<string>)command.Options.First(o => o.Name == "question"));
-        var questionNumberValue = parseResult.GetValue((Option<int>)command.Options.First(o => o.Name == "question-number"));
-        var totalQuestionsValue = parseResult.GetValue((Option<int>)command.Options.First(o => o.Name == "total-questions"));
-        var answerValue = parseResult.GetValue((Option<string>)command.Options.First(o => o.Name == "answer"));
-        var nextQuestionNeededValue = parseResult.GetValue((Option<bool>)command.Options.First(o => o.Name == "next-question-needed"));
-        var confidenceScoreValue = parseResult.GetValue((Option<double>)command.Options.First(o => o.Name == "confidence-score"));
+        var questionValue = parseResult.GetValue((Option<string>)command.Options.First(o => o.Name == "--question"));
+        var questionNumberValue = parseResult.GetValue((Option<int>)command.Options.First(o => o.Name == "--question-number"));
+        var totalQuestionsValue = parseResult.GetValue((Option<int>)command.Options.First(o => o.Name == "--total-questions"));
+        var answerValue = parseResult.GetValue((Option<string>)command.Options.First(o => o.Name == "--answer"));
+        var nextQuestionNeededValue = parseResult.GetValue((Option<bool>)command.Options.First(o => o.Name == "--next-question-needed"));
+        var confidenceScoreValue = parseResult.GetValue((Option<double>)command.Options.First(o => o.Name == "--confidence-score"));
 
         Assert.Equal("What type of application are you building?", questionValue);
         Assert.Equal(3, questionNumberValue);
