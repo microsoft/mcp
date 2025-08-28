@@ -1080,8 +1080,36 @@ azmcp monitor metrics query --subscription <subscription> \
 azmcp azuremanagedlustre filesystem list --subscription <subscription> \
                                          --resource-group <resource-group> 
 
-azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
-                                            --location <location>
+# Create an Azure Managed Lustre filesystem
+azmcp azuremanagedlustre filesystem create --subscription <subscription> \
+                                           --sku <sku> \
+                                           --size <filesystem-size-in-tib> \
+                                           --subnet-id <subnet-id> \
+                                           --zone <zone> \
+                                           --maintenance-day <maintenance-day> \
+                                           --maintenance-time <maintenance-time> \
+                                           [--hsm-container <hsm-container>] \
+                                           [--hsm-log-container <hsm-log-container>] \
+                                           [--import-prefix <import-prefix>] \
+                                           [--root-squash-mode <root-squash-mode>] \
+                                           [--no-squash-nid-list <no-squash-nid-list>] \
+                                           [--squash-uid <squash-uid>] \
+                                           [--squash-gid <squash-gid>] \
+                                           [--custom-encryption] \
+                                           [--key-url <key-url>] \
+                                           [--source-vault <source-vault>] \
+                                           [--user-assigned-identity-id <user-assigned-identity-id>]
+
+# Update an existing Azure Managed Lustre filesystem
+azmcp azuremanagedlustre filesystem update --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --name <filesystem-name> \
+                                           [--maintenance-day <maintenance-day>] \
+                                           [--maintenance-time <HH:mm>] \
+                                           [--root-squash-mode <mode>] \
+                                           [--no-squash-nid-list <nid1,nid2,...>] \
+                                           [--squash-uid <uid>] \
+                                           [--squash-gid <gid>]
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
 azmcp azuremanagedlustre filesystem subnetsize ask --subscription <subscription> \
@@ -1094,6 +1122,10 @@ azmcp azuremanagedlustre filesystem subnetsize validate --subscription <subscrip
                                                         --sku <azure-managed-lustre-sku> \
                                                         --size <filesystem-size-in-tib> \
                                                         --location <filesystem-location>
+
+# Lists the available Azure Managed Lustre SKUs in a specific location
+azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
+                                            --location <location>
 ```
 
 ### Azure Native ISV Operations
