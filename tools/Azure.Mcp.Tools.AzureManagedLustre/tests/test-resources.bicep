@@ -126,7 +126,7 @@ resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2025-01-01'
 
 resource hsmContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2025-01-01' = {
   parent : blobService
-  name: 'hsmdata'
+  name: 'hsm-data'
   properties: {
     publicAccess: 'None'
   }
@@ -135,7 +135,7 @@ resource hsmContainer 'Microsoft.Storage/storageAccounts/blobServices/containers
 
 resource hsmLogsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2025-01-01' = {
   parent : blobService
-  name: 'hsmlogs'
+  name: 'hsm-logs'
   properties: {
     publicAccess: 'None'
   }
@@ -177,7 +177,7 @@ resource keyVaultCryptoUser 'Microsoft.Authorization/roleAssignments@2022-04-01'
 
 resource keyvaultSecret 'Microsoft.KeyVault/vaults/keys@2024-11-01' = {
   parent: keyVault
-  name: 'encryptionkey'
+  name: 'encryption-key'
   properties: {
     kty: 'RSA'
     keySize: 2048

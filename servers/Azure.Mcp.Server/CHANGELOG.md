@@ -21,13 +21,16 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added support for listing service health events in a subscription via the command `azmcp_resourcehealth_service-health-events_list`. [[#367](https://github.com/microsoft/mcp/pull/367)]
 - Added nodepool list tool for AKS managed cluster: [[#360](https://github.com/microsoft/mcp/pull/360)]
 
+
 ### Breaking Changes
 
 - Updated/removed options for the following commands: [[#108](https://github.com/microsoft/mcp/pull/108)]
   - `azmcp_storage_account_create`: Removed the ability to configure `enable-https-traffic-only` (always `true` now), `allow-blob-public-access` (always `false` now), and `kind` (always `StorageV2` now).
   - `azmcp_storage_blob_container_create`: Removed the ability to configure `blob-container-public-access` (always `false` now).
   - `azmcp_storage_blob_upload`: Removed the ability to configure `overwrite` (always `false` now).
-
+- Added the following Azure Managed Lustre commands: [[#50](https://github.com/microsoft/mcp/issues/50)]
+  - `azmcp_azuremanagedlustre_filesystem_create`: Create an Azure Managed Lustre filesystems.
+  
 ### Bugs Fixed
 
 - Fixed telemetry bug where "ToolArea" was incorrectly populated in with "ToolName". [[#346](https://github.com/microsoft/mcp/pull/346)]

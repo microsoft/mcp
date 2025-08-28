@@ -45,7 +45,7 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
 
     public override string Description =>
         """
-        Create an Azure Managed Lustre (AMLFS) file system using the specified network, capacity, miantenance window and availability zone.
+        Create an Azure Managed Lustre (AMLFS) file system using the specified network, capacity, maintenance window and availability zone.
         Optionally provides possibility to define Blob Integration, customer managed key encryption and root squash configuration.
         """;
 
@@ -63,11 +63,11 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
         command.AddOption(_sizeOption);
         command.AddOption(_subnetIdOption);
         command.AddOption(_zoneOption);
+        command.AddOption(_maintenanceDayOption);
+        command.AddOption(_maintenanceTimeOption);
         command.AddOption(_hsmContainerOption);
         command.AddOption(_hsmLogContainerOption);
         command.AddOption(_importPrefixOption);
-        command.AddOption(_maintenanceDayOption);
-        command.AddOption(_maintenanceTimeOption);
         command.AddOption(_rootSquashModeOption);
         command.AddOption(_noSquashNidListsOption);
         command.AddOption(_squashUidOption);
