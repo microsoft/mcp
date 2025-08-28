@@ -37,6 +37,8 @@ if ($amlfsCluster) {
 # This is not easy to do in Bicep and at the resource group scope
 Write-Host "Resolving 'HPC Cache Resource Provider' service principal..." -ForegroundColor Yellow
 
+$storageAccountName = $testSettings.ResourceBaseName
+
 $sa = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $storageAccountName -ErrorAction Stop
 $scope = $sa.Id
 
