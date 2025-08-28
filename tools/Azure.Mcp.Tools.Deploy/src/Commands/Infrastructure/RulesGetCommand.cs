@@ -59,9 +59,9 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
             }
 
             context.Activity?
-                .AddTag("DeploymentTool", options.DeploymentTool)
-                .AddTag("IacType", options.IacType)
-                .AddTag("ComputeHostResources", options.ResourceTypes);
+                .AddTag(DeployTelemetryTags.DeploymentTool, options.DeploymentTool)
+                .AddTag(DeployTelemetryTags.IacType, options.IacType)
+                .AddTag(DeployTelemetryTags.ComputeHostResources, options.ResourceTypes);
 
             var resourceTypes = options.ResourceTypes.Split(',')
                 .Select(rt => rt.Trim())

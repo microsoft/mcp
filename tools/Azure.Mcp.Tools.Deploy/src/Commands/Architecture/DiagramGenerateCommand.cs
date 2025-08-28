@@ -70,9 +70,9 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
             }
 
             context.Activity?
-                .AddTag("ServiceCount", appTopology.Services.Length)
-                .AddTag("ComputeHostResources", string.Join(", ", appTopology.Services.Select(s => s.AzureComputeHost)))
-                .AddTag("BackingServiceResources", string.Join(", ", appTopology.Services.SelectMany(s => s.Dependencies).Select(d => d.ServiceType)));
+                .AddTag(DeployTelemetryTags.ServiceCount, appTopology.Services.Length)
+                .AddTag(DeployTelemetryTags.ComputeHostResources, string.Join(", ", appTopology.Services.Select(s => s.AzureComputeHost)))
+                .AddTag(DeployTelemetryTags.BackingServiceResources, string.Join(", ", appTopology.Services.SelectMany(s => s.Dependencies).Select(d => d.ServiceType)));
 
             _logger.LogInformation("Successfully parsed app topology with {ServiceCount} services", appTopology.Services.Length);
 
