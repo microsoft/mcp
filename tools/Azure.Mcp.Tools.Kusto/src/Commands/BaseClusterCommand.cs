@@ -24,19 +24,6 @@ public abstract class BaseClusterCommand<
         base.RegisterOptions(command);
         command.Options.Add(_clusterUriOption);
         command.Options.Add(_clusterNameOption);
-
-        command.Validators.Add(result =>
-        {
-            var validationResult = Validate(result);
-            if (!validationResult.IsValid)
-            {
-                if (!string.IsNullOrEmpty(validationResult.ErrorMessage))
-                {
-                    result.AddError(validationResult.ErrorMessage);
-                }
-                return;
-            }
-        });
     }
 
     public override ValidationResult Validate(CommandResult parseResult, CommandResponse? commandResponse = null)
@@ -59,7 +46,7 @@ public abstract class BaseClusterCommand<
             if (string.IsNullOrEmpty(subscription) || string.IsNullOrEmpty(clusterName))
             {
                 validationResult.IsValid = false;
-                validationResult.ErrorMessage = $"Either --{_clusterUriOption.Name} must be provided, or both --{_subscriptionOption.Name} and --{_clusterNameOption.Name} must be provided.";
+                validationResult.ErrorMessage = $"Either {_clusterUriOption.Name} must be provided, or both {_subscriptionOption.Name} and {_clusterNameOption.Name} must be provided.";
 
                 if (commandResponse != null)
                 {

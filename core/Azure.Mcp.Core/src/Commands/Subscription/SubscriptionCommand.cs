@@ -25,11 +25,26 @@ public abstract class SubscriptionCommand<
         // This mirrors the prior behavior that preferred the explicit option but fell back to env var.
         command.Validators.Add(commandResult =>
         {
-            // Look for an explicit option result among the command's children
-            var optionResult = commandResult.Children.OfType<OptionResult>().FirstOrDefault(r => r.Option == _subscriptionOption);
-            var subscriptionValue = optionResult != null && optionResult.Tokens.Count > 0
-                ? optionResult.Tokens[0].Value
-                : null;
+            static string Normalize(string? s) => (s ?? string.Empty).TrimStart('-', '/');
+
+            // Look for an explicit option result among the command's children by comparing normalized
+            // option names and aliases rather than relying on reference equality. Consider an option
+            // present only if it has at least one non-whitespace token.
+            var optionResult = commandResult.Children.OfType<OptionResult>()
+                .FirstOrDefault(or =>
+                {
+                    if (or.Tokens == null || or.Tokens.Count == 0)
+                        return false;
+                    if (!string.IsNullOrWhiteSpace(or.Tokens[0].Value) &&
+                        (string.Equals(Normalize(or.Option.Name), Normalize(_subscriptionOption.Name), StringComparison.OrdinalIgnoreCase)
+                         || (or.Option.Aliases != null && or.Option.Aliases.Any(a => string.Equals(Normalize(a), Normalize(_subscriptionOption.Name), StringComparison.OrdinalIgnoreCase)))
+                         || (_subscriptionOption.Aliases != null && _subscriptionOption.Aliases.Any(a => string.Equals(Normalize(a), Normalize(or.Option.Name), StringComparison.OrdinalIgnoreCase)))))
+                        return true;
+
+                    return false;
+                });
+
+            var subscriptionValue = optionResult != null ? optionResult.Tokens[0].Value : null;
 
             var envSubscription = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
 

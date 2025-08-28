@@ -162,7 +162,7 @@ public static partial class OptionDefinitions
         )
         {
             Description = "The ID of an existing test run to update. If provided, the command will trigger a rerun of the given test run id.",
-            Required = true
+            Required = false
         };
 
         public static readonly Option<int> VirtualUsers = new(

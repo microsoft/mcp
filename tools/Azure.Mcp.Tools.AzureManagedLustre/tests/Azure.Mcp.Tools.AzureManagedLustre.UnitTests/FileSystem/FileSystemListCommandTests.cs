@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.TestUtilities;
+using System.CommandLine.Parsing;
 using Azure.Mcp.Tools.AzureManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.AzureManagedLustre.Models;
 using Azure.Mcp.Tools.AzureManagedLustre.Services;
@@ -127,30 +128,30 @@ public class FileSystemListCommandTests
         if (shouldSucceed)
         {
             var expected = new List<LustreFileSystem>
-        {
-            new LustreFileSystem(
-                "fs1",
-                _knownResourceIdRg1,
-                _knownSubscriptionId,
-                "rg1",
-                "eastus",
-                "Succeeded",
-                "Available",
-                "10.0.0.5",
-                "AMLFS-Durable-Premium-40",
-                48,
-                null,
-                "Monday",
-                "01:00"
-            ),
-        };
+            {
+                new LustreFileSystem(
+                    "fs1",
+                    _knownResourceIdRg1,
+                    _knownSubscriptionId,
+                    "rg1",
+                    "eastus",
+                    "Succeeded",
+                    "Available",
+                    "10.0.0.5",
+                    "AMLFS-Durable-Premium-40",
+                    48,
+                    null,
+                    "Monday",
+                    "01:00"
+                ),
+            };
 
             _amlfsService.ListFileSystemsAsync(
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>())
-            .Returns(expected);
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions?>())
+                .Returns(expected);
 
         }
 
