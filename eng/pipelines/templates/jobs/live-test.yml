@@ -1,6 +1,4 @@
 parameters:
-- name: ServerName
-  type: string
 - name: TimeoutInMinutes
   type: number
   default: 60
@@ -91,8 +89,7 @@ jobs:
           -TestType 'Live' `
           -Areas @('$(Area)') `
           -TestResultsPath '$(Build.ArtifactStagingDirectory)/native/testResults' `
-          -TestNativeBuild `
-          -ServerName '${{ parameters.ServerName }}'
+          -TestNativeBuild
 
         exit $LastExitCode
       pwsh: true

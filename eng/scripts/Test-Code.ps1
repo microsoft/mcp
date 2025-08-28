@@ -9,8 +9,7 @@ param(
     [string] $TestType = 'Unit',
     [switch] $CollectCoverage,
     [switch] $OpenReport,
-    [switch] $TestNativeBuild,
-    [string] $ServerName
+    [switch] $TestNativeBuild
 )
 
 $ErrorActionPreference = 'Stop'
