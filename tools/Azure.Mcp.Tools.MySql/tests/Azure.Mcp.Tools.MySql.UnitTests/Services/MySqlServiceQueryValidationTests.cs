@@ -31,7 +31,7 @@ public class MySqlServiceQueryValidationTests
     [InlineData("SELECT * FROM users LIMIT 100")]
     [InlineData("SELECT COUNT(*) FROM products LIMIT 1")]
     [InlineData("SELECT COUNT(*) FROM products;")]
-    [InlineData("SELECT COUNT(*) FROM products; -- comment")]    
+    [InlineData("SELECT COUNT(*) FROM products; -- comment")]
     public void ValidateQuerySafety_WithSafeQueries_ShouldNotThrow(string query)
     {
         // Arrange
@@ -132,7 +132,7 @@ public class MySqlServiceQueryValidationTests
     [InlineData("SELECT * FROM users; DROP TABLE users")]
     [InlineData("SELECT * FROM users; SELECT * FROM products")]
     [InlineData("SELECT * FROM users; SELECT * FROM products; --comment")]
-    [InlineData("SELECT * FROM Logs; union select password from Users")]    
+    [InlineData("SELECT * FROM Logs; union select password from Users")]
     public void ValidateQuerySafety_WithMultipleStatements_ShouldThrowInvalidOperationException(string query)
     {
         // Arrange
