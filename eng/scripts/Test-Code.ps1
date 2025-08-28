@@ -33,6 +33,53 @@ if (!$TestResultsPath) {
 # Clean previous results
 Remove-Item -Recurse -Force $TestResultsPath -ErrorAction SilentlyContinue
 
+# Groups areas by their server based on naming convention.
+function groupAreasByServer {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string[]]$areas
+    )
+
+    $allServers = @(Get-ChildItem -Path "$RepoRoot/servers" -Directory | ForEach-Object { $_.Name })
+    Write-Host "Available servers: $($allServers -join ', ')" -ForegroundColor Cyan
+
+    $servers = @() # e.g. (Azure.Mcp., Fabric.Mcp., Template.Mcp.)
+    foreach ($server in $allServers) {
+        if ($server -match '^(.+)\.Server$') {
+            $servers += "$($matches[1])."
+        } else {
+            Write-Warning "Server '$server' doesn't match expected naming pattern '*.Server'"
+        }
+    }
+
+    $serverAreasMap = @{}
+    foreach ($area in $areas) {
+        if ($area -match '^(tools|core|servers)/([^/]+)') {
+            $areaProjName = $matches[2] # e.g. Azure.Mcp.Core, Azure.Mcp.Tools.Acr, Fabric.Mcp.Tools.EventStream
+
+            # Find the server that the area belongs to.
+            $serverName = $null
+            
+            foreach ($server in $servers) {
+                if ($areaProjName.StartsWith($server)) {
+                    $serverName = "$($server.TrimEnd('.')).Server"
+                    break
+                }
+            }
+            
+            if (-not $serverName) {
+                Write-Warning "No matching server found for the area '$area'. Available mcp server types: $($servers -join ', ')"
+                continue
+            }
+            if (-not $serverAreasMap.ContainsKey($serverName)) {
+                $serverAreasMap[$serverName] = @()
+            }
+            $serverAreasMap[$serverName] += $area
+        }
+    }
+    return $serverAreasMap
+}
+
 # Gets all area projects those are excluded using BuildNative condition.
 function Get-NativeExcludedAreas {
     param(
@@ -67,6 +114,33 @@ function Get-NativeExcludedAreas {
     return $excludedAreas
 }
 
+# Analyzes areas for native compatibility and returns servers, native-compatible areas, and incompatible areas.
+function Get-NativeCompatibleAreasAndServers {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string[]]$areas
+    )
+
+    $serverAreasMap = groupAreasByServer -areas $areas
+
+    $servers = @($serverAreasMap.Keys)
+    $nonNativeAreas = @()
+    $nativeAreas = @()
+    
+    foreach ($server in $servers) {
+        $serverAreas = $serverAreasMap[$server]
+        $excludedAreas = Get-NativeExcludedAreas -ServerName $server
+        $nonNativeAreas += @($serverAreas | Where-Object { $_ -in $excludedAreas })
+        $nativeAreas += @($serverAreas | Where-Object { $_ -notin $excludedAreas })
+    }
+
+    return @{
+        Servers = $servers
+        NativeAreas = $nativeAreas
+        NonNativeAreas = $nonNativeAreas
+    }
+}
+
 
 # Identifies the root directories to be recursively scanned for tests in the specified areas.
 function GetTestsRootDirs {
@@ -93,23 +167,29 @@ function GetTestsRootDirs {
     return $testsRootDirs
 }
 
-function BuildNativeBinaryAndPrepareTests {
+function BuildNativeServersAndPrepareTests {
     param(
         [Parameter(Mandatory=$true)]
         [string[]]$testsRootDirs,
         [Parameter(Mandatory=$true)]
-        [string]$ServerName
+        [string[]]$servers
     )
 
-    # Native AOT compilation only occurs during 'dotnet publish', not 'dotnet build'
-    $nativeBinaryPath = PublishNativeBinary -ServerName $ServerName
+    $nativeBinaryPaths = @()
+    foreach ($server in $servers) {
+        # Native AOT compilation only occurs during 'dotnet publish', not 'dotnet build'
+        $nativeBinaryPath = PublishNativeBinary -ServerName $server
+        $nativeBinaryPaths += $nativeBinaryPath
+    }
 
     Write-Host "Building test project(s)"
     Invoke-LoggedCommand `
         -Command "dotnet build" `
         -AllowedExitCodes @(0)
-
-    CopyNativeBinaryToTestDirs -nativeBinaryPath $nativeBinaryPath -testsRootDirs $testsRootDirs
+    
+    foreach ($nativeBinaryPath in $nativeBinaryPaths) {
+        CopyNativeBinaryToTestDirs -nativeBinaryPath $nativeBinaryPath -testsRootDirs $testsRootDirs
+    }
 }
 
 function PublishNativeBinary {
@@ -203,15 +283,24 @@ function CreateTestSolution {
 
 # main
 
+$areas = $Areas
+
 if ($TestNativeBuild) {
-    if ([string]::IsNullOrWhiteSpace($ServerName) -or $ServerName -eq "none") {
-        Write-Error "ServerName parameter is required when TestNativeBuild is specified."
+    if (-not $areas -or $areas.Count -eq 0) {
+        Write-Error "Areas parameter is required and must contain at least one area when TestNativeBuild is specified."
         exit 1
     }
 
-    $excludedAreas = Get-NativeExcludedAreas -ServerName $ServerName
-    $nonNativeAreas = @($areas | Where-Object { $_ -in $excludedAreas })
-    $areas = @($areas | Where-Object { $_ -notin $excludedAreas })
+    $result = Get-NativeCompatibleAreasAndServers -areas $areas
+
+    if ($result.Servers.Count -eq 0) {
+        Write-Warning "No area to mcp server mapping exists for $($areas -join ', ')"
+        exit 0
+    }
+
+    $servers = $result.Servers
+    $areas = $result.NativeAreas
+    $nonNativeAreas = $result.NonNativeAreas
 
     if ($areas.Count -eq 0) {
         Write-Warning "All the specified area(s) [$($nonNativeAreas -join ', ')] are native incompatible, specify areas that support native builds or run without -TestNativeBuild."
@@ -239,7 +328,7 @@ if (!$solutionPath) {
 Push-Location $workPath
 try {
     if ($TestNativeBuild) {
-        BuildNativeBinaryAndPrepareTests -testsRootDirs $testsRootDirs -ServerName $ServerName
+        BuildNativeServersAndPrepareTests -testsRootDirs $testsRootDirs -servers $servers
     }
 
     if($debugLogs) {
