@@ -242,6 +242,7 @@ Replace `/full/path/to/.env` with your actual .env file path. Alternatively, use
 
 * "List the Azure Managed Lustre clusters in resource group 'my-resource-group'"
 * "How many IP Addresses I need to create a 128 TiB cluster of AMLFS 500?"
+* Create a 4 TIB Azure Managed Lustre filesystem in 'my-region' attaching to 'my-subnet' in virtual network 'my-virtual-network'
 
 ### 📊 Azure Monitor
 
