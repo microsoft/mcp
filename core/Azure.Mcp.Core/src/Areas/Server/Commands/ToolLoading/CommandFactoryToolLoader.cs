@@ -3,11 +3,11 @@
 
 using System.Diagnostics;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 using ModelContextProtocol.Protocol;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
