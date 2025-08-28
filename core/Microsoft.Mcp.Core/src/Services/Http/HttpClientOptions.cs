@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Services.Http;
+namespace Microsoft.Mcp.Core.Services.Http;
 
 /// <summary>
 /// Configuration options for HttpClient services.

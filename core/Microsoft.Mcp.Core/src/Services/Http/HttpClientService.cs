@@ -4,7 +4,7 @@
 using System.Net;
 using Microsoft.Extensions.Options;
 
-namespace Azure.Mcp.Core.Services.Http;
+namespace Microsoft.Mcp.Core.Services.Http;
 
 /// <summary>
 /// Implementation of IHttpClientService that provides configured HttpClient instances with proxy support.
