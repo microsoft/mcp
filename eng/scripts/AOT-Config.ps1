@@ -8,7 +8,7 @@ $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 $script:AOTConfig = @{
     # Base paths
     RootPath = $RepoRoot
-    ProjectFile = "$RepoRoot/core/src/AzureMcp.Cli/AzureMcp.Cli.csproj"
+    ProjectFile = "$RepoRoot/servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj"
 
     # AOT report directories and files
     ReportDirectory = "$RepoRoot/.work/aotCompactReport"

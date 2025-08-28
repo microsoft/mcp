@@ -35,20 +35,20 @@ jobs:
       SigningKeyCode: 'CP-230012' # MS Cert
       BinaryPath: $(Build.ArtifactStagingDirectory)/signed
       BinaryPattern: |
-        win-*/**/azmcp.dll
-        win-*/**/azmcp.exe
-        win-*/**/AzureMcp*.dll
+        **/win-*/**/azmcp.dll
+        **/win-*/**/azmcp.exe
+        **/win-*/**/*.Mcp.*.dll
 
   - template: pipelines/steps/binary-signing.yml@azure-sdk-build-tools
     parameters:
       SigningKeyCode: 'CP-231522' # MS 3rd Party Cert
       BinaryPath: $(Build.ArtifactStagingDirectory)/signed
       BinaryPattern: |
-        win-*/**/ModelContextProtocol*.dll
-        win-*/**/Npgsql.dll
-        win-*/**/OpenAI.dll
-        win-*/**/OpenTelemetry*.dll
-        win-*/**/YamlDotNet.dll
+        **/win-*/**/ModelContextProtocol*.dll
+        **/win-*/**/Npgsql.dll
+        **/win-*/**/OpenAI.dll
+        **/win-*/**/OpenTelemetry*.dll
+        **/win-*/**/YamlDotNet.dll
 
   - template: pipelines/steps/azd-cli-mac-signing.yml@azure-sdk-build-tools
     parameters:
