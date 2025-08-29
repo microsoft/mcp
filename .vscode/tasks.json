@@ -24,6 +24,18 @@
 				"/consoleloggerparameters:NoSummary"
 			],
 			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\code\\mcp\\AzureMcp.sln",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"group": "build"
 		}
 	]
 }

@@ -201,7 +201,7 @@ public class KeyValueSetCommandTests
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(string args)
     {
         // Arrange
-        var parsedArgs = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
+        var parsedArgs = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parsedArgs);

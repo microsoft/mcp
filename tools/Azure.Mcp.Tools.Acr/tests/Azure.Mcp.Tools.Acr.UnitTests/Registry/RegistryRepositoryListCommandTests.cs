@@ -52,7 +52,7 @@ public class RegistryRepositoryListCommandTests
                 });
         }
 
-        var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
