@@ -130,7 +130,7 @@ public sealed class ServiceStartCommand : BaseCommand
                 logging.ClearProviders();
                 logging.ConfigureOpenTelemetryLogger();
                 logging.AddEventSourceLogger();
-                
+
                 if (serverOptions.Debug)
                 {
                     // Configure console logger to emit Debug+ to stderr so tests can capture logs from StandardError

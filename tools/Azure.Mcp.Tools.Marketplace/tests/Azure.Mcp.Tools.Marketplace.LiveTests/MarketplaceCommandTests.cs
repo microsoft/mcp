@@ -26,7 +26,7 @@ public class MarketplaceCommandTests(ITestOutputHelper output) : CommandTestsBas
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync();
-        
+
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new CacheService(memoryCache);
         var tenantService = new TenantService(cacheService);
@@ -79,8 +79,6 @@ public class MarketplaceCommandTests(ITestOutputHelper output) : CommandTestsBas
     [Trait("Category", "Live")]
     public async Task Should_get_marketplace_product_with_market_option()
     {
-
-
         var result = await CallToolAsync(
             "azmcp_marketplace_product_get",
             new()
@@ -102,7 +100,6 @@ public class MarketplaceCommandTests(ITestOutputHelper output) : CommandTestsBas
     [Trait("Category", "Live")]
     public async Task Should_get_marketplace_product_with_multiple_options()
     {
-
         var result = await CallToolAsync(
             "azmcp_marketplace_product_get",
             new()
