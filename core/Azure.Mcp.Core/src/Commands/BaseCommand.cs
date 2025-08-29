@@ -186,37 +186,22 @@ public abstract class BaseCommand : IBaseCommand
 
     private static bool HasOptionResult(CommandResult commandResult, Option option)
     {
-        var normalizedOptionName = NormalizeName(option.Name);
+        // In System.CommandLine 2.0, use GetResult to detect if an option was present.
+        // This correctly handles switches (no tokens) and value options.
+        var result = commandResult.GetResult(option);
+        if (result is null || result.IdentifierTokenCount == 0)
+        {
+            return false;
+        }
 
-        return commandResult.Children
-            .OfType<System.CommandLine.Parsing.OptionResult>()
-            .Any(or =>
-            {
-                // Treat option as present only if it has tokens (a provided value)
-                if (or.Tokens == null || or.Tokens.Count == 0)
-                    return false;
-                // If all tokens are empty/whitespace treat the option as not provided
-                if (or.Tokens.All(t => string.IsNullOrWhiteSpace(t.Value)))
-                    return false;
-                // OptionResult.Option may have a name and aliases; compare normalized names/aliases
-                var orName = NormalizeName(or.Option.Name);
-                if (string.Equals(orName, normalizedOptionName, StringComparison.OrdinalIgnoreCase))
-                    return true;
+        // For switches, presence alone is enough. For value options, ensure a non-empty token/value was provided.
+        if (result.Tokens is null || result.Tokens.Count == 0)
+        {
+            // No tokens: treat as present (typical for boolean switches) if option is implicitly allowed without value
+            return true;
+        }
 
-                if (or.Option.Aliases != null && or.Option.Aliases.Any(a => string.Equals(NormalizeName(a), normalizedOptionName, StringComparison.OrdinalIgnoreCase)))
-                    return true;
-
-                // Also compare against the target option's aliases
-                if (option.Aliases != null && option.Aliases.Any(a => string.Equals(NormalizeName(a), NormalizeName(or.Option.Name), StringComparison.OrdinalIgnoreCase)))
-                    return true;
-
-                return false;
-            });
-    }
-
-    private static bool IsOptionValueMissing(object? value)
-    {
-        return value == null || (value is string str && string.IsNullOrWhiteSpace(str));
+        return result.Tokens.Any(t => !string.IsNullOrWhiteSpace(t.Value));
     }
 
     protected void UseResourceGroup()

@@ -25,7 +25,8 @@ public static class ServiceOptionDefinitions
         Description = "The Azure service namespaces to expose on the MCP server (e.g., storage, keyvault, cosmos).",
         Required = false,
         Arity = ArgumentArity.OneOrMore,
-        AllowMultipleArgumentsPerToken = true
+        AllowMultipleArgumentsPerToken = true,
+        DefaultValueFactory = _ => null
     };
 
     public static readonly Option<string?> Mode = new Option<string?>(
@@ -34,7 +35,8 @@ public static class ServiceOptionDefinitions
     {
         Description = "Mode for the MCP server. 'single' exposes one azure tool that routes to all services. 'namespace' (default) exposes one tool per service namespace. 'all' exposes all tools individually.",
         Required = false,
-        Arity = ArgumentArity.ZeroOrOne
+        Arity = ArgumentArity.ZeroOrOne,
+        DefaultValueFactory = _ => (string?)ModeTypes.NamespaceProxy
     };
 
     public static readonly Option<bool?> ReadOnly = new(

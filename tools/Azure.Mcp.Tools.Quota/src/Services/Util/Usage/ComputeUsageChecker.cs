@@ -23,7 +23,7 @@ public class ComputeUsageChecker(TokenCredential credential, string subscription
                 result.Add(new UsageInfo(
                     Name: item.Name?.LocalizedValue ?? item.Name?.Value ?? string.Empty,
                     Limit: (int)item.Limit,
-                    Used: (int)item.CurrentValue,
+                    Used: item.CurrentValue,
                     Unit: item.Unit.ToString()
                 ));
             }

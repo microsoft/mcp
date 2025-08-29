@@ -125,14 +125,12 @@ public static class MonitorOptionDefinitions
         )
         {
             Description = "The time interval for data points (e.g., PT1H for 1 hour, PT5M for 5 minutes)."
-
         };
 
         public static readonly Option<string> Aggregation = new(
             $"--{AggregationName}"
         )
         {
-
             Description = "The aggregation type to use (Average, Maximum, Minimum, Total, Count)."
         };
 
@@ -140,7 +138,6 @@ public static class MonitorOptionDefinitions
             $"--{FilterName}"
         )
         {
-
             Description = "OData filter to apply to the metrics query."
         };
 
