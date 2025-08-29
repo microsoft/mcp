@@ -60,7 +60,7 @@
     <PackageDescription>Azure MCP Server - Model Context Protocol implementation for Azure.</PackageDescription>
     <PackageTags>azure;mcp;</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <McpServerJsonTemplateFile>.mcp/server.json</McpServerJsonTemplateFile>
+    <McpServerJsonTemplateFile>../../.mcp/server.json</McpServerJsonTemplateFile>
   </PropertyGroup>
   <ItemGroup Condition="'$(BuildNative)' == 'true' and '$(RuntimeIdentifier)' == ''">
     <None Include="../../../README.md" Pack="true" PackagePath="./README.md" />
@@ -98,5 +98,5 @@
   <ItemGroup Condition="'$(BuildNative)' == 'true'">
     <ProjectReference Remove="..\..\..\tools\azuremanagedlustre\src\AzureMcp.AzureManagedLustre\AzureMcp.AzureManagedLustre.csproj" />
   </ItemGroup>
-  <Import Project="PackServerJson.targets" />
+  <Import Project="..\..\PackServerJson.targets" />
 </Project>
