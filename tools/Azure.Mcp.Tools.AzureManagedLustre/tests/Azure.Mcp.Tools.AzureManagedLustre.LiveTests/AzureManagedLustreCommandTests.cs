@@ -86,7 +86,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
 
             var fileSystem = result.AssertProperty("fileSystem");
             Assert.Equal(JsonValueKind.Object, fileSystem.ValueKind);
-            
+
             var name = fileSystem.GetProperty("name").GetString();
             Assert.Equal(fsName, name);
 
@@ -103,7 +103,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
             }
             Assert.True(hasCapacity, "Expected a storage capacity property.");
             Assert.Equal(4, capacityValue);
-            
+
         }
 
     }
