@@ -4,7 +4,7 @@
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
 using Azure.Mcp.Tools.Deploy.Models;

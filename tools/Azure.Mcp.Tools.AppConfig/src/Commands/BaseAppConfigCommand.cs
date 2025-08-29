@@ -2,8 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Microsoft.Extensions.Logging;
 using Azure.Mcp.Tools.AppConfig.Options;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands;
