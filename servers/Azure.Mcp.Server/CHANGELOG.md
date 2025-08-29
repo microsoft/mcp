@@ -2,19 +2,13 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.5.10 (Unreleased)
+## 0.5.10 (2025-08-28)
 
-### Features Added
+### Bugs fixed
 
-### Breaking Changes
-
-### Bugs Fixed
-
-### Other Changes
+- Fixed a bug with telemetry collection related to AppConfig tools. [[#44](https://github.com/microsoft/mcp/pull/44)]
 
 ## 0.5.9 (2025-08-26)
-
-- Fix a bug with telemetry collecting related to AppConfig MCP tools. [[#44](https://github.com/microsoft/mcp/pull/44)]
 
 ### Other Changes
 
