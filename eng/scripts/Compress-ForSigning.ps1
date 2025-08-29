@@ -5,7 +5,6 @@
 param(
     [string] $ArtifactsPath,
     [string] $ArtifactPrefix,
-    [string] $ServerName,
     [string] $OutputPath
 )
 
@@ -22,6 +21,7 @@ if(!$ArtifactPrefix) {
 
 if(!$OutputPath) {
     $OutputPath = "$RepoRoot/.work/signed"
+    Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 if(!(Test-Path -Path $ArtifactsPath -PathType Container)) {
@@ -35,7 +35,6 @@ $artifactDirectories = Get-ChildItem -Path $ArtifactsPath -Directory
 | Where-Object { $_.Name -like "$ArtifactPrefix*" }
 | Where-Object { $_.Name -notlike '*FailedAttempt*' }
 
-Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $OutputPath | Out-Null
 $OutputPath = (Resolve-Path $OutputPath).Path.Replace('\', '/')
 
@@ -48,10 +47,6 @@ if($env:TF_BUILD) {
 }
 
 $serverJsonFiles = $artifactDirectories | Get-ChildItem -Filter "wrapper.json" -Recurse
-
-if ($ServerName) {
-    $serverJsonFiles = $serverJsonFiles | Where-Object { $_.Directory.Name -ieq $ServerName }
-}
 
 foreach ($serverJsonFile in $serverJsonFiles) {
     Write-Host "Processing $serverJsonFile" -ForegroundColor Yellow

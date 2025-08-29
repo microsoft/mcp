@@ -102,7 +102,7 @@ jobs:
       filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
       arguments: >
         -ServerName '${{ parameters.ServerName }}'
-        -OutputPath '$(Agent.TempDirectory)/native-build'
+        -OutputPath '$(Build.ArtifactStagingDirectory)'
         -VersionSuffix '$(VersionSuffix)'
         -OperatingSystem '${{ parameters.OSName }}'
         -Architecture '$(Architecture)'
