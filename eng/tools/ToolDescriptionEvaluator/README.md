@@ -118,12 +118,9 @@ This application requires two environment variables to be configured:
 Set both required environment variables:
 
 ```bash
-export AOAI_ENDPOINT="https://<your-resource>.openai.azure.com"
+export AOAI_ENDPOINT="https://<your-resource>.openai.azure.com/openai/deployments/<embeddings-deployment-name>/embeddings?api-version=<api-version>"
 export TEXT_EMBEDDING_API_KEY="your_api_key_here"
 ```
-
-The tool automatically constructs the full embeddings endpoint:
-`{AOAI_ENDPOINT}/openai/deployments/text-embedding-3-large/embeddings?api-version=2024-02-01`
 
 #### Option 2: .env File (Recommended for Local Development)
 
@@ -136,7 +133,7 @@ The tool automatically constructs the full embeddings endpoint:
 2. Edit `.env` and add both required variables:
 
    ```env
-   AOAI_ENDPOINT=https://<your-resource>.openai.azure.com
+   AOAI_ENDPOINT="https://<your-resource>.openai.azure.com/openai/deployments/<embeddings-deployment-name>/embeddings?api-version=<api-version>"
    TEXT_EMBEDDING_API_KEY=your_actual_api_key_here
    ```
 
@@ -144,28 +141,12 @@ The tool automatically constructs the full embeddings endpoint:
 
 The tool generates detailed analysis reports in two formats:
 
-### Plain Text Output (Default)
-
-Results are written to `results.txt`:
-
-```bash
-dotnet run
-```
-
-- Compact, simple format for quick review
-- Includes confidence scores and success rates
-- Shows top matching tools for each prompt
-
-### Markdown Output (Documentation)
+### Markdown Output (Default)
 
 Generate structured markdown reports:
 
 ```bash
-# Using environment variable
-output=md dotnet run
-
-# Using command line flag  
-dotnet run -- --markdown
+dotnet run
 ```
 
 Results are written to `results.md` with:
@@ -176,14 +157,37 @@ Results are written to `results.md` with:
 - 📊 **Success rate analysis** with performance ratings
 - 🕐 **Execution timing** and statistics
 
+### Plain Text Output
+
+Results are written to `results.txt`:
+
+```bash
+dotnet run -- --text
+```
+
+- Compact, simple format for quick review
+- Includes confidence scores and success rates
+- Shows top matching tools for each prompt
+
 ### Analysis Metrics
 
 The tool provides several key metrics:
 
-- **Confidence Scores**: Cosine similarity scores (0.0 to 1.0) between prompts and tool descriptions
-- **Success Rate**: Percentage of prompts where the expected tool ranked highest
-- **Performance Ratings**: 🟢 Excellent (>90%), 🟡 Good (75-90%), 🟠 Fair (50-75%), 🔴 Poor (<50%)
-- **Top-N Accuracy**: How often the expected tool appears in top 3, 5, or 10 results
+- **Confidence scores:** Cosine similarity (0.0–1.0) between prompts and tool descriptions
+- **Top choice success rate:** Percentage of prompts where the expected tool ranked #1
+- **Confidence level distribution:** Share of prompts by confidence band
+  - Very High (≥0.8)
+  - High (≥0.7)
+  - Good (≥0.6)
+  - Fair (≥0.5)
+  - Acceptable (≥0.4)
+  - Low (<0.4)
+- **Top choice + confidence combinations:** How often the expected top match also meets each band (≥0.8, ≥0.7, ≥0.6, ≥0.5, ≥0.4)
+- **Performance ratings** (based on Top choice + Acceptable confidence ≥0.4):
+  - 🟢 Excellent (≥90%)
+  - 🟡 Good (≥75% and <90%)
+  - 🟠 Fair (≥50% and <75%)
+  - 🔴 Poor (<50%)
 
 ## Configuration Files
 
@@ -191,7 +195,7 @@ The tool provides several key metrics:
 
 #### Markdown Format (Default)
 
-The tool reads from `docs/e2eTestPrompts.md` which contains tables like:
+The tool reads from `../../../docs/e2eTestPrompts.md` which contains tables like:
 
 ```markdown
 ## Azure Storage
