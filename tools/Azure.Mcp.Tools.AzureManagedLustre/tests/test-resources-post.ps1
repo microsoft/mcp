@@ -87,5 +87,5 @@ $HPCCacheResourceProviderPrincipalId = $firstEvent.Caller
 
 foreach ($role in $rolesToAssign) {
     Write-Host "Assigning role '$role' to principal 'HPC Cache Resource Provider'on scope '$scope'..." -ForegroundColor Yellow
-    New-AzRoleAssignment -Scope $scope -RoleDefinitionName $role -PrincipalId $HPCCacheResourceProviderPrincipalId -Debug | Out-Null
+    New-AzRoleAssignment -Scope $scope -RoleDefinitionName $role -PrincipalId $HPCCacheResourceProviderPrincipalId | Out-Null
 }
