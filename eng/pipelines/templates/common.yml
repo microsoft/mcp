@@ -48,54 +48,54 @@ extends:
           DynamicPrereleaseVersion: ${{ not(parameters.ReleaseRun) }}
           ServerName: ${{ parameters.ServerName }}
 
-    - stage: Build
-      dependsOn:
-      - Initialize
-      pool:
-        name: $(LINUXPOOL)
-        image: $(LINUXVMIMAGE)
-        os: linux
-      variables:
-      - template: /eng/pipelines/templates/variables/image.yml
-      - template: /eng/pipelines/templates/variables/globals.yml
-      - name: VersionSuffix
-        value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
-      jobs:
-      - template: /eng/pipelines/templates/jobs/analyze.yml
-      - template: /eng/common/pipelines/templates/jobs/generate-job-matrix.yml
-        parameters:
-          SparseCheckout: false
-          JobTemplatePath: /eng/pipelines/templates/jobs/build.yml
-          AdditionalParameters:
-            TestTimeoutInMinutes: 10
-            ${{ if ne(parameters.ServerName, 'none') }}:
-              ServerName: ${{ parameters.ServerName }}
-          MatrixConfigs:
-            - Name: build_matrix
-              Path: eng/pipelines/build-matrix.json
-              Selection: all
-              GenerateVMJobs: true
+    #- stage: Build
+    #  dependsOn:
+    #  - Initialize
+    #  pool:
+    #    name: $(LINUXPOOL)
+    #    image: $(LINUXVMIMAGE)
+    #    os: linux
+    #  variables:
+    #  - template: /eng/pipelines/templates/variables/image.yml
+    #  - template: /eng/pipelines/templates/variables/globals.yml
+    #  - name: VersionSuffix
+    #    value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
+    #  jobs:
+    #  - template: /eng/pipelines/templates/jobs/analyze.yml
+    #  - template: /eng/common/pipelines/templates/jobs/generate-job-matrix.yml
+    #    parameters:
+    #      SparseCheckout: false
+    #      JobTemplatePath: /eng/pipelines/templates/jobs/build.yml
+    #      AdditionalParameters:
+    #        TestTimeoutInMinutes: 10
+    #        ${{ if ne(parameters.ServerName, 'none') }}:
+    #          ServerName: ${{ parameters.ServerName }}
+    #      MatrixConfigs:
+    #        - Name: build_matrix
+    #          Path: eng/pipelines/build-matrix.json
+    #          Selection: all
+    #          GenerateVMJobs: true
 
-    - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
-      - stage: Test
-        displayName: 'Live test'
-        dependsOn:
-        - Initialize
-        pool:
-          name: $(LINUXPOOL)
-          image: $(LINUXVMIMAGE)
-          os: linux
-        variables:
-        - template: /eng/pipelines/templates/variables/image.yml
-        - template: /eng/pipelines/templates/variables/globals.yml
-        jobs:
-        - template: /eng/pipelines/templates/jobs/live-test.yml
+    #- ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
+    #  - stage: Test
+    #    displayName: 'Live test'
+    #    dependsOn:
+    #    - Initialize
+    #    pool:
+    #      name: $(LINUXPOOL)
+    #      image: $(LINUXVMIMAGE)
+    #      os: linux
+    #    variables:
+    #    - template: /eng/pipelines/templates/variables/image.yml
+    #    - template: /eng/pipelines/templates/variables/globals.yml
+    #    jobs:
+    #    - template: /eng/pipelines/templates/jobs/live-test.yml
 
     - ${{ if eq(parameters.PublishPackages, 'true') }}:
       - stage: Sign
         displayName: 'Sign'
-        # dependsOn:
-        # - Initialize
+        dependsOn:
+        - Initialize
         # - Build
         pool:
           name: $(LINUXPOOL)
