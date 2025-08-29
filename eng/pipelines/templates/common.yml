@@ -186,9 +186,9 @@ extends:
 
       - ${{ if eq(parameters.ReleaseRun, 'true') }}:
         - stage: Release
-          # dependsOn:
+          dependsOn:
           # - Initialize
-          # - Sign
+          - Sign
           pool:
             name: $(LINUXPOOL)
             image: $(LINUXVMIMAGE)
