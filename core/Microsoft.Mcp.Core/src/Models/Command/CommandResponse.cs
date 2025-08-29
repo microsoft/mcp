@@ -45,7 +45,7 @@ public sealed class ResponseResult
     }
 }
 
-internal class ResultConverter : JsonConverter<ResponseResult>
+public class ResultConverter : JsonConverter<ResponseResult>
 {
     public override ResponseResult? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
