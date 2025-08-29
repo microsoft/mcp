@@ -51,5 +51,5 @@ $HPCCacheResourceProviderApplicationId = '4392ab71-2ce2-4b0d-8770-b352745c73f5'
 
 foreach ($role in $rolesToAssign) {
     Write-Host "Assigning role '$role' to principal 'HPC Cache Resource Provider'on scope '$scope'..." -ForegroundColor Yellow
-    New-AzRoleAssignment -Scope $scope -RoleDefinitionName $role -ApplicationId $HPCCacheResourceProviderApplicationId  | Out-Null
+    New-AzRoleAssignment -Scope $scope -RoleDefinitionName $role -ApplicationId $HPCCacheResourceProviderApplicationId -Debug | Out-Null
 }

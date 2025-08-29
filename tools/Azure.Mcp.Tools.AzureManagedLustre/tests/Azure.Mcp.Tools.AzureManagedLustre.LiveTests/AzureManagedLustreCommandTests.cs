@@ -42,7 +42,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
         }
 
         [Fact]
-        public async Task Should_create_azure_maanged_lustre_no_blob_no_cmk()
+        public async Task Should_create_azure_managed_lustre_no_blob_no_cmk()
         {
             var fsName = $"amlfs-{Guid.NewGuid().ToString("N")[..8]}";
             var subnetId = Environment.GetEnvironmentVariable("AMLFS_SUBNET_ID");
