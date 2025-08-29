@@ -61,6 +61,8 @@ internal class Program
             new Azure.Mcp.Core.Areas.Server.ServerSetup(),
             new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
             new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
+            // Register AI namespace
+            new AzureMcp.Ai.AiSetup(),
             // Register Azure service areas
             new Azure.Mcp.Tools.Aks.AksSetup(),
             new Azure.Mcp.Tools.AppConfig.AppConfigSetup(),
