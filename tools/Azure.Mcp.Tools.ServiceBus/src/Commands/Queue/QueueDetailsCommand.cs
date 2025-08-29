@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.ServiceBus.Models;
@@ -10,6 +9,7 @@ using Azure.Mcp.Tools.ServiceBus.Options.Queue;
 using Azure.Mcp.Tools.ServiceBus.Services;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 

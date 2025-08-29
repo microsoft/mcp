@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.Collections.Generic;
 using Azure;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.VirtualDesktop.Models;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 

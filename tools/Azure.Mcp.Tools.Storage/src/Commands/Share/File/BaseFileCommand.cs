@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Share.File;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Share.File;
 

@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob;
 

@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 
