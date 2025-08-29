@@ -131,9 +131,11 @@ resource searchService 'Microsoft.Search/searchServices@2023-11-01' = {
     encryptionWithCmk: {
       enforcement: 'Unspecified'
     }
-    disableLocalAuth: false
+    disableLocalAuth: true
     authOptions: {
-      apiKeyOnly: {}
+      aadOrApiKey: {
+        aadAuthFailureMode: 'http401WithBearerChallenge'
+      }
     }
   }
   identity: {
@@ -176,25 +178,9 @@ resource searchIndexDeploymentScript 'Microsoft.Resources/deploymentScripts@2023
       # Set the context
       Set-AzContext -SubscriptionId $subscriptionId
 
-      # Get access token for Azure management API
-      $accessToken = Get-AzAccessToken -ResourceUrl $resourceManagerUrl
-      $token = $accessToken.Token
-
-      # Get search service admin keys using REST API
-      $adminKeysUri = "$($resourceManagerUrl.TrimEnd('/'))subscriptions/$subscriptionId/resourceGroups/$resourceGroupName/providers/Microsoft.Search/searchServices/$searchServiceName/listAdminKeys?api-version=2023-11-01"
-      $headers = @{
-        'Authorization' = "Bearer $token"
-        'Content-Type' = 'application/json'
-      }
-
-      try {
-        $adminKeysResponse = Invoke-RestMethod -Uri $adminKeysUri -Method POST -Headers $headers
-        $adminKey = $adminKeysResponse.primaryKey
-        Write-Output "Successfully retrieved admin key"
-      } catch {
-        Write-Error "Failed to retrieve admin keys: $($_.Exception.Message)"
-        throw
-      }
+      # Get access token for Azure AI Search service (not management API)
+      $searchAccessToken = Get-AzAccessToken -ResourceUrl "https://search.azure.com/"
+      $searchToken = $searchAccessToken.Token
 
       # Define the index schema
       $indexSchema = @{
@@ -234,11 +220,11 @@ resource searchIndexDeploymentScript 'Microsoft.Resources/deploymentScripts@2023
         )
       } | ConvertTo-Json -Depth 10
 
-      # Create the index using Search Service API
+      # Create the index using Search Service API with Entra ID authentication
       $searchUri = "https://$searchServiceName.search.windows.net/indexes?api-version=2023-11-01"
       $searchHeaders = @{
         'Content-Type' = 'application/json'
-        'api-key' = $adminKey
+        'Authorization' = "Bearer $searchToken"
       }
 
       try {
@@ -250,7 +236,12 @@ resource searchIndexDeploymentScript 'Microsoft.Resources/deploymentScripts@2023
           Write-Output "Search index 'test-knowledge-index' already exists"
         } else {
           Write-Error "Failed to create search index: $($_.Exception.Message)"
-          Write-Error "Response: $($_.Exception.Response | ConvertTo-Json)"
+          if ($_.Exception.Response) {
+            $errorResponse = $_.Exception.Response.GetResponseStream()
+            $reader = New-Object System.IO.StreamReader($errorResponse)
+            $errorContent = $reader.ReadToEnd()
+            Write-Error "Error response: $errorContent"
+          }
           throw
         }
       }
