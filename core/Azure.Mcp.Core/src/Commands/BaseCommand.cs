@@ -115,7 +115,7 @@ public abstract class BaseCommand : IBaseCommand
         // by the parser or command validators. System.CommandLine sometimes reports missing
         // required options via commandResult.Errors (e.g., "Option '--cluster' is required.")
         // — detect that case and return a standardized missing-options message instead of
-        // surfacing SCL's raw errors.
+        // surfacing raw errors.
         if (commandResult.Errors != null && commandResult.Errors.Any())
         {
             // Look for "is required" style messages and extract option tokens like "--cluster"
