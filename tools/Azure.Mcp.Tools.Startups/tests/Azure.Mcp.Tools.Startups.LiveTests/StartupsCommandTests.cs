@@ -22,7 +22,7 @@ namespace Azure.Mcp.Tools.Startups.LiveTests
             var guidance = result.AssertProperty("guidance");
             Assert.Equal(JsonValueKind.Object, guidance.ValueKind);
 
-            // Verify the guidance has the expected properties
+            // Verify guidance has expected properties
             var programInfo = guidance.GetProperty("programInfo");
             Assert.NotNull(programInfo.GetString());
 

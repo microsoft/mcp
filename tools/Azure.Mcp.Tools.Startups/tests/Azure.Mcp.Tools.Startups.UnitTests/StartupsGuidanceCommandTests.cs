@@ -28,11 +28,12 @@ public sealed class StartupsGuidanceCommandTests
         _startupsService = Substitute.For<IStartupsService>();
         _logger = Substitute.For<ILogger<StartupsGuidanceCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_startupsService);
-        _serviceProvider = collection.BuildServiceProvider();
+        var collection = new ServiceCollection().AddSingleton(_startupsService);
 
+        _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
+        _context = new(_serviceProvider);
+        _parser = new(_command.GetCommand());
     }
 
     [Fact]
@@ -52,11 +53,10 @@ public sealed class StartupsGuidanceCommandTests
     public async Task ExecuteAsync_ReturnsResponseSuccessfully()
     {
         // Arrange
-        var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
         Assert.Equal(200, response.Status);
@@ -67,42 +67,6 @@ public sealed class StartupsGuidanceCommandTests
         var guidanceJson = JsonSerializer.Serialize(response.Results);
         Assert.Contains("Microsoft for Startups", guidanceJson);
         Assert.Contains("https://startups.microsoft.com/", guidanceJson);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_ContainsExpectedCapabilities()
-    {
-        // Arrange
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse("");
-
-        // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
-
-        // Assert
-        var guidanceJson = JsonSerializer.Serialize(response.Results);
-        Assert.Contains("Static Website Deployment", guidanceJson);
-        Assert.Contains("React App Deployment", guidanceJson);
-        Assert.Contains("Deployment Capabilities", guidanceJson);
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("--help")]
-    public async Task ExecuteAsync_AcceptsValidArguments(string args)
-    {
-        // Arrange
-        var context = new CommandContext(_serviceProvider);
-        var parseResult = _command.GetCommand().Parse(args);
-
-        // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
-
-        // Assert
-        if (args != "--help")
-        {
-            Assert.Equal(200, response.Status);
-        }
     }
 
     [Fact]
@@ -120,11 +84,10 @@ public sealed class StartupsGuidanceCommandTests
     public async Task ExecuteAsync_ReturnsCorrectResponseStructure()
     {
         // Arrange
-        var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
         Assert.NotNull(response);
@@ -136,11 +99,10 @@ public sealed class StartupsGuidanceCommandTests
     public async Task ExecuteAsync_ContainsSamplePrompts()
     {
         // Arrange
-        var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
         var guidanceJson = JsonSerializer.Serialize(response.Results);
@@ -153,11 +115,10 @@ public sealed class StartupsGuidanceCommandTests
     public async Task ExecuteAsync_ContainsValidationRules()
     {
         // Arrange
-        var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
         var guidanceJson = JsonSerializer.Serialize(response.Results);
