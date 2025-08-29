@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 internal class Program
 {
-    private static IAreaSetup[] Areas = RegisterAreas();
+    private static IAreaSetup[] Areas = RegisterToolsets();
 
     private static async Task<int> Main(string[] args)
     {
@@ -50,7 +50,7 @@ internal class Program
             return 1;
         }
     }
-    private static IAreaSetup[] RegisterAreas()
+    private static IAreaSetup[] RegisterToolsets()
     {
 
         return [
