@@ -12,7 +12,7 @@ namespace Microsoft.Mcp;
 [JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(List<JsonNode>))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
-internal partial class JsonSourceGenerationContext : JsonSerializerContext
+public partial class JsonSourceGenerationContext : JsonSerializerContext
 {
 
 }
