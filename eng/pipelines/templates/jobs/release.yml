@@ -104,11 +104,6 @@ jobs:
       - input: pipelineArtifact
         artifactName: vsix_packages_signed
         targetPath: $(Pipeline.Workspace)/drop
-        buildType: specific
-        project: internal
-        definition: 7866
-        runVersion: specific
-        runId: 5275162
     environment: package-publish
     pool:
       name: azsdk-pool

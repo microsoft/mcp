@@ -17,6 +17,11 @@ jobs:
   - download: current
     artifact: $(PipelineArtifactName)_signed
     displayName: "Download signed MCP server binaries"
+    buildType: specific
+    project: internal
+    definition: 7866
+    runVersion: specific
+    runId: 5275162
 
   - task: NodeTool@0
     displayName: "Use Node.js 20.x"
