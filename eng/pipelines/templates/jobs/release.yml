@@ -8,7 +8,7 @@ parameters:
 jobs:
 - job: TagRepository
   displayName: "Create release tag"
-  condition: and(succeeded(), ne(variables['Skip.TagRepository'], 'true'))
+  condition: false
   steps:
   - checkout: self
 
@@ -32,7 +32,7 @@ jobs:
 
 - deployment: Publish
   displayName: "Publish to npmjs.com"
-  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  condition: false
   templateContext:
     type: releaseJob
     isProduction: true
@@ -95,7 +95,7 @@ jobs:
 - ${{ each VsixTarget in parameters.VsixTargets }}:
   - deployment: PublishVSIX_${{ replace(VsixTarget, '-', '_') }}
     displayName: "Publish VSIX Artifact to Marketplace - ${{ VsixTarget }}"
-    dependsOn: Publish
+    #dependsOn: Publish
     condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
     templateContext:
       type: releaseJob
@@ -104,6 +104,11 @@ jobs:
       - input: pipelineArtifact
         artifactName: vsix_packages_signed
         targetPath: $(Pipeline.Workspace)/drop
+        buildType: specific
+        project: internal
+        definition: 7866
+        runVersion: specific
+        runId: 5275162
     environment: package-publish
     pool:
       name: azsdk-pool
@@ -130,7 +135,7 @@ jobs:
 
 - job: UpdatePackageVersion
   displayName: "Update Package Versions"
-  condition: and(succeeded(), ne(variables['Skip.UpdatePackageVersion'], 'true'))
+  condition: false
   dependsOn: Publish
   steps:
   - checkout: self
