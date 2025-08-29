@@ -9,6 +9,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.Commands;
 
 [JsonSerializable(typeof(FileSystemSubnetSizeCommand.FileSystemSubnetSizeResult))]
 [JsonSerializable(typeof(FileSystemListCommand.FileSystemListResult))]
+[JsonSerializable(typeof(FileSystemCreateCommand.FileSystemCreateResult))]
 [JsonSerializable(typeof(LustreFileSystem))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal partial class AzureManagedLustreJsonContext : JsonSerializerContext;

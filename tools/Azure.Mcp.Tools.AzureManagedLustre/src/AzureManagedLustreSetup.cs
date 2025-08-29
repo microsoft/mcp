@@ -22,7 +22,7 @@ public class AzureManagedLustreSetup : IAreaSetup
     public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
     {
         var azureManagedLustre = new CommandGroup(Name,
-            "Azure Managed Lustre operations - Commands for listing and inspecting Azure Managed Lustre file systems (AMLFS) used for high-performance computing workloads.");
+            "Azure Managed Lustre operations - Commands for creating, listing and inspecting Azure Managed Lustre file systems (AMLFS) used for high-performance computing workloads. The tool focuses on managing all the aspects related to Azure Managed Lustre filesystem instances, import and export jobs from Azure Blob Storage.");
         rootGroup.AddSubGroup(azureManagedLustre);
 
         var fileSystem = new CommandGroup("filesystem", "Azure Managed Lustre file system operations - Commands for listing managed Lustre file systems.");
@@ -30,5 +30,6 @@ public class AzureManagedLustreSetup : IAreaSetup
 
         fileSystem.AddCommand("list", new FileSystemListCommand(loggerFactory.CreateLogger<FileSystemListCommand>()));
         fileSystem.AddCommand("required-subnet-size", new FileSystemSubnetSizeCommand(loggerFactory.CreateLogger<FileSystemSubnetSizeCommand>()));
+        fileSystem.AddCommand("create", new FileSystemCreateCommand(loggerFactory.CreateLogger<FileSystemCreateCommand>()));
     }
 }

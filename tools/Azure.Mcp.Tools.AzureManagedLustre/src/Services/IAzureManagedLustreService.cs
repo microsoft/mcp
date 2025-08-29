@@ -18,4 +18,34 @@ public interface IAzureManagedLustreService
         string sku, int size,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<LustreFileSystem> CreateFileSystemAsync(
+        string subscription,
+        string resourceGroup,
+        string name,
+        string location,
+        string sku,
+        int sizeTiB,
+        string subnetId,
+        string zone,
+        // Maintenance window
+        string maintenanceDay,
+        string maintenanceTime,
+        // HSM
+        string? hsmContainer = null,
+        string? hsmLogContainer = null,
+        string? importPrefix = null,
+        // Root squash
+        string? rootSquashMode = null,
+        string? noSquashNidLists = null,
+        long? squashUid = null,
+        long? squashGid = null,
+        // Encryption
+        bool enableCustomEncryption = false,
+        string? keyUrl = null,
+        string? sourceVaultId = null,
+        string? userAssignedIdentityId = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
 }
+

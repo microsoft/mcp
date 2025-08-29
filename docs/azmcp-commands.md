@@ -777,9 +777,27 @@ azmcp azuremanagedlustre filesystem list --subscription <subscription> \
 azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \
                                       --sku <azure-managed-lustre-sku> \
                                       --size <filesystem-size-in-tib>
+
+# Create an Azure Managed Lustre filesystem
+azmcp azuremanagedlustre filesystem create --subscription <subscription> \
+                                           --sku <sku> \
+                                           --size <size> \
+                                           --subnet-id <subnet-id> \
+                                           --zone <zone> \
+                                           --maintenance-day <maintenance-day> \
+                                           --maintenance-time <maintenance-time> \
+                                           [--hsm-container <hsm-container>] \
+                                           [--hsm-log-container <hsm-log-container>] \
+                                           [--import-prefix <import-prefix>] \
+                                           [--root-squash-mode <root-squash-mode>] \
+                                           [--no-squash-nid-list <no-squash-nid-list>] \
+                                           [--squash-uid <squash-uid>] \
+                                           [--squash-gid <squash-gid>] \
+                                           [--custom-encryption] \
+                                           [--key-url <key-url>] \
+                                           [--source-vault <source-vault>] \
+                                           [--user-assigned-identity-id <user-assigned-identity-id>]
 ```
-
-
 
 ### Azure Native ISV Operations
 
