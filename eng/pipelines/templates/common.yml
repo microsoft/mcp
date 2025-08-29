@@ -23,13 +23,13 @@ parameters:
 # Optional: specify an upstream pipeline run to download artifacts from
 - name: UpstreamProject
   type: string
-  default: ''
+  default: internal
 - name: UpstreamPipelineId
   type: string
-  default: ''
+  default: 7866
 - name: UpstreamRunId
   type: string
-  default: ''
+  default: 5275162
 
 resources:
   repositories:
