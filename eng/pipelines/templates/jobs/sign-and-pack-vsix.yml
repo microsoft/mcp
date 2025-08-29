@@ -35,7 +35,7 @@ jobs:
   - template: pipelines/steps/azd-vscode-signing.yml@azure-sdk-build-tools
     parameters:
       Path: $(Build.ArtifactStagingDirectory)
-      Pattern: '*.signature.p7s'
+      Pattern: '**/*.signature.p7s'
 
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
