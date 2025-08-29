@@ -41,3 +41,37 @@ jobs:
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)
       ArtifactName: vsix_packages_signed
+
+- job: VerifyVSIXSigning
+  displayName: "Verify VSIX Signing"
+  dependsOn: SignAndPackVSIX
+  pool:
+    name: $(WINDOWSPOOL) # Signing verification must happen on windows
+    image: $(WINDOWSVMIMAGE)
+    os: windows
+  variables:
+  - template: /eng/pipelines/templates/variables/image.yml
+  - template: /eng/pipelines/templates/variables/globals.yml
+  steps:
+  - checkout: none
+  - download: current
+    artifact: vsix_$(PipelineArtifactName)_signed
+    displayName: "Download signed MCP server VSIX files"
+  - pwsh: |
+      Write-Host "Verifying signing for win-x64 and win-arm64 VSIX files..."
+      $allSigned = $true
+      $signedVsixFiles = Get-ChildItem -Path '$(Pipeline.Workspace)/vsix_$(PipelineArtifactName)_signed/**/win-*' -Recurse -Include "*.signature.p7s"
+      foreach ($vsix in $signedVsixFiles) {
+          if ((Get-AuthenticodeSignature -FilePath $vsix.FullName).Status -ne 'Valid') {
+              Write-Host "VSIX file $($vsix.FullName) is NOT signed correctly."
+              $allSigned = $false
+          }
+          else {
+              Write-Host "VSIX file $($vsix.FullName) is signed correctly."
+          }
+      }
+      if (-not $allSigned) {
+          Write-Error "One or more VSIX files are not signed correctly."
+          exit 1
+      }
+    displayName: "Verify VSIX Signing"
