@@ -451,6 +451,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_servicebus_topic_details | Show me the details of service bus <service_bus_name> topic <topic_name> |
 | azmcp_servicebus_topic_subscription_details | Show me the details of service bus <service_bus_name> subscription <subscription_name> |
 
+## Azure SignalR
+
+| Tool Name                       | Test Prompt |
+|:--------------------------------|:----------|
+| azmcp_signalr_runtime_show | Show me the details of signalr <signalr_name> |
+| azmcp_signalr_runtime_list | List all signalr runtime in my subscription |
+| azmcp_signalr_identity_show | Show me the assigned identity details of signalr <signalr_name> |
+| azmcp_signalr_key_list | List keys of signalr <signalr_name> |
+| azmcp_signalr_network-rule_list | List the network rule details of signalr <signalr_name> |
+
 ## Azure SQL Database
 
 | Tool Name | Test Prompt |

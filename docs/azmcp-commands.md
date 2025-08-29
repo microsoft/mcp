@@ -283,7 +283,7 @@ azmcp appconfig kv get --subscription <subscription> \
                        [--key-filter <key-filter>] \
                        [--label-filter <label-filter>]
 
-# Lock (make it read-only) or unlock (remove read-only) a key-value setting 
+# Lock (make it read-only) or unlock (remove read-only) a key-value setting
 azmcp appconfig kv lock set --subscription <subscription> \
                             --account <account> \
                             --key <key> \
@@ -752,7 +752,7 @@ azmcp keyvault key list --subscription <subscription> \
 Tools that handle sensitive data such as secrets require user consent before execution through a security mechanism called **elicitation**. When you run commands that access sensitive information, the MCP client will prompt you to confirm the operation before proceeding.
 
 > **🛡️ Elicitation (user confirmation) Security Feature:**
-> 
+>
 > Elicitation prompts appear when tools may expose sensitive information like:
 > - Key Vault secrets
 > - Connection strings and passwords
@@ -1146,6 +1146,33 @@ azmcp servicebus topic subscription details --subscription <subscription> \
                                             --subscription-name <subscription-name>
 ```
 
+### Azure SignalR Service Operations
+
+```bash
+# List SignalR Service resources in a subscription
+azmcp signalr runtime list --subscription <subscription>
+
+# Show details of a specific SignalR Service
+azmcp signalr runtime show --subscription <subscription> \
+                           --resource-group <resource-group> \
+                           --signalr-name <signalr-name>
+
+# List access keys for a SignalR Service
+azmcp signalr key list --subscription <subscription> \
+                       --resource-group <resource-group> \
+                       --signalr-name <signalr-name>
+
+# List network access control rules for a SignalR Service
+azmcp signalr network-rule list --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --signalr-name <signalr-name>
+
+# Show managed identity configuration of a SignalR Service
+azmcp signalr identity show --subscription <subscription> \
+                            --resource-group <resource-group> \
+                            --signalr-name <signalr-name>
+```
+
 ### Azure SQL Operations
 
 #### Database
@@ -1175,7 +1202,7 @@ azmcp sql db delete --subscription <subscription> \
 azmcp sql db list --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name>
-                  
+
 # Rename an existing SQL database to a new name within the same server
 azmcp sql db rename --subscription <subscription> \
                     --resource-group <resource-group> \
