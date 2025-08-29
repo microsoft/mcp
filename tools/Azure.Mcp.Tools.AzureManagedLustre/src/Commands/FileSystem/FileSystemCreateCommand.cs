@@ -19,7 +19,7 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
     private readonly Option<string> _nameOption = AzureManagedLustreOptionDefinitions.NameOption;
     private readonly Option<string> _locationOption = AzureManagedLustreOptionDefinitions.LocationOption;
     private readonly Option<string> _skuOption = AzureManagedLustreOptionDefinitions.SkuOption;
-    private static readonly Option<int> _sizeOption = AzureManagedLustreOptionDefinitions.SizeOption;
+    private readonly Option<int> _sizeOption = AzureManagedLustreOptionDefinitions.SizeOption;
     private readonly Option<string> _subnetIdOption = AzureManagedLustreOptionDefinitions.SubnetIdOption;
     private readonly Option<string> _zoneOption = AzureManagedLustreOptionDefinitions.ZoneOption;
 

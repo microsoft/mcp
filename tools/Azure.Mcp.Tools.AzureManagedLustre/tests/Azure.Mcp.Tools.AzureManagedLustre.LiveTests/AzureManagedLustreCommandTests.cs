@@ -55,7 +55,6 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
             var userAssignedIdentityId = Environment.GetEnvironmentVariable("USER_ASSIGNED_IDENTITY_RESOURCE_ID");
 
             // Calculate HSM required variables
-            var storageAccountName = Settings.ResourceBaseName;
             var hsmDataContainerId = Environment.GetEnvironmentVariable("HSM_CONTAINER_ID");
             var hsmLogContainerId = Environment.GetEnvironmentVariable("HSM_LOGS_CONTAINER_ID");
 
@@ -86,7 +85,25 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
                 });
 
             var fileSystem = result.AssertProperty("fileSystem");
-            Assert.Equal(JsonValueKind.Array, fileSystem.ValueKind);
+            Assert.Equal(JsonValueKind.Object, fileSystem.ValueKind);
+            
+            var name = fileSystem.GetProperty("name").GetString();
+            Assert.Equal(fsName, name);
+
+            var fsLocation = fileSystem.GetProperty("location").GetString();
+            Assert.Equal(location, fsLocation);
+
+            var hasCapacity = false;
+            var capacityValue = 0;
+
+            if (fileSystem.TryGetProperty("storageCapacityTiB", out var capTiB) && capTiB.ValueKind == JsonValueKind.Number)
+            {
+                hasCapacity = true;
+                capacityValue = capTiB.GetInt32();
+            }
+            Assert.True(hasCapacity, "Expected a storage capacity property.");
+            Assert.Equal(4, capacityValue);
+            
         }
 
     }
