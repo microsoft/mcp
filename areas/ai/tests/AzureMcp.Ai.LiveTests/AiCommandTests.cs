@@ -14,12 +14,10 @@ namespace AzureMcp.Ai.LiveTests
     public class AiCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
         : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
     {
-        // Expected static resource names for live testing
-        // These should match the actual deployed Azure OpenAI resources in the test environment
-        private const string OpenAiResourceSuffix = "openai";
-        private const string DefaultDeploymentName = "gpt-35-turbo";
-
-        private string OpenAiResourceName => $"{Settings.ResourceBaseName}{OpenAiResourceSuffix}";
+        // Static resource names for live testing
+        // These match the actual deployed Azure OpenAI resources in the static test environment
+        private const string OpenAiResourceName = "azmcp-test";
+        private const string DefaultDeploymentName = "gpt-4o-mini";
 
         [Fact]
         public async Task Should_create_openai_completion()

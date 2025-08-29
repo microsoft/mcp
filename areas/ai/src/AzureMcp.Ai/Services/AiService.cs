@@ -63,10 +63,13 @@ public class AiService(ISubscriptionService subscriptionService, ITenantService 
         // Set up completion options
         var chatOptions = new ChatCompletionOptions();
         
-        if (maxTokens.HasValue)
+        // Set max tokens with a default value if not provided
+        var effectiveMaxTokens = maxTokens ?? 100;
+        if (effectiveMaxTokens <= 0)
         {
-            chatOptions.MaxOutputTokenCount = maxTokens.Value;
+            effectiveMaxTokens = 100; // Ensure we always have a positive value
         }
+        chatOptions.MaxOutputTokenCount = effectiveMaxTokens;
         
         if (temperature.HasValue)
         {

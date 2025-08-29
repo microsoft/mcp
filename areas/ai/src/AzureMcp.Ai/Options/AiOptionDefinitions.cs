@@ -35,7 +35,7 @@ public static class AiOptionDefinitions
         IsRequired = true
     };
 
-    public static readonly Option<int> MaxTokens = new(
+    public static readonly Option<int?> MaxTokens = new(
         $"--{MaxTokensName}",
         "The maximum number of tokens to generate in the completion."
     )
@@ -43,7 +43,7 @@ public static class AiOptionDefinitions
         IsRequired = false
     };
 
-    public static readonly Option<double> Temperature = new(
+    public static readonly Option<double?> Temperature = new(
         $"--{TemperatureName}",
         "Controls randomness in the output. Values between 0.0 and 1.0."
     )
