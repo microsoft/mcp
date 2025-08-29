@@ -107,7 +107,7 @@ public class ClusterListCommandTests
             argsList.Add("sub123");
         }
 
-        var args = command.GetCommand().Parse(argsList.ToArray());
+        var args = command.GetCommand().Parse([.. argsList]);
 
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);

@@ -63,6 +63,6 @@ public class ServiceStartCommandTests
         args.Add("--transport");
         args.Add("stdio");
 
-        return CommandLineParser.Parse(root, args);
+        return root.Parse([.. args]);
     }
 }
