@@ -200,6 +200,12 @@
 
 # PRLabel: %tools-EventGrid
 /tools/Azure.Mcp.Tools.EventGrid/     @microsoft/azure-mcp
- 
+
 # ServiceLabel: %tools-EventGrid
 # ServiceOwners:                      @microsoft/azure-mcp
+
+# PRLabel: %area-SignalR
+/tools/Azure.Mcp.Tools.SignalR/        @kenchennt @JialinXin @HaofanLiao @Azure/azure-mcp
+
+# ServiceLabel: %area-SignalR
+# ServiceOwners:                       @kenchennt @JialinXin
