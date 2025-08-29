@@ -184,25 +184,25 @@ public class DesignCommandTests
 
         // Build a single command line and use ArgSplitter to emulate shell quoting
         var cmdLine = $"--question \"{complexQuestion.Replace("\"", "\\\"")}\" --answer \"{complexAnswer.Replace("\"", "\\\"")}\" --question-number 2 --total-questions 10";
-    var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(cmdLine));
+        var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(cmdLine));
 
-    // Ensure there were no parse/validation errors
-    Assert.True(!parseResult.Errors.Any(), string.Join("; ", parseResult.Errors.Select(e => e.Message)));
+        // Ensure there were no parse/validation errors
+        Assert.True(!parseResult.Errors.Any(), string.Join("; ", parseResult.Errors.Select(e => e.Message)));
 
-    // Act
-    var response = await _command.ExecuteAsync(_context, parseResult);
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult);
 
-    // Assert
-    Assert.Equal(200, response.Status);
-    Assert.NotNull(response.Results);
-    Assert.Empty(response.Message);
+        // Assert
+        Assert.Equal(200, response.Status);
+        Assert.NotNull(response.Results);
+        Assert.Empty(response.Message);
 
-    // Verify all options were parsed correctly using the canonical option definitions
-    var questionValue = parseResult.GetValue(CloudArchitectOptionDefinitions.Question);
-    var answerValue = parseResult.GetValue(CloudArchitectOptionDefinitions.Answer);
+        // Verify all options were parsed correctly using the canonical option definitions
+        var questionValue = parseResult.GetValue(CloudArchitectOptionDefinitions.Question);
+        var answerValue = parseResult.GetValue(CloudArchitectOptionDefinitions.Answer);
 
-    Assert.Equal(complexQuestion, questionValue);
-    Assert.Equal(complexAnswer, answerValue);
+        Assert.Equal(complexQuestion, questionValue);
+        Assert.Equal(complexAnswer, answerValue);
     }
 
     [Fact]

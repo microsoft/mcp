@@ -75,16 +75,16 @@ public sealed class ServiceStartCommand : BaseCommand
     /// <returns>A command response indicating the result of the operation.</returns>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        var namespaces = parseResult.GetValue(_namespaceOption) == default
-            ? ServiceOptionDefinitions.Namespace.GetDefaultValue()
+        string[]? namespaces = parseResult.GetValue(_namespaceOption) == default
+            ? (string[]?)ServiceOptionDefinitions.Namespace.GetDefaultValue()
             : parseResult.GetValue(_namespaceOption);
 
-        var mode = parseResult.GetValue(_modeOption) == default
-            ? ServiceOptionDefinitions.Mode.GetDefaultValue()
+        string? mode = parseResult.GetValue(_modeOption) == default
+            ? (string?)ServiceOptionDefinitions.Mode.GetDefaultValue()
             : parseResult.GetValue(_modeOption);
 
-        var readOnly = parseResult.GetValue(_readOnlyOption) == default
-            ? ServiceOptionDefinitions.ReadOnly.GetDefaultValue()
+        bool? readOnly = parseResult.GetValue(_readOnlyOption) == default
+            ? (bool?)ServiceOptionDefinitions.ReadOnly.GetDefaultValue()
             : parseResult.GetValue(_readOnlyOption);
 
         if (!IsValidMode(mode))

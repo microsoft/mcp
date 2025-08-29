@@ -5,13 +5,13 @@ using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.BicepSchema.Commands;
 using Azure.Mcp.Tools.BicepSchema.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
-using Azure.Mcp.TestUtilities;
 
 namespace Azure.Mcp.Tools.BicepSchema.UnitTests;
 
@@ -41,7 +41,7 @@ public class BicepSchemaGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsSchema_WhenResourceTypeExists()
     {
-    var args = _commandDefinition.Parse(ArgSplitter.SplitArgs("--resource-type Microsoft.Sql/servers/databases/schemas"));
+        var args = _commandDefinition.Parse(ArgSplitter.SplitArgs("--resource-type Microsoft.Sql/servers/databases/schemas"));
 
         var response = await _command.ExecuteAsync(_context, args);
         Assert.NotNull(response);
@@ -59,7 +59,7 @@ public class BicepSchemaGetCommandTests
     public async Task ExecuteAsync_ReturnsError_WhenResourceTypeDoesNotExist()
     {
 
-    var args = _commandDefinition.Parse(ArgSplitter.SplitArgs("--resource-type Microsoft.Unknown/virtualRandom"));
+        var args = _commandDefinition.Parse(ArgSplitter.SplitArgs("--resource-type Microsoft.Unknown/virtualRandom"));
 
         var response = await _command.ExecuteAsync(_context, args);
         Assert.NotNull(response);

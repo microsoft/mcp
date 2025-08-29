@@ -5,13 +5,13 @@ using System.CommandLine;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
-using Azure.Mcp.TestUtilities;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.Log;
 
@@ -77,7 +77,7 @@ public sealed class WorkspaceLogQueryCommandTests
         }
 
         // Act
-    var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(ArgSplitter.SplitArgs(args)));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(ArgSplitter.SplitArgs(args)));
 
         // Assert
         Assert.Equal(shouldSucceed ? 200 : 400, response.Status);

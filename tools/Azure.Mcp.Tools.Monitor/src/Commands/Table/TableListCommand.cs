@@ -36,7 +36,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseMon
     protected override TableListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TableType = parseResult.GetValue(_tableTypeOption) ?? MonitorOptionDefinitions.TableType.GetDefaultValue();
+        options.TableType = parseResult.GetValue(_tableTypeOption) ?? (string?)MonitorOptionDefinitions.TableType.GetDefaultValue();
         return options;
     }
 
