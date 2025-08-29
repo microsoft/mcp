@@ -9,8 +9,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.LiveTests;
 
-public sealed class AksCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+public sealed class AksCommandTests(ITestOutputHelper output)
+    : CommandTestsBase(output)
 {
 
     [Fact]

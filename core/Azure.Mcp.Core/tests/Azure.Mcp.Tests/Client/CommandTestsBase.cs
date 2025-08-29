@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -11,14 +12,95 @@ using Xunit;
 
 namespace Azure.Mcp.Tests.Client;
 
-public abstract class CommandTestsBase(LiveTestFixture liveTestFixture, ITestOutputHelper output) : IDisposable
+public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetime, IDisposable
 {
     protected const string TenantNameReason = "Service principals cannot use TenantName for lookup";
 
-    protected IMcpClient Client { get; } = liveTestFixture.Client;
-    protected LiveTestSettings Settings { get; } = liveTestFixture.Settings;
+    protected IMcpClient Client { get; private set; } = default!;
+    protected LiveTestSettings Settings { get; private set; } = default!;
     protected StringBuilder FailureOutput { get; } = new();
     protected ITestOutputHelper Output { get; } = output;
+
+    private string[]? _customArguments;
+
+    /// <summary>
+    /// Sets custom arguments for the MCP server. Call this before InitializeAsync().
+    /// </summary>
+    /// <param name="arguments">Custom arguments to pass to the server (e.g., ["server", "start", "--mode", "single"])</param>
+    public void SetArguments(params string[] arguments)
+    {
+        _customArguments = arguments;
+    }
+
+    // public virtual async ValueTask InitializeAsync()
+    // {
+    //     var settingsFixture = new LiveTestSettingsFixture();
+    //     await settingsFixture.InitializeAsync();
+    //     Settings = settingsFixture.Settings;
+
+    //     string testAssemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+    //     string executablePath = OperatingSystem.IsWindows() ? Path.Combine(testAssemblyPath, "azmcp.exe") : Path.Combine(testAssemblyPath, "azmcp");
+
+    //     // Use custom arguments if provided, otherwise default to ["server", "start", "--debug"]
+    //     var arguments = _customArguments ?? ["server", "start", "--mode", "all", "--debug"];
+
+    //     StdioClientTransportOptions transportOptions = new()
+    //     {
+    //         Name = "Test Server",
+    //         Command = executablePath,
+    //         Arguments = arguments,
+    //         StandardErrorLines = Output.WriteLine
+    //     };
+
+    //     if (!string.IsNullOrEmpty(Settings.TestPackage))
+    //     {
+    //         Environment.CurrentDirectory = Settings.SettingsDirectory;
+    //         transportOptions.Command = "npx";
+    //         transportOptions.Arguments = ["-y", Settings.TestPackage, .. arguments];
+    //     }
+
+    //     var clientTransport = new StdioClientTransport(transportOptions);
+
+    //     Client = await McpClientFactory.CreateAsync(clientTransport);
+    // }
+
+    public virtual async ValueTask InitializeAsync()
+    {
+        var settingsFixture = new LiveTestSettingsFixture();
+        await settingsFixture.InitializeAsync();
+        Settings = settingsFixture.Settings;
+
+        string testAssemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+        string executablePath = OperatingSystem.IsWindows() ? Path.Combine(testAssemblyPath, "azmcp.exe") : Path.Combine(testAssemblyPath, "azmcp");
+
+        // Use custom arguments if provided, otherwise default to ["server", "start", "--debug"]
+        var arguments = _customArguments ?? ["server", "start", "--mode", "all", "--debug"];
+
+        StdioClientTransportOptions transportOptions = new()
+        {
+            Name = "Test Server",
+            Command = executablePath,
+            Arguments = arguments,
+            StandardErrorLines = Output.WriteLine
+        };
+
+        if (!string.IsNullOrEmpty(Settings.TestPackage))
+        {
+            Environment.CurrentDirectory = Settings.SettingsDirectory;
+            transportOptions.Command = "npx";
+            transportOptions.Arguments = ["-y", Settings.TestPackage, .. arguments];
+        }
+
+        var clientTransport = new StdioClientTransport(transportOptions);
+
+        Client = await McpClientFactory.CreateAsync(clientTransport);
+    }
+
+    public virtual ValueTask DisposeAsync()
+    {
+        Client?.DisposeAsync();
+        return ValueTask.CompletedTask;
+    }
 
     protected async Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
     {

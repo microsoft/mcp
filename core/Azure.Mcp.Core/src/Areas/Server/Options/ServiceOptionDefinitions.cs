@@ -9,6 +9,7 @@ public static class ServiceOptionDefinitions
     public const string NamespaceName = "namespace";
     public const string ModeName = "mode";
     public const string ReadOnlyName = "read-only";
+    public const string DebugName = "debug";
 
     public static readonly Option<string> Transport = new(
         $"--{TransportName}",
@@ -44,4 +45,9 @@ public static class ServiceOptionDefinitions
         $"--{ReadOnlyName}",
         () => null,
         "Whether the MCP server should be read-only. If true, no write operations will be allowed.");
+
+    public static readonly Option<bool> Debug = new(
+        $"--{DebugName}",
+        () => false,
+        "Enable debug mode with verbose logging to stderr.");
 }

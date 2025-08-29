@@ -14,18 +14,19 @@ using Xunit;
 namespace Azure.Mcp.Tools.Marketplace.LiveTests;
 
 [Trait("Area", "Marketplace")]
-public class MarketplaceCommandTests : CommandTestsBase,
-    IClassFixture<LiveTestFixture>
+public class MarketplaceCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     private const string ProductKey = "product";
     private const string ProductId = "test_test_pmc2pc1.vmsr_uat_beta";
     private const string Language = "en";
     private const string Market = "US";
-    private readonly MarketplaceService _marketplaceService;
-    private readonly string _subscriptionId;
+    private MarketplaceService _marketplaceService = default!;
+    private string _subscriptionId = default!;
 
-    public MarketplaceCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : base(liveTestFixture, output)
+    public override async ValueTask InitializeAsync()
     {
+        await base.InitializeAsync();
+
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new CacheService(memoryCache);
         var tenantService = new TenantService(cacheService);
@@ -78,8 +79,6 @@ public class MarketplaceCommandTests : CommandTestsBase,
     [Trait("Category", "Live")]
     public async Task Should_get_marketplace_product_with_market_option()
     {
-
-
         var result = await CallToolAsync(
             "azmcp_marketplace_product_get",
             new()
@@ -101,7 +100,6 @@ public class MarketplaceCommandTests : CommandTestsBase,
     [Trait("Category", "Live")]
     public async Task Should_get_marketplace_product_with_multiple_options()
     {
-
         var result = await CallToolAsync(
             "azmcp_marketplace_product_get",
             new()
@@ -122,3 +120,4 @@ public class MarketplaceCommandTests : CommandTestsBase,
         Assert.Contains(ProductId, id.GetString());
     }
 }
+

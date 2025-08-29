@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Reflection;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client.Helpers;
@@ -11,9 +12,52 @@ using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests;
 
-public class ClientToolTests(LiveTestFixture liveTestFixture) : IClassFixture<LiveTestFixture>
+public class ClientToolTests : IAsyncLifetime
 {
-    private readonly IMcpClient _client = liveTestFixture.Client;
+    private readonly ITestOutputHelper _output;
+    private IMcpClient _client = default!;
+    private LiveTestSettings _settings = default!;
+
+    public ClientToolTests(ITestOutputHelper output)
+    {
+        _output = output;
+    }
+
+    public async ValueTask InitializeAsync()
+    {
+        var settingsFixture = new LiveTestSettingsFixture();
+        await settingsFixture.InitializeAsync();
+        _settings = settingsFixture.Settings;
+
+        string testAssemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+        string executablePath = OperatingSystem.IsWindows() ? Path.Combine(testAssemblyPath, "azmcp.exe") : Path.Combine(testAssemblyPath, "azmcp");
+
+        var arguments = new[] { "server", "start", "--mode", "all", "--debug" };
+
+        StdioClientTransportOptions transportOptions = new()
+        {
+            Name = "Test Server",
+            Command = executablePath,
+            Arguments = arguments,
+            StandardErrorLines = _output.WriteLine
+        };
+
+        if (!string.IsNullOrEmpty(_settings.TestPackage))
+        {
+            Environment.CurrentDirectory = _settings.SettingsDirectory;
+            transportOptions.Command = "npx";
+            transportOptions.Arguments = ["-y", _settings.TestPackage, .. arguments];
+        }
+
+        var clientTransport = new StdioClientTransport(transportOptions);
+        _client = await McpClientFactory.CreateAsync(clientTransport);
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        _client?.DisposeAsync();
+        return ValueTask.CompletedTask;
+    }
 
     [Fact]
     public async Task Should_List_Tools()
