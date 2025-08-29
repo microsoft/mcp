@@ -176,22 +176,9 @@ extends:
           - template: /eng/pipelines/templates/variables/globals.yml
           steps:
           - checkout: none
-          # Match the same artifact source (either current run or specific run)
-          - ${{ if and(ne(parameters.UpstreamPipelineId, ''), ne(parameters.UpstreamRunId, '')) }}:
-            - task: DownloadPipelineArtifact@2
-              displayName: "Download signed MCP server VSIX files (specific run)"
-              inputs:
-                buildType: specific
-                project: ${{ parameters.UpstreamProject }}
-                pipeline: ${{ parameters.UpstreamPipelineId }}
-                runVersion: specific
-                runId: ${{ parameters.UpstreamRunId }}
-                artifact: vsix_$(PipelineArtifactName)_signed
-                targetPath: '$(Pipeline.Workspace)/vsix_$(PipelineArtifactName)_signed'
-          - ${{ if or(eq(parameters.UpstreamPipelineId, ''), eq(parameters.UpstreamRunId, '')) }}:
-            - download: current
-              artifact: vsix_$(PipelineArtifactName)_signed
-              displayName: "Download signed MCP server VSIX files"
+          - download: current
+            artifact: vsix_$(PipelineArtifactName)_signed
+            displayName: "Download signed MCP server VSIX files"
           - pwsh: |
               Write-Host "Verifying signing for win-x64 and win-arm64 VSIX files..."
               $allSigned = $true
