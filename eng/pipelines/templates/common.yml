@@ -34,7 +34,6 @@ extends:
     autoBaseline: ${{ and(eq(variables['Build.DefinitionName'], 'azure - mcp'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['System.TeamProject'], 'internal')) }}
     stages:
     - stage: Initialize
-      condition: false
       pool:
         name: $(LINUXPOOL)
         image: $(LINUXVMIMAGE)
