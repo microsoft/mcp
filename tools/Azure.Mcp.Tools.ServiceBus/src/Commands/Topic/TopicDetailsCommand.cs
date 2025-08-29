@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Topic;
