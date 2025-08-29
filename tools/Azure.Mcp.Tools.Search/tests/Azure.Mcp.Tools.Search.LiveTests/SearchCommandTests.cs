@@ -9,9 +9,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Search.LiveTests;
 
-public class SearchCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output),
-    IClassFixture<LiveTestFixture>
+public class SearchCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     const string IndexName = "products";
 
@@ -146,3 +144,4 @@ public class SearchCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelp
         Assert.Equal(JsonValueKind.Array, docs.ValueKind);
     }
 }
+

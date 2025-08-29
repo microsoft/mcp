@@ -10,12 +10,11 @@ using Xunit;
 namespace Azure.Mcp.Tools.Quota.LiveTests;
 
 [Trait("Area", "Quota")]
-public class QuotaCommandTests : CommandTestsBase,
-    IClassFixture<LiveTestFixture>
+public class QuotaCommandTests : CommandTestsBase
 {
     private readonly string _subscriptionId;
 
-    public QuotaCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : base(liveTestFixture, output)
+    public QuotaCommandTests(ITestOutputHelper output) : base(output)
     {
         _subscriptionId = Settings.SubscriptionId;
     }
@@ -135,3 +134,4 @@ public class QuotaCommandTests : CommandTestsBase,
         // Assert.Equal(expectedRegions, actualRegions);
     }
 }
+

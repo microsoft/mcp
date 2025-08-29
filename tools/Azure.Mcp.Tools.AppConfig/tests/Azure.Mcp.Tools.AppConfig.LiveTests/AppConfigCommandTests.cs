@@ -14,8 +14,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.LiveTests;
 
-public class AppConfigCommandTests : CommandTestsBase,
-    IClassFixture<LiveTestFixture>
+public class AppConfigCommandTests : CommandTestsBase
 {
     private const string AccountsKey = "accounts";
     private const string SettingsKey = "settings";
@@ -23,7 +22,7 @@ public class AppConfigCommandTests : CommandTestsBase,
     private readonly string _subscriptionId;
     private readonly string _accountName;
 
-    public AppConfigCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : base(liveTestFixture, output)
+    public AppConfigCommandTests(ITestOutputHelper output) : base(output)
     {
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new CacheService(memoryCache);
@@ -519,3 +518,4 @@ public class AppConfigCommandTests : CommandTestsBase,
         }
     }
 }
+

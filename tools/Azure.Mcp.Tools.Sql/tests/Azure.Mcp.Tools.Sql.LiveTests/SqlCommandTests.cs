@@ -9,8 +9,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.LiveTests;
 
-public class SqlCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
 
     [Fact]
@@ -278,3 +277,4 @@ public class SqlCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper 
         Assert.Equal("Microsoft.Sql/servers/elasticPools", poolType, ignoreCase: true);
     }
 }
+

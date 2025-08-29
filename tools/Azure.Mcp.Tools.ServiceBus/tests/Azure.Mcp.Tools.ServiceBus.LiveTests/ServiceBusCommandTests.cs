@@ -13,7 +13,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.ServiceBus.LiveTests
 {
-    public class ServiceBusCommandTests : CommandTestsBase, IClassFixture<LiveTestFixture>
+    public class ServiceBusCommandTests : CommandTestsBase
     {
         private const string QueueName = "queue1";
         private const string TopicName = "topic1";
@@ -21,7 +21,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
 
         private readonly string _serviceBusNamespace;
 
-        public ServiceBusCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : base(liveTestFixture, output)
+        public ServiceBusCommandTests(ITestOutputHelper output) : base(output)
         {
             _serviceBusNamespace = $"{Settings.ResourceBaseName}.servicebus.windows.net";
         }
@@ -139,3 +139,4 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
         }
     }
 }
+
