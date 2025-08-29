@@ -52,7 +52,7 @@ public abstract class BaseCommand : IBaseCommand
         response.Results = ResponseResult.Create(result, JsonSourceGenerationContext.Default.ExceptionResult);
     }
 
-    internal record ExceptionResult(
+    public record ExceptionResult(
         string Message,
         string? StackTrace,
         string Type);
