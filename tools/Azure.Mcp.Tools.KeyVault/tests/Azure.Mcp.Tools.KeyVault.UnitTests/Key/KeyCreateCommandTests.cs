@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -25,7 +25,7 @@ public class KeyCreateCommandTests
     private readonly ILogger<KeyCreateCommand> _logger;
     private readonly KeyCreateCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     private const string _knownSubscriptionId = "knownSubscription";
     private const string _knownVaultName = "knownVaultName";
@@ -44,7 +44,7 @@ public class KeyCreateCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
 
         _knownKeyVaultKey = new KeyVaultKey(_knownKeyName);
 
@@ -72,7 +72,7 @@ public class KeyCreateCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(_knownKeyVaultKey);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVaultName,
             "--key", _knownKeyName,
             "--key-type", _knownKeyType.ToString(),
@@ -98,7 +98,7 @@ public class KeyCreateCommandTests
     public async Task ExecuteAsync_ReturnsInvalidObject_IfKeyNameIsEmpty()
     {
         // Arrange - No need to mock service since validation should fail before service is called
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVaultName,
             "--key", "",
             "--key-type", _knownKeyType.ToString(),
@@ -129,7 +129,7 @@ public class KeyCreateCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVaultName,
             "--key", _knownKeyName,
             "--key-type", _knownKeyType.ToString(),

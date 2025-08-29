@@ -8,11 +8,11 @@ public static class BicepSchemaOptionDefinitions
     public const string ResourceType = "resource-type";
 
     public static readonly Option<string> ResourceTypeName = new(
-        $"--{ResourceType}",
-        "The name of the Bicep Resource Type and must be in the full Azure Resource Manager format '{ResourceProvider}/{ResourceType}'. " +
-        "(e.g., 'Microsoft.KeyVault/vaults', 'Microsoft.Storage/storageAccounts', 'Microsoft.Compute/virtualMachines')(e.g., Microsoft.Storage/storageAccounts)."
+        $"--{ResourceType}"
     )
     {
-        IsRequired = true
+        Description = "The name of the Bicep Resource Type and must be in the full Azure Resource Manager format '{ResourceProvider}/{ResourceType}'. " +
+        "(e.g., 'Microsoft.KeyVault/vaults', 'Microsoft.Storage/storageAccounts', 'Microsoft.Compute/virtualMachines')(e.g., Microsoft.Storage/storageAccounts).",
+        Required = true
     };
 }

@@ -34,31 +34,31 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_workbookIdOption);
-        command.AddOption(_displayNameOption);
-        command.AddOption(_serializedContentOption);
+        command.Options.Add(_workbookIdOption);
+        command.Options.Add(_displayNameOption);
+        command.Options.Add(_serializedContentOption);
     }
 
     protected override UpdateWorkbooksOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkbookId = parseResult.GetValueForOption(_workbookIdOption);
-        options.DisplayName = parseResult.GetValueForOption(_displayNameOption);
-        options.SerializedContent = parseResult.GetValueForOption(_serializedContentOption);
+        options.WorkbookId = parseResult.GetValue(_workbookIdOption);
+        options.DisplayName = parseResult.GetValue(_displayNameOption);
+        options.SerializedContent = parseResult.GetValue(_serializedContentOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var workbooksService = context.GetService<IWorkbooksService>();
             var updatedWorkbook = await workbooksService.UpdateWorkbook(
                 options.WorkbookId!,

@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
-using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
@@ -134,8 +131,8 @@ public class AvailabilityStatusListCommandTests
             .ThrowsAsync(new Exception("Test error"));
 
         var command = new AvailabilityStatusListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(["--subscription", subscriptionId]);
+
+        var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -150,10 +147,14 @@ public class AvailabilityStatusListCommandTests
     public async Task ExecuteAsync_ReturnsError_WhenRequiredParameterIsMissing(string missingParameter)
     {
         var command = new AvailabilityStatusListCommand(_logger);
-        var args = command.GetCommand().Parse(
-        [
-            missingParameter == "--subscription" ? "" : "--subscription", "12345678-1234-1234-1234-123456789012",
-        ]);
+        var argsList = new List<string>();
+        if (missingParameter != "--subscription")
+        {
+            argsList.Add("--subscription");
+            argsList.Add("12345678-1234-1234-1234-123456789012");
+        }
+
+        var args = command.GetCommand().Parse([.. argsList]);
 
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);

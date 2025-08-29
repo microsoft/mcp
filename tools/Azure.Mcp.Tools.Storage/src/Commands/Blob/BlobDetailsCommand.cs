@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob;
 using Azure.Mcp.Tools.Storage.Services;
 using Azure.Storage.Blobs.Models;
@@ -19,7 +18,7 @@ public sealed class BlobDetailsCommand(ILogger<BlobDetailsCommand> logger) : Bas
 
     public override string Description =>
         $"""
-        Get blob properties, metadata, and general information. This tool retrieves blob configuration including metadata properties, 
+        Get blob properties, metadata, and general information. This tool retrieves blob configuration including metadata properties,
         approximate size, and last modification time information. Returns blob properties as JSON.
         """;
 
@@ -29,15 +28,15 @@ public sealed class BlobDetailsCommand(ILogger<BlobDetailsCommand> logger) : Bas
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var storageService = context.GetService<IStorageService>();
             var details = await storageService.GetBlobDetails(
                 options.Account!,

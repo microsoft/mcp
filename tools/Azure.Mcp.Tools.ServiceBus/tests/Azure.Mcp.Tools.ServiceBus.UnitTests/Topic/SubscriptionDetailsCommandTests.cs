@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Services;
@@ -26,7 +27,7 @@ public class SubscriptionDetailsCommandTests
     private readonly ILogger<SubscriptionDetailsCommand> _logger;
     private readonly SubscriptionDetailsCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     // Test constants
     private const string SubscriptionId = "sub123";
@@ -44,7 +45,7 @@ public class SubscriptionDetailsCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -71,7 +72,7 @@ public class SubscriptionDetailsCommandTests
             Arg.Any<RetryPolicyOptions>()
         ).Returns(expectedDetails);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", SubscriptionId,
             "--namespace", NamespaceName,
             "--topic", TopicName,
@@ -110,7 +111,7 @@ public class SubscriptionDetailsCommandTests
             Arg.Any<RetryPolicyOptions>()
         ).ThrowsAsync(serviceBusException);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", SubscriptionId,
             "--namespace", NamespaceName,
             "--topic", TopicName,
@@ -140,7 +141,7 @@ public class SubscriptionDetailsCommandTests
             Arg.Any<RetryPolicyOptions>()
         ).ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", SubscriptionId,
             "--namespace", NamespaceName,
             "--topic", TopicName,
@@ -184,7 +185,7 @@ public class SubscriptionDetailsCommandTests
                 .Returns(expectedDetails);
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

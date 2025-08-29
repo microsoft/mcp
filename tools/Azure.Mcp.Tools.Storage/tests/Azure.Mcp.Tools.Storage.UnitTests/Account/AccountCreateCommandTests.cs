@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
@@ -24,7 +25,7 @@ public class AccountCreateCommandTests
     private readonly ILogger<AccountCreateCommand> _logger;
     private readonly AccountCreateCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public AccountCreateCommandTests()
     {
@@ -36,7 +37,7 @@ public class AccountCreateCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -87,7 +88,7 @@ public class AccountCreateCommandTests
                 .Returns(expectedAccount);
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -132,7 +133,7 @@ public class AccountCreateCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(conflictException);
 
-        var parseResult = _parser.Parse(["--account", "existingaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
+        var parseResult = _commandDefinition.Parse(["--account", "existingaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -163,7 +164,7 @@ public class AccountCreateCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(notFoundException);
 
-        var parseResult = _parser.Parse(["--account", "testaccount", "--resource-group", "nonexistentrg", "--location", "eastus", "--subscription", "sub123"]);
+        var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "nonexistentrg", "--location", "eastus", "--subscription", "sub123"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -194,7 +195,7 @@ public class AccountCreateCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(authException);
 
-        var parseResult = _parser.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
+        var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -223,7 +224,7 @@ public class AccountCreateCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<StorageAccountInfo>(new Exception("Test error")));
 
-        var parseResult = _parser.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
+        var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -263,7 +264,7 @@ public class AccountCreateCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(expectedAccount);
 
-        var parseResult = _parser.Parse([
+        var parseResult = _commandDefinition.Parse([
             "--account", "testaccount",
             "--resource-group", "testrg",
             "--location", "eastus",

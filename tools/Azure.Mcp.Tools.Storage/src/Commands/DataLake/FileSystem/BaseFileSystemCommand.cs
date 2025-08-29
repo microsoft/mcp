@@ -17,13 +17,13 @@ public abstract class BaseFileSystemCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_fileSystemOption);
+        command.Options.Add(_fileSystemOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.FileSystem = parseResult.GetValueForOption(_fileSystemOption);
+        options.FileSystem = parseResult.GetValue(_fileSystemOption);
         return options;
     }
 }

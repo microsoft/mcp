@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Deploy.Options;
 using Azure.Mcp.Tools.Deploy.Options.App;
 using Azure.Mcp.Tools.Deploy.Services;
@@ -32,30 +31,32 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_workspaceFolderOption);
-        command.AddOption(_azdEnvNameOption);
-        command.AddOption(_limitOption);
+        command.Options.Add(_workspaceFolderOption);
+        command.Options.Add(_azdEnvNameOption);
+        command.Options.Add(_limitOption);
     }
 
     protected override LogsGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceFolder = parseResult.GetValueForOption(_workspaceFolderOption)!;
-        options.AzdEnvName = parseResult.GetValueForOption(_azdEnvNameOption)!;
-        options.Limit = parseResult.GetValueForOption(_limitOption);
+        options.WorkspaceFolder = parseResult.GetValue(_workspaceFolderOption)!;
+        options.AzdEnvName = parseResult.GetValue(_azdEnvNameOption)!;
+        options.Limit = parseResult.GetValue(_limitOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
+
 
             var deployService = context.GetService<IDeployService>();
             string result = await deployService.GetAzdResourceLogsAsync(

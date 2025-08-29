@@ -20,7 +20,7 @@ public sealed class FileSystemListPathsCommand(ILogger<FileSystemListPathsComman
     public override string Description =>
         """
         List paths in a Data Lake file system. This command retrieves and displays paths (files and directories)
-        available in the specified Data Lake file system within the storage account. Results include path names, 
+        available in the specified Data Lake file system within the storage account. Results include path names,
         types (file or directory), and metadata, returned as a JSON array.
         """;
 
@@ -31,29 +31,29 @@ public sealed class FileSystemListPathsCommand(ILogger<FileSystemListPathsComman
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(StorageOptionDefinitions.FilterPath);
-        command.AddOption(StorageOptionDefinitions.Recursive);
+        command.Options.Add(StorageOptionDefinitions.FilterPath);
+        command.Options.Add(StorageOptionDefinitions.Recursive);
     }
 
     protected override ListPathsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.FilterPath = parseResult.GetValueForOption(StorageOptionDefinitions.FilterPath);
-        options.Recursive = parseResult.GetValueForOption(StorageOptionDefinitions.Recursive);
+        options.FilterPath = parseResult.GetValue(StorageOptionDefinitions.FilterPath);
+        options.Recursive = parseResult.GetValue(StorageOptionDefinitions.Recursive);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var storageService = context.GetService<IStorageService>();
             var paths = await storageService.ListDataLakePaths(
                 options.Account!,

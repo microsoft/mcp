@@ -27,7 +27,7 @@ public sealed class RegistryDiscoveryStrategy(IOptions<ServiceStartOptions> opti
         var registryRoot = await LoadRegistryAsync();
         if (registryRoot == null)
         {
-            return Enumerable.Empty<IMcpServerProvider>();
+            return [];
         }
 
         return registryRoot

@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Services;
@@ -52,15 +52,7 @@ public class TestRunCreateCommandTests
             .Returns(expected);
 
         var command = new TestRunCreateCommand(_logger);
-        var args = command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--resource-group", "resourceGroup123",
-            "--test-resource-name", "testResourceName",
-            "--testrun-id", "run1",
-            "--tenant", "tenant123",
-            "--test-id", "testId1",
-            "--display-name", "displayName"
-        ]);
+        var args = command.GetCommand().Parse("--subscription sub123 --resource-group resourceGroup123 --test-resource-name testResourceName --testrun-id run1 --tenant tenant123 --test-id testId1 --display-name displayName");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
@@ -85,15 +77,7 @@ public class TestRunCreateCommandTests
             .Returns(expected);
 
         var command = new TestRunCreateCommand(_logger);
-        var args = command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--resource-group", "resourceGroup123",
-            "--test-resource-name", "testResourceName",
-            "--testrun-id", "run1",
-            "--tenant", "tenant123",
-            "--test-id", "testId1",
-            "--old-testrun-id", "oldId1"
-        ]);
+        var args = command.GetCommand().Parse("--subscription sub123 --resource-group resourceGroup123 --test-resource-name testResourceName --testrun-id run1 --tenant tenant123 --test-id testId1 --old-testrun-id oldId1");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
@@ -118,13 +102,7 @@ public class TestRunCreateCommandTests
             .Returns(expected);
 
         var command = new TestRunCreateCommand(_logger);
-        var args = command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--resource-group", "resourceGroup123",
-            "--test-resource-name", "testResourceName",
-            "--tenant", "tenant123",
-            "--testrun-id", "run1"
-        ]);
+        var args = command.GetCommand().Parse("--subscription sub123 --resource-group resourceGroup123 --test-resource-name testResourceName --tenant tenant123 --testrun-id run1");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
         Assert.Equal(400, response.Status);
@@ -138,14 +116,7 @@ public class TestRunCreateCommandTests
             .Returns(Task.FromException<TestRun>(new Exception("Test error")));
 
         var command = new TestRunCreateCommand(_logger);
-        var args = command.GetCommand().Parse([
-            "--subscription", "sub123",
-            "--resource-group", "resourceGroup123",
-            "--test-resource-name", "testResourceName",
-            "--testrun-id", "run1",
-            "--tenant", "tenant123",
-            "--test-id", "testId1"
-        ]);
+        var args = command.GetCommand().Parse("--subscription sub123 --resource-group resourceGroup123 --test-resource-name testResourceName --testrun-id run1 --tenant tenant123 --test-id testId1");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
         Assert.Equal(500, response.Status);

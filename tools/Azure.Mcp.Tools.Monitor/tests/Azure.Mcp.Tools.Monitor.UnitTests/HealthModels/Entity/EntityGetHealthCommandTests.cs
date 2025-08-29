@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
@@ -25,7 +24,7 @@ public class EntityGetHealthCommandTests
     private readonly IMonitorHealthModelService _monitorHealthService;
     private readonly EntityGetHealthCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     // Sample test data
     private const string TestEntity = "entity123";
@@ -48,7 +47,7 @@ public class EntityGetHealthCommandTests
         _logger = Substitute.For<ILogger<EntityGetHealthCommand>>();
         _command = new EntityGetHealthCommand(_logger);
         _context = new CommandContext(_serviceProvider);
-        _parser = new Parser(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -68,7 +67,7 @@ public class EntityGetHealthCommandTests
                 Arg.Any<RetryPolicyOptions?>())
             .Returns(mockResponse);
 
-        var args = _parser.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --tenant {TestTenant}");
+        var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --tenant {TestTenant}");
 
         // Act
         var result = await _command.ExecuteAsync(_context, args);
@@ -91,7 +90,7 @@ public class EntityGetHealthCommandTests
     [Fact]
     public async Task ExecuteAsync_WithMissingRequiredParameters_ReturnsBadRequest()
     {        // Arrange - missing entity parameter
-        var args = _parser.Parse($"--health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
+        var args = _commandDefinition.Parse($"--health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
 
         // Act
         var result = await _command.ExecuteAsync(_context, args);
@@ -127,7 +126,7 @@ public class EntityGetHealthCommandTests
                 Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromException<JsonNode>(new KeyNotFoundException("Entity not found")));
 
-        var args = _parser.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
+        var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
 
         // Act
         var result = await _command.ExecuteAsync(_context, args);
@@ -162,7 +161,7 @@ public class EntityGetHealthCommandTests
                 Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromException<JsonNode>(new ArgumentException("Invalid health model format")));
 
-        var args = _parser.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
+        var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
 
         // Act
         var result = await _command.ExecuteAsync(_context, args);
@@ -198,7 +197,7 @@ public class EntityGetHealthCommandTests
                 Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromException<JsonNode>(new Exception(expectedError)));
 
-        var args = _parser.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
+        var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
 
         // Act
         var result = await _command.ExecuteAsync(_context, args);
@@ -236,7 +235,7 @@ public class EntityGetHealthCommandTests
                 Arg.Any<RetryPolicyOptions?>())
             .Returns(mockResponse);
 
-        var args = _parser.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --auth-method {authMethod}");
+        var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --auth-method {authMethod}");
 
         // Act
         var result = await _command.ExecuteAsync(_context, args);
@@ -274,7 +273,7 @@ public class EntityGetHealthCommandTests
                 Arg.Is<RetryPolicyOptions>(r => r.DelaySeconds == RetryDelay && r.MaxRetries == MaxRetries))
             .Returns(mockResponse);
 
-        var args = _parser.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --retry-delay {RetryDelay} --retry-max-retries {MaxRetries}");
+        var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --retry-delay {RetryDelay} --retry-max-retries {MaxRetries}");
 
         // Act
         var result = await _command.ExecuteAsync(_context, args);

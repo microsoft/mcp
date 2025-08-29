@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
 using Azure.Storage.Blobs.Models;
@@ -24,7 +25,7 @@ public class ContainerCreateCommandTests
     private readonly ILogger<ContainerCreateCommand> _logger;
     private readonly ContainerCreateCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
     private readonly string _knownAccount = "account123";
     private readonly string _knownContainer = "container123";
     private readonly string _knownSubscription = "sub123";
@@ -38,7 +39,7 @@ public class ContainerCreateCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -68,7 +69,7 @@ public class ContainerCreateCommandTests
                 .Returns(expectedProperties);
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -93,11 +94,11 @@ public class ContainerCreateCommandTests
             Arg.Is(_knownSubscription), Arg.Is((string?)null), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedProperties);
 
-        var args = _parser.Parse([
-            "--account", _knownAccount,
+        var args = _commandDefinition.Parse([
+                "--account", _knownAccount,
             "--container", _knownContainer,
             "--subscription", _knownSubscription
-        ]);
+            ]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -131,12 +132,12 @@ public class ContainerCreateCommandTests
             Arg.Is(_knownSubscription), Arg.Is(publicAccessInput), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedProperties);
 
-        var args = _parser.Parse([
-            "--account", _knownAccount,
+        var args = _commandDefinition.Parse([
+                "--account", _knownAccount,
             "--container", _knownContainer,
             "--subscription", _knownSubscription,
             "--blob-container-public-access", publicAccessInput
-        ]);
+            ]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -162,11 +163,11 @@ public class ContainerCreateCommandTests
             Arg.Is(_knownSubscription), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse([
-            "--account", _knownAccount,
+        var args = _commandDefinition.Parse([
+                "--account", _knownAccount,
             "--container", _knownContainer,
             "--subscription", _knownSubscription
-        ]);
+            ]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -186,11 +187,11 @@ public class ContainerCreateCommandTests
             Arg.Is(_knownSubscription), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(conflictException);
 
-        var args = _parser.Parse([
-            "--account", _knownAccount,
+        var args = _commandDefinition.Parse([
+                "--account", _knownAccount,
             "--container", _knownContainer,
             "--subscription", _knownSubscription
-        ]);
+            ]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);

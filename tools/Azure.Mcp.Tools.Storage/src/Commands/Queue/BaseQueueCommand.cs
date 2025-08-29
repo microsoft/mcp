@@ -18,13 +18,13 @@ public abstract class BaseQueueCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_queueOption);
+        command.Options.Add(_queueOption);
     }
 
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Queue = parseResult.GetValueForOption(_queueOption);
+        options.Queue = parseResult.GetValue(_queueOption);
         return options;
     }
 }

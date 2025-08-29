@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Options;
 using Azure.Mcp.Tools.Deploy.Options.Infrastructure;
 using Azure.Mcp.Tools.Deploy.Services.Util;
@@ -33,31 +31,32 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_deploymentToolOption);
-        command.AddOption(_iacTypeOption);
-        command.AddOption(_resourceTypesOption);
+        command.Options.Add(_deploymentToolOption);
+        command.Options.Add(_iacTypeOption);
+        command.Options.Add(_resourceTypesOption);
     }
 
     private RulesGetOptions BindOptions(ParseResult parseResult)
     {
         var options = new RulesGetOptions();
-        options.DeploymentTool = parseResult.GetValueForOption(_deploymentToolOption) ?? string.Empty;
-        options.IacType = parseResult.GetValueForOption(_iacTypeOption) ?? string.Empty;
-        options.ResourceTypes = parseResult.GetValueForOption(_resourceTypesOption) ?? string.Empty;
+        options.DeploymentTool = parseResult.GetValue(_deploymentToolOption) ?? string.Empty;
+        options.IacType = parseResult.GetValue(_iacTypeOption) ?? string.Empty;
+        options.ResourceTypes = parseResult.GetValue(_resourceTypesOption) ?? string.Empty;
 
         return options;
     }
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return Task.FromResult(context.Response);
+        }
+
         var options = BindOptions(parseResult);
+
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return Task.FromResult(context.Response);
-            }
-
             var resourceTypes = options.ResourceTypes.Split(',')
                 .Select(rt => rt.Trim())
                 .Where(rt => !string.IsNullOrWhiteSpace(rt))

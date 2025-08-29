@@ -43,43 +43,43 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_productIdOption);
-        command.AddOption(_includeStopSoldPlansOption);
-        command.AddOption(_languageOption);
-        command.AddOption(_marketOption);
-        command.AddOption(_lookupOfferInTenantLevelOption);
-        command.AddOption(_planIdOption);
-        command.AddOption(_skuIdOption);
-        command.AddOption(_includeServiceInstructionTemplatesOption);
-        command.AddOption(_pricingAudienceOption);
+        command.Options.Add(_productIdOption);
+        command.Options.Add(_includeStopSoldPlansOption);
+        command.Options.Add(_languageOption);
+        command.Options.Add(_marketOption);
+        command.Options.Add(_lookupOfferInTenantLevelOption);
+        command.Options.Add(_planIdOption);
+        command.Options.Add(_skuIdOption);
+        command.Options.Add(_includeServiceInstructionTemplatesOption);
+        command.Options.Add(_pricingAudienceOption);
     }
 
     protected override ProductGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ProductId = parseResult.GetValueForOption(_productIdOption);
-        options.IncludeStopSoldPlans = parseResult.GetValueForOption(_includeStopSoldPlansOption);
-        options.Language = parseResult.GetValueForOption(_languageOption);
-        options.Market = parseResult.GetValueForOption(_marketOption);
-        options.LookupOfferInTenantLevel = parseResult.GetValueForOption(_lookupOfferInTenantLevelOption);
-        options.PlanId = parseResult.GetValueForOption(_planIdOption);
-        options.SkuId = parseResult.GetValueForOption(_skuIdOption);
-        options.IncludeServiceInstructionTemplates = parseResult.GetValueForOption(_includeServiceInstructionTemplatesOption);
-        options.PricingAudience = parseResult.GetValueForOption(_pricingAudienceOption);
+        options.ProductId = parseResult.GetValue(_productIdOption);
+        options.IncludeStopSoldPlans = parseResult.GetValue(_includeStopSoldPlansOption);
+        options.Language = parseResult.GetValue(_languageOption);
+        options.Market = parseResult.GetValue(_marketOption);
+        options.LookupOfferInTenantLevel = parseResult.GetValue(_lookupOfferInTenantLevelOption);
+        options.PlanId = parseResult.GetValue(_planIdOption);
+        options.SkuId = parseResult.GetValue(_skuIdOption);
+        options.IncludeServiceInstructionTemplates = parseResult.GetValue(_includeServiceInstructionTemplatesOption);
+        options.PricingAudience = parseResult.GetValue(_pricingAudienceOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
 
             // Get the marketplace service from DI
             var marketplaceService = context.GetService<IMarketplaceService>();

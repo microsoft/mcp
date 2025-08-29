@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.BicepSchema.Commands;
 using Azure.Mcp.Tools.BicepSchema.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +22,7 @@ public class BicepSchemaGetCommandTests
     private readonly ILogger<BicepSchemaGetCommand> _logger;
     private readonly CommandContext _context;
     private readonly BicepSchemaGetCommand _command;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public BicepSchemaGetCommandTests()
     {
@@ -34,15 +35,13 @@ public class BicepSchemaGetCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _context = new(_serviceProvider);
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsSchema_WhenResourceTypeExists()
     {
-        var args = _parser.Parse([
-        "--resource-type", "Microsoft.Sql/servers/databases/schemas"
-        ]);
+        var args = _commandDefinition.Parse("--resource-type Microsoft.Sql/servers/databases/schemas");
 
         var response = await _command.ExecuteAsync(_context, args);
         Assert.NotNull(response);
@@ -60,10 +59,7 @@ public class BicepSchemaGetCommandTests
     public async Task ExecuteAsync_ReturnsError_WhenResourceTypeDoesNotExist()
     {
 
-        var args = _parser.Parse([
-        "--resource-type", "Microsoft.Unknown/virtualRandom",
-        "--subscription", "knownSubscription"
-        ]);
+        var args = _commandDefinition.Parse("--resource-type Microsoft.Unknown/virtualRandom");
 
         var response = await _command.ExecuteAsync(_context, args);
         Assert.NotNull(response);

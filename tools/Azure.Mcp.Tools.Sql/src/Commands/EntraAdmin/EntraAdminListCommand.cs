@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.EntraAdmin;
 using Azure.Mcp.Tools.Sql.Services;
@@ -19,8 +18,8 @@ public sealed class EntraAdminListCommand(ILogger<EntraAdminListCommand> logger)
 
     public override string Description =>
         """
-        Gets a list of Microsoft Entra ID administrators for a SQL server. This command retrieves all 
-        Entra ID administrators configured for the specified SQL server, including their display names, object IDs, 
+        Gets a list of Microsoft Entra ID administrators for a SQL server. This command retrieves all
+        Entra ID administrators configured for the specified SQL server, including their display names, object IDs,
         and tenant information. Returns an array of Entra ID administrator objects with their properties.
         """;
 
@@ -30,15 +29,15 @@ public sealed class EntraAdminListCommand(ILogger<EntraAdminListCommand> logger)
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var sqlService = context.GetService<ISqlService>();
 
             var administrators = await sqlService.GetEntraAdministratorsAsync(

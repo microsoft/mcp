@@ -37,33 +37,33 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_vaultOption);
-        command.AddOption(_certificateOption);
-        command.AddOption(_certificateDataOption);
-        command.AddOption(_passwordOption);
+        command.Options.Add(_vaultOption);
+        command.Options.Add(_certificateOption);
+        command.Options.Add(_certificateDataOption);
+        command.Options.Add(_passwordOption);
     }
 
     protected override CertificateImportOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValueForOption(_vaultOption);
-        options.CertificateName = parseResult.GetValueForOption(_certificateOption);
-        options.CertificateData = parseResult.GetValueForOption(_certificateDataOption);
-        options.Password = parseResult.GetValueForOption(_passwordOption);
+        options.VaultName = parseResult.GetValue(_vaultOption);
+        options.CertificateName = parseResult.GetValue(_certificateOption);
+        options.CertificateData = parseResult.GetValue(_certificateDataOption);
+        options.Password = parseResult.GetValue(_passwordOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var keyVaultService = context.GetService<IKeyVaultService>();
 
             var certificate = await keyVaultService.ImportCertificate(

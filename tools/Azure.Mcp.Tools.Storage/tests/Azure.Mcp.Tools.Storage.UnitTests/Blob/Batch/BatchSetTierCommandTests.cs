@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Batch;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +24,7 @@ public class BatchSetTierCommandTests
     private readonly ILogger<BatchSetTierCommand> _logger;
     private readonly BatchSetTierCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
     private readonly string _knownAccount = "account123";
     private readonly string _knownContainer = "container123";
     private readonly string _knownSubscription = "sub123";
@@ -40,7 +41,7 @@ public class BatchSetTierCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -70,7 +71,7 @@ public class BatchSetTierCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>()).Returns(expectedResult);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--container", _knownContainer,
             "--tier", _knownTier,
@@ -115,7 +116,7 @@ public class BatchSetTierCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>()).Returns(expectedResult);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--container", _knownContainer,
             "--tier", _knownTier,
@@ -167,7 +168,7 @@ public class BatchSetTierCommandTests
                 Arg.Any<RetryPolicyOptions>()).Returns(expectedResult);
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -204,7 +205,7 @@ public class BatchSetTierCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--container", _knownContainer,
             "--tier", _knownTier,
@@ -237,7 +238,7 @@ public class BatchSetTierCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>()).ThrowsAsync(requestFailedException);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--container", _knownContainer,
             "--tier", _knownTier,
@@ -270,7 +271,7 @@ public class BatchSetTierCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>()).ThrowsAsync(requestFailedException);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--container", _knownContainer,
             "--tier", _knownTier,

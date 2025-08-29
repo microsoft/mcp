@@ -12,43 +12,41 @@ public static class ServiceBusOptionDefinitions
     public const string SubscriptionName = "subscription-name";
 
     public static readonly Option<string> Namespace = new(
-        $"--{NamespaceName}",
-        "The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)"
+        $"--{NamespaceName}"
     )
     {
-        IsRequired = true
+        Description = "The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)",
+        Required = true
     };
 
     public static readonly Option<string> Queue = new(
-        $"--{QueueName}",
-        "The queue name to peek messages from."
+        $"--{QueueName}"
     )
     {
-        IsRequired = true
+        Description = "The queue name to peek messages from.",
+        Required = true
     };
 
     public static readonly Option<string> Subscription = new(
-        $"--{SubscriptionName}",
-        "The name of subscription to peek messages from."
+        $"--{SubscriptionName}"
     )
     {
-        IsRequired = true
+        Description = "The name of subscription to peek messages from.",
+        Required = true
     };
 
     public static readonly Option<string> Topic = new(
-        $"--{TopicName}",
-        "The name of the topic containing the subscription."
+        $"--{TopicName}"
     )
     {
-        IsRequired = true
+        Description = "The name of the topic containing the subscription.",
+        Required = true
     };
 
-    public static readonly Option<int> MaxMessages = new(
-        $"--{MaxMessagesName}",
-        () => 1,
-        "The maximum number of messages to return."
-    )
+    public static readonly Option<int> MaxMessages = new($"--{MaxMessagesName}")
     {
-        IsRequired = false
+        Description = "The maximum number of messages to return.",
+        DefaultValueFactory = _ => 1,
+        Required = false
     };
 }

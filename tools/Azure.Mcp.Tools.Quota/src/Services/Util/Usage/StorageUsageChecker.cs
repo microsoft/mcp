@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.ResourceManager;
 using Azure.ResourceManager.Storage;
-using Azure.ResourceManager.Storage.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;

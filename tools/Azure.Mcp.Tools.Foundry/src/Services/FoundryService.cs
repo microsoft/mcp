@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text;
-using Azure;
 using Azure.AI.Projects;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;

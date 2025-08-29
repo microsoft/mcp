@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Sql.Commands.ElasticPool;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
@@ -22,7 +23,7 @@ public class ElasticPoolListCommandTests
     private readonly ILogger<ElasticPoolListCommand> _logger;
     private readonly ElasticPoolListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public ElasticPoolListCommandTests()
     {
@@ -35,7 +36,7 @@ public class ElasticPoolListCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -81,7 +82,7 @@ public class ElasticPoolListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockElasticPools);
 
-        var args = _parser.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -107,7 +108,7 @@ public class ElasticPoolListCommandTests
             Arg.Any<CancellationToken>())
             .Returns(mockElasticPools);
 
-        var args = _parser.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -131,7 +132,7 @@ public class ElasticPoolListCommandTests
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var args = _parser.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -155,7 +156,7 @@ public class ElasticPoolListCommandTests
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 
-        var args = _parser.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -178,7 +179,7 @@ public class ElasticPoolListCommandTests
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(requestException);
 
-        var args = _parser.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -208,7 +209,7 @@ public class ElasticPoolListCommandTests
                 .Returns(new List<SqlElasticPool>());
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

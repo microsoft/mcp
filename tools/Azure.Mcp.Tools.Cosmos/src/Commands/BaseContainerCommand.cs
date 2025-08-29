@@ -16,13 +16,13 @@ public abstract class BaseContainerCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_containerOption);
+        command.Options.Add(_containerOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Container = parseResult.GetValueForOption(_containerOption);
+        options.Container = parseResult.GetValue(_containerOption);
         return options;
     }
 }

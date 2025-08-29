@@ -37,31 +37,31 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
     {
         base.RegisterOptions(command);
         RequireResourceGroup();
-        command.AddOption(_kindOption);
-        command.AddOption(_categoryOption);
-        command.AddOption(_sourceIdOption);
+        command.Options.Add(_kindOption);
+        command.Options.Add(_categoryOption);
+        command.Options.Add(_sourceIdOption);
     }
 
     protected override ListWorkbooksOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Kind = parseResult.GetValueForOption(_kindOption);
-        options.Category = parseResult.GetValueForOption(_categoryOption);
-        options.SourceId = parseResult.GetValueForOption(_sourceIdOption);
+        options.Kind = parseResult.GetValue(_kindOption);
+        options.Category = parseResult.GetValue(_categoryOption);
+        options.SourceId = parseResult.GetValue(_sourceIdOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var workbooksService = context.GetService<IWorkbooksService>();
             var filters = options.ToFilters();
             var workbooks = await workbooksService.ListWorkbooks(

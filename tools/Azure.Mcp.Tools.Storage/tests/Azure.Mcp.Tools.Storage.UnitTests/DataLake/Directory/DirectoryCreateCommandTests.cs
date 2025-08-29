@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Storage.Commands.DataLake.Directory;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
@@ -24,7 +25,7 @@ public class DirectoryCreateCommandTests
     private readonly ILogger<DirectoryCreateCommand> _logger;
     private readonly DirectoryCreateCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
     private readonly string _knownAccount = "account123";
     private readonly string _knownDirectoryPath = "filesystem123/data/logs";
     private readonly string _knownSubscription = "sub123";
@@ -39,7 +40,7 @@ public class DirectoryCreateCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -61,7 +62,7 @@ public class DirectoryCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>()).Returns(expectedDirectory);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--directory-path", _knownDirectoryPath,
             "--subscription", _knownSubscription
@@ -97,7 +98,7 @@ public class DirectoryCreateCommandTests
             null,
             Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--directory-path", _knownDirectoryPath,
             "--subscription", _knownSubscription
@@ -131,7 +132,7 @@ public class DirectoryCreateCommandTests
                 Arg.Any<RetryPolicyOptions>()).Returns(expectedDirectory);
         }
 
-        var parseResult = _parser.Parse(args.Split(' '));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

@@ -22,8 +22,8 @@ public sealed class BatchSetTierCommand(ILogger<BatchSetTierCommand> logger) : B
 
     public override string Description =>
         $"""
-        Set access tier for multiple blobs in a single batch operation. This tool efficiently changes the 
-        storage tier for multiple blobs simultaneously in a single request. Different tiers offer different 
+        Set access tier for multiple blobs in a single batch operation. This tool efficiently changes the
+        storage tier for multiple blobs simultaneously in a single request. Different tiers offer different
         trade-offs between storage costs, access costs, and retrieval latency.
         """;
 
@@ -34,30 +34,30 @@ public sealed class BatchSetTierCommand(ILogger<BatchSetTierCommand> logger) : B
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_tierOption);
-        command.AddOption(_blobsOption);
+        command.Options.Add(_tierOption);
+        command.Options.Add(_blobsOption);
     }
 
     protected override BatchSetTierOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Tier = parseResult.GetValueForOption(_tierOption);
-        options.BlobNames = parseResult.GetValueForOption(_blobsOption);
+        options.Tier = parseResult.GetValue(_tierOption);
+        options.BlobNames = parseResult.GetValue(_blobsOption);
         return options;
     }
 
     [McpServerTool(Destructive = false, ReadOnly = false, Title = CommandTitle)]
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var storageService = context.GetService<IStorageService>();
             var result = await storageService.SetBlobTierBatch(
                 options.Account!,

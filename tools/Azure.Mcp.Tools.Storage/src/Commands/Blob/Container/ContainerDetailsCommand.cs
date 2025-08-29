@@ -3,7 +3,6 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
 using Azure.Storage.Blobs.Models;
@@ -29,15 +28,15 @@ public sealed class ContainerDetailsCommand(ILogger<ContainerDetailsCommand> log
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var storageService = context.GetService<IStorageService>();
             var details = await storageService.GetContainerDetails(
                 options.Account!,

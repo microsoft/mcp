@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Postgres.Commands.Table;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -79,14 +78,13 @@ public class TableListCommandTests
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
         var command = new TableListCommand(_logger);
-        var args = command.GetCommand().Parse(new string[]
-        {
-            missingParameter == "--subscription" ? "" : "--subscription", "sub123",
-            missingParameter == "--resource-group" ? "" : "--resource-group", "rg1",
-            missingParameter == "--user" ? "" : "--user", "user1",
-            missingParameter == "--server" ? "" : "--server", "server123",
-            missingParameter == "--database" ? "" : "--database", "db123"
-        });
+        var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
+            ("--subscription", "sub123"),
+            ("--resource-group", "rg1"),
+            ("--user", "user1"),
+            ("--server", "server123"),
+            ("--database", "db123")
+        ));
 
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);

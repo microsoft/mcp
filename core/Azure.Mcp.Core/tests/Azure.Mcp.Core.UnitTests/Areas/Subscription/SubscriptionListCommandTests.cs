@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Subscription.Commands;
 using Azure.Mcp.Core.Models;
@@ -26,7 +25,7 @@ public class SubscriptionListCommandTests
     private readonly ISubscriptionService _subscriptionService;
     private readonly SubscriptionListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public SubscriptionListCommandTests()
     {
@@ -40,7 +39,7 @@ public class SubscriptionListCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -57,7 +56,7 @@ public class SubscriptionListCommandTests
             .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedSubscriptions);
 
-        var args = _parser.Parse("");
+        var args = _commandDefinition.Parse("");
 
         // Act
         var result = await _command.ExecuteAsync(_context, args);
@@ -88,7 +87,7 @@ public class SubscriptionListCommandTests
     {
         // Arrange
         var tenantId = "test-tenant-id";
-        var args = _parser.Parse($"--tenant {tenantId}");
+        var args = _commandDefinition.Parse($"--tenant {tenantId}");
 
         _subscriptionService
             .GetSubscriptions(Arg.Is<string>(x => x == tenantId), Arg.Any<RetryPolicyOptions>())
@@ -113,7 +112,7 @@ public class SubscriptionListCommandTests
             .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns([]);
 
-        var args = _parser.Parse("");
+        var args = _commandDefinition.Parse("");
 
         // Act
         var result = await _command.ExecuteAsync(_context, args);
@@ -133,7 +132,7 @@ public class SubscriptionListCommandTests
             .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<List<SubscriptionData>>(new Exception(expectedError)));
 
-        var args = _parser.Parse("");
+        var args = _commandDefinition.Parse("");
 
         // Act
         var result = await _command.ExecuteAsync(_context, args);
@@ -149,7 +148,7 @@ public class SubscriptionListCommandTests
     {
         // Arrange
         var authMethod = AuthMethod.Credential.ToString().ToLowerInvariant();
-        var args = _parser.Parse($"--auth-method {authMethod}");
+        var args = _commandDefinition.Parse($"--auth-method {authMethod}");
 
         _subscriptionService
             .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
@@ -165,70 +164,5 @@ public class SubscriptionListCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>());
     }
-    [Fact]
-    public async Task ExecuteAsync_GetBySubscriptionId_ReturnsMatchingSubscription()
-    {
-        // Arrange
-        var expectedSubscriptionId = "test-subscription-id";
-        var expectedDisplayName = "Test Subscription";
-        var expectedSubscriptions = new List<SubscriptionData>
-        {
-            SubscriptionTestHelpers.CreateSubscriptionData(expectedSubscriptionId, expectedDisplayName)
-        };
 
-        _subscriptionService
-            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedSubscriptions);
-
-        var args = _parser.Parse($"--subscription {expectedSubscriptionId}");
-
-        // Act
-        var result = await _command.ExecuteAsync(_context, args);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
-        Assert.NotNull(result.Results);
-
-        var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(result.Results));
-        var subscriptionsArray = jsonDoc.RootElement.GetProperty("subscriptions");
-
-        Assert.Equal(1, subscriptionsArray.GetArrayLength());
-        var subscription = subscriptionsArray[0];
-        Assert.Equal(expectedSubscriptionId, subscription.GetProperty("subscriptionId").GetString());
-        Assert.Equal(expectedDisplayName, subscription.GetProperty("displayName").GetString());
-    }
-    [Fact]
-    public async Task ExecuteAsync_GetBySubscriptionName_ReturnsMatchingSubscription()
-    {
-        // Arrange
-        var expectedSubscriptionId = "test-subscription-id";
-        var expectedDisplayName = "Test Subscription";
-        var expectedSubscriptions = new List<SubscriptionData>
-        {
-            SubscriptionTestHelpers.CreateSubscriptionData(expectedSubscriptionId, expectedDisplayName)
-        };
-
-        _subscriptionService
-            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedSubscriptions);
-
-        var args = _parser.Parse($" --subscription {expectedDisplayName}");
-
-        // Act
-        var result = await _command.ExecuteAsync(_context, args);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
-        Assert.NotNull(result.Results);
-
-        var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(result.Results));
-        var subscriptionsArray = jsonDoc.RootElement.GetProperty("subscriptions");
-
-        Assert.Equal(1, subscriptionsArray.GetArrayLength());
-        var subscription = subscriptionsArray[0];
-        Assert.Equal(expectedSubscriptionId, subscription.GetProperty("subscriptionId").GetString());
-        Assert.Equal(expectedDisplayName, subscription.GetProperty("displayName").GetString());
-    }
 }

@@ -27,7 +27,7 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
         """
         Send messages to an Azure Storage queue for asynchronous processing. This tool sends a message to a specified queue
         with optional time-to-live and visibility delay settings. Messages are returned with receipt handles for tracking.
-        Returns a QueueMessageSendResult object containing message ID, insertion time, expiration time, pop receipt, 
+        Returns a QueueMessageSendResult object containing message ID, insertion time, expiration time, pop receipt,
         next visible time, and message content.
         """;
 
@@ -42,32 +42,31 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_messageOption);
-        command.AddOption(_timeToLiveOption);
-        command.AddOption(_visibilityTimeoutOption);
+        command.Options.Add(_messageOption);
+        command.Options.Add(_timeToLiveOption);
+        command.Options.Add(_visibilityTimeoutOption);
     }
 
     protected override QueueMessageSendOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Message = parseResult.GetValueForOption(_messageOption);
-        options.TimeToLiveInSeconds = parseResult.GetValueForOption(_timeToLiveOption);
-        options.VisibilityTimeoutInSeconds = parseResult.GetValueForOption(_visibilityTimeoutOption);
+        options.Message = parseResult.GetValue(_messageOption);
+        options.TimeToLiveInSeconds = parseResult.GetValue(_timeToLiveOption);
+        options.VisibilityTimeoutInSeconds = parseResult.GetValue(_visibilityTimeoutOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             // Get the storage service from DI
             var service = context.GetService<IStorageService>();
 

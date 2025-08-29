@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.Tests;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Services;
@@ -23,7 +22,7 @@ public class KnowledgeIndexListCommandTests
     private readonly ILogger<KnowledgeIndexListCommand> _logger;
     private readonly KnowledgeIndexListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public KnowledgeIndexListCommandTests()
     {
@@ -34,7 +33,7 @@ public class KnowledgeIndexListCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new();
         _context = new CommandContext(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -61,7 +60,7 @@ public class KnowledgeIndexListCommandTests
                 });
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -86,7 +85,7 @@ public class KnowledgeIndexListCommandTests
         _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<List<KnowledgeIndexInformation>>(new Exception("Test error")));
 
-        var parseResult = _parser.Parse(["--endpoint", "https://example.com"]);
+        var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -110,7 +109,7 @@ public class KnowledgeIndexListCommandTests
         _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedIndexes);
 
-        var parseResult = _parser.Parse(["--endpoint", "https://example.com"]);
+        var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

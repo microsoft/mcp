@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics;
 using System.Text.Json.Serialization;
-using Azure.Bicep.Types.Concrete;
-using Azure.Mcp.Tools.BicepSchema.Services.Support;
 
 namespace Azure.Mcp.Tools.BicepSchema.Services.ResourceProperties.Entities;
 

@@ -46,43 +46,43 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_accountCreateOption);
+        command.Options.Add(_accountCreateOption);
         RequireResourceGroup();
-        command.AddOption(_locationOption);
-        command.AddOption(_skuOption);
-        command.AddOption(_kindOption);
-        command.AddOption(_accessTierOption);
-        command.AddOption(_enableHttpsTrafficOnlyOption);
-        command.AddOption(_allowBlobPublicAccessOption);
-        command.AddOption(_enableHierarchicalNamespaceOption);
+        command.Options.Add(_locationOption);
+        command.Options.Add(_skuOption);
+        command.Options.Add(_kindOption);
+        command.Options.Add(_accessTierOption);
+        command.Options.Add(_enableHttpsTrafficOnlyOption);
+        command.Options.Add(_allowBlobPublicAccessOption);
+        command.Options.Add(_enableHierarchicalNamespaceOption);
     }
 
     protected override AccountCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueForOption(_accountCreateOption);
-        options.Location = parseResult.GetValueForOption(_locationOption);
-        options.Sku = parseResult.GetValueForOption(_skuOption);
-        options.Kind = parseResult.GetValueForOption(_kindOption);
-        options.AccessTier = parseResult.GetValueForOption(_accessTierOption);
-        options.EnableHttpsTrafficOnly = parseResult.GetValueForOption(_enableHttpsTrafficOnlyOption);
-        options.AllowBlobPublicAccess = parseResult.GetValueForOption(_allowBlobPublicAccessOption);
-        options.EnableHierarchicalNamespace = parseResult.GetValueForOption(_enableHierarchicalNamespaceOption);
+        options.Account = parseResult.GetValue(_accountCreateOption);
+        options.Location = parseResult.GetValue(_locationOption);
+        options.Sku = parseResult.GetValue(_skuOption);
+        options.Kind = parseResult.GetValue(_kindOption);
+        options.AccessTier = parseResult.GetValue(_accessTierOption);
+        options.EnableHttpsTrafficOnly = parseResult.GetValue(_enableHttpsTrafficOnlyOption);
+        options.AllowBlobPublicAccess = parseResult.GetValue(_allowBlobPublicAccessOption);
+        options.EnableHierarchicalNamespace = parseResult.GetValue(_enableHierarchicalNamespaceOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             // Get the storage service from DI
             var storageService = context.GetService<IStorageService>();
 

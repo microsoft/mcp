@@ -9,18 +9,18 @@ public static class SqlOptionDefinitions
     public const string DatabaseName = "database";
 
     public static readonly Option<string> Server = new(
-        $"--{ServerName}",
-        "The Azure SQL Server name."
+        $"--{ServerName}"
     )
     {
-        IsRequired = true
+        Description = "The Azure SQL Server name.",
+        Required = true
     };
 
     public static readonly Option<string> Database = new(
-        $"--{DatabaseName}",
-        "The Azure SQL Database name."
+        $"--{DatabaseName}"
     )
     {
-        IsRequired = true
+        Description = "The Azure SQL Database name.",
+        Required = true
     };
 }

@@ -16,13 +16,13 @@ public abstract class BaseBicepSchemaCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_resourceTypeName);
+        command.Options.Add(_resourceTypeName);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceType = parseResult.GetValueForOption(_resourceTypeName);
+        options.ResourceType = parseResult.GetValue(_resourceTypeName);
         return options;
     }
 }

@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Aks.Commands.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +20,7 @@ public class ClusterGetCommandTests
     private readonly ILogger<ClusterGetCommand> _logger;
     private readonly ClusterGetCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public ClusterGetCommandTests()
     {
@@ -30,7 +31,7 @@ public class ClusterGetCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -70,7 +71,7 @@ public class ClusterGetCommandTests
                 .Returns(testCluster);
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -105,7 +106,7 @@ public class ClusterGetCommandTests
         _aksService.GetCluster("test-subscription", "test-cluster", "test-rg", null, Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions>())
             .Returns(expectedCluster);
 
-        var parseResult = _parser.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
+        var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -123,7 +124,7 @@ public class ClusterGetCommandTests
         _aksService.GetCluster("test-subscription", "nonexistent-cluster", "test-rg", null, Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions>())
             .Returns((Azure.Mcp.Tools.Aks.Models.Cluster?)null);
 
-        var parseResult = _parser.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "nonexistent-cluster"]);
+        var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "nonexistent-cluster"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -141,7 +142,7 @@ public class ClusterGetCommandTests
         _aksService.GetCluster(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions>())
             .Returns(Task.FromException<Azure.Mcp.Tools.Aks.Models.Cluster?>(new Exception("Test error")));
 
-        var parseResult = _parser.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
+        var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -160,7 +161,7 @@ public class ClusterGetCommandTests
         _aksService.GetCluster(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions>())
             .Returns(Task.FromException<Azure.Mcp.Tools.Aks.Models.Cluster?>(notFoundException));
 
-        var parseResult = _parser.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
+        var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -178,7 +179,7 @@ public class ClusterGetCommandTests
         _aksService.GetCluster(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions>())
             .Returns(Task.FromException<Azure.Mcp.Tools.Aks.Models.Cluster?>(forbiddenException));
 
-        var parseResult = _parser.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
+        var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

@@ -12,6 +12,5 @@
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
     <PackageReference Include="System.CommandLine" />
-    <PackageReference Include="System.Linq.AsyncEnumerable" />
   </ItemGroup>
 </Project>

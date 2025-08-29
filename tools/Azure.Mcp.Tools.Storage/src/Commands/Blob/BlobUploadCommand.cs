@@ -37,29 +37,29 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_localFilePathOption);
-        command.AddOption(_overwriteOption);
+        command.Options.Add(_localFilePathOption);
+        command.Options.Add(_overwriteOption);
     }
 
     protected override BlobUploadOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.LocalFilePath = parseResult.GetValueForOption(_localFilePathOption);
-        options.Overwrite = parseResult.GetValueForOption(_overwriteOption);
+        options.LocalFilePath = parseResult.GetValue(_localFilePathOption);
+        options.Overwrite = parseResult.GetValue(_overwriteOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var storageService = context.GetService<IStorageService>();
 
             var result = await storageService.UploadBlob(

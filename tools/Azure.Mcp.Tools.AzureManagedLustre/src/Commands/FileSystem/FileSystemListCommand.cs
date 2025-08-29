@@ -24,17 +24,23 @@ public sealed class FileSystemListCommand(ILogger<FileSystemListCommand> logger)
 
     public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
 
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        RequireResourceGroup();
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var svc = context.GetService<IAzureManagedLustreService>();
             var fileSystems = await svc.ListFileSystemsAsync(
                 options.Subscription!,

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Models.Command;
@@ -46,9 +45,9 @@ public sealed class AzqrCommandTests
         _dateTimeProvider.UtcNow.Returns(fixedDateTime);
 
         var command = new AzqrCommand(_logger);
-        var parser = new Parser(command.GetCommand());
+
         var mockSubscriptionId = "12345678-1234-1234-1234-123456789012";
-        var args = parser.Parse($"--subscription {mockSubscriptionId}");
+        var args = command.GetCommand().Parse($"--subscription {mockSubscriptionId}");
         var context = new CommandContext(_serviceProvider);
 
         var expectedOutput = "Scan completed successfully";
@@ -115,8 +114,8 @@ public sealed class AzqrCommandTests
     {
         // Arrange
         var command = new AzqrCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(""); // No subscription specified
+
+        var args = command.GetCommand().Parse(""); // No subscription specified
         var context = new CommandContext(_serviceProvider);
 
         // Act

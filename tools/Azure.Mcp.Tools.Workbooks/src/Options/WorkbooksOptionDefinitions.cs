@@ -13,74 +13,76 @@ public static class WorkbooksOptionDefinitions
     public const string CategoryText = "category";
 
     public static readonly Option<string> WorkbookId = new(
-        $"--{WorkbookIdText}",
-        "The Azure Resource ID of the workbook to retrieve."
+        $"--{WorkbookIdText}"
     )
     {
-        IsRequired = true
+        Description = "The Azure Resource ID of the workbook to retrieve.",
+        Required = true
     };
 
     public static readonly Option<string> DisplayName = new(
-        $"--{DisplayNameText}",
-        "The display name of the workbook."
+        $"--{DisplayNameText}"
     )
     {
-        IsRequired = false
+        Description = "The display name of the workbook.",
+        Required = false
     };
 
     public static readonly Option<string> SerializedContent = new(
-        $"--{SerializedContentText}",
-        "The JSON serialized content/data of the workbook."
+        $"--{SerializedContentText}"
     )
     {
-        IsRequired = false
+        Description = "The JSON serialized content/data of the workbook.",
+        Required = false
     };
 
     public static readonly Option<string> SourceId = new(
-        $"--{SourceIdText}",
-        "The linked resource ID for the workbook. By default, this is 'azure monitor'."
+        $"--{SourceIdText}"
     )
     {
-        IsRequired = false,
+        Description = "The linked resource ID for the workbook. By default, this is 'azure monitor'.",
+        Required = false,
     };
 
     // Command-specific variations for required fields
     public static readonly Option<string> DisplayNameRequired = new(
-        $"--{DisplayNameText}",
-        "The display name of the workbook.")
+        $"--{DisplayNameText}"
+    )
     {
-        IsRequired = true
+        Description = "The display name of the workbook.",
+        Required = true
     };
 
     public static readonly Option<string> SerializedContentRequired = new(
-        $"--{SerializedContentText}",
-        "The serialized JSON content of the workbook.")
+        $"--{SerializedContentText}"
+    )
     {
-        IsRequired = true
+        Description = "The serialized JSON content of the workbook.",
+        Required = true
     };
 
     // Filter options for listing workbooks
     public static readonly Option<string> Kind = new(
-        $"--{KindText}",
-        "Filter workbooks by kind (e.g., 'shared', 'user'). If not specified, all kinds will be returned."
+        $"--{KindText}"
     )
     {
-        IsRequired = false
+        Description = "Filter workbooks by kind (e.g., 'shared', 'user'). If not specified, all kinds will be returned.",
+        Required = false
     };
 
     public static readonly Option<string> Category = new(
-        $"--{CategoryText}",
-        "Filter workbooks by category (e.g., 'workbook', 'sentinel', 'TSG'). If not specified, all categories will be returned."
+        $"--{CategoryText}"
     )
     {
-        IsRequired = false
+        Description = "Filter workbooks by category (e.g., 'workbook', 'sentinel', 'TSG'). If not specified, all categories will be returned.",
+        Required = false
     };
 
     public static readonly Option<string> SourceIdFilter = new(
-        $"--{SourceIdText}",
-        "Filter workbooks by source resource ID (e.g., Application Insights resource, Log Analytics workspace). If not specified, all workbooks will be returned."
+        $"--{SourceIdText}"
     )
     {
-        IsRequired = false
+        Description = "Filter workbooks by source resource ID (e.g., Application Insights resource, Log Analytics workspace). If not specified, all workbooks will be returned.",
+        Required = false
     };
 }

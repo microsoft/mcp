@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +16,7 @@ public class RulesGetCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<RulesGetCommand> _logger;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
     private readonly CommandContext _context;
     private readonly RulesGetCommand _command;
 
@@ -28,14 +28,14 @@ public class RulesGetCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _context = new(_serviceProvider);
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
     public async Task Should_get_infrastructure_code_rules()
     {
         // arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--deployment-tool", "azd",
             "--iac-type", "bicep",
             "--resource-types", "appservice, azurestorage"
@@ -55,7 +55,7 @@ public class RulesGetCommandTests
     public async Task Should_get_infrastructure_rules_for_terraform()
     {
         // arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--deployment-tool", "azd",
             "--iac-type", "terraform",
             "--resource-types", "containerapp, azurecosmosdb"
@@ -75,7 +75,7 @@ public class RulesGetCommandTests
     public async Task Should_get_infrastructure_rules_for_function_app()
     {
         // arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--deployment-tool", "azd",
             "--iac-type", "bicep",
             "--resource-types", "function"
@@ -96,7 +96,7 @@ public class RulesGetCommandTests
     public async Task Should_get_infrastructure_rules_for_container_app()
     {
         // arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--deployment-tool", "azd",
             "--iac-type", "bicep",
             "--resource-types", "containerapp"
@@ -117,7 +117,7 @@ public class RulesGetCommandTests
     public async Task Should_get_infrastructure_rules_for_azcli_deployment_tool()
     {
         // arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--deployment-tool", "AzCli",
             "--iac-type", "",
             "--resource-types", "aks"
@@ -137,7 +137,7 @@ public class RulesGetCommandTests
     public async Task Should_include_necessary_tools_in_response()
     {
         // arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--deployment-tool", "azd",
             "--iac-type", "terraform",
             "--resource-types", "containerapp"
@@ -160,7 +160,7 @@ public class RulesGetCommandTests
     public async Task Should_handle_multiple_resource_types()
     {
         // arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--deployment-tool", "azd",
             "--iac-type", "bicep",
             "--resource-types", "appservice,containerapp,function"

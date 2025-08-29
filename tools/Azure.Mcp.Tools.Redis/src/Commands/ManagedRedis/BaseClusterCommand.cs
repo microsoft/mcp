@@ -17,14 +17,14 @@ public abstract class BaseClusterCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_clusterOption);
+        command.Options.Add(_clusterOption);
         RequireResourceGroup();
     }
 
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Cluster = parseResult.GetValueForOption(_clusterOption);
+        options.Cluster = parseResult.GetValue(_clusterOption);
         return options;
     }
 }

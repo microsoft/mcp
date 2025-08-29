@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +25,7 @@ public class KeyValueLockCommandTests
     private readonly ILogger<KeyValueLockCommand> _logger;
     private readonly KeyValueLockCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public KeyValueLockCommandTests()
     {
@@ -32,7 +33,7 @@ public class KeyValueLockCommandTests
         _logger = Substitute.For<ILogger<KeyValueLockCommand>>();
 
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
         _serviceProvider = new ServiceCollection()
             .AddSingleton(_appConfigService)
             .BuildServiceProvider();
@@ -43,7 +44,7 @@ public class KeyValueLockCommandTests
     public async Task ExecuteAsync_LocksKeyValue_WhenValidParametersProvided()
     {
         // Arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key"
@@ -76,7 +77,7 @@ public class KeyValueLockCommandTests
     public async Task ExecuteAsync_LocksKeyValueWithLabel_WhenLabelProvided()
     {
         // Arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key",
@@ -120,7 +121,7 @@ public class KeyValueLockCommandTests
             Arg.Any<string>())
             .ThrowsAsync(new Exception("Failed to lock key-value"));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key"
@@ -141,7 +142,7 @@ public class KeyValueLockCommandTests
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(string args)
     {
         // Arrange
-        var parsedArgs = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parsedArgs = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parsedArgs);
