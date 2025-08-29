@@ -16,7 +16,7 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 /// Implementation of the MCP runtime that delegates tool discovery and invocation to a tool loader.
 /// Provides logging and configuration support for the MCP server.
 /// </summary>
-public sealed class McpRuntime : IMcpRuntime
+public class McpRuntime : IMcpRuntime
 {
     private readonly IToolLoader _toolLoader;
     private readonly IOptions<ServiceStartOptions> _options;
