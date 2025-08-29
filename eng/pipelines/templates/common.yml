@@ -167,7 +167,7 @@ extends:
           - pwsh: |
               Write-Host "Verifying signing for win-x64 and win-arm64 VSIX files..."
               $allSigned = $true
-              $signedVsixFiles = Get-ChildItem -Path '$(Pipeline.Workspace)/vsix_$(PipelineArtifactName)_signed/**/win-*' -Recurse -Include "*.vsix"
+              $signedVsixFiles = Get-ChildItem -Path '$(Pipeline.Workspace)/vsix_$(PipelineArtifactName)_signed/**/win-*' -Recurse -Include "*.signature.p7s"
               foreach ($vsix in $signedVsixFiles) {
                   if ((Get-AuthenticodeSignature -FilePath $vsix.FullName).Status -ne 'Valid') {
                       Write-Host "VSIX file $($vsix.FullName) is NOT signed correctly."
