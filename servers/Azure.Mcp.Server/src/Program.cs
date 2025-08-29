@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
@@ -37,7 +36,7 @@ internal class Program
 
             var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
             var rootCommand = commandFactory.RootCommand;
-            var parseResult = CommandLineParser.Parse(rootCommand, args);
+            var parseResult = rootCommand.Parse(args);
             return await parseResult.InvokeAsync();
         }
         catch (Exception ex)

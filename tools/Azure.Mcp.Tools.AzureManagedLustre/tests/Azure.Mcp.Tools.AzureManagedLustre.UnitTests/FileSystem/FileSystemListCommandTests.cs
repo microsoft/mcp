@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;

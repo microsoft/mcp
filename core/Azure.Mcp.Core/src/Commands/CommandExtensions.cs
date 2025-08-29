@@ -2,12 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Buffers;
-using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Linq;
 using System.Text;
-using System.Text.Json;
 using Azure.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Core.Commands;

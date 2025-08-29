@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 
-using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using Azure.Mcp.Core.Models.Option;
