@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Commands;
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 

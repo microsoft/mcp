@@ -3,13 +3,17 @@
 
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Option;
 
 namespace Azure.Mcp.Core.Areas.Tools.Commands;
 
 [HiddenCommand]
-public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCommand()
+public sealed class ToolsListCommand(ICommandFactory commandFactory, ILogger<ToolsListCommand> logger) : BaseCommand()
 {
+    private readonly ICommandFactory _commandFactory = commandFactory;
+
     private const string CommandTitle = "List Available Tools";
 
     public override string Name => "list";
@@ -29,8 +33,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
     {
         try
         {
-            var factory = context.GetService<CommandFactory>();
-            var tools = await Task.Run(() => CommandFactory.GetVisibleCommands(factory.AllCommands)
+            var tools = await Task.Run(() => CommandFactory.GetVisibleCommands(_commandFactory.AllCommands)
                 .Select(kvp => CreateCommand(kvp.Key, kvp.Value))
                 .ToList());
 
@@ -46,7 +49,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         }
     }
 
-    private static CommandInfo CreateCommand(string tokenizedName, IBaseCommand command)
+    private CommandInfo CreateCommand(string tokenizedName, IBaseCommand command)
     {
         var commandDetails = command.GetCommand();
 
@@ -62,7 +65,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         {
             Name = commandDetails.Name,
             Description = commandDetails.Description ?? string.Empty,
-            Command = tokenizedName.Replace(CommandFactory.Separator, ' '),
+            Command = tokenizedName.Replace(_commandFactory.Separator, ' '),
             Options = optionInfos,
         };
     }

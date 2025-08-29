@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Areas.Tools.Commands;
-using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Core.Areas.Tools;
 

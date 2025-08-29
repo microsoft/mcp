@@ -4,6 +4,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Core.Commands.Subscription;
 

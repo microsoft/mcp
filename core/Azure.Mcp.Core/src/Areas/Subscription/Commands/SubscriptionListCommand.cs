@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Core.Areas.Subscription.Commands;
 

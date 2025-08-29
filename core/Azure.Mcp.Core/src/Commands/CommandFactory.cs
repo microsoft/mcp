@@ -9,11 +9,14 @@ using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Commands;
 
-public class CommandFactory
+public class CommandFactory : ICommandFactory
 {
     private readonly IAreaSetup[] _serviceAreas;
     private readonly IServiceProvider _serviceProvider;
@@ -21,8 +24,6 @@ public class CommandFactory
     private readonly RootCommand _rootCommand;
     private readonly CommandGroup _rootGroup;
     private readonly ModelsJsonContext _srcGenWithOptions;
-
-    public const char Separator = '_';
 
     /// <summary>
     /// Mapping of tokenized command names to their <see cref="IBaseCommand" />
@@ -69,6 +70,8 @@ public class CommandFactory
     public CommandGroup RootGroup => _rootGroup;
 
     public IReadOnlyDictionary<string, IBaseCommand> AllCommands => _commandMap;
+
+    public char Separator => '_';
 
     public IReadOnlyDictionary<string, IBaseCommand> GroupCommands(string[] groupNames)
     {
@@ -193,7 +196,7 @@ public class CommandFactory
                     response.Results = ResponseResult.Create(new List<string>(), JsonSourceGenerationContext.Default.ListString);
                 }
 
-                var isServiceStartCommand = implementation is Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
+                var isServiceStartCommand = implementation is Areas.Server.Commands.ServiceStartCommand;
                 if (!isServiceStartCommand)
                 {
                     Console.WriteLine(JsonSerializer.Serialize(response, _srcGenWithOptions.CommandResponse));
@@ -254,7 +257,7 @@ public class CommandFactory
         return _serviceAreaNames.Contains(split[0]) ? split[0] : null;
     }
 
-    private static Dictionary<string, IBaseCommand> CreateCommmandDictionary(CommandGroup node, string prefix)
+    private Dictionary<string, IBaseCommand> CreateCommmandDictionary(CommandGroup node, string prefix)
     {
         var aggregated = new Dictionary<string, IBaseCommand>();
         var updatedPrefix = GetPrefix(prefix, node.Name);
@@ -285,7 +288,7 @@ public class CommandFactory
         return aggregated;
     }
 
-    private static string GetPrefix(string currentPrefix, string additional) => string.IsNullOrEmpty(currentPrefix)
+    private string GetPrefix(string currentPrefix, string additional) => string.IsNullOrEmpty(currentPrefix)
         ? additional
         : currentPrefix + Separator + additional;
 
@@ -294,5 +297,10 @@ public class CommandFactory
         return commands
             .Where(kvp => kvp.Value.GetType().GetCustomAttribute<HiddenCommandAttribute>() == null)
             .OrderBy(kvp => kvp.Key);
+    }
+
+    internal static IEnumerable<KeyValuePair<string, IBaseCommand>> GetVisibleCommands(IReadOnlyDictionary<string, IBaseCommand> toolCommands)
+    {
+        return GetVisibleCommands(toolCommands.AsEnumerable());
     }
 }

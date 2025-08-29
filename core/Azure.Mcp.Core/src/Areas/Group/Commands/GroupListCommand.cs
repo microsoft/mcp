@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Areas.Group.Options;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Models.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Core.Areas.Group.Commands;
 
