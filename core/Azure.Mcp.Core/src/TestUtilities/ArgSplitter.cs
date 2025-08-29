@@ -57,6 +57,6 @@ public static class ArgSplitter
         if (current.Length > 0)
             args.Add(current.ToString());
 
-        return args.ToArray();
+        return [.. args];
     }
 }
