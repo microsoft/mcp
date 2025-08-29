@@ -22,8 +22,8 @@ public class ContainerInstanceUsageChecker(TokenCredential credential, string su
             {
                 result.Add(new UsageInfo(
                     Name: item.Name?.LocalizedValue ?? item.Name?.Value ?? string.Empty,
-                    Limit: (int)(item.Limit ?? 0),
-                    Used: (int)(item.CurrentValue ?? 0),
+                    Limit: item.Limit ?? 0,
+                    Used: item.CurrentValue ?? 0,
                     Unit: item.Unit.ToString()
                 ));
             }

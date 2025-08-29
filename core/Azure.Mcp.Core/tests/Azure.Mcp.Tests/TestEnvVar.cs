@@ -24,7 +24,7 @@ public class TestEnvVar : DisposableConfig
 
         CleanExistingEnvironmentVariables();
 
-        Environment.SetEnvironmentVariable(name, value as string);
+        Environment.SetEnvironmentVariable(name, value);
     }
 
     internal override void SetValues(Dictionary<string, string> values)
@@ -38,7 +38,7 @@ public class TestEnvVar : DisposableConfig
 
         foreach (var kvp in values)
         {
-            Environment.SetEnvironmentVariable(kvp.Key, kvp.Value as string);
+            Environment.SetEnvironmentVariable(kvp.Key, kvp.Value);
         }
     }
 
@@ -58,7 +58,7 @@ public class TestEnvVar : DisposableConfig
     {
         foreach (var kvp in _originalValues)
         {
-            Environment.SetEnvironmentVariable(kvp.Key, kvp.Value as string);
+            Environment.SetEnvironmentVariable(kvp.Key, kvp.Value);
         }
     }
 }
