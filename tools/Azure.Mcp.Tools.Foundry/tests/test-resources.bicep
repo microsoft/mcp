@@ -175,9 +175,25 @@ resource searchIndexDeploymentScript 'Microsoft.Resources/deploymentScripts@2023
       # Set the context
       Set-AzContext -SubscriptionId $subscriptionId
 
-      # Get search service admin key
-      $adminKeys = Get-AzSearchAdminKeyPair -ResourceGroupName $resourceGroupName -ServiceName $searchServiceName
-      $adminKey = $adminKeys.Primary
+      # Get access token for Azure management API
+      $context = Get-AzContext
+      $token = [Microsoft.Azure.Commands.Common.Authentication.AzureSession]::Instance.AuthenticationFactory.Authenticate($context.Account, $context.Environment, $context.Tenant.Id, $null, "${environment().resourceManager}").AccessToken
+
+      # Get search service admin keys using REST API
+      $adminKeysUri = "${environment().resourceManager}subscriptions/$subscriptionId/resourceGroups/$resourceGroupName/providers/Microsoft.Search/searchServices/$searchServiceName/listAdminKeys?api-version=2023-11-01"
+      $headers = @{
+        'Authorization' = "Bearer $token"
+        'Content-Type' = 'application/json'
+      }
+
+      try {
+        $adminKeysResponse = Invoke-RestMethod -Uri $adminKeysUri -Method POST -Headers $headers
+        $adminKey = $adminKeysResponse.primaryKey
+        Write-Output "Successfully retrieved admin key"
+      } catch {
+        Write-Error "Failed to retrieve admin keys: $($_.Exception.Message)"
+        throw
+      }
 
       # Define the index schema
       $indexSchema = @{
@@ -217,15 +233,15 @@ resource searchIndexDeploymentScript 'Microsoft.Resources/deploymentScripts@2023
         )
       } | ConvertTo-Json -Depth 10
 
-      # Create the index
-      $uri = "https://$searchServiceName.search.windows.net/indexes?api-version=2023-11-01"
-      $headers = @{
+      # Create the index using Search Service API
+      $searchUri = "https://$searchServiceName.search.windows.net/indexes?api-version=2023-11-01"
+      $searchHeaders = @{
         'Content-Type' = 'application/json'
         'api-key' = $adminKey
       }
 
       try {
-        $response = Invoke-RestMethod -Uri $uri -Method POST -Body $indexSchema -Headers $headers
+        $response = Invoke-RestMethod -Uri $searchUri -Method POST -Body $indexSchema -Headers $searchHeaders
         Write-Output "Successfully created search index: test-knowledge-index"
         Write-Output "Index response: $($response | ConvertTo-Json)"
       } catch {
@@ -233,6 +249,7 @@ resource searchIndexDeploymentScript 'Microsoft.Resources/deploymentScripts@2023
           Write-Output "Search index 'test-knowledge-index' already exists"
         } else {
           Write-Error "Failed to create search index: $($_.Exception.Message)"
+          Write-Error "Response: $($_.Exception.Response | ConvertTo-Json)"
           throw
         }
       }
