@@ -17,6 +17,8 @@ $ErrorActionPreference = 'Stop'
 
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
+Write-Host "Input Areas: $($Areas -join ', ')" -ForegroundColor Cyan
+
 $debugLogs = $env:SYSTEM_DEBUG -eq 'true' -or $DebugPreference -eq 'Continue'
 
 $workPath = "$RepoRoot/.work/tests"
@@ -30,10 +32,79 @@ if (!$TestResultsPath) {
 # Clean previous results
 Remove-Item -Recurse -Force $TestResultsPath -ErrorAction SilentlyContinue
 
+# Analyzes for native compatibility and returns native-compatible mcp servers, native-compatible areas, and incompatible areas.
+function Get-NativeCompatibleAreasAndServers {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string[]]$areas
+    )
+
+    $allServers = @(Get-ChildItem -Path "$RepoRoot/servers" -Directory | ForEach-Object { $_.Name })
+    Write-Host "Available servers: $($allServers -join ', ')" -ForegroundColor Cyan
+
+    $servers = @() # e.g. (Azure.Mcp., Fabric.Mcp., Template.Mcp.)
+    foreach ($server in $allServers) {
+        if ($server -match '^(.+)\.Server$') {
+            $servers += "$($matches[1])."
+        } else {
+            Write-Warning "Server '$server' doesn't match expected naming pattern '*.Server'"
+        }
+    }
+
+    # group areas by their server based on naming convention.
+    $serverAreasMap = @{}
+    foreach ($area in $areas) {
+        if ($area -match '^(tools|core|servers)/([^/]+)') {
+            $areaProjName = $matches[2] # e.g. Azure.Mcp.Core, Azure.Mcp.Tools.Acr, Fabric.Mcp.Tools.EventStream
+
+            # Find the server that the area belongs to.
+            $serverName = $null
+            
+            foreach ($server in $servers) {
+                if ($areaProjName.StartsWith($server)) {
+                    $serverName = "$($server.TrimEnd('.')).Server"
+                    break
+                }
+            }
+            
+            if (-not $serverName) {
+                Write-Warning "No matching server found for the area '$area'. Available mcp server types: $($servers -join ', ')"
+                continue
+            }
+            if (-not $serverAreasMap.ContainsKey($serverName)) {
+                $serverAreasMap[$serverName] = @()
+            }
+            $serverAreasMap[$serverName] += $area
+        }
+    }
+
+    $servers = @($serverAreasMap.Keys)
+    $nonNativeAreas = @()
+    $nativeAreas = @()
+    
+    foreach ($server in $servers) {
+        $serverAreas = $serverAreasMap[$server]
+        $excludedAreas = Get-NativeExcludedAreas -ServerName $server
+        $nonNativeAreas += @($serverAreas | Where-Object { $_ -in $excludedAreas })
+        $nativeAreas += @($serverAreas | Where-Object { $_ -notin $excludedAreas })
+    }
+
+    return @{
+        Servers = $servers
+        NativeAreas = $nativeAreas
+        NonNativeAreas = $nonNativeAreas
+    }
+}
+
 # Gets all area projects those are excluded using BuildNative condition.
 function Get-NativeExcludedAreas {
-    $areaPathPattern = 'areas[/\\]([^/\\]+)[/\\]src'
-    $ProjectFile = "$RepoRoot/core/src/AzureMcp.Cli/AzureMcp.Cli.csproj"
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$ServerName
+    )
+    
+    $areaPathPattern = '(tools[/\\][^/\\]+)[/\\]src'
+    $ProjectFile = "$RepoRoot/servers/$ServerName/src/$ServerName.csproj"
 
     if (!(Test-Path $ProjectFile)) {
         Write-Error "$ProjectFile not found"
@@ -51,13 +122,13 @@ function Get-NativeExcludedAreas {
     $excludedAreas = @()
     foreach ($ref in $buildNativeGroup.ProjectReference) {
         if ($ref.Remove -match $areaPathPattern) {
-            $excludedAreas += $matches[1].ToLower()
+            $excludedAreas += $matches[1].Replace('\', '/')
         }
     }
 
+    Write-Host "Areas excluded in $ServerName.csproj: $($excludedAreas -join ', ')"
     return $excludedAreas
 }
-
 
 # Identifies the root directories to be recursively scanned for tests in the specified areas.
 function GetTestsRootDirs {
@@ -84,35 +155,81 @@ function GetTestsRootDirs {
     return $testsRootDirs
 }
 
-function BuildNativeBinaryAndPrepareTests {
+function BuildNativeServersAndPrepareTests {
     param(
         [Parameter(Mandatory=$true)]
-        [string[]]$testsRootDirs
+        [string[]]$testsRootDirs,
+        [Parameter(Mandatory=$true)]
+        [string[]]$servers
     )
 
-    # Native AOT compilation only occurs during 'dotnet publish', not 'dotnet build'
-    $nativeBinaryPath = PublishNativeBinary
+    $nativeServerPaths = @()
+    foreach ($server in $servers) {
+        # Native AOT compilation only occurs during 'dotnet publish', not 'dotnet build'
+        $nativeServerPath = PublishNativeServer -ServerName $server
+        $nativeServerPaths += $nativeServerPath
+    }
 
     Write-Host "Building test project(s)"
     Invoke-LoggedCommand `
         -Command "dotnet build" `
         -AllowedExitCodes @(0)
-
-    CopyNativeBinaryToTestDirs -nativeBinaryPath $nativeBinaryPath -testsRootDirs $testsRootDirs
+    
+    foreach ($nativeServerPath in $nativeServerPaths) {
+        CopyNativeServerToTestDirs -nativeServerPath $nativeServerPath -testsRootDirs $testsRootDirs
+    }
 }
 
-function PublishNativeBinary {
-    $runtimeId = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier
-    Write-Host "Publishing AzureMcp as native binary for $runtimeId"
+function GetCliName {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$ServerName
+    )
+    
+    $projectFile = "$RepoRoot/servers/$ServerName/src/$ServerName.csproj"
+    
+    if (!(Test-Path $projectFile)) {
+        Write-Error "$projectFile not found"
+        exit 1
+    }
+    
+    [xml]$xml = Get-Content $projectFile
+    
+    $cliName = $null
+    foreach ($propertyGroup in $xml.Project.PropertyGroup) {
+        if ($propertyGroup.CliName) {
+            $cliName = $propertyGroup.CliName
+            break
+        }
+    }
+    
+    if (-not $cliName) {
+        Write-Error "CliName property not found in the server project file $projectFile"
+        exit 1
+    }
+    
+    return $cliName
+}
 
-    $cliProjectDir = "$RepoRoot/core/src/AzureMcp.Cli"
+function PublishNativeServer {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$ServerName
+    )
+    
+    $runtimeId = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier
+    Write-Host "Publishing $ServerName as native binary for $runtimeId"
+
+    $projectDir = "$RepoRoot/servers/$ServerName/src"
 
     Invoke-LoggedCommand `
-        -Command "dotnet publish '$cliProjectDir/AzureMcp.Cli.csproj' -c Release -r $runtimeId /p:BuildNative=true" `
+        -Command "dotnet publish '$projectDir/$ServerName.csproj' -c Release -r $runtimeId /p:BuildNative=true" `
         -AllowedExitCodes @(0) | Out-Null
 
-    $exeName = if ($runtimeId.StartsWith('win-')) { "azmcp.exe" } else { "azmcp" }
-    $nativeExePath = "$cliProjectDir/bin/Release/net9.0/$runtimeId/publish/$exeName"
+    $cliName = GetCliName -ServerName $ServerName
+    
+    $exeName = if ($runtimeId.StartsWith('win-')) { "$cliName.exe" } else { $cliName }
+    $nativeExePath = "$projectDir/bin/Release/net9.0/$runtimeId/publish/$exeName"
 
     if (-not (Test-Path $nativeExePath)) {
         Write-Error "Native binary not found at $nativeExePath"
@@ -122,19 +239,19 @@ function PublishNativeBinary {
     return $nativeExePath
 }
 
-function CopyNativeBinaryToTestDirs {
+function CopyNativeServerToTestDirs {
     param(
         [Parameter(Mandatory=$true)]
-        [string]$nativeBinaryPath,
+        [string]$nativeServerPath,
         [string[]]$testsRootDirs
     )
-    Write-Host "Copying native AzureMcp to test directories"
+    Write-Host "Copying native $nativeServerPath to test directories"
 
     $testsRootDirs | ForEach-Object {
         Get-ChildItem -Path $_ -Recurse -Filter "*.LiveTests" -Directory
     } | ForEach-Object {
         $targetDirectory = "$($_.FullName)/bin/Debug/net9.0"
-        Copy-Item $nativeBinaryPath $targetDirectory -Force
+        Copy-Item $nativeServerPath $targetDirectory -Force
     }
 }
 
@@ -187,10 +304,24 @@ function CreateTestSolution {
 
 # main
 
+$areas = $Areas
+
 if ($TestNativeBuild) {
-    $excludedAreas = Get-NativeExcludedAreas
-    $nonNativeAreas = @($areas | Where-Object { $_ -in $excludedAreas })
-    $areas = @($areas | Where-Object { $_ -notin $excludedAreas })
+    if (-not $areas -or $areas.Count -eq 0) {
+        Write-Error "Areas parameter is required and must contain at least one area when TestNativeBuild is specified."
+        exit 1
+    }
+
+    $result = Get-NativeCompatibleAreasAndServers -areas $areas
+
+    if ($result.Servers.Count -eq 0) {
+        Write-Warning "No area to mcp server mapping exists for $($areas -join ', ')"
+        exit 0
+    }
+
+    $servers = $result.Servers
+    $areas = $result.NativeAreas
+    $nonNativeAreas = $result.NonNativeAreas
 
     if ($areas.Count -eq 0) {
         Write-Warning "All the specified area(s) [$($nonNativeAreas -join ', ')] are native incompatible, specify areas that support native builds or run without -TestNativeBuild."
@@ -218,7 +349,7 @@ if (!$solutionPath) {
 Push-Location $workPath
 try {
     if ($TestNativeBuild) {
-        BuildNativeBinaryAndPrepareTests -testsRootDirs $testsRootDirs
+        BuildNativeServersAndPrepareTests -testsRootDirs $testsRootDirs -servers $servers
     }
 
     if($debugLogs) {
