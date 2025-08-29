@@ -540,8 +540,8 @@ Each area has its own hierarchy of base command classes that inherit from `Globa
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using AzureMcp.Core.Commands;
-using AzureMcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Commands.Subscription;
 using AzureMcp.{Area}.Options;
 
 namespace AzureMcp.{Area}.Commands;
@@ -1205,7 +1205,7 @@ When creating new C# files, start with only the using statements you actually ne
 
 ```csharp
 // Start minimal - only add what you actually use
-using AzureMcp.Core.Commands;
+using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
 
 // Add more using statements as you implement the code
@@ -1758,7 +1758,7 @@ var subscriptionResource = await _subscriptionService.GetSubscription(subscripti
 - **Solution**: Use correct generic type: `ILogger<BaseDatabaseCommand<TOptions>>`
 
 **Issue: Missing using statements for TrimAnnotations**
-- **Solution**: Add `using AzureMcp.Core.Commands;` for `TrimAnnotations.CommandAnnotations`
+- **Solution**: Add `using Azure.Mcp.Core.Commands;` for `TrimAnnotations.CommandAnnotations`
 
 ### AOT Compilation Issues
 

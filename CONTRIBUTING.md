@@ -70,11 +70,11 @@ The project is organized as follows:
 
 - `core/` - Core functionality and CLI application
   - `src/` - Core source code
-    - `AzureMcp.Core/` - Core library with shared functionality
+    - `Azure.Mcp.Core/` - Core library with shared functionality
     - `AzureMcp.Cli/` - CLI application entry point
   - `tests/` - Core test files
-    - `AzureMcp.Core.UnitTests/` - Core unit tests
-    - `AzureMcp.Core.LiveTests/` - Core integration tests
+    - `Azure.Mcp.Core.UnitTests/` - Core unit tests
+    - `Azure.Mcp.Core.LiveTests/` - Core integration tests
     - `AzureMcp.Tests/` - Shared test utilities
 - `areas/` - Service-specific implementations
   - `{area-name}/` - Individual Azure service areas (e.g., `storage`, `cosmos`)
@@ -485,7 +485,7 @@ The Azure MCP Server supports connecting to external MCP servers through an embe
 
 #### Registry Configuration
 
-External MCP servers are defined in the embedded resource file `core/src/AzureMcp.Core/Areas/Server/Resources/registry.json`. This file contains server configurations that support both SSE (Server-Sent Events) and stdio transport mechanisms, following the standard MCP configuration format.
+External MCP servers are defined in the embedded resource file `core/src/Azure.Mcp.Core/Areas/Server/Resources/registry.json`. This file contains server configurations that support both SSE (Server-Sent Events) and stdio transport mechanisms, following the standard MCP configuration format.
 
 The registry structure follows this format:
 
@@ -541,7 +541,7 @@ azmcp server start --mode namespace
 
 To add a new external MCP server to the registry:
 
-1. Edit `core/src/AzureMcp.Core/Areas/Server/Resources/registry.json`
+1. Edit `core/src/Azure.Mcp.Core/Areas/Server/Resources/registry.json`
 2. Add your server configuration under the `servers` object using VS Code's MCP configuration schema
 3. Use a unique identifier as the key
 4. Provide either a `url` for SSE transport or `type: "stdio"` with `command` for stdio transport
