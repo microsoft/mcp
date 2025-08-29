@@ -2,6 +2,12 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
+## 0.5.11 (unreleased)
+
+### Bugs fixed
+
+- Fixed a bug in MySQL query validation logic. [[#81](https://github.com/microsoft/mcp/pull/81)]
+
 ## 0.5.10 (2025-08-28)
 
 ### Bugs fixed

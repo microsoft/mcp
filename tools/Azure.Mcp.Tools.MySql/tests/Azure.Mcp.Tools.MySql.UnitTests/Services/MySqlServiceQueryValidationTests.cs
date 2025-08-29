@@ -30,6 +30,8 @@ public class MySqlServiceQueryValidationTests
     [Theory]
     [InlineData("SELECT * FROM users LIMIT 100")]
     [InlineData("SELECT COUNT(*) FROM products LIMIT 1")]
+    [InlineData("SELECT COUNT(*) FROM products;")]
+    [InlineData("SELECT COUNT(*) FROM products; -- comment")]
     public void ValidateQuerySafety_WithSafeQueries_ShouldNotThrow(string query)
     {
         // Arrange
@@ -129,6 +131,8 @@ public class MySqlServiceQueryValidationTests
     [Theory]
     [InlineData("SELECT * FROM users; DROP TABLE users")]
     [InlineData("SELECT * FROM users; SELECT * FROM products")]
+    [InlineData("SELECT * FROM users; SELECT * FROM products; --comment")]
+    [InlineData("SELECT * FROM Logs; union select password from Users")]
     public void ValidateQuerySafety_WithMultipleStatements_ShouldThrowInvalidOperationException(string query)
     {
         // Arrange
@@ -139,7 +143,7 @@ public class MySqlServiceQueryValidationTests
             validateMethod.Invoke(null, new object[] { query }));
 
         Assert.IsType<InvalidOperationException>(exception.InnerException);
-        Assert.Contains("Query contains dangerous patterns that could indicate SQL injection attempts", exception.InnerException!.Message);
+        Assert.Contains("Multiple SQL statements are not allowed. Use only a single SELECT statement.", exception.InnerException!.Message);
     }
 
     [Theory]

@@ -146,23 +146,15 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
             throw new ArgumentException("Query cannot be empty after removing comments and whitespace.", nameof(query));
         }
 
-        // Check for multiple SQL statements (semicolons that are not in comments)
-        var semicolonCount = cleanedQuery.Split(';').Length - 1;
-        if (semicolonCount > 1)
-        {
-            throw new InvalidOperationException("Multiple SQL statements are not allowed. Use only a single SELECT statement.");
-        }
-
-        // Regex pattern to detect common SQL injection techniques (comments are already removed)
-        var dangerPattern = new Regex(
-            @"(;|\b(union\s+select|drop\s+table|insert\s+into|update\s+|delete\s+from|or\s+1=1)\b)",
+        // Regex pattern to detect multiple SQL statements (semicolon not at end)
+        var multipleStatementsPattern = new Regex(
+            @";\s*\w",
             RegexOptions.IgnoreCase | RegexOptions.Compiled
         );
 
-        // Check for common SQL injection patterns using regex
-        if (dangerPattern.IsMatch(cleanedQuery))
+        if (multipleStatementsPattern.IsMatch(cleanedQuery))
         {
-            throw new InvalidOperationException("Query contains dangerous patterns that could indicate SQL injection attempts and is not allowed for security reasons.");
+            throw new InvalidOperationException("Multiple SQL statements are not allowed. Use only a single SELECT statement.");
         }
 
         // List of dangerous SQL keywords that should be blocked
