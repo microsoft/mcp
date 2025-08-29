@@ -20,6 +20,7 @@ public static class FoundryOptionDefinitions
     public const string SkuCapacity = "sku-capacity";
     public const string ScaleType = "scale-type";
     public const string ScaleCapacity = "scale-capacity";
+    public const string IndexName = "index-name";
 
     public static readonly Option<string> EndpointOption = new(
         $"--{Endpoint}",
@@ -111,4 +112,12 @@ public static class FoundryOptionDefinitions
         $"--{ScaleCapacity}",
         "The scale capacity for the deployment."
     );
+
+    public static readonly Option<string> IndexNameOption = new(
+        $"--{IndexName}",
+        "The name of the knowledge index."
+    )
+    {
+        IsRequired = true
+    };
 }

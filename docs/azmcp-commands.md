@@ -123,6 +123,10 @@ azmcp server start \
 # List knowledge indexes in an AI Foundry project
 azmcp foundry knowledge index list --endpoint <endpoint>
 
+# Get knowledge index schema information
+azmcp foundry knowledge index schema --endpoint <endpoint> \
+                                     --index-name <index-name>
+
 # Deploy an AI Foundry model
 azmcp foundry models deploy --subscription <subscription> \
                             --resource-group <resource-group> \
@@ -771,7 +775,7 @@ azmcp monitor metrics query --subscription <subscription> \
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 azmcp azuremanagedlustre filesystem list --subscription <subscription> \
-                                      --resource-group <resource-group> 
+                                      --resource-group <resource-group>
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
 azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \

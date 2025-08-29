@@ -39,6 +39,11 @@ Below are Microsoft's official MCP server implementations:
 - **Repository**: [azure-ai-foundry/mcp-foundry](https://github.com/azure-ai-foundry/mcp-foundry)
 - **Description**: An experimental MCP server implementation for Azure AI Foundry that exposes unified tools for models, knowledge, evaluation and deployment.
 
+Example prompts:
+
+- "List my knowledge indexes in Azure AI Foundry"
+- "Show me the schema for my knowledge index 'customer-support'"
+
 ---
 
 ### 📊 Clarity MCP Server
