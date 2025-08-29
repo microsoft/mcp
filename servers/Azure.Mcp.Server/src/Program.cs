@@ -71,6 +71,7 @@ internal class Program
             new Azure.Mcp.Tools.Acr.AcrSetup(),
             new Azure.Mcp.Tools.Cosmos.CosmosSetup(),
             new Azure.Mcp.Tools.CloudArchitect.CloudArchitectSetup(),
+            new Azure.Mcp.Tools.EventHubs.EventHubsSetup(),
             new Azure.Mcp.Tools.Foundry.FoundrySetup(),
             new Azure.Mcp.Tools.FunctionApp.FunctionAppSetup(),
             new Azure.Mcp.Tools.Grafana.GrafanaSetup(),
