@@ -70,6 +70,7 @@ internal class Program
             new Azure.Mcp.Tools.Deploy.DeploySetup(),
             new Azure.Mcp.Tools.EventGrid.EventGridSetup(),
             new Azure.Mcp.Tools.Acr.AcrSetup(),
+            new Azure.Mcp.Tools.Cosmos.CosmosSetup(),
             new Azure.Mcp.Tools.CloudArchitect.CloudArchitectSetup(),
             new Azure.Mcp.Tools.Foundry.FoundrySetup(),
             new Azure.Mcp.Tools.FunctionApp.FunctionAppSetup(),
@@ -98,7 +99,6 @@ internal class Program
             // https://github.com/Azure/azure-mcp/blob/main/docs/aot-compatibility.md
             new Azure.Mcp.Tools.BicepSchema.BicepSchemaSetup(),
             new Azure.Mcp.Tools.AzureManagedLustre.AzureManagedLustreSetup(),
-            new Azure.Mcp.Tools.Cosmos.CosmosSetup()
 #endif
         ];
     }

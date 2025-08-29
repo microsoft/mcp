@@ -13,10 +13,10 @@ param(
     [switch] $CleanBuild,
     [switch] $BuildNative,
     [string] $ServerName,
-    [Parameter(Mandatory=$true, ParameterSetName='Named')]
+    [Parameter(Mandatory=$true, ParameterSetName='SpecificPlatform')]
     [ValidateSet('windows','linux','macOS')]
     [string] $OperatingSystem,
-    [Parameter(Mandatory=$true, ParameterSetName='Named')]
+    [Parameter(Mandatory=$true, ParameterSetName='SpecificPlatform')]
     [ValidateSet('x64','arm64')]
     [string] $Architecture,
     [Parameter(ParameterSetName='AllPlatforms')]

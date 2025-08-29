@@ -91,6 +91,6 @@ jobs:
       path: '$(Pipeline.Workspace)/docker_drops'
       image: image:tag
       buildArguments: |
-        --build-arg PUBLISH_DIR="linux-x64/dist"
+        --build-arg PUBLISH_DIR="Azure.Mcp.Server/linux-x64/dist"
       enableNetwork: true
       useBuildKit: true

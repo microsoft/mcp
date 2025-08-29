@@ -1,6 +1,13 @@
 
 # Release History
 
+## 0.5.9 - 2025-08-26
+
+### Changed
+
+- Updated dependencies to improve .NET Ahead-of-Time (AOT) compilation support:
+  - `Microsoft.Azure.Cosmos` `3.51.0` → `Microsoft.Azure.Cosmos.Aot` `0.1.1-preview.1`. [[#37](https://github.com/microsoft/mcp/pull/37)]
+
 ## 0.5.8 - 2025-08-21
 
 ### Added

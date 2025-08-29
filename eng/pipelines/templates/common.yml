@@ -67,6 +67,8 @@ extends:
           JobTemplatePath: /eng/pipelines/templates/jobs/build.yml
           AdditionalParameters:
             TestTimeoutInMinutes: 10
+            ${{ if ne(parameters.ServerName, 'none') }}:
+              ServerName: ${{ parameters.ServerName }}
           MatrixConfigs:
             - Name: build_matrix
               Path: eng/pipelines/build-matrix.json
@@ -105,12 +107,14 @@ extends:
           value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
         jobs:
         - template: /eng/pipelines/templates/jobs/sign-and-pack.yml
-        - ${{ each vsixtarget in parameters.VsixTargets }}:
-          - template: /eng/pipelines/templates/jobs/sign-and-pack-vsix.yml
-            parameters:
-              DependsOn: SignAndPack
-              VsixTarget: ${{ vsixtarget }}
-              ServerName: ${{ parameters.ServerName }}
+          parameters:
+            ServerName: ${{ parameters.ServerName }}
+
+        - template: /eng/pipelines/templates/jobs/sign-and-pack-vsix.yml
+          parameters:
+            DependsOn: SignAndPack
+            ServerName: ${{ parameters.ServerName }}
+
         - job: Verify_Signing
           displayName: "Verify Signing"
           dependsOn: SignAndPack
@@ -184,3 +188,5 @@ extends:
             value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
           jobs:
           - template: /eng/pipelines/templates/jobs/integration.yml
+            parameters:
+              ServerName: ${{ parameters.ServerName }}

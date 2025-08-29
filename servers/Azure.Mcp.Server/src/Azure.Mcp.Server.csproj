@@ -41,9 +41,40 @@
     <SelfContained>true</SelfContained>
     <IlcOptimizationPreference>Size</IlcOptimizationPreference>
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
+  </PropertyGroup>
+  <!-- .NET Tool Package settings -->
+  <PropertyGroup Condition="'$(BuildNative)' == 'true'">
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <PackageType>McpServer</PackageType>
+    <PackageId>Azure.Mcp</PackageId>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <ToolCommandName>$(CliName)</ToolCommandName>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <!-- Keep these aligned with OS + arch build-matrix.json. -->
+    <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+  <!-- Properties for the root (RID-less) .NET Tool package -->
+  <PropertyGroup Condition="'$(BuildNative)' == 'true' and '$(RuntimeIdentifier)' == ''">
+    <PackageDescription>Azure MCP Server - Model Context Protocol implementation for Azure.</PackageDescription>
+    <PackageTags>azure;mcp;</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <McpServerJsonTemplateFile>.mcp/server.json</McpServerJsonTemplateFile>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(BuildNative)' == 'true' and '$(RuntimeIdentifier)' == ''">
+    <None Include="../../../README.md" Pack="true" PackagePath="./README.md" />
+  </ItemGroup>
+  <!-- Properties for the RID-specific .NET Tool packages -->
+  <PropertyGroup Condition="'$(BuildNative)' == 'true' and '$(RuntimeIdentifier)' != ''">
+    <PackageDescription>Azure MCP Server - Model Context Protocol implementation for Azure. Internal implementation package for $(RuntimeIdentifier).</PackageDescription>
+  </PropertyGroup>
+  <!-- Windows AOT native build security flags to enable 'Control Flow Guard' (CFG) -->
+  <PropertyGroup Condition="'$(BuildNative)' == 'true' and $(RuntimeIdentifier.StartsWith('win'))">
+    <ControlFlowGuard>Guard</ControlFlowGuard>
   </PropertyGroup>
   <!-- Debug configuration -->
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <PublishSingleFile>false</PublishSingleFile>
     <SelfContained>false</SelfContained>
     <DebugType>portable</DebugType>
@@ -57,8 +88,6 @@
     <ProjectReference Include="..\..\..\tools\Azure.*\src\*.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <!-- We need a package reference for Cosmos so we have a path to the native assets for exclusion later -->
-    <PackageReference Include="Microsoft.Azure.Cosmos" GeneratePathProperty="true" />
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
@@ -67,17 +96,7 @@
        https://github.com/Azure/azure-mcp/blob/main/docs/aot-compatibility.md
        Do not add ProjectReference removals in this ItemGroup. -->
   <ItemGroup Condition="'$(BuildNative)' == 'true'">
-    <ProjectReference Remove="..\..\..\tools\cosmos\src\AzureMcp.Cosmos\AzureMcp.Cosmos.csproj" />
     <ProjectReference Remove="..\..\..\tools\azuremanagedlustre\src\AzureMcp.AzureManagedLustre\AzureMcp.AzureManagedLustre.csproj" />
-    <PackageReference Remove="Microsoft.Azure.Cosmos" />
   </ItemGroup>
-  <!-- Remove Cosmos native files from the build output directory -->
-  <Target Name="RemoveCosmosNativeFiles" BeforeTargets="GetCopyToOutputDirectoryItems">
-    <ItemGroup>
-      <FilesToRemove Include="@(ContentWithTargetPath)" Condition="$([System.String]::new('%(FullPath)').Contains('$(PkgMicrosoft_Azure_Cosmos)'))" />
-    </ItemGroup>
-    <ItemGroup>
-      <ContentWithTargetPath Remove="@(FilesToRemove)" />
-    </ItemGroup>
-  </Target>
+  <Import Project="PackServerJson.targets" />
 </Project>

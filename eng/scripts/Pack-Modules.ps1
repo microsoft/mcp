@@ -34,8 +34,9 @@ try {
     # Clear and recreate the output directory
     Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 
-    $serverDirectories = Get-ChildItem $ArtifactsPath -Directory
-    foreach($serverDirectory in $serverDirectories) {
+    $wrapperJsonFiles = Get-ChildItem -Path $ArtifactsPath -Filter "wrapper.json" -Recurse
+    foreach($wrapperJsonFile in $wrapperJsonFiles) {
+        $serverDirectory = $wrapperJsonFile.Directory
         $serverName = $serverDirectory.Name
         $platformOutputPath = "$OutputPath/$serverName/platform"
         $wrapperOutputPath = "$OutputPath/$serverName/wrapper"
@@ -43,7 +44,7 @@ try {
         New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
         New-Item -ItemType Directory -Force -Path $wrapperOutputPath | Out-Null
 
-        $wrapperPackageJson = Get-Content "$serverDirectory/wrapper.json" -Raw | ConvertFrom-Json -AsHashtable
+        $wrapperPackageJson = Get-Content $wrapperJsonFile -Raw | ConvertFrom-Json -AsHashtable
 
         $platformDirectories = Get-ChildItem -Path $serverDirectory -Directory
 
