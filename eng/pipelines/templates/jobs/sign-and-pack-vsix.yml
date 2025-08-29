@@ -7,6 +7,15 @@ parameters:
 - name: ArtifactSourceAlias
   type: string
   default: current
+- name: Project
+  type: string
+  default: ''
+- name: PipelineId
+  type: string
+  default: ''
+- name: RunId
+  type: string
+  default: ''
 
 jobs:
 - job: SignAndPackVSIX
@@ -17,9 +26,22 @@ jobs:
   - checkout: self
 
   # Download the signed MCP server binaries for this OS
-  - download: ${{ parameters.ArtifactSourceAlias }}
-    artifact: $(PipelineArtifactName)_signed
-    displayName: "Download signed MCP server binaries"
+  # If PipelineId and RunId are provided, fetch from that specific run; otherwise use the alias/current
+  - ${{ if and(ne(parameters.PipelineId, ''), ne(parameters.RunId, '')) }}:
+    - task: DownloadPipelineArtifact@2
+      displayName: "Download signed MCP server binaries (specific run)"
+      inputs:
+        buildType: specific
+        project: ${{ parameters.Project }}
+        pipeline: ${{ parameters.PipelineId }}
+        runVersion: specific
+        runId: ${{ parameters.RunId }}
+        artifact: $(PipelineArtifactName)_signed
+        targetPath: '$(Pipeline.Workspace)/$(PipelineArtifactName)_signed'
+  - ${{ if or(eq(parameters.PipelineId, ''), eq(parameters.RunId, '')) }}:
+    - download: ${{ parameters.ArtifactSourceAlias }}
+      artifact: $(PipelineArtifactName)_signed
+      displayName: "Download signed MCP server binaries"
 
   - task: NodeTool@0
     displayName: "Use Node.js 20.x"

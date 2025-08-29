@@ -20,6 +20,16 @@ parameters:
     - osx-arm64
     - win-x64
     - win-arm64
+# Optional: specify an upstream pipeline run to download artifacts from
+- name: UpstreamProject
+  type: string
+  default: ''
+- name: UpstreamPipelineId
+  type: string
+  default: ''
+- name: UpstreamRunId
+  type: string
+  default: ''
 
 resources:
   repositories:
@@ -27,11 +37,6 @@ resources:
     type: git
     name: internal/azure-sdk-build-tools
     ref: refs/tags/azure-sdk-build-tools_20250808.1
-  pipelines:
-  - pipeline: signed
-    project: internal
-    source: 7866
-    version: 5275162  
 
 extends:
   template: /eng/pipelines/templates/1es-redirect.yml
@@ -119,7 +124,11 @@ extends:
           parameters:
             # DependsOn: SignAndPack
             ServerName: ${{ parameters.ServerName }}
-            ArtifactSourceAlias: signed
+            # Use explicit run targeting if provided instead of a pipeline resource alias
+            Project: ${{ parameters.UpstreamProject }}
+            PipelineId: ${{ parameters.UpstreamPipelineId }}
+            RunId: ${{ parameters.UpstreamRunId }}
+            ArtifactSourceAlias: current
 
         #- job: Verify_Signing
         #  displayName: "Verify Signing"
@@ -167,9 +176,22 @@ extends:
           - template: /eng/pipelines/templates/variables/globals.yml
           steps:
           - checkout: none
-          - download: current
-            artifact: vsix_$(PipelineArtifactName)_signed
-            displayName: "Download signed MCP server VSIX files"
+          # Match the same artifact source (either current run or specific run)
+          - ${{ if and(ne(parameters.UpstreamPipelineId, ''), ne(parameters.UpstreamRunId, '')) }}:
+            - task: DownloadPipelineArtifact@2
+              displayName: "Download signed MCP server VSIX files (specific run)"
+              inputs:
+                buildType: specific
+                project: ${{ parameters.UpstreamProject }}
+                pipeline: ${{ parameters.UpstreamPipelineId }}
+                runVersion: specific
+                runId: ${{ parameters.UpstreamRunId }}
+                artifact: vsix_$(PipelineArtifactName)_signed
+                targetPath: '$(Pipeline.Workspace)/vsix_$(PipelineArtifactName)_signed'
+          - ${{ if or(eq(parameters.UpstreamPipelineId, ''), eq(parameters.UpstreamRunId, '')) }}:
+            - download: current
+              artifact: vsix_$(PipelineArtifactName)_signed
+              displayName: "Download signed MCP server VSIX files"
           - pwsh: |
               Write-Host "Verifying signing for win-x64 and win-arm64 VSIX files..."
               $allSigned = $true
