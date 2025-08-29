@@ -169,18 +169,19 @@ resource searchIndexDeploymentScript 'Microsoft.Resources/deploymentScripts@2023
       param(
         [string]$searchServiceName,
         [string]$resourceGroupName,
-        [string]$subscriptionId
+        [string]$subscriptionId,
+        [string]$resourceManagerUrl
       )
 
       # Set the context
       Set-AzContext -SubscriptionId $subscriptionId
 
       # Get access token for Azure management API
-      $accessToken = Get-AzAccessToken -ResourceUrl "${environment().resourceManager}"
+      $accessToken = Get-AzAccessToken -ResourceUrl $resourceManagerUrl
       $token = $accessToken.Token
 
       # Get search service admin keys using REST API
-      $adminKeysUri = "${environment().resourceManager}subscriptions/$subscriptionId/resourceGroups/$resourceGroupName/providers/Microsoft.Search/searchServices/$searchServiceName/listAdminKeys?api-version=2023-11-01"
+      $adminKeysUri = "$($resourceManagerUrl.TrimEnd('/'))subscriptions/$subscriptionId/resourceGroups/$resourceGroupName/providers/Microsoft.Search/searchServices/$searchServiceName/listAdminKeys?api-version=2023-11-01"
       $headers = @{
         'Authorization' = "Bearer $token"
         'Content-Type' = 'application/json'
@@ -254,7 +255,7 @@ resource searchIndexDeploymentScript 'Microsoft.Resources/deploymentScripts@2023
         }
       }
     '''
-    arguments: '-searchServiceName "${searchService.name}" -resourceGroupName "${resourceGroup().name}" -subscriptionId "${subscription().subscriptionId}"'
+    arguments: '-searchServiceName "${searchService.name}" -resourceGroupName "${resourceGroup().name}" -subscriptionId "${subscription().subscriptionId}" -resourceManagerUrl "${environment().resourceManager}"'
   }
   dependsOn: [
     searchServiceRoleAssignment
