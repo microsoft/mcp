@@ -105,6 +105,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D9515F83-9B0
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Deploy", "tools\Azure.Mcp.Tools.Deploy\src\Azure.Mcp.Tools.Deploy.csproj", "{9924AEB8-EEB1-40EC-943B-DA1B9E610767}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.EventGrid", "Azure.Mcp.Tools.EventGrid", "{E1234560-1234-1234-1234-123456789012}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E1234561-1234-1234-1234-123456789012}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.EventGrid", "tools\Azure.Mcp.Tools.EventGrid\src\Azure.Mcp.Tools.EventGrid.csproj", "{E1234567-1234-1234-1234-123456789012}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Extension", "Azure.Mcp.Tools.Extension", "{0D319E14-6DDE-C12F-A5B0-76EED797D651}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{917EE497-2381-F55E-88F6-47586FC57241}"
@@ -320,6 +326,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Deploy.LiveTests", "tools\Azure.Mcp.Tools.Deploy\tests\Azure.Mcp.Tools.Deploy.LiveTests\Azure.Mcp.Tools.Deploy.LiveTests.csproj", "{BBE0307D-17C0-4A0A-9D7A-D8E9328A3CF7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Deploy.UnitTests", "tools\Azure.Mcp.Tools.Deploy\tests\Azure.Mcp.Tools.Deploy.UnitTests\Azure.Mcp.Tools.Deploy.UnitTests.csproj", "{56B04873-1F4B-402E-88C0-528F006E3914}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E1234562-1234-1234-1234-123456789012}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.EventGrid.LiveTests", "tools\Azure.Mcp.Tools.EventGrid\tests\Azure.Mcp.Tools.EventGrid.LiveTests\Azure.Mcp.Tools.EventGrid.LiveTests.csproj", "{E1234568-1234-1234-1234-123456789012}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.EventGrid.UnitTests", "tools\Azure.Mcp.Tools.EventGrid\tests\Azure.Mcp.Tools.EventGrid.UnitTests\Azure.Mcp.Tools.EventGrid.UnitTests.csproj", "{E1234569-1234-1234-1234-123456789012}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{81E3F68B-68AA-1E51-D1D2-DE3FA9DB90AD}"
 EndProject

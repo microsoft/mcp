@@ -864,6 +864,16 @@ azmcp resourcehealth availability-status list --subscription <subscription> \
                                               [--resource-group <resource-group>]
 ```
 
+### Azure Event Grid Operations
+
+```bash
+# List all Event Grid topics in a subscription
+azmcp eventgrid topic list --subscription <subscription>
+
+# List Event Grid topics in a resource group
+azmcp eventgrid topic list --subscription <subscription> --resource-group <resource-group>
+```
+
 ### Azure Service Bus Operations
 
 ```bash
