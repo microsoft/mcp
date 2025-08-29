@@ -81,7 +81,7 @@ public class DesignCommandTests
     public async Task ExecuteAsync_ReturnsArchitectureDesignText(string args)
     {
         // Arrange
-        var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(args));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -182,9 +182,16 @@ public class DesignCommandTests
         var complexQuestion = "What is your \"primary\" application 'type' and how \"big\" will it be?";
         var complexAnswer = "It's a \"web application\" with 'high' scalability requirements";
 
-        // Build a single command line and use ArgSplitter to emulate shell quoting
-        var cmdLine = $"--question \"{complexQuestion.Replace("\"", "\\\"")}\" --answer \"{complexAnswer.Replace("\"", "\\\"")}\" --question-number 2 --total-questions 10";
-        var parseResult = _commandDefinition.Parse(ArgSplitter.SplitArgs(cmdLine));
+        // Build a single command line and rely on System.CommandLine's Parse(string) to emulate shell quoting
+        // Use platform-appropriate escaping for embedded quotes inside a quoted token:
+        // - Windows: escape a quote within quotes by doubling it ("")
+        // - Unix-like: escape a quote within quotes using backslash (\")
+        static string EscapeForSingleLine(string value)
+            => OperatingSystem.IsWindows() ? value.Replace("\"", "\"\"") : value.Replace("\"", "\\\"");
+
+        var cmdLine = $"--question \"{EscapeForSingleLine(complexQuestion)}\" --answer \"{EscapeForSingleLine(complexAnswer)}\" --question-number 2 --total-questions 10";
+        var args = SplitCommandLine(cmdLine);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Ensure there were no parse/validation errors
         Assert.True(!parseResult.Errors.Any(), string.Join("; ", parseResult.Errors.Select(e => e.Message)));
@@ -203,6 +210,68 @@ public class DesignCommandTests
 
         Assert.Equal(complexQuestion, questionValue);
         Assert.Equal(complexAnswer, answerValue);
+    }
+
+    private static string[] SplitCommandLine(string commandLine)
+    {
+        if (string.IsNullOrWhiteSpace(commandLine))
+            return Array.Empty<string>();
+
+        var args = new List<string>();
+        var current = new StringBuilder();
+        bool inQuotes = false;
+
+        for (int i = 0; i < commandLine.Length; i++)
+        {
+            char c = commandLine[i];
+
+            if (c == '\\')
+            {
+                if (i + 1 < commandLine.Length && commandLine[i + 1] == '"')
+                {
+                    current.Append('"');
+                    i++; // consume escaped quote
+                    continue;
+                }
+                current.Append(c);
+                continue;
+            }
+
+            if (c == '"')
+            {
+                if (inQuotes && i + 1 < commandLine.Length && commandLine[i + 1] == '"')
+                {
+                    // double-quote within quotes -> literal quote (Windows style)
+                    current.Append('"');
+                    i++; // consume second quote
+                }
+                else
+                {
+                    inQuotes = !inQuotes;
+                }
+                continue;
+            }
+
+            if (char.IsWhiteSpace(c) && !inQuotes)
+            {
+                if (current.Length > 0)
+                {
+                    args.Add(current.ToString());
+                    current.Clear();
+                }
+            }
+            else
+            {
+                current.Append(c);
+            }
+        }
+
+        if (current.Length > 0)
+        {
+            args.Add(current.ToString());
+        }
+
+        return args.ToArray();
     }
 
     [Fact]

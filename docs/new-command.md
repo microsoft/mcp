@@ -654,7 +654,8 @@ public class {Resource}{Operation}CommandTests
                 .Returns(new List<ResultType>());
         }
 
-    var parseResult = _parser.Parse(Azure.Mcp.TestUtilities.ArgSplitter.SplitArgs(args));
+    // Build args from a single string in tests using the test-only splitter
+    var parseResult = _parser.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

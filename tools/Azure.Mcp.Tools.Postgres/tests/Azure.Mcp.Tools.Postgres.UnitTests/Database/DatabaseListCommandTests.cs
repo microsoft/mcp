@@ -39,7 +39,7 @@ public class DatabaseListCommandTests
         _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns(expectedDatabases);
 
         var command = new DatabaseListCommand(_logger);
-        var args = command.GetCommand().Parse(ArgSplitter.SplitArgs("--subscription sub123 --resource-group rg1 --user user1 --server server1"));
+        var args = command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --user user1 --server server1");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -61,7 +61,7 @@ public class DatabaseListCommandTests
         _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns(new List<string>());
 
         var command = new DatabaseListCommand(_logger);
-        var args = command.GetCommand().Parse(ArgSplitter.SplitArgs("--subscription sub123 --resource-group rg1 --user user1 --server server1"));
+        var args = command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --user user1 --server server1");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -78,7 +78,7 @@ public class DatabaseListCommandTests
         _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").ThrowsAsync(new Exception("Test exception"));
 
         var command = new DatabaseListCommand(_logger);
-        var args = command.GetCommand().Parse(ArgSplitter.SplitArgs("--subscription sub123 --resource-group rg1 --user user1 --server server1"));
+        var args = command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --user user1 --server server1");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
 
