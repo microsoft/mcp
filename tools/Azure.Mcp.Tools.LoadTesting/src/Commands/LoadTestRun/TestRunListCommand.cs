@@ -19,9 +19,13 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
     public override string Name => "list";
     public override string Description =>
         $"""
-        Retrieves a comprehensive list of all test run executions for a specific load test configuration. 
-        This command provides an overview of test execution history, allowing you to track performance 
-        trends, compare results across multiple runs, and analyze testing patterns over time.
+        List test runs for a given load test (Test ID) on a Load Testing resource. Here the input is test id and we get the LIST of test runs for the given id. Use this when asked to retrieve multiple test runs for a test id.
+            Returns run-level metadata for each run (run id, display name, status, start/end times, duration, brief metrics summary).
+            Does NOT return the test definition/configuration or run artifacts. To retrieve a specific run's full details, use test run get instead:
+            azmcp loadtesting testrun get --testrun-id <id> --test-resource-name <resource> --resource-group <rg>
+            Required parameters: --test-id and --test-resource-name (and --subscription). Use --resource-group when needed.
+            Example:
+            azmcp loadtesting testrun list --test-id <test-id> --test-resource-name <resource> --resource-group <rg> --subscription <sub>
         """;
     public override string Title => _commandTitle;
 
