@@ -6,7 +6,7 @@ parameters:
   type: string
 
 jobs:
-- job:
+- job: SignAndPackVSIX
   displayName: "Sign and Pack VSIX"
   dependsOn: ${{ parameters.DependsOn }}
   condition: and(succeeded(), ne(variables['NoPackagesChanged'], 'true'))
