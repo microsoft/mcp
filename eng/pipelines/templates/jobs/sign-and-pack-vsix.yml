@@ -4,6 +4,9 @@ parameters:
   default: []
 - name: ServerName
   type: string
+- name: ArtifactSourceAlias
+  type: string
+  default: current
 
 jobs:
 - job: SignAndPackVSIX
@@ -14,14 +17,9 @@ jobs:
   - checkout: self
 
   # Download the signed MCP server binaries for this OS
-  - download: current
+  - download: ${{ parameters.ArtifactSourceAlias }}
     artifact: $(PipelineArtifactName)_signed
     displayName: "Download signed MCP server binaries"
-    buildType: specific
-    project: internal
-    definition: 7866
-    runVersion: specific
-    runId: 5275162
 
   - task: NodeTool@0
     displayName: "Use Node.js 20.x"

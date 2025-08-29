@@ -27,6 +27,11 @@ resources:
     type: git
     name: internal/azure-sdk-build-tools
     ref: refs/tags/azure-sdk-build-tools_20250808.1
+  pipelines:
+  - pipeline: signed
+    project: internal
+    source: 7866
+    version: 5275162  
 
 extends:
   template: /eng/pipelines/templates/1es-redirect.yml
@@ -114,6 +119,7 @@ extends:
           parameters:
             # DependsOn: SignAndPack
             ServerName: ${{ parameters.ServerName }}
+            ArtifactSourceAlias: signed
 
         #- job: Verify_Signing
         #  displayName: "Verify Signing"
