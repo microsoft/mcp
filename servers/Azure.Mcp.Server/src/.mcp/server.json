@@ -1,0 +1,31 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schemas/draft/2025-07-09/server.json",
+  "description": "$(PackageDescription)",
+  "name": "io.github.microsoft/mcp",
+  "packages": [
+    {
+      "registry_name": "nuget",
+      "name": "$(PackageId)",
+      "version": "$(PackageVersion)",
+      "package_arguments": [
+        {
+          "type": "positional",
+          "value": "server",
+          "value_hint": "server"
+        },
+        {
+          "type": "positional",
+          "value": "start",
+          "value_hint": "start"
+        }
+      ]
+    }
+  ],
+  "repository": {
+    "url": "$(RepositoryUrl)",
+    "source": "github"
+  },
+  "version_detail": {
+    "version": "$(PackageVersion)"
+  }
+}

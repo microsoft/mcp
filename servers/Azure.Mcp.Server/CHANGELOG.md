@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.5.9 (Unreleased)
+## 0.5.11 (Unreleased)
 
 ### Features Added
 
@@ -14,10 +14,20 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+## 0.5.10 (2025-08-28)
+
+### Bugs fixed
+
+- Fixed a bug with telemetry collection related to AppConfig tools. [[#44](https://github.com/microsoft/mcp/pull/44)]
+
+## 0.5.9 (2025-08-26)
+
+### Other Changes
+
 #### Dependency Updates
 
-- Updated the following dependencies to improve .NET Ahead-of-Time (AOT) compilation support: [[#37](https://github.com/microsoft/mcp/pull/37)]
-  - Switched from the AOT-incompatible Microsoft.Azure.Cosmos to the AOT-compatible Microsoft.Azure.Cosmos.Aot version `0.1.1-preview.1`.
+- Updated the following dependencies to improve .NET Ahead-of-Time (AOT) compilation support: 
+  - Microsoft.Azure.Cosmos `3.51.0` → Microsoft.Azure.Cosmos.Aot `0.1.1-preview.1`. [[#37](https://github.com/microsoft/mcp/pull/37)]
 
 ## 0.5.8 (2025-08-21)
 
@@ -59,8 +69,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Enhanced `BaseAzureService` with `EscapeKqlString` method for safe KQL query construction across all Azure services. [[#938](https://github.com/Azure/azure-mcp/pull/938)]
   - Fixed KQL string escaping in Workbooks service queries.
 - Standardized Azure Storage command descriptions, option names, and parameter names for consistency across all storage commands. Updated JSON serialization context to remove unused model types and improve organization. [[#1015](https://github.com/Azure/azure-mcp/pull/1015)]
-- Updated to .NET 10 SDK to prepare for .NET tool packing.
+- Updated to .NET 10 SDK to prepare for .NET tool packing. [[#1023](https://github.com/Azure/azure-mcp/pull/1023)]
 - Enhanced `bestpractices` and `azureterraformbestpractices` tool descriptions to better work with the vscode copilot tool grouping feature. [[#1029](https://github.com/Azure/azure-mcp/pull/1029)]
+- The Azure MCP Server can now be packaged as a .NET SDK Tool for easier use by users with the .NET 10 SDK installed. [[#422](https://github.com/Azure/azure-mcp/issues/422)]
 
 #### Dependency Updates
 

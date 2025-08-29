@@ -1,0 +1,101 @@
+<Project>
+  <!--
+  This targets file introduces a new target that runs during dotnet pack.
+
+  It reads a template .mcp/server.json file and fills in the placeholders. The resulting file is included in the output .NET tool package (a .nupkg file, NuGet package).
+
+  The schema of the .mcp/server.json file is owned by the MCP Registry project:
+  https://github.com/modelcontextprotocol/registry/blob/main/docs/server-json/README.md
+
+  It is used by NuGet.org to render the needed MCP client/host configuration (such as VS Code mcp.json). It is also used by VS Code when installing a NuGet-based MCP server so it can generate configuration during installation.
+
+  The server.json file declares the required inputs for the Azure MCP server process, such as CLI arguments that launch the stdio-based MCP server. The server.json file is only included in the root (RID-less) .NET tool package, based on the McpServerJsonTemplateFile property.
+
+  For more information about MCP servers in NuGet packages (.NET tool packages), see:
+  https://learn.microsoft.com/nuget/concepts/nuget-mcp
+  -->
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
+    <!--
+    This dependency is already in the runtime graph via AzureMcp.Core.
+    Use it at pack time in SerializePropertiesToJson to fill in .mcp/server.json placeholders.
+    -->
+    <PackageReference Include="System.Text.Json" GeneratePathProperty="true" />
+  </ItemGroup>
+  
+  <UsingTask TaskName="SerializePropertiesToJson" TaskFactory="RoslynCodeTaskFactory" AssemblyName="Microsoft.Build.Tasks.Core">
+    <ParameterGroup>
+      <PackageId ParameterType="System.String" Required="true" />
+      <PackageVersion ParameterType="System.String" Required="true" />
+      <PackageDescription ParameterType="System.String" Required="true" />
+      <RepositoryUrl ParameterType="System.String" Required="true" />
+
+      <JsonPackageId ParameterType="System.String" Output="true" />
+      <JsonPackageVersion ParameterType="System.String" Output="true" />
+      <JsonPackageDescription ParameterType="System.String" Output="true" />
+      <JsonRepositoryUrl ParameterType="System.String" Output="true" />
+    </ParameterGroup>
+    <Task>
+        <Reference Include="$(PkgSystem_Text_Json)/lib/netstandard2.0/System.Text.Json.dll"/>
+        <Using Namespace="System.Text.Json"/>
+        <Code Type="Fragment" Language="cs">
+          <![CDATA[
+          JsonPackageId = JsonSerializer.Serialize(PackageId);
+          JsonPackageVersion = JsonSerializer.Serialize(PackageVersion);
+          JsonPackageDescription = JsonSerializer.Serialize(PackageDescription);
+          JsonRepositoryUrl = JsonSerializer.Serialize(RepositoryUrl);
+          ]]>
+        </Code>
+    </Task>
+  </UsingTask>
+
+  <Target
+    Name="UpdateServerJsonForPackaging"
+    DependsOnTargets="_InitializeNuspecRepositoryInformationProperties"
+    BeforeTargets="GenerateNuspec;_GetPackageFiles"
+    Outputs="@(_UpdatedServerJsonPath)"
+    Condition="'$(McpServerJsonTemplateFile)' != ''">
+    
+    <PropertyGroup>
+      <_UpdatedServerJsonPath>$(IntermediateOutputPath).mcp\server.json</_UpdatedServerJsonPath>
+      <_McpServerJsonFileContent>$([System.IO.File]::ReadAllText($(McpServerJsonTemplateFile)))</_McpServerJsonFileContent>
+    </PropertyGroup>
+    
+    <SerializePropertiesToJson
+      PackageId="$(PackageId)"
+      PackageVersion="$(PackageVersion)"
+      PackageDescription="$(PackageDescription)"
+      RepositoryUrl="$(RepositoryUrl)">
+        <Output TaskParameter="JsonPackageId" PropertyName="JsonPackageId" />
+        <Output TaskParameter="JsonPackageVersion" PropertyName="JsonPackageVersion" />
+        <Output TaskParameter="JsonPackageDescription" PropertyName="JsonPackageDescription" />
+        <Output TaskParameter="JsonRepositoryUrl" PropertyName="JsonRepositoryUrl" />
+    </SerializePropertiesToJson>
+
+    <PropertyGroup>
+      <_McpServerJsonFileContent>$(_McpServerJsonFileContent
+        .Replace('"%24(PackageId)"', '$(JsonPackageId)')
+        .Replace('"%24(PackageVersion)"', '$(JsonPackageVersion)')
+        .Replace('"%24(PackageDescription)"', '$(JsonPackageDescription)')
+        .Replace('"%24(RepositoryUrl)"', '$(JsonRepositoryUrl)'))</_McpServerJsonFileContent>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_McpServerJsonFileContentLine Include="$(_McpServerJsonFileContent)" />
+    </ItemGroup>
+
+    <WriteLinesToFile
+      File="$(_UpdatedServerJsonPath)"
+      Lines="@(_McpServerJsonFileContentLine)"
+      Overwrite="true"
+      WriteOnlyWhenDifferent="true" />
+      
+    <ItemGroup>
+      <ItemWrites Include="$(_UpdatedServerJsonPath)" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="$(_UpdatedServerJsonPath)" Pack="true" PackagePath="/.mcp/server.json" />
+    </ItemGroup>
+  </Target>
+</Project>

@@ -37,7 +37,7 @@ jobs:
       $number = $env:PRERELEASE_NUMBER
       $suffix = ($label -and $number) ? "-$label.$number" : ""
 
-      Write-Host "##vso[task.setvariable variable=VersionSuffix]$suffix"
+      Write-Host "##vso[task.setvariable variable=VersionSuffix;isOutput=true]$suffix"
     name: GetVersion
     displayName: "Get version suffix"
     ${{ if eq(parameters.DynamicPrereleaseVersion, true) }}:

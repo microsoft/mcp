@@ -28,11 +28,11 @@
         "ai"
     ],
     "bugs": {
-        "url": "https://github.com/Azure/azure-mcp/issues"
+        "url": "https://github.com/microsoft/mcp/issues"
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/azure/azure-mcp"
+        "url": "https://github.com/microsoft/mcp"
     },
     "activationEvents": [
         "onStartupFinished"
@@ -159,7 +159,7 @@
         "@typescript-eslint/eslint-plugin": "~6",
         "@typescript-eslint/parser": "~6",
         "@vscode/test-electron": "~2",
-        "@vscode/vsce": "~2",
+        "@vscode/vsce": "~3",
         "chai": "~4",
         "eslint": "~8",
         "glob": "~8",

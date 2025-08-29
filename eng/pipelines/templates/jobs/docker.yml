@@ -37,8 +37,8 @@ jobs:
         $properties = ./eng/scripts/Get-ProjectProperties.ps1 -ProjectName '${{parameters.ServerName}}.csproj'
         $imageName = $properties.DockerImageName
         $version = $properties.Version
-        Write-Host "##vso[task.setvariable variable=DockerImageName]$imageName"
-        Write-Host "##vso[task.setvariable variable=DockerImageVersion]$version$VersionSuffix"
+        Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$imageName"
+        Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version$VersionSuffix"
     env:
       VERSION_SUFFIX: '$(VersionSuffix)'
 
@@ -91,6 +91,6 @@ jobs:
       path: '$(Pipeline.Workspace)/docker_drops'
       image: image:tag
       buildArguments: |
-        --build-arg PUBLISH_DIR="linux-x64/dist"
+        --build-arg PUBLISH_DIR="Azure.Mcp.Server/linux-x64/dist"
       enableNetwork: true
       useBuildKit: true

@@ -2,18 +2,13 @@ parameters:
 - name: DependsOn
   type: object
   default: []
-- name: VsixTarget
-  type: string
 - name: ServerName
   type: string
 
 jobs:
 - job:
-  displayName: "Sign and Pack VSIX for ${{ parameters.VsixTarget }}"
+  displayName: "Sign and Pack VSIX"
   dependsOn: ${{ parameters.DependsOn }}
-  variables:
-    VsixTarget: ${{ parameters.VsixTarget }}
-    VsixServerPath: $(System.DefaultWorkingDirectory)/eng/vscode
   condition: and(succeeded(), ne(variables['NoPackagesChanged'], 'true'))
   steps:
   - checkout: self
@@ -23,49 +18,26 @@ jobs:
     artifact: $(PipelineArtifactName)_signed
     displayName: "Download signed MCP server binaries"
 
-  - powershell: |
-      $src = "$(Pipeline.Workspace)/$(PipelineArtifactName)_signed/$(VsixTarget)/dist/*"
-      $dest = "$(VsixServerPath)/server"
-      New-Item -ItemType Directory -Force -Path $dest
-      Copy-Item -Path $src -Destination $dest -Recurse -Force
-    displayName: "Copy signed MCP server binaries to VSIX ${{ parameters.VsixTarget }}"
-
-  # --- VS Code Extension Packaging Steps ---
   - task: NodeTool@0
     displayName: "Use Node.js 20.x"
     inputs:
       versionSpec: 20.x
-  - pwsh: |
-      npm install -g npm vsce
-      npm ci --no-optional
-    displayName: "Install npm dependencies and vsce"
-    workingDirectory: $(VsixServerPath)
 
-  - pwsh: ./ci-package.ps1 -os '$(VsixTarget)' -VersionSuffix '$(VersionSuffix)'
-    workingDirectory: $(VsixServerPath)
-    displayName: "Package VS Code Extension"
+  # --- VS Code Extension Packaging Steps ---
 
-  - task: PowerShell@2
-    inputs:
-      targetType: filePath
-      filePath: eng/scripts/New-VsixSigningManifest.ps1
-      arguments: -Path $(VsixServerPath)
-      pwsh: true
-    displayName: Create signing manifest
+  - pwsh: >
+      eng/scripts/Pack-Vsix.ps1
+      -ServerName '${{ parameters.ServerName }}'
+      -ArtifactsPath '$(Pipeline.Workspace)/$(PipelineArtifactName)_signed'
+      -OutputPath '$(Build.ArtifactStagingDirectory)'
+    displayName: "Copy signed MCP server binaries to VSIX"
 
   - template: pipelines/steps/azd-vscode-signing.yml@azure-sdk-build-tools
     parameters:
-      Path: $(VsixServerPath)
+      Path: $(Build.ArtifactStagingDirectory)
       Pattern: '*.signature.p7s'
-
-  - pwsh: |
-      New-Item -ItemType Directory -Path signed -Force
-      Copy-Item "$(VsixServerPath)\*.vsix" -Destination signed -Force
-      Copy-Item "$(VsixServerPath)\*.manifest" -Destination signed -Force
-      Copy-Item "$(VsixServerPath)\*.signature.p7s" -Destination signed -Force
-    displayName: Copy signed VSIX for publishing
 
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
-      ArtifactPath: signed
-      ArtifactName: vsix_package_${{ parameters.VsixTarget }}_signed
+      ArtifactPath: $(Build.ArtifactStagingDirectory)
+      ArtifactName: vsix_packages_signed
