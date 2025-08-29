@@ -3,7 +3,6 @@
 
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 
