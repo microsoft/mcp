@@ -6,6 +6,7 @@ tests/test-cmds.txt
 bin/
 obj/
 .vs/
+.idea/
 TestResults/
 *.binlog
 
