@@ -14,6 +14,7 @@ public abstract class BaseCommand : IBaseCommand
     private const string TroubleshootingUrl = "https://aka.ms/azmcp/troubleshooting";
 
     private readonly Command _command;
+
     protected BaseCommand()
     {
         _command = new Command(Name, Description);
@@ -81,14 +82,14 @@ public abstract class BaseCommand : IBaseCommand
         }
 
         return result;
+    }
 
-        static void SetValidationError(CommandResponse? response, string errorMessage)
+    protected void SetValidationError(CommandResponse? response, string errorMessage)
+    {
+        if (response != null)
         {
-            if (response != null)
-            {
-                response.Status = ValidationErrorStatusCode;
-                response.Message = errorMessage;
-            }
+            response.Status = ValidationErrorStatusCode;
+            response.Message = errorMessage;
         }
     }
 
