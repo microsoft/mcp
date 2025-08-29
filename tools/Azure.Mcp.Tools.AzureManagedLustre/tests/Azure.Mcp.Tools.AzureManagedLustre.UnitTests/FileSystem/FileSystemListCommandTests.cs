@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.TestUtilities;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Tools.AzureManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.AzureManagedLustre.Models;
 using Azure.Mcp.Tools.AzureManagedLustre.Services;
@@ -118,7 +118,7 @@ public class FileSystemListCommandTests
         Assert.Equal("fs1", result.FileSystems[0].Name);
     }
 
-   // TODO: jong - Figure out why failing
+    // TODO: jong - Figure out why failing
     [Theory(Skip = "Skipping for now")]
     [InlineData("--resource-group testrg", false)] // Missing subscription
     [InlineData("--subscription sub123", true)] // Missing resource group
@@ -206,7 +206,7 @@ public class FileSystemListCommandTests
     }
 
     // TODO: jong - Figure out why failing
-    [Fact (Skip = "Skipping for now")]
+    [Fact(Skip = "Skipping for now")]
     public async Task ExecuteAsync_HandlesRequestFailedException_NotFound()
     {
         // Arrange - 404 Not Found
@@ -223,7 +223,7 @@ public class FileSystemListCommandTests
     }
 
     // TODO: jong - Figure out why failing
-    [Fact (Skip = "Skipping for now")]
+    [Fact(Skip = "Skipping for now")]
     public async Task ExecuteAsync_HandlesRequestFailedException_Forbidden()
     {
         // Arrange - 403 Forbidden

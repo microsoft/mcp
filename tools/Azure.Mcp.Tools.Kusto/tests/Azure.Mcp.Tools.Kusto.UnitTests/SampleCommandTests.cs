@@ -32,8 +32,8 @@ public sealed class SampleCommandTests
 
     public static IEnumerable<object[]> SampleArgumentMatrix()
     {
-            yield return new object[] { "--subscription sub1 --cluster mycluster --database db1 --table table1", false };
-            yield return new object[] { "--cluster-uri https://mycluster.kusto.windows.net --database db1 --table table1", true };
+        yield return new object[] { "--subscription sub1 --cluster mycluster --database db1 --table table1", false };
+        yield return new object[] { "--cluster-uri https://mycluster.kusto.windows.net --database db1 --table table1", true };
     }
 
     // TODO: jong - Figure out why failing

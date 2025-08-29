@@ -5,13 +5,13 @@ using System.CommandLine;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
-using Azure.Mcp.TestUtilities;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.Log;
 
@@ -75,8 +75,8 @@ public sealed class ResourceLogQueryCommandTests
                 .Returns(mockResults);
         }
 
-    // Act
-    var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(ArgSplitter.SplitArgs(args)));
+        // Act
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(ArgSplitter.SplitArgs(args)));
 
         // Assert
         Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
@@ -112,7 +112,7 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(mockResults);
 
-        var args = _commandDefinition.Parse(ArgSplitter.SplitArgs($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"") );
+        var args = _commandDefinition.Parse(ArgSplitter.SplitArgs($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\""));
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -183,7 +183,7 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(mockResults);
 
-        var args = _commandDefinition.Parse(ArgSplitter.SplitArgs($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"") );
+        var args = _commandDefinition.Parse(ArgSplitter.SplitArgs($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\""));
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -216,7 +216,7 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<List<JsonNode>>(new Exception("Test error")));
 
-        var args = _commandDefinition.Parse(ArgSplitter.SplitArgs($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"") );
+        var args = _commandDefinition.Parse(ArgSplitter.SplitArgs($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\""));
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -246,7 +246,7 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(mockResults);
 
-        var args = _commandDefinition.Parse(ArgSplitter.SplitArgs($"--subscription {_knownSubscription} --resource-id \"{complexResourceId}\" --table {table} --query \"{query}\"") );
+        var args = _commandDefinition.Parse(ArgSplitter.SplitArgs($"--subscription {_knownSubscription} --resource-id \"{complexResourceId}\" --table {table} --query \"{query}\""));
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
