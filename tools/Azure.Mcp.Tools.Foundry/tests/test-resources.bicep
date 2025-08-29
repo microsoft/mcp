@@ -176,8 +176,8 @@ resource searchIndexDeploymentScript 'Microsoft.Resources/deploymentScripts@2023
       Set-AzContext -SubscriptionId $subscriptionId
 
       # Get access token for Azure management API
-      $context = Get-AzContext
-      $token = [Microsoft.Azure.Commands.Common.Authentication.AzureSession]::Instance.AuthenticationFactory.Authenticate($context.Account, $context.Environment, $context.Tenant.Id, $null, "${environment().resourceManager}").AccessToken
+      $accessToken = Get-AzAccessToken -ResourceUrl "${environment().resourceManager}"
+      $token = $accessToken.Token
 
       # Get search service admin keys using REST API
       $adminKeysUri = "${environment().resourceManager}subscriptions/$subscriptionId/resourceGroups/$resourceGroupName/providers/Microsoft.Search/searchServices/$searchServiceName/listAdminKeys?api-version=2023-11-01"
