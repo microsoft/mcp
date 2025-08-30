@@ -19,6 +19,7 @@ using Azure.Storage.Files.DataLake;
 using Azure.Storage.Files.Shares;
 using Azure.Storage.Files.Shares.Models;
 using Azure.Storage.Queues;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.Storage.Services;
 

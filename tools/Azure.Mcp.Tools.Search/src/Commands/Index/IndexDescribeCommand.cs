@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
 using Azure.Search.Documents.Indexes.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Search.Commands.Index;
 

@@ -5,10 +5,10 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.ResourceManager.Kusto;
+using Microsoft.Mcp.Core.Services.Caching;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
 

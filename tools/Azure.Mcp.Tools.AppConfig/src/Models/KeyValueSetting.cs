@@ -3,8 +3,6 @@
 
 namespace Azure.Mcp.Tools.AppConfig.Models;
 
-using ETag = Azure.Mcp.Core.Models.ETag;
-
 public class KeyValueSetting
 {
     public string Key { get; set; } = string.Empty;
