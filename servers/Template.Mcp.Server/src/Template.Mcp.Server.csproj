@@ -44,6 +44,33 @@
     <SelfContained>true</SelfContained>
     <IlcOptimizationPreference>Size</IlcOptimizationPreference>
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
+  </PropertyGroup>
+  <!-- .NET Tool Package settings -->
+  <PropertyGroup Condition="'$(BuildNative)' == 'true'">
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <PackageType>McpServer</PackageType>
+    <PackageId>Template.Mcp</PackageId>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <ToolCommandName>$(CliName)</ToolCommandName>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <!-- Keep these aligned with OS + arch build-matrix.json. -->
+    <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+  <!-- Properties for the root (RID-less) .NET Tool package -->
+  <PropertyGroup Condition="'$(BuildNative)' == 'true' and '$(RuntimeIdentifier)' == ''">
+    <PackageDescription>Template MCP Server - Basic Model Context Protocol implementation</PackageDescription>
+    <PackageTags>template;mcp;</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <McpServerJsonTemplateFile>../../.mcp/server.json</McpServerJsonTemplateFile>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(BuildNative)' == 'true' and '$(RuntimeIdentifier)' == ''">
+    <None Include="../../../README.md" Pack="true" PackagePath="./README.md" />
+  </ItemGroup>
+  <!-- Properties for the RID-specific .NET Tool packages -->
+  <PropertyGroup Condition="'$(BuildNative)' == 'true' and '$(RuntimeIdentifier)' != ''">
+    <PackageDescription>Template MCP Server - Basic Model Context Protocol implementation. Internal implementation package for $(RuntimeIdentifier).</PackageDescription>
   </PropertyGroup>
 
   <!-- Debug configuration -->
@@ -67,4 +94,5 @@
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 
+  <Import Project="..\..\PackServerJson.targets" />
 </Project>
