@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DotNetCliTool Version="2">
+  <Commands>
+    <Command Name="__CommandName__" />
+  </Commands>
+  <RuntimeIdentifierPackages>
+    <RuntimeIdentifierPackage RuntimeIdentifier="__RuntimeIdentifier__" Id="__Id__" />
+  </RuntimeIdentifierPackages>
+</DotNetCliTool>
