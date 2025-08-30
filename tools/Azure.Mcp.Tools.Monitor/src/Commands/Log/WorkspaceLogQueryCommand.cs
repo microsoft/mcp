@@ -6,6 +6,8 @@ using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Log;
 

@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.MySql.Json;
 using Azure.Mcp.Tools.MySql.Options.Server;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.MySql.Commands.Server;
 
