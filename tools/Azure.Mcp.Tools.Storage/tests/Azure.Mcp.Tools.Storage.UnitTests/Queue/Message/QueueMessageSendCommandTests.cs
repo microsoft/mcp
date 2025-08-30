@@ -2,12 +2,13 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
-using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Commands.Queue.Message;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
