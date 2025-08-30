@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Options;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels;
 

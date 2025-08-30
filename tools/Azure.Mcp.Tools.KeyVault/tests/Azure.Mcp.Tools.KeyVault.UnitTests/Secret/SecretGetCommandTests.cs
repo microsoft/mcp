@@ -4,13 +4,13 @@
 using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.KeyVault.Commands.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -31,6 +31,8 @@ public class SecretGetCommandTests
     private const string _knownSecretName = "knownSecretName";
     private const string _knownSecretValue = "knownSecretValue";
     private readonly KeyVaultSecret _knownKeyVaultSecret;
+
+    public CommandContext Context => _context;
 
     public SecretGetCommandTests()
     {
@@ -67,7 +69,7 @@ public class SecretGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(Context, args);
 
         // Assert
         Assert.NotNull(response);
@@ -93,7 +95,7 @@ public class SecretGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(Context, args);
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
@@ -122,7 +124,7 @@ public class SecretGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(Context, args);
 
         // Assert
         Assert.NotNull(response);

@@ -3,6 +3,7 @@
 
 using System.Text.Json.Nodes;
 using Azure.Core;
+using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;

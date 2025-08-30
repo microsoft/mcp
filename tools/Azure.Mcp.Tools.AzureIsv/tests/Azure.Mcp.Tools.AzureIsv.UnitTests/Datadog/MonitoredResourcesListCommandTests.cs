@@ -4,11 +4,11 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
 using Azure.Mcp.Tools.AzureIsv.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;

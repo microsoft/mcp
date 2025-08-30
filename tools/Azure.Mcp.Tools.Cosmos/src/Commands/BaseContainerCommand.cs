@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Cosmos.Options;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;
 

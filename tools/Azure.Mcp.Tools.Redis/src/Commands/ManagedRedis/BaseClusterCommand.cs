@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Redis.Options.ManagedRedis;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Redis.Commands.ManagedRedis;
 

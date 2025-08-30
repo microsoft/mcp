@@ -9,7 +9,7 @@ public class KeyValueSetting
     public string Value { get; set; } = string.Empty;
     public string Label { get; set; } = string.Empty;
     public string ContentType { get; set; } = string.Empty;
-    public ETag ETag { get; set; } = new();
+    public Microsoft.Mcp.Core.Models.ETag ETag { get; set; } = new();
     public DateTimeOffset? LastModified { get; set; }
     public bool? Locked { get; set; }
 }
