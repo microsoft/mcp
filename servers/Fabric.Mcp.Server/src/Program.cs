@@ -5,19 +5,20 @@ using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using System.Text.Json;
-using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Caching;
 
 internal class Program
 {
@@ -63,7 +64,7 @@ internal class Program
             new Azure.Mcp.Core.Areas.Group.GroupSetup(),
             new Azure.Mcp.Core.Areas.Server.ServerSetup(),
             new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
-            new Azure.Mcp.Core.Areas.Tools.ToolsSetup(),
+            new Microsoft.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Fabric areas
         ];
     }
