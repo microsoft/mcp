@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.Mcp.Tools.FunctionApp.Options.FunctionApp;
 using Azure.Mcp.Tools.FunctionApp.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
 

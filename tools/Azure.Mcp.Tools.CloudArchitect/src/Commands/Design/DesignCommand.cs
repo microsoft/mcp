@@ -1,17 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Text.Json;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Models;
 using Azure.Mcp.Tools.CloudArchitect.Models;
 using Azure.Mcp.Tools.CloudArchitect.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.CloudArchitect.Commands.Design;
 

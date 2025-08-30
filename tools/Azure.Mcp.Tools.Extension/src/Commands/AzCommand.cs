@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Tools.Extension.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
