@@ -199,7 +199,7 @@ public class MarketplaceService(ITenantService tenantService)
         );
         if (!string.IsNullOrEmpty(pricingAudience))
         {
-            headers["PricingAudience"] = pricingAudience;
+            headers["x-ms-pricing-audience"] = pricingAudience;
         }
 
         return productDetails ?? throw new JsonException("Failed to deserialize marketplace response to ProductDetails.");
@@ -225,21 +225,6 @@ public class MarketplaceService(ITenantService tenantService)
         var tokenCredential = await GetCredential(tenant);
         return await tokenCredential
             .GetTokenAsync(tokenRequestContext, CancellationToken.None);
-    }
-
-    private static void ValidateRequiredParameters(string subscription)
-    {
-        if (string.IsNullOrWhiteSpace(subscription))
-            throw new ArgumentException("Subscription ID cannot be null or empty.", nameof(subscription));
-    }
-
-    private static void ValidateRequiredParameters(string productId, string subscription)
-    {
-        if (string.IsNullOrWhiteSpace(productId))
-            throw new ArgumentException("Product ID cannot be null or empty.", nameof(productId));
-
-        if (string.IsNullOrWhiteSpace(subscription))
-            throw new ArgumentException("Subscription ID cannot be null or empty.", nameof(subscription));
     }
 
     private async Task<T> ExecuteMarketplaceRequestAsync<T>(
