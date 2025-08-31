@@ -43,7 +43,7 @@ try {
     }
 
     # Locate azmcp CLI artifact (platform & build-type agnostic)
-    $cliBinDir = Join-Path $repoRoot "core/src/AzureMcp.Cli/bin/Release"
+    $cliBinDir = Join-Path $repoRoot "servers/Azure.Mcp.Server/src/bin/Release"
     $platformIsWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)
 
     # Acceptable artifact name candidates in precedence order
