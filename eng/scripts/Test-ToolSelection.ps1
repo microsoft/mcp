@@ -13,10 +13,10 @@
 .PARAMETER SkipIfMissingCredentials
     Skip the test if Azure OpenAI credentials are not configured (default: true in CI)
 
-.PARAMETER UseToolsFile
+.PARAMETER ToolsFile$ToolsFile
     Use static JSON file for tools instead of dynamic loading
 
-.PARAMETER UsePromptsFile
+.PARAMETER PromptsFile
     Use custom prompts file (.md or .json format)
 
 .PARAMETER OutputMarkdown
@@ -37,7 +37,7 @@
     
 .EXAMPLE
     # Use custom tools file
-    .\Test-ToolSelection.ps1 -UseToolsFile "my-tools.json"
+    .\Test-ToolSelection.ps1 -ToolsFile "my-tools.json"
     
 .EXAMPLE
     # Generate markdown output
@@ -49,13 +49,13 @@
     
 .EXAMPLE
     # Full custom analysis
-    .\Test-ToolSelection.ps1 -UseToolsFile "custom-tools.json" -UsePromptsFile "custom-prompts.md" -OutputMarkdown
+    .\Test-ToolSelection.ps1 -ToolsFile "custom-tools.json" -PromptsFile "custom-prompts.md" -OutputMarkdown
 #>
 
 param(
     [switch]$SkipIfMissingCredentials,
-    [string]$UseToolsFile,
-    [string]$UsePromptsFile,
+    [string]$ToolsFile,
+    [string]$PromptsFile,
     [switch]$OutputMarkdown,
     [switch]$ValidateMode,
     [string]$ToolDescription,
@@ -64,10 +64,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 3.0
-. (Join-Path $PSScriptRoot '..' 'common' 'scripts' 'common.ps1')
+. "$PSScriptRoot\..\common\scripts\common.ps1"
 
-$toolSelectionPath = Join-Path $RepoRoot 'eng/tools/ToolDescriptionEvaluator'
-$defaultMarkdownPrompts = Join-Path $RepoRoot 'docs/e2eTestPrompts.md'
+$toolSelectionPath = "$RepoRoot\eng\tools\ToolDescriptionEvaluator"
+$defaultMarkdownPrompts = "$RepoRoot\docs\e2eTestPrompts.md"
 
 if (-not (Test-Path $toolSelectionPath)) {
     Write-Host "⏭️  Tool Description Evaluator utility not found at $toolSelectionPath - skipping"
@@ -79,12 +79,12 @@ Push-Location $toolSelectionPath
 
 try {
     # Check if we have the required sources for dynamic loading
-    $hasSourceCode = Test-Path (Join-Path $RepoRoot 'servers/Azure.Mcp.Server/src')
+    $hasSourceCode = Test-Path "$RepoRoot\servers\Azure.Mcp.Server\src"
     $hasMarkdownPrompts = Test-Path $defaultMarkdownPrompts
     
     # Check if we have fallback test data files
-    $hasToolsData = Test-Path (Join-Path $toolSelectionPath 'tools.json')
-    $hasPromptsData = Test-Path (Join-Path $toolSelectionPath 'prompts.json')
+    $hasToolsData = Test-Path "$toolSelectionPath\tools.json"
+    $hasPromptsData = Test-Path "$toolSelectionPath\prompts.json"
     $hasApiKey = -not [string]::IsNullOrEmpty($env:TEXT_EMBEDDING_API_KEY)
     $hasEndpoint = -not [string]::IsNullOrEmpty($env:AOAI_ENDPOINT)
     
@@ -127,8 +127,8 @@ try {
     # Resolve custom file paths relative to repo root if they're not absolute
     $resolvedToolsFile = $null
     $resolvedPromptsFile = $null
-    if (-not [string]::IsNullOrEmpty($UseToolsFile)) {
-        $candidate = if ([System.IO.Path]::IsPathRooted($UseToolsFile)) { $UseToolsFile } else { Join-Path $RepoRoot $UseToolsFile }
+    if (-not [string]::IsNullOrEmpty($ToolsFile)) {
+        $candidate = if ([System.IO.Path]::IsPathRooted($ToolsFile)) { $ToolsFile } else { Join-Path $RepoRoot $ToolsFile }
         $resolved = Resolve-Path -LiteralPath $candidate -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Path -First 1
 
         if (-not $resolved) {
@@ -140,8 +140,8 @@ try {
         $resolvedToolsFile = $resolved
     }
     
-    if (-not [string]::IsNullOrEmpty($UsePromptsFile)) {
-        $candidate = if ([System.IO.Path]::IsPathRooted($UsePromptsFile)) { $UsePromptsFile } else { Join-Path $RepoRoot $UsePromptsFile }
+    if (-not [string]::IsNullOrEmpty($PromptsFile)) {
+        $candidate = if ([System.IO.Path]::IsPathRooted($PromptsFile)) { $PromptsFile } else { Join-Path $RepoRoot $PromptsFile }
         $resolved = Resolve-Path -LiteralPath $candidate -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Path -First 1
 
         if (-not $resolved) {
