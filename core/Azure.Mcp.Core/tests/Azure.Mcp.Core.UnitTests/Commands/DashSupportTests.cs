@@ -2,6 +2,12 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.Deploy.Services.Util;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Services.Telemetry;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Commands;
@@ -22,7 +28,12 @@ public class DashSupportTests
         // After the fix: separator is '_'
 
         // Arrange & Act
-        var separator = CommandFactory.Separator;
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var logger = Substitute.For<ILogger<CommandFactory>>();
+        var telemetryService = Substitute.For<ITelemetryService>();
+        var commandFactory = new CommandFactory(serviceProvider, Enumerable.Empty<IAreaSetup>(), telemetryService, logger);
+
+        var separator = commandFactory.Separator;
 
         // Assert
         Assert.Equal('_', separator);

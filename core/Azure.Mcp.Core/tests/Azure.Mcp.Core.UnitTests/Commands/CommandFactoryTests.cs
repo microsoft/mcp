@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
 
@@ -33,7 +33,8 @@ public class CommandFactoryTests
         // by ensuring the separator is underscore instead of dash
 
         // Arrange & Act
-        var separator = CommandFactory.Separator;
+        var commandFactory = new CommandFactory(_serviceProvider, Enumerable.Empty<IAreaSetup>(), _telemetryService, _logger);
+        var separator = commandFactory.Separator;
 
         // Assert
         Assert.Equal('_', separator);

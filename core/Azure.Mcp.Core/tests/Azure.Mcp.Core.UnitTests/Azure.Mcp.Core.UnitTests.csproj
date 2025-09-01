@@ -14,5 +14,8 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="coverlet.collector" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Areas\Server\Helpers\" />
+  </ItemGroup>
 </Project>
 

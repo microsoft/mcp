@@ -4,13 +4,15 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
-using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using NSubstitute;
@@ -80,17 +82,17 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var mockTelemetry = CreateMockTelemetryService();
         var options = CreateOptions();
 
         // Act
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, mockTelemetry, logger);
 
         // Assert
         Assert.NotNull(runtime);
-        Assert.IsType<McpRuntime>(runtime);
+        Assert.IsType<AzureMcpRuntime>((object)runtime);
         Assert.IsAssignableFrom<IMcpRuntime>(runtime);
     }
 
@@ -99,13 +101,13 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockTelemetry = CreateMockTelemetryService();
         var options = CreateOptions();
 
         // Act & Assert
         var exception = Assert.Throws<ArgumentNullException>(() =>
-            new McpRuntime(null!, options, mockTelemetry, logger));
+            new AzureMcpRuntime(null!, options, mockTelemetry, logger));
         Assert.Equal("toolLoader", exception.ParamName);
     }
 
@@ -114,13 +116,13 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var mockTelemetry = CreateMockTelemetryService();
 
         // Act & Assert
         var exception = Assert.Throws<ArgumentNullException>(() =>
-            new McpRuntime(mockToolLoader, null!, mockTelemetry, logger));
+            new AzureMcpRuntime(mockToolLoader, null!, mockTelemetry, logger));
         Assert.Equal("options", exception.ParamName);
     }
 
@@ -129,13 +131,13 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
 
         // Act & Assert
         var exception = Assert.Throws<ArgumentNullException>(() =>
-            new McpRuntime(mockToolLoader, options, null!, logger));
+            new AzureMcpRuntime(mockToolLoader, options, null!, logger));
         Assert.Equal("telemetry", exception.ParamName);
     }
 
@@ -149,7 +151,7 @@ public class McpRuntimeTests
 
         // Act & Assert
         var exception = Assert.Throws<ArgumentNullException>(() =>
-            new McpRuntime(mockToolLoader, options, mockTelemetry, null!));
+            new AzureMcpRuntime(mockToolLoader, options, mockTelemetry, null!));
         Assert.Equal("logger", exception.ParamName);
     }
 
@@ -158,7 +160,7 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var mockTelemetry = CreateMockTelemetryService();
         var options = CreateOptions(new ServiceStartOptions
@@ -168,7 +170,7 @@ public class McpRuntimeTests
         });
 
         // Act
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, mockTelemetry, logger);
 
         // Assert
         Assert.NotNull(runtime);
@@ -181,7 +183,7 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
 
         var mockTelemetry = CreateMockTelemetryService();
@@ -190,7 +192,7 @@ public class McpRuntimeTests
             .Returns(ValueTask.FromResult<Activity?>(activity));
 
         var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, mockTelemetry, logger);
 
         var expectedResult = new ListToolsResult
         {
@@ -220,7 +222,7 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
 
         var mockTelemetry = CreateMockTelemetryService();
@@ -229,7 +231,7 @@ public class McpRuntimeTests
             .Returns(ValueTask.FromResult<Activity?>(activity));
 
         var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, mockTelemetry, logger);
 
         var expectedResult = new CallToolResult
         {
@@ -270,10 +272,10 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
 
         var expectedResult = new ListToolsResult { Tools = new List<Tool>() };
         var request = CreateListToolsRequest();
@@ -295,10 +297,10 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
 
         var expectedResult = new CallToolResult { Content = new List<ContentBlock>() };
         var request = CreateCallToolRequest();
@@ -320,7 +322,7 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
 
         var mockTelemetry = CreateMockTelemetryService();
@@ -329,7 +331,7 @@ public class McpRuntimeTests
             .Returns(ValueTask.FromResult<Activity?>(activity));
 
         var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, mockTelemetry, logger);
 
         var request = CreateListToolsRequest();
         var expectedException = new InvalidOperationException("Tool loader failed");
@@ -354,7 +356,7 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
 
         var mockTelemetry = CreateMockTelemetryService();
@@ -363,7 +365,7 @@ public class McpRuntimeTests
             .Returns(ValueTask.FromResult<Activity?>(activity));
 
         var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, mockTelemetry, logger);
 
         var request = CreateCallToolRequest();
         var expectedException = new InvalidOperationException("Tool loader failed");
@@ -395,12 +397,12 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
 
         // Test with ReadOnly = false and no services
         var options1 = CreateOptions(new ServiceStartOptions { ReadOnly = false });
-        var runtime1 = new McpRuntime(mockToolLoader, options1, CreateMockTelemetryService(), logger);
+        var runtime1 = new AzureMcpRuntime(mockToolLoader, options1, CreateMockTelemetryService(), logger);
         Assert.NotNull(runtime1);
 
         // Test with ReadOnly = null and multiple services
@@ -409,7 +411,7 @@ public class McpRuntimeTests
             ReadOnly = null,
             Namespace = new[] { "storage", "keyvault", "monitor" }
         });
-        var runtime2 = new McpRuntime(mockToolLoader, options2, CreateMockTelemetryService(), logger);
+        var runtime2 = new AzureMcpRuntime(mockToolLoader, options2, CreateMockTelemetryService(), logger);
         Assert.NotNull(runtime2);
 
         // Test with empty service array
@@ -418,7 +420,7 @@ public class McpRuntimeTests
             ReadOnly = true,
             Namespace = Array.Empty<string>()
         });
-        var runtime3 = new McpRuntime(mockToolLoader, options3, CreateMockTelemetryService(), logger);
+        var runtime3 = new AzureMcpRuntime(mockToolLoader, options3, CreateMockTelemetryService(), logger);
         Assert.NotNull(runtime3);
     }
 
@@ -427,10 +429,10 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
-        IMcpRuntime runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        IMcpRuntime runtime = new AzureMcpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
 
         // Setup mock responses
         var listToolsResult = new ListToolsResult { Tools = new List<Tool>() };
@@ -454,10 +456,10 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
 
         var expectedResult = new ListToolsResult { Tools = new List<Tool>() };
         mockToolLoader.ListToolsHandler(null!, Arg.Any<CancellationToken>())
@@ -476,7 +478,7 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
 
@@ -485,7 +487,7 @@ public class McpRuntimeTests
         mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>())
             .Returns(ValueTask.FromResult<Activity?>(activity));
 
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, mockTelemetry, logger);
 
         // Act
         var result = await runtime.CallToolHandler(null!, CancellationToken.None);
@@ -513,12 +515,12 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions(new ServiceStartOptions { Namespace = null });
 
         // Act
-        var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
 
         // Assert
         Assert.NotNull(runtime);
@@ -530,10 +532,10 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
 
         var expectedResult = new CallToolResult { Content = new List<ContentBlock>() };
         var request = CreateCallToolRequest();
@@ -555,10 +557,10 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
 
         var expectedResult = new ListToolsResult { Tools = new List<Tool>() };
         var request = CreateListToolsRequest();
@@ -580,12 +582,12 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
 
         // Act
-        var runtime = new McpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, CreateMockTelemetryService(), logger);
 
         // Assert
         Assert.NotNull(runtime);
@@ -598,11 +600,11 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
         var mockTelemetry = CreateMockTelemetryService();
         var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, mockTelemetry, logger);
 
         var expectedResult = new CallToolResult
         {
@@ -646,9 +648,9 @@ public class McpRuntimeTests
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
         var mockTelemetryService = CreateMockTelemetryService();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
 
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetryService, logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, mockTelemetryService, logger);
 
         // Act
         await runtime.DisposeAsync();
@@ -664,13 +666,13 @@ public class McpRuntimeTests
         var serviceProvider = CreateServiceProvider();
         var options = CreateOptions();
         var mockTelemetryService = CreateMockTelemetryService();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
 
         // Create a mock that returns null (edge case)
         var mockToolLoader = Substitute.For<IToolLoader>();
         mockToolLoader.DisposeAsync().Returns(ValueTask.CompletedTask);
 
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetryService, logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, mockTelemetryService, logger);
 
         // Act & Assert - should not throw
         await runtime.DisposeAsync();
@@ -685,12 +687,12 @@ public class McpRuntimeTests
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
         var mockTelemetryService = CreateMockTelemetryService();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
 
         var expectedException = new InvalidOperationException("Tool loader disposal failed");
         mockToolLoader.DisposeAsync().Returns(ValueTask.FromException(expectedException));
 
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetryService, logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, mockTelemetryService, logger);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => runtime.DisposeAsync().AsTask());
@@ -705,9 +707,9 @@ public class McpRuntimeTests
         var mockToolLoader = Substitute.For<IToolLoader>();
         var options = CreateOptions();
         var mockTelemetryService = CreateMockTelemetryService();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
 
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetryService, logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, mockTelemetryService, logger);
 
         // Act - dispose multiple times
         await runtime.DisposeAsync();
@@ -723,7 +725,7 @@ public class McpRuntimeTests
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
-        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<AzureMcpRuntime>>();
         var mockToolLoader = Substitute.For<IToolLoader>();
 
         var mockTelemetry = CreateMockTelemetryService();
@@ -732,7 +734,7 @@ public class McpRuntimeTests
             .Returns(ValueTask.FromResult<Activity?>(activity));
 
         var options = CreateOptions();
-        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+        var runtime = new AzureMcpRuntime(mockToolLoader, options, mockTelemetry, logger);
 
         var errorText = "Some error details";
         var expectedResult = new CallToolResult

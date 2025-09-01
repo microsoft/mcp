@@ -4,7 +4,7 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Areas.Server.Commands;
-using Azure.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Areas.Server.Options;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;

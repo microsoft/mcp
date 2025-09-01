@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Areas.Server.Commands;
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
-using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
-using Azure.Mcp.Core.Areas.Server.Options;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Server;
 using Xunit;
 
@@ -56,7 +57,7 @@ public class ServiceCollectionExtensionsTests
 
         // Verify runtime
         Assert.NotNull(provider.GetService<IMcpRuntime>());
-        Assert.IsType<McpRuntime>(provider.GetService<IMcpRuntime>());
+        Assert.IsType<Core.Areas.Server.Commands.Runtime.AzureMcpRuntime>(provider.GetService<IMcpRuntime>());
     }
 
     [Fact]
@@ -265,7 +266,7 @@ public class ServiceCollectionExtensionsTests
 
         // Verify runtime
         Assert.NotNull(provider.GetService<IMcpRuntime>());
-        Assert.IsType<McpRuntime>(provider.GetService<IMcpRuntime>());
+        Assert.IsType<AzureMcpRuntime>(provider.GetService<IMcpRuntime>());
     }
 
     [Theory]
