@@ -11,4 +11,6 @@ public interface IFabricPublicApiService
     Task<IEnumerable<string>> ListFabricWorkloadsAsync();
 
     Task<FabricWorkloadPublicApi> ListFabricWorkloadPublicApis(string workload);
+
+    Task<IDictionary<string, string>> GetExamplesAsync(string workloadType);
 }

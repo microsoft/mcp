@@ -9,7 +9,7 @@ public static class FabricOptionDefinitions
 
     public static readonly Option<string> WorkloadType = new(
         $"--{WorkloadTypeName}",
-        "The type of Microsoft Fabric workload. A list of valid values can be retrived by calling the `list-fabric-workloads` command."
+        "The type of Microsoft Fabric workload."
     )
     {
         IsRequired = true

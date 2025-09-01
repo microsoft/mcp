@@ -8,17 +8,19 @@ using Microsoft.Extensions.Logging;
 
 namespace Fabric.Mcp.Tools.PublicApi.Commands.PublicApis;
 
-public sealed class ListPublicWorkloadsCommand(ILogger<ListPublicWorkloadsCommand> logger) : GlobalCommand<BaseFabricOptions>()
+public sealed class DiscoverPublicWorkloadsCommand(ILogger<DiscoverPublicWorkloadsCommand> logger) : GlobalCommand<BaseFabricOptions>()
 {
-    private const string CommandTitle = "List Fabric Workloads";
+    private const string CommandTitle = "List Available Fabric Workloads";
 
-    private readonly ILogger<ListPublicWorkloadsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<DiscoverPublicWorkloadsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public override string Name => "list";
 
     public override string Description =>
         """
-        List all workloads supported by Microsoft Fabric public APIs.
+        List all Microsoft Fabric workload types that have public API specifications available.
+        Returns workload names like 'notebook', 'report', 'platform', etc. that can be used 
+        with other commands to retrieve their specific API documentation.
         """;
 
     public override string Title => CommandTitle;
