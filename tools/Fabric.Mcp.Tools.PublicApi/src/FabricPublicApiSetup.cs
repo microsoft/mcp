@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Fabric.Mcp.Tools.PublicApi.Commands.PublicApis;
+using Fabric.Mcp.Tools.PublicApi.Commands.BestPractices;
 using Fabric.Mcp.Tools.PublicApi.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,7 @@ namespace Fabric.Mcp.Tools.PublicApi;
 
 public class FabricPublicApiSetup : IAreaSetup
 {
-    public string Name => "fabric";
+    public string Name => "publicapis";
 
     public void ConfigureServices(IServiceCollection services)
     {
@@ -22,30 +23,34 @@ public class FabricPublicApiSetup : IAreaSetup
 
     public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
     {
-        var fabric = new CommandGroup(Name,
+        var fabricPublicApis = new CommandGroup(Name,
             """
-            Microsoft Fabric operations - Commands for managing and accessing Microsoft Fabric workspaces, 
-            items, and resources through the public APIs. Use this tool when you need to list workspaces, 
-            get workspace details, list items within workspaces, or get detailed information about specific 
-            Fabric items like lakehouses, reports, notebooks, and other Fabric artifacts. This tool focuses 
-            on read-only operations to discover and explore Fabric resources. This tool is a hierarchical 
-            MCP command router where sub-commands are routed to MCP servers that require specific fields 
-            inside the "parameters" object. To invoke a command, set "command" and wrap its arguments in 
-            "parameters". Set "learn=true" to discover available sub-commands for different Microsoft Fabric 
-            operations including workspace and item management. Note that this tool requires appropriate 
-            Fabric permissions and will only access resources accessible to the authenticated user.
+            Microsoft Fabric Public API Access - Retrieve OpenAPI specifications and example files 
+            from Microsoft Fabric's official API documentation. Use this tool when you need to:
+            - Build applications that integrate with Microsoft Fabric APIs
+            - Understand API endpoints, request/response schemas, and authentication requirements
+            - Generate client SDKs or API wrappers for Fabric services
+            - Review example API calls and responses for development guidance
+            - Explore available APIs across different Fabric workloads
+            This tool provides read-only access to Microsoft Fabric's public API documentation 
+            repository on GitHub. It does NOT interact with live Fabric resources or require 
+            authentication - it only retrieves API specifications and examples.
             """);
-        rootGroup.AddSubGroup(fabric);
+        rootGroup.AddSubGroup(fabricPublicApis);
 
         // Create Fabric subgroups
-        var publicApis = new CommandGroup("publicapis", "Fabric public APIS - Commands for fetching resources and learning about Fabric public APIs");
-        fabric.AddSubGroup(publicApis);
+        var bestPractices = new CommandGroup("best-practices", "API Examples and Best Practices - Commands for retrieving example API request/response files and implementation guidance from Microsoft Fabric's documentation repository.");
+        fabricPublicApis.AddSubGroup(bestPractices);
 
-        var apiSpecs = new CommandGroup("apispecs", "Fabric API Specs - Commands for listing and retrieving Microsoft Fabric API specifications.");
-        publicApis.AddSubGroup(apiSpecs);
+        fabricPublicApis.AddCommand("discover-workloads", new DiscoverPublicWorkloadsCommand(loggerFactory.CreateLogger<DiscoverPublicWorkloadsCommand>()));
+        fabricPublicApis.AddCommand("get", new GetWorkloadApisCommand(loggerFactory.CreateLogger<GetWorkloadApisCommand>()));
+        fabricPublicApis.AddCommand("get-platform", new GetPlatformApisCommand(loggerFactory.CreateLogger<GetPlatformApisCommand>()));
 
-        // apiSpecs.AddCommand("list", new ListPublicWorkloadsCommand(loggerFactory.CreateLogger<ListPublicWorkloadsCommand>()));
-        apiSpecs.AddCommand("details", new GetWorkloadApisCommand(loggerFactory.CreateLogger<GetWorkloadApisCommand>()));
-
+        // Add best practices commands
+        bestPractices.AddCommand("get", new GetExamplesCommand(loggerFactory.CreateLogger<GetExamplesCommand>()));
+        
+        //fabricPublicApis.AddCommand("item-definition", new GetWorkloadApisCommand(loggerFactory.CreateLogger<GetWorkloadApisCommand>()));
+        //bestPractices.AddCommand("long-running-operations", new GetWorkloadApisCommand(loggerFactory.CreateLogger<GetWorkloadApisCommand>()));
+        //bestPractices.AddCommand("pagination", new GetWorkloadApisCommand(loggerFactory.CreateLogger<GetWorkloadApisCommand>()));
     }
 }

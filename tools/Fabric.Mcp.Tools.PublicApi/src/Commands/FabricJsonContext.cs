@@ -3,13 +3,15 @@
 
 using System.Text.Json.Serialization;
 using Fabric.Mcp.Tools.PublicApi.Commands.PublicApis;
+using Fabric.Mcp.Tools.PublicApi.Commands.BestPractices;
 using Fabric.Mcp.Tools.PublicApi.Models;
 
 namespace Fabric.Mcp.Tools.PublicApi.Commands;
 
 
 [JsonSerializable(typeof(FabricWorkloadPublicApi))]
-[JsonSerializable(typeof(ListPublicWorkloadsCommand.ItemListCommandResult))]
+[JsonSerializable(typeof(DiscoverPublicWorkloadsCommand.ItemListCommandResult))]
+[JsonSerializable(typeof(GetExamplesCommand.ExampleFileResult))]
 public partial class FabricJsonContext : JsonSerializerContext
 {
 }

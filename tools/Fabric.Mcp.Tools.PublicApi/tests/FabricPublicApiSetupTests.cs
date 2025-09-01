@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Services.Http;
 using Fabric.Mcp.Tools.PublicApi.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NSubstitute;
 
 namespace Fabric.Mcp.Tools.PublicApi.Tests;
 
@@ -14,6 +17,8 @@ public class FabricPublicApiSetupTests
     {
         // Arrange
         var services = new ServiceCollection();
+        services.AddSingleton(Substitute.For<IHttpClientService>());
+        services.AddLogging();
         var setup = new FabricPublicApiSetup();
 
         // Act
@@ -39,16 +44,15 @@ public class FabricPublicApiSetupTests
         setup.RegisterCommands(rootGroup, loggerFactory);
 
         // Assert
-        var fabricGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "fabric");
-        Assert.NotNull(fabricGroup);
+        var publicApisGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "publicapis");
+        Assert.NotNull(publicApisGroup);
         
-        var publicApiGroup = fabricGroup.SubGroup.FirstOrDefault(g => g.Name == "publicapi");
-        Assert.NotNull(publicApiGroup);
+        var bestPracticesGroup = publicApisGroup.SubGroup.FirstOrDefault(g => g.Name == "best-practices");
+        Assert.NotNull(bestPracticesGroup);
 
-        var apiSpecGroup = fabricGroup.SubGroup.FirstOrDefault(g => g.Name == "apispec");
-        Assert.NotNull(apiSpecGroup);
-
-        Assert.Contains("list", apiSpecGroup.Commands.Keys);
-        Assert.Contains("details", apiSpecGroup.Commands.Keys);
+        Assert.Contains("discover-workloads", publicApisGroup.Commands.Keys);
+        Assert.Contains("get", publicApisGroup.Commands.Keys);
+        Assert.Contains("discover-examples", bestPracticesGroup.Commands.Keys);
+        Assert.Contains("get", bestPracticesGroup.Commands.Keys);
     }
 }
