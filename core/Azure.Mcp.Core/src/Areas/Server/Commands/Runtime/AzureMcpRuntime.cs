@@ -18,11 +18,11 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.Runtime;
 /// Implementation of the MCP runtime that delegates tool discovery and invocation to a tool loader.
 /// Provides logging and configuration support for the MCP server.
 /// </summary>
-public sealed class McpRuntime : IMcpRuntime
+public sealed class AzureMcpRuntime : IMcpRuntime
 {
     private readonly IToolLoader _toolLoader;
     private readonly IOptions<ServiceStartOptions> _options;
-    private readonly ILogger<McpRuntime> _logger;
+    private readonly ILogger<AzureMcpRuntime> _logger;
 
     private readonly ITelemetryService _telemetry;
 
@@ -33,11 +33,11 @@ public sealed class McpRuntime : IMcpRuntime
     /// <param name="options">Configuration options for the MCP server.</param>
     /// <param name="logger">Logger for runtime operations.</param>
     /// <exception cref="ArgumentNullException">Thrown if any required dependencies are null.</exception>
-    public McpRuntime(
+    public AzureMcpRuntime(
         IToolLoader toolLoader,
         IOptions<ServiceStartOptions> options,
         ITelemetryService telemetry,
-        ILogger<McpRuntime> logger)
+        ILogger<AzureMcpRuntime> logger)
     {
         _toolLoader = toolLoader ?? throw new ArgumentNullException(nameof(toolLoader));
         _options = options ?? throw new ArgumentNullException(nameof(options));
