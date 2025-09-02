@@ -19,7 +19,7 @@ function New-StringHash([string[]]$strings) {
     return [BitConverter]::ToString($hashBytes) -replace '-', ''
 }
 
-$testResourcesDirectory = Resolve-Path -Path  "$RepoRoot/areas/$($Area.ToLower())/tests" -ErrorAction SilentlyContinue
+$testResourcesDirectory = Resolve-Path -Path  "$RepoRoot/tools/Azure.Mcp.Tools.$($Area.ToLower())/tests" -ErrorAction SilentlyContinue
 $bicepPath = "$testResourcesDirectory/test-resources.bicep"
 if(!(Test-Path -Path $bicepPath)) {
     Write-Error "Test resources bicep template '$bicepPath' does not exist."

@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 internal class Program
 {
-    private static IAreaSetup[] Areas = RegisterAreas();
+    private static IAreaSetup[] Areas = RegisterToolsets();
 
     private static async Task<int> Main(string[] args)
     {
@@ -50,7 +50,7 @@ internal class Program
             return 1;
         }
     }
-    private static IAreaSetup[] RegisterAreas()
+    private static IAreaSetup[] RegisterToolsets()
     {
 
         return [
@@ -71,6 +71,7 @@ internal class Program
             new Azure.Mcp.Tools.Acr.AcrSetup(),
             new Azure.Mcp.Tools.Cosmos.CosmosSetup(),
             new Azure.Mcp.Tools.CloudArchitect.CloudArchitectSetup(),
+            new Azure.Mcp.Tools.EventHubs.EventHubsSetup(),
             new Azure.Mcp.Tools.Foundry.FoundrySetup(),
             new Azure.Mcp.Tools.FunctionApp.FunctionAppSetup(),
             new Azure.Mcp.Tools.Grafana.GrafanaSetup(),
