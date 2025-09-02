@@ -90,7 +90,7 @@ public class ProductListCommandTests : CommandTestsBase,
         Assert.Equal(JsonValueKind.Array, products.ValueKind);
 
         var productArray = products.EnumerateArray().ToArray();
-        var product =  productArray[0];
+        var product = productArray[0];
         Assert.True(product.TryGetProperty("uniqueProductId", out _));
         Assert.True(product.TryGetProperty("displayName", out _));
     }
