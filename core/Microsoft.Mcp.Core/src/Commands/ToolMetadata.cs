@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Commands;
+namespace Microsoft.Mcp.Core.Commands;
 
 /// <summary>
 /// Provides metadata about an MCP tool describing its behavioral characteristics.

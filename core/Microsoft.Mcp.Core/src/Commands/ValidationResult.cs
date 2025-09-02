@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Commands;
+namespace Microsoft.Mcp.Core.Commands;
 
 public class ValidationResult
 {
