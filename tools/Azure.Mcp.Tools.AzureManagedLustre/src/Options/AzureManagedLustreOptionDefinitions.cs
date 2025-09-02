@@ -8,6 +8,12 @@ public static class AzureManagedLustreOptionDefinitions
     public const string sku = "sku";
     public const string size = "size";
     public const string location = "location";
+    public const string fileSystem = "file-system";
+    public const string importPrefixes = "import-prefixes";
+    public const string conflictResolutionMode = "conflict-resolution-mode";
+    public const string maximumErrors = "maximum-errors";
+    public const string adminStatus = "admin-status";
+    public const string jobName = "job-name";
     public static readonly Option<string> SkuOption = new(
         $"--{sku}"
     )
@@ -38,5 +44,54 @@ public static class AzureManagedLustreOptionDefinitions
     {
         Description = LocationOption.Description,
         Required = false
+    };
+
+    public static readonly Option<string> FileSystemOption = new(
+        $"--{fileSystem}",
+        "The name of the Azure Managed Lustre file system (AMLFS)."
+    )
+    {
+        IsRequired = true
+    };
+
+    public static readonly Option<string[]> ImportPrefixesOption = new(
+        $"--{importPrefixes}",
+        "List of path prefixes in the linked HSM/Blob container to import. Provide multiple prefixes separated by spaces. If omitted, the entire container may be considered depending on service defaults."
+    )
+    {
+        IsRequired = false,
+        AllowMultipleArgumentsPerToken = true
+    };
+
+    public static readonly Option<string> ConflictResolutionModeOption = new(
+        $"--{conflictResolutionMode}",
+        "How to handle conflicts during import. Allowed values: OverwriteIfDirty, OverwriteAlways, Fail, Skip. Default: OverwriteAlways."
+    )
+    {
+        IsRequired = false
+    };
+
+    public static readonly Option<int?> MaximumErrorsOption = new(
+        $"--{maximumErrors}",
+        "Maximum number of errors before the import job fails fast. Default: 0 (fail on first error)."
+    )
+    {
+        IsRequired = false
+    };
+
+    public static readonly Option<string> AdminStatusOption = new(
+        $"--{adminStatus}",
+        "Administrative status of the job. Usually 'Active'."
+    )
+    {
+        IsRequired = false
+    };
+
+    public static readonly Option<string> JobNameOption = new(
+        $"--{jobName}",
+        "An optional name for the import job. If omitted a timestamp-based name will be generated."
+    )
+    {
+        IsRequired = false
     };
 }

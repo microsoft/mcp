@@ -11,6 +11,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added the following Azure Managed Lustre commands: [[#100](https://github.com/microsoft/mcp/issues/100)]
   - `azmcp_azuremanagedlustre_filesystem_get_sku_info`: Get information about Azure Managed Lustre SKU.
 - `azmcp_functionapp_get` can now list Function Apps on a resource group level.
+- Added the following Azure Managed Lustre command (preview / placeholder implementation):
+  - `azmcp_azuremanagedlustre_filesystem_importjob_create`: Create a manual import job for an Azure Managed Lustre filesystem (hydrates namespace from linked HSM/Blob; current release returns placeholder status until REST API integration ships).
 
 ### Features Removed
 
