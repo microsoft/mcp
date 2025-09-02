@@ -132,11 +132,6 @@ resource searchService 'Microsoft.Search/searchServices@2023-11-01' = {
       enforcement: 'Unspecified'
     }
     disableLocalAuth: true
-    authOptions: {
-      aadOrApiKey: {
-        aadAuthFailureMode: 'http401WithBearerChallenge'
-      }
-    }
   }
   identity: {
     type: 'SystemAssigned'
