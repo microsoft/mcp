@@ -13,6 +13,7 @@ $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 $wrapperSourcePath = "$RepoRoot/eng/npm/wrapper"
 $platformSourcePath = "$RepoRoot/eng/npm/platform"
+$nuspecSourcePath = "$RepoRoot/eng/dnx/nuspec"
 
 if(!$ArtifactsPath) {
     $ArtifactsPath = "$RepoRoot/.work/build"
@@ -38,15 +39,28 @@ try {
     foreach($wrapperJsonFile in $wrapperJsonFiles) {
         $serverDirectory = $wrapperJsonFile.Directory
         $serverName = $serverDirectory.Name
-        $platformOutputPath = "$OutputPath/$serverName/platform"
-        $wrapperOutputPath = "$OutputPath/$serverName/wrapper"
+        $npmPlatformOutputPath = "$OutputPath/$serverName/npm/platform"
+        $npmWrapperOutputPath = "$OutputPath/$serverName/npm/wrapper"
+        $nugetPlatformOutputPath = "$OutputPath/$serverName/nuget/platform"
+        $nugetWrapperOutputPath = "$OutputPath/$serverName/nuget/wrapper"
 
-        New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
-        New-Item -ItemType Directory -Force -Path $wrapperOutputPath | Out-Null
+        New-Item -ItemType Directory -Force -Path $npmPlatformOutputPath | Out-Null
+        New-Item -ItemType Directory -Force -Path $npmWrapperOutputPath | Out-Null
+        New-Item -ItemType Directory -Force -Path $nugetPlatformOutputPath | Out-Null
+        New-Item -ItemType Directory -Force -Path $nugetWrapperOutputPath | Out-Null
 
         $wrapperPackageJson = Get-Content $wrapperJsonFile -Raw | ConvertFrom-Json -AsHashtable
 
         $platformDirectories = Get-ChildItem -Path $serverDirectory -Directory
+
+        $tempNugetWrapperDir = Join-Path $nugetWrapperOutputPath "temp"
+        $wrapperToolDir = "$tempNugetWrapperDir/tools/$($platformPackageJson.targetFramework)/any"
+        New-Item -ItemType Directory -Force -Path $wrapperToolDir | Out-Null
+
+        (Get-Content -Path "$nuspecSourcePath/RuntimeAgnosticToolSettingsTemplate.xml") `
+            -replace "__CommandName__", $platformPackageJson.commandName `
+            Set-Content -Path "$wrapperToolDir/DotnetToolSettings.xml"
+        Copy-Item -Path "$serverDirectory/README.md" -Destination $tempNugetWrapperDir -Force
 
         # Build the project
         foreach ($platformDirectory in $platformDirectories) {
@@ -93,15 +107,42 @@ try {
             Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempFolder -Force
             Write-Host "Copied README.md, NOTICE.txt and LICENSE to $tempFolder"
 
-            Write-Host "Packaging $tempFolder into $platformOutputPath"
-            Invoke-LoggedCommand "npm pack $tempFolder --pack-destination '$platformOutputPath'" -GroupOutput | Tee-Object -Variable fileName
-            Write-Host "Package location: $platformOutputPath/$fileName" -ForegroundColor Yellow
+            Write-Host "Packaging $tempFolder into $npmPlatformOutputPath"
+            Invoke-LoggedCommand "npm pack $tempFolder --pack-destination '$npmPlatformOutputPath'" -GroupOutput | Tee-Object -Variable fileName
+            Write-Host "Package location: $npmPlatformOutputPath/$fileName" -ForegroundColor Yellow
 
             if ($UsePaths) {
-                $wrapperPackageJson.optionalDependencies[$platformPackageJson.name] = "file://$((Resolve-Path "$platformOutputPath/$fileName").Path.Replace('\', '/'))"
+                $wrapperPackageJson.optionalDependencies[$platformPackageJson.name] = "file://$((Resolve-Path "$npmPlatformOutputPath/$fileName").Path.Replace('\', '/'))"
             } else {
                 $wrapperPackageJson.optionalDependencies[$platformPackageJson.name] = $platformPackageJson.version
             }
+
+            # Create Nuget Packages
+            $tempPlatformDir = Join-Path $nugetPlatformOutputPath $platformDirectory
+            $platformToolDir = "$tempPlatformDir/tools/any/$platformDirectory"
+            $platformNuspecFile = "$tempPlatformDir/$($platformPackageJson.packageId).nuspec"
+            New-Item -ItemType Directory -Force -Path $platformToolDir | Out-Null
+
+            Copy-Item -Path "$tempFolder/dist" -Destination $platformToolDir -Force
+            (Get-Content -Path "$nuspecSourcePath/RuntimeSpecificTemplate.nuspec") `
+                -replace "__Id__", $platformPackageJson.packageId `
+                -replace "__Version__", $platformPackageJson.version `
+                -replace "__Authors__", $platformPackageJson.author `
+                -replace "__Description__", $platformPackageJson.description `
+                -replace "__RepositoryUrl__", $platformPackageJson.repository.url `
+                -replace "__RepositoryBranch__", $platformPackageJson.repository.branch `
+                -replace "__CommitSHA__", $platformPackageJson.repository.commitSHA `
+                -replace "__TargetFramework__", $platformPackageJson.targetFramework |
+                Set-Content -Path $platformNuspecFile
+
+            (Get-Content -Path "$nuspecSourcePath/RuntimeSpecificToolSettingsTemplate.xml") `
+                -replace "__CommandName__", $platformPackageJson.commandName `
+                -replace "__CommandEntryPoint__", $platformPackageJson.entryPoint |
+                Set-Content -Path "$platformToolDir/DotnetToolSettings.xml"
+
+            Write-Host "Creating Nuget Package from $platformNuspecFile"
+            Invoke-LoggedCommand "nuget pack $platformNuspecFile -OutputDirectory '$nugetPlatformOutputPath'" -GroupOutput
+            Remove-Item -Path $tempPlatformDir -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
         }
 
         Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
@@ -120,9 +161,9 @@ try {
         Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
         Write-Host "Copied README.md and LICENSE to $tempFolder"
 
-        Write-Host "Packaging $tempFolder into $wrapperOutputPath"
-        Invoke-LoggedCommand "npm pack $tempFolder --pack-destination '$wrapperOutputPath'" -GroupOutput | Tee-Object -Variable fileName
-        Write-Host "Package location: $wrapperOutputPath/$fileName" -ForegroundColor Yellow
+        Write-Host "Packaging $tempFolder into $npmWrapperOutputPath"
+        Invoke-LoggedCommand "npm pack $tempFolder --pack-destination '$npmWrapperOutputPath'" -GroupOutput | Tee-Object -Variable fileName
+        Write-Host "Package location: $npmWrapperOutputPath/$fileName" -ForegroundColor Yellow
     }
 
     Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
