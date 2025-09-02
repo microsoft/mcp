@@ -92,5 +92,23 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
                 Assert.False(supportsZones.GetBoolean(), "'supportsZones' must be false.");
             }
         }
+
+        public async Task Should_create_import_job()
+        {
+            var result = await CallToolAsync(
+                "azmcp_azuremanagedlustre_filesystem_importjob_create",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "file-system", Settings.ResourceBaseName }
+                });
+
+            var importJob = result.AssertProperty("importJob");
+            Assert.Equal(JsonValueKind.Object, importJob.ValueKind);
+            Assert.True(importJob.TryGetProperty("jobName", out _));
+            Assert.True(importJob.TryGetProperty("fileSystemName", out var fsName));
+            Assert.Equal(Settings.ResourceBaseName, fsName.GetString());
+        }
     }
 }

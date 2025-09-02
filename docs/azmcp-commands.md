@@ -236,7 +236,7 @@ azmcp appconfig kv list --subscription <subscription> \
                         [--key <key>] \
                         [--label <label>]
 
-# Lock (make it read-only) or unlock (remove read-only) a key-value setting 
+# Lock (make it read-only) or unlock (remove read-only) a key-value setting
 azmcp appconfig kv lock set --subscription <subscription> \
                             --account <account> \
                             --key <key> \
@@ -695,7 +695,7 @@ azmcp keyvault key list --subscription <subscription> \
 Tools that handle sensitive data such as secrets require user consent before execution through a security mechanism called **elicitation**. When you run commands that access sensitive information, the MCP client will prompt you to confirm the operation before proceeding.
 
 > **🛡️ Elicitation (user confirmation) Security Feature:**
-> 
+>
 > Elicitation prompts appear when tools may expose sensitive information like:
 > - Key Vault secrets
 > - Connection strings and passwords
@@ -974,6 +974,16 @@ azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscri
 
 azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
                                             --location <location>
+
+# Create an Azure Managed Lustre filesystem import job (preview / placeholder)
+azmcp azuremanagedlustre filesystem importjob create --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --file-system <filesystem-name> \
+                                     --import-prefixes <prefix1> <prefix2> ... <prefixN> \
+                                     [--conflict-resolution-mode <conflict-mode>] \
+                                     [--maximum-errors <maximum-errors>] \
+                                     [--admin-status <admin-status>] \
+                                     [--job-name <job-name>]
 ```
 
 ### Azure Native ISV Operations
@@ -1115,7 +1125,7 @@ azmcp sql db delete --subscription <subscription> \
 azmcp sql db list --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name>
-                  
+
 # Rename an existing SQL database to a new name within the same server
 azmcp sql db rename --subscription <subscription> \
                     --resource-group <resource-group> \
