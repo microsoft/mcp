@@ -26,7 +26,7 @@ If your command interacts with Azure resources (storage accounts, databases, VMs
 - ✅ **MUST create** `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources-post.ps1` (required even if basic template)
 - ✅ **MUST include** RBAC role assignments for test application
 - ✅ **MUST validate** with `az bicep build --file tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`
-- ✅ **MUST test deployment** with `./eng/scripts/Deploy-TestResources.ps1 -Toolset {Toolset}`
+- ✅ **MUST test deployment** with `./eng/scripts/Deploy-TestResources.ps1 -Tool 'Azure.Mcp.Tools.{Toolset}'`
 
 ### **Non-Azure Commands (No Test Infrastructure Needed)**
 If your command is a wrapper/utility (CLI tools, best practices, documentation):
