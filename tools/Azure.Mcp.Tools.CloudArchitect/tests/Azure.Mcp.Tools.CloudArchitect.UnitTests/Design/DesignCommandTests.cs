@@ -68,7 +68,7 @@ public class DesignCommandTests
         Assert.Contains("--state", optionNames);
     }
 
-    // TODO: jong - See why --architecture-tier are in the tests, but not in the DesignCommand.
+    // TODO: jongio - See why --architecture-tier are in the tests, but not in the DesignCommand.
     [Theory]
     [InlineData("")]
     [InlineData("--question \"What is your application type?\"")]
@@ -640,7 +640,7 @@ public class DesignCommandTests
         Assert.Single(responseObject.ResponseObject.State.Requirements.Assumed);
     }
 
-    // TODO: jong - Talk with author.  It looks like the code intentionally throws
+    // TODO: jongio - Talk with author.  It looks like the code intentionally throws
     // [Fact]
     // public async Task ExecuteAsync_WithInvalidStateJson_HandlesGracefully()
     // {

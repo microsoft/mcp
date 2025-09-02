@@ -36,7 +36,7 @@ public sealed class SampleCommandTests
         yield return new object[] { "--cluster-uri https://mycluster.kusto.windows.net --database db1 --table table1", true };
     }
 
-    // TODO: jong - Figure out why failing
+    // TODO: jongio - Figure out why failing
 
     [Theory(Skip = "Skipping for now")]
     [MemberData(nameof(SampleArgumentMatrix))]
@@ -111,7 +111,7 @@ public sealed class SampleCommandTests
         Assert.Null(response.Results);
     }
 
-    // TODO: jong - Talk to author about why they expect 500 here
+    // TODO: jongio - Talk to author about why they expect 500 here
     // [Theory]
     // [MemberData(nameof(SampleArgumentMatrix))]
     // public async Task ExecuteAsync_HandlesException_AndSetsException(string cliArgs, bool useClusterUri)

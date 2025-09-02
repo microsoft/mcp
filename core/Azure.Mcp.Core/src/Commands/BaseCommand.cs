@@ -185,7 +185,7 @@ public abstract class BaseCommand : IBaseCommand
     private static string NormalizeName(string? name) => (name ?? string.Empty).TrimStart('-', '/');
 
 
-    // TODO: jong - Design a better way for options to exist and either be required or not required.
+    // TODO: jongio - Design a better way for options to exist and either be required or not required.
 
     protected void UseResourceGroup()
     {
