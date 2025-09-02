@@ -340,8 +340,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azmcp_azuremanagedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> |
 | azmcp_azuremanagedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> |
-| azmcp_azuremanagedlustre_filesystem_required-subnet-size | Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku> |
 | azmcp_azuremanagedlustre_filesystem_sku_get | List the Azure Managed Lustre SKUs available in <location> |
+| azmcp_azuremanagedlustre_filesystem_subnetsize_ask | Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku> |
+| azmcp_azuremanagedlustre_filesystem_subnetsize_validate | Validate if <subnet_id> can host <filesystem_size> of <amlfs_sku> |
 
 ## Azure Marketplace
 
