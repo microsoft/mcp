@@ -195,7 +195,7 @@ try {
     $serverNames = @(if($ServerName) {
         $ServerName
     } else {
-        Get-ChildItem -Path "$RepoRoot/servers" -Directory | Where-Object { -not ($_.Name -like '.*') } | Select-Object -ExpandProperty Name
+        Get-ChildItem -Path "$RepoRoot/servers" -Directory | Select-Object -ExpandProperty Name
     })
 
     foreach ($serverName in $serverNames) {
