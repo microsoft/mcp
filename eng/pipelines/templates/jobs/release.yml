@@ -88,7 +88,7 @@ jobs:
             MainPublisher: 'ESRPRELPACMANTEST'
             ProductState: latest
 
-        - if eq('${{ parameters.IncludeNative }}', true):
+        - ${{ if eq('${{ parameters.IncludeNative }}', true) }}:
           - task: EsrpRelease@9
             displayName: Publish native platform packages to npmjs.com
             inputs:
