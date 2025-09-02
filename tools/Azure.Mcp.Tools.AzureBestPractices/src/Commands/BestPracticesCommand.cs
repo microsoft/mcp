@@ -3,10 +3,10 @@
 
 using System.Reflection;
 using System.Text;
-using Microsoft.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Tools.AzureBestPractices.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
 

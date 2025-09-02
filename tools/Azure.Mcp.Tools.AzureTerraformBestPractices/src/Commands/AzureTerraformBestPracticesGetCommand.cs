@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
-using Microsoft.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.AzureTerraformBestPractices.Commands;
 
