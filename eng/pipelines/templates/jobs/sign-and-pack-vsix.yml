@@ -6,7 +6,7 @@ parameters:
   type: string
 
 jobs:
-- job:
+- job: SignAndPackVSIX
   displayName: "Sign and Pack VSIX"
   dependsOn: ${{ parameters.DependsOn }}
   condition: and(succeeded(), ne(variables['NoPackagesChanged'], 'true'))
@@ -41,3 +41,88 @@ jobs:
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)
       ArtifactName: vsix_packages_signed
+
+- job: VerifyVSIXSigning
+  displayName: "Verify VSIX Signing"
+  dependsOn: SignAndPackVSIX
+  pool:
+    name: $(WINDOWSPOOL) # Signing verification must happen on windows
+    image: $(WINDOWSVMIMAGE)
+    os: windows
+  variables:
+  - template: /eng/pipelines/templates/variables/image.yml
+  - template: /eng/pipelines/templates/variables/globals.yml
+  steps:
+  - checkout: none
+  - download: current
+    artifact: vsix_$(PipelineArtifactName)_signed
+    displayName: "Download signed MCP server VSIX files"
+  - pwsh: |
+      Write-Host "Verifying VSIX signing by parsing CodeSignSummary markdown files..."
+
+      $root = "$(Pipeline.Workspace)/vsix_$(PipelineArtifactName)_signed"
+      $summaries = Get-ChildItem -Path $root -Recurse -Filter 'CodeSignSummary-*.md'
+
+      if (-not $summaries) {
+        Write-Error "No CodeSignSummary-*.md files found under $root. Cannot verify signing."
+
+        exit 1
+      }
+
+      $allPassed = $true
+
+      foreach ($file in $summaries) {
+        Write-Host "Checking summary: $($file.FullName)"
+
+        $lines = Get-Content -Path $file.FullName
+
+        # Consider only table lines that start with '|'
+        $tableLines = $lines | Where-Object { $_ -match '^\s*\|' }
+
+        if (-not $tableLines) { continue }
+
+        # Header is the first non-separator table line
+        $headerLine = $tableLines | Where-Object { $_ -notmatch '^\s*\|[-\s]+\|\s*$' } | Select-Object -First 1
+
+        if (-not $headerLine) { continue }
+
+        $headers = ($headerLine -split '\|') | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
+        $statusIdx = [Array]::IndexOf($headers, 'Status')
+        $componentIdx = [Array]::IndexOf($headers, 'Component')
+        $fileNameIdx = [Array]::IndexOf($headers, 'FileName')
+
+        if ($statusIdx -lt 0 -or $componentIdx -lt 0) {
+          Write-Host "Skipping file with unexpected header format: $($file.FullName)"
+
+          continue
+        }
+
+        # Data rows: all table lines except header and separator
+        $dataRows = $tableLines | Where-Object { $_ -notmatch '^\s*\|[-\s]+\|\s*$' -and $_ -ne $headerLine }
+
+        foreach ($row in $dataRows) {
+          $cols = ($row -split '\|') | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
+
+          if ($cols.Count -lt $headers.Count) { continue }
+
+          $component = $cols[$componentIdx]
+          $status = $cols[$statusIdx]
+          $fname = if ($fileNameIdx -ge 0 -and $fileNameIdx -lt $cols.Count) { $cols[$fileNameIdx] } else { '' }
+
+          if ($component -eq 'Sign' -and $status -ne 'Pass') {
+            Write-Host "Signing failed: Status=$status Component=$component File=$fname (in $($file.Name))"
+
+            $allPassed = $false
+          }
+        }
+      }
+
+      if (-not $allPassed) {
+        Write-Error "One or more 'Sign' entries did not report 'Pass' in CodeSignSummary."
+
+        exit 1
+      }
+      else {
+        Write-Host "All 'Sign' entries report 'Pass'."
+      }
+    displayName: "Verify VSIX Signing"
