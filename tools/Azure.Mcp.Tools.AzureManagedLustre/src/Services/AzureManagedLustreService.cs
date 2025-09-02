@@ -117,10 +117,10 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
 
                 var resourceType = sku.ResourceType ?? string.Empty;
 
-                
+
                 if (resourceType != "amlFilesystems")
                     continue;
-                    
+
 
                 var name = sku.Name ?? string.Empty;
 

@@ -50,7 +50,7 @@ public sealed class FileSystemGetSkuInfoCommand(ILogger<FileSystemGetSkuInfoComm
                 return context.Response;
 
             var service = context.GetService<IAzureManagedLustreService>();
-            var skus = await service.GetSkuInfoAsync(options.Subscription!, options.Tenant,  options.Location, options.RetryPolicy);
+            var skus = await service.GetSkuInfoAsync(options.Subscription!, options.Tenant, options.Location, options.RetryPolicy);
 
             context.Response.Results = skus.Count > 0 ? ResponseResult.Create(
                 new FileSystemGetSkuInfoResult(skus),

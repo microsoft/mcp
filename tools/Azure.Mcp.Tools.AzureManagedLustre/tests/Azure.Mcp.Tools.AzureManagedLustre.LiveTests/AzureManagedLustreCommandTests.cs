@@ -93,6 +93,6 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
                 Assert.False(supportsZones.GetBoolean(), "'supportsZones' must be false.");
             }
         }
-        
+
     }
 }
