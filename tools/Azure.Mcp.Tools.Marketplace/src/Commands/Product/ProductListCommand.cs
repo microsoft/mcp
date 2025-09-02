@@ -22,27 +22,29 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
     private readonly Option<string> _searchOption = OptionDefinitions.Marketplace.Search;
     private readonly Option<string> _filterOption = OptionDefinitions.Marketplace.Filter;
     private readonly Option<string> _orderByOption = OptionDefinitions.Marketplace.OrderBy;
-    private readonly Option<string> _selectFieldsOption = OptionDefinitions.Marketplace.Select;
+    private readonly Option<string> _selectOption = OptionDefinitions.Marketplace.Select;
     private readonly Option<string> _nextCursorOption = OptionDefinitions.Marketplace.NextCursor;
+    private readonly Option<string> _expandOption = OptionDefinitions.Marketplace.Expand;
 
     public override string Name => "list";
 
     public override string Description =>
         """
-        Retrieves private products (offers) that a subscription has access to in the Azure Marketplace.
+        Retrieves products (offers) that a subscription has access to in the Azure Marketplace.
         Returns a list of marketplace products including display names, publishers, pricing information, and metadata.
 
         Required options:
         - subscription: Azure subscription ID or name
 
         Additional options:
-        - search: Search for products using a general term
+        - search: Search for products using a short general term (up to 25 characters)
         - language: Specify the language for returned information (default: en)
 
         Advanced query options (OData):
         - filter: Filter results using OData syntax (e.g., "displayName eq 'Azure'")
-        - orderby: Sort results using OData syntax (e.g., "displayName asc")
-        - selectFields: Select specific fields using OData syntax (e.g., "displayName,publisherDisplayName")
+        - orderby: Sort results by a single field using OData syntax (e.g., "displayName asc")
+        - select: Select specific fields using OData syntax (e.g., "displayName,publisherDisplayName")
+        - expand: Include related data in the response using OData syntax (e.g., "plans" to include plan details)
 
         Pagination:
         - next-cursor: Token used for pagination to request the next batch of products in a multi-part response
@@ -59,8 +61,9 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
         command.AddOption(_searchOption);
         command.AddOption(_filterOption);
         command.AddOption(_orderByOption);
-        command.AddOption(_selectFieldsOption);
+        command.AddOption(_selectOption);
         command.AddOption(_nextCursorOption);
+        command.AddOption(_expandOption);
     }
 
     protected override ProductListOptions BindOptions(ParseResult parseResult)
@@ -70,8 +73,9 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
         options.Search = parseResult.GetValueForOption(_searchOption);
         options.Filter = parseResult.GetValueForOption(_filterOption);
         options.OrderBy = parseResult.GetValueForOption(_orderByOption);
-        options.SelectFields = parseResult.GetValueForOption(_selectFieldsOption);
+        options.Select = parseResult.GetValueForOption(_selectOption);
         options.NextCursor = parseResult.GetValueForOption(_nextCursorOption);
+        options.Expand = parseResult.GetValueForOption(_expandOption);
         return options;
     }
 
@@ -98,8 +102,9 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
                 options.Search,
                 options.Filter,
                 options.OrderBy,
-                options.SelectFields,
+                options.Select,
                 options.NextCursor,
+                options.Expand,
                 options.Tenant,
                 options.RetryPolicy);
 

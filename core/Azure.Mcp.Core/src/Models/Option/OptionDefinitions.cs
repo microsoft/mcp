@@ -225,6 +225,7 @@ public static partial class OptionDefinitions
         public const string OrderByName = "orderby";
         public const string SelectName = "select";
         public const string NextCursorName = "next-cursor";
+        public const string ExpandName = "expand";
 
         public static readonly Option<string> ProductId = new(
             $"--{ProductIdName}",
@@ -338,6 +339,14 @@ public static partial class OptionDefinitions
         public static readonly Option<string> NextCursor = new(
             $"--{NextCursorName}",
             "Pagination cursor to retrieve the next page of results. Use the NextPageLink value from a previous response."
+        )
+        {
+            IsRequired = false
+        };
+
+        public static readonly Option<string> Expand = new(
+            $"--{ExpandName}",
+            "OData expand expression to include related data in the response (e.g., \"plans\" to include plan details)."
         )
         {
             IsRequired = false

@@ -70,8 +70,9 @@ public class MarketplaceService(ITenantService tenantService)
     /// <param name="search">Search by display name, publisher name, or keywords.</param>
     /// <param name="filter">OData filter expression.</param>
     /// <param name="orderBy">OData orderby expression.</param>
-    /// <param name="selectFields">OData select expression. Renamed from 'select' to avoid reserved word.</param>
+    /// <param name="select">OData select expression. Renamed from 'select' to avoid reserved word.</param>
     /// <param name="nextCursor">Pagination cursor.</param>
+    /// <param name="expand">OData expand expression to include related data.</param>
     /// <param name="tenant">Optional. The Azure tenant ID for authentication.</param>
     /// <param name="retryPolicy">Optional. Policy parameters for retrying failed requests.</param>
     /// <returns>A list of ProductSummary objects containing the marketplace products.</returns>
@@ -83,14 +84,15 @@ public class MarketplaceService(ITenantService tenantService)
         string? search = null,
         string? filter = null,
         string? orderBy = null,
-        string? selectFields = null, // Renamed from 'select' to 'selectFields' to avoid reserved word
+        string? select = null,
         string? nextCursor = null,
+        string? expand = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters(subscription);
 
-        string productsUrl = BuildProductsListUrl(subscription, language, search, filter, orderBy, selectFields, nextCursor);
+        string productsUrl = BuildProductsListUrl(subscription, language, search, filter, orderBy, select, nextCursor, expand);
 
         return await GetMarketplaceListProductsResponseAsync(productsUrl, tenant, retryPolicy);
     }
@@ -101,8 +103,9 @@ public class MarketplaceService(ITenantService tenantService)
         string? search,
         string? filter,
         string? orderBy,
-        string? selectFields,
-        string? nextCursor)
+        string? select,
+        string? nextCursor,
+        string? expand)
     {
         var queryParams = new List<string>
         {
@@ -122,12 +125,16 @@ public class MarketplaceService(ITenantService tenantService)
         if (!string.IsNullOrEmpty(orderBy))
             queryParams.Add($"$orderby={Uri.EscapeDataString(orderBy)}");
 
-        if (!string.IsNullOrEmpty(selectFields))
-            queryParams.Add($"$select={Uri.EscapeDataString(selectFields)}");
+        if (!string.IsNullOrEmpty(select))
+            queryParams.Add($"$select={Uri.EscapeDataString(select)}");
+
+        if (!string.IsNullOrEmpty(expand))
+            queryParams.Add($"$expand={Uri.EscapeDataString(expand)}");
 
         if (!string.IsNullOrEmpty(nextCursor))
             queryParams.Add($"$skiptoken={Uri.EscapeDataString(nextCursor)}");
 
+        queryParams.Add("storefront=any"); // include all storefronts
         string queryString = string.Join("&", queryParams);
         return $"{ManagementApiBaseUrl}/subscriptions/{subscription}/providers/Microsoft.Marketplace/products?{queryString}";
     }

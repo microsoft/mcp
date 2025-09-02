@@ -28,8 +28,9 @@ public interface IMarketplaceService
         string? search = null,
         string? filter = null,
         string? orderBy = null,
-        string? selectFields = null,
+        string? select = null,
         string? nextCursor = null,
+        string? expand = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 }
