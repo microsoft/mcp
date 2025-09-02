@@ -66,9 +66,11 @@ public sealed class KnowledgeIndexListCommand : GlobalCommand<KnowledgeIndexList
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new KnowledgeIndexListCommandResult(indexes ?? []),
-                FoundryJsonContext.Default.KnowledgeIndexListCommandResult);
+            context.Response.Results = indexes?.Count > 0 ?
+                ResponseResult.Create(
+                    new KnowledgeIndexListCommandResult(indexes),
+                    FoundryJsonContext.Default.KnowledgeIndexListCommandResult) :
+                null;
         }
         catch (Exception ex)
         {
