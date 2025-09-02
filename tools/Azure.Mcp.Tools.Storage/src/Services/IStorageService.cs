@@ -26,10 +26,7 @@ public interface IStorageService
         string location,
         string subscription,
         string? sku = null,
-        string? kind = null,
         string? accessTier = null,
-        bool? enableHttpsTrafficOnly = null,
-        bool? allowBlobPublicAccess = null,
         bool? enableHierarchicalNamespace = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);

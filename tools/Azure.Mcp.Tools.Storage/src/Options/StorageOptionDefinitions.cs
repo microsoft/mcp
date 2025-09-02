@@ -26,10 +26,7 @@ public static class StorageOptionDefinitions
     public const string OverwriteName = "overwrite";
     public const string LocationName = "location";
     public const string SkuName = "sku";
-    public const string KindName = "kind";
     public const string AccessTierName = "access-tier";
-    public const string EnableHttpsTrafficOnlyName = "enable-https-traffic-only";
-    public const string AllowBlobPublicAccessName = "allow-blob-public-access";
     public const string BlobContainerPublicAccessName = "blob-container-public-access";
     public const string EnableHierarchicalNamespaceName = "enable-hierarchical-namespace";
 
@@ -65,35 +62,9 @@ public static class StorageOptionDefinitions
         IsRequired = false
     };
 
-    public static readonly Option<string> Kind = new(
-        $"--{KindName}",
-        "The storage account kind. Valid values: Storage, StorageV2, BlobStorage, FileStorage, BlockBlobStorage."
-    )
-    {
-        IsRequired = false
-    };
-
     public static readonly Option<string> AccessTier = new(
         $"--{AccessTierName}",
         "The default access tier for blob storage. Valid values: Hot, Cool."
-    )
-    {
-        IsRequired = false
-    };
-
-    public static readonly Option<bool> EnableHttpsTrafficOnly = new(
-        $"--{EnableHttpsTrafficOnlyName}",
-        () => true,
-        "Whether to require secure transfer (HTTPS) for the storage account."
-    )
-    {
-        IsRequired = false
-    };
-
-    public static readonly Option<bool> AllowBlobPublicAccess = new(
-        $"--{AllowBlobPublicAccessName}",
-        () => false,
-        "Whether to allow public access to blobs in the storage account."
     )
     {
         IsRequired = false

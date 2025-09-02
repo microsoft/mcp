@@ -123,10 +123,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         string location,
         string subscription,
         string? sku = null,
-        string? kind = null,
         string? accessTier = null,
-        bool? enableHttpsTrafficOnly = null,
-        bool? allowBlobPublicAccess = null,
         bool? enableHierarchicalNamespace = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
@@ -145,19 +142,18 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
             }
 
             // Set default values
-            var storageKind = string.IsNullOrEmpty(kind) ? StorageKind.StorageV2 : ParseStorageKind(kind);
             var storageSku = new StorageSku(string.IsNullOrEmpty(sku) ? StorageSkuName.StandardLrs : ParseStorageSkuName(sku));
             var defaultAccessTier = string.IsNullOrEmpty(accessTier) ? StorageAccountAccessTier.Hot : ParseAccessTier(accessTier);
 
             var createOptions = new StorageAccountCreateOrUpdateContent(
                 storageSku,
-                storageKind,
+                StorageKind.StorageV2,
                 location)
             {
                 AccessTier = defaultAccessTier,
-                EnableHttpsTrafficOnly = enableHttpsTrafficOnly ?? true,
-                AllowBlobPublicAccess = allowBlobPublicAccess ?? false,
-                IsHnsEnabled = enableHierarchicalNamespace ?? false
+                IsHnsEnabled = enableHierarchicalNamespace ?? false,
+                AllowBlobPublicAccess = false,
+                EnableHttpsTrafficOnly = true
             };
 
             var operation = await resourceGroupResource.Value

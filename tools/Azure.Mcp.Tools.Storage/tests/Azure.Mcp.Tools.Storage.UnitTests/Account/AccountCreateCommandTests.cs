@@ -68,8 +68,7 @@ public class AccountCreateCommandTests
                 "Standard_LRS",
                 "Standard",
                 false,
-                false,
-                true);
+                false);
 
             _storageService.CreateStorageAccount(
                 Arg.Any<string>(),
@@ -245,8 +244,7 @@ public class AccountCreateCommandTests
             "Standard_GRS",
             "Standard",
             true,
-            false,
-            true);
+            false);
 
         _storageService.CreateStorageAccount(
             "testaccount",
@@ -271,7 +269,6 @@ public class AccountCreateCommandTests
             "--sku", "Standard_GRS",
             "--kind", "StorageV2",
             "--access-tier", "Cool",
-            "--enable-https-traffic-only", "true",
             "--allow-blob-public-access", "false",
             "--enable-hierarchical-namespace", "true"
         ]);

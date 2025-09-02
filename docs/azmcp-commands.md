@@ -931,10 +931,7 @@ azmcp storage account create --subscription <subscription> \
                              --resource-group <resource-group> \
                              --location <location> \
                              --sku <sku> \
-                             --kind <kind> \
                              --access-tier <access-tier> \
-                             --enable-https-traffic-only true \
-                             --allow-blob-public-access false \
                              --enable-hierarchical-namespace false
 
 # Get detailed information about a specific Storage account
