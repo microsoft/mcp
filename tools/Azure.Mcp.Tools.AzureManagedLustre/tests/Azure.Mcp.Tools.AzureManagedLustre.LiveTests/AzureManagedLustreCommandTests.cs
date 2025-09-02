@@ -27,18 +27,19 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
 
             foreach (var fs in fileSystems.EnumerateArray())
             {
-                if (fs.ValueKind != JsonValueKind.Object) continue;
+                if (fs.ValueKind != JsonValueKind.Object)
+                    continue;
 
                 if (fs.TryGetProperty("name", out var nameProp) &&
                     nameProp.ValueKind == JsonValueKind.String &&
-                    string.Equals(nameProp.GetString(), Settings.ResourceBaseName , StringComparison.OrdinalIgnoreCase))
+                    string.Equals(nameProp.GetString(), Settings.ResourceBaseName, StringComparison.OrdinalIgnoreCase))
                 {
                     found = true;
                     break;
                 }
             }
 
-            Assert.True(found, $"Expected at least one filesystem in resource group with name '{Settings.ResourceBaseName }'.");
+            Assert.True(found, $"Expected at least one filesystem in resource group with name '{Settings.ResourceBaseName}'.");
         }
 
         [Fact]
@@ -155,7 +156,8 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
             var found = false;
             foreach (var fs in fileSystems.EnumerateArray())
             {
-                if (fs.ValueKind != JsonValueKind.Object) continue;
+                if (fs.ValueKind != JsonValueKind.Object)
+                    continue;
 
                 if (fs.TryGetProperty("name", out var nameProp) &&
                     nameProp.ValueKind == JsonValueKind.String &&

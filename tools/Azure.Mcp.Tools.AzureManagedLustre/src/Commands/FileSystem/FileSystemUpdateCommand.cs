@@ -52,7 +52,7 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
         base.RegisterOptions(command);
         command.AddOption(_nameOption);
         RequireResourceGroup();
-    // All update fields are optional, we only patch those provided
+        // All update fields are optional, we only patch those provided
         command.AddOption(_optionalMaintenanceDayOption);
         command.AddOption(_optionalMaintenanceTimeOption);
         command.AddOption(_noSquashNidListsOption);

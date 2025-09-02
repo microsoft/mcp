@@ -77,7 +77,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
 
     private static AmlFileSystemPropertiesMaintenanceWindow GenerateMaintenanceWindow(string maintenanceDay, string maintenanceTime)
     {
-         MaintenanceDayOfWeekType dayEnum;
+        MaintenanceDayOfWeekType dayEnum;
 
         if (!Enum.TryParse<MaintenanceDayOfWeekType>(maintenanceDay, true, out dayEnum))
         {
@@ -167,7 +167,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             {
                 Settings = null
             };
-        }    
+        }
     }
     public async Task<int> GetRequiredAmlFSSubnetsSize(string subscription,
     string sku, int size,
@@ -273,7 +273,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         data.RootSquashSettings = GenerateRootSquashSettings(rootSquashMode ?? "None", noSquashNidLists, squashUid, squashGid);
         data.MaintenanceWindow = GenerateMaintenanceWindow(maintenanceDay, maintenanceTime);
         data.Hsm = GenerateHsmSettings(hsmContainer, hsmLogContainer, importPrefix);
-   
+
         // Encryption
         if (enableCustomEncryption)
         {

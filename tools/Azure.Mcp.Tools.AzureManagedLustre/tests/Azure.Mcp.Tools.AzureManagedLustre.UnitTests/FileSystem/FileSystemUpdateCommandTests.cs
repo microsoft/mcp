@@ -136,7 +136,7 @@ public class FileSystemUpdateCommandTests
 
         var response = await _command.ExecuteAsync(_context, args);
         Assert.Equal(200, response.Status);
-        await _svc.Received(1).UpdateFileSystemAsync(Sub, Rg, Name, null, null,  "All", "nid1,nid2", 1000, 1000, null, Arg.Any<RetryPolicyOptions?>());
+        await _svc.Received(1).UpdateFileSystemAsync(Sub, Rg, Name, null, null, "All", "nid1,nid2", 1000, 1000, null, Arg.Any<RetryPolicyOptions?>());
     }
 
     [Fact]
