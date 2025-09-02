@@ -954,7 +954,7 @@ Azure service commands requiring test resource deployment must add a bicep templ
 
 #### Live Test Resource Infrastructure
 
-**1. Create Toolset Bicep Template (`/tools/Azure.Mcp.{Toolset}/tests/test-resources.bicep`)**
+**1. Create Toolset Bicep Template (`/tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`)**
 
 Follow this pattern for your toolset's infrastructure:
 
