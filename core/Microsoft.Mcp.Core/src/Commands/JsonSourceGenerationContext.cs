@@ -3,15 +3,14 @@
 
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Commands;
 
-namespace Azure.Mcp;
+namespace Microsoft.Mcp;
 
 [JsonSerializable(typeof(BaseCommand.ExceptionResult))]
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(List<JsonNode>))]
-[JsonSerializable(typeof(AzureCredentials))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal partial class JsonSourceGenerationContext : JsonSerializerContext
 {
