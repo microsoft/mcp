@@ -4,7 +4,6 @@
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
-using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.CloudArchitect.Commands.Design;
 using Azure.Mcp.Tools.CloudArchitect.Options;
 

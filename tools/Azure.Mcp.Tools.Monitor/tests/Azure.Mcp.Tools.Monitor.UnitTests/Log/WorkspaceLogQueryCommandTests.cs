@@ -5,7 +5,6 @@ using System.CommandLine;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;

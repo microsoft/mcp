@@ -98,8 +98,8 @@ public abstract class BaseCommand : IBaseCommand
         var result = new ValidationResult { IsValid = true };
 
         var missingOptions = commandResult.Command.Options
-            .Where(o => o.Required && !commandResult.HasOptionResult(o))
-            .Where(o => !o.HasDefaultValue)
+            .Where(o => o.Required && !o.HasDefaultValue)
+            .Where(o => !commandResult.HasOptionResult(o))
             .Select(o => $"--{NormalizeName(o.Name)}")
             .ToList();
 

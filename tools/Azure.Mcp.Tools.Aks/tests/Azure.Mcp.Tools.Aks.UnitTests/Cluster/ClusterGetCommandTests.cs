@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.Aks.Commands.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
 using Microsoft.Extensions.DependencyInjection;

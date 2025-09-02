@@ -5,7 +5,6 @@ using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.BicepSchema.Commands;
 using Azure.Mcp.Tools.BicepSchema.Services;
 using Microsoft.Extensions.DependencyInjection;

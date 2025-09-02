@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Buffers;
-using System.CommandLine.Parsing;
 using System.Text;
 using Azure.Mcp.Core.Helpers;
 

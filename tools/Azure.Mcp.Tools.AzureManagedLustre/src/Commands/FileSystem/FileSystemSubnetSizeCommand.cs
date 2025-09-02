@@ -58,7 +58,7 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
 
         if (result.IsValid)
         {
-            if (commandResult.TryGetOptionValue(_skuOption, out var skuName)
+            if (commandResult.TryGetValue(_skuOption, out var skuName)
                 && !string.IsNullOrWhiteSpace(skuName)
                 && !AllowedSkus.Contains(skuName))
             {

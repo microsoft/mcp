@@ -42,8 +42,8 @@ public abstract class BaseHostPoolCommand<
         }
 
         // Retrieve values once and infer presence from non-empty values
-        commandResult.TryGetOptionValue(_hostPoolOption, out string? hostPoolName);
-        commandResult.TryGetOptionValue(_hostPoolResourceIdOption, out string? hostPoolResourceId);
+        commandResult.TryGetValue(_hostPoolOption, out string? hostPoolName);
+        commandResult.TryGetValue(_hostPoolResourceIdOption, out string? hostPoolResourceId);
 
         var hasHostPool = !string.IsNullOrWhiteSpace(hostPoolName);
         var hasHostPoolResourceId = !string.IsNullOrWhiteSpace(hostPoolResourceId);

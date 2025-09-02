@@ -16,23 +16,22 @@ public static class CommandResultExtensions
         if (result is null)
             return false;
 
-        // Consider explicitly present if we have an identifier token (e.g., --option)
-        if (result.IdentifierTokenCount > 0)
-            return true;
+        // For zero-arity options (e.g., bool switches), identifier presence indicates explicit usage
+        var expectsValue = option.Arity.MaximumNumberOfValues > 0;
+        if (!expectsValue)
+        {
+            return result.IdentifierTokenCount > 0;
+        }
 
-        // Or if there are non-empty value tokens (covers edge inputs)
-        var hasValueTokens = result.Tokens is { Count: > 0 } && result.Tokens.Any(t => !string.IsNullOrWhiteSpace(t.Value));
-        if (hasValueTokens)
-            return true;
-
-        // Otherwise, treat as not present (likely implicit/default)
-        return false;
+        // For value-taking options, consider present only if there is at least one non-empty value token
+        var hasNonEmptyValue = result.Tokens is { Count: > 0 } && result.Tokens.Any(t => !string.IsNullOrWhiteSpace(t.Value));
+        return hasNonEmptyValue;
     }
 
     public static bool HasOptionResult<T>(this CommandResult commandResult, Option<T> option)
         => HasOptionResult(commandResult, (Option)option);
 
-    public static bool TryGetOptionValue<T>(this CommandResult commandResult, Option<T> option, out T? value)
+    public static bool TryGetValue<T>(this CommandResult commandResult, Option<T> option, out T? value)
     {
         // If the option has any result (explicit or implicit), attempt to read its value.
         var result = commandResult.GetResult(option);

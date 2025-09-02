@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Xunit;

@@ -74,7 +74,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
 
         if (result.IsValid)
         {
-            commandResult.TryGetOptionValue(_metricNamesOption, out string? metricNamesValue);
+            commandResult.TryGetValue(_metricNamesOption, out string? metricNamesValue);
 
             if (string.IsNullOrWhiteSpace(metricNamesValue))
             {

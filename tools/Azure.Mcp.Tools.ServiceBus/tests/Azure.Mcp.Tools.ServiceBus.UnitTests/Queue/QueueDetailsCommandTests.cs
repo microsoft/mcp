@@ -5,7 +5,6 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.TestUtilities;
 using Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Services;

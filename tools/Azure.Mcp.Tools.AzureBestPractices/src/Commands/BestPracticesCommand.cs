@@ -91,8 +91,8 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
     {
         var result = new ValidationResult { IsValid = true };
 
-        commandResult.TryGetOptionValue(BestPracticesOptionDefinitions.Resource, out string? resource);
-        commandResult.TryGetOptionValue(BestPracticesOptionDefinitions.Action, out string? action);
+        commandResult.TryGetValue(BestPracticesOptionDefinitions.Resource, out string? resource);
+        commandResult.TryGetValue(BestPracticesOptionDefinitions.Action, out string? action);
 
         if (string.IsNullOrWhiteSpace(resource) || string.IsNullOrWhiteSpace(action))
         {

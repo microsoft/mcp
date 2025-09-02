@@ -30,9 +30,9 @@ public abstract class BaseClusterCommand<
     {
         var validationResult = new ValidationResult { IsValid = true };
 
-        parseResult.TryGetOptionValue(_clusterUriOption, out string? clusterUri);
-        parseResult.TryGetOptionValue(_clusterNameOption, out string? clusterName);
-        parseResult.TryGetOptionValue(_subscriptionOption, out string? subscription);
+        parseResult.TryGetValue(_clusterUriOption, out string? clusterUri);
+        parseResult.TryGetValue(_clusterNameOption, out string? clusterName);
+        parseResult.TryGetValue(_subscriptionOption, out string? subscription);
 
         if (!string.IsNullOrEmpty(clusterUri))
         {
