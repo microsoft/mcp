@@ -51,7 +51,7 @@ public class AccountCreateCommandTests
     [Theory]
     [InlineData("--account testaccount --resource-group testrg --location eastus --subscription sub123", true)]
     [InlineData("--account testaccount --resource-group testrg --location eastus --sku Standard_GRS --subscription sub123", true)]
-    [InlineData("--account testaccount --resource-group testrg --location eastus --kind StorageV2 --access-tier Cool --subscription sub123", true)]
+    [InlineData("--account testaccount --resource-group testrg --location eastus --access-tier Cool --subscription sub123", true)]
     [InlineData("--resource-group testrg --location eastus --subscription sub123", false)] // Missing account name
     [InlineData("--account testaccount --location eastus --subscription sub123", false)] // Missing resource group
     [InlineData("--account testaccount --resource-group testrg --subscription sub123", false)] // Missing location
@@ -68,7 +68,8 @@ public class AccountCreateCommandTests
                 "Standard_LRS",
                 "Standard",
                 false,
-                false);
+                false,
+                true);
 
             _storageService.CreateStorageAccount(
                 Arg.Any<string>(),
@@ -77,9 +78,6 @@ public class AccountCreateCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<bool?>(),
-                Arg.Any<bool?>(),
                 Arg.Any<bool?>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>())
@@ -123,9 +121,6 @@ public class AccountCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<bool?>(),
-            Arg.Any<bool?>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
@@ -154,9 +149,6 @@ public class AccountCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<bool?>(),
-            Arg.Any<bool?>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
@@ -185,9 +177,6 @@ public class AccountCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<bool?>(),
-            Arg.Any<bool?>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
@@ -214,9 +203,6 @@ public class AccountCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<bool?>(),
-            Arg.Any<bool?>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
@@ -244,7 +230,8 @@ public class AccountCreateCommandTests
             "Standard_GRS",
             "Standard",
             true,
-            false);
+            false,
+            true);
 
         _storageService.CreateStorageAccount(
             "testaccount",
@@ -252,10 +239,7 @@ public class AccountCreateCommandTests
             "eastus",
             "sub123",
             "Standard_GRS",
-            "StorageV2",
             "Cool",
-            true,
-            false,
             true,
             null,
             Arg.Any<RetryPolicyOptions>())
@@ -267,10 +251,7 @@ public class AccountCreateCommandTests
             "--location", "eastus",
             "--subscription", "sub123",
             "--sku", "Standard_GRS",
-            "--kind", "StorageV2",
-            "--access-tier", "Cool",
-            "--allow-blob-public-access", "false",
-            "--enable-hierarchical-namespace", "true"
+            "--access-tier", "Cool"
         ]);
 
         // Act
@@ -284,10 +265,7 @@ public class AccountCreateCommandTests
             "eastus",
             "sub123",
             "Standard_GRS",
-            "StorageV2",
             "Cool",
-            true,
-            false,
             true,
             null,
             Arg.Any<RetryPolicyOptions>());

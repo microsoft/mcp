@@ -23,7 +23,6 @@ public static class StorageOptionDefinitions
     public const string TimeToLiveInSecondsName = "time-to-live-in-seconds";
     public const string VisibilityTimeoutInSecondsName = "visibility-timeout-in-seconds";
     public const string LocalFilePathName = "local-file-path";
-    public const string OverwriteName = "overwrite";
     public const string LocationName = "location";
     public const string SkuName = "sku";
     public const string AccessTierName = "access-tier";
@@ -205,13 +204,5 @@ public static class StorageOptionDefinitions
     )
     {
         IsRequired = true
-    };
-
-    public static readonly Option<bool> Overwrite = new(
-        $"--{OverwriteName}",
-        "Whether to overwrite content if it already exists. Defaults to false."
-    )
-    {
-        IsRequired = false
     };
 }

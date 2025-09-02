@@ -803,8 +803,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         string account,
         string container,
         string blob,
-        string localFilePath,
-        bool overwrite,
+        string localFilePath
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
@@ -822,7 +821,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
 
         // Upload the file
         using var fileStream = File.OpenRead(localFilePath);
-        var response = await blobClient.UploadAsync(fileStream, overwrite);
+        var response = await blobClient.UploadAsync(fileStream, false);
 
         return new BlobUploadResult(
             Blob: blob,
