@@ -114,9 +114,9 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
                 {
                     throw new ArgumentException("squash-gid must be provided when root-squash-mode is not None.");
                 }
-                if (!string.IsNullOrWhiteSpace(noSquashNidLists))
+                if (string.IsNullOrWhiteSpace(noSquashNidLists))
                 {
-                    throw new ArgumentException("squash-gid must be provided when root-squash-mode is not None.");
+                    throw new ArgumentException("no-squash-nid-list must be provided when root-squash-mode is not None.");
                 }
                 if (squashUid.Value < 0)
                 {
