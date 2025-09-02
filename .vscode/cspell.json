@@ -326,6 +326,7 @@
         "eventgrid",
         "eventhouse",
         "exfiltration",
+        "fabmcp",
         "fabricmcp",
         "facetable",
         "filefilters",
