@@ -771,12 +771,22 @@ azmcp monitor metrics query --subscription <subscription> \
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 azmcp azuremanagedlustre filesystem list --subscription <subscription> \
-                                      --resource-group <resource-group> 
+                                      --resource-group <resource-group>
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
 azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \
                                       --sku <azure-managed-lustre-sku> \
                                       --size <filesystem-size-in-tib>
+
+# Create an Azure Managed Lustre filesystem import job (preview / placeholder)
+azmcp azuremanagedlustre filesystem importjob create --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --file-system <filesystem-name> \
+                                     --import-prefixes <prefix1> <prefix2> ... <prefixN> \
+                                     [--conflict-resolution-mode <conflict-mode>] \
+                                     [--maximum-errors <maximum-errors>] \
+                                     [--admin-status <admin-status>] \
+                                     [--job-name <job-name>]
 ```
 
 

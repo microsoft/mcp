@@ -215,6 +215,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azmcp_azuremanagedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> |
 | azmcp_azuremanagedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> |
+| azmcp_azuremanagedlustre_filesystem_importjob_create | Create an import job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| azmcp_azuremanagedlustre_filesystem_importjob_create | Start a filesystem import job for AMLFS <filesystem_name> with prefixes <prefixes> |
 | azmcp_azuremanagedlustre_filesystem_required-subnet-size | Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku> |
 
 ## Azure Marketplace

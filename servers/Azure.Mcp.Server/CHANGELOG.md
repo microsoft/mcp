@@ -6,6 +6,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added the following Azure Managed Lustre command (preview / placeholder implementation):
+  - `azmcp_azuremanagedlustre_filesystem_importjob_create`: Create a manual import job for an Azure Managed Lustre filesystem (hydrates namespace from linked HSM/Blob; current release returns placeholder status until REST API integration ships).
+
 ### Breaking Changes
 
 ### Bugs Fixed
@@ -24,7 +27,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 #### Dependency Updates
 
-- Updated the following dependencies to improve .NET Ahead-of-Time (AOT) compilation support: 
+- Updated the following dependencies to improve .NET Ahead-of-Time (AOT) compilation support:
   - Microsoft.Azure.Cosmos `3.51.0` → Microsoft.Azure.Cosmos.Aot `0.1.1-preview.1`. [[#37](https://github.com/microsoft/mcp/pull/37)]
 
 ## 0.5.8 (2025-08-21)
