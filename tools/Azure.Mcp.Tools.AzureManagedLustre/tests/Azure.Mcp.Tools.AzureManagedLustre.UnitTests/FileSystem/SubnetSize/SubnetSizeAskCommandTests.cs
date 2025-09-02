@@ -20,8 +20,8 @@ public class FileSystemSubnetSizeCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IAzureManagedLustreService _amlfsService;
-    private readonly ILogger<FileSystemSubnetSizeCommand> _logger;
-    private readonly FileSystemSubnetSizeCommand _command;
+    private readonly ILogger<SubnetSizeAskCommand> _logger;
+    private readonly SubnetSizeAskCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
     private readonly string _knownSubscriptionId = "sub123";
@@ -29,7 +29,7 @@ public class FileSystemSubnetSizeCommandTests
     public FileSystemSubnetSizeCommandTests()
     {
         _amlfsService = Substitute.For<IAzureManagedLustreService>();
-        _logger = Substitute.For<ILogger<FileSystemSubnetSizeCommand>>();
+        _logger = Substitute.For<ILogger<SubnetSizeAskCommand>>();
 
         var services = new ServiceCollection().AddSingleton(_amlfsService);
         _serviceProvider = services.BuildServiceProvider();
@@ -43,7 +43,7 @@ public class FileSystemSubnetSizeCommandTests
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = _command.GetCommand();
-        Assert.Equal("required-subnet-size", command.Name);
+        Assert.Equal("ask", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
