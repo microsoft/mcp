@@ -803,7 +803,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         string account,
         string container,
         string blob,
-        string localFilePath
+        string localFilePath,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)

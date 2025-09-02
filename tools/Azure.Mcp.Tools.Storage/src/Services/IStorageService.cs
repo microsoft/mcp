@@ -121,7 +121,7 @@ public interface IStorageService
         string account,
         string container,
         string blob,
-        string localFilePath
+        string localFilePath,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
