@@ -59,7 +59,7 @@ public class MarketplaceService(ITenantService tenantService)
         string productUrl = BuildProductUrl(subscription, productId, includeStopSoldPlans, language, market,
             lookupOfferInTenantLevel, planId, skuId, includeServiceInstructionTemplates);
 
-        return await GetMarketplaceSingleProductResponseAsync(productUrl, pricingAudience, tenant, retryPolicy);
+        return await GetMarketplaceSingleProductResponseAsync(productUrl, tenant, retryPolicy);
     }
 
     /// <summary>
@@ -70,7 +70,7 @@ public class MarketplaceService(ITenantService tenantService)
     /// <param name="search">Search by display name, publisher name, or keywords.</param>
     /// <param name="filter">OData filter expression.</param>
     /// <param name="orderBy">OData orderby expression.</param>
-    /// <param name="select">OData select expression.</param>
+    /// <param name="selectFields">OData select expression. Renamed from 'select' to avoid reserved word.</param>
     /// <param name="nextCursor">Pagination cursor.</param>
     /// <param name="tenant">Optional. The Azure tenant ID for authentication.</param>
     /// <param name="retryPolicy">Optional. Policy parameters for retrying failed requests.</param>
@@ -83,14 +83,14 @@ public class MarketplaceService(ITenantService tenantService)
         string? search = null,
         string? filter = null,
         string? orderBy = null,
-        string? select = null,
+        string? selectFields = null, // Renamed from 'select' to 'selectFields' to avoid reserved word
         string? nextCursor = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters(subscription);
 
-        string productsUrl = BuildProductsListUrl(subscription, language, search, filter, orderBy, select, nextCursor);
+        string productsUrl = BuildProductsListUrl(subscription, language, search, filter, orderBy, selectFields, nextCursor);
 
         return await GetMarketplaceListProductsResponseAsync(productsUrl, tenant, retryPolicy);
     }
@@ -101,7 +101,7 @@ public class MarketplaceService(ITenantService tenantService)
         string? search,
         string? filter,
         string? orderBy,
-        string? select,
+        string? selectFields,
         string? nextCursor)
     {
         var queryParams = new List<string>
@@ -122,8 +122,8 @@ public class MarketplaceService(ITenantService tenantService)
         if (!string.IsNullOrEmpty(orderBy))
             queryParams.Add($"$orderby={Uri.EscapeDataString(orderBy)}");
 
-        if (!string.IsNullOrEmpty(select))
-            queryParams.Add($"$select={Uri.EscapeDataString(select)}");
+        if (!string.IsNullOrEmpty(selectFields))
+            queryParams.Add($"$select={Uri.EscapeDataString(selectFields)}");
 
         if (!string.IsNullOrEmpty(nextCursor))
             queryParams.Add($"$skiptoken={Uri.EscapeDataString(nextCursor)}");
@@ -132,10 +132,10 @@ public class MarketplaceService(ITenantService tenantService)
         return $"{ManagementApiBaseUrl}/subscriptions/{subscription}/providers/Microsoft.Marketplace/products?{queryString}";
     }
 
-    private async Task<ProductListResponseWithNextCursor> GetMarketplaceListProductsResponseAsync(string url, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    private async Task<ProductListResponseWithNextCursor> GetMarketplaceListProductsResponseAsync(string url, string? tenant, RetryPolicyOptions? retryPolicy = null)
     {
         var productsListResponse = await ExecuteMarketplaceRequestAsync<ProductsListResponse>(
-            url, MarketplaceJsonContext.Default.ProductsListResponse, retryPolicy);
+            url, MarketplaceJsonContext.Default.ProductsListResponse, retryPolicy, tenant);
 
         var result = new ProductListResponseWithNextCursor
         {
@@ -187,21 +187,14 @@ public class MarketplaceService(ITenantService tenantService)
         return $"{ManagementApiBaseUrl}/subscriptions/{subscription}/providers/Microsoft.Marketplace/products/{productId}?{queryString}";
     }
 
-    private async Task<ProductDetails> GetMarketplaceSingleProductResponseAsync(string url, string? pricingAudience, string? tenant, RetryPolicyOptions? retryPolicy = null)
+    private async Task<ProductDetails> GetMarketplaceSingleProductResponseAsync(string url, string? tenant, RetryPolicyOptions? retryPolicy = null)
     {
-        var headers = new Dictionary<string, string>();
         var productDetails = await ExecuteMarketplaceRequestAsync<ProductDetails>(
             url,
             MarketplaceJsonContext.Default.ProductDetails,
             retryPolicy,
-            headers,
             tenant
         );
-        if (!string.IsNullOrEmpty(pricingAudience))
-        {
-            headers["x-ms-pricing-audience"] = pricingAudience;
-        }
-
         return productDetails ?? throw new JsonException("Failed to deserialize marketplace response to ProductDetails.");
     }
 
@@ -231,7 +224,6 @@ public class MarketplaceService(ITenantService tenantService)
         string url,
         JsonTypeInfo<T> jsonTypeInfo,
         RetryPolicyOptions? retryPolicy = null,
-        Dictionary<string, string>? headers = null,
         string? tenant = null
     )
     {
@@ -257,15 +249,6 @@ public class MarketplaceService(ITenantService tenantService)
         request.Method = RequestMethod.Get;
         request.Uri.Reset(new Uri(url));
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
-
-        // Add any additional headers
-        if (headers != null && headers.Count > 0)
-        {
-            foreach (var header in headers)
-            {
-                request.Headers.Add(header.Key, header.Value);
-            }
-        }
 
         var response = await pipeline.SendRequestAsync(request, CancellationToken.None);
 

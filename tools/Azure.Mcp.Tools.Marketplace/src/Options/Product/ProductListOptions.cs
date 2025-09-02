@@ -11,6 +11,6 @@ public class ProductListOptions : SubscriptionOptions
     public string? Search { get; set; }
     public string? Filter { get; set; }
     public string? OrderBy { get; set; }
-    public string? Select { get; set; }
+    public string? SelectFields { get; set; }
     public string? NextCursor { get; set; }
 }

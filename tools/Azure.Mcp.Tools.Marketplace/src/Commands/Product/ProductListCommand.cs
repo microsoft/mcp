@@ -22,7 +22,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
     private readonly Option<string> _searchOption = OptionDefinitions.Marketplace.Search;
     private readonly Option<string> _filterOption = OptionDefinitions.Marketplace.Filter;
     private readonly Option<string> _orderByOption = OptionDefinitions.Marketplace.OrderBy;
-    private readonly Option<string> _selectOption = OptionDefinitions.Marketplace.Select;
+    private readonly Option<string> _selectFieldsOption = OptionDefinitions.Marketplace.Select;
     private readonly Option<string> _nextCursorOption = OptionDefinitions.Marketplace.NextCursor;
 
     public override string Name => "list";
@@ -31,22 +31,21 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
         """
         Retrieves private products (offers) that a subscription has access to in the Azure Marketplace.
         Returns a list of marketplace products including display names, publishers, pricing information, and metadata.
-        Supports filtering by search terms, language, and other criteria.
 
         Required options:
         - subscription: Azure subscription ID or name
 
-        Optional filtering:
-        - search: Filter by display name, publisher name, or keywords
-        - language: Product language (default: en)
+        Additional options:
+        - search: Search for products using a general term
+        - language: Specify the language for returned information (default: en)
 
-        OData query options:
+        Advanced query options (OData):
         - filter: Filter results using OData syntax (e.g., "displayName eq 'Azure'")
         - orderby: Sort results using OData syntax (e.g., "displayName asc")
-        - select: Select specific fields using OData syntax (e.g., "displayName,publisherDisplayName")
+        - selectFields: Select specific fields using OData syntax (e.g., "displayName,publisherDisplayName")
 
         Pagination:
-        - next-cursor: Use the NextPageLink value from a previous response to retrieve the next page of results
+        - next-cursor: Token used for pagination to request the next batch of products in a multi-part response
         """;
 
     public override string Title => CommandTitle;
@@ -60,7 +59,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
         command.AddOption(_searchOption);
         command.AddOption(_filterOption);
         command.AddOption(_orderByOption);
-        command.AddOption(_selectOption);
+        command.AddOption(_selectFieldsOption);
         command.AddOption(_nextCursorOption);
     }
 
@@ -71,7 +70,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
         options.Search = parseResult.GetValueForOption(_searchOption);
         options.Filter = parseResult.GetValueForOption(_filterOption);
         options.OrderBy = parseResult.GetValueForOption(_orderByOption);
-        options.Select = parseResult.GetValueForOption(_selectOption);
+        options.SelectFields = parseResult.GetValueForOption(_selectFieldsOption);
         options.NextCursor = parseResult.GetValueForOption(_nextCursorOption);
         return options;
     }
@@ -99,7 +98,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
                 options.Search,
                 options.Filter,
                 options.OrderBy,
-                options.Select,
+                options.SelectFields,
                 options.NextCursor,
                 options.Tenant,
                 options.RetryPolicy);

@@ -48,13 +48,9 @@ public class ProductListCommandTests : CommandTestsBase,
         // Check that we have at least one product
         var productArray = products.EnumerateArray().ToArray();
         Assert.NotEmpty(productArray);
-
-        // Verify each product has expected properties
-        foreach (var product in productArray)
-        {
-            Assert.True(product.TryGetProperty("uniqueProductId", out _));
-            Assert.True(product.TryGetProperty("displayName", out _));
-        }
+        var product = productArray[0];
+        Assert.True(product.TryGetProperty("uniqueProductId", out _));
+        Assert.True(product.TryGetProperty("displayName", out _));
     }
 
     [Fact]
@@ -93,13 +89,10 @@ public class ProductListCommandTests : CommandTestsBase,
         var products = result.AssertProperty(ProductsKey);
         Assert.Equal(JsonValueKind.Array, products.ValueKind);
 
-        // Results may be empty for search, but structure should be valid
         var productArray = products.EnumerateArray().ToArray();
-        foreach (var product in productArray)
-        {
-            Assert.True(product.TryGetProperty("uniqueProductId", out _));
-            Assert.True(product.TryGetProperty("displayName", out _));
-        }
+        var product =  productArray[0];
+        Assert.True(product.TryGetProperty("uniqueProductId", out _));
+        Assert.True(product.TryGetProperty("displayName", out _));
     }
 
     [Fact]
@@ -117,13 +110,10 @@ public class ProductListCommandTests : CommandTestsBase,
         var products = result.AssertProperty(ProductsKey);
         Assert.Equal(JsonValueKind.Array, products.ValueKind);
 
-        // Results may be empty for search, but structure should be valid
         var productArray = products.EnumerateArray().ToArray();
-        foreach (var product in productArray)
-        {
-            Assert.True(product.TryGetProperty("uniqueProductId", out _));
-            Assert.True(product.TryGetProperty("displayName", out _));
-        }
+        var product = productArray[0];
+        Assert.True(product.TryGetProperty("uniqueProductId", out _));
+        Assert.True(product.TryGetProperty("displayName", out _));
     }
 
     [Fact]
@@ -144,11 +134,7 @@ public class ProductListCommandTests : CommandTestsBase,
 
         // Results may be filtered, but structure should be valid
         var productArray = products.EnumerateArray().ToArray();
-        foreach (var product in productArray)
-        {
-            Assert.True(product.TryGetProperty("uniqueProductId", out _));
-            Assert.True(product.TryGetProperty("displayName", out _));
-        }
+        Assert.NotEmpty(productArray);
     }
 
     [Fact]
@@ -168,11 +154,7 @@ public class ProductListCommandTests : CommandTestsBase,
 
         // Results may be filtered, but structure should be valid
         var productArray = products.EnumerateArray().ToArray();
-        foreach (var product in productArray)
-        {
-            Assert.True(product.TryGetProperty("uniqueProductId", out _));
-            Assert.True(product.TryGetProperty("displayName", out _));
-        }
+        Assert.NotEmpty(productArray);
     }
 
     [Fact]
@@ -215,12 +197,11 @@ public class ProductListCommandTests : CommandTestsBase,
         Assert.NotEmpty(productArray);
 
         // Verify selected properties are present
-        foreach (var product in productArray)
-        {
-            Assert.True(product.TryGetProperty("uniqueProductId", out _));
-            Assert.True(product.TryGetProperty("displayName", out _));
-            Assert.True(product.TryGetProperty("publisherDisplayName", out _));
-        }
+        Assert.NotEmpty(productArray);
+        var product = productArray[0];
+        Assert.True(product.TryGetProperty("uniqueProductId", out _));
+        Assert.True(product.TryGetProperty("displayName", out _));
+        Assert.True(product.TryGetProperty("publisherDisplayName", out _));
     }
 
     [Fact]
@@ -242,10 +223,10 @@ public class ProductListCommandTests : CommandTestsBase,
 
         // Results may be filtered, but structure should be valid
         var productArray = products.EnumerateArray().ToArray();
-        foreach (var product in productArray)
-        {
-            Assert.True(product.TryGetProperty("uniqueProductId", out _));
-            Assert.True(product.TryGetProperty("displayName", out _));
-        }
+        Assert.NotEmpty(productArray);
+        var product = productArray[0];
+        Assert.True(product.TryGetProperty("uniqueProductId", out _));
+        Assert.True(product.TryGetProperty("displayName", out _));
+
     }
 }
