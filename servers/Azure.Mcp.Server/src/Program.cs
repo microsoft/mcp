@@ -146,7 +146,7 @@ internal class Program
         services.AddSingleton<ITenantService, TenantService>();
         services.AddSingleton<IResourceGroupService, ResourceGroupService>();
         services.AddSingleton<ISubscriptionService, SubscriptionService>();
-        services.AddSingleton<CommandFactory>();
+        services.AddSingleton<ICommandFactory, CommandFactory>();
 
         foreach (var area in Areas)
         {

@@ -3,6 +3,7 @@
 
 using System.Reflection;
 using System.Text;
+using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -85,7 +86,7 @@ public static class AzureMcpServiceCollectionExtensions
         services.AddSingleton<RegistryServerProvider>();
 
         // Register MCP runtimes
-        services.AddSingleton<IMcpRuntime, McpRuntime>();
+        services.AddSingleton<IMcpRuntime, AzureMcpRuntime>();
 
         // Register MCP discovery strategies based on proxy mode
         if (serviceStartOptions.Mode == ModeTypes.SingleToolProxy || serviceStartOptions.Mode == ModeTypes.NamespaceProxy)
