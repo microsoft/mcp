@@ -5,7 +5,8 @@
 
 ### Fixed
 
-- Fixed VSIX signing and included native packages in build artifacts and pack/release scripts.
+- Fixed VSIX signing [[#91](https://github.com/microsoft/mcp/pull/91)]
+- Included native packages in build artifacts and pack/release scripts. [[#51](https://github.com/microsoft/mcp/pull/51)]
 
 ## 0.5.10 - 2025-08-28
 
