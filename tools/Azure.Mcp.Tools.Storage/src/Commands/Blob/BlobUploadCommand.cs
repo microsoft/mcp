@@ -63,7 +63,7 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
                 options.Account!,
                 options.Container!,
                 options.Blob!,
-                options.LocalFilePath!
+                options.LocalFilePath!,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy);
