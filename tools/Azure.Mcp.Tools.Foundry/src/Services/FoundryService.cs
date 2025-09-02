@@ -290,33 +290,34 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
             var credential = await GetCredential(tenantId);
             var indexesClient = new AIProjectClient(new Uri(endpoint), credential).GetIndexesClient();
 
-            // Get the list of indexes to find the correct one
-            await foreach (var index in indexesClient.GetIndicesAsync())
-            {
-                if (string.Equals(index.Name, indexName, StringComparison.OrdinalIgnoreCase))
-                {
-                    // Map the SDK index to our AOT-safe schema type
-                    string indexType = index switch
-                    {
-                        AzureAISearchIndex => "AzureAISearchIndex",
-                        ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
-                        CosmosDBIndex => "CosmosDBIndex",
-                        _ => index.GetType().Name
-                    };
+            // Find the index by name using async enumerable
+            var index = await indexesClient.GetIndicesAsync()
+                .Where(i => string.Equals(i.Name, indexName, StringComparison.OrdinalIgnoreCase))
+                .FirstOrDefaultAsync();
 
-                    return new KnowledgeIndexSchema
-                    {
-                        Type = indexType,
-                        Id = index.Id,
-                        Name = index.Name,
-                        Version = index.Version,
-                        Description = index.Description,
-                        Tags = index.Tags?.ToDictionary(kvp => kvp.Key, kvp => (string?)kvp.Value)
-                    };
-                }
+            if (index == null)
+            {
+                throw new Exception($"Knowledge index '{indexName}' not found.");
             }
 
-            throw new Exception($"Knowledge index '{indexName}' not found.");
+            // Map the SDK index to our AOT-safe schema type
+            string indexType = index switch
+            {
+                AzureAISearchIndex => "AzureAISearchIndex",
+                ManagedAzureAISearchIndex => "ManagedAzureAISearchIndex",
+                CosmosDBIndex => "CosmosDBIndex",
+                _ => index.GetType().Name
+            };
+
+            return new KnowledgeIndexSchema
+            {
+                Type = indexType,
+                Id = index.Id,
+                Name = index.Name,
+                Version = index.Version,
+                Description = index.Description,
+                Tags = index.Tags?.ToDictionary(kvp => kvp.Key, kvp => (string?)kvp.Value)
+            };
         }
         catch (Exception ex)
         {
