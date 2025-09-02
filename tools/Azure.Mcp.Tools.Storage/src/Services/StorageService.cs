@@ -151,9 +151,9 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
                 location)
             {
                 AccessTier = defaultAccessTier,
-                IsHnsEnabled = enableHierarchicalNamespace ?? false,
+                EnableHttpsTrafficOnly = true,
                 AllowBlobPublicAccess = false,
-                EnableHttpsTrafficOnly = true
+                IsHnsEnabled = enableHierarchicalNamespace ?? false
             };
 
             var operation = await resourceGroupResource.Value

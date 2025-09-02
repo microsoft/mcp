@@ -251,7 +251,8 @@ public class AccountCreateCommandTests
             "--location", "eastus",
             "--subscription", "sub123",
             "--sku", "Standard_GRS",
-            "--access-tier", "Cool"
+            "--access-tier", "Cool",
+            "--enable-hierarchical-namespace", "true"
         ]);
 
         // Act
