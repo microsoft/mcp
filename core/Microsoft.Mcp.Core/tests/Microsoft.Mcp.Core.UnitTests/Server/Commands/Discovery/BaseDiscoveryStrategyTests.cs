@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using ModelContextProtocol.Client;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
+namespace Microsoft.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
 
 /// <summary>
 /// Concrete test implementation of BaseDiscoveryStrategy for testing disposal behavior

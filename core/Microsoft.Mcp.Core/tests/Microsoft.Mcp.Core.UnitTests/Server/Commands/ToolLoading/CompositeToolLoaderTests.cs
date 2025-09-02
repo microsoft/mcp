@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
@@ -10,7 +10,7 @@ using ModelContextProtocol.Server;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.ToolLoading;
+namespace Microsoft.Mcp.Core.UnitTests.Areas.Server.Commands.ToolLoading;
 
 public class CompositeToolLoaderTests
 {

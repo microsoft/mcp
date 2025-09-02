@@ -1,20 +1,31 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tests.Client.Helpers;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.UnitTests.Server.Helpers;
 using ModelContextProtocol.Client;
+using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
+namespace Microsoft.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
 
 public class CommandGroupServerProviderTests
 {
-    private readonly CommandFactory _commandFactory;
+    private readonly MockCommandFactory _commandFactory = new MockCommandFactory();
+    private readonly CommandGroup _subGroupA = new CommandGroup("A", "A_description");
+    private readonly CommandGroup _subGroupB = new CommandGroup("B", "B_description");
+    private readonly CommandGroup _subGroupC = new CommandGroup("C", "C_description");
+    private readonly CommandGroup _extensionSubGroup = new CommandGroup("extension", "extensions should be ignored.");
+    private readonly CommandGroup _serverSubGroup = new CommandGroup("server", "server should be ignored here.");
+
     public CommandGroupServerProviderTests()
     {
-        _commandFactory = CommandFactoryHelpers.CreateCommandFactory();
+        _commandFactory.RootGroup.SubGroup.Add(_subGroupA);
+        _commandFactory.RootGroup.SubGroup.Add(_subGroupB);
+        _commandFactory.RootGroup.SubGroup.Add(_subGroupC);
+        _commandFactory.RootGroup.SubGroup.Add(_extensionSubGroup);
+        _commandFactory.RootGroup.SubGroup.Add(_serverSubGroup);
     }
 
     [Fact]
@@ -63,7 +74,7 @@ public class CommandGroupServerProviderTests
     public void ReadOnly_Property_DefaultsToFalse()
     {
         // Arrange
-        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == "storage");
+        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == _subGroupB.Name);
 
         // Act
         var mcpCommandGroup = new CommandGroupServerProvider(storageGroup);
@@ -76,7 +87,7 @@ public class CommandGroupServerProviderTests
     public void ReadOnly_Property_CanBeSet()
     {
         // Arrange
-        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == "storage");
+        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == _subGroupB.Name);
         var mcpCommandGroup = new CommandGroupServerProvider(storageGroup);
 
         // Act
@@ -90,7 +101,7 @@ public class CommandGroupServerProviderTests
     public void EntryPoint_SetToNull_UsesDefault()
     {
         // Arrange
-        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == "storage");
+        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == _subGroupC.Name);
         var mcpCommandGroup = new CommandGroupServerProvider(storageGroup);
         var originalEntryPoint = mcpCommandGroup.EntryPoint;
         // Act
@@ -105,7 +116,7 @@ public class CommandGroupServerProviderTests
     public void EntryPoint_SetToEmpty_UsesDefault()
     {
         // Arrange
-        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == "storage");
+        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == _subGroupA.Name);
         var mcpCommandGroup = new CommandGroupServerProvider(storageGroup);
         var originalEntryPoint = mcpCommandGroup.EntryPoint;
 
@@ -121,7 +132,7 @@ public class CommandGroupServerProviderTests
     public void EntryPoint_SetToValidValue_UsesProvidedValue()
     {
         // Arrange
-        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == "storage");
+        var storageGroup = _commandFactory.RootGroup.SubGroup.First(g => g.Name == _subGroupB.Name);
         var mcpCommandGroup = new CommandGroupServerProvider(storageGroup);
         var customEntryPoint = "/custom/path/to/executable";
 

@@ -3,38 +3,39 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Areas.Tools.Commands;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Services.Telemetry;
-using Azure.Mcp.Core.UnitTests.Areas.Server;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Areas.Tools.Commands;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Telemetry;
+using Microsoft.Mcp.Core.UnitTests.Server.Helpers;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Core.UnitTests.Areas.Tools.UnitTests;
+namespace Microsoft.Mcp.Core.UnitTests.Tools;
 
 public class ToolsListCommandTests
 {
     private const int SuccessStatusCode = 200;
     private const int ErrorStatusCode = 500;
-    private const int MinimumExpectedCommands = 3;
 
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ToolsListCommand> _logger;
     private readonly CommandContext _context;
     private readonly ToolsListCommand _command;
     private readonly Command _commandDefinition;
+    private readonly Parser _parser;
+    private readonly MockCommandFactory _commandFactory;
 
     public ToolsListCommandTests()
     {
         var collection = new ServiceCollection();
         collection.AddLogging();
 
-        var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
-        collection.AddSingleton(commandFactory);
+        _commandFactory = new MockCommandFactory();
+        collection.AddSingleton<ICommandFactory>(_commandFactory);
 
         _serviceProvider = collection.BuildServiceProvider();
         _context = new(_serviceProvider);
@@ -75,13 +76,15 @@ public class ToolsListCommandTests
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
+        // Number of hidden commands in MockCommandFactory is 1.
+        var expected = _commandFactory.AllCommands.Count - 1;
+        Assert.Equal(expected, result.Count);
+
         foreach (var command in result)
         {
             Assert.False(string.IsNullOrWhiteSpace(command.Name), "Command name should not be empty");
             Assert.False(string.IsNullOrWhiteSpace(command.Description), "Command description should not be empty");
             Assert.False(string.IsNullOrWhiteSpace(command.Command), "Command path should not be empty");
-
-            Assert.StartsWith("azmcp ", command.Command);
 
             if (command.Options != null && command.Options.Count > 0)
             {
@@ -142,10 +145,9 @@ public class ToolsListCommandTests
 
         Assert.NotNull(result);
 
-        Assert.DoesNotContain(result, cmd => cmd.Name == "list" && cmd.Command.Contains("tool"));
+        Assert.DoesNotContain(result, cmd => cmd.Name.Equals(_commandFactory.HiddenCommand.Name));
 
         Assert.Contains(result, cmd => !string.IsNullOrEmpty(cmd.Name));
-
     }
 
     /// <summary>
@@ -158,6 +160,13 @@ public class ToolsListCommandTests
         // Arrange
         var args = _commandDefinition.Parse([]);
 
+        var commandName = "command_with_options";
+        var optionName = "option1";
+        var mockCommand = new MockCommand(commandName);
+
+        mockCommand.AddOption(optionName);
+        _commandFactory.AddCommand(commandName, mockCommand);
+
         // Act
         var response = await _command.ExecuteAsync(_context, args);
 
@@ -169,12 +178,17 @@ public class ToolsListCommandTests
 
         Assert.NotNull(result);
 
-        var commandWithOptions = result.FirstOrDefault(cmd => cmd.Options?.Count > 0);
-        Assert.NotNull(commandWithOptions);
-        Assert.NotNull(commandWithOptions.Options);
-        Assert.NotEmpty(commandWithOptions.Options);
+        var commandWithOptions = result.Where(cmd => cmd.Options?.Count > 0).ToList();
 
-        var option = commandWithOptions.Options.First();
+        Assert.Single(commandWithOptions);
+
+        var first = commandWithOptions.First();
+
+        Assert.NotNull(first);
+        Assert.NotNull(first.Options);
+        Assert.NotEmpty(first.Options);
+
+        var option = first.Options.First();
         Assert.NotNull(option.Name);
         Assert.NotNull(option.Description);
     }
@@ -208,7 +222,7 @@ public class ToolsListCommandTests
     {
         // Arrange
         var faultyServiceProvider = Substitute.For<IServiceProvider>();
-        faultyServiceProvider.GetService(typeof(CommandFactory))
+        faultyServiceProvider.GetService(typeof(ICommandFactory))
             .Returns(x => throw new InvalidOperationException("Corrupted command factory"));
 
         var faultyContext = new CommandContext(faultyServiceProvider);
@@ -325,7 +339,7 @@ public class ToolsListCommandTests
 
         // Create empty command factory with minimal dependencies
         var tempServiceProvider = emptyCollection.BuildServiceProvider();
-        var logger = tempServiceProvider.GetRequiredService<ILogger<CommandFactory>>();
+        var logger = tempServiceProvider.GetRequiredService<ILogger<ICommandFactory>>();
         var telemetryService = Substitute.For<ITelemetryService>();
         var emptyAreaSetups = Array.Empty<IAreaSetup>();
 
@@ -333,7 +347,7 @@ public class ToolsListCommandTests
         var finalCollection = new ServiceCollection();
         finalCollection.AddLogging();
 
-        var emptyCommandFactory = new CommandFactory(tempServiceProvider, emptyAreaSetups, telemetryService, logger);
+        var emptyCommandFactory = Substitute.For<ICommandFactory>();
         finalCollection.AddSingleton(emptyCommandFactory);
 
         var emptyServiceProvider = finalCollection.BuildServiceProvider();
