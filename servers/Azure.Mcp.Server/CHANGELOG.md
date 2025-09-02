@@ -12,6 +12,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
+
+
 ## 0.5.10 (2025-08-28)
 
 ### Bugs fixed
