@@ -3,5 +3,5 @@
 
 global using System.CommandLine;
 global using System.CommandLine.Parsing;
-global using Microsoft.Mcp.Core.Commands;
 global using Azure.Mcp.Core.Options;
+global using Microsoft.Mcp.Core.Commands;
