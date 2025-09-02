@@ -162,6 +162,6 @@ resource managedIdentityRoleAssignment 'Microsoft.Authorization/roleAssignments@
 }
 
 output searchServiceName string = searchService.name
-output searchServiceEndpoint string = searchService.properties.endpoint
+output searchServiceEndpoint string = 'https://${searchService.name}.search.windows.net'
 output knowledgeIndexName string = '${baseName}-knowledge-index'
 output aiProjectsEndpoint string = 'https://${aiServicesAccount.name}.services.ai.azure.com/api/projects/${aiProjects.name}'
