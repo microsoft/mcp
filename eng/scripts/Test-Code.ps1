@@ -4,7 +4,7 @@
 [CmdletBinding()]
 param(
     [string] $TestResultsPath,
-    [string[]] $Areas,  # for PR
+    [string[]] $Paths,
     [ValidateSet('Live', 'Unit', 'All')]
     [string] $TestType = 'Unit',
     [switch] $CollectCoverage,
@@ -31,8 +31,8 @@ if (!$TestResultsPath) {
 Remove-Item -Recurse -Force $TestResultsPath -ErrorAction SilentlyContinue
 
 # Gets all area projects those are excluded using BuildNative condition.
-function Get-NativeExcludedAreas {
-    $areaPathPattern = 'areas[/\\]([^/\\]+)[/\\]src'
+function Get-NativeExcludedTools {
+    $toolsPathPattern = 'tools/.+'
     $ProjectFile = "$RepoRoot/core/src/AzureMcp.Cli/AzureMcp.Cli.csproj"
 
     if (!(Test-Path $ProjectFile)) {
@@ -48,16 +48,15 @@ function Get-NativeExcludedAreas {
         return @()
     }
 
-    $excludedAreas = @()
+    $excludedTools = @()
     foreach ($ref in $buildNativeGroup.ProjectReference) {
-        if ($ref.Remove -match $areaPathPattern) {
-            $excludedAreas += $matches[1].ToLower()
+        if ($ref.Remove -and $ref.Remove.Replace('\', '/') -match $toolsPathPattern) {
+            $excludedTools += $matches[0].ToLower()
         }
     }
 
-    return $excludedAreas
+    return $excludedTools
 }
-
 
 # Identifies the root directories to be recursively scanned for tests in the specified areas.
 function GetTestsRootDirs {
@@ -185,87 +184,12 @@ function CreateTestSolution {
     return "$workPath/Tests.sln"
 }
 
-# main
+function Create-CoverageReport {
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$TestResultsPath
+    )
 
-if ($TestNativeBuild) {
-    $excludedAreas = Get-NativeExcludedAreas
-    $nonNativeAreas = @($areas | Where-Object { $_ -in $excludedAreas })
-    $areas = @($areas | Where-Object { $_ -notin $excludedAreas })
-
-    if ($areas.Count -eq 0) {
-        Write-Warning "All the specified area(s) [$($nonNativeAreas -join ', ')] are native incompatible, specify areas that support native builds or run without -TestNativeBuild."
-        exit 0
-    }
-
-    if ($nonNativeAreas.Count -gt 0) {
-        Write-Warning "The following native incompatible areas will be excluded from native tests:"
-        Write-Warning "  $($nonNativeAreas -join ', ')"
-    }
-}
-
-$testsRootDirs = GetTestsRootDirs -areas $areas
-
-if (!$testsRootDirs) {
-    exit 1
-}
-
-$solutionPath = CreateTestSolution -workPath $workPath -testsRootDirs $testsRootDirs -testType $TestType
-
-if (!$solutionPath) {
-    exit 1
-}
-
-Push-Location $workPath
-try {
-    if ($TestNativeBuild) {
-        BuildNativeBinaryAndPrepareTests -testsRootDirs $testsRootDirs
-    }
-
-    if($debugLogs) {
-        Write-Host "`n`n"
-        # dump all environment variables
-        Write-Host "Current environment variables:" -ForegroundColor Yellow
-        Get-ChildItem Env: | Sort-Object Name | ForEach-Object { "$($_.Name)= $($_.Value)" } | Out-Host
-
-        # dump az powershell context
-        Write-Host "`nCurrent Azure PowerShell context (Get-AzContext):" -ForegroundColor Yellow
-        try {
-            Get-AzContext | ConvertTo-Json | Out-Host
-        } catch {
-            Write-Host "Error retrieving Azure PowerShell context: $($_.Exception.Message)" -ForegroundColor Red
-        }
-
-        # dump az cli context
-        Write-Host "`nCurrent Azure CLI context (az account show):" -ForegroundColor Yellow
-        try {
-            az account show | ConvertTo-Json | Out-Host
-        } catch {
-            Write-Host "Error retrieving Azure CLI context: $($_.Exception.Message)" -ForegroundColor Red
-        }
-        Write-Host "`n`n"
-    }
-
-    $coverageArg = $CollectCoverage ? "--collect:'XPlat Code Coverage'" : ""
-    $resultsArg = "--results-directory '$TestResultsPath'"
-    $loggerArg = "--logger 'trx'"
-
-    $command = "dotnet test $coverageArg $resultsArg $loggerArg"
-    if ($TestNativeBuild) {
-        $command += " --no-build"
-    }
-
-    Invoke-LoggedCommand `
-        -Command $command `
-        -AllowedExitCodes @(0, 1)
-}
-finally {
-    Pop-Location
-}
-
-$testExitCode = $LastExitCode
-
-# Coverage Report Generation - only if coverage collection was enabled
-if ($CollectCoverage) {
     # Find the coverage file
     $coverageFile = Get-ChildItem -Path $TestResultsPath -Recurse -Filter "coverage.cobertura.xml"
     | Where-Object { $_.FullName.Replace('\','/') -notlike "*/in/*" }
@@ -394,6 +318,89 @@ if ($CollectCoverage) {
         Write-Host "Stack trace: $($_.Exception.StackTrace)"
         exit 1
     }
+}
+# main
+
+if ($TestNativeBuild) {
+    $excludedTools = Get-NativeExcludedTools
+    $nonNativeTools = @($tools | Where-Object { 'tools/$_' -in $excludedTools })
+    $tools = @($tools | Where-Object { $_ -notin $excludedTools })
+
+    if ($tools.Count -eq 0) {
+        Write-Warning "All the specified area(s) [$($nonNativeTools -join ', ')] are native incompatible, specify areas that support native builds or run without -TestNativeBuild."
+        exit 0
+    }
+
+    if ($nonNativeTools.Count -gt 0) {
+        Write-Warning "The following native incompatible areas will be excluded from native tests:"
+        Write-Warning "  $($nonNativeTools -join ', ')"
+    }
+}
+
+$testsRootDirs = GetTestsRootDirs -Tools $tools
+
+if (!$testsRootDirs) {
+    exit 1
+}
+
+$solutionPath = CreateTestSolution -workPath $workPath -testsRootDirs $testsRootDirs -testType $TestType
+
+if (!$solutionPath) {
+    exit 1
+}
+
+Push-Location $workPath
+try {
+    if ($TestNativeBuild) {
+        BuildNativeBinaryAndPrepareTests -testsRootDirs $testsRootDirs
+    }
+
+    if($debugLogs) {
+        Write-Host "`n`n"
+        # dump all environment variables
+        Write-Host "Current environment variables:" -ForegroundColor Yellow
+        Get-ChildItem Env: | Sort-Object Name | ForEach-Object { "$($_.Name)= $($_.Value)" } | Out-Host
+
+        # dump az powershell context
+        Write-Host "`nCurrent Azure PowerShell context (Get-AzContext):" -ForegroundColor Yellow
+        try {
+            Get-AzContext | ConvertTo-Json | Out-Host
+        } catch {
+            Write-Host "Error retrieving Azure PowerShell context: $($_.Exception.Message)" -ForegroundColor Red
+        }
+
+        # dump az cli context
+        Write-Host "`nCurrent Azure CLI context (az account show):" -ForegroundColor Yellow
+        try {
+            az account show | ConvertTo-Json | Out-Host
+        } catch {
+            Write-Host "Error retrieving Azure CLI context: $($_.Exception.Message)" -ForegroundColor Red
+        }
+        Write-Host "`n`n"
+    }
+
+    $coverageArg = $CollectCoverage ? "--collect:'XPlat Code Coverage'" : ""
+    $resultsArg = "--results-directory '$TestResultsPath'"
+    $loggerArg = "--logger 'trx'"
+
+    $command = "dotnet test $coverageArg $resultsArg $loggerArg"
+    if ($TestNativeBuild) {
+        $command += " --no-build"
+    }
+
+    Invoke-LoggedCommand `
+        -Command $command `
+        -AllowedExitCodes @(0, 1)
+}
+finally {
+    Pop-Location
+}
+
+$testExitCode = $LastExitCode
+
+# Coverage Report Generation - only if coverage collection was enabled
+if ($CollectCoverage) {
+    Create-CoverageReport -TestResultsPath $TestResultsPath -OpenReport:$OpenReport
 }
 
 exit $testExitCode

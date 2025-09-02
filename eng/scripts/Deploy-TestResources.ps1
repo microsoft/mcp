@@ -1,8 +1,6 @@
 param(
-    [Parameter(Mandatory=$true, ParameterSetName="ByPath")]
-    [string]$Path,
-    [Parameter(Mandatory=$true, ParameterSetName="ByTool")]
-    [string]$Tool,
+    [Parameter(Mandatory=$true)]
+    [string[]]$Paths,
     [string]$SubscriptionId,
     [string]$ResourceGroupName,
     [string]$BaseName,
@@ -21,77 +19,69 @@ function New-StringHash([string[]]$strings) {
     return [BitConverter]::ToString($hashBytes) -replace '-', ''
 }
 
-switch ($PSCmdlet.ParameterSetName) {
-    'ByPath' {
-        if(!(Test-Path -Path $Path)) {
-            Write-Error "Path '$Path' does not exist."
-            exit 1
-        }
-    }
-    'ByTool' {
-        $tools = Get-ChildItem -Path "$RepoRoot/tools" -Directory
+$toolPaths = Get-ChildItem -Path "$RepoRoot/tools" -Directory
+| Where-Object { Test-Path "$_/tests/test-resources.bicep" }
 
-        $match = $tools | Where-Object { $_.Name -ceq $Tool }
-        if ($match) {
-            $Path = $match.FullName
-        } else {
-            $matchingTools = $tools | Where-Object { $_.Name -like "*$Tool*" }
-            if ($matchingTools.Count -eq 1) {
-                $match = $matchingTools[0]
-                Write-Host "Found tool '$($match.Name)'."
-                $Path = $match.FullName
-            } elseif ($matchingTools.Count -gt 1) {
-                $matchNames = $matchingTools | ForEach-Object { $_.Name }
-                Write-Error "Multiple tools match '$Tool':`n  $($matchNames -join "`n  ")`nPlease specify a more specific tool name."
-                exit 1
-            } else {
-                Write-Error "No tool matches '*$Tool*'."
-                exit 1
-            }
+$serverPaths = Get-ChildItem -Path "$RepoRoot/servers" -Directory
+| Where-Object { Test-Path "$_/tests/test-resources.bicep" }
+
+$corePaths = Get-ChildItem -Path "$RepoRoot/core" -Directory
+| Where-Object { Test-Path "$_/tests/test-resources.bicep" }
+
+$allPaths = $toolPaths + $serverPaths + $corePaths
+
+$filteredPaths = @()
+foreach ($path in $allPaths) {
+    foreach ($filter in $Paths) {
+        if ($path -like $filter) {
+            $filteredPaths += $path
+            break
         }
     }
 }
 
-$testResourcesDirectory = Resolve-Path -Path  "$Path/tests" -ErrorAction SilentlyContinue
-$bicepPath = "$testResourcesDirectory/test-resources.bicep"
-if(!(Test-Path -Path $bicepPath)) {
-    Write-Error "Test resources bicep template '$bicepPath' does not exist."
+if ($filteredPaths.Count -eq 0) {
+    Write-Error "No paths with test resources match the specified filters: $($Areas -join ', ')"
     exit 1
 }
 
-if($SubscriptionId) {
-    Select-AzSubscription -Subscription $SubscriptionId | Out-Null
-    $context = Get-AzContext
-} else {
-    # We don't want New-TestResources to conditionally pick a subscription for us
-    # If the user didn't specify a subscription, we explicitly use the current context's subscription
-    $context = Get-AzContext
-    $SubscriptionId = $context.Subscription.Id
-}
-$subscriptionName = $context.Subscription.Name
-$account = $context.Account
+foreach ($area in $filteredAreas) {
+    $testResourcesDirectory = Resolve-Path -Path  "$Path/tests" -ErrorAction SilentlyContinue
+    $bicepPath = "$testResourcesDirectory/test-resources.bicep"
 
-# Base the user hash on the user's account ID and subscription being deployed to
-if($Unique) {
-    $hash = [guid]::NewGuid().ToString()
-} else {
-    $hash = (New-StringHash $account.Id, $SubscriptionId, $Path)
-}
+    if($SubscriptionId) {
+        Select-AzSubscription -Subscription $SubscriptionId | Out-Null
+        $context = Get-AzContext
+    } else {
+        # We don't want New-TestResources to conditionally pick a subscription for us
+        # If the user didn't specify a subscription, we explicitly use the current context's subscription
+        $context = Get-AzContext
+        $SubscriptionId = $context.Subscription.Id
+    }
+    $subscriptionName = $context.Subscription.Name
+    $account = $context.Account
 
-$suffix = $hash.ToLower().Substring(0, 8)
+    # Base the user hash on the user's account ID and subscription being deployed to
+    if($Unique) {
+        $hash = [guid]::NewGuid().ToString()
+    } else {
+        $hash = (New-StringHash $account.Id, $SubscriptionId, $Path)
+    }
 
-if(!$BaseName) {
-    $BaseName = "mcp$($suffix)"
-}
+    $suffix = $hash.ToLower().Substring(0, 8)
 
-if(!$ResourceGroupName) {
-    $username = $account.Id.Split('@')[0].ToLower()
-    $ResourceGroupName = "$username-mcp$($suffix)"
-}
+    if(!$BaseName) {
+        $BaseName = "mcp$($suffix)"
+    }
 
-Push-Location $RepoRoot
-try {
-    Write-Host @"
+    if(!$ResourceGroupName) {
+        $username = $account.Id.Split('@')[0].ToLower()
+        $ResourceGroupName = "$username-mcp$($suffix)"
+    }
+
+    Push-Location $RepoRoot
+    try {
+        Write-Host @"
 Deploying:
     SubscriptionId: '$SubscriptionId'
     SubscriptionName: '$subscriptionName'
@@ -100,14 +90,15 @@ Deploying:
     DeleteAfterHours: $DeleteAfterHours
     TestResourcesDirectory: '$testResourcesDirectory'
 "@
-    ./eng/common/TestResources/New-TestResources.ps1 `
-        -SubscriptionId $SubscriptionId `
-        -ResourceGroupName $ResourceGroupName `
-        -BaseName $BaseName `
-        -TestResourcesDirectory $testResourcesDirectory `
-        -DeleteAfterHours $DeleteAfterHours `
-        -Force
-}
-finally {
-    Pop-Location
+        ./eng/common/TestResources/New-TestResources.ps1 `
+            -SubscriptionId $SubscriptionId `
+            -ResourceGroupName $ResourceGroupName `
+            -BaseName $BaseName `
+            -TestResourcesDirectory $testResourcesDirectory `
+            -DeleteAfterHours $DeleteAfterHours `
+            -Force
+    }
+    finally {
+        Pop-Location
+    }
 }
