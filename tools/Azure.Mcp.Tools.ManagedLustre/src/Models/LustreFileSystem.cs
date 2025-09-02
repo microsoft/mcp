@@ -26,3 +26,15 @@ public sealed record LustreFileSystem(
     [property: JsonPropertyName("squashUid")] long? SquashUid,
     [property: JsonPropertyName("squashGid")] long? SquashGid
 );
+
+public sealed record ImportJobInfo(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("fileSystemName")] string FileSystemName,
+    [property: JsonPropertyName("resourceGroupName")] string ResourceGroupName,
+    [property: JsonPropertyName("subscriptionId")] string SubscriptionId,
+    [property: JsonPropertyName("status")] string Status,
+    [property: JsonPropertyName("conflictResolutionMode")] string ConflictResolutionMode,
+    [property: JsonPropertyName("maximumErrors")] int? MaximumErrors,
+    [property: JsonPropertyName("adminStatus")] string? AdminStatus,
+    [property: JsonPropertyName("importPrefixes")] IList<string>? ImportPrefixes
+);

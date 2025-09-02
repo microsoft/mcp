@@ -1243,7 +1243,7 @@ azmcp monitor metrics query --subscription <subscription> \
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre filesystem list --subscription <subscription> \
-                                         --resource-group <resource-group> 
+                                         --resource-group <resource-group>
 
 # Create an Azure Managed Lustre filesystem
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -1296,6 +1296,16 @@ azmcp managedlustre filesystem subnetsize validate --subscription <subscription>
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre filesystem sku get --subscription <subscription> \
                                             --location <location>
+
+# Create an Azure Managed Lustre filesystem import job (preview / placeholder)
+azmcp azuremanagedlustre filesystem importjob create --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --file-system <filesystem-name> \
+                                     [--import-prefixes <prefix1> <prefix2> ... <prefixN>] \
+                                     [--conflict-resolution-mode <conflict-mode>] \
+                                     [--maximum-errors <maximum-errors>] \
+                                     [--admin-status <admin-status>] \
+                                     [--name <name>]
 ```
 
 ### Azure Native ISV Operations
