@@ -1,7 +1,14 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
+param(
+    [string] $TenantId,
+    [string] $TestApplicationId,
+    [string] $ResourceGroupName,
+    [string] $BaseName,
+    [hashtable] $DeploymentOutputs
+)
 
-# This script is executed after the test resources are deployed
-# It can be used for additional setup steps that can't be done in Bicep
+$ErrorActionPreference = "Stop"
 
-Write-Host "EventHubs test resources post-deployment setup completed"
+. "$PSScriptRoot/../../../eng/common/scripts/common.ps1"
+. "$PSScriptRoot/../../../eng/scripts/helpers/TestResourcesHelpers.ps1"
+
+$testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot

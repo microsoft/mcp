@@ -32,8 +32,8 @@ Remove-Item -Recurse -Force $TestResultsPath -ErrorAction SilentlyContinue
 
 # Gets all area projects those are excluded using BuildNative condition.
 function Get-NativeExcludedAreas {
-    $areaPathPattern = 'tools[/\\]([^/\\]+)[/\\]src'
-    $ProjectFile = "$RepoRoot/servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj"
+    $areaPathPattern = 'areas[/\\]([^/\\]+)[/\\]src'
+    $ProjectFile = "$RepoRoot/core/src/AzureMcp.Cli/AzureMcp.Cli.csproj"
 
     if (!(Test-Path $ProjectFile)) {
         Write-Error "$ProjectFile not found"
@@ -105,10 +105,10 @@ function PublishNativeBinary {
     $runtimeId = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier
     Write-Host "Publishing AzureMcp as native binary for $runtimeId"
 
-    $cliProjectDir = "$RepoRoot/servers/Azure.Mcp.Server/src"
+    $cliProjectDir = "$RepoRoot/core/src/AzureMcp.Cli"
 
     Invoke-LoggedCommand `
-        -Command "dotnet publish '$cliProjectDir/Azure.Mcp.Server.csproj' -c Release -r $runtimeId /p:BuildNative=true" `
+        -Command "dotnet publish '$cliProjectDir/AzureMcp.Cli.csproj' -c Release -r $runtimeId /p:BuildNative=true" `
         -AllowedExitCodes @(0) | Out-Null
 
     $exeName = if ($runtimeId.StartsWith('win-')) { "azmcp.exe" } else { "azmcp" }
