@@ -27,9 +27,7 @@ public sealed class KnowledgeIndexSchemaCommand : GlobalCommand<KnowledgeIndexSc
             Use this function when you need to examine the detailed configuration of a specific knowledge index. This is helpful for troubleshooting search issues, understanding index capabilities, planning data mapping, or when integrating with the index programmatically.
 
         Notes:
-            - Returns the complete index schema including field definitions, analyzers, and configuration settings.
-            - The schema provides insights into searchable, filterable, and retrievable field configurations.
-            - Index schema information is useful for query planning and data integration tasks.
+            - Returns the index schema.
         """;
 
     public override string Title => CommandTitle;
