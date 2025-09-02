@@ -8,6 +8,9 @@ parameters:
 - name: RunLiveTests
   type: boolean
   default: false
+- name: IncludeNative
+  type: boolean
+  default: false
 - name: ServerName
   type: string
   default: none
@@ -166,6 +169,7 @@ extends:
             parameters:
               VsixTargets: ${{ parameters.VsixTargets }}
               ServerName: ${{ parameters.ServerName }}
+              IncludeNative: ${{ parameters.IncludeNative }}
           - template: /eng/pipelines/templates/jobs/docker.yml
             parameters:
               ContainerRegistry: 'azuresdkimages'
