@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 
-public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger) 
+public sealed class NamespaceListCommand(ILogger<NamespaceListCommand> logger)
     : BaseEventHubsCommand<NamespaceListOptions>(logger)
 {
     private const string CommandTitle = "List EventHubs Namespaces";

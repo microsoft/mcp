@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.EventHubs.Services;
 
-public class EventHubsService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventHubsService> logger) 
+public class EventHubsService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventHubsService> logger)
     : BaseAzureResourceService(subscriptionService, tenantService), IEventHubsService
 {
     private readonly ILogger<EventHubsService> _logger = logger;
@@ -46,7 +46,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         // Parse the Resource Graph JSON element to extract EventHubs namespace information
         var name = item.TryGetProperty("name", out var nameElement) ? nameElement.GetString() ?? "Unknown" : "Unknown";
         var id = item.TryGetProperty("id", out var idElement) ? idElement.GetString() ?? "Unknown" : "Unknown";
-        
+
         // Extract resource group from resource ID
         var resourceGroup = ExtractResourceGroupFromId(id);
 
@@ -61,9 +61,9 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         // Resource ID format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/...
         var parts = resourceId.Split('/', StringSplitOptions.RemoveEmptyEntries);
         var resourceGroupIndex = Array.IndexOf(parts, "resourceGroups");
-        
-        return resourceGroupIndex >= 0 && resourceGroupIndex + 1 < parts.Length 
-            ? parts[resourceGroupIndex + 1] 
+
+        return resourceGroupIndex >= 0 && resourceGroupIndex + 1 < parts.Length
+            ? parts[resourceGroupIndex + 1]
             : "Unknown";
     }
 }

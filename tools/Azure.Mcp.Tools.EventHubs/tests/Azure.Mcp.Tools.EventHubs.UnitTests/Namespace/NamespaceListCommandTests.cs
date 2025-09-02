@@ -55,7 +55,7 @@ public class NamespaceListCommandTests
         {
             var namespaces = new List<EventHubsNamespaceInfo>
             {
-                new("eh-namespace-prod-001", 
+                new("eh-namespace-prod-001",
                     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-eventhubs-prod/providers/Microsoft.EventHub/namespaces/eh-namespace-prod-001",
                     "rg-eventhubs-prod"),
                 new("eh-namespace-prod-002",
@@ -178,10 +178,10 @@ public class NamespaceListCommandTests
         // Assert
         Assert.Equal(200, response.Status);
         Assert.NotNull(response.Results);
-        
+
         // Verify response structure
         Assert.NotNull(response.Results);
-        
+
         // Verify service was called correctly
         await _eventHubsService.Received(1).ListNamespacesAsync(resourceGroup, subscriptionId, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>());
     }
