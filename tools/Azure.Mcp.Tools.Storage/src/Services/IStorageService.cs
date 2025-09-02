@@ -70,7 +70,6 @@ public interface IStorageService
         string account,
         string container,
         string subscription,
-        string? blobContainerPublicAccess = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 

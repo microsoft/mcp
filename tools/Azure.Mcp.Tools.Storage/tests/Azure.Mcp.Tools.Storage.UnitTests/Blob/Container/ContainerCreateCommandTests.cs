@@ -52,8 +52,6 @@ public class ContainerCreateCommandTests
 
     [Theory]
     [InlineData("--account account123 --container container123 --subscription sub123", true)]
-    [InlineData("--account account123 --container container123 --subscription sub123 --blob-container-public-access blob", true)]
-    [InlineData("--account account123 --container container123 --subscription sub123 --blob-container-public-access container", true)]
     [InlineData("--container container123 --subscription sub123", false)] // Missing account
     [InlineData("--account account123 --subscription sub123", false)] // Missing container
     [InlineData("--account account123 --container container123", false)] // Missing subscription
@@ -134,8 +132,7 @@ public class ContainerCreateCommandTests
         var args = _parser.Parse([
             "--account", _knownAccount,
             "--container", _knownContainer,
-            "--subscription", _knownSubscription,
-            "--blob-container-public-access", publicAccessInput
+            "--subscription", _knownSubscription
         ]);
 
         // Act

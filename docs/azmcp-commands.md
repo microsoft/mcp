@@ -952,8 +952,7 @@ azmcp storage blob batch set-tier --subscription <subscription> \
 # Create a blob container with optional public access
 azmcp storage blob container create --subscription <subscription> \
                                     --account <account> \
-                                    --container <container> \
-                                    [--blob-container-public-access <blob|container>]
+                                    --container <container>
 
 # Get detailed properties of a storage container
 azmcp storage blob container details --subscription <subscription> \

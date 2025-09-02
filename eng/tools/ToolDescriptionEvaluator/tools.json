@@ -3445,12 +3445,6 @@
           "description": "The name of the container to access within the storage account.",
           "type": "string",
           "required": true
-        },
-        {
-          "name": "blob-container-public-access",
-          "description": "The public access level for the blob container. Valid values: blob (allows public read access to blobs), container (allows public read access to both blobs and container metadata). If not specified, the container will be private.",
-          "type": "string",
-          "required": null
         }
       ]
     },

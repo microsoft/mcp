@@ -378,7 +378,6 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         string account,
         string container,
         string subscription,
-        string? blobContainerPublicAccess = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
@@ -389,19 +388,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
 
         try
         {
-            PublicAccessType publicAccessType = PublicAccessType.None;
-
-            if (!string.IsNullOrEmpty(blobContainerPublicAccess))
-            {
-                publicAccessType = blobContainerPublicAccess.ToLowerInvariant() switch
-                {
-                    "blob" => PublicAccessType.Blob,
-                    "container" => PublicAccessType.BlobContainer,
-                    _ => throw new Exception($"Unknown blob-container-public-access {blobContainerPublicAccess}, only 'blob' or 'container' are allowed.")
-                };
-            }
-
-            await containerClient.CreateAsync(publicAccessType);
+            await containerClient.CreateAsync(PublicAccessType.None);
             var properties = await containerClient.GetPropertiesAsync();
             return properties.Value;
         }
