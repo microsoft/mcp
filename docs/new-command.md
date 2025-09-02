@@ -950,7 +950,7 @@ dotnet test --verbosity normal
 ```
 
 ### Integration Tests
-Azure service commands requiring test resource deployment must add a bicep template, `tests/test-resources.bicep`, to their toolset directory. Additionally, all Azure service commands must include a `test-resources-post.ps1` file in the same directory, even if it contains only the basic template without custom logic. See `/tools/Azure.Mcp.Storage/tests/test-resources.bicep` and `/tools/Azure.Mcp.Storage/tests/test-resources-post.ps1` for canonical examples.
+Azure service commands requiring test resource deployment must add a bicep template, `tests/test-resources.bicep`, to their toolset directory. Additionally, all Azure service commands must include a `test-resources-post.ps1` file in the same directory, even if it contains only the basic template without custom logic. See `/tools/Azure.Mcp.Tools.Storage/tests/test-resources.bicep` and `/tools/Azure.Mcp.Tools.Storage/tests/test-resources-post.ps1` for canonical examples.
 
 #### Live Test Resource Infrastructure
 
