@@ -1,0 +1,48 @@
+{
+    "parameters": {},
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "f51b705f-a409-4d40-9197-c5d5f349e2ef",
+                        "tenantSettings": [
+                            {
+                                "settingName": "TenantSettingForCapacityDelegatedSwitch",
+                                "title": "Capacity delegation test settings",
+                                "enabled": true,
+                                "canSpecifySecurityGroups": true,
+                                "enabledSecurityGroups": [
+                                    {
+                                        "graphId": "f51b705f-a409-4d40-9197-c5d5f349e2f0",
+                                        "name": "TestComputeCdsa"
+                                    },
+                                    {
+                                        "graphId": "1fecf19f-6e33-41b3-89fa-de8c821f3b79",
+                                        "name": "TestComputeGroup2"
+                                    },
+                                    {
+                                        "graphId": "64bc10f1-1f1b-4a7e-b7a0-c87d89cba2b4",
+                                        "name": "TestCertifiers"
+                                    }
+                                ],
+                                "tenantSettingGroup": "Delegation testing",
+                                "properties": [
+                                    {
+                                        "name": "testIntProp",
+                                        "value": "5",
+                                        "type": "Integer"
+                                    }
+                                ],
+                                "delegateToWorkspace": false,
+                                "delegatedFrom": "Tenant"
+                            }
+                        ]
+                    }
+                ],
+                "continuationUri": "https://api.fabric.microsoft.com/v1/admin/capacities/delegatedTenantSettingOverrides?continuationToken=MSwxMDAwMCww",
+                "continuationToken": "MSwxMDAwMCww"
+            }
+        }
+    }
+}

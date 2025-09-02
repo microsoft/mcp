@@ -1,0 +1,26 @@
+{
+    "parameters": {
+        "workspaceId": "6e335e92-a2a2-4b5a-970a-bd6a89fbb765",
+        "kqlDashboardId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "definition": {
+                    "parts": [
+                        {
+                            "path": "RealTimeDashboard.json",
+                            "payload": "ewogICJhdXRvUmVmcmVzaCI6IHsKICAgICJlbmFibGVkIjogZmFsc2UKICB9LAogICJiYXNlUXVlcmllcyI6IFtdLAogICJ0aWxlcyI6IFtdLAogICJkYXRhU291cmNlcyI6IFtdLAogICJwYWdlcyI6IFsKICAgIHsKICAgICAgIm5hbWUiOiAiUGFnZSAxIiwKICAgICAgImlkIjogImFiNWYwNjI4LTk3NTAtNDNlNi05YmE0LTIwMTE2ZTg2ODc1NSIKICAgIH0KICBdLAogICJwYXJhbWV0ZXJzIjogWwogICAgewogICAgICAia2luZCI6ICJkdXJhdGlvbiIsCiAgICAgICJpZCI6ICJmNTEwYjlmZi0xZjI3LTQ4YmQtODBlNC1mZDFhNTllODQ5MjQiLAogICAgICAiZGlzcGxheU5hbWUiOiAiVGltZSByYW5nZSIsCiAgICAgICJkZXNjcmlwdGlvbiI6ICIiLAogICAgICAiYmVnaW5WYXJpYWJsZU5hbWUiOiAiX3N0YXJ0VGltZSIsCiAgICAgICJlbmRWYXJpYWJsZU5hbWUiOiAiX2VuZFRpbWUiLAogICAgICAiZGVmYXVsdFZhbHVlIjogewogICAgICAgICJraW5kIjogImR5bmFtaWMiLAogICAgICAgICJjb3VudCI6IDEsCiAgICAgICAgInVuaXQiOiAiaG91cnMiCiAgICAgIH0sCiAgICAgICJzaG93T25QYWdlcyI6IHsKICAgICAgICAia2luZCI6ICJhbGwiCiAgICAgIH0KICAgIH0KICBdLAogICJxdWVyaWVzIjogW10sCiAgInNjaGVtYV92ZXJzaW9uIjogIjUyIiwKICAidGl0bGUiOiAidmNkem5ncnpzbSIKfQ==",
+                            "payloadType": "InlineBase64"
+                        },
+                        {
+                            "path": ".platform",
+                            "payload": "ewogICIkc2NoZW1hIjogImh0dHBzOi8vZGV2ZWxvcGVyLm1pY3Jvc29mdC5jb20vanNvbi1zY2hlbWFzL2ZhYnJpYy9naXRJbnRlZ3JhdGlvbi9wbGF0Zm9ybVByb3BlcnRpZXMvMi4wLjAvc2NoZW1hLmpzb24iLAogICJtZXRhZGF0YSI6IHsKICAgICJ0eXBlIjogIktRTERhc2hib2FyZCIsCiAgICAiZGlzcGxheU5hbWUiOiAidmNkem5ncnpzbSIsCiAgICAiZGVzY3JpcHRpb24iOiAidmNkem5ncnpzbSIKICB9LAogICJjb25maWciOiB7CiAgICAidmVyc2lvbiI6ICIyLjAiLAogICAgImxvZ2ljYWxJZCI6ICIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDAiCiAgfQp9",
+                            "payloadType": "InlineBase64"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

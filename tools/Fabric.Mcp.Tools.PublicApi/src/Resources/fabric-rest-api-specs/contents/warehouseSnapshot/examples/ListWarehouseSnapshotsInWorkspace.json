@@ -1,0 +1,37 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "3546052c-ae64-4526-b1a8-52af7761426f",
+                        "displayName": "WarehouseSnapshot Name 1",
+                        "description": "A WarehouseSnapshot description.",
+                        "type": "WarehouseSnapshot",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "connectionString": "qvrmbuxie7we7glrekxgy6npqu-6xgyei3x2xiejip4iime6knh5m.datawarehouse.fabric.microsoft.com",
+                            "parentWarehouseId": "7332259c-fb34-4975-99db-85818fb8664f",
+                            "snapshotDateTime": "2024-10-10T15:20:15Z"
+                        }
+                    },
+                    {
+                        "id": "f697fb63-abd4-4399-9548-be7e3c3c0dac",
+                        "displayName": "WarehouseSnapshot Name 2",
+                        "description": "A WarehouseSnapshot description.",
+                        "type": "WarehouseSnapshot",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "connectionString": "qvrmbuxie7we7glrekxgy6npqu-6xgyei3x2xiejip4iime6knh5m.datawarehouse.fabric.microsoft.com",
+                            "parentWarehouseId": "7332259c-fb34-4975-99db-85818fb8664f",
+                            "snapshotDateTime": "2024-10-01T15:20:15Z"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

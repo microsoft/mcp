@@ -1,0 +1,97 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "SQLDatabase data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "SQLDatabase": {
+            "description": "A SQL database object.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The SQLDatabase properties.",
+                    "$ref": "#/definitions/SQLDatabaseProperties"
+                }
+            }
+        },
+        "SQLDatabases": {
+            "description": "A list of SQL databases.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of SQL databases.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SQLDatabase"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "SQLDatabaseProperties": {
+            "required": ["connectionString", "databaseName", "serverFqdn"],
+            "description": "The SQL database properties.",
+            "type": "object",
+            "properties": {
+                "connectionString": {
+                    "description": "The connection string of the database.",
+                    "type": "string"
+                },
+                "databaseName": {
+                    "description": "The database name.",
+                    "type": "string"
+                },
+                "serverFqdn": {
+                    "description": "The server fully qualified domain name (FQDN).",
+                    "type": "string"
+                }
+            }
+        },
+        "CreateSQLDatabaseRequest": {
+            "description": "Create SQL database request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The SQL database display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The SQL database description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the SQL database is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateSQLDatabaseRequest": {
+            "description": "Update SQL database request.",
+            "properties": {
+                "description": {
+                    "description": "The SQL database description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        }
+    }
+  }
+  

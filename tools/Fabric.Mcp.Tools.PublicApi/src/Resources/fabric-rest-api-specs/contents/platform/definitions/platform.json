@@ -1,0 +1,1815 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Platform data types"
+    },
+    "paths": {},
+    "definitions": {
+        "Workspaces": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of workspaces.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Workspace"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "Workspace": {
+            "description": "A workspace object.",
+            "type": "object",
+            "required": ["id", "displayName", "description"],
+            "properties": {
+                "id": {
+                    "description": "The workspace ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "displayName": {
+                    "description": "The workspace display name.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The workspace description.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "type": {
+                    "description": "The workspace type.",
+                    "$ref": "../../common/definitions.json#/definitions/WorkspaceType",
+                    "readOnly": true
+                },
+                "capacityId": {
+                    "description": "The ID of the capacity the workspace is assigned to.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                }
+            },
+            "readOnly": true
+        },
+        "WorkspaceInfo": {
+            "description": "A workspace object.",
+            "type": "object",
+            "required": [ "id", "displayName", "description" ],
+            "allOf": [
+              {
+                "$ref": "#/definitions/Workspace"
+              }
+            ],
+            "properties": {
+                "capacityAssignmentProgress": {
+                    "description": "The status of the workspace's capacity assignment progress.",
+                    "$ref": "#/definitions/CapacityAssignmentProgress",
+                    "readOnly": true
+                },
+                "workspaceIdentity": {
+                    "description": "The workspace identity.",
+                    "$ref": "#/definitions/WorkspaceIdentity",
+                    "readOnly": true
+                },
+                "capacityRegion": {
+                    "description": "The region of the capacity associated with this workspace.",
+                    "$ref": "#/definitions/CapacityRegion",
+                    "readOnly": true
+                },
+                "oneLakeEndpoints": {
+                    "description": "The OneLake API endpoints associated with this workspace.",
+                    "$ref": "#/definitions/OneLakeEndpoints",
+                    "readOnly": true
+                }
+            },
+            "readOnly": true
+        },
+        "CapacityRegion": {
+            "type": "string",
+            "description": "The region of the capacity associated with this workspace. Additional capacity region values may be added over time.",
+            "enum": ["Australia East", "Australia Southeast", "Brazil South", "Brazil Southeast", "Canada Central", "Canada East", "Central India"
+        ,"Central US", "Central US EUAP", "East Asia", "East US", "East US 2", "France Central", "France South", "Germany Central", "Germany Northeast"
+        ,"Israel Central", "Italy North", "Japan East", "Japan West", "Korea Central", "Korea South", "Mexico Central", "North Central US", "North Europe"
+        ,"Norway East", "Norway West", "Poland Central", "South Africa North", "South Africa West", "South Central US", "South India", "Southeast Asia"
+        ,"Spain Central", "Sweden Central", "Switzerland North", "Switzerland West", "West Europe", "West India", "West US", "West US 2", "West US 3"
+        ,"West Central US", "UAE Central", "UAE North", "Qatar Central", "Germany West Central", "Germany North", "UK South", "UK West", "China North"
+        ,"China East", "China East 2", "China East 3", "China North 2", "China North 3"],
+            "x-ms-enum": {
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Australia East",
+                        "description": "Australia East region"
+                    },
+                    {
+                        "value": "Australia Southeast",
+                        "description": "Australia Southeast region"
+                    },
+                    {
+                        "value": "Brazil South",
+                        "description": "Brazil South region"
+                    },
+                    {
+                        "value": "Brazil Southeast",
+                        "description": "Brazil Southeast region"
+                    },
+                    {
+                        "value": "Canada Central",
+                        "description": "Canada Central region"
+                    },
+                    {
+                        "value": "Canada East",
+                        "description": "Canada East region"
+                    },
+                    {
+                        "value": "Central India",
+                        "description": "Central India region"
+                    },
+                    {
+                        "value": "Central US",
+                        "description": "Central US region"
+                    },
+                    {
+                        "value": "Central US EUAP",
+                        "description": "Central US EUAP region"
+                    },
+                    {
+                        "value": "East Asia",
+                        "description": "East Asia region"
+                    },
+                    {
+                        "value": "East US",
+                        "description": "East US region"
+                    },
+                    {
+                        "value": "East US 2",
+                        "description": "East US 2 region"
+                    },
+                    {
+                        "value": "France Central",
+                        "description": "France Central region"
+                    },
+                    {
+                        "value": "France South",
+                        "description": "France South region"
+                    },
+                    {
+                        "value": "Germany Central",
+                        "description": "Germany Central region"
+                    },
+                    {
+                        "value": "Germany Northeast",
+                        "description": "Germany Northeast region"
+                    },
+                    {
+                        "value": "Israel Central",
+                        "description": "Israel Central region"
+                    },
+                    {
+                        "value": "Italy North",
+                        "description": "Italy North region"
+                    },
+                    {
+                        "value": "Japan East",
+                        "description": "Japan East region"
+                    },
+                    {
+                        "value": "Japan West",
+                        "description": "Japan West region"
+                    },
+                    {
+                        "value": "Korea Central",
+                        "description": "Korea Central region"
+                    },
+                    {
+                        "value": "Korea South",
+                        "description": "Korea South region"
+                    },
+                    {
+                        "value": "Mexico Central",
+                        "description": "Mexico Central region"
+                    },
+                    {
+                        "value": "North Central US",
+                        "description": "North Central US region"
+                    },
+                    {
+                        "value": "North Europe",
+                        "description": "North Europe region"
+                    },
+                    {
+                        "value": "Norway East",
+                        "description": "Norway East region"
+                    },
+                    {
+                        "value": "Norway West",
+                        "description": "Norway West region"
+                    },
+                    {
+                        "value": "Poland Central",
+                        "description": "Poland Central region"
+                    },
+                    {
+                        "value": "South Africa North",
+                        "description": "South Africa North region"
+                    },
+                    {
+                        "value": "South Africa West",
+                        "description": "South Africa West region"
+                    },
+                    {
+                        "value": "South Central US",
+                        "description": "South Central US region"
+                    },
+                    {
+                        "value": "South India",
+                        "description": "South India region"
+                    },
+                    {
+                        "value": "Southeast Asia",
+                        "description": "Southeast Asia region"
+                    },
+                    {
+                        "value": "Spain Central",
+                        "description": "Spain Central region"
+                    },
+                    {
+                        "value": "Sweden Central",
+                        "description": "Sweden Central region"
+                    },
+                    {
+                        "value": "Switzerland North",
+                        "description": "Switzerland North region"
+                    },
+                    {
+                        "value": "Switzerland West",
+                        "description": "Switzerland West region"
+                    },
+                    {
+                        "value": "West Europe",
+                        "description": "West Europe region"
+                    },
+                    {
+                        "value": "West India",
+                        "description": "West India region"
+                    },
+                    {
+                        "value": "West US",
+                        "description": "West US region"
+                    },
+                    {
+                        "value": "West US 2",
+                        "description": "West US 2 region"
+                    },
+                    {
+                        "value": "West US 3",
+                        "description": "West US 3 region"
+                    },
+                    {
+                        "value": "West Central US",
+                        "description": "West Central US region"
+                    },
+                    {
+                        "value": "UAE Central",
+                        "description": "UAE Central region"
+                    },
+                    {
+                        "value": "UAE North",
+                        "description": "UAE North region"
+                    },
+                    {
+                        "value": "Qatar Central",
+                        "description": "Qatar Central region"
+                    },
+                    {
+                        "value": "Germany West Central",
+                        "description": "Germany West Central region"
+                    },
+                    {
+                        "value": "Germany North",
+                        "description": "Germany North region"
+                    },
+                    {
+                        "value": "UK South",
+                        "description": "UK South region"
+                    },
+                    {
+                        "value": "UK West",
+                        "description": "UK West region"
+                    },
+                    {
+                        "value": "China North",
+                        "description": "China North region"
+                    },
+                    {
+                        "value": "China East",
+                        "description": "China East region"
+                    },
+                    {
+                        "value": "China East 2",
+                        "description": "China East 2 region"
+                    },
+                    {
+                        "value": "China East 3",
+                        "description": "China East 3 region"
+                    },
+                    {
+                        "value": "China North 2",
+                        "description": "China North 2 region"
+                    },
+                    {
+                        "value": "China North 3",
+                        "description": "China North 3 region"
+                    }
+                ]
+            }
+        },
+        "OneLakeEndpoints": {
+            "description": "The OneLake API endpoints associated with this workspace.",
+            "type": "object",
+            "properties": {
+                "blobEndpoint": {
+                    "description": "The OneLake API endpoint available for Blob API operations. This is a region specific endpoint, unless the tenant has Private Link enabled and public access disabled, in which case the global endpoint is provided.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "dfsEndpoint": {
+                    "description": "The OneLake API endpoint available for Distributed File System (DFS) or ADLSgen2 filesystem API operations. This is a region specific endpoint, unless the tenant has Private Link enabled and public access disabled, in which case the global endpoint is provided.",
+                    "type": "string",
+                    "readOnly": true
+                }
+            }
+        },
+        "CreateWorkspaceRequest": {
+            "description": "Create workspace request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The workspace display name.<br>The display name cannot contain more than 256 characters.<br>Only unused workspace names are allowed.<br>\"Admin monitoring\" is a reserved workspace name.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The workspace description.<br>The description cannot contain more than 4000 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "capacityId": {
+                    "description": "The ID of the capacity to assign the workspace to.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateWorkspaceRequest": {
+            "description": "Update workspace request payload.",
+            "properties": {
+                "displayName": {
+                    "description": "The workspace display name.<br>The display name cannot contain more than 256 characters.<br>Workspace names must be unique within the tenant.<br>\"Admin monitoring\" is a reserved workspace name.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The workspace description.<br>The description cannot contain more than 4000 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateWorkspaceRoleAssignmentRequest": {
+            "description": "Update workspace role assignment request payload.",
+            "required": ["role"],
+            "properties": {
+                "role": {
+                    "description": "The workspace role of the principal.",
+                    "$ref": "../../common/definitions.json#/definitions/WorkspaceRole",
+                    "readOnly": false
+                }
+            }
+        },
+        "WorkspaceRoleAssignments": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "type": "array",
+                    "items": {
+                        "description": "A list of workspace role assignments.",
+                        "$ref": "#/definitions/WorkspaceRoleAssignment"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "AddWorkspaceRoleAssignmentRequest": {
+            "type": "object",
+            "description": "Add workspace role assignment request payload.",
+            "required": ["principal", "role"],
+            "properties": {
+                "principal": {
+                    "description": "The principal.",
+                    "$ref": "../../common/definitions.json#/definitions/Principal"
+                },
+                "role": {
+                    "description": "The workspace role of the principal.",
+                    "$ref": "../../common/definitions.json#/definitions/WorkspaceRole"
+                }
+            }
+        },
+        "WorkspaceRoleAssignment": {
+            "type": "object",
+            "description": "A workspace role assignment object.",
+            "required": ["id", "principal", "role"],
+            "properties": {
+                "id": {
+                    "description": "The workspace role assignment ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "principal": {
+                    "description": "The principal.",
+                    "$ref": "../../common/definitions.json#/definitions/Principal",
+                    "readOnly": true
+                },
+                "role": {
+                    "description": "The workspace role of the principal.",
+                    "$ref": "../../common/definitions.json#/definitions/WorkspaceRole",
+                    "readOnly": true
+                }
+            }
+        },
+        "Capacities": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of capacities.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Capacity"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "Capacity": {
+            "description": "A capacity object.",
+            "type": "object",
+            "required": ["id", "displayName", "sku", "region", "state"],
+            "properties": {
+                "id": {
+                    "description": "The capacity ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "displayName": {
+                    "description": "The capacity display name.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "sku": {
+                    "description": "The capacity SKU.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "region": {
+                    "description": "The Azure region where the capacity was provisioned.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "state": {
+                    "description": "The capacity state.",
+                    "$ref": "#/definitions/CapacityState",
+                    "readOnly": true
+                }
+            },
+            "readOnly": true
+        },
+        "CapacityState": {
+            "type": "string",
+            "description": "A Capacity state. Additional capacity states may be added over time.",
+            "enum": ["Active", "Inactive"],
+            "x-ms-enum": {
+                "name": "CapacityState",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Active",
+                        "description": "The capacity is ready to use."
+                    },
+                    {
+                        "value": "Inactive",
+                        "description": "The capacity can't be used."
+                    }
+                ]
+            }
+        },
+        "AssignWorkspaceToCapacityRequest": {
+            "type": "object",
+            "description": "A capacity assignment request.",
+            "required": ["capacityId"],
+            "properties": {
+                "capacityId": {
+                    "description": "The ID of the capacity the workspace should be assigned to.",
+                    "type": "string",
+                    "format": "uuid"
+                }
+            }
+        },
+        "CapacityAssignmentProgress": {
+            "type": "string",
+            "description": "A Workspace assignment to capacity progress status. Additional capacity assignment progress values may be added over time.",
+            "enum": ["Completed", "Failed", "InProgress"],
+            "x-ms-enum": {
+                "name": "CapacityAssignmentProgress",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Completed",
+                        "description": "Last capacity assignment operation was completed successfully."
+                    },
+                    {
+                        "value": "Failed",
+                        "description": "Capacity assignment operation has encountered an error or failure and was unable to complete."
+                    },
+                    {
+                        "value": "InProgress",
+                        "description": "Capacity assignment operation is currently running and has not yet completed."
+                    }
+                ]
+            },
+            "readOnly": true
+        },
+        "WorkspaceIdentity": {
+            "type": "object",
+            "description": "A workspace identity object.",
+            "required": ["applicationId", "servicePrincipalId"],
+            "properties": {
+                "applicationId": {
+                    "description": "The application ID.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "servicePrincipalId": {
+                    "description": "The service principal ID.",
+                    "type": "string",
+                    "readOnly": true
+                }
+            },
+            "readOnly": true
+        },
+        "Items": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of items.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "../../common/definitions.json#/definitions/Item"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateItemRequest": {
+            "description": "Create item request payload.",
+            "required": ["displayName", "type"],
+            "properties": {
+                "displayName": {
+                    "description": "The item display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The item description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "type": {
+                    "description": "The item type.",
+                    "$ref": "../../common/definitions.json#/definitions/ItemType",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the item is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The item definition. The *Create Item* page of the relevant type indicates whether the definition is supported and details its structure. Use `definition` or `creationPayload`. You can't use both at the same time.",
+                    "$ref": "#/definitions/ItemDefinition",
+                    "readOnly": false
+                },
+                "creationPayload": {
+                    "description": "A set of properties used to create the item. The *Create Item* page of the relevant type indicates whether `creationPayload` is supported and lists the item's properties. Use `creationPayload` or `definition`. You can't use both at the same time.",
+                    "type": "object",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateItemDefinitionRequest": {
+            "description": "Update item definition request payload.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/ItemDefinition"
+                }
+            }
+        },
+        "ItemDefinitionResponse": {
+            "description": "Item public definition response.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/ItemDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "ItemDefinition" : {
+            "description": "An item definition object.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "format": {
+                    "description": "The format of the item definition.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ItemDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "ItemDefinitionPart": {
+            "description": "An item definition part object.",
+            "type": "object",
+            "required": ["path", "payload", "payloadType"],
+            "properties": {
+                "path": {
+                    "description": "The item part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The item part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateItemRequest": {
+            "description": "Update item request.",
+            "properties": {
+                "displayName": {
+                    "description": "The item display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The item description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "DataAccessRoles": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of roles that are used to manage data access security and ensure that only authorized users can view certain data. A role represents a set of permissions and permission scopes that define what actions its members are allowed to perform for the data in scope. Members are users or groups who have been granted the role, and they can read the data based on the permissions assigned to the role. For example, a member can be a Microsoft Entra ID group and permission scope can be a Read Action applied on the given Path to File, Folder(s) or Table(s) in OneLake.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataAccessRole"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateOrUpdateDataAccessRolesRequest": {
+            "description": "Contains definition of Roles that are used to manage data access security and ensure that only authorized users can view, edit, or delete certain data. Calling this API updates role definitions and creates, updates, or deletes roles to match the provided payload.",
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of roles that are used to manage data access security and ensure that only authorized users can view certain data. A role represents a set of permissions and permission scopes that define what actions its members are allowed to perform for the data in scope. Members are users or groups who have been granted the role, and they can read the data based on the permissions assigned to the role. For example, a member can be a Microsoft Entra ID group and permission scope can be a Read Action applied on the given Path to File, Folder(s) or Table(s) in OneLake.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataAccessRole"
+                    }
+                }
+            }
+        },
+        "DataAccessRole": {
+            "description": "A Data access role represents a set of permissions and permission scopes that define what actions its members are allowed to perform for the data in scope. Data access roles are used to manage data access security and ensure that only authorized users can view, edit, or delete certain data. Members are users or groups who have been granted the role, and they can read the data based on the permissions assigned to the role. For example, a member can be an Microsoft Entra ID group and permission scope can be a Read Action applied on the given Path to File, Folder(s) or Table(s) in OneLake.",
+            "type": "object",
+            "required": [ "name", "decisionRules" ],
+            "properties": {
+                "id": {
+                    "description": "The unique id for the Data access role.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "name": {
+                    "description": "The name of the Data access role.",
+                    "type": "string"
+                },
+                "decisionRules": {
+                    "description": "The array of permissions that make up the Data access role.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DecisionRule"
+                    }
+                },
+                "members": {
+                    "description": "The members object which contains the members of the role as arrays of different member types.",
+                    "type": "object",
+                    "$ref": "#/definitions/Members"
+                }
+            }
+        },
+        "DecisionRule": {
+            "description": "Specifies a rule for matching the requested action. Contains effect (Permit) and Permission which determine whether a user or entity is authorized to perform a specific action (e.g., read) on a resource. Permission is a set of scopes, defined by attributes, that must match the requested action for the rule to apply.",
+            "type": "object",
+            "required": [ "permission" ],
+            "properties": {
+                "effect": {
+                    "description": "The effect that a role has on access to the data resource. Currently, the only supported effect type is `Permit`, which grants access to the resource. Additional effect types may be added over time.",
+                    "type": "string",
+                    "enum": ["Permit"],
+                    "x-ms-enum": { 
+                        "name": "Effect",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Permit",
+                                "description": "the effect type Permit"
+                            }
+                        ]
+                    }
+                },
+                "permission": {
+                    "description": "The `permission` property is an array that specifies the scope and level of access for a requested action. The array must contain exactly two PermissionScope objects: `Path` and `Action`. The `scope` is defined using the `PermissionScope` object, with `attributeValueIncludedIn` specifying either the location of the resource being accessed or the type of action being granted. The `access` refers to the level of access being granted, such as `Read`.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/PermissionScope"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                }
+            }
+        },
+        "PermissionScope": {
+            "description": "Defines a set of attributes (properties) that determine the scope and level of access to a resource. When `attributeName` property is set to `Path`, the `attributeValueIncludedIn` property must specify the location of the resource being accessed, such as \"Tables/Table1\". When the `attributeName` property is set to `Action`, the `attributeValueIncludedIn` property must specify the type of access being granted, such as `Read`.",
+            "type": "object",
+            "required": [ "attributeName", "attributeValueIncludedIn" ],
+            "properties": {
+                "attributeName": {
+                    "description": "Specifies the name of the attribute that is being evaluated for access permissions. AttributeName can be `Path` or `Action`. Additional attributeName types may be added over time.",
+                    "type": "string",
+                    "enum": [ "Path", "Action" ],
+                    "x-ms-enum": {
+                        "name": "AttributeName",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Path",
+                                "description": "Attribute name Path"
+                            },
+                            {
+                                "value": "Action",
+                                "description": "Attribute name Action"
+                            }
+                        ]
+                    }
+                },
+                "attributeValueIncludedIn": {
+                    "description": "Specifies a list of values for the `attributeName` to define the scope and the level of access to a resource. \nWhen `attributeName` is `Path`, `attributeValueIncludedIn` must specify the location of the resource being accessed, such as \"Tables/Table1\".\nWhen `attributeName` is `Action`, the `attributeValueIncludedIn` must specify the type of access being granted, such as `Read`.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }   
+            }
+        },
+        "Members": {
+            "description": "The members object which contains the members of the role as arrays of different member types.",
+            "type": "object",
+            "properties": {
+                "fabricItemMembers": {
+                    "description": "A list of members who have a certain permission set in Microsoft Fabric. All members with that permission set are added as members of this Data Access Role.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/FabricItemMember"
+                    }
+                },
+                "microsoftEntraMembers": {
+                    "description": "The list of Microsoft Entra ID members.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MicrosoftEntraMember"
+                    }
+                }
+            }
+        },
+        "MicrosoftEntraMember": {
+            "description": "Microsoft Entra ID member assigned to the role.", 
+            "type": "object",
+            "required": [ "tenantId", "objectId" ],
+            "properties": {
+                "tenantId": {
+                    "description": "The tenant id.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "objectId": {
+                    "description": "The object id.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "objectType": {
+                    "description": "The type of Microsoft Entra ID object. Additional objectType types may be added over time.",  
+                    "type": "string",
+                    "enum": [ "Group", "User", "ServicePrincipal", "ManagedIdentity" ],  
+                    "x-ms-enum": {
+                        "name": "ObjectType",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Group",
+                                "description": "Attribute name Group"
+                            },
+                            {
+                                "value": "User",
+                                "description": "Attribute name User"
+                            },
+                             {
+                                "value": "ServicePrincipal",
+                                "description": "Attribute name ServicePrincipal"
+                            },
+                            {
+                                "value": "ManagedIdentity",
+                                "description": "Attribute name ManagedIdentity"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "FabricItemMember": {
+            "description": "Fabric item member.",
+            "type": "object",
+            "required": [ "itemAccess", "sourcePath" ],
+            "properties": {
+                "itemAccess": {
+                    "description": "A list specifying the access permissions for Fabric user to have to be automatically included in the role members. Additional itemAccess types may be added over time.",
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [ "Read", "Write", "Reshare", "Explore", "Execute", "ReadAll" ],
+                        "x-ms-enum": {
+                        "name": "ItemAccess",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Read",
+                                "description": "Item Access Read."
+                            },
+                            {
+                                "value": "Write",
+                                "description": "Item Access Write."
+                            },
+                            {
+                                "value": "Reshare",
+                                "description": "Item Access Reshare."
+                            },
+                            {
+                                "value": "Explore",
+                                "description": "Item Access Explore."
+                            },
+                            {
+                                "value": "Execute",
+                                "description": "Item Access Execute."
+                            },
+                            {
+                                "value": "ReadAll",
+                                "description": "Item Access ReadAll."
+                            }
+                        ]
+                    }
+                    }
+                },
+                "sourcePath": {
+                    "description": "The path to Fabric item having the specified item access.",
+                    "type": "string",
+                    "pattern": "^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?/[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$"
+                }
+            }
+        },
+        "CreateShortcutRequest": {
+            "description": "A shortcut creation request with an object representing a reference to another storage location.",
+            "type": "object",
+            "required": ["path", "name", "target"],
+            "properties": {
+                "path": {
+                    "description": "A string representing the full path where the shortcut is created, including either \"Files\" or \"Tables\".",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name of the shortcut.",
+                    "type": "string"
+                },
+                "target": {
+                    "description": "An object that contains the target datasource, and it must specify exactly one of the supported destinations: OneLake, Amazon S3, ADLS Gen2, Google Cloud Storage, S3 compatible, Dataverse or Azure Blob storage.",
+                    "type": "object",
+                    "$ref": "#/definitions/CreatableShortcutTarget"
+                }
+            }
+        },
+        "Shortcuts": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of shortcuts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Shortcut"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "Shortcut": {
+            "description": "An object representing a reference that points to other storage locations which can be internal or external to OneLake. Shortcut is defined by name, path where the shortcut is created and target specifying the target storage location.",
+            "type": "object",
+            "required": ["path", "name", "target"],
+            "properties": {
+                "path": {
+                    "description": "A string representing the full path where the shortcut is created, including either \"Files\" or \"Tables\".",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name of the shortcut.",
+                    "type": "string"
+                },
+                "target": {
+                    "description": "An object that contains the target datasource, and must specify exactly one of the supported destinations.",
+                    "type": "object",
+                    "$ref": "#/definitions/Target"
+                }
+            }
+        },
+        "CreatableShortcutTarget": {
+            "description": "An object that contains the target datasource, and must specify exactly one of the supported destinations as described in the table below.",
+            "type": "object",
+            "properties": {
+                "oneLake": {
+                    "description": "An object containing the properties of the target OneLake data source.",
+                    "type": "object",
+                    "$ref": "#/definitions/OneLake"
+                },
+                "amazonS3": {
+                    "description": "An object containing the properties of the target Amazon S3 data source.",
+                    "type": "object",
+                    "$ref": "#/definitions/AmazonS3"
+                },
+                "adlsGen2": {
+                    "description": "An object containing the properties of the target ADLS Gen2 data source.",
+                    "type": "object",
+                    "$ref": "#/definitions/AdlsGen2"
+                },
+                "googleCloudStorage": {
+                    "description": "An object containing the properties of the target Google Cloud Storage data source.",
+                    "type": "object",
+                    "$ref": "#/definitions/GoogleCloudStorage"
+                },
+                "s3Compatible": {
+                    "description": "An object containing the properties of the target S3 compatible data source.",
+                    "type": "object",
+                    "$ref": "#/definitions/S3Compatible"
+                },
+                "dataverse": {
+                    "description": "An object containing the properties of the target Dataverse data source.",
+                    "type": "object",
+                    "$ref": "#/definitions/Dataverse"
+                },
+                "azureBlobStorage": {
+                    "description": "An object containing the properties of the target Azure Blob Storage data source.",
+                    "type": "object",
+                    "$ref": "#/definitions/AzureBlobStorage"
+                }
+            }
+        },
+        "Target": {
+            "description": "An object that contains the target datasource, and must specify exactly one of the supported destinations as described in the table below.",
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+                "type": {
+                    "description": "The type object contains properties like target shortcut account type. Additional types may be added over time.",
+                    "type": "string",
+                    "enum": ["OneLake", "AmazonS3", "AdlsGen2", "GoogleCloudStorage", "S3Compatible", "Dataverse", "ExternalDataShare", "AzureBlobStorage"],
+                    "x-ms-enum": {
+                        "name": "Type",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "OneLake",
+                                "description": "OneLake"
+                            },
+                            {
+                                "value": "AmazonS3",
+                                "description": "AmazonS3"
+                            }
+                            ,
+                            {
+                                "value": "AdlsGen2",
+                                "description": "AdlsGen2"
+                            }
+                            ,
+                            {
+                                "value": "GoogleCloudStorage",
+                                "description": "GoogleCloudStorage"
+                            }
+                            ,
+                            {
+                                "value": "S3Compatible",
+                                "description": "S3Compatible"
+                            }
+                            ,
+                            {
+                                "value": "Dataverse",
+                                "description": "Dataverse"
+                            }
+                            ,
+                            {
+                                "value": "ExternalDataShare",
+                                "description": "ExternalDataShare"
+                            }
+                            ,
+                            {
+                                "value": "AzureBlobStorage",
+                                "description": "AzureBlobStorage"
+                            }
+                        ]
+                    }
+                }, 
+                "oneLake": {
+                    "description": "An object containing the properties of the target OneLake data source.",
+                    "type": "object",
+                    "$ref": "#/definitions/OneLake"
+                },
+                "amazonS3": {
+                    "description": "An object containing the properties of the target Amazon S3 data source.",
+                    "type": "object",
+                    "$ref": "#/definitions/AmazonS3"
+                },
+                "adlsGen2": {
+                    "description": "An object containing the properties of the target ADLS Gen2 data source.",
+                    "type": "object",
+                    "$ref": "#/definitions/AdlsGen2"
+                },
+                "googleCloudStorage": {
+                    "description": "An object containing the properties of the target Google Cloud Storage data source.",
+                    "type": "object",
+                    "$ref": "#/definitions/GoogleCloudStorage"
+                },
+                "s3Compatible": {
+                    "description": "An object containing the properties of the target S3 compatible data source.",
+                    "type": "object",
+                    "$ref": "#/definitions/S3Compatible"
+                },
+                "dataverse": {
+                    "description": "An object containing the properties of the target Dataverse data source.",
+                    "type": "object",
+                    "$ref": "#/definitions/Dataverse"
+                },
+                "externalDataShare": {
+                    "description": "An object containing the properties of the target external data share.",
+                    "type": "object",
+                    "$ref": "#/definitions/ExternalDataShareTarget"
+                },
+                "azureBlobStorage": {
+                    "description": "An object containing the properties of the target Azure Blob Storage data source.",
+                    "type": "object",
+                    "$ref": "#/definitions/AzureBlobStorage"
+                }
+            }
+        },
+        "OneLake": {
+            "description": "An object containing the properties of the target OneLake data source.",
+            "type": "object",
+            "required": [ "itemId", "workspaceId", "path" ],
+            "properties": {
+                "itemId": {
+                    "description": "The ID of the target in OneLake. The target can be an item of Lakehouse, KQLDatabase, or Warehouse. ",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "workspaceId": {
+                    "description": "The ID of the target workspace.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "path": {
+                    "description": "A string representing the full path to the target folder within the Item. This path should be relative to the root of the OneLake directory structure. For example: \"Tables/myTablesFolder/someTableSubFolder\".",
+                    "type": "string"
+                }
+            }
+        },
+        "AmazonS3": {
+            "description": "An object containing the properties of the target Amazon S3 data source.",
+            "type": "object",
+            "required": ["location", "connectionId"],
+            "properties": {
+                "location": {
+                    "description": "HTTP URL that points to the target bucket in S3. The URL should be in the format https://[bucket-name].s3.[region-code].amazonaws.com, where \"bucket-name\" is the name of the S3 bucket you want to point to, and \"region-code\" is the code for the region where the bucket is located. For example: https://my-s3-bucket.s3.us-west-2.amazonaws.com",
+                    "type": "string",
+                    "format": "uri"
+                },
+                "subpath": {
+                    "description": "Specifies a target folder or subfolder within the S3 bucket.",
+                    "type": "string"
+                },
+                "connectionId": {
+                    "description": "A string representing the connection that is bound with the shortcut. The connectionId is a unique identifier used to establish a connection between the shortcut and the target datasource. To find this connection ID, first [create a cloud connection](/fabric/data-factory/data-source-management#add-a-data-source) to be used by the shortcut when connecting to the Amazon S3 data location. Open the cloud connection's Settings view and copy the connection ID; this is a GUID.",
+                    "type": "string",
+                    "format": "uuid"
+                }
+            }
+        },
+        "AdlsGen2": {
+            "description": "An object containing the properties of the target ADLS Gen2 data source.",
+            "type": "object",
+            "required": ["location", "subpath", "connectionId"],
+            "properties": {
+                "location": {
+                    "description": "Specifies the location of the target ADLS container. The URI must be in the format https://[account-name].dfs.core.windows.net where [account-name] is the name of the target ADLS account.",
+                    "type": "string",
+                    "format": "uri"
+                },
+                "subpath": {
+                    "description": "Specifies the container and subfolder within the ADLS account where the target folder is located. Must be of the format [container]/[subfolder] where [container] is the name of the container that holds the files and folders; [subfolder] is the name of the subfolder within the container (optional). For example: /mycontainer/mysubfolder",
+                    "type": "string"
+                },
+                "connectionId": {
+                    "description": "A string representing the connection that is bound with the shortcut. The connectionId is a unique identifier used to establish a connection between the shortcut and the target datasource. To find this connection ID, first [create a cloud connection](/fabric/data-factory/data-source-management#add-a-data-source) to be used by the shortcut when connecting to the ADLS data location. Open the cloud connection's Settings view and copy the connection ID; this is a GUID.",
+                    "type": "string",
+                    "format": "uuid"
+                }
+            }
+        },
+        "GoogleCloudStorage": {
+            "description": "An object containing the properties of the target Google Cloud Storage data source.",
+            "type": "object",
+            "required": ["location", "subpath", "connectionId"],
+            "properties": {
+                "location": {
+                    "description": "HTTP URL that points to the target bucket in GCS. The URL should be in the format https://[bucket-name].storage.googleapis.com, where [bucket-name] is the name of the bucket you want to point to. For example: https://my-gcs-bucket.storage.googleapis.com",
+                    "type": "string",
+                    "format": "uri"
+                },
+                "subpath": {
+                    "description": "Specifies a target folder or subfolder within the GCS bucket. For example: /folder",
+                    "type": "string"
+                },
+                "connectionId": {
+                    "description": "A string representing the connection that is bound with the shortcut. The connectionId is a unique identifier used to establish a connection between the shortcut and the target datasource.",
+                    "type": "string",
+                    "format": "uuid"
+                }
+            }
+        },
+        "S3Compatible": {
+            "description": "An object containing the properties of the target S3 compatible data source.",
+            "type": "object",
+            "required": ["location", "subpath", "bucket", "connectionId"],
+            "properties": {
+                "location": {
+                    "description": "HTTP URL of the S3 compatible endpoint. This endpoint must be able to receive ListBuckets S3 API calls. The URL must be in the non-bucket specific format; no bucket should be specified here. For example: https://s3endpoint.contoso.com",
+                    "type": "string",
+                    "format": "uri"
+                },
+                "subpath": {
+                    "description": "Specifies a target folder or subfolder within the S3 compatible bucket. For example: /folder",
+                    "type": "string"
+                },
+                "bucket": {
+                    "description": "Specifies the target bucket within the S3 compatible location.",
+                    "type": "string"
+                },
+                "connectionId": {
+                    "description": "A string representing the connection that is bound with the shortcut. The connectionId is a unique identifier used to establish a connection between the shortcut and the target datasource.",
+                    "type": "string",
+                    "format": "uuid"
+                }
+            }
+        },
+        "Dataverse": {
+            "description": "An object containing the properties of the target Dataverse data source.",
+            "type": "object",
+            "required": ["environmentDomain", "connectionId", "deltaLakeFolder", "tableName"],
+            "properties": {
+                "environmentDomain": {
+                    "description": "URI that indicates the Dataverse target environment's domain name. The URI should be formatted as \"https://[orgname].crm[xx].dynamics.com\", where `[orgname]` represents the name of your Dataverse organization.",
+                    "type": "string",
+                    "format": "uri"
+                },
+                "connectionId": {
+                    "description": "A string representing the connection that is bound with the shortcut. The connectionId is a unique identifier used to establish a connection between the shortcut and the target datasource. To find this connection ID, first [create a cloud connection](/fabric/data-factory/data-source-management#add-a-data-source) to be used by the shortcut when connecting to the Dataverse data location. Open the cloud connection's Settings view and copy the connection ID; this is a GUID.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "deltaLakeFolder": {
+                    "description": "Specifies the DeltaLake folder path where the target data is stored.",
+                    "type": "string"
+                },
+                "tableName": {
+                    "description": "Specifies the name of the target table in Dataverse ",
+                    "type": "string"
+                }
+            }
+        },
+        "AzureBlobStorage": {
+            "description": "An object containing the properties of the target Azure Blob Storage data source.",
+            "type": "object",
+            "required": ["location", "subpath", "connectionId"],
+            "properties": {
+                "location": {
+                    "description": "Specifies the location of the target Azure Blob Storage container. The URI must be in the format `https://[account-name].blob.core.windows.net` where `[account-name]` is the name of the target Azure Blob Storage account.",
+                    "type": "string",
+                    "format": "uri"
+                },
+                "subpath": {
+                    "description": "Specifies the container and subfolder within the Azure Blob Storage account where the target folder is located. Must be of the format [container]/[subfolder]. [Container] is the name of the container that holds the files and folders. [Subfolder] is the name of the subfolder within the container and is optional. For example: /mycontainer/mysubfolder",
+                    "type": "string"
+                },
+                "connectionId": {
+                    "description": "A string representing the connection that is bound with the shortcut. The connectionId is a unique identifier used to establish a connection between the shortcut and the target datasource. To find this connection ID, first [create a cloud connection](/fabric/data-factory/data-source-management#add-a-data-source) to be used by the shortcut when connecting to the Azure Blob Storage data location. Open the cloud connection's settings view and copy the GUID that is the connection ID.",
+                    "type": "string",
+                    "format": "uuid"
+                }
+            }
+        },
+        "ExternalDataShareTarget": {
+            "description": "An object containing the properties of the target external data share.",
+            "type": "object",
+            "required": ["connectionId"],
+            "properties": {
+                "connectionId": {
+                    "description": "A string representing the connection that is bound with the shortcut. The connectionId is a unique identifier used to establish a connection between the shortcut and the target datasource.",
+                    "type": "string",
+                    "format": "uuid"
+                }
+            }
+        },
+        "RunOnDemandItemJobRequest": {
+            "description": "Run on demand item job instance payload",
+            "properties": {
+                "executionData": {
+                    "description": "Payload for run on-demand job request. Needed only if the job type requires a payload.",
+                    "type": "object"
+                }
+            }
+        },
+        "ItemJobInstances": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of item job instances.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ItemJobInstance"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "ItemJobInstance": {
+            "description": "An object representing item job instance",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "Job instance Id",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "itemId": {
+                    "description": "Item Id",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "jobType": {
+                    "description": "Job type",
+                    "type": "string"
+                },
+                "invokeType": {
+                    "description": "The item job invoke type. Additional invokeTypes may be added over time.",
+                    "type": "string",
+                    "enum": ["Scheduled", "Manual"],
+                    "x-ms-enum": {
+                        "name": "InvokeType",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Scheduled",
+                                "description": "Job is scheduled"
+                            },
+                            {
+                                "value": "Manual",
+                                "description": "Job is invoked manually"
+                            }
+                        ]
+                    }
+                },
+                "status": {
+                    "description": "The item job status. Additional statuses may be added over time.",
+                    "type": "string",
+                    "enum": ["NotStarted", "InProgress", "Completed", "Failed", "Cancelled", "Deduped"],
+                    "x-ms-enum": {
+                        "name": "Status",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "NotStarted",
+                                "description": "Job not started"
+                            },
+                            {
+                                "value": "InProgress",
+                                "description": "Job in progress"
+                            },
+                            {
+                                "value": "Completed",
+                                "description": "Job completed"
+                            },
+                            {
+                                "value": "Failed",
+                                "description": "Job failed"
+                            },
+                            {
+                                "value": "Cancelled",
+                                "description": "Job cancelled"
+                            },
+                            {
+                                "value": "Deduped",
+                                "description": "A job instance of the same job type is already running and this job instance is skipped"
+                            }
+                        ]
+                    }
+                },
+                "rootActivityId": {
+                    "description": "Root activity id to trace requests across services",
+                    "type": "string"
+                },
+                "startTimeUtc": {
+                    "description": "Job start time in UTC",
+                    "type": "string"
+                },
+                "endTimeUtc": {
+                    "description": "Job end time in UTC",
+                    "type": "string"
+                },
+                "failureReason": {
+                    "description": "Error response when job is failed",
+                    "type": "object",
+                    "$ref": "../../common/definitions.json#/definitions/ErrorResponse"
+                }
+            }
+        },
+        "OperationState": {
+            "description": "An object describing the details and current state of a long running operation",
+            "type": "object",
+            "required": ["status", "createdTimeUtc", "lastUpdatedTimeUtc"],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "description": "The current status of the operation. Additional operation statuses may be added over time.",
+                    "enum": [
+                        "Undefined",
+                        "NotStarted",
+                        "Running",
+                        "Succeeded",
+                        "Failed"
+                    ],
+                    "x-ms-enum": {
+                        "name": "LongRunningOperationStatus",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Undefined",
+                                "description": "The status of the operation is undefined"
+                            },
+                            {
+                                "value": "NotStarted",
+                                "description": "The operation didn't start"
+                            },
+                            {
+                                "value": "Running",
+                                "description": "The operation is running"
+                            },
+                            {
+                                "value": "Succeeded",
+                                "description": "The operation has finished successfully"
+                            },
+                            {
+                                "value": "Failed",
+                                "description": "The operation has failed"
+                            }
+                        ]
+                    }
+                },
+                "createdTimeUtc": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The start date and time of the operation"
+                },
+                "lastUpdatedTimeUtc": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date and time of the last change to the operation"
+                },
+                "percentComplete": {
+                    "type": "integer",
+                    "description": "Operation progress as a percentage",
+                    "format": "int32",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "error": {
+                    "description": "The error details in case the operation is in failed state",
+                    "$ref": "../../common/definitions.json#/definitions/ErrorResponse"
+                }
+            }
+        },
+        "ItemSchedules": {
+            "description": "list of schedules for this item.",
+            "required": ["value"],
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ],
+            "properties": {
+                "value": {
+                    "description": "list of schedules for this item.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ItemSchedule"
+                    }
+                }
+            }
+        },
+        "ScheduleConfig": {
+            "description": "Item schedule plan detail settings.",
+            "type": "object",
+            "discriminator": "type",
+            "required": ["type", "startDateTime", "endDateTime", "localTimeZoneId"],
+            "properties": {
+                "type": {
+                    "description": "A string represents the type of the plan. Additional planType types may be added over time.",
+                    "type": "string",
+                    "enum": ["Cron", "Daily", "Weekly"],
+                    "x-ms-enum": {
+                        "name": "ScheduleType",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Cron",
+                                "description": "A type of schedule triggers jobs periodically."
+                            },
+                            {
+                                "value": "Daily",
+                                "description": "A type of schedule triggers jobs daily."
+                            },
+                            {
+                                "value": "Weekly",
+                                "description": "A type of schedule triggers jobs by the week."
+                            }
+                        ]
+                    }
+                },
+              "startDateTime": {
+                "description": "The start time for this schedule. If the start time is in the past, it will trigger a job instantly. The time is in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                "type": "string",
+                "format": "date-time"
+              },
+              "endDateTime": {
+                "description": "The end time for this schedule. The end time must be later than the start time. It has to be in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                "type": "string",
+                "format": "date-time"
+              },
+                "localTimeZoneId": {
+                    "description": "The time zone identifier registry on local computer for windows, see [Default Time Zones](/windows-hardware/manufacture/desktop/default-time-zones)",
+                    "type": "string"
+                }
+            }
+        },
+        "CronScheduleConfig": {
+            "type": "object",
+            "x-ms-discriminator-value": "Cron",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ScheduleConfig"
+                }
+            ],
+            "required": ["interval"],
+            "properties": {
+                "interval": {
+                    "description": "The time interval in minutes. A number between 1 and 5270400 (10 years).",
+                    "type": "integer",
+                    "format": "int32",
+                    "minimum": 1,
+                    "maximum": 5270400
+                }
+            }
+        },
+        "DailyScheduleConfig": {
+            "type": "object",
+            "x-ms-discriminator-value": "Daily",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ScheduleConfig"
+                }
+            ],
+            "required": ["times"],
+            "properties": {
+                "times": {
+                    "description": "A list of time slots in hh:mm format, at most 100 elements are allowed.",
+                    "type": "array",
+                    "items": {
+                        "description": "Time slots in hh:mm format.",
+                        "type": "string"
+                    },
+                    "minItems": 1,
+                    "maxItems": 100
+                }
+            }
+        },
+        "WeeklyScheduleConfig": {
+            "type": "object",
+            "x-ms-discriminator-value": "Weekly",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ScheduleConfig"
+                }
+            ],
+            "required": ["times", "weekdays"],
+            "properties": {
+                "times": {
+                    "description": "A list of time slots in hh:mm format, at most 100 elements are allowed.",
+                    "type": "array",
+                    "items": {
+                        "description": "Time slots in hh:mm format.",
+                        "type": "string"
+                    },
+                    "minItems": 1,
+                    "maxItems": 100
+                },
+                "weekdays": {
+                    "description": "A list of weekdays, at most seven elements are allowed.",
+                    "type": "array",
+                    "items": {
+                        "description": "Days of the week",
+                        "type": "string",
+                        "enum": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+                        "x-ms-enum": {
+                            "name": "DayOfWeek",
+                            "modelAsString": true,
+                            "values": [
+                                {
+                                    "value": "Monday",
+                                    "description": "Monday"
+                                },
+                                {
+                                    "value": "Tuesday",
+                                    "description": "Tuesday"
+                                },
+                                {
+                                    "value": "Wednesday",
+                                    "description": "Wednesday"
+                                },
+                                {
+                                    "value": "Thursday",
+                                    "description": "Thursday"
+                                },
+                                {
+                                    "value": "Friday",
+                                    "description": "Friday"
+                                },
+                                {
+                                    "value": "Saturday",
+                                    "description": "Saturday"
+                                },
+                                {
+                                    "value": "Sunday",
+                                    "description": "Sunday"
+                                }
+                            ]
+                        }
+                    },
+                    "minItems": 1,
+                    "maxItems": 7
+                }
+            }
+        },
+        "ItemSchedule": {
+            "description": "Item schedule.",
+            "type": "object",
+            "required": ["id", "enabled"],
+            "properties": {
+                "id" : {
+                    "description": "The schedule ID.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "enabled": {
+                    "description": "Whether this schedule is enabled. True - Enabled, False - Disabled.",
+                    "type": "boolean"
+                },
+              "createdDateTime": {
+                "description": "The created time stamp of this schedule in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                "type": "string",
+                "format": "date-time"
+              },
+                "configuration": {
+                    "description": "The actual data contains the time/weekdays of this schedule.",
+                    "$ref": "#/definitions/ScheduleConfig"
+                },
+                "owner": {
+                    "description": "The user identity that created this schedule or last modified.",
+                    "$ref": "../../common/definitions.json#/definitions/Principal"
+                }
+            }
+        },
+        "CreateScheduleRequest": {
+            "description": "Create item schedule plan request payload.",
+            "type": "object",
+            "required": ["enabled", "configuration"],
+            "properties": {
+                "enabled": {
+                    "description": "Whether this schedule is enabled. True - Enabled, False - Disabled.",
+                    "type": "boolean"
+                },
+                "configuration": {
+                    "description": "The actual data contains the time/weekdays of this schedule.",
+                    "$ref": "#/definitions/ScheduleConfig"
+                }
+            }
+        },
+        "UpdateScheduleRequest": {
+            "description": "Update item schedule plan request payload.",
+            "required": ["enabled", "configuration"],
+            "properties": {
+                "enabled": {
+                    "description": "Whether this schedule is enabled. True - Enabled, False - Disabled.",
+                    "type": "boolean"
+                },
+                "configuration": {
+                    "description": "The actual data contains the time/weekdays of this schedule.",
+                    "$ref": "#/definitions/ScheduleConfig"
+                }
+            }
+        },
+        "ItemJobParameter": {
+            "description": "Parameter details.",
+            "type": "object",
+            "required": [
+              "parameterName",
+              "type",
+              "value"
+            ],
+            "properties": {
+                "parameterName": {
+                    "description": "Name of the parameter.",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "The parameter type. Additional parameter types may be added over time.",
+                    "type": "string",
+                    "enum": [ "Automatic" ],
+                    "x-ms-enum": {
+                        "name": "Type",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Automatic",
+                                "description": "Value must be Automatic"
+                            }
+                        ]
+                    }
+                },
+                "value": {
+                    "description": "The value of the parameter to override during execution."
+                }
+            }
+        },
+        "Folders": {
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of folders.",
+                    "type": "array",
+                    "readOnly": true,
+                    "items": {
+                        "$ref": "../../common/definitions.json#/definitions/Folder"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateFolderRequest": {
+            "description": "Create folder request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The folder display name. The name must meet [Folder name requirements](/fabric/get-started/workspaces-folders#folder-name-requirements)",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "parentFolderId": {
+                    "description": "The parent folder ID. If not specified or null, the folder is created with the workspace as its parent folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateFolderRequest": {
+            "description": "Update folder request.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The folder display name. The name must meet [Folder name requirements](/fabric/get-started/workspaces-folders#folder-name-requirements)",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "MoveFolderRequest": {
+            "description": "Move folder request.",
+            "properties": {
+                "targetFolderId": {
+                    "description": "The destination folder ID. If not provided, the workspace is used as the destination folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                }
+            }
+        }
+    }
+}

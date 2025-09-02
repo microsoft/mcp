@@ -1,0 +1,77 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "itemId": "56bac802-080d-4f73-8a42-1b406eb1fcac"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "path": "Files/blafolder/folder3",
+                        "name": "MyOneLakeShortcut",
+                        "target": {
+                            "type": "OneLake",
+                            "oneLake": {
+                                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                                "itemId": "56bac802-080d-4f73-8a42-1b406eb1fcac",
+                                "path": "Tables/myTablesFolder/someTableSubFolder"
+                            }
+                        }
+                    },
+                    {
+                        "path": "Files/noaccess",
+                        "name": "MyS3Shortcut",
+                        "target": {
+                            "type": "AmazonS3"
+                        }
+                    },
+                    {
+                        "path": "Files/blafolder/folder3",
+                        "name": "MyS3CompatibleShortcut",
+                        "target": {
+                            "type": "S3Compatible",
+                            "s3Compatible": {
+                                "connectionId": "3c976446-0bda-472e-8800-f1d6e4f162dc",
+                                "location": "https://s3endpoint.contoso.com",
+                                "bucket": "contosoBucket",
+                                "subpath": "s3CompatibleDirectory"
+                            }
+                        }
+                    },
+                    {
+                       "path": "Files/blafolder/folder3",
+                        "name": "MyGCSShortcut",
+                        "target": {
+                            "type": "GoogleCloudStorage",
+                            "googleCloudStorage": {
+                                "connectionId": "5b218778-e7a5-4d73-8187-f10824047715",
+                                "location": "https://gcs-contosoBucket.storage.googleapis.com",
+                                "subpath": "gcsDirectory"
+                            }
+                        }
+                    },
+                    {
+                        "path": "Files/blafolder/folder3",
+                        "name": "MyExternalDataShareShortcut",
+                        "target": {
+                            "type": "ExternalDataShare",
+                            "externalDataShare": {
+                                "connectionId": "af196b7b-0bf8-4430-b383-ad48d14f4edf"
+                            }
+                        }
+                    },
+                    {
+                        "path": "Files/bla1folder/folder4",
+                        "name": "MyDataShareShortcutWithREAD",
+                        "target": {
+                            "type": "ExternalDataShare"
+                        }
+                    }
+                ],
+                "continuationToken": "LDEsMTAwMDAwLDA%3D",
+                "continuationUri": "https://api.fabric.microsoft.com/v1/workspaces/cfafbeb1-8037-4d0c-896e-a46fb27ff229/items/56bac802-080d-4f73-8a42-1b406eb1fcac/shortcuts?continuationToken=LDEsMTAwMDAwLDA%3D"
+            }
+        }
+    }
+}

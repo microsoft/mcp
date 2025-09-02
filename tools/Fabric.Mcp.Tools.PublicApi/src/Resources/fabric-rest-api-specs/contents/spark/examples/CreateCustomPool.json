@@ -1,0 +1,44 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "createCustomPoolRequest": {
+            "name": "pool1",
+            "nodeFamily": "MemoryOptimized",
+            "nodeSize": "Small",
+            "autoScale": {
+                "enabled": true,
+                "minNodeCount": 1,
+                "maxNodeCount": 2
+            },
+            "dynamicExecutorAllocation": {
+                "enabled": true,
+                "minExecutors": 1,
+                "maxExecutors": 1
+            }
+        }
+    },
+    "responses": {
+        "201": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/workspaces/f089354e-8366-4e18-aea3-4cb4a3a50b48/spark/pools/2367293d-b70b-4b33-97f2-161b8d04a8d7"
+            },
+            "body": {
+                "id": "2367293d-b70b-4b33-97f2-161b8d04a8d7",
+                "name": "pool1",
+                "type": "Workspace",
+                "nodeFamily": "MemoryOptimized",
+                "nodeSize": "Small",
+                "autoScale": {
+                    "enabled": true,
+                    "minNodeCount": 1,
+                    "maxNodeCount": 2
+                },
+                "dynamicExecutorAllocation": {
+                    "enabled": true,
+                    "minExecutors": 1,
+                    "maxExecutors": 1
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "createKQLQuerysetRequest": {
+            "displayName": "KQLQueryset_1",
+            "description": "A KQL queryset description",
+            "definition": {
+                "format": null,
+                "parts": [
+                    {
+                        "path": "RealTimeQueryset.json",
+                        "payload": "ewogICAgInF1ZXJ5c2V0IjogewogICAgICAgICJ2ZXJzaW9uIjogIjEuMC4wIiwKICAgICAgICAiZGF0YVNvdXJjZXMiOiBbewogICAgICAgICAgICAgICAgImlkIjogImMyNDM0YmY4LTI1YmItNGFhMC04NzQ2LWRiNDcwNTMzYWRhZiIsCiAgICAgICAgICAgICAgICAiY2x1c3RlclVyaSI6ICJodHRwczovL2hlbHAua3VzdG8ud2luZG93cy5uZXQvIiwKICAgICAgICAgICAgICAgICJ0eXBlIjogIkF6dXJlRGF0YUV4cGxvcmVyIiwKICAgICAgICAgICAgICAgICJkYXRhYmFzZU5hbWUiOiAiU2FtcGxlcyIKICAgICAgICAgICAgfQogICAgICAgIF0sCiAgICAgICAgInRhYnMiOiBbewogICAgICAgICAgICAgICAgImlkIjogImNjZDdiOTBjLTUxZmUtNDI5Zi1hODUzLTM4NWIwMmJkNzRjOSIsCiAgICAgICAgICAgICAgICAiY29udGVudCI6ICJTdG9ybUV2ZW50c1xcXFxufCBjb3VudCIsCiAgICAgICAgICAgICAgICAidGl0bGUiOiAiVGFiMU5hbWUiLAogICAgICAgICAgICAgICAgImRhdGFTb3VyY2VJZCI6ICJjMjQzNGJmOC0yNWJiLTRhYTAtODc0Ni1kYjQ3MDUzM2FkYWYiCiAgICAgICAgICAgIH0KICAgICAgICBdCiAgICB9Cn0=",
+                        "payloadType": "InlineBase64"
+                    }
+                ]
+            }
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "displayName": "KQLQueryset_1",
+                "description": "A KQL queryset description",
+                "type": "KQLQueryset",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "5b218778-e7a5-4d73-8187-f10824047715"
+            }
+        }
+    }
+}

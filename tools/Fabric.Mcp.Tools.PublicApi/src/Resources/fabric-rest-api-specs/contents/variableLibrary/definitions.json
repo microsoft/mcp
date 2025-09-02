@@ -1,0 +1,166 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "VariableLibrary data types"
+    },
+    "paths": {},
+    "definitions": {
+        "VariableLibraries": {
+            "description": "A list of VariableLibraries.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of VariableLibraries.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/VariableLibrary"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "VariableLibrary": {
+            "description": "A VariableLibrary object.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The VariableLibrary properties.",
+                    "$ref": "#/definitions/VariableLibraryProperties"
+                }
+            }
+        },
+        "VariableLibraryProperties": {
+            "description": "The VariableLibrary properties.",
+            "required": ["activeValueSetName"],
+            "type": "object",
+            "properties": {
+                "activeValueSetName": {
+                    "description": "The VariableLibrary current active value set.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "CreateVariableLibraryRequest": {
+            "description": "Create VariableLibrary request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The VariableLibrary display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The VariableLibrary description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the VariableLibrary is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The VariableLibrary public definition.",
+                    "$ref": "#/definitions/VariableLibraryPublicDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateVariableLibraryDefinitionRequest": {
+            "description": "Update VariableLibrary public definition request payload.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/VariableLibraryPublicDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "VariableLibraryDefinitionResponse": {
+            "description": "VariableLibrary public definition response.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/VariableLibraryPublicDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "VariableLibraryPublicDefinition" : {
+            "description": "VariableLibrary public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/variable-library-definition) for more details on how to craft a VariableLibrary public definition.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "format": {
+                    "description": "The format of the item definition. Supported format: `VariableLibraryV1`.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/VariableLibraryPublicDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "VariableLibraryPublicDefinitionPart": {
+            "description": "VariableLibrary definition part object.",
+            "type": "object",
+            "required": ["path", "payload", "payloadType"],
+            "properties": {
+                "path": {
+                    "description": "The VariableLibrary public definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The VariableLibrary public definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateVariableLibraryRequest": {
+            "description": "Update VariableLibrary request.",
+            "properties": {
+                "displayName": {
+                    "description": "The VariableLibrary display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The VariableLibrary description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "properties": {
+                    "description": "The VariableLibrary properties.",
+                    "$ref": "#/definitions/VariableLibraryProperties",
+                    "readOnly": false
+                }
+            }
+        }
+    }
+}

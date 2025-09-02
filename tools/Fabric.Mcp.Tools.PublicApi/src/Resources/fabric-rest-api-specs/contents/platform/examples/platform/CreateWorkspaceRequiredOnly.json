@@ -1,0 +1,20 @@
+{
+    "parameters": {
+        "createWorkspaceRequest": {
+            "displayName": "New workspace"
+        }
+    },
+    "responses": {
+        "201": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/workspaces/cfafbeb1-8037-4d0c-896e-a46fb22287ff"
+            },
+            "body": {
+                "id": "cfafbeb1-8037-4d0c-896e-a46fb22287ff",
+                "displayName": "New workspace",
+                "description": "",
+                "type": "Workspace"
+            }
+        }
+    }
+}

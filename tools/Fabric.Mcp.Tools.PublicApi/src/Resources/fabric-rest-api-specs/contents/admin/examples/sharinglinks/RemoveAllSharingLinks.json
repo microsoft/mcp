@@ -1,0 +1,18 @@
+{
+    "parameters": {
+        "removeAllSharingLinksRequest": {
+            "sharingLinkType": "OrgLink"
+        }
+    },
+    "responses": {
+        "200": {
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "x-ms-operation-id": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "Retry-After": 30
+            }
+        }
+    }
+}

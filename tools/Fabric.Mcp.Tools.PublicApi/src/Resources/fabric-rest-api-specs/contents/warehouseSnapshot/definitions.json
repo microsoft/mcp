@@ -1,0 +1,143 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "WarehouseSnapshot data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "WarehouseSnapshot": {
+            "description": "A Warehouse snapshot object.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The Warehouse snapshot properties.",
+                    "$ref": "#/definitions/WarehouseSnapshotProperties"
+                }
+            }
+        },
+        "WarehouseSnapshotProperties": {
+            "description": "The Warehouse snapshot properties.",
+            "type": "object",
+            "required": ["connectionString", "parentWarehouseId", "snapshotDateTime"],
+            "properties": {
+                "connectionString": {
+                    "description": "The SQL connection string connected to the workspace containing this warehouse.",
+                    "type": "string"
+                },
+                "parentWarehouseId": {
+                    "description": "The parent Warehouse ID.",
+                    "type": "string"
+                },
+                "snapshotDateTime": {
+                    "description": "The current warehouse snapshot date and time in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }
+        },
+        "WarehouseSnapshots": {
+            "description": "A list of Warehouse snapshots.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of Warehouse snapshots.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/WarehouseSnapshot"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateWarehouseSnapshotRequest": {
+            "description": "Create Warehouse snapshot request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The Warehouse snapshot display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The Warehouse snapshot description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the Warehouse snapshot is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "creationPayload": {
+                    "description": "The Warehouse snapshot creation payload.",
+                    "$ref": "#/definitions/WarehouseSnapshotCreationPayload",
+                    "readOnly": false
+                }
+            }
+        },
+        "WarehouseSnapshotCreationPayload": {
+            "description": "The Warehouse snapshot creation payload.",
+            "type": "object",
+            "required": ["parentWarehouseId"],
+            "properties": {
+                "parentWarehouseId": {
+                    "description": "The parent Warehouse ID.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "snapshotDateTime": {
+                    "description": "The date and time used for the Warehouse snapshot, if not provided the current date and time will be taken. If given it should be in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                }
+            }
+        },
+        "UpdateWarehouseSnapshotRequest": {
+            "description": "Update Warehouse snapshot request.",
+            "properties": {
+                "displayName": {
+                    "description": "The Warehouse snapshot display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The Warehouse snapshot description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "properties": {
+                    "description": "The Warehouse snapshot update properties payload.",
+                    "$ref": "#/definitions/WarehouseSnapshotUpdateProperties",
+                    "readOnly": false
+                }
+            }
+        },
+        "WarehouseSnapshotUpdateProperties": {
+            "description": "The Warehouse snapshot update properties payload.",
+            "type": "object",
+            "required": ["snapshotDateTime"],
+            "properties": {
+                "snapshotDateTime": {
+                    "description": "The date and time used for the Warehouse snapshot, if not provided the current date and time will be taken. If given it should be in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                }
+            }
+        }
+    }
+}

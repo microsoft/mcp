@@ -1,0 +1,15 @@
+{
+    "parameters": {
+        "workspaceId": "4b218778-e7a5-4d73-8187-f10824047715",
+        "itemId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "jobInstanceId": "5b218778-e7a5-4d73-8187-f10824047715"
+    },
+    "responses": {
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/workspaces/4b218778-e7a5-4d73-8187-f10824047715/items/cfafbeb1-8037-4d0c-896e-a46fb27ff229/jobs/instances/5b218778-e7a5-4d73-8187-f10824047715",
+                "Retry-After": 60
+            }
+        }
+    }
+}

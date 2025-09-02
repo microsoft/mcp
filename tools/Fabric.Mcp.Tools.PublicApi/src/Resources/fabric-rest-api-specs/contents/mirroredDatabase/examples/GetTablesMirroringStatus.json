@@ -1,0 +1,25 @@
+{
+    "parameters": {
+        "workspaceId": "a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1",
+        "mirroredDatabaseId": "b1b1b1b1-cccc-dddd-eeee-f2f2f2f2f2f2"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "data": [
+                    {
+                        "sourceObjectType": "Table",
+                        "sourceSchemaName": "dbo",
+                        "sourceTableName": "test",
+                        "status": "Replicating",
+                        "metrics": {
+                            "processedBytes": 1247,
+                            "processedRows": 6,
+                            "lastSyncDateTime": "2024-10-08T05:07:11.0663362Z"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

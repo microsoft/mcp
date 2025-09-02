@@ -1,0 +1,10 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "eventstreamId": "8c500070-073f-4a88-b478-8fabe1941c52",
+        "sourceId": "e2886002-d696-4c05-969c-51361365cc24"
+    },
+    "responses": {
+        "200": {}
+    }
+}

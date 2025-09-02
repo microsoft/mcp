@@ -1,0 +1,39 @@
+{
+    "parameters": {
+        "workspaceId": "e4ae4765-02a0-4cd8-bbef-65be17dd5a22"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "81fac5e1-2a81-421b-a168-110b1c72fa11",
+                        "principal": {
+                            "displayName": "Eric Solomon",
+                            "id": "81fac5e1-2a81-421b-a168-110b1c72fa11",
+                            "type": "User",
+                            "userDetails": {
+                                "userPrincipalName": "eric@microsoft.com"
+                            }
+                        },
+                        "role": "Admin"
+                    },
+                    {
+                        "id": "dbc4f130-681f-46b9-b19a-ca19ea5daa31",
+                        "principal": {
+                            "displayName": "ServicePrincipal",
+                            "id": "dbc4f130-681f-46b9-b19a-ca19ea5daa31",
+                            "type": "ServicePrincipal",
+                            "servicePrincipalDetails": {
+                                "aadAppId": "7ac9c70b-69f1-48c5-bf5b-69ac50578a55"
+                            }
+                        },
+                        "role": "Member"
+                    }
+                ],
+                "continuationToken": "LDEsMTAwMDAwLDA%3D",
+                "continuationUri": "https://api.fabric.microsoft.com/v1/workspaces/e4ae4765-02a0-4cd8-bbef-65be17dd5a22/roleAssignments?continuationToken=LDEsMTAwMDAwLDA%3D"
+            }
+        }
+    }
+}

@@ -1,0 +1,38 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "sqlEndpointId": "5b218778-e7a5-4d73-8187-f10824047715",
+    "preview": "true"
+  },
+  "responses": {
+    "200": {
+      "body": [
+        {
+          "tableName": "Table 1",
+          "startDateTime": "2025-02-04T22:29:12.4400865Z",
+          "endDateTime": "2025-02-04T22:29:12.4869641Z",
+          "status": "Success",
+          "lastSuccessfulSyncDateTime": "2024-07-23T14:28:23.1864319Z"
+        },
+        {
+          "tableName": "Table 2",
+          "startDateTime": "2025-02-04T22:29:13.4400865Z",
+          "endDateTime": "2025-02-04T22:29:13.4869641Z",
+          "status": "Failure",
+          "error": {
+            "errorCode": "AdalRetryException",
+            "message": "Couldn't run query. There is a problem with the Microsoft Entra ID token. Have the warehouse owner log in again. If they're unavailable, use the takeover feature."
+          },
+          "lastSuccessfulSyncDateTime": "2024-07-23T14:28:23.1864319Z"
+        },
+        {
+          "tableName": "Table 3",
+          "startDateTime": "2025-02-04T22:29:14.4400865Z",
+          "endDateTime": "2025-02-04T22:29:14.4869641Z",
+          "status": "NotRun",
+          "lastSuccessfulSyncDateTime": "2024-07-23T14:28:23.1864319Z"
+        }
+      ]
+    }
+  }
+}

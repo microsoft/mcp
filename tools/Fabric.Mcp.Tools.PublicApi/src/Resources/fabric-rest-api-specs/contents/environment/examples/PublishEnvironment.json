@@ -1,0 +1,25 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "environmentId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "publishDetails": {
+                    "state": "Running",
+                    "targetVersion": "46838a80-5450-4414-bea0-40fb6f3e0c0d",
+                    "startTime": "2024-03-29T14:17:09.0697022Z",
+                    "componentPublishInfo": {
+                        "sparkLibraries": {
+                            "state": "Running"
+                        },
+                        "sparkSettings": {
+                            "state": "Running"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

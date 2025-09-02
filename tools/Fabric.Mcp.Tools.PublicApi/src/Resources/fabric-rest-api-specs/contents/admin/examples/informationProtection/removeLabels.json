@@ -1,0 +1,61 @@
+{
+    "parameters": {
+        "removeLabelsRequest": {
+            "items": [
+                {
+                    "id": "fe472f5e-636e-4c10-a1c6-7e9edc0b542a",
+                    "type": "Dashboard"
+                },
+                {
+                    "id": "476fcafe-b514-495d-b13f-ca9a4f0b1d8b",
+                    "type": "Dashboard"
+                },
+                {
+                    "id": "fe472f5e-636e-4c10-a1c6-7e9edc0b542c",
+                    "type": "Report"
+                },
+                {
+                    "id": "fe472f5e-636e-4c10-a1c6-7e9edc0b542e",
+                    "type": "SemanticModel"
+                },
+                {
+                    "id": "476fcafe-b514-495d-b13f-ca9a4f0b1d8f",
+                    "type": "Notebook"
+                }
+            ]
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "itemsChangeLabelStatus": [
+                    {
+                        "id": "fe472f5e-636e-4c10-a1c6-7e9edc0b542a",
+                        "type": "Dashboard",
+                        "status": "NotFound"
+                    },
+                    {
+                        "id": "476fcafe-b514-495d-b13f-ca9a4f0b1d8b",
+                        "type": "Dashboard",
+                        "status": "Failed"
+                    },
+                    {
+                        "id": "fe472f5e-636e-4c10-a1c6-7e9edc0b542c",
+                        "type": "Report",
+                        "status": "Succeeded"
+                    },
+                    {
+                        "id": "fe472f5e-636e-4c10-a1c6-7e9edc0b542e",
+                        "type": "SemanticModel",
+                        "status": "InsufficientUsageRights"
+                    },
+                    {
+                        "id": "476fcafe-b514-495d-b13f-ca9a4f0b1d8f",
+                        "type": "Notebook",
+                        "status": "FailedToGetUsageRights"
+                    }
+                ]
+            }
+        }
+    }
+}

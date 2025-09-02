@@ -1,0 +1,104 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "itemId": "5b218778-e7a5-4d73-8187-f10824047715"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "dccc162f-7a41-4720-83c3-5c7e81187959",
+                        "paths": [
+                            "Files/Sales/Contoso_Sales_2023"
+                        ],
+                        "creatorPrincipal": {
+                            "id": "f3052d1c-61a9-46fb-8df9-0d78916ae041",
+                            "displayName": "Jacob Hancock",
+                            "type": "User",
+                            "userDetails": {
+                                "userPrincipalName": "jacob@contoso.com"
+                            }
+                        },
+                        "recipient": {
+                            "userPrincipalName": "lisa@fabrikam.com"
+                        },
+                        "status": "Pending",
+                        "expirationTimeUtc": "2024-12-13T00:00:00.000Z",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "itemId": "5b218778-e7a5-4d73-8187-f10824047715",
+                        "invitationUrl": "https://app.fabric.microsoft.com/externaldatasharing/accept?providerTenantId=34f92457-fe9d-4c36-92a8-499fdfaf0f8f&shareId=dccc162f-7a41-4720-83c3-5c7e81187959"
+                    },
+                    {
+                        "id": "96c21561-65b8-4b23-bb9a-ee8cef945c45",
+                        "paths": [
+                            "Files/Sales/Contoso_Sales_2023"
+                        ],
+                        "creatorPrincipal": {
+                            "id": "f3052d1c-61a9-46fb-8df9-0d78916ae041",
+                            "displayName": "Jacob Hancock",
+                            "type": "User",
+                            "userDetails": {
+                                "userPrincipalName": "jacob@contoso.com"
+                            }
+                        },
+                        "recipient": {
+                            "userPrincipalName": "lisa@fabrikam.com"
+                        },
+                        "status": "Active",
+                        "expirationTimeUtc": "2024-08-31T00:00:00.000Z",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "itemId": "5b218778-e7a5-4d73-8187-f10824047715",
+                        "invitationUrl": "https://app.fabric.microsoft.com/externaldatasharing/accept?providerTenantId=34f92457-fe9d-4c36-92a8-499fdfaf0f8f&shareId=96c21561-65b8-4b23-bb9a-ee8cef945c45",
+                        "acceptedByTenantId": "c51dc03f-268a-4da0-a879-25f24947ab8b"
+                    },
+                    {
+                        "id": "0f40aeca-8f78-4a6f-a552-e5c45faadc60",
+                        "paths": [
+                            "Files/Sales/Contoso_Sales_2023"
+                        ],
+                        "creatorPrincipal": {
+                            "id": "81fac5e1-2a81-421b-a168-110b1c72fa11",
+                            "displayName": "Eric Solomon",
+                            "type": "User",
+                            "userDetails": {
+                                "userPrincipalName": "eric@contoso.com"
+                            }
+                        },
+                        "recipient": {
+                            "userPrincipalName": "lisa@fabrikam.com"
+                        },
+                        "status": "InvitationExpired",
+                        "expirationTimeUtc": "2024-01-01T00:00:00.000Z",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "itemId": "5b218778-e7a5-4d73-8187-f10824047715",
+                        "invitationUrl": "https://app.fabric.microsoft.com/externaldatasharing/accept?providerTenantId=34f92457-fe9d-4c36-92a8-499fdfaf0f8f&shareId=0f40aeca-8f78-4a6f-a552-e5c45faadc60"
+                    },
+                    {
+                        "id": "89e82a82-0140-4837-8eee-9c919e3e5952",
+                        "paths": [
+                            "Files/Sales/Contoso_Sales_2023"
+                        ],
+                        "creatorPrincipal": {
+                            "id": "81fac5e1-2a81-421b-a168-110b1c72fa11",
+                            "displayName": "Eric Solomon",
+                            "type": "User",
+                            "userDetails": {
+                                "userPrincipalName": "eric@contoso.com"
+                            }
+                        },
+                        "recipient": {
+                            "userPrincipalName": "lisa@fabrikam.com"
+                        },
+                        "status": "Revoked",
+                        "expirationTimeUtc": "2024-12-01T00:00:00.000Z",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "itemId": "5b218778-e7a5-4d73-8187-f10824047715",
+                        "invitationUrl": "https://app.fabric.microsoft.com/externaldatasharing/accept?providerTenantId=34f92457-fe9d-4c36-92a8-499fdfaf0f8f&shareId=89e82a82-0140-4837-8eee-9c919e3e5952",
+                        "acceptedByTenantId": "c51dc03f-268a-4da0-a879-25f24947ab8b"
+                    }
+                ]
+            }
+        }
+    }
+}

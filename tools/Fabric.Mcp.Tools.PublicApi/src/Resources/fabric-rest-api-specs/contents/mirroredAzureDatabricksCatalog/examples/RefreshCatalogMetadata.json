@@ -1,0 +1,17 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "mirroredAzureDatabricksCatalogId": "b9429666-fd5a-4a51-a81d-09b1e20ca4be"
+  },
+  "responses": {
+    "200": {
+    },
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/ea72fc0b-5e31-44b0-b48f-add98bff6cdb",
+        "x-ms-operation-id": "ea72fc0b-5e31-44b0-b48f-add98bff6cdb",
+        "Retry-After": 30
+      }
+    }
+  }
+}

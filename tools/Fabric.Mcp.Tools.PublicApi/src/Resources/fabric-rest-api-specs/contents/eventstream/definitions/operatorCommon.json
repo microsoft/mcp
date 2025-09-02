@@ -1,0 +1,644 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Eventstream operator common data types"
+    },
+    "paths": {},
+    "definitions": {
+        "OperatorCommonDuration": {
+            "type": "object",
+            "description": "Represents the duration.",
+            "required": [
+                "value",
+                "unit"
+            ],
+            "properties": {
+                "value": {
+                    "type": "integer",
+                    "description": "The value of the duration."
+                },
+                "unit": {
+                    "type": "string",
+                    "description": "The unit of the duration.",
+                    "enum": [
+                        "Microsecond",
+                        "Millisecond",
+                        "Second",
+                        "Minute",
+                        "Hour",
+                        "Day",
+                        "Weekday",
+                        "Week",
+                        "DayOfYear",
+                        "Month",
+                        "Quarter",
+                        "Year"
+                    ]
+                }
+            }
+        },
+        "ColumnReferenceExpression": {
+            "type": "object",
+            "description": "Represents a reference to a column.",
+            "required": [
+                "columnName"
+            ],
+            "properties": {
+                "node": {
+                    "type": "string",
+                    "description": "The name of the reference node."
+                },
+                "columnName": {
+                    "type": "string",
+                    "description": "The name of the column."
+                },
+                "columnPathSegments": {
+                    "type": "array",
+                    "description": "The path segments to the column reference for nested columns.",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "LiteralExpression": {
+            "type": "object",
+            "description": "Represents a literal expression.",
+            "required": [
+                "dataType",
+                "value"
+            ],
+            "properties": {
+                "dataType": {
+                    "$ref": "#/definitions/DataType",
+                    "description": "The data type of the literal expression."
+                },
+                "value": {
+                    "type": "string",
+                    "description": "The value of the literal expression."
+                }
+            }
+        },
+        "Aggregation": {
+            "type": "object",
+            "description": "Represents an aggregation on a column.",
+            "required": [
+                "aggregationFunction",
+                "column"
+            ],
+            "properties": {
+                "aggregationFunction": {
+                    "type": "string",
+                    "description": "The aggregation function.",
+                    "enum": [
+                        "Average",
+                        "Count",
+                        "Maximum",
+                        "Minimum",
+                        "PercentileContinuous",
+                        "PercentileDiscrete",
+                        "StandardDeviation",
+                        "StandardDeviationPopulation",
+                        "Sum",
+                        "Variance",
+                        "VariancePopulation"
+                    ]
+                },
+                "arguments": {
+                    "type": "array",
+                    "description": "A list of the arguments for the aggregation.",
+                    "items": {
+                        "type": "object"
+                    }
+                },
+                "column": {
+                    "$ref": "#/definitions/ColumnReferenceExpression"
+                },
+                "alias": {
+                    "type": "string",
+                    "description": "The alias of the aggregation."
+                }
+            }
+        },
+        "InColumnAggregation": {
+            "type": "object",
+            "description": "Represents an aggregation on a column.",
+            "required": [
+                "duration"
+            ],
+            "properties": {
+                "partitionBy": {
+                    "type": "array",
+                    "description": "A list of the columns to partition by.",
+                    "items": {
+                        "$ref": "#/definitions/ColumnReferenceExpression"
+                    }
+                },
+                "duration": {
+                    "$ref": "#/definitions/OperatorCommonDuration"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Aggregation"
+                }
+            ]
+        },
+        "FilterCondition": {
+            "type": "object",
+            "description": "Represents a filter condition.",
+            "required": [
+                "column",
+                "operatorType"
+            ],
+            "properties": {
+                "column": {
+                    "$ref": "#/definitions/ColumnReferenceExpression"
+                },
+                "operatorType": {
+                    "type": "string",
+                    "description": "The operator type.",
+                    "enum": [
+                        "Equals",
+                        "NotEquals",
+                        "GreaterThan",
+                        "GreaterThanOrEquals",
+                        "LessThan",
+                        "LessThanOrEquals",
+                        "Contains",
+                        "DoesNotContain",
+                        "StartsWith",
+                        "DoesNotStartWith",
+                        "EndsWith",
+                        "DoesNotEndWith",
+                        "IsEmpty",
+                        "IsNull",
+                        "IsNotNull",
+                        "IsNotNullOrEmpty"
+                    ]
+                },
+                "value": {
+                    "$ref": "#/definitions/LiteralExpression"
+                }
+            }
+        },
+        "GroupByWindow": {
+            "type": "object",
+            "description": "Represents the window for the group by operator.",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The type of the window.",
+                    "enum": [
+                        "Tumbling",
+                        "Hopping",
+                        "Sliding",
+                        "Snapshot",
+                        "Session"
+                    ]
+                }
+            },
+            "discriminator": "type"
+        },
+        "TumblingWindow": {
+            "type": "object",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties for a tumbling window.",
+                    "$ref": "#/definitions/TumblingWindowProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/GroupByWindow"
+                }
+            ],
+            "x-ms-discriminator-value": "Tumbling"
+        },
+        "HoppingWindow": {
+            "type": "object",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties for a hopping window.",
+                    "$ref": "#/definitions/HoppingWindowProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/GroupByWindow"
+                }
+            ],
+            "x-ms-discriminator-value": "Hopping"
+        },
+        "SlidingWindow": {
+            "type": "object",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties for a sliding window.",
+                    "$ref": "#/definitions/SlidingWindowProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/GroupByWindow"
+                }
+            ],
+            "x-ms-discriminator-value": "Sliding"
+        },
+        "SnapshotWindow": {
+            "type": "object",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties for a snapshot window.",
+                    "$ref": "#/definitions/SnapshotWindowProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/GroupByWindow"
+                }
+            ],
+            "x-ms-discriminator-value": "Snapshot"
+        },
+        "SessionWindow": {
+            "type": "object",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties for a session window.",
+                    "$ref": "#/definitions/SessionWindowProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/GroupByWindow"
+                }
+            ],
+            "x-ms-discriminator-value": "Session"
+        },
+        "TumblingWindowProperties": {
+            "type": "object",
+            "description": "Properties for a tumbling window.",
+            "required": [
+                "duration"
+            ],
+            "properties": {
+                "duration": {
+                    "$ref": "#/definitions/OperatorCommonDuration"
+                },
+                "offset": {
+                    "$ref": "#/definitions/OperatorCommonDuration"
+                }
+            }
+        },
+        "HoppingWindowProperties": {
+            "type": "object",
+            "description": "Properties for a hopping window.",
+            "required": [
+                "hopSize",
+                "duration"
+            ],
+            "properties": {
+                "hopSize": {
+                    "$ref": "#/definitions/OperatorCommonDuration"
+                },
+                "duration": {
+                    "$ref": "#/definitions/OperatorCommonDuration"
+                },
+                "offset": {
+                    "$ref": "#/definitions/OperatorCommonDuration"
+                }
+            }
+        },
+        "SlidingWindowProperties": {
+            "type": "object",
+            "description": "Properties for a sliding window.",
+            "required": [
+                "duration"
+            ],
+            "properties": {
+                "duration": {
+                    "$ref": "#/definitions/OperatorCommonDuration"
+                }
+            }
+        },
+        "SnapshotWindowProperties": {
+            "type": "object",
+            "description": "Properties for a snapshot window.",
+            "properties": {}
+        },
+        "SessionWindowProperties": {
+            "type": "object",
+            "description": "Properties for a session window.",
+            "required": [
+                "maxDuration",
+                "timeout"
+            ],
+            "properties": {
+                "maxDuration": {
+                    "$ref": "#/definitions/OperatorCommonDuration"
+                },
+                "timeout": {
+                    "$ref": "#/definitions/OperatorCommonDuration"
+                },
+                "partitionBy": {
+                    "$ref": "#/definitions/ColumnReferenceExpression"
+                }
+            }
+        },
+        "JoinOn": {
+            "type": "object",
+            "description": "Represents a join condition.",
+            "required": [
+                "left",
+                "right"
+            ],
+            "properties": {
+                "left": {
+                    "$ref": "#/definitions/ColumnReferenceExpression"
+                },
+                "right": {
+                    "$ref": "#/definitions/ColumnReferenceExpression"
+                }
+            }
+        },
+        "ManageFieldsOperation": {
+            "type": "object",
+            "description": "Represents an operation on a column.",
+            "required": [
+                "operationType"
+            ],
+            "properties": {
+                "operationType": {
+                    "type": "string",
+                    "description": "The operation type.",
+                    "enum": [
+                        "FunctionCall",
+                        "Cast",
+                        "Rename"
+                    ],
+                    "x-ms-enum": {
+                        "name": "operationType",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "FunctionCall",
+                                "description": "Function call operation."
+                            },
+                            {
+                                "value": "Cast",
+                                "description": "Cast operation."
+                            },
+                            {
+                                "value": "Rename",
+                                "description": "Rename operation."
+                            }
+                        ]
+                    }
+                },
+                "alias": {
+                    "type": "string",
+                    "description": "The alias of the operation."
+                }
+            },
+            "discriminator": "operationType"
+        },
+        "ManageFieldsFunctionCallOperation": {
+            "type": "object",
+            "description": "Represents a manage fields function call operation.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties for a manage fields function call operation.",
+                    "$ref": "#/definitions/FunctionCallProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ManageFieldsOperation"
+                }
+            ],
+            "x-ms-discriminator-value": "FunctionCall"
+        },
+        "ManageFieldsCastOperation": {
+            "type": "object",
+            "description": "Represents a manage fields cast operation.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties for a manage fields cast operation.",
+                    "$ref": "#/definitions/CastProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ManageFieldsOperation"
+                }
+            ],
+            "x-ms-discriminator-value": "Cast"
+        },
+        "ManageFieldsRenameOperation": {
+            "type": "object",
+            "description": "Represents a manage fields rename operation.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties for a manage fields rename operation.",
+                    "$ref": "#/definitions/RenameProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ManageFieldsOperation"
+                }
+            ],
+            "x-ms-discriminator-value": "Rename"
+        },
+        "FunctionCallProperties": {
+            "type": "object",
+            "description": "Properties for a function call operation.",
+            "required": [
+                "functionName",
+                "arguments"
+            ],
+            "properties": {
+                "functionName": {
+                    "type": "string",
+                    "description": "The name of the function."
+                },
+                "arguments": {
+                    "type": "array",
+                    "description": "A list of the arguments for the function.",
+                    "items": {
+                        "type": "object"
+                    }
+                }
+            }
+        },
+        "CastProperties": {
+            "type": "object",
+            "description": "Properties for a cast operation.",
+            "required": [
+                "targetDataType",
+                "column"
+            ],
+            "properties": {
+                "targetDataType": {
+                    "$ref": "#/definitions/DataType"
+                },
+                "column": {
+                    "$ref": "#/definitions/ColumnReferenceExpression"
+                }
+            }
+        },
+        "RenameProperties": {
+            "type": "object",
+            "description": "Properties for a rename operation.",
+            "required": [
+                "column"
+            ],
+            "properties": {
+                "column": {
+                    "$ref": "#/definitions/ColumnReferenceExpression"
+                }
+            }
+        },
+        "DataType": {
+            "type": "string",
+            "description": "Represents the data type. Additional data types may be added over time.",
+            "enum": [
+                "BigInt",
+                "Float",
+                "Nvarchar(max)",
+                "DateTime",
+                "Bit",
+                "Record",
+                "Array",
+                "Any"
+            ],
+            "x-ms-enum": {
+                "name": "DataType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "BigInt",
+                        "description": "BigInt data type."
+                    },
+                    {
+                        "value": "Float",
+                        "description": "Float data type."
+                    },
+                    {
+                        "value": "Nvarchar(max)",
+                        "description": "Nvarchar(max) data type."
+                    },
+                    {
+                        "value": "DateTime",
+                        "description": "DateTime data type."
+                    },
+                    {
+                        "value": "Bit",
+                        "description": "Bit data type."
+                    },
+                    {
+                        "value": "Record",
+                        "description": "Record data type."
+                    },
+                    {
+                        "value": "Array",
+                        "description": "Array data type."
+                    },
+                    {
+                        "value": "Any",
+                        "description": "Unknown data type."
+                    }
+                ]
+            }
+        },
+        "ColumnSchema": {
+            "type": "object",
+            "description": "Represents the schema of a column.",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of the column."
+                },
+                "type": {
+                    "$ref": "#/definitions/DataType",
+                    "description": "The data type of the column."
+                },
+                "fields": {
+                    "type": "array",
+                    "description": "A list of the fields for the record or array data type.",
+                    "items": {
+                        "$ref": "#/definitions/ColumnSchema"
+                    }
+                },
+                "items": {
+                    "$ref": "#/definitions/ColumnSchema",
+                    "description": "The schema of the array items."
+                }
+            }
+        },
+        "Schema": {
+            "type": "object",
+            "description": "Represents the schema of the data.",
+            "required": [
+                "columns"
+            ],
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "description": "A list of the columns in the schema.",
+                    "items": {
+                        "$ref": "#/definitions/ColumnSchema"
+                    }
+                }
+            }
+        },
+        "InputSchema": {
+            "type": "object",
+            "description": "Represents the input schema of the source, destination, or operator.",
+            "required": [
+                "name",
+                "schema"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of the input schema."
+                },
+                "schema": {
+                    "$ref": "#/definitions/Schema"
+                }
+            }
+        }
+    }
+}

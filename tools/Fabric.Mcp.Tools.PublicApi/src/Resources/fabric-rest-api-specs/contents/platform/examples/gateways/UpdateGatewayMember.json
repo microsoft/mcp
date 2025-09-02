@@ -1,0 +1,24 @@
+{
+    "parameters": {
+        "gatewayId": "41d198df-5fb2-4463-8157-2af5153e6503",
+        "gatewayMemberId": "1e624ffb-f74a-4dfb-9aa8-ea5056da37da",
+        "updateGatewayMemberRequest": {
+            "displayName": "ContosoGatewayMember1",
+            "enabled": false
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "1e624ffb-f74a-4dfb-9aa8-ea5056da37da",
+                "displayName": "ContosoGatewayMember1",
+                "publicKey": {
+                    "exponent": "AQGB",
+                    "modulus": "od9b...90Jp1Q=="
+                },
+                "version": "3000.1.1",
+                "enabled": false
+            }
+        }
+    }
+}

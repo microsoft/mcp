@@ -1,0 +1,434 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Spark setting REST APIs",
+    "version": "v1"
+  },
+  "schemes": [
+    "https"
+  ],
+  "host": "api.fabric.microsoft.com",
+  "basePath": "/v1",
+  "paths": {
+    "/workspaces/{workspaceId}/spark/settings": {
+      "get": {
+        "tags": [
+          "WorkspaceSettings"
+        ],
+        "summary": "Get workspace spark settings.",
+        "description": "## Permissions\n\nThe caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "WorkspaceSettings_GetSparkSettings",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/WorkspaceSparkSettings"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get workspace Spark settings example": {
+            "$ref": "./examples/GetWorkspaceSparkSettings.json"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "WorkspaceSettings"
+        ],
+        "summary": "Update workspace spark settings.",
+        "description": "## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "WorkspaceSettings_UpdateSparkSettings",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "updateWorkspaceSettingsRequest",
+            "in": "body",
+            "description": "Update workspace Spark settings request payload.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateWorkspaceSparkSettingsRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/WorkspaceSparkSettings"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update workspace Spark settings example": {
+            "$ref": "./examples/UpdateWorkspaceSparkSettings.json"
+          },
+          "Update workspace Spark settings default pool using pool ID example": {
+            "$ref": "./examples/UpdateWorkspaceSparkSettingsDefaultPoolWithId.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/spark/pools": {
+      "get": {
+        "tags": [
+          "CustomPools"
+        ],
+        "summary": "List custom pools.",
+        "description": "## Permissions\n\nThe caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "CustomPools_ListWorkspaceCustomPools",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri",
+          "itemName": "value"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "Continuation token. Used to get the next items in the list.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CustomPools"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List custom pools example": {
+            "$ref": "./examples/ListCustomPools.json"
+          },
+          "List custom pools with continuation example": {
+            "$ref": "./examples/ListCustomPoolsWithContinuation.json"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CustomPools"
+        ],
+        "summary": "Create custom pool.",
+        "description": "## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "CustomPools_CreateWorkspaceCustomPool",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "createCustomPoolRequest",
+            "in": "body",
+            "description": "Create custom pool request payload.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CreateCustomPoolRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CustomPool"
+            },
+            "headers": {
+              "Location": {
+                "description": "The URL of the newly created pool.",
+                "type": "string"
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create custom pool example": {
+            "$ref": "./examples/CreateCustomPool.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/spark/pools/{poolId}": {
+      "get": {
+        "tags": [
+          "CustomPools"
+        ],
+        "summary": "Get custom pool.",
+        "description": "## Permissions\n\nThe caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "CustomPools_GetWorkspaceCustomPool",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "poolId",
+            "in": "path",
+            "description": "The custom pool ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CustomPool"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get custom pool example": {
+            "$ref": "./examples/GetCustomPool.json"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "CustomPools"
+        ],
+        "summary": "Delete custom pool.",
+        "description": "## Permissions\n\nThe caller must have *admin* workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "CustomPools_DeleteWorkspaceCustomPool",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "poolId",
+            "in": "path",
+            "description": "The custom pool ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete custom pool example": {
+            "$ref": "./examples/DeleteCustomPool.json"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "CustomPools"
+        ],
+        "summary": "Update custom pool.",
+        "description": "## Permissions\n\nThe caller must have *admin* workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "CustomPools_UpdateWorkspaceCustomPool",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "poolId",
+            "in": "path",
+            "description": "The custom pool ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "updateCustomPoolRequest",
+            "in": "body",
+            "description": "Update custom pool request payload.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateCustomPoolRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CustomPool"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update custom pool example": {
+            "$ref": "./examples/UpdateCustomPool.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/spark/livySessions": {
+      "get": {
+          "tags": [
+              "LivySessions"
+          ],
+          "summary": "Returns a list of livy sessions from the specified workspace.",
+          "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nThe caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+          "operationId": "LivySessions_ListLivySessions",
+          "x-ms-pageable": {
+              "nextLinkName": "continuationUri"
+          },
+          "produces": [
+              "application/json"
+          ],
+          "parameters": [
+              {
+                  "in": "path",
+                  "name": "workspaceId",
+                  "description": "The workspace identifier.",
+                  "required": true,
+                  "type": "string"
+              },
+              {
+                  "in": "query",
+                  "name": "continuationToken",
+                  "description": "Token to retrieve the next page of results, if available.",
+                  "type": "string",
+                  "required": false
+              }
+          ],
+          "responses": {
+              "200": {
+                  "description": "OK -- Returns a list of all livy sessions associated to an itemId.",
+                  "schema": {
+                      "$ref": "../common/spark_definitions.json#/definitions/LivySessions"
+                  }
+              },
+              "default": {
+                  "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+                  "schema": {
+                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+                  }
+              }
+          },
+          "x-ms-examples": {
+              "List all livy sessions example": {
+                  "$ref": "./examples/ListSessionsInWorkspace.json"
+              }
+          }
+      }
+    }
+  },
+  "responses": {},
+  "security": [],
+  "tags": []
+}

@@ -1,0 +1,32 @@
+{
+    "parameters": {
+        "type": "Report"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "itemEntities": [
+                    {
+                        "id": "b1a7e572-2585-4650-98ae-b92356f4460b",
+                        "type": "Report",
+                        "name": "Test Report",
+                        "state": "Active",
+                        "lastUpdatedDate": "2022-06-27T16:55:04.893",
+                        "workspaceId": "7f4496db-9929-47bd-89c0-d7eb2f517a98",
+                        "capacityId": "D5E336D6-D919-4ECC-B424-1F771A506851",
+                        "creatorPrincipal": {
+                            "id": "f3052d1c-61a9-46fb-8df9-0d78916ae041",
+                            "displayName": "Jacob Hancock",
+                            "type": "User",
+                            "userDetails": {
+                                "userPrincipalName": "Jacob@example.com"
+                            }
+                        }
+                    }
+                ],
+                "continuationUri": null,
+                "continuationToken": null
+            }
+        }
+    }
+}

@@ -1,0 +1,154 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Eventstream serialization data types"
+    },
+    "paths": {},
+    "definitions": {
+        "SerializationType": {
+            "type": "string",
+            "description": "The serialization type.",
+            "enum": [
+                "Avro",
+                "Json",
+                "Csv"
+            ],
+            "x-ms-enum": {
+                "name": "SerializationType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Avro",
+                        "description": "The serialization type is Avro."
+                    },
+                    {
+                        "value": "Json",
+                        "description": "The serialization type is JSON."
+                    },
+                    {
+                        "value": "Csv",
+                        "description": "The serialization type is CSV."
+                    }
+                ]
+            }
+        },
+        "SerializationInfo": {
+            "type": "object",
+            "description": "Serialization information.",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "description": "The serialization type.",
+                    "$ref": "#/definitions/SerializationType"
+                }
+            },
+            "discriminator": "type"
+        },
+        "JsonSerializationInfo": {
+            "type": "object",
+            "description": "JSON serialization information.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "JSON serialization properties.",
+                    "$ref": "#/definitions/JsonSerializationProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SerializationInfo"
+                }
+            ],
+            "x-ms-discriminator-value": "Json"
+        },
+        "JsonSerializationProperties": {
+            "type": "object",
+            "description": "JSON serialization properties.",
+            "properties": {
+                "encoding": {
+                    "type": "string",
+                    "description": "The encoding type.",
+                    "enum": [
+                        "UTF8"
+                    ]
+                }
+            }
+        },
+        "CsvSerializationInfo": {
+            "type": "object",
+            "description": "CSV serialization information.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "CSV serialization properties.",
+                    "$ref": "#/definitions/CsvSerializationProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SerializationInfo"
+                }
+            ],
+            "x-ms-discriminator-value": "Csv"
+        },
+        "CsvSerializationProperties": {
+            "type": "object",
+            "description": "CSV serialization properties.",
+            "required": [
+                "fieldDelimiter"
+            ],
+            "properties": {
+                "encoding": {
+                    "type": "string",
+                    "description": "The encoding type.",
+                    "enum": [
+                        "UTF8"
+                    ]
+                },
+                "fieldDelimiter": {
+                    "type": "string",
+                    "description": "The field delimiter."
+                },
+                "format": {
+                    "type": "string",
+                    "description": "The format type.",
+                    "enum": [
+                        "WithHeaders",
+                        "WithoutHeaders"
+                    ]
+                }
+            }
+        },
+        "AvroSerializationInfo": {
+            "type": "object",
+            "description": "Avro serialization information.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "Avro serialization properties.",
+                    "$ref": "#/definitions/AvroSerializationProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SerializationInfo"
+                }
+            ],
+            "x-ms-discriminator-value": "Avro"
+        },
+        "AvroSerializationProperties": {
+            "type": "object",
+            "description": "Avro serialization properties.",
+            "properties": {}
+        }
+    }
+}

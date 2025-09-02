@@ -1,0 +1,27 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "createVariableLibraryRequest": {
+            "displayName": "VariableLibrary 1",
+            "description": "A VariableLibrary description."
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "displayName": "VariableLibrary 1",
+                "description": "A VariableLibrary description.",
+                "type": "VariableLibrary",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "5b218778-e7a5-4d73-8187-f10824047715"
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "Retry-After": 30
+            }
+        }
+    }
+}

@@ -1,0 +1,59 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "3546052c-ae64-4526-b1a8-52af7761426f",
+                        "displayName": "Environment_1",
+                        "description": "A environment description.",
+                        "type": "Environment",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "publishDetails": {
+                                "state": "Failed",
+                                "targetVersion": "14ece8b5-68a1-4130-a9e7-074c04537588",
+                                "startTime": "2024-03-30T14:17:09.0697022Z",
+                                "endTime": "2024-03-30T14:48:09.0697022Z",
+                                "componentPublishInfo": {
+                                    "sparkLibraries": {
+                                        "state": "Failed"
+                                    },
+                                    "sparkSettings": {
+                                        "state": "Success"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "id": "a8a1bffa-7eea-49dc-a1d2-6281c1d031f1",
+                        "displayName": "Environment_2",
+                        "description": "A environment description.",
+                        "type": "Environment",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "publishDetails": {
+                                "state": "Success",
+                                "targetVersion": "46838a80-5450-4414-bea0-40fb6f3e0c0d",
+                                "startTime": "2024-03-29T14:17:09.0697022Z",
+                                "endTime": "2024-03-29T14:48:09.0697022Z",
+                                "componentPublishInfo": {
+                                    "sparkLibraries": {
+                                        "state": "Success"
+                                    },
+                                    "sparkSettings": {
+                                        "state": "Success"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

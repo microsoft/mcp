@@ -1,0 +1,47 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "00000000-0000-0000-0000-000000000000",
+                        "name": "Starter Pool",
+                        "type": "Workspace",
+                        "nodeFamily": "MemoryOptimized",
+                        "nodeSize": "Medium",
+                        "autoScale": {
+                            "enabled": true,
+                            "minNodeCount": 1,
+                            "maxNodeCount": 10
+                        },
+                        "dynamicExecutorAllocation": {
+                            "enabled": true,
+                            "minExecutors": 1,
+                            "maxExecutors": 9
+                        }
+                    },
+                    {
+                        "id": "2367293d-b70b-4b33-97f2-161b8d04a8d7",
+                        "name": "pool1",
+                        "type": "Workspace",
+                        "nodeFamily": "MemoryOptimized",
+                        "nodeSize": "Small",
+                        "autoScale": {
+                            "enabled": true,
+                            "minNodeCount": 1,
+                            "maxNodeCount": 4
+                        },
+                        "dynamicExecutorAllocation": {
+                            "enabled": true,
+                            "minExecutors": 1,
+                            "maxExecutors": 2
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

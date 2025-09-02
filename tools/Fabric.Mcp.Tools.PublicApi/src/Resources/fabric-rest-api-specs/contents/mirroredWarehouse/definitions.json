@@ -1,0 +1,39 @@
+{
+  "swagger": "2.0",
+  "info": {
+      "version": "v1",
+      "title": "MirroredWarehouse data types"
+  },
+  "paths": {},
+  "definitions": {
+      "MirroredWarehouses": {
+          "description": "A list of mirrored warehouses.",
+          "required": ["value"],
+          "type": "object",
+          "properties": {
+              "value": {
+                  "description": "A list of mirrored warehouses.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/MirroredWarehouse"
+                  }
+              }
+          },
+          "allOf": [
+              {
+                  "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+              }
+          ]
+      },
+      "MirroredWarehouse": {
+          "description": "A mirrored warehouse object.",
+          "type": "object",
+          "required": ["type"],
+          "allOf": [
+            {
+                "$ref": "../common/definitions.json#/definitions/Item"
+            }
+          ]
+      }
+  }
+}

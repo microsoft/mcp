@@ -1,0 +1,223 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "SparkJobDefinition data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "SparkJobDefinition": {
+            "description": "A spark job definition object.",
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The spark job definition properties.",
+                    "$ref": "#/definitions/SparkJobDefinitionProperties"
+                }
+            }
+        },
+        "SparkJobDefinitionProperties": {
+            "description": "The spark job definition properties.",
+            "type": "object",
+            "required": [
+                "oneLakeRootPath"
+            ],
+            "properties": {
+                "oneLakeRootPath": {
+                    "description": "OneLake path to the SparkJobDefinition root directory.",
+                    "type": "string"
+                }
+            }
+        },
+        "SparkJobDefinitions": {
+            "description": "A list of spark job definitions.",
+            "required": [
+                "value"
+            ],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of spark job definitions.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SparkJobDefinition"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateSparkJobDefinitionRequest": {
+            "description": "Create spark job definition request payload.",
+            "required": [
+                "displayName"
+            ],
+            "properties": {
+                "displayName": {
+                    "description": "The spark job definition display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The spark job definition description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the spark job definition is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The spark job definition public definition.",
+                    "$ref": "#/definitions/SparkJobDefinitionPublicDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateSparkJobDefinitionDefinitionRequest": {
+            "description": "Update spark job definition public definition request payload.",
+            "required": [
+                "definition"
+            ],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/SparkJobDefinitionPublicDefinition"
+                }
+            }
+        },
+        "SparkJobDefinitionDefinitionResponse": {
+            "description": "Spark job definition public definition response.",
+            "required": [
+                "definition"
+            ],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/SparkJobDefinitionPublicDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "SparkJobDefinitionPublicDefinition": {
+            "description": "Spark job definition public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/spark-job-definition) for more details on how to craft a spark job definition public definition.",
+            "type": "object",
+            "required": [
+                "parts"
+            ],
+            "properties": {
+                "format": {
+                    "description": "The format of the item definition. Supported format: `SparkJobDefinitionV1`.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SparkJobDefinitionPublicDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "SparkJobDefinitionPublicDefinitionPart": {
+            "description": "Spark job definition definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The spark job definition public definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The spark job definition public definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType": {
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateSparkJobDefinitionRequest": {
+            "description": "Update spark job definition request.",
+            "properties": {
+                "displayName": {
+                    "description": "The spark job definition display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The spark job definition description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "RunSparkJobDefinitionRequest": {
+            "description": "Run spark job definition request with executionData.",
+            "properties": {
+                "executionData": {
+                    "description": "The spark job definition parameters to be used during execution if needed. By default no body is needed",
+                    "$ref": "#/definitions/ExecutionData",
+                    "readOnly": false
+                }
+            }
+        },
+        "ExecutionData": {
+            "description": "ExecutionData for spark job definition run if customer wants to override default values.",
+            "type": "object",
+            "properties": {
+                "executableFile": {
+                    "description": "Executable main file to be used. The path must be an abfs path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "mainClass": {
+                    "description": "Main class name to be used. This is not needed for python and r executable files.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "commandLineArguments": {
+                    "description": "Command line arguments. The arguments are space separated",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "additionalLibraryUris": {
+                    "description": "List of additional library paths needed for execution.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/libraryuris"
+                    }
+                },
+                "environmentId": {
+                    "description": "The environment ID that will be used for the Spark job definition. Can be used to specify Spark settings.",
+                    "$ref": "../common/definitions.json#/definitions/ItemReference"
+                },
+                "defaultLakehouseId": {
+                    "description": "The lakehouse ID that will be used as the default lakehouse of the Spark job definition.",
+                    "$ref": "../common/definitions.json#/definitions/ItemReference"
+                }
+            }
+        },
+        "libraryuris": {
+            "description": "The fully qualified path of libraries.",
+            "type": "string",
+            "readOnly": false
+        }
+    }
+}

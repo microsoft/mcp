@@ -1,0 +1,748 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Deployment Pipelines data types"
+    },
+    "paths": {},
+    "definitions": {
+        "DeploymentPipelineAssignWorkspaceRequest": {
+            "required": ["workspaceId"],
+            "description": "A request to assign a workspace to a deployment pipeline stage.",
+            "properties": {
+                "workspaceId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The workspace ID.",
+                    "readOnly": false
+                }
+            }
+        },
+        "DeploymentPipelineStage": {
+            "required": ["id", "order", "displayName"],
+            "description": "A Fabric deployment pipeline stage.",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The deployment pipeline stage ID.",
+                    "readOnly": true
+                },
+                "order": {
+                    "type": "integer",
+                    "description": "The stage order, starting from zero.",
+                    "readOnly": true
+                },
+                "displayName": {
+                    "type": "string",
+                    "description": "The deployment pipeline stage display name.",
+                    "readOnly": false
+                },
+                "description": {
+                    "type": "string",
+                    "description": "The deployment pipeline stage description.",
+                    "readOnly": false
+                },
+                "workspaceId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The assigned workspace ID. Only applicable when there's an assigned workspace.",
+                    "readOnly": false
+                },
+                "workspaceName": {
+                    "type": "string",
+                    "description": "The assigned workspace name. Only applicable when there's an assigned workspace and the user has access to the workspace.",
+                    "readOnly": false
+                },
+                "isPublic": {
+                    "type": "boolean",
+                    "description": "Indicates whether the deployment pipeline stage is public. True - the stage is public, False - the stage isn't public.",
+                    "readOnly": false
+                }
+            }
+        },
+        "DeploymentPipeline": {
+            "description": "A Fabric deployment pipeline.",
+            "required": ["id", "displayName"],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The deployment pipeline ID.",
+                    "readOnly": true
+                },
+                "displayName": {
+                    "type": "string",
+                    "description": "The deployment pipeline display name.",
+                    "readOnly": false
+                },
+                "description": {
+                    "type": "string",
+                    "description": "The deployment pipeline description.",
+                    "readOnly": false
+                }
+            }
+        },
+        "DeploymentPipelineExtendedInfo": {
+            "description": "A Fabric deployment pipeline.",
+            "required": ["id", "displayName", "stages"],
+            "properties": {
+                "stages": {
+                    "type": "array",
+                    "description": "The collection of deployment pipeline stages.",
+                    "items": {
+                        "$ref": "#/definitions/DeploymentPipelineStage"
+                    },
+                    "readOnly": false
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/DeploymentPipeline"
+                }
+            ]
+        },
+        "DeploymentPipelines": {
+            "description": "A collection of Fabric deployment pipelines.",
+            "properties": {
+                "value": {
+                    "type": "array",
+                    "description": "A collection of deployment pipelines.",
+                    "items": {
+                        "$ref": "#/definitions/DeploymentPipeline"
+                    },            
+                    "readOnly": false
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateDeploymentPipelineRequest": {
+            "required": ["displayName", "stages"],
+            "description": "A request to create a new deployment pipeline.",
+            "properties": {
+                "displayName": {
+                    "type": "string",
+                    "description": "The display name for the deployment pipeline.<br>The display name cannot contain more than 256 characters.",
+                    "maxLength": 256,
+                    "readOnly": false
+                },
+                "description": {
+                    "type": "string",
+                    "description": "The description for the deployment pipeline.<br>The description cannot contain more than 1024 characters.",
+                    "maxLength": 1024,
+                    "readOnly": false
+                },
+                "stages": {
+                    "type": "array",
+                    "description": "The collection of deployment pipeline stages.",
+                    "items": {
+                        "$ref": "#/definitions/DeploymentPipelineStageRequest"
+                    },
+                    "readOnly": false
+                }
+            },
+            "readOnly": false
+        },
+        "DeploymentPipelineStageRequest": {
+            "type": "object",
+            "required": ["displayName"],
+            "description": "A Fabric deployment pipeline stage.",
+            "properties": {
+                "displayName": {
+                    "type": "string",
+                    "description": "The deployment pipeline stage display name.<br>The display name cannot contain more than 256 characters.",
+                    "maxLength": 256,
+                    "readOnly": false
+                },
+                "description": {
+                    "type": "string",
+                    "description": "The deployment pipeline stage description.<br>The description cannot contain more than 1024 characters.",
+                    "maxLength": 1024,
+                    "readOnly": false
+                },
+                "isPublic": {
+                    "type": "boolean",
+                    "description": "Whether the deployment pipeline stage is public.",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateDeploymentPipelineRequest": {
+            "description": "A request to update an existing deployment pipeline. An updated display name and/or a description is required.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/DeploymentPipelineRequestBase"
+                }
+            ]
+        },
+        "DeploymentPipelineRequestBase" : {
+            "type": "object",
+            "description": "A request to update an existing deployment pipeline or creating a new one. A display name and/or a description is required.",
+            "properties": {
+                "displayName": {
+                    "type": "string",
+                    "description": "The display name for the deployment pipeline.<br>The display name cannot contain more than 256 characters.",
+                    "maxLength": 256,
+                    "readOnly": false
+                },
+                "description": {
+                    "type": "string",
+                    "description": "The description for the deployment pipeline.<br>The description cannot contain more than 1024 characters.",
+                    "maxLength": 1024,
+                    "readOnly": false
+                }
+            }
+        },
+        "DeploymentPipelineNewWorkspaceConfiguration": {
+            "required": ["name"],
+            "description": "The configuration details for creating a new workspace. Required when deploying to a stage that has no assigned workspaces.",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of the new workspace.<br>The display name cannot contain more than 256 characters.",
+                    "maxLength": 256,
+                    "readOnly": false
+                },
+                "capacityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The ID of the capacity that the new workspace will be assigned to. If unspecified and the API caller has permissions for the source stage workspace capacity, then that capacity will be used. Otherwise, Fabric will select a capacity that the API caller has permissions for.",
+                    "readOnly": false
+                }
+            },
+            "readOnly": false
+        },
+        "DeploymentPipelineOperationNote": {
+            "description": "A note describing the deployment.",
+            "required": ["content"],
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "description": "Text describing the deployment.",
+                    "readOnly": false
+                },
+                "isTruncated": {
+                    "type": "boolean",
+                    "description": "Indicates whether the note content is truncated. True - the note content is truncated, False - the note content isn't truncated. Default value is false.",
+                    "readOnly": false
+                }
+            },
+            "readOnly": false
+        },
+        "ItemPreDeploymentDiffState": {
+            "type": "string",
+            "description": "Specifies if an item is new, different or identical to items in the target stage before deployment. Additional states may be added over time.",
+            "enum": ["New", "Different", "NoDifference"],
+            "x-ms-enum": {
+                "name": "ItemPreDeploymentDiffState",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "New",
+                        "description": "A new deployed item that doesn't exist in the target stage."
+                    },
+                    {
+                        "value": "Different",
+                        "description": "Before deployment, the item in the source stage wasn't identical to the one in the target stage."
+                    },
+                    {
+                        "value": "NoDifference",
+                        "description": "Before deployment, the item in the source stage was identical to the one in the target stage."
+                    }
+                ]
+            },
+            "readOnly": true
+        },
+        "DeploymentSourceAndTarget": {
+            "required": ["sourceItemId"],
+            "description": "Source and target items.",
+            "properties": {
+                "sourceItemId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The ID of the Fabric item that's deployed from the source stage.",
+                    "readOnly": true
+                },
+                "sourceItemDisplayName": {
+                    "type": "string",
+                    "description": "The display name of the Fabric item that's deployed from the source stage.",
+                    "readOnly": true
+                },
+                "targetItemId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The ID of the Fabric item that will be overwritten in the target stage. Only applies when overwriting a Fabric item.",
+                    "readOnly": true
+                },
+                "targetItemDisplayName": {
+                    "type": "string",
+                    "description": "The name of the Fabric item that will be overwritten in the target stage. Only applies when overwriting a Fabric item.",
+                    "readOnly": true
+                },
+                "itemType": {
+                    "description": "The type of the Fabric item that will be overwritten in the target stage. Only applies when overwriting a Fabric item.",
+                    "$ref": "../../Common/definitions.json#/definitions/ItemType",
+                    "readOnly": true
+                }
+            },
+            "readOnly": true
+        },
+        "DeploymentExecutionStep": {
+            "required": ["index", "description", "status", "sourceAndTarget"],
+            "description": "A deployment execution step.",
+            "properties": {
+                "index": {
+                    "type": "integer",
+                    "description": "The step index.",
+                    "readOnly": true
+                },
+                "description": {
+                    "type": "string",
+                    "description": "The deployment step description.",
+                    "readOnly": true
+                },
+                "status": {
+                    "type": "string",
+                    "description": "The status of the deployment pipeline operation. Additional statuses may be added over time.",
+                    "enum": ["NotStarted", "Running", "Succeeded", "Failed"],
+                    "x-ms-enum": {
+                        "name": "DeploymentPipelineOperationStatus",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "NotStarted",
+                                "description": "The deployment pipeline operation didn't start."
+                            },
+                            {
+                                "value": "Running",
+                                "description": "The deployment pipeline operation is running."
+                            },
+                            {
+                                "value": "Succeeded",
+                                "description": "The deployment pipeline operation succeeded."
+                            },
+                            {
+                                "value": "Failed",
+                                "description": "The deployment pipeline operation failed."
+                            }
+                        ]
+                    },
+                    "readOnly": true
+                },
+                "preDeploymentDiffState": {
+                    "description": "Is an item new, different or identical to items in the target stage before deployment.",
+                    "$ref": "#/definitions/ItemPreDeploymentDiffState"
+                },
+                "sourceAndTarget": {
+                    "description": "The source and target items of the step.",
+                    "$ref": "#/definitions/DeploymentSourceAndTarget"
+                },
+                "error": {
+                    "description": "The error details. Only applicable if the deployment pipeline operation failed.",
+                    "$ref": "../../common/definitions.json#/definitions/ErrorResponse"
+                }
+            },
+            "readOnly": true
+        },
+        "DeploymentExecutionPlan": {
+            "description": "A deployment execution plan.",
+            "properties": {
+                "steps": {
+                    "type": "array",
+                    "description": "The collection of execution plan steps.",
+                    "items": {
+                        "$ref": "#/definitions/DeploymentExecutionStep"
+                    },
+                    "readOnly": true
+                }
+            },
+            "readOnly": true
+        },
+        "PreDeploymentDiffInformation": {
+            "required": [
+                "newItemsCount",
+                "differentItemsCount",
+                "noDifferenceItemsCount"
+            ],
+            "description": "The number of new, different and identical deployed items before deployment.",
+            "properties": {
+                "newItemsCount": {
+                    "type": "integer",
+                    "description": "The number of new items deployed to the target stage.",
+                    "readOnly": true
+                },
+                "differentItemsCount": {
+                    "type": "integer",
+                    "description": "The number of deployed items with differences between source and target stages, before deployment.",
+                    "readOnly": true
+                },
+                "noDifferenceItemsCount": {
+                    "type": "integer",
+                    "description": "The number of identical deployed items in the source and target stages, before deployment.",
+                    "readOnly": true
+                }
+            },
+            "readOnly": true
+        },
+        "DeploymentPipelineOperation": {
+            "required": ["id", "type", "status", "lastUpdatedTime"],
+            "description": "A Fabric deployment pipeline operation.",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The operation ID.",
+                    "readOnly": true
+                },
+                "type": {
+                    "type": "string",
+                    "description": "The operation type. Additional types may be added over time.",
+                    "enum": ["Deploy"],
+                    "x-ms-enum": {
+                        "name": "DeploymentPipelineOperationType",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Deploy",
+                                "description": "Deploy content between stages."
+                            }
+                        ]
+                    },
+                    "readOnly": true
+                },
+                "status": {
+                    "type": "string",
+                    "description": "The deployment pipeline operation status. Additional statuses may be added over time.",
+                    "enum": ["NotStarted", "Running", "Succeeded", "Failed"],
+                    "x-ms-enum": {
+                        "name": "DeploymentPipelineOperationStatus",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "NotStarted",
+                                "description": "Operation not started"
+                            },
+                            {
+                                "value": "Running",
+                                "description": "Operation running"
+                            },
+                            {
+                                "value": "Succeeded",
+                                "description": "Operation succeeded"
+                            },
+                            {
+                                "value": "Failed",
+                                "description": "Operation failed"
+                            }
+                        ]
+                    },
+                    "readOnly": true
+                },
+                "lastUpdatedTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date and time that the operation was last updated.",
+                    "readOnly": true
+                },
+                "executionStartTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date and time that the operation started.",
+                    "readOnly": true
+                },
+                "executionEndTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date and time that the operation ended.",
+                    "readOnly": true
+                },
+                "sourceStageId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The ID of a source deployment pipeline stage.",
+                    "readOnly": true
+                },
+                "targetStageId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The ID of a target deployment pipeline stage.",
+                    "readOnly": true
+                },
+                "performedBy": {
+                    "description": "The principal that performed the deployment pipeline operation.",
+                    "$ref": "../../common/definitions.json#/definitions/Principal"
+                },
+                "preDeploymentDiffInformation": {
+                    "description": "The number of deployed items in the source stage, that are new, identical or different to items in the target stage, before deployment.",
+                    "$ref": "#/definitions/PreDeploymentDiffInformation"
+                },
+                "note": {
+                    "description": "A note representing a description of the operation.",
+                    "$ref": "#/definitions/DeploymentPipelineOperationNote"
+                }
+            }
+        },
+        "DeploymentPipelineOperationExtendedInfo": {
+            "type": "object",
+            "required": ["id", "type", "status", "lastUpdatedTime"],
+            "description": "A Fabric deployment pipeline operation.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/DeploymentPipelineOperation"
+                }
+            ],
+            "properties": {
+                "executionPlan": {
+                    "description": "The deployment execution plan.",
+                    "$ref": "#/definitions/DeploymentExecutionPlan"
+                }
+            }
+        },
+        "DeploymentPipelineStageItem": {
+            "required": [
+                "itemId",
+                "itemDisplayName",
+                "itemType"
+            ],
+            "description": "Fabric item metadata for a deployment pipeline stage.",
+            "properties": {
+                "itemId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The Fabric item ID.",
+                    "readOnly": false
+                },
+                "itemType": {
+                    "description": "The Fabric item type.",
+                    "$ref": "../../Common/definitions.json#/definitions/ItemType",
+                    "readOnly": false
+                },
+                "itemDisplayName": {
+                    "type": "string",
+                    "description": "The Fabric item display name.",
+                    "readOnly": false
+                },
+                "sourceItemId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The ID of the Fabric item from the workspace assigned to the source stage, which will update the current Fabric item upon deployment. Applicable only when the user has at least contributor access to the source stage workspace.",
+                    "readOnly": false
+                },
+                "targetItemId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The ID of the Fabric item from the workspace of the target stage, which will be updated by the current Fabric item upon deployment. Applicable only when the user has at least contributor access to the target stage workspace.",
+                    "readOnly": false
+                },
+                "lastDeploymentTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The last deployment date and time of the Fabric item.",
+                    "readOnly": true
+                }
+            },
+            "readOnly": false
+        },
+        "DeploymentPipelineStages": {
+            "description": "A collection of Fabric deployment pipeline stages.",
+            "properties": {
+                "value": {
+                    "type": "array",
+                    "description": "The collection of deployment pipeline stages",
+                    "items": {
+                        "$ref": "#/definitions/DeploymentPipelineStage"
+                    },
+                    "readOnly": false
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ],
+            "readOnly": false
+        },
+        "DeploymentPipelineOperations": {
+            "description": "A collection of Fabric deployment pipeline operations.",
+            "properties": {
+                "value": {
+                    "type": "array",
+                    "description": "The collection of deployment pipeline operations.",
+                    "items": {
+                        "$ref": "#/definitions/DeploymentPipelineOperation"
+                    },
+                    "readOnly": false
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "DeploymentPipelineStageItems": {
+            "description": "Supported items from a workspace that's assigned to a deployment pipeline stage.",
+            "properties": {
+                "value": {
+                    "type": "array",
+                    "description": "The items collection.",
+                    "items": {
+                        "$ref": "#/definitions/DeploymentPipelineStageItem"
+                    },
+                    "readOnly": false
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "AddDeploymentPipelineRoleAssignmentRequest": {
+            "type": "object",
+            "description": "Add deployment pipeline role assignment request payload.",
+            "required": ["principal", "role"],
+            "properties": {
+                "principal": {
+                    "description": "The principal.",
+                    "$ref": "../../common/definitions.json#/definitions/Principal"
+                },
+                "role": {
+                    "description": "The deployment pipeline role of the principal.",
+                    "$ref": "#/definitions/DeploymentPipelineRole"
+                }
+            }
+        },
+        "DeploymentPipelineRoleAssignment": {
+            "required": ["principal", "role"],
+            "description": "A Fabric principal role assignment for a deployment pipeline.",
+            "properties": {
+                "principal": {
+                    "description": "The principal.",
+                    "$ref": "../../common/definitions.json#/definitions/Principal",
+                    "readOnly": true
+                },
+                "role": {
+                    "description": "The deployment pipeline role of the principal.",
+                    "$ref": "#/definitions/DeploymentPipelineRole",
+                    "readOnly": true
+                }
+            }
+        },
+        "DeploymentPipelineRole":{
+            "type": "string",
+            "description": "A Deployment Pipeline role. Additional Deployment Pipeline roles may be added over time.",
+            "enum": ["Admin"],
+            "x-ms-enum": {
+                "name": "DeploymentPipelineRole",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Admin",
+                        "description": "Enables administrative access to the deployment pipeline."
+                    }
+                ]
+            },
+            "readOnly": false
+        },
+        "DeploymentPipelineRoleAssignments": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "type": "array",
+                    "items": {
+                        "description": "A list of deployment pipeline role assignments.",
+                        "$ref": "#/definitions/DeploymentPipelineRoleAssignment"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "ItemDeploymentRequest": {
+            "required": [
+                "sourceItemId",
+                "itemType"
+            ],
+            "type": "object",
+            "description": "A request to deploy a Fabric item (such as a report or a dashboard).",
+            "properties": {
+                "sourceItemId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The ID of the Fabric item to be deployed.",
+                    "readOnly": false
+                },
+                "itemType": {
+                    "description": "The Fabric item type.",
+                    "$ref": "../../Common/definitions.json#/definitions/ItemType",
+                    "readOnly": false
+                }
+            },
+            "readOnly": false
+        },
+        "DeploymentOptions": {
+            "description": "Deployment configuration options for the deployment.",
+            "type": "object",
+            "properties": {
+                "allowCrossRegionDeployment": {
+                    "type": "boolean",
+                    "description": "Indicates whether cross region deployment is enabled. True - enabled, False - disabled. Default value is false.",
+                    "readOnly": false
+                }
+            },
+            "readOnly": false
+        },
+        "DeployRequest": {
+            "required": ["sourceStageId", "targetStageId"],
+            "description": "A request to deploy items from a deployment pipeline stage to another consecutive stage. Deploying to a previous stage can be done only when the target stage is empty. If no items were specified, will deploy all supported items from the deployment pipeline stage, otherwise will deploy only the specified items.",
+            "properties": {
+                "sourceStageId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The ID of the source stage.",
+                    "readOnly": false
+                },
+                "targetStageId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The ID of the target stage.",
+                    "readOnly": false
+                },
+                "createdWorkspaceDetails": {
+                    "description": "The configuration details for creating a new workspace. Required when deploying to a stage that has no assigned workspaces, otherwise it is ignored. The deployment will fail if the new workspace configuration details aren't provided when required.",
+                    "$ref": "#/definitions/DeploymentPipelineNewWorkspaceConfiguration",
+                    "readOnly": false
+                },
+                "note": {
+                    "type": "string",
+                    "description": "A note describing the deployment. The text size is limited to 1024 characters.",
+                    "maxLength": 1024,
+                    "readOnly": false
+                },
+                "items": {
+                    "type": "array",
+                    "description": "A list of items to be deployed. If not used, all supported stage items are deployed.",
+                    "items": {
+                        "$ref": "#/definitions/ItemDeploymentRequest"
+                    },
+                    "readOnly": false
+                },
+                "options": {
+                    "description": "Deployment options that control the behavior of the deployment.",
+                    "$ref": "#/definitions/DeploymentOptions",
+                    "readOnly": false
+                }
+            }
+        }
+    }
+}

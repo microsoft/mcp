@@ -1,0 +1,28 @@
+{
+    "parameters": {
+        "itemId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "workspaceId": "7f4496db-9929-47bd-89c0-d7eb2f517a98"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "17d8929d-ab32-46d1-858b-fdea74e93bf2",
+                "type": "Kusto",
+                "name": "Test",
+                "description": "Test Jacob's notebook.",
+                "state": "Active",
+                "lastUpdatedDate": "2022-04-29T17:47:29.98673",
+                "workspaceId": "7f4496db-9929-47bd-89c0-d7eb2f517a98",
+                "capacityId": "D5E336D6-D919-4ECC-B424-1F771A506851",
+                "creatorPrincipal": {
+                    "id": "f3052d1c-61a9-46fb-8df9-0d78916ae041",
+                    "displayName": "Jacob Hancock",
+                    "type": "User",
+                    "userDetails": {
+                        "userPrincipalName": "Jacob@example.com"
+                    }
+                }
+            }
+        }
+    }
+}

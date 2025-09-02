@@ -1,0 +1,244 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Eventstream common data types"
+    },
+    "paths": {},
+    "definitions": {
+        "CompatibilityLevel": {
+            "type": "string",
+            "description": "Represents the compatibility level of the Eventstream topology. Additional compatibility levels may be added over time.",
+            "enum": [
+                "1.0"
+            ],
+            "x-ms-enum": {
+                "name": "CompatibilityLevel",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "1.0",
+                        "description": "The compatibility level of the Eventstream topology is 1.0."
+                    }
+                ]
+            }
+        },
+        "NodeReference": {
+            "type": "object",
+            "description": "Represents a reference to a node using its unique name.",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The unique name of the node."
+                }
+            }
+        },
+        "RuntimeInformation": {
+            "type": "object",
+            "description": "Represents the runtime information of a node.",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "description": "The status of the node. Additional node status may be added over time.",
+                    "enum": [
+                        "Unknown",
+                        "Creating",
+                        "Created",
+                        "Updating",
+                        "Running",
+                        "Paused",
+                        "Failed",
+                        "Warning",
+                        "Deleting",
+                        "Pausing",
+                        "Resuming",
+                        "External"
+                    ],
+                    "x-ms-enum": {
+                        "name": "NodeStatus",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Unknown",
+                                "description": "The status of the node is unknown."
+                            },
+                            {
+                                "value": "Creating",
+                                "description": "The node is being created."
+                            },
+                            {
+                                "value": "Created",
+                                "description": "The node has been created."
+                            },
+                            {
+                                "value": "Updating",
+                                "description": "The node is being updated."
+                            },
+                            {
+                                "value": "Running",
+                                "description": "The node is running."
+                            },
+                            {
+                                "value": "Paused",
+                                "description": "The node is paused."
+                            },
+                            {
+                                "value": "Failed",
+                                "description": "The node has failed."
+                            },
+                            {
+                                "value": "Warning",
+                                "description": "The node has a warning."
+                            },
+                            {
+                                "value": "Deleting",
+                                "description": "The node is being deleted."
+                            },
+                            {
+                                "value": "Pausing",
+                                "description": "The node is being paused."
+                            },
+                            {
+                                "value": "Resuming",
+                                "description": "The node is being resumed."
+                            },
+                            {
+                                "value": "External",
+                                "description": "The node status depends on an external service."
+                            }
+                        ]
+                    }
+                },
+                "error": {
+                    "$ref": "#/definitions/ErrorInfo",
+                    "description": "The error information."
+                }
+            }
+        },
+        "ErrorInfo": {
+            "type": "object",
+            "description": "Represents the error information.",
+            "required": [
+                "errorMessage"
+            ],
+            "properties": {
+                "errorCode": {
+                    "type": "string",
+                    "description": "The error code."
+                },
+                "errorMessage": {
+                    "type": "string",
+                    "description": "The error message."
+                },
+                "errorDetails": {
+                    "type": "array",
+                    "description": "The error details.",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "BaseCustomEndpointConnection": {
+            "type": "object",
+            "description": "Represents the connection information for a custom endpoint.",
+            "required": [
+                "fullyQualifiedNamespace",
+                "eventHubName"
+            ],
+            "properties": {
+                "fullyQualifiedNamespace": {
+                    "type": "string",
+                    "description": "The fully qualified namespace of the EventHub."
+                },
+                "eventHubName": {
+                    "type": "string",
+                    "description": "The name of the EventHub."
+                },
+                "accessKeys": {
+                    "$ref": "#/definitions/AccessKeys",
+                    "description": "The access keys."
+                }
+            }
+        },
+        "AccessKeys": {
+            "type": "object",
+            "description": "The access keys.",
+            "required": [
+                "primaryKey",
+                "secondaryKey",
+                "primaryConnectionString",
+                "secondaryConnectionString"
+            ],
+            "properties": {
+                "primaryKey": {
+                    "type": "string",
+                    "description": "The primary key."
+                },
+                "secondaryKey": {
+                    "type": "string",
+                    "description": "The secondary key."
+                },
+                "primaryConnectionString": {
+                    "type": "string",
+                    "description": "The primary connection string."
+                },
+                "secondaryConnectionString": {
+                    "type": "string",
+                    "description": "The secondary connection string."
+                }
+            }
+        },
+        "DataSourceStartType": {
+            "type": "string",
+            "description": "Represents the start type of the data source. Additional start types may be added over time.",
+            "enum": [
+                "Now",
+                "WhenLastStopped",
+                "CustomTime"
+            ],
+            "x-ms-enum": {
+                "name": "DataSourceStartType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Now",
+                        "description": "The data source starts now."
+                    },
+                    {
+                        "value": "WhenLastStopped",
+                        "description": "The data source starts when it was last stopped."
+                    },
+                    {
+                        "value": "CustomTime",
+                        "description": "The data source starts at a custom time."
+                    }
+                ]
+            }
+        },
+        "DataSourceStartRequest": {
+            "type": "object",
+            "description": "Represents the request to start a data source.",
+            "required": [
+                "startType"
+            ],
+            "properties": {
+                "startType": {
+                    "$ref": "#/definitions/DataSourceStartType",
+                    "description": "The start type of the data source."
+                },
+                "customStartDateTime": {
+                    "type": "string",
+                    "description": "The custom start time of the data source in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                    "format": "date-time"
+                }
+            }
+        }
+    }
+}

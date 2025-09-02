@@ -1,0 +1,9 @@
+{
+    "parameters": {
+        "workspaceId": "ba33a98a-2b66-49f1-bb71-80c38e4b3756",
+        "workspaceRoleAssignmentId": "6e335e92-a2a2-4b5a-970a-bd6a89fbb765"
+    },
+    "responses": {
+        "200": {}
+    }
+}

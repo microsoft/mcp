@@ -1,0 +1,37 @@
+{
+    "parameters": {
+        "roles" : "Admin,Member,Contributor,Viewer"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "fa9ad228-3e6b-44d4-b5f4-e275f337afa9",
+                        "displayName": "Admins workspace",
+                        "description": "A workspace for admins",
+                        "type": "Personal"
+                    },
+                    {
+                        "id": "cfafbeb1-8037-4d0c-896e-a46fb27ff227",
+                        "displayName": "Members workspace",
+                        "description": "A workspace for members",
+                        "type": "Workspace"
+                    },
+                    {
+                        "id": "0c02a0cd-71bc-410f-aa05-5a7bc98765f7",
+                        "displayName": "Contributors workspace",
+                        "description": "A workspace for contributors",
+                        "type": "Workspace"
+                    },
+                    {
+                        "id": "99d58687-8903-4dbd-8a78-40f95dca7177",
+                        "displayName": "Viewers workspace",
+                        "description": "A workspace for viewers",
+                        "type": "Workspace"
+                    }
+                ]
+            }
+        }
+    }
+}

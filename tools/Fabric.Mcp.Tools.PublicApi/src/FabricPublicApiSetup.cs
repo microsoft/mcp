@@ -17,7 +17,8 @@ public class FabricPublicApiSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton<IResourceProviderService, NetworkResourceProviderService>();
+        services.AddSingleton<IResourceProviderService, EmbeddedResourceProviderService>();
+        //services.AddSingleton<IResourceProviderService, NetworkResourceProviderService>();
         services.AddSingleton<IFabricPublicApiService, FabricPublicApiService>();
         services.AddHttpClient<FabricPublicApiService>();
     }
@@ -49,8 +50,8 @@ public class FabricPublicApiSetup : IAreaSetup
 
         // Add best practices commands
         bestPractices.AddCommand("get", new GetExamplesCommand(loggerFactory.CreateLogger<GetExamplesCommand>()));
+        fabricPublicApis.AddCommand("item-definition", new GetWorkloadDefinitionCommand(loggerFactory.CreateLogger<GetWorkloadDefinitionCommand>()));
         
-        //fabricPublicApis.AddCommand("item-definition", new GetWorkloadApisCommand(loggerFactory.CreateLogger<GetWorkloadApisCommand>()));
         //bestPractices.AddCommand("long-running-operations", new GetWorkloadApisCommand(loggerFactory.CreateLogger<GetWorkloadApisCommand>()));
         //bestPractices.AddCommand("pagination", new GetWorkloadApisCommand(loggerFactory.CreateLogger<GetWorkloadApisCommand>()));
     }

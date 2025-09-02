@@ -1,0 +1,37 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "3546052c-ae64-4526-b1a8-52af7761426f",
+                        "displayName": "SQLDatabase1",
+                        "description": "A SQLDatabase description.",
+                        "type": "SQLDatabase",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "connectionString": "Data Source=fvzeldvqgvce3b2hxvbg4hnjqu-nowrtjcsie2e3ny6v4ojbd3esa.database.fabric.microsoft.com,1433;Initial Catalog=SQLDatabase1-45c6e7cf-89b1-4a69-b4e1-5495271c7e45;MultipleActiveResultSets=False;Connect Timeout=30;Encrypt=True;TrustServerCertificate=False",
+                            "databaseName": "SQLDatabase1-45c6e7cf-89b1-4a69-b4e1-5495271c7e45",
+                            "serverFqdn": "fvzeldvqgvce3b2hxvbg4hnjqu-nowrtjcsie2e3ny6v4ojbd3esa.database.fabric.microsoft.com,1433"
+                        }
+                    },
+                    {
+                        "id": "f697fb63-abd4-4399-9548-be7e3c3c0dac",
+                        "displayName": "SQLDatabase2",
+                        "description": "A SQLDatabase description.",
+                        "type": "SQLDatabase",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "connectionString": "Data Source=x6eps4xrq2xudenlfv6naeo3i4-cfqmbux5lgvuzcoypz4jiwkqxq.database.fabric.microsoft.com,1433;Initial Catalog=SQLDatabase2-85fdf021-23ed-4307-be63-92e553a22d54;MultipleActiveResultSets=False;Connect Timeout=30;Encrypt=True;TrustServerCertificate=False",
+                            "databaseName": "SQLDatabase2-85fdf021-23ed-4307-be63-92e553a22d54",
+                            "serverFqdn": "x6eps4xrq2xudenlfv6naeo3i4-cfqmbux5lgvuzcoypz4jiwkqxq.database.fabric.microsoft.com,1433"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

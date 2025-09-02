@@ -1,0 +1,21 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "notebookId": "5b218778-e7a5-4d73-8187-f10824047715",
+        "updateNotebookRequest": {
+            "displayName": "Notebook's New name",
+            "description": "A new description for notebook."
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "displayName": "Notebook's New name",
+                "description": "A new description for notebook.",
+                "type": "Notebook",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "5b218778-e7a5-4d73-8187-f10824047715"
+            }
+        }
+    }
+}

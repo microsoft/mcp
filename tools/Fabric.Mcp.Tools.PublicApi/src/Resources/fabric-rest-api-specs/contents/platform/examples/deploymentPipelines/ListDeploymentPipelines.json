@@ -1,0 +1,21 @@
+{
+    "parameters": {},
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "a5ded933-57b7-41f4-b072-ed4c1f9d5824",
+                        "displayName": "Marketing Deployment Pipeline",
+                        "description": "Fabric deployment pipeline to manage marketing reports."
+                    },
+                    {
+                        "id": "f2d70dc6-8f3e-4f2c-b00e-e2d336d7d711",
+                        "displayName": "Finance Deployment Pipeline",
+                        "description": "Fabric deployment pipeline to manage finance reports."
+                    }
+                ]
+            }
+        }
+    }
+}

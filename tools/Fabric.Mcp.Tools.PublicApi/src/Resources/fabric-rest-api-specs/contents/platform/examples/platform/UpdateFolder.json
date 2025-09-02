@@ -1,0 +1,18 @@
+{
+    "parameters": {
+        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+        "folderId": "aaaaaaaa-6666-7777-8888-bbbbbbbbbbbb",
+        "updateFolderRequest": {
+            "displayName": "A new Folder name"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "aaaaaaaa-6666-7777-8888-bbbbbbbbbbbb",
+                "displayName": "A new Folder name",
+                "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb"
+            }
+        }
+    }
+}

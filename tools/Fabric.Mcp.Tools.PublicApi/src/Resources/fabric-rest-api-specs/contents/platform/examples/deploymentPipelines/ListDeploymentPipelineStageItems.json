@@ -1,0 +1,41 @@
+{
+    "parameters": {
+        "deploymentPipelineId": "a5ded933-57b7-41f4-b072-ed4c1f9d5824",
+        "stageId": "48d2f500-6375-4f17-9199-2e1d73c18486"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "itemId": "a7654a17-c5d1-4539-b9ec-022075545e50",
+                        "itemDisplayName": "Sales datamart",
+                        "itemType": "Datamart",
+                        "sourceItemId": "6bfe235c-6d7b-41b7-98a6-2b8276b3e82b",
+                        "lastDeploymentTime": "2021-06-06T11:55:59.057Z"
+                    },
+                    {
+                        "itemId": "dd3b6aa1-4d40-405c-a19b-48314a27e8ee",
+                        "itemDisplayName": "Sales semantic model",
+                        "itemType": "SemanticModel",
+                        "sourceItemId": "1a201f2a-d1d8-45c0-8c61-1676338517de",
+                        "targetItemId": "a5cf347e-7b49-4198-8a2b-0aa92c37d8f8",
+                        "lastDeploymentTime": "2020-12-13T09:26:41.153Z"
+                    },
+                    {
+                        "itemId": "9d5c1f0f-f85c-48f4-8a8e-4c77547116b3",
+                        "itemDisplayName": "Sales report",
+                        "itemType": "Report",
+                        "sourceItemId": "2d225191-65f8-4ec3-b77d-06100602b1f7",
+                        "lastDeploymentTime": "2020-12-13T09:26:41.153Z"
+                    },
+                    {
+                        "itemId": "9046e4cc-8aea-4a7a-a3b5-1a78b1447d82",
+                        "itemDisplayName": "Sales dashboard",
+                        "itemType": "Dashboard"
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,446 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Environment data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "EnvironmentSparkCompute": {
+            "type": "object",
+            "properties": {
+                "instancePool": {
+                    "description": "Environment pool has to be a valid custom pool. \"Starter Pool\" means use starter pool.",
+                    "$ref": "#/definitions/InstancePool"
+                },
+                "driverCores": {
+                    "description": "Spark driver core.",
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "driverMemory": {
+                    "description": "Spark driver memory.",
+                    "type": "string"
+                },
+                "executorCores": {
+                    "description": "Spark executor core.",
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "executorMemory": {
+                    "description": "Spark executor memory.",
+                    "type": "string"
+                },
+                "dynamicExecutorAllocation": {
+                    "description": "Dynamic executor allocation.",
+                    "$ref": "#/definitions/DynamicExecutorAllocationProperties"
+                },
+                "sparkProperties": {
+                    "type": "object",
+                    "description": "Spark properties."
+                },
+                "runtimeVersion": {
+                    "description": "Runtime version, find the supported [fabric runtimes](/fabric/data-engineering/runtime). For example: 1.3",
+                    "type": "string"
+                }
+            }
+        },
+        "UpdateEnvironmentSparkComputeRequest": {
+            "type": "object",
+            "properties": {
+                "instancePool": {
+                    "description": "Environment pool has to be a valid custom pool. The name for a default workspace pool is *Starter Pool*.",
+                    "$ref": "#/definitions/InstancePool",
+                    "type": "object"
+                },
+                "driverCores": {
+                    "description": "Spark driver core.",
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "driverMemory": {
+                    "description": "Spark driver memory.",
+                    "type": "string"
+                },
+                "executorCores": {
+                    "description": "Spark executor core.",
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "executorMemory": {
+                    "description": "Spark executor memory.",
+                    "type": "string"
+                },
+                "dynamicExecutorAllocation": {
+                    "description": "Dynamic executor allocation.",
+                    "$ref": "#/definitions/DynamicExecutorAllocationProperties"
+                },
+                "sparkProperties": {
+                    "type": "object",
+                    "description": "Spark properties."
+                },
+                "runtimeVersion": {
+                    "description": "Runtime version, find the supported [fabric runtimes](/fabric/data-engineering/runtime). For example: 1.3",
+                    "type": "string"
+                }
+            }
+        },
+        "InstancePool": {
+            "required": [
+                "name",
+                "type"
+            ],
+            "type": "object",
+            "description": "An instance of a pool.",
+            "properties": {
+                "id": {
+                    "format": "uuid",
+                    "description": "Instance pool ID.",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance pool name.",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Instance pool type.",
+                    "$ref": "#/definitions/CustomPoolType"
+                }
+            }
+        },
+        "CustomPoolType": {
+            "type": "string",
+            "description": "Custom pool type. Additional `CustomPoolType` types may be added over time.",
+            "enum": ["Workspace", "Capacity"],
+            "x-ms-enum": {
+                "name": "CustomPoolType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Workspace",
+                        "description": "Workspace custom pool"
+                    },
+                    {
+                        "value": "Capacity",
+                        "description": "Capacity custom pool"
+                    }
+                ]
+            }
+        },
+        "DynamicExecutorAllocationProperties": {
+            "description": "Dynamic executor allocation proerties.",
+            "required": [
+                "enabled",
+                "minExecutors",
+                "maxExecutors"
+            ],
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "description": "The status of the dynamic executor allocation. False - Disabled, true - Enabled.",
+                    "type": "boolean"
+                },
+                "minExecutors": {
+                    "description": "The minimum executor number for dynamic allocation and the minimum for this property is 1.",
+                    "format": "int32",
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "maxExecutors": {
+                    "description": "The maximum executor number for dynamic allocation and the minimum for this property is 1",
+                    "format": "int32",
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "Environments": {
+            "description": "A list of environments.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of environments.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Environment"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "Environment": {
+            "description": "An Environment item.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The environment properties.",
+                    "$ref": "#/definitions/EnvironmentPublishInfo"
+                }
+            }
+        },
+        "CreateEnvironmentRequest": {
+            "description": "Create environment request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The environment display name.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The environment description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the environment is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateEnvironmentRequest": {
+            "description": "Update environment request.",
+            "properties": {
+                "displayName": {
+                    "description": "The environment display name.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The environment description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "EnvironmentPublishInfo": {
+            "description": "Environment publish information.",
+            "type": "object",
+            "required": ["publishDetails"],
+            "properties": {
+                "publishDetails": {
+                    "description": "Environment publish operation details.",
+                    "$ref": "#/definitions/PublishDetails"
+                }
+            }
+        },
+        "PublishDetails": {
+            "description": "Details of publish operation.",
+            "type": "object",
+            "properties": {
+                "state": {
+                    "description": "Publish state. Additional state types may be added over time.",
+                    "type": "string",
+                    "enum": ["Success", "Cancelled", "Failed", "Cancelling", "Running", "Waiting"],
+                    "x-ms-enum": {
+                        "name": "EnvironmentPublishState",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Waiting",
+                                "description": "Environment publish is in waiting state."
+                            },
+                            {
+                                "value": "Running",
+                                "description": "Environment publish is in running state."
+                            },
+                            {
+                                "value": "Cancelling",
+                                "description": "Environment publish is in cancelling state."
+                            },
+                            {
+                                "value": "Cancelled",
+                                "description": "Environment publish is in cancelled state."
+                            },
+                            {
+                                "value": "Failed",
+                                "description": "Environment publish is in failed state."
+                            },
+                            {
+                                "value": "Success",
+                                "description": "Environment publish is in success state."
+                            }
+                        ]
+                    }
+
+                },
+                "targetVersion": {
+                    "description": "Target verion to be published.",
+                    "format": "uuid",
+                    "type": "string"
+                },
+                "startTime": {
+                    "description": "Start time of publish operation.",
+                    "format": "date-time",
+                    "type": "string"
+                },
+                "endTime": {
+                    "description": "End time of publish operation.",
+                    "format": "date-time",
+                    "type": "string"
+                },
+                "componentPublishInfo": {
+                    "description": "Environment component publish information.",
+                    "$ref": "#/definitions/ComponentPublishInfo"
+                }
+            }
+        },
+        "ComponentPublishInfo": {
+            "description": "Publish info for each components in environment.",
+            "type": "object",
+            "properties": {
+                "sparkLibraries": {
+                    "description": "Spark libraries publish information.",
+                    "$ref": "#/definitions/SparkLibraries"
+                },
+                "sparkSettings": {
+                    "description": "Spark settings publish information.",
+                    "$ref": "#/definitions/SparkSettings"
+                }
+            }
+        },
+        "SparkLibraries": {
+            "description": "Spark libraries.",
+            "type": "object",
+            "properties": {
+                "state": {
+                    "description": "Publish state. Additional state types may be added over time.",
+                    "type": "string",
+                    "enum": ["Success", "Cancelled", "Failed", "Cancelling", "Running", "Waiting"],
+                    "x-ms-enum": {
+                        "name": "EnvironmentPublishState",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Waiting",
+                                "description": "Environment publish is in waiting state."
+                            },
+                            {
+                                "value": "Running",
+                                "description": "Environment publish is in running state."
+                            },
+                            {
+                                "value": "Cancelling",
+                                "description": "Environment publish is in cancelling state."
+                            },
+                            {
+                                "value": "Cancelled",
+                                "description": "Environment publish is in cancelled state."
+                            },
+                            {
+                                "value": "Failed",
+                                "description": "Environment publish is in failed state."
+                            },
+                            {
+                                "value": "Success",
+                                "description": "Environment publish is in success state."
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "SparkSettings": {
+            "description": "Spark settings.",
+            "type": "object",
+            "properties": {
+                "state": {
+                    "description": "Publish state. Additional state types may be added over time.",
+                    "type": "string",
+                    "enum": ["Success", "Cancelled", "Failed", "Cancelling", "Running", "Waiting"],
+                    "x-ms-enum": {
+                        "name": "EnvironmentPublishState",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Waiting",
+                                "description": "Environment publish is in waiting state."
+                            },
+                            {
+                                "value": "Running",
+                                "description": "Environment publish is in running state."
+                            },
+                            {
+                                "value": "Cancelling",
+                                "description": "Environment publish is in cancelling state."
+                            },
+                            {
+                                "value": "Cancelled",
+                                "description": "Environment publish is in cancelled state."
+                            },
+                            {
+                                "value": "Failed",
+                                "description": "Environment publish is in failed state."
+                            },
+                            {
+                                "value": "Success",
+                                "description": "Environment publish is in success state."
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "EnvironmentLibraries": {
+            "description": "Environment libraries.",
+            "type": "object",
+            "properties": {
+                "customLibraries": {
+                    "description": "Custom libraries (.py, .whl, .jar, .tar.gz).",
+                    "$ref": "#/definitions/CustomLibraries"
+                },
+                "environmentYml": {
+                    "description": "Feed libraries.",
+                    "type": "string"
+                }
+            }
+        },
+        "CustomLibraries": {
+            "description": "Custom libraries.",
+            "type": "object",
+            "properties": {
+                "wheelFiles": {
+                    "type": "array",
+                    "description": "A list of Wheel files.",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "pyFiles": {
+                    "type": "array",
+                    "description": "A list of Python files.",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "jarFiles": {
+                    "type": "array",
+                    "description": "A list of Jar files.",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "rTarFiles": {
+                    "type": "array",
+                    "description": "A list of R files.",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}

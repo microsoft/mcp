@@ -1,0 +1,29 @@
+{
+    "parameters": {
+        "connectionId": "fa968eee-8075-48f6-8c6d-41260ee1396d",
+        "updateConnectionRequest": {
+            "connectivityType": "ShareableCloud",
+            "displayName": "ContosoCloudConnection"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "fa968eee-8075-48f6-8c6d-41260ee1396d",
+                "displayName": "ContosoCloudConnection",
+                "connectivityType": "ShareableCloud",
+                "connectionDetails":{
+                    "type": "SQL",
+                    "path": "contoso.database.windows.net;networks"
+                },
+                "privacyLevel": "Public",
+                "credentialDetails": {
+                    "credentialType": "Basic",
+                    "singleSignOnType": "None",
+                    "connectionEncryption": "NotEncrypted",
+                    "skipTestConnection": true
+                }
+            }
+        }
+    }
+}

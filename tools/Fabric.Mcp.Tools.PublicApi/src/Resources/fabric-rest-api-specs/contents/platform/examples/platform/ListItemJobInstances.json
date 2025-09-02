@@ -1,0 +1,36 @@
+{
+    "parameters": {
+        "workspaceId": "4b218778-e7a5-4d73-8187-f10824047715",
+        "itemId": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "f2d65699-dd22-4889-980c-15226deb0e1b",    
+                        "itemId": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                        "jobType": "DefaultJob",
+                        "invokeType": "Manual",
+                        "status": "Completed",
+                        "rootActivityId": "8c2ee553-53a4-7edb-1042-0d8189a9e0ca",
+                        "startTimeUtc": "2024-06-22T06:35:00.7812154",
+                        "endTimeUtc": "2024-06-22T06:35:00.8033333",
+                        "failureReason": null
+                    },
+                    {
+                        "id": "c0c99aed-be56-4fe0-a6e5-6de5fe277f16",    
+                        "itemId": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                        "jobType": "DefaultJob",
+                        "invokeType": "Manual",
+                        "status": "Completed",
+                        "rootActivityId": "c0c99aed-be56-4fe0-a6e5-6de5fe277f16",
+                        "startTimeUtc": "2024-06-22T06:35:00.7812154",
+                        "endTimeUtc": "2024-06-22T07:35:00.8033333",
+                        "failureReason": null
+                    }
+                ]
+            }
+        }
+    }
+}

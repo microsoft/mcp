@@ -1,0 +1,36 @@
+{
+    "parameters": {
+        "workspaceId": "bf94607f-3ba1-4a95-8259-27649ccd7755", 
+        "itemId": "884e71cd-f5b4-45f9-8e00-b71355f7ea5d",
+        "createShortcutRequest": {
+            "path": "Files",
+            "name": "MyAzureBlobStorage",
+            "target": {
+                "azureBlobStorage": {
+                    "location": "https://azureblobstoragetesting.blob.core.windows.net", 
+                    "subpath": "/tables",  
+                    "connectionId": "97e33458-1353-4911-96b1-6f4f4bbfd335"
+                }               
+            }
+        }
+    },
+    "responses": {
+        "201": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/workspaces/bf94607f-3ba1-4a95-8259-27649ccd7755/items/884e71cd-f5b4-45f9-8e00-b71355f7ea5d/shortcuts/Files/MyAzureBlobStorage"
+            },
+            "body": {
+            "path": "Files",
+            "name": "MyAzureBlobStorage",
+            "target": {
+                "type": "AzureBlobStorage",
+                "azureBlobStorage": {
+                    "location": "https://azureblobstoragetesting.blob.core.windows.net",
+                    "subpath": "/tables",
+                    "connectionId": "97e33458-1353-4911-96b1-6f4f4bbfd335"
+                }
+            }
+            }        
+        }
+    }
+}

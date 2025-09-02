@@ -1,0 +1,141 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "CopyJob data types",
+    "version": "v1"
+  },
+  "paths": {},
+  "definitions": {
+    "CopyJob": {
+      "description": "A CopyJob object.",
+      "type": "object",
+      "required": [ "type" ],
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/Item"
+        }
+      ]
+    },
+    "CopyJobs": {
+      "description": "A list of CopyJobs.",
+      "required": [ "value" ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of CopyJobs.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CopyJob"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "CreateCopyJobRequest": {
+      "description": "Create CopyJob request payload.",
+      "required": [ "displayName" ],
+      "properties": {
+        "displayName": {
+          "description": "The CopyJob display name. The display name must follow naming rules according to item type.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The CopyJob description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        },
+        "folderId": {
+            "description": "The folder ID. If not specified or null, the CopyJob is created with the workspace as its folder.",
+            "type": "string",
+            "format": "uuid",
+            "readOnly": false
+        },
+        "definition": {
+          "description": "The CopyJob public definition.",
+          "$ref": "#/definitions/CopyJobDefinition",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateCopyJobDefinitionRequest": {
+      "description": "Update CopyJob public definition request payload.",
+      "required": [ "definition" ],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/CopyJobDefinition"
+        }
+      }
+    },
+    "CopyJobDefinitionResponse": {
+      "description": "CopyJob public definition response.",
+      "required": [ "definition" ],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/CopyJobDefinition",
+          "readOnly": true
+        }
+      }
+    },
+    "CopyJobDefinition": {
+      "description": "CopyJob public definition object. Refer to [Copy job definition](/rest/api/fabric/articles/item-management/definitions/copyjob-definition) for more details on how to craft a CopyJob public definition.",
+      "type": "object",
+      "required": [ "parts" ],
+      "properties": {
+        "format": {
+          "description": "The format of the item definition.",
+          "type": "string",
+          "readOnly": false
+        },
+        "parts": {
+          "description": "A list of definition parts.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CopyJobDefinitionPart"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "CopyJobDefinitionPart": {
+      "description": "CopyJob definition part object.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "The CopyJob public definition part path.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payload": {
+          "description": "The CopyJob public definition part payload.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payloadType": {
+          "description": "The payload type.",
+          "$ref": "../common/definitions.json#/definitions/PayloadType",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateCopyJobRequest": {
+      "description": "Update CopyJob request.",
+      "properties": {
+        "displayName": {
+          "description": "The CopyJob display name. The display name must follow naming rules according to item type.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The CopyJob description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        }
+      }
+    }
+  }
+}

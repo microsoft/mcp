@@ -1,0 +1,21 @@
+{
+    "parameters": {
+        "domainId": "97dd1d38-a4c6-41ed-bc4f-1e383f8ddd0f",
+        "updateDomainRequest": {
+            "displayName": "Domain's new name",
+            "description": "Domain's new description",
+            "contributorsScope": "SpecificUsersAndGroups"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "f2f6a374-789e-4d1d-9cc7-6e0b934fc529",
+                "displayName": "Domain's new name",
+                "description": "Domain's new description",
+                "parentDomainId": null,
+                "contributorsScope": "SpecificUsersAndGroups"
+            }
+        }
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "warehouseId": "5b218778-e7a5-4d73-8187-f10824047715"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "displayName": "Warehouse 1",
+                "description": "A warehouse description.",
+                "type": "Warehouse",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "5b218778-e7a5-4d73-8187-f10824047715",
+                "properties": {
+                    "connectionString": "qvrmbuxie7we7glrekxgy6npqu-6xgyei3x2xiejip4iime6knh5m.datawarehouse.fabric.microsoft.com",
+                    "createdDate": "2023-09-28T22:52:13.78",
+                    "lastUpdatedTime": "2023-10-04T22:56:33.283",
+                    "collationType": "Latin1_General_100_BIN2_UTF8"
+                }
+            }
+        }
+    }
+}

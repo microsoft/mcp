@@ -1,0 +1,74 @@
+{
+    "parameters": {
+        "itemId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "workspaceId": "7f4496db-9929-47bd-89c0-d7eb2f517a98"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "accessDetails": [
+                {
+                    "principal": {
+                        "id": "f3052d1c-61a9-46fb-8df9-0d78916ae041",
+                        "displayName": "Jacob Hancock",
+                        "type": "User",
+                        "userDetails": {
+                                "userPrincipalName": "jacob@example.com"
+                            }
+                    },
+                    "itemAccessDetails": {
+                        "type": "Notebook",
+                        "permissions": [
+                            "Read",
+                            "Reshare"
+                            ],
+                        "additionalPermissions" : [
+                                "ReadAll",
+                                "viewOutput"
+                            ]
+                        }
+                    },
+                    {
+                        "principal": {
+                            "id": "c7db8e03-c8cb-4d4c-9f64-1dcd327c9d3c",
+                            "displayName": "Eric Solomon",
+                            "type": "User",
+                            "userDetails": {
+                                "userPrincipalName": "eric@example.com"
+                            }
+                        },
+                        "itemAccessDetails": {
+                            "type": "Notebook",
+                            "permissions": [
+                                "Read",
+                                "Reshare",
+                                "Explore"
+                            ],
+                            "additionalPermissions" : [
+                                "ReadAll"
+                            ]
+                        }
+                    },
+                    {
+                        "principal": {
+                            "id": "f51b705f-a409-4d40-9197-c5d5f349e2f0",
+                            "displayName": "TestSecurityGroup",
+                            "type": "Group",
+                            "groupDetails": {
+                                "groupType": "SecurityGroup"
+                            }
+                        },
+                        "itemAccessDetails": {
+                            "type": "Notebook",
+                            "permissions": [
+                                "Read",
+                                "Reshare"
+                            ],
+                            "additionalPermissions" : []
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

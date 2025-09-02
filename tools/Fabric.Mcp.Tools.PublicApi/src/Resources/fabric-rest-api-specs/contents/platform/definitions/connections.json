@@ -1,0 +1,1216 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Connection data types"
+    },
+    "paths": {},
+    "definitions": {
+        "ConnectivityType": {
+            "type": "string",
+            "description": "The connectivity type of the connection. Additional connectivity types may be added over time.",
+            "enum": ["ShareableCloud", "PersonalCloud", "OnPremisesGateway", "OnPremisesGatewayPersonal", "VirtualNetworkGateway", "Automatic", "None"],
+            "x-ms-enum": {     
+                "name": "ConnectivityType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "ShareableCloud",
+                        "description": "The connection connects through the cloud and can be shared with others."
+                    },
+                    {
+                        "value": "PersonalCloud",
+                        "description": "The connection connects through the cloud and cannot be shared with others."
+                    },
+                    {
+                        "value": "OnPremisesGateway",
+                        "description": "The connection connects through an on-premises data gateway."
+                    },
+                    {
+                        "value": "OnPremisesGatewayPersonal",
+                        "description": "The connection connects through a personal on-premises data gateway."
+                    },
+                    {
+                        "value": "VirtualNetworkGateway",
+                        "description": "The connection connects through a virtual network data gateway."
+                    },
+                    {
+                        "value": "Automatic",
+                        "description": "The connection connects through the cloud using an implicit data connection. This option is only available for specific scenarios like semantic models that use Single Sign-On (SSO).”"
+                    },
+                    {
+                        "value": "None",
+                        "description": "The connection is not bound"
+                    }
+                ]
+            }
+        },
+        "PrivacyLevel": {
+            "type": "string",
+            "description": "The privacy level setting of the connection. Additional privacy levels may be added over time.",
+            "enum": ["None", "Private", "Organizational", "Public"],
+            "x-ms-enum": {     
+                "name": "PrivacyLevel",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "None",
+                        "description": "No privacy level setting is configured."
+                    },
+                    {
+                        "value": "Private",
+                        "description": "Connections set to private contain sensitive or confidential information. Visibility can be restricted to authorized users. Data from a private connection won't fold in to other connections, including other private connections."
+                    },
+                    {
+                        "value": "Organizational",
+                        "description": "Connections set to organizational can fold in to private and other organizational connections. They can't fold in to public connections. Visibility is set to a trusted group."
+                    },
+                    {
+                        "value": "Public",
+                        "description": "Files, internet connections, and workbook data can be set to public. Data can fold in to other connections. Visibility is available to everyone."
+                    }
+                ]
+            }
+        },
+        "CredentialType": {
+            "type": "string",
+            "description": "The credential type of the connection. Additional credential types may be added over time.",
+            "enum": ["Windows", "Anonymous", "Basic", "Key", "OAuth2", "WindowsWithoutImpersonation", "SharedAccessSignature", "ServicePrincipal", "WorkspaceIdentity"],
+            "x-ms-enum": {     
+                "name": "CredentialType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Windows",
+                        "description": "Connection uses Windows authentication to connect. Only supported for on-premises gateways."
+                    },
+                    {
+                        "value": "Anonymous",
+                        "description": "Connection uses anonymous authentication to connect."
+                    },
+                    {
+                        "value": "Basic",
+                        "description": "Connection uses basic authentication to connect."
+                    },
+                    {
+                        "value": "Key",
+                        "description": "Connection uses key authentication to connect."
+                    },
+                    {
+                        "value": "OAuth2",
+                        "description": "Connection uses OAuth 2.0 authentication to connect."
+                    },
+                    {
+                        "value": "WindowsWithoutImpersonation",
+                        "description": "Connection uses Windows (without the option for impersonation) authentication to connect. Only supported for on-premises gateways (personal mode)."
+                    },
+                    {
+                        "value": "SharedAccessSignature",
+                        "description": "Connection uses shared access signature (SAS) authentication to connect."
+                    },
+                    {
+                        "value": "ServicePrincipal",
+                        "description": "Connection uses service principal authentication to connect."
+                    },
+                    {
+                        "value": "WorkspaceIdentity",
+                        "description": "Connection uses workspace identity authentication to connect."
+                    }
+                ]
+            }
+        },
+        "SingleSignOnType": {
+            "type": "string",
+            "description": "The single sign-on type of the connection. Additional single sign on types may be added over time.",
+            "enum": ["None", "Kerberos", "MicrosoftEntraID", "SecurityAssertionMarkupLanguage", "KerberosDirectQueryAndRefresh"],
+            "x-ms-enum": {     
+                "name": "SingleSignOnType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "None",
+                        "description": "Connection does not use single sign-on to connect."
+                    },
+                    {
+                        "value": "Kerberos",
+                        "description": "Connection uses Kerberos single sign-on to connect."
+                    },
+                    {
+                        "value": "MicrosoftEntraID",
+                        "description": "Connection uses Microsoft Entra ID single sign-on to connect."
+                    },
+                    {
+                        "value": "SecurityAssertionMarkupLanguage",
+                        "description": "Connection uses Security Assertion Markup Language (SAML) single sign-on to connect."
+                    },
+                    {
+                        "value": "KerberosDirectQueryAndRefresh",
+                        "description": "Connection uses Kerberos DirectQuery and Refresh single sign-on to connect."
+                    }
+                ]
+            }
+        },
+        "ConnectionEncryption": {
+            "type": "string",
+            "description": "The connection encryption type of the connection. Additional connection encryption values may be added over time.",
+            "enum": ["Encrypted", "Any", "NotEncrypted"],
+            "x-ms-enum": {     
+                "name": "ConnectionEncryption",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Encrypted",
+                        "description": "The connection attempt is made using an encrypted connection."
+                    },
+                    {
+                        "value": "Any",
+                        "description": "The connection attempt is first made using an encrypted connection, then falls back to unencrypted connection if unsuccessful."
+                    },
+                    {
+                        "value": "NotEncrypted",
+                        "description": "The connection attempt is made using an unencrypted connection."
+                    }
+                ]
+            }
+        },
+        "DataType": {
+            "type": "string",
+            "description": "The data type of the connection creation parameter value. Additional data type values may be added over time.",
+            "enum": ["Text", "Number", "Boolean", "Duration", "Date", "DateTime", "DateTimeZone", "Time"],
+            "x-ms-enum": {     
+                "name": "DataType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Text",
+                        "description": "Use text as the parameter input value."
+                    },
+                    {
+                        "value": "Number",
+                        "description": "Use number as the parameter input value (integer or floating point)."
+                    },
+                    {
+                        "value": "Boolean",
+                        "description": "Use boolean as the parameter input value. False - the value is false, True - the value is true."
+                    },
+                    {
+                        "value": "Duration",
+                        "description": "Use duration as the parameter input value, using [-]P(n)DT(n)H(n)M(n)S format. For example: P3DT4H30M10S (for 3 days, 4 hours, 30 minutes, and 10 seconds)."
+                    },
+                    {
+                        "value": "Date",
+                        "description": "Use date as the parameter input value, using YYYY-MM-DD format."
+                    },
+                    {
+                        "value": "DateTime",
+                        "description": "Use date time as the parameter input value, using YYYY-MM-DDTHH:mm:ss.FFFZ format."
+                    },
+                    {
+                        "value": "DateTimeZone",
+                        "description": "Use date time zone as the parameter input value, using YYYY-MM-DDTHH:mm:ss.FFF±hh:mm format."
+                    },
+                    {
+                        "value": "Time",
+                        "description": "Use time as the parameter input value, using HH:mm:ss.FFFZ format."
+                    }
+                ]
+            }
+        },
+        "ConnectionDetailsParameter": {
+            "required": ["dataType", "name"],
+            "type": "object",
+            "description": "The base object of ConnectionDetailsParameter.",
+            "discriminator": "dataType",
+            "properties": {
+                "dataType": {
+                    "description": "The data type of the parameter.",
+                    "$ref": "#/definitions/DataType"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The name of the parameter."
+                }
+            }
+        },
+        "ConnectionDetailsTextParameter": {
+            "required": ["value"],
+            "type": "object",
+            "description": "ConnectionDetailsParameter for text dataType.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ConnectionDetailsParameter"
+                }
+            ],
+            "x-ms-discriminator-value": "Text",
+            "properties": {
+                "value": {
+                    "type": "string",
+                    "description": "The text value."
+                }
+            }
+        },
+        "ConnectionDetailsNumberParameter": {
+            "required": ["value"],
+            "type": "object",
+            "description": "ConnectionDetailsParameter for number dataType.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ConnectionDetailsParameter"
+                }
+            ],
+            "x-ms-discriminator-value": "Number",
+            "properties": {
+                "value": {
+                    "type": "number",
+                    "description": "The number value."
+                }
+            }
+        },
+        "ConnectionDetailsBooleanParameter": {
+            "required": ["value"],
+            "type": "object",
+            "description": "ConnectionDetailsParameter for boolean dataType.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ConnectionDetailsParameter"
+                }
+            ],
+            "x-ms-discriminator-value": "Boolean",
+            "properties": {
+                "value": {
+                    "type": "boolean",
+                    "description": "The boolean value."
+                }
+            }
+        },
+        "ConnectionDetailsDurationParameter": {
+            "required": ["value"],
+            "type": "object",
+            "description": "ConnectionDetailsParameter for duration dataType.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ConnectionDetailsParameter"
+                }
+            ],
+            "x-ms-discriminator-value": "Duration",
+            "properties": {
+                "value": {
+                    "type": "string",
+                    "format": "time-span",
+                    "description": "The duration value using [-]P(n)DT(n)H(n)M(n)S format. For example: P3DT4H30M10S (for 3 days, 4 hours, 30 minutes, and 10 seconds)."
+                }
+            }
+        },
+        "ConnectionDetailsDateParameter": {
+            "required": ["value"],
+            "type": "object",
+            "description": "ConnectionDetailsParameter for date dataType.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ConnectionDetailsParameter"
+                }
+            ],
+            "x-ms-discriminator-value": "Date",
+            "properties": {
+                "value": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "The date value using YYYY-MM-DD format."
+                }
+            }
+        },
+        "ConnectionDetailsDateTimeParameter": {
+            "required": ["value"],
+            "type": "object",
+            "description": "ConnectionDetailsParameter for dateTime dataType.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ConnectionDetailsParameter"
+                }
+            ],
+            "x-ms-discriminator-value": "DateTime",
+            "properties": {
+                "value": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date time value using YYYY-MM-DDTHH:mm:ss.FFFZ format."
+                }
+            }
+        },
+        "ConnectionDetailsDateTimeZoneParameter": {
+            "required": ["value"],
+            "type": "object",
+            "description": "ConnectionDetailsParameter for dateTimeZone dataType.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ConnectionDetailsParameter"
+                }
+            ],
+            "x-ms-discriminator-value": "DateTimeZone",
+            "properties": {
+                "value": {
+                    "type": "string",
+                    "format": "date-time-offset",
+                    "description": "The date time zone value using YYYY-MM-DDTHH:mm:ss.FFF±hh:mm format."
+                }
+            }
+        },
+        "ConnectionDetailsTimeParameter": {
+            "required": ["value"],
+            "type": "object",
+            "description": "ConnectionDetailsParameter for time dataType.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ConnectionDetailsParameter"
+                }
+            ],
+            "x-ms-discriminator-value": "Time",
+            "properties": {
+                "value": {
+                    "type": "string",
+                    "format": "time",
+                    "description": "The time value using HH:mm:ss.FFFZ format."
+                }
+            }
+        },
+        "ConnectionDetails": {
+            "required": ["type"],
+            "type": "object",
+            "description": "The base object of connection details.",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The type of the connection."
+                }
+            }
+        },
+        "ListConnectionDetails": {
+            "required": ["path"],
+            "type": "object",
+            "description": "The connection details output for list operations.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ConnectionDetails"
+                }
+            ],
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "The path of the connection. "
+                }
+            }
+        },
+        "CreateConnectionDetails": {
+            "required": ["creationMethod", "parameters"],
+            "type": "object",
+            "description": "The connection details input for create operations.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ConnectionDetails"
+                }
+            ],
+            "properties": {
+                "creationMethod": {
+                    "type": "string",
+                    "description": "The creation method used to create the connection. For a list of creation methods use the [ListSupportedConnectionTypes](/rest/api/fabric/core/connections/list-supported-connection-types) API."
+                },
+                "parameters": {
+                    "type": "array",
+                    "description": "The list of connection parameters. For a list of parameters for each creation method use the [ListSupportedConnectionTypes](/rest/api/fabric/core/connections/list-supported-connection-types) API.",
+                    "items": {
+                        "$ref": "#/definitions/ConnectionDetailsParameter"
+                  }
+                }
+            }
+        },
+        "OnPremisesCredentialEntry": {
+            "required": ["gatewayId", "encryptedCredentials"],
+            "type": "object",
+            "description": "A gateway ID and its encrypted serialized credentials.",
+            "properties": {
+              "gatewayId": {
+                "type": "string",
+                "description": "The object ID of the gateway.",
+                "format": "uuid"
+              },
+              "encryptedCredentials": {
+                "type": "string",
+                "description": "The encrypted serialized .json of the list of name value pairs. Name is a credential name and value is a credential value. Encryption is performed using the Rivest-Shamir-Adleman (RSA) encryption algorithm with the on-premises gateway member's public key."
+              }
+            }
+        },
+        "Credentials": {
+            "required": ["credentialType"],
+            "type": "object",
+            "description": "The base object of credentials.",
+            "discriminator": "credentialType",
+            "properties": {
+                "credentialType": {
+                    "description": "The credential type of the connection.",
+                    "$ref": "#/definitions/CredentialType"
+                }
+            }
+        },
+        "OnPremisesGatewayCredentials": {
+            "required": ["credentialType", "values"],
+            "type": "object",
+            "description": "Credentials for authenticating through an on-premises gateway.",
+            "properties": {
+                "credentialType": {
+                    "description": "The credential type of the connection.",
+                    "$ref": "#/definitions/CredentialType"
+                },
+                "values": {
+                    "type": "array",
+                    "description": "The credential payload to send to the on-premises gateway.",
+                    "items": {
+                        "$ref": "#/definitions/OnPremisesCredentialEntry"
+                    }
+                }
+            }
+        },
+        "OnPremisesGatewayPersonalCredentials": {
+            "required": ["credentialType", "encryptedCredentials"],
+            "type": "object",
+            "description": "Credentials for authenticating through an on-premises gateway (personal mode).",
+            "properties": {
+                "credentialType": {
+                    "description": "The credential type of the connection.",
+                    "$ref": "#/definitions/CredentialType"
+                },
+                "encryptedCredentials": {
+                    "type": "string",
+                    "description": "The encrypted serialized .json of the list of name value pairs. Name is a credential name and value is a credential value. Encryption is performed using the Rivest-Shamir-Adleman (RSA) encryption algorithm with the on-premises gateway's public key."
+                }
+            }
+        },
+        "AnonymousCredentials": {
+            "type": "object",
+            "description": "Credentials for Anonymous CredentialType.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Credentials"
+                }
+            ],
+            "x-ms-discriminator-value": "Anonymous"
+        },
+        "WindowsWithoutImpersonationCredentials": {
+            "type": "object",
+            "description": "Credentials for WindowsWithoutImpersonation CredentialType.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Credentials"
+                }
+            ],
+            "x-ms-discriminator-value": "WindowsWithoutImpersonation"
+        },
+        "WorkspaceIdentityCredentials": {
+            "type": "object",
+            "description": "Credentials for WorkspaceIdentity CredentialType.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Credentials"
+                }
+            ],
+            "x-ms-discriminator-value": "WorkspaceIdentity"
+        },
+        "WindowsCredentials": {
+            "required": ["username", "password"],
+            "type": "object",
+            "description": "Credentials for Windows CredentialType.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Credentials"
+                }
+            ],
+            "properties": {
+                "username": {
+                    "type": "string",
+                    "description": "The username."
+                },
+                "password": {
+                    "type": "string",
+                    "description": "The password."
+                }
+            },
+            "x-ms-discriminator-value": "Windows"
+        },
+        "BasicCredentials": {
+            "required": ["username", "password"],
+            "type": "object",
+            "description": "Credentials for Basic CredentialType.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Credentials"
+                }
+            ],
+            "properties": {
+                "username": {
+                    "type": "string",
+                    "description": "The username."
+                },
+                "password": {
+                    "type": "string",
+                    "description": "The password."
+                }
+            },
+            "x-ms-discriminator-value": "Basic"
+        },
+        "KeyCredentials": {
+            "required": ["key"],
+            "type": "object",
+            "description": "Credentials for Key CredentialType.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Credentials"
+                }
+            ],
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "description": "The key."
+                }
+            },
+            "x-ms-discriminator-value": "Key"
+        },
+        "ServicePrincipalCredentials": {
+            "required": ["tenantId", "servicePrincipalClientId", "servicePrincipalSecret"],
+            "type": "object",
+            "description": "Credentials for ServicePrincipal CredentialType.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Credentials"
+                }
+            ],
+            "properties": {
+                "tenantId": {
+                    "type": "string",
+                    "description": "The tenant ID of the service principal.",
+                    "format": "uuid"
+                },
+                "servicePrincipalClientId": {
+                    "type": "string",
+                    "description": "The client ID of the service principal.",
+                    "format": "uuid"
+                },
+                "servicePrincipalSecret": {
+                    "type": "string",
+                    "description": "The secret of the service principal."
+                }
+            },
+            "x-ms-discriminator-value": "ServicePrincipal"
+        },
+        "SharedAccessSignatureCredentials": {
+            "required": ["token"],
+            "type": "object",
+            "description": "Credentials for SharedAccessSignature CredentialType.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Credentials"
+                }
+            ],
+            "properties": {
+                "token": {
+                    "type": "string",
+                    "description": "The token."
+                }
+            },
+            "x-ms-discriminator-value": "SharedAccessSignature"
+        },
+        "CredentialDetails": {
+            "type": "object",
+            "description": "The base object of credential details.",
+            "properties": {
+                "singleSignOnType": {
+                    "description": "The single sign-on type of the connection.",
+                    "$ref": "#/definitions/SingleSignOnType"
+                },
+                "connectionEncryption": {
+                    "description": "The connection encryption setting that is used during the test connection.",
+                    "$ref": "#/definitions/ConnectionEncryption"
+                },
+                "skipTestConnection": {
+                    "type": "boolean",
+                    "description": "Whether the connection should skip the test connection during creation and update. True - Skip the test connection, False - Do not skip the test connection."
+                }
+            }
+        },
+        "ListCredentialDetails": {
+            "type": "object",
+            "description": "The credential details returned when fetching a connection.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/CredentialDetails"
+                }
+            ],
+            "properties": {
+                "credentialType": {
+                    "description": "The credential type of the connection.",
+                    "$ref": "#/definitions/CredentialType"
+                }
+            }
+        },
+        "CreateCredentialDetailsRequest": {
+            "type": "object",
+            "description": "Create credential details payload.",
+            "properties": {
+                "singleSignOnType": {
+                    "description": "(Optional) The single sign-on type of the connection. When no value is passed, the connection doesn't use single sign-on.",
+                    "$ref": "#/definitions/SingleSignOnType"
+                },
+                "connectionEncryption": {
+                    "description": "(Optional) The connection encryption setting that is used during the test connection. When no value is passed, the connection is not encrypted.",
+                    "$ref": "#/definitions/ConnectionEncryption"
+                },
+                "skipTestConnection": {
+                    "type": "boolean",
+                    "description": "Whether the connection should skip the test connection during creation and update. True - Skip the test connection, False - Do not skip the test connection. When no value is passed, this is set to 'False'."
+                }
+            }
+        },
+        "CreateCredentialDetails": {
+            "required": ["credentials"],
+            "type": "object",
+            "description": "The credential details input for creating a connection.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/CreateCredentialDetailsRequest"
+                }
+            ],
+            "properties": {
+                "credentials": {
+                    "description": "The credentials of the connection.",
+                    "$ref": "#/definitions/Credentials"
+                }
+            }
+        },
+        "CreateOnPremisesCredentialDetails": {
+            "required": ["credentials"],
+            "type": "object",
+            "description": "The credential details input for creating an on-premises gateway connection.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/CreateCredentialDetailsRequest"
+                }
+            ],
+            "properties": {
+                "credentials": {
+                    "description": "The credentials of the connection.",
+                    "$ref": "#/definitions/OnPremisesGatewayCredentials"
+                }
+            }
+        },
+        "UpdateCredentialDetails": {
+            "type": "object",
+            "description": "The credential details input for updating a connection.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/CredentialDetails"
+                }
+            ],
+            "properties": {
+                "credentials": {
+                    "description": "The credentials of the connection.",
+                    "$ref": "#/definitions/Credentials"
+                }
+            }
+        },
+        "UpdateOnPremisesGatewayCredentialDetails": {
+            "type": "object",
+            "description": "The credential details input for updating an on-premises gateway connection.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/CredentialDetails"
+                }
+            ],
+            "properties": {
+                "credentials": {
+                    "description": "The credentials of the connection.",
+                    "$ref": "#/definitions/OnPremisesGatewayCredentials"
+                }
+            }
+        },
+        "UpdateOnPremisesGatewayPersonalCredentialDetails": {
+            "type": "object",
+            "description": "The credential details input for updating an on-premises gateway connection.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/CredentialDetails"
+                }
+            ],
+            "properties": {
+                "credentials": {
+                    "description": "The credentials of the connection.",
+                    "$ref": "#/definitions/OnPremisesGatewayPersonalCredentials"
+                }
+            }
+        },
+        "CreateConnectionRequest": {
+            "required": ["connectivityType", "displayName", "connectionDetails"],
+            "type": "object",
+            "description": "The base object of create connection request.",
+            "discriminator": "connectivityType",
+            "properties": {
+                "connectivityType": {
+                    "description": "The connectivity type of the connection.",
+                    "$ref": "#/definitions/ConnectivityType"
+                },
+                "displayName": {
+                    "description": "The display name of the connection. Maximum length is 200 characters.",
+                    "type": "string"
+                },
+                "connectionDetails": {
+                    "description": "The connection details of the connection.",
+                    "$ref": "#/definitions/CreateConnectionDetails"
+                },
+                "privacyLevel": {
+                    "description": "(Optional) The privacy level of the connection. When no value is passed, this is set to 'Organizational'.",
+                    "$ref": "#/definitions/PrivacyLevel"
+                }
+            }
+        },
+        "CreateOnPremisesConnectionRequest": {
+            "required": ["gatewayId", "credentialDetails"],
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/CreateConnectionRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "OnPremisesGateway",
+            "properties": {
+                "gatewayId": {
+                    "type": "string",
+                    "description": "The object ID of the primary gateway of the on-premises gateway that the connection is created under.",
+                    "format": "uuid"
+                },
+                "credentialDetails": {
+                    "description": "The credential details of the connection.",
+                    "$ref": "#/definitions/CreateOnPremisesCredentialDetails"
+                }
+            }
+        },
+        "CreateVirtualNetworkGatewayConnectionRequest": {
+            "required": ["gatewayId", "credentialDetails"],
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/CreateConnectionRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "VirtualNetworkGateway",
+            "properties": {
+                "gatewayId": {
+                    "type": "string",
+                    "description": "The object ID of the virtual network gateway that the connection is created under.",
+                    "format": "uuid"
+                },
+                "credentialDetails": {
+                    "description": "The credential details of the connection.",
+                    "$ref": "#/definitions/CreateCredentialDetails"
+                }
+            }
+        },
+        "CreateCloudConnectionRequest": {
+            "required": ["credentialDetails"],
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/CreateConnectionRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "ShareableCloud",
+            "properties": {
+                "credentialDetails": {
+                    "description": "The credential details of the connection.",
+                    "$ref": "#/definitions/CreateCredentialDetails"
+                }
+            }
+        },
+        "UpdateConnectionRequest": {
+            "required": ["connectivityType"],
+            "type": "object",
+            "description": "The base object of update connection request.",
+            "discriminator": "connectivityType",
+            "properties": {
+                "connectivityType": {
+                    "description": "The connectivity type of the connection.",
+                    "$ref": "#/definitions/ConnectivityType"
+                },
+                "privacyLevel": {
+                    "description": "The privacy level of the connection.",
+                    "$ref": "#/definitions/PrivacyLevel"
+                }
+            }
+        },
+        "UpdateOnPremisesGatewayConnectionRequest": {
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UpdateConnectionRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "OnPremisesGateway",
+            "properties": {
+                "displayName": {
+                    "description": "The display name of the connection. Maximum length is 200 characters.",
+                    "type": "string"
+                },
+                "credentialDetails": {
+                    "description": "The credential details of the connection.",
+                    "$ref": "#/definitions/UpdateOnPremisesGatewayCredentialDetails"
+                }
+            }
+        },
+        "UpdateOnPremisesGatewayPersonalConnectionRequest": {
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UpdateConnectionRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "OnPremisesGatewayPersonal",
+            "properties": {
+                "credentialDetails": {
+                    "description": "The credential details of the connection.",
+                    "$ref": "#/definitions/UpdateOnPremisesGatewayPersonalCredentialDetails"
+                }
+            }
+        },
+        "UpdateVirtualNetworkGatewayConnectionRequest": {
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UpdateConnectionRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "VirtualNetworkGateway",
+            "properties": {
+                "displayName": {
+                    "description": "The display name of the connection. Maximum length is 200 characters.",
+                    "type": "string"
+                },
+                "credentialDetails": {
+                    "description": "The credential details of the connection.",
+                    "$ref": "#/definitions/UpdateCredentialDetails"
+                }
+            }
+        },
+        "UpdateShareableCloudConnectionRequest": {
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UpdateConnectionRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "ShareableCloud",
+            "properties": {
+                "displayName": {
+                    "description": "The display name of the connection. Maximum length is 200 characters.",
+                    "type": "string"
+                },
+                "credentialDetails": {
+                    "description": "The credential details of the connection.",
+                    "$ref": "#/definitions/UpdateCredentialDetails"
+                }
+            }
+        },
+        "UpdatePersonalCloudConnectionRequest": {
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UpdateConnectionRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "PersonalCloud",
+            "properties": {
+                "credentialDetails": {
+                    "description": "The credential details of the connection.",
+                    "$ref": "#/definitions/UpdateCredentialDetails"
+                }
+            }
+        },
+        "Connection": {
+            "required": ["id", "connectivityType", "connectionDetails"],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "The object ID of the connection.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "displayName": {
+                    "description": "The display name of the connection.",
+                    "type": "string"
+                },
+                "gatewayId": {
+                    "description": "The gateway object ID of the connection.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "connectivityType": {
+                    "description": "The connectivity type of the connection.",
+                    "$ref": "#/definitions/ConnectivityType"
+                },
+                "connectionDetails": {
+                    "description": "The connection details of the connection.",
+                    "$ref": "#/definitions/ListConnectionDetails"
+                },
+                "privacyLevel": {
+                    "description": "The privacy level of the connection.",
+                    "$ref": "#/definitions/PrivacyLevel"
+                },
+                "credentialDetails": {
+                    "description": "The credential details of the connection.",
+                    "$ref": "#/definitions/ListCredentialDetails"
+                }
+            }
+        },
+        "ListConnectionsResponse": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of connections returned.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Connection"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "ConnectionCreationParameter": {
+            "required": ["name", "dataType", "required"],
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "The name of the connection creation parameter.",
+                    "type": "string"
+                },
+                "dataType": {
+                    "description": "The data type of the connection creation parameter.",
+                    "$ref": "#/definitions/DataType"
+                },
+                "required": {
+                    "description": "Whether the connection creation parameter is required. True - The connection creation parameter is required, False - The connection creation parameter is not required.",
+                    "type": "boolean"
+                },
+                "allowedValues": {
+                    "description": "A list of allowed values for the connection creation parameter.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "ConnectionCreationMethod": {
+            "required": ["name", "parameters"],
+            "type": "object",
+            "properties": {
+              "name": {
+                "description": "The name of the creation method.",
+                "type": "string"
+              },
+              "parameters": {
+                "description": "A list of creation method parameters for the connection.",
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/ConnectionCreationParameter"
+                }
+              }
+            }
+        },
+        "ConnectionCreationMetadata": {
+            "required": ["type", "creationMethods", "supportedCredentialTypes", "supportedConnectionEncryptionTypes", "supportsSkipTestConnection"],
+            "type": "object",
+            "properties": {
+                "type": {
+                    "description": "The type of the connection.",
+                    "type": "string"
+                },
+                "creationMethods": {
+                    "description": "A list of creation methods for the connection.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ConnectionCreationMethod"
+                    }
+                },
+                "supportedCredentialTypes": {
+                    "description": "A list of credential type values that the connection supports.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CredentialType"
+                    }
+                },
+                "supportedConnectionEncryptionTypes": {
+                    "description": "A list of connection encryption values that the connection supports.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ConnectionEncryption"
+                    }
+                },
+                "supportsSkipTestConnection": {
+                    "description": "Whether the connection type supports skip test connection. True - The connection type supports skip test connection, False - The connection type does not support skip test connection.",
+                    "type": "boolean"
+                }
+            }
+        },
+        "ListSupportedConnectionTypesResponse": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of supported connection types returned.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ConnectionCreationMetadata"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "AddConnectionRoleAssignmentRequest": {
+            "type": "object",
+            "description": "The add connection role assignment request for a principal.",
+            "required": ["principal", "role"],
+            "properties": {
+                "principal": {
+                    "description": "The principal.",
+                    "$ref": "../../common/definitions.json#/definitions/Principal"
+                },
+                "role": {
+                    "description": "The connection role of the principal.",
+                    "$ref": "#/definitions/ConnectionRole"
+                }
+            }
+        },
+        "UpdateConnectionRoleAssignmentRequest": {
+            "type": "object",
+            "description": "An update connection role assignment request payload.",
+            "required": ["role"],
+            "properties": {
+                "role": {
+                    "description": "The connection role of the principal.",
+                    "$ref": "#/definitions/ConnectionRole"
+                }
+            }
+        },
+        "ConnectionRoleAssignment": {
+            "type": "object",
+            "description": "The connection role assignment for a principal.",
+            "required": ["id", "principal", "role"],
+            "properties": {
+                "id": {
+                    "description": "The object ID of the connection role assignment.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "principal": {
+                    "description": "The principal.",
+                    "$ref": "../../common/definitions.json#/definitions/Principal"
+                },
+                "role": {
+                    "description": "The connection role of the principal.",
+                    "$ref": "#/definitions/ConnectionRole"
+                }
+            }
+        },
+        "ConnectionRoleAssignments": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of connection role assignments.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ConnectionRoleAssignment"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "ConnectionRole": {
+            "type": "string",
+            "description": "A Connection role. Additional connection roles may be added over time.",
+            "enum": ["User", "UserWithReshare", "Owner"],
+            "x-ms-enum": {
+                "name": "ConnectionRole",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "User",
+                        "description": "Enables user access for the connection."
+                    },
+                    {
+                        "value": "UserWithReshare",
+                        "description": "Enables user with resharing access for the connection."
+                    },
+                    {
+                        "value": "Owner",
+                        "description": "Enables ownership access for the connection."
+                    }
+                ]
+            }
+        },
+        "ItemConnection": {
+            "required": ["connectivityType", "connectionDetails"],
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "The object ID of the connection.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "displayName": {
+                    "description": "The display name of the connection. Maximum length is 200 characters.",
+                    "type": "string"
+                },
+                "gatewayId": {
+                    "description": "The gateway object ID of the connection.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "connectivityType": {
+                    "description": "The connectivity type of the connection.",
+                    "$ref": "#/definitions/ConnectivityType"
+                },
+                "connectionDetails": {
+                    "description": "The connection details of the connection.",
+                    "$ref": "#/definitions/ListConnectionDetails"
+                }
+            }
+        },
+        "ItemConnections": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of item connections",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ItemConnection"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        }
+    }
+}

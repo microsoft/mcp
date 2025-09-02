@@ -1,0 +1,36 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff222", 
+        "itemId": "25bac802-080d-4f73-8a42-1b406eb1fceb",
+        "createShortcutRequest": {
+            "path": "Files/landingZone",
+            "name": "MyGCSShortcut1",
+            "target": {
+                "googleCloudStorage": {
+                    "location": "https://gcs-contosoBucket.storage.googleapis.com", 
+                    "subpath": "/gcsDirectory/data/ContosoProducts",  
+                    "connectionId": "3c976446-0bda-472e-8800-f1d6e4f162dc"
+                }               
+            }
+        }
+    },
+    "responses": {
+        "201": {
+          "headers": {
+            "Location": "https://api.fabric.microsoft.com/v1/workspaces/cfafbeb1-8037-4d0c-896e-a46fb27ff222/items/25bac802-080d-4f73-8a42-1b406eb1fceb/shortcuts/Files/landingZone/MyGCSShortcut1"
+          },
+          "body": {
+            "path": "Files/landingZone",
+            "name": "MyGCSShortcut1",
+            "target": {
+              "type": "GoogleCloudStorage",
+              "googleCloudStorage": {
+                "location": "https://gcs-contosoBucket.storage.googleapis.com",
+                "subpath": "/gcsDirectory/data/ContosoProducts",
+                "connectionId": "3c976446-0bda-472e-8800-f1d6e4f162dc"
+              }
+            }
+          }        
+        }
+    }
+}

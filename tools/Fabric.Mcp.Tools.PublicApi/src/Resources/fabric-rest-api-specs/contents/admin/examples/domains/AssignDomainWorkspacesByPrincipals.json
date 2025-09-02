@@ -1,0 +1,22 @@
+{
+    "parameters": {
+        "domainId": "97dd1d38-a4c6-41ed-bc4f-1e383f8ddd0f",
+        "assignDomainWorkspacesByPrincipalsRequest": {
+            "principals": [
+                {
+                    "id": "796ce6ad-9163-4c16-9559-c68192a251de",
+                    "type": "User"
+                }
+            ]
+        }
+    },
+    "responses": {
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/operations/cfafbeb1-8037-4d0c-896e-a46fb27ff227",
+                "x-ms-operation-id": "cfafbeb1-8037-4d0c-896e-a46fb27ff227",
+                "Retry-After": 30
+            }
+        }
+    }
+}

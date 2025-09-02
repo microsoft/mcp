@@ -10,7 +10,9 @@ public interface IFabricPublicApiService
 {
     Task<IEnumerable<string>> ListFabricWorkloadsAsync();
 
-    Task<FabricWorkloadPublicApi> ListFabricWorkloadPublicApis(string workload);
+    Task<FabricWorkloadPublicApi> GetFabricWorkloadPublicApis(string workloadType);
 
     Task<IDictionary<string, string>> GetExamplesAsync(string workloadType);
+
+    string GetFabricWorkloadItemDefinition(string workloadType);
 }

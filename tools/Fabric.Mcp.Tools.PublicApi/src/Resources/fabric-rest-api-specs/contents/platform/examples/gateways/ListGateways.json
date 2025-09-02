@@ -1,0 +1,50 @@
+{
+    "parameters": {},
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "8e41c4dd-a382-4937-9bf3-695ab881f7c2",
+                        "type": "OnPremises",
+                        "displayName": "ContosoOnPremisesGateway",
+                        "publicKey": {
+                            "exponent": "AQGB",
+                            "modulus": "od9b...90Jp1Q=="
+                        },
+                        "version": "3000.1.1",
+                        "numberOfMemberGateways": 2,
+                        "loadBalancingSetting": "DistributeEvenly",
+                        "allowCloudConnectionRefresh": true,
+                        "allowCustomConnectors": true
+                    },
+                    {
+                        "id": "ca8979ff-4238-4489-ad13-2e1bd69a8412",
+                        "type": "OnPremisesPersonal",
+                        "publicKey": {
+                            "exponent": "AQOV",
+                            "modulus": "pt9b...87Jp1Q=="
+                        },
+                        "version": "3000.1.1"
+                    },
+                    {
+                        "id": "271c5c9a-0860-4927-b1da-ce49008d6565",
+                        "type": "VirtualNetwork",
+                        "displayName": "ContosoVirtualNetworkGateway",
+                        "capacityId": "ed26b6f3-7bc5-44b0-9565-a8942619ef4c",
+                        "virtualNetworkAzureResource": {
+                            "subscriptionId": "879b4ba0-ed17-4ff2-851e-4a2228e00b70",
+                            "resourceGroupName": "ContosoResourceGroup",
+                            "virtualNetworkName": "ContosoVirtualNetwork",
+                            "subnetName": "ContosoSubnet"
+                        },
+                        "inactivityMinutesBeforeSleep": 1440,
+                        "numberOfMemberGateways": 3
+                    }
+                ],
+                "continuationToken": "LDEsMTAwMDAwLDA%3D",
+                "continuationUri": "https://api.fabric.microsoft.com/v1/connections?continuationToken=LDEsMTAwMDAwLDA%3D"
+            }
+        }
+    }
+}

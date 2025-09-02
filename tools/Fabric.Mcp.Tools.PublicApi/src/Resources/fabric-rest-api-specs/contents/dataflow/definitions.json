@@ -1,0 +1,209 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Dataflow data types",
+    "version": "v1"
+  },
+  "paths": {},
+  "definitions": {
+    "Dataflow": {
+      "description": "A Dataflow object.",
+      "type": "object",
+      "required": [ "type" ],
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/Item"
+        }
+      ]
+    },
+    "Dataflows": {
+      "description": "A list of Dataflows.",
+      "required": [ "value" ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of Dataflows.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Dataflow"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "CreateDataflowRequest": {
+      "description": "Create Dataflow request payload.",
+      "required": [ "displayName" ],
+      "properties": {
+        "displayName": {
+          "description": "The Dataflow display name. The display name must follow naming rules according to item type.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The Dataflow description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        },
+        "folderId": {
+          "description": "The folder ID. If not specified or null, the Dataflow is created with the workspace as its folder.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": false
+        },
+        "definition": {
+          "description": "The Dataflow public definition.",
+          "$ref": "#/definitions/DataflowDefinition",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateDataflowDefinitionRequest": {
+      "description": "Update Dataflow public definition request payload.",
+      "required": [ "definition" ],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/DataflowDefinition"
+        }
+      }
+    },
+    "DataflowDefinitionResponse": {
+      "description": "Dataflow public definition response.",
+      "required": [ "definition" ],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/DataflowDefinition",
+          "readOnly": true
+        }
+      }
+    },
+    "DataflowDefinition": {
+      "description": "Dataflow public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/dataflow-definition) for more details on how to craft a Dataflow public definition.",
+      "type": "object",
+      "required": [ "parts" ],
+      "properties": {
+        "parts": {
+          "description": "A list of definition parts.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataflowDefinitionPart"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "DataflowDefinitionPart": {
+      "description": "Dataflow definition part object.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "The Dataflow public definition part path.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payload": {
+          "description": "The Dataflow public definition part payload.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payloadType": {
+          "description": "The payload type.",
+          "$ref": "../common/definitions.json#/definitions/PayloadType",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateDataflowRequest": {
+      "description": "Update Dataflow request.",
+      "properties": {
+        "displayName": {
+          "description": "The Dataflow display name. The display name must follow naming rules according to item type.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The Dataflow description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        }
+      }
+    },
+    "DataflowSchedule": {
+      "description": "Dataflow schedule.",
+      "type": "object",
+      "required": [ "id", "enabled" ],
+      "allOf": [
+        {
+          "$ref": "../platform/definitions/platform.json#/definitions/ItemSchedule"
+        }
+      ]
+    },
+    "CreateDataflowExecuteScheduleRequest": {
+      "description": "Create dataflow execute schedule plan request payload.",
+      "type": "object",
+      "required": [ "enabled", "configuration" ],
+      "allOf": [
+        {
+          "$ref": "../platform/definitions/platform.json#/definitions/CreateScheduleRequest"
+        }
+      ]
+
+    },
+    "CreateDataflowApplyChangesScheduleRequest": {
+      "description": "Create dataflow apply changes schedule plan request payload.",
+      "type": "object",
+      "required": [ "enabled", "configuration" ],
+      "allOf": [
+        {
+          "$ref": "../platform/definitions/platform.json#/definitions/CreateScheduleRequest"
+        }
+      ]
+    },
+    "RunOnDemandDataflowExecuteJobRequest": {
+      "description": "Run on demand execute dataflow job instance payload",
+      "type": "object",
+      "properties": {
+        "executionData": {
+          "description": "Payload for run on-demand execute job request. Needed only if the dataflow has parameterization enabled.",
+          "$ref": "#/definitions/DataflowExecutionPayload"
+        }
+      }
+    },
+    "DataflowExecutionPayload": {
+      "description": "The execution data payload for Dataflow",
+      "type": "object",
+      "properties": {
+        "executeOption": {
+          "description": "Options to run the execute operation. Additional executeOptions may be added over time.",
+          "type": "string",
+          "enum": [ "SkipApplyChanges", "ApplyChangesIfNeeded" ],
+          "x-ms-enum": {
+            "name": "ExecuteOption",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "SkipApplyChanges",
+                "description": "Default Value. Apply Changes operation is skipped."
+              },
+              {
+                "value": "ApplyChangesIfNeeded",
+                "description": "Appply Changes operation is done if needed. Can be used when the latest changes are required for Execute."
+              }
+            ]
+          }
+        },
+        "parameters": {
+          "description": "A list of parameters to override during execution.",
+          "type": "array",
+          "items": {
+            "$ref": "../platform/definitions/platform.json#/definitions/ItemJobParameter"
+          }
+        }
+      }
+    }
+  }
+}
