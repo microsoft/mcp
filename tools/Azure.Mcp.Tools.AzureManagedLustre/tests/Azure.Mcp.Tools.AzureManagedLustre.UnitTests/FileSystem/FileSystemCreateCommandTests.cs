@@ -222,7 +222,8 @@ public class FileSystemCreateCommandTests
             "Monday", "00:00",
             null, null, null,
             null, null, null, null,
-            true, "https://kv.vault.azure.net/keys/k/123", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv", null,
+            true, "https://kv.vault.azure.net/keys/k/123", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
+            "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1",
             null, Arg.Any<RetryPolicyOptions?>()).Returns(expected);
 
         var args = _parser.Parse([
@@ -238,7 +239,8 @@ public class FileSystemCreateCommandTests
             "--maintenance-time", "00:00",
             "--custom-encryption", "true",
             "--key-url", "https://kv.vault.azure.net/keys/k/123",
-            "--source-vault", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv"
+            "--source-vault", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
+            "--user-assigned-identity-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1"
         ]);
 
         var response = await _command.ExecuteAsync(_context, args);
@@ -247,7 +249,8 @@ public class FileSystemCreateCommandTests
             "Monday", "00:00",
             null, null, null,
             null, null, null, null,
-            true, "https://kv.vault.azure.net/keys/k/123", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv", null,
+            true, "https://kv.vault.azure.net/keys/k/123", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv",
+            "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1",
             null, Arg.Any<RetryPolicyOptions?>());
     }
 
@@ -333,7 +336,7 @@ public class FileSystemCreateCommandTests
 
         var response = await _command.ExecuteAsync(_context, args);
         Assert.True(response.Status >= 400);
-        Assert.Contains("hsm", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Azure Blob Integration", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     private static LustreFileSystem CreateLustre() => new(

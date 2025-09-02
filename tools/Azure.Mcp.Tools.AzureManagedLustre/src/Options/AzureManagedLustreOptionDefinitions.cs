@@ -127,4 +127,15 @@ public static class AzureManagedLustreOptionDefinitions
         "User-assigned managed identity resource ID (full resource ID) to use for Key Vault access when custom encryption is enabled. The identity must have RBAC role to access the encryption key\n" +
         "Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{name}.\n" +
         "Example: --user-assigned-identity-id /subscriptions/0000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1\n");
+
+    // Local optional variants for maintenance options (update does not require them)
+    public static readonly Option<string> OptionalMaintenanceDayOption = new(MaintenanceDayOption.Aliases.ToArray(), MaintenanceDayOption.Description)
+    {
+        IsRequired = false
+    };
+    public static readonly Option<string> OptionalMaintenanceTimeOption = new(MaintenanceTimeOption.Aliases.ToArray(), MaintenanceTimeOption.Description)
+    {
+        IsRequired = false
+    };
 }
+

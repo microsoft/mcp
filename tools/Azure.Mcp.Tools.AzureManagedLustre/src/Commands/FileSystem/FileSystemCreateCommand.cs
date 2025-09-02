@@ -56,8 +56,8 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_nameOption);
         RequireResourceGroup();
+        command.AddOption(_nameOption);
         command.AddOption(_locationOption);
         command.AddOption(_skuOption);
         command.AddOption(_sizeOption);
@@ -107,30 +107,13 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
     {
         var options = BindOptions(parseResult);
 
-        // Root squash validation: default None; if not None, require the other params
-        var mode = options.RootSquashMode;
-        if (!string.IsNullOrWhiteSpace(mode) && !mode.Equals("None", StringComparison.OrdinalIgnoreCase))
-        {
-            if (string.IsNullOrWhiteSpace(options.NoSquashNidLists) || options.SquashUid is null || options.SquashGid is null)
-            {
-                context.Response.Status = 400;
-                context.Response.Message = "When root-squash-mode is not 'None', you must provide no-squash-nid-list, squash-uid and squash-gid.";
-                return context.Response;
-            }
-        }
-        if (options.EnableCustomEncryption == true)
-        {
-            if (string.IsNullOrWhiteSpace(options.KeyUrl) || string.IsNullOrWhiteSpace(options.SourceVaultId))
-            {
-                context.Response.Status = 400;
-                context.Response.Message = "Missing Required options: key-url, source-vault when custom-encryption is set";
-                return context.Response;
-            }
-        }
-
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            if (!Validate(parseResult.CommandResult, context.Response).IsValid ||
+                !base.ValidateRootSquashOptions(parseResult.CommandResult, context.Response).IsValid ||
+                !base.ValidateMaintenanceOptions(parseResult.CommandResult, context.Response).IsValid ||
+                !base.ValidateEncryptionOptions(parseResult.CommandResult, context.Response).IsValid ||
+                !base.ValidateHSMOptions(parseResult.CommandResult, context.Response).IsValid)
             {
                 return context.Response;
             }
