@@ -937,7 +937,7 @@ public async Task ExecuteAsync_HandlesServiceError()
 When developing new commands, run only your specific tests to save time:
 ```bash
 # Run all tests from the test project directory:
-pushd ./tools/Azure.Mcp.YourToolset/tests/Azure.Mcp.YourToolset.UnitTests  #or .LiveTests
+pushd ./tools/Azure.Mcp.Tools.YourToolset/tests/Azure.Mcp.Tools.YourToolset.UnitTests  #or .LiveTests
 
 # Run only tests for your specific command class
 dotnet test --filter "FullyQualifiedName~YourCommandNameTests" --verbosity normal
