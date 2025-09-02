@@ -3,12 +3,12 @@
 
 using System.Net;
 using System.Net.Sockets;
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
-using Azure.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 using ModelContextProtocol.Client;
 using Xunit;
 
-namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
+namespace Microsoft.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
 
 public class RegistryServerProviderTests
 {

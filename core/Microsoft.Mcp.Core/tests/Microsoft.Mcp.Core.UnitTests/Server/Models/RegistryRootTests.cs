@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Areas.Server.Models;
 using Xunit;
 
-namespace Azure.Mcp.Core.UnitTests.Areas.Server.Models;
+namespace Microsoft.Mcp.Core.UnitTests.Areas.Server.Models;
 
 public class RegistryRootTests
 {

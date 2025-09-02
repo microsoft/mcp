@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
+namespace Microsoft.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
 
 public class CompositeDiscoveryStrategyTests
 {
