@@ -1,13 +1,11 @@
 
 # Release History
 
-## 0.5.11 - Unreleased
-
-### Added
-
-### Changed
+## 0.5.11 - 2025-09-02
 
 ### Fixed
+
+- Fixed VSIX signing and included native packages in build artifacts and pack/release scripts.
 
 ## 0.5.10 - 2025-08-28
 

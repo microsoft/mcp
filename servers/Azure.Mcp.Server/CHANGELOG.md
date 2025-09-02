@@ -2,15 +2,11 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.5.11 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
-
-### Bugs Fixed
+## 0.5.11 (2025-09-02)
 
 ### Other Changes
+
+- Fixed VSIX signing and included native packages in build artifacts and pack/release scripts.
 
 ## 0.5.10 (2025-08-28)
 
