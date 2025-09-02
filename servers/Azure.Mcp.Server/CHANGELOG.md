@@ -53,6 +53,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Added support for listing all Event Grid topics in a subscription via the command `azmcp_eventgrid_topic_list`. [[#43](https://github.com/microsoft/mcp/pull/43)]
 - Added support for retrieving knowledge index schema information in Azure AI Foundry projects via the command `azmcp_foundry_knowledge_index_schema`. [[#41](https://github.com/microsoft/mcp/pull/41)]
+- Added the following Azure Managed Lustre commands: [[#110](https://github.com/microsoft/mcp/issues/110)]
+  - `azmcp_azuremanagedlustre_filesystem_check-subnet-size`: Check if the subnet can host the target Azure Managed Lustre SKU and size.
 - Added support for listing service health events in a subscription via the command `azmcp_resourcehealth_service-health-events_list`. [[#367](https://github.com/microsoft/mcp/pull/367)]
 
 ### Breaking Changes

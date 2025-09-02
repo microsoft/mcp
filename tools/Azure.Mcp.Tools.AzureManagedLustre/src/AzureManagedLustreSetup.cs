@@ -35,5 +35,6 @@ public class AzureManagedLustreSetup : IAreaSetup
         fileSystem.AddSubGroup(sku);
 
         sku.AddCommand("get", new SkuGetCommand(loggerFactory.CreateLogger<SkuGetCommand>()));
+        fileSystem.AddCommand("check-subnet-size", new FileSystemCheckSubnetCommand(loggerFactory.CreateLogger<FileSystemCheckSubnetCommand>()));
     }
 }

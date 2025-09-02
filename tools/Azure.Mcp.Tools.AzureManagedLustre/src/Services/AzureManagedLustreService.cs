@@ -156,4 +156,39 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             throw new Exception($"Error retrieving Azure Managed Lustre SKUs for subscription '{subscription}': {ex.Message}", ex);
         }
     }
+
+    public async Task CheckAmlFSSubnetAsync(
+        string subscription,
+        string sku,
+        int size,
+        string subnetId,
+        string? location = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
+        ArgumentException.ThrowIfNullOrWhiteSpace(sku);
+        ArgumentException.ThrowIfNullOrWhiteSpace(subnetId);
+
+        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
+        var content = new AmlFileSystemSubnetContent
+        {
+            FilesystemSubnet = subnetId,
+            SkuName = sku,
+            StorageCapacityTiB = size
+        };
+        if (!string.IsNullOrWhiteSpace(location))
+        {
+            content.Location = location;
+        }
+
+        try
+        {
+            _ = await sub.CheckAmlFSSubnetsAsync(content);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error validating AMLFS subnet: {ex.Message}", ex);
+        }
+    }
 }

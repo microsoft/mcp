@@ -99,5 +99,6 @@ resource amlfs 'Microsoft.StorageCache/amlFilesystems@2024-07-01' = {
   }
 }
 
-output amlfsId string = amlfs.id
-output amlfsSubnetId string = filesystemSubnetId
+output AMLFS_ID string = amlfs.id
+output AMLFS_SUBNET_ID string = filesystemSubnetId
+output LOCATION string = location

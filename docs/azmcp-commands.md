@@ -788,6 +788,12 @@ azmcp azuremanagedlustre filesystem list --subscription <subscription> \
 azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \
                                       --sku <azure-managed-lustre-sku> \
                                       --size <filesystem-size-in-tib>
+
+# Checks if a subnet has enough available IP addresses for the specified Azure Managed Lustre SKU and filesystem size
+azmcp azuremanagedlustre filesystem check-subnet-size --subscription <subscription> \
+                                                    --subnet-id <subnet-resource-id> \
+                                                    --sku <azure-managed-lustre-sku> \
+                                                    --size <filesystem-size-in-tib>
 ```
 
 

@@ -19,6 +19,15 @@ public interface IAzureManagedLustreService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
+    Task CheckAmlFSSubnetAsync(
+        string subscription,
+        string sku,
+        int size,
+        string subnetId,
+        string? location = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
+
     Task<List<Models.AzureManagedLustreSkuInfo>> SkuGetInfoAsync(
         string subscription,
         string? tenant = null,
