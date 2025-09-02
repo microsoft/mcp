@@ -16,6 +16,7 @@ public class CommandFactoryTests
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<CommandFactory> _logger;
     private readonly ITelemetryService _telemetryService;
+    private readonly CommandFactory _commandFactory;
 
     public CommandFactoryTests()
     {
@@ -24,6 +25,7 @@ public class CommandFactoryTests
         _serviceProvider = services.BuildServiceProvider();
         _logger = Substitute.For<ILogger<CommandFactory>>();
         _telemetryService = Substitute.For<ITelemetryService>();
+        _commandFactory = new CommandFactory(_serviceProvider, Enumerable.Empty<IAreaSetup>(), _telemetryService, _logger);
     }
 
     [Fact]
@@ -200,11 +202,8 @@ public class CommandFactoryTests
     /// <summary>
     /// Helper method to access the private GetPrefix method via reflection
     /// </summary>
-    private static string CallGetPrefix(string? currentPrefix, string additional)
+    private string CallGetPrefix(string? currentPrefix, string additional)
     {
-        var method = typeof(CommandFactory).GetMethod("GetPrefix",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-
-        return (string)method!.Invoke(null, new object?[] { currentPrefix, additional })!;
+        return _commandFactory.GetPrefix(currentPrefix!, additional);
     }
 }

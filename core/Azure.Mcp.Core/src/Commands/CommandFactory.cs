@@ -288,7 +288,7 @@ public class CommandFactory : ICommandFactory
         return aggregated;
     }
 
-    private string GetPrefix(string currentPrefix, string additional) => string.IsNullOrEmpty(currentPrefix)
+    internal string GetPrefix(string currentPrefix, string additional) => string.IsNullOrEmpty(currentPrefix)
         ? additional
         : currentPrefix + Separator + additional;
 
