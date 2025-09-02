@@ -5,7 +5,6 @@ using System.CommandLine.Parsing;
 using System.Reflection;
 using System.Text;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Tools.AzureBestPractices.Options;
 using Microsoft.Extensions.Logging;
@@ -42,26 +41,34 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         command.Options.Add(_actionOption);
     }
 
+    private BestPracticesOptions BindOptions(ParseResult parseResult)
+    {
+        return new BestPracticesOptions
+        {
+            Resource = parseResult.CommandResult.GetValue(BestPracticesOptionDefinitions.Resource),
+            Action = parseResult.CommandResult.GetValue(BestPracticesOptionDefinitions.Action)
+        };
+    }
+
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return Task.FromResult(context.Response);
+        }
+
+        var options = BindOptions(parseResult);
+
         try
         {
-            var result = Validate(parseResult.CommandResult, context.Response);
-            if (!result.IsValid)
+            if (string.IsNullOrEmpty(options.Resource) || string.IsNullOrEmpty(options.Action))
             {
-                return Task.FromResult(context.Response);
-            }
-
-            if (!parseResult.CommandResult.TryGetValue(BestPracticesOptionDefinitions.Resource, out string? resource)
-                || !parseResult.CommandResult.TryGetValue(BestPracticesOptionDefinitions.Action, out string? action))
-            {
-                // Validation should have caught missing values; return 400 if somehow absent
                 context.Response.Status = 400;
                 context.Response.Message = "Both resource and action parameters are required.";
                 return Task.FromResult(context.Response);
             }
 
-            var resourceFileName = GetResourceFileName(resource!, action!);
+            var resourceFileName = GetResourceFileName(options.Resource, options.Action);
             var bestPractices = GetBestPracticesText(resourceFileName);
 
             context.Response.Status = 200;
@@ -70,11 +77,9 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         }
         catch (Exception ex)
         {
-            // Log any available values without calling GetValue (which may throw)
-            _ = parseResult.CommandResult.TryGetValue(BestPracticesOptionDefinitions.Resource, out var logResource);
-            _ = parseResult.CommandResult.TryGetValue(BestPracticesOptionDefinitions.Action, out var logAction);
+
             _logger.LogError(ex, "Error getting best practices for Resource: {Resource}, Action: {Action}",
-                logResource, logAction);
+                options.Resource, options.Action);
             HandleException(context, ex);
         }
 
@@ -85,29 +90,34 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
     {
         var result = new ValidationResult { IsValid = true };
 
-        // Safely try to read values without causing System.CommandLine to throw
-        var hasResource = commandResult.TryGetValue(BestPracticesOptionDefinitions.Resource, out string? resource);
-        var hasAction = commandResult.TryGetValue(BestPracticesOptionDefinitions.Action, out string? action);
+        commandResult.TryGetOptionValue(BestPracticesOptionDefinitions.Resource, out string? resource);
+        commandResult.TryGetOptionValue(BestPracticesOptionDefinitions.Action, out string? action);
 
-        if (!hasResource || !hasAction || string.IsNullOrEmpty(resource) || string.IsNullOrEmpty(action))
+        if (string.IsNullOrWhiteSpace(resource) || string.IsNullOrWhiteSpace(action))
         {
             result.IsValid = false;
             result.ErrorMessage = "Both resource and action parameters are required.";
         }
-        else if (resource != "general" && resource != "azurefunctions" && resource != "static-web-app")
+        else
         {
-            result.IsValid = false;
-            result.ErrorMessage = "Invalid resource. Must be 'general', 'azurefunctions', or 'static-web-app'.";
-        }
-        else if (action != "all" && action != "code-generation" && action != "deployment")
-        {
-            result.IsValid = false;
-            result.ErrorMessage = "Invalid action. Must be 'all', 'code-generation' or 'deployment'.";
-        }
-        else if (resource == "static-web-app" && action != "all")
-        {
-            result.IsValid = false;
-            result.ErrorMessage = "The 'static-web-app' resource only supports 'all' action.";
+            bool validResource = resource == "general" || resource == "azurefunctions" || resource == "static-web-app";
+            bool validAction = action == "all" || action == "code-generation" || action == "deployment";
+
+            if (!validResource)
+            {
+                result.IsValid = false;
+                result.ErrorMessage = "Invalid resource. Must be 'general', 'azurefunctions', or 'static-web-app'.";
+            }
+            else if (!validAction)
+            {
+                result.IsValid = false;
+                result.ErrorMessage = "Invalid action. Must be 'all', 'code-generation' or 'deployment'.";
+            }
+            else if (resource == "static-web-app" && action != "all")
+            {
+                result.IsValid = false;
+                result.ErrorMessage = "The 'static-web-app' resource only supports 'all' action.";
+            }
         }
 
         if (!result.IsValid && commandResponse != null)

@@ -74,7 +74,9 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
 
         if (result.IsValid)
         {
-            if (!commandResult.TryGetValue(_metricNamesOption, out var metricNamesValue) || string.IsNullOrWhiteSpace(metricNamesValue))
+            commandResult.TryGetOptionValue(_metricNamesOption, out string? metricNamesValue);
+
+            if (string.IsNullOrWhiteSpace(metricNamesValue))
             {
                 result.IsValid = false;
                 result.ErrorMessage = $"Invalid format for {_metricNamesOption.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).";

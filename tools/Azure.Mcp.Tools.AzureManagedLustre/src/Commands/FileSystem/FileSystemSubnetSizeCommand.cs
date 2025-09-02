@@ -3,7 +3,6 @@
 
 using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureManagedLustre.Options;
 using Azure.Mcp.Tools.AzureManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.AzureManagedLustre.Services;
@@ -58,18 +57,17 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
 
         if (result.IsValid)
         {
-            if (commandResult.TryGetValue(_skuOption, out var skuName) && !string.IsNullOrWhiteSpace(skuName))
+            if (commandResult.TryGetOptionValue(_skuOption, out var skuName)
+                && !string.IsNullOrWhiteSpace(skuName)
+                && !AllowedSkus.Contains(skuName))
             {
-                if (!AllowedSkus.Contains(skuName))
-                {
-                    result.IsValid = false;
-                    result.ErrorMessage = $"Invalid SKU '{skuName}'. Allowed values: {string.Join(", ", AllowedSkus)}";
+                result.IsValid = false;
+                result.ErrorMessage = $"Invalid SKU '{skuName}'. Allowed values: {string.Join(", ", AllowedSkus)}";
 
-                    if (commandResponse != null)
-                    {
-                        commandResponse.Status = 400;
-                        commandResponse.Message = result.ErrorMessage!;
-                    }
+                if (commandResponse != null)
+                {
+                    commandResponse.Status = 400;
+                    commandResponse.Message = result.ErrorMessage!;
                 }
             }
         }

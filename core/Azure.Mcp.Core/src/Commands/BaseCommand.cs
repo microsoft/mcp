@@ -98,7 +98,7 @@ public abstract class BaseCommand : IBaseCommand
         var result = new ValidationResult { IsValid = true };
 
         var missingOptions = commandResult.Command.Options
-            .Where(o => o.Required && !HasOptionResult(commandResult, o))
+            .Where(o => o.Required && !commandResult.HasOptionResult(o))
             .Where(o => !o.HasDefaultValue)
             .Select(o => $"--{NormalizeName(o.Name)}")
             .ToList();
@@ -161,7 +161,7 @@ public abstract class BaseCommand : IBaseCommand
         // Check logical requirements (e.g., resource group requirement)
         if (result.IsValid && _requiresResourceGroup)
         {
-            var hasRg = HasOptionResult(commandResult, OptionDefinitions.Common.ResourceGroup);
+            var hasRg = commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup);
             if (!hasRg)
             {
                 result.IsValid = false;
@@ -184,25 +184,8 @@ public abstract class BaseCommand : IBaseCommand
 
     private static string NormalizeName(string? name) => (name ?? string.Empty).TrimStart('-', '/');
 
-    private static bool HasOptionResult(CommandResult commandResult, Option option)
-    {
-        // In System.CommandLine 2.0, use GetResult to detect if an option was present.
-        // This correctly handles switches (no tokens) and value options.
-        var result = commandResult.GetResult(option);
-        if (result is null || result.IdentifierTokenCount == 0)
-        {
-            return false;
-        }
 
-        // For switches, presence alone is enough. For value options, ensure a non-empty token/value was provided.
-        if (result.Tokens is null || result.Tokens.Count == 0)
-        {
-            // No tokens: treat as present (typical for boolean switches) if option is implicitly allowed without value
-            return true;
-        }
-
-        return result.Tokens.Any(t => !string.IsNullOrWhiteSpace(t.Value));
-    }
+    // TODO: jong - Design a better way for options to exist and either be required or not required.
 
     protected void UseResourceGroup()
     {
@@ -218,8 +201,15 @@ public abstract class BaseCommand : IBaseCommand
         _requiresResourceGroup = true;
     }
 
-    protected string? GetResourceGroup(ParseResult parseResult) =>
-        _usesResourceGroup ? parseResult.TryGetValue(OptionDefinitions.Common.ResourceGroup, out string? rg) ? rg : null : null;
+    protected string? GetResourceGroup(ParseResult parseResult)
+    {
+        if (!UsesResourceGroup)
+            return null;
+
+        return parseResult.CommandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup)
+                ? parseResult.CommandResult.GetValue(OptionDefinitions.Common.ResourceGroup)
+                : null;
+    }
 
     protected bool UsesResourceGroup => _usesResourceGroup;
 }

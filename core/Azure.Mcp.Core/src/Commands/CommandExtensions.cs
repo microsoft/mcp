@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Buffers;
+using System.CommandLine.Parsing;
 using System.Text;
 using Azure.Mcp.Core.Helpers;
 
@@ -155,22 +156,5 @@ public static class CommandExtensions
             JsonValueKind.Array => string.Join(" ", element.EnumerateArray().Select(e => e.GetString() ?? string.Empty)),
             _ => element.GetRawText()
         };
-    }
-
-    /// <summary>
-    /// Safe TryGetValue for ParseResult to avoid System.CommandLine throwing when options are missing.
-    /// </summary>
-    public static bool TryGetValue<T>(this ParseResult parseResult, Option<T> option, out T? value)
-    {
-        try
-        {
-            value = parseResult.GetValue(option);
-            return true;
-        }
-        catch
-        {
-            value = default;
-            return false;
-        }
     }
 }

@@ -5,7 +5,6 @@ using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Kusto.Options;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
@@ -30,10 +29,9 @@ public abstract class BaseClusterCommand<
     {
         var validationResult = new ValidationResult { IsValid = true };
 
-        // Try to obtain clusterUri, clusterName and subscription using safe TryGetValue
-        _ = parseResult.TryGetValue(_clusterUriOption, out string? clusterUri);
-        _ = parseResult.TryGetValue(_clusterNameOption, out string? clusterName);
-        _ = parseResult.TryGetValue(_subscriptionOption, out string? subscription);
+        parseResult.TryGetOptionValue(_clusterUriOption, out string? clusterUri);
+        parseResult.TryGetOptionValue(_clusterNameOption, out string? clusterName);
+        parseResult.TryGetOptionValue(_subscriptionOption, out string? subscription);
 
         if (!string.IsNullOrEmpty(clusterUri))
         {

@@ -4,7 +4,6 @@
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.VirtualDesktop.Options;
 using Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
 
@@ -41,11 +40,25 @@ public abstract class BaseHostPoolCommand<
             return result;
         }
 
-        _ = commandResult.TryGetValue(_hostPoolOption, out string? hostPoolName);
-        _ = commandResult.TryGetValue(_hostPoolResourceIdOption, out string? hostPoolResourceId);
+        // Determine explicit presence and retrieve values safely
+        var hasHostPool = commandResult.HasOptionResult(_hostPoolOption);
+        string? hostPoolName = null;
+        commandResult.TryGetOptionValue(_hostPoolOption, out hostPoolName);
+        if (hasHostPool && string.IsNullOrWhiteSpace(hostPoolName))
+        {
+            hasHostPool = false;
+        }
+
+        var hasHostPoolResourceId = commandResult.HasOptionResult(_hostPoolResourceIdOption);
+        string? hostPoolResourceId = null;
+        commandResult.TryGetOptionValue(_hostPoolResourceIdOption, out hostPoolResourceId);
+        if (hasHostPoolResourceId && string.IsNullOrWhiteSpace(hostPoolResourceId))
+        {
+            hasHostPoolResourceId = false;
+        }
 
         // Validate that either hostpool or hostpool-resource-id is provided, but not both
-        if (string.IsNullOrEmpty(hostPoolName) && string.IsNullOrEmpty(hostPoolResourceId))
+        if (!hasHostPool && !hasHostPoolResourceId)
         {
             result.IsValid = false;
             result.ErrorMessage = "Either --hostpool or --hostpool-resource-id must be provided.";
@@ -57,7 +70,7 @@ public abstract class BaseHostPoolCommand<
             return result;
         }
 
-        if (!string.IsNullOrEmpty(hostPoolName) && !string.IsNullOrEmpty(hostPoolResourceId))
+        if (hasHostPool && hasHostPoolResourceId)
         {
             result.IsValid = false;
             result.ErrorMessage = "Cannot specify both --hostpool and --hostpool-resource-id. Use only one.";
