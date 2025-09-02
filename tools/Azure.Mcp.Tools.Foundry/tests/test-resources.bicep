@@ -152,108 +152,6 @@ resource searchServiceRoleAssignment 'Microsoft.Authorization/roleAssignments@20
   }
 }
 
-resource searchIndexDeploymentScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
-  name: '${baseName}-create-search-index'
-  location: location
-  kind: 'AzurePowerShell'
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${managedIdentity.id}': {}
-    }
-  }
-  properties: {
-    azPowerShellVersion: '11.0'
-    retentionInterval: 'P1D'
-    timeout: 'PT30M'
-    cleanupPreference: 'OnSuccess'
-    scriptContent: '''
-      param(
-        [string]$searchServiceName,
-        [string]$resourceGroupName,
-        [string]$subscriptionId,
-        [string]$resourceManagerUrl
-      )
-
-      # Set the context
-      Set-AzContext -SubscriptionId $subscriptionId
-
-      # Get access token for Azure AI Search service (not management API)
-      $searchAccessToken = Get-AzAccessToken -ResourceUrl "https://search.azure.com/"
-      $searchToken = $searchAccessToken.Token
-
-      # Define the index schema
-      $indexSchema = @{
-        name = "test-knowledge-index"
-        fields = @(
-          @{
-            name = "id"
-            type = "Edm.String"
-            key = $true
-            searchable = $false
-            filterable = $true
-            retrievable = $true
-          },
-          @{
-            name = "content"
-            type = "Edm.String"
-            searchable = $true
-            filterable = $false
-            retrievable = $true
-            analyzer = "standard.lucene"
-          },
-          @{
-            name = "title"
-            type = "Edm.String"
-            searchable = $true
-            filterable = $true
-            retrievable = $true
-            sortable = $true
-          },
-          @{
-            name = "metadata"
-            type = "Edm.String"
-            searchable = $false
-            filterable = $true
-            retrievable = $true
-          }
-        )
-      } | ConvertTo-Json -Depth 10
-
-      # Create the index using Search Service API with Entra ID authentication
-      $searchUri = "https://$searchServiceName.search.windows.net/indexes?api-version=2023-11-01"
-      $searchHeaders = @{
-        'Content-Type' = 'application/json'
-        'Authorization' = "Bearer $searchToken"
-      }
-
-      try {
-        $response = Invoke-RestMethod -Uri $searchUri -Method POST -Body $indexSchema -Headers $searchHeaders
-        Write-Output "Successfully created search index: test-knowledge-index"
-        Write-Output "Index response: $($response | ConvertTo-Json)"
-      } catch {
-        if ($_.Exception.Response.StatusCode -eq 409) {
-          Write-Output "Search index 'test-knowledge-index' already exists"
-        } else {
-          Write-Error "Failed to create search index: $($_.Exception.Message)"
-          if ($_.Exception.Response) {
-            $errorResponse = $_.Exception.Response.GetResponseStream()
-            $reader = New-Object System.IO.StreamReader($errorResponse)
-            $errorContent = $reader.ReadToEnd()
-            Write-Error "Error response: $errorContent"
-          }
-          throw
-        }
-      }
-    '''
-    arguments: '-searchServiceName "${searchService.name}" -resourceGroupName "${resourceGroup().name}" -subscriptionId "${subscription().subscriptionId}" -resourceManagerUrl "${environment().resourceManager}"'
-  }
-  dependsOn: [
-    searchServiceRoleAssignment
-    managedIdentityRoleAssignment
-  ]
-}
-
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: '${baseName}-deployment-identity'
   location: location
@@ -268,7 +166,97 @@ resource managedIdentityRoleAssignment 'Microsoft.Authorization/roleAssignments@
   }
 }
 
+// Note: Knowledge indexes are typically created via REST API or SDK after the search service is deployed
+// This bicep template creates the necessary infrastructure for a knowledge index
+// To create the actual knowledge index, use the Azure AI Search REST API or SDK with the following schema:
+/*
+Knowledge Index Schema for Azure AI Foundry:
+{
+  "name": "{baseName}-knowledge-index",
+  "fields": [
+    {
+      "name": "id",
+      "type": "Edm.String",
+      "key": true,
+      "searchable": false,
+      "filterable": true,
+      "retrievable": true
+    },
+    {
+      "name": "content",
+      "type": "Edm.String",
+      "searchable": true,
+      "filterable": false,
+      "retrievable": true,
+      "analyzer": "en.microsoft"
+    },
+    {
+      "name": "title",
+      "type": "Edm.String",
+      "searchable": true,
+      "filterable": true,
+      "retrievable": true,
+      "sortable": true
+    },
+    {
+      "name": "category",
+      "type": "Edm.String",
+      "searchable": true,
+      "filterable": true,
+      "retrievable": true,
+      "facetable": true
+    },
+    {
+      "name": "contentVector",
+      "type": "Collection(Edm.Single)",
+      "searchable": true,
+      "retrievable": true,
+      "dimensions": 1536,
+      "vectorSearchProfile": "default-vector-profile"
+    },
+    {
+      "name": "metadata",
+      "type": "Edm.String",
+      "searchable": false,
+      "retrievable": true
+    }
+  ],
+  "vectorSearch": {
+    "profiles": [
+      {
+        "name": "default-vector-profile",
+        "algorithm": "default-vector-algorithm"
+      }
+    ],
+    "algorithms": [
+      {
+        "name": "default-vector-algorithm",
+        "kind": "hnsw",
+        "hnswParameters": {
+          "metric": "cosine",
+          "m": 4,
+          "efConstruction": 400,
+          "efSearch": 500
+        }
+      }
+    ]
+  },
+  "semantic": {
+    "configurations": [
+      {
+        "name": "default-semantic-config",
+        "prioritizedFields": {
+          "titleField": { "fieldName": "title" },
+          "contentFields": [{ "fieldName": "content" }],
+          "keywordsFields": [{ "fieldName": "category" }]
+        }
+      }
+    ]
+  }
+}
+*/
+
 output searchServiceName string = searchService.name
 output searchServiceEndpoint string = 'https://${searchService.name}.search.windows.net'
-output knowledgeIndexName string = 'test-knowledge-index'
+output knowledgeIndexName string = '${baseName}-knowledge-index'
 output aiProjectsEndpoint string = 'https://${aiServicesAccount.name}.services.ai.azure.com/api/projects/${aiProjects.name}'
