@@ -2,15 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Foundry.Options.Models;
 
-public class KnowledgeIndexSchemaOptions : GlobalOptions
+public class KnowledgeIndexSchemaOptions : BaseKnowledgeIndexOptions
 {
-    [JsonPropertyName(FoundryOptionDefinitions.Endpoint)]
-    public string? Endpoint { get; set; }
-
     [JsonPropertyName(FoundryOptionDefinitions.IndexName)]
     public string? IndexName { get; set; }
 }
