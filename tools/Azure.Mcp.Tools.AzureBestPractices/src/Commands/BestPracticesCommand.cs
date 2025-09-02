@@ -5,6 +5,7 @@ using System.CommandLine.Parsing;
 using System.Reflection;
 using System.Text;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Tools.AzureBestPractices.Options;
 using Microsoft.Extensions.Logging;

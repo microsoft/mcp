@@ -4,6 +4,7 @@
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.VirtualDesktop.Options;
 using Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
 
@@ -40,22 +41,12 @@ public abstract class BaseHostPoolCommand<
             return result;
         }
 
-        // Determine explicit presence and retrieve values safely
-        var hasHostPool = commandResult.HasOptionResult(_hostPoolOption);
-        string? hostPoolName = null;
-        commandResult.TryGetOptionValue(_hostPoolOption, out hostPoolName);
-        if (hasHostPool && string.IsNullOrWhiteSpace(hostPoolName))
-        {
-            hasHostPool = false;
-        }
+        // Retrieve values once and infer presence from non-empty values
+        commandResult.TryGetOptionValue(_hostPoolOption, out string? hostPoolName);
+        commandResult.TryGetOptionValue(_hostPoolResourceIdOption, out string? hostPoolResourceId);
 
-        var hasHostPoolResourceId = commandResult.HasOptionResult(_hostPoolResourceIdOption);
-        string? hostPoolResourceId = null;
-        commandResult.TryGetOptionValue(_hostPoolResourceIdOption, out hostPoolResourceId);
-        if (hasHostPoolResourceId && string.IsNullOrWhiteSpace(hostPoolResourceId))
-        {
-            hasHostPoolResourceId = false;
-        }
+        var hasHostPool = !string.IsNullOrWhiteSpace(hostPoolName);
+        var hasHostPoolResourceId = !string.IsNullOrWhiteSpace(hostPoolResourceId);
 
         // Validate that either hostpool or hostpool-resource-id is provided, but not both
         if (!hasHostPool && !hasHostPoolResourceId)

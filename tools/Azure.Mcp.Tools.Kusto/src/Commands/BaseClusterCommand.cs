@@ -5,6 +5,7 @@ using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Kusto.Options;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
