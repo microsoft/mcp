@@ -68,7 +68,7 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
             }
 
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var apis = await fabricService.ListFabricWorkloadPublicApis(options.WorkloadType);
+            var apis = await fabricService.GetFabricWorkloadPublicApis(options.WorkloadType);
 
             context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricWorkloadPublicApi);
         }

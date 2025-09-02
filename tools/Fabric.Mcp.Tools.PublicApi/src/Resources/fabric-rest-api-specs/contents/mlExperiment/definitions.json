@@ -1,0 +1,154 @@
+{
+  "swagger": "2.0",
+  "info": {
+      "version": "v1",
+      "title": "MLExperiment data types"
+  },
+  "paths": {},
+  "definitions": {
+      "MLExperiments": {
+          "description": "A list of machine learning experiments.",
+          "required": ["value"],
+          "type": "object",
+          "properties": {
+              "value": {
+                  "description": "A list of machine learning experiments.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/MLExperiment"
+                  }
+              }
+          },
+          "allOf": [
+              {
+                  "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+              }
+          ]
+      },
+      "MLExperiment": {
+          "description": "A machine learning experiment object.",
+          "type": "object",
+          "required": ["type"],
+          "allOf": [
+            {
+                "$ref": "../common/definitions.json#/definitions/Item"
+            }
+          ],
+          "properties": {
+               "properties": {
+                    "description": "The machine learning experiment properties.",
+                    "$ref": "#/definitions/MLExperimentProperties"
+                }
+           }
+      },
+      "MLExperimentProperties": {
+            "description": "The machine learning experiment properties.",
+            "type": "object",
+            "properties": {
+                "mlFlowExperimentId": {
+                    "description": "The internal machine learning flow experiment ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                }
+            }
+      },
+      "CreateMLExperimentRequest": {
+          "description": "Create machine learning experiment request payload.",
+          "required": ["displayName"],
+          "properties": {
+              "displayName": {
+                  "description": "The machine learning experiment display name. The display name must follow naming rules according to item type.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "description": {
+                  "description": "The machine learning experiment description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "folderId": {
+                  "description": "The folder ID. If not specified or null, the machine learning experiment is created with the workspace as its folder.",
+                  "type": "string",
+                  "format": "uuid",
+                  "readOnly": false
+              }
+          }
+      },
+      "UpdateMLExperimentDefinitionRequest": {
+          "description": "Update machine learning experiment public definition request payload.",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/MLExperimentDefinition"
+              }
+          }
+      },
+      "MLExperimentDefinitionResponse": {
+          "description": "Machine learning experiment public definition response.",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/MLExperimentDefinition",
+                  "readOnly": true
+              }
+          }
+      },
+      "MLExperimentDefinition" : {
+          "description": "Machine learning experiment public definition object.",
+          "type": "object",
+          "required": ["parts"],
+          "properties": {
+              "format": {
+                  "description": "The format of the item definition.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "parts": {
+                  "description": "A list of definition parts.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/MLExperimentDefinitionPart"
+                  },
+                  "readOnly": false
+              }
+          }
+      },
+      "MLExperimentDefinitionPart": {
+          "description": "Machine learning experiment definition part object.",
+          "type": "object",
+          "properties": {
+              "path": {
+                  "description": "The machine learning experiment part path.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payload": {
+                  "description": "The machine learning experiment part payload.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payloadType":{
+                  "description": "The payload type.",
+                  "$ref": "../common/definitions.json#/definitions/PayloadType",
+                  "readOnly": false
+              }
+          }
+      },
+      "UpdateMLExperimentRequest": {
+          "description": "Update machine learning experiment request.",
+          "properties": {
+              "displayName": {
+                  "description": "The machine learning experiment display name. The display name must follow naming rules according to item type.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "description": {
+                  "description": "The machine learning experiment description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              }
+          }
+      }
+  }
+}

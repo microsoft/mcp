@@ -1,0 +1,47 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Eventstream topology data types"
+    },
+    "paths": {},
+    "definitions": {
+        "EventstreamTopologyResponse": {
+            "type": "object",
+            "description": "Represents the Eventstream topology response.",
+            "properties": {
+                "sources": {
+                    "type": "array",
+                    "description": "A list of Eventstream sources.",
+                    "items": {
+                        "$ref": "./source.json#/definitions/SourceResponse"
+                    }
+                },
+                "destinations": {
+                    "type": "array",
+                    "description": "A list of Eventstream destinations.",
+                    "items": {
+                        "$ref": "./destination.json#/definitions/DestinationResponse"
+                    }
+                },
+                "streams": {
+                    "type": "array",
+                    "description": "A list of Eventstream default and derived streams.",
+                    "items": {
+                        "$ref": "./stream.json#/definitions/StreamResponse"
+                    }
+                },
+                "operators": {
+                    "type": "array",
+                    "description": "A list of Eventstream operators.",
+                    "items": {
+                        "$ref": "./operator.json#/definitions/Operator"
+                    }
+                },
+                "compatibilityLevel": {
+                    "$ref": "./common.json#/definitions/CompatibilityLevel"
+                }
+            }
+        }
+    }
+}

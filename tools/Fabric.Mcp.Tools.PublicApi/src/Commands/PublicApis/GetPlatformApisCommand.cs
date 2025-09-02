@@ -39,7 +39,7 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
             }
 
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var apis = await fabricService.ListFabricWorkloadPublicApis("platform");
+            var apis = await fabricService.GetFabricWorkloadPublicApis("platform");
 
             context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricWorkloadPublicApi);
         }

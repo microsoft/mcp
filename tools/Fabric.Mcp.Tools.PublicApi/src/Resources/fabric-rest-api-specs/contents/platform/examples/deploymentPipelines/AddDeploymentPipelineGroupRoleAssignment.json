@@ -1,0 +1,15 @@
+{
+    "parameters": {
+        "deploymentPipelineId": "8ce96c50-85a0-4db3-85c6-7ccc3ed46523",
+        "deploymentPipelineRoleAssignmentRequest": {
+            "principal": {
+                "id": "154aef10-47b8-48c4-ab97-f0bf9d5f8fcf",
+                "type": "Group"
+            }, 
+            "role": "Admin" 
+        }
+    },
+    "responses": {
+        "200": {}
+    }
+}

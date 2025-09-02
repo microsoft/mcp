@@ -1,0 +1,18 @@
+{
+    "parameters": {
+        "gatewayId": "8e41c4dd-a382-4937-9bf3-695ab881f7c2",
+        "gatewayRoleAssignmentId": "056afb37-8f6c-4fd8-9aa5-64ba7f1974e7"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "056afb37-8f6c-4fd8-9aa5-64ba7f1974e7",
+                "principal": {
+                    "id": "056afb37-8f6c-4fd8-9aa5-64ba7f1974e7",
+                    "type": "User"
+                },
+                "role": "Admin"
+            }
+        }
+    }
+}

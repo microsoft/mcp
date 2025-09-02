@@ -1,0 +1,17 @@
+{
+    "parameters": {
+        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+        "folderId": "dddddddd-9999-0000-1111-eeeeeeeeeeee",
+        "moveFolderRequest": {
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "dddddddd-9999-0000-1111-eeeeeeeeeeee",
+                "displayName": "Q2",
+                "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb"
+            }
+        }
+    }
+}
