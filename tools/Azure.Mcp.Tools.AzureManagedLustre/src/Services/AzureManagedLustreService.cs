@@ -75,6 +75,100 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         );
     }
 
+    private static AmlFileSystemPropertiesMaintenanceWindow GenerateMaintenanceWindow(string maintenanceDay, string maintenanceTime)
+    {
+         MaintenanceDayOfWeekType dayEnum;
+
+        if (!Enum.TryParse<MaintenanceDayOfWeekType>(maintenanceDay, true, out dayEnum))
+        {
+            throw new ArgumentException($"Invalid maintenance day '{maintenanceDay}'. Allowed values: Monday..Sunday");
+        }
+
+        return new AmlFileSystemPropertiesMaintenanceWindow
+        {
+            DayOfWeek = dayEnum,
+            TimeOfDayUTC = maintenanceTime
+        };
+    }
+
+    private static AmlFileSystemRootSquashSettings GenerateRootSquashSettings(string rootSquashMode, string? noSquashNidLists, long? squashUid, long? squashGid)
+    {
+        // Root squash: default to None if not provided; when not None, ensure required squash parameters are provided
+        var rootSquashSettings = new AmlFileSystemRootSquashSettings
+        {
+            Mode = AmlFileSystemSquashMode.None
+        };
+
+        if (!string.IsNullOrWhiteSpace(rootSquashMode))
+        {
+            AmlFileSystemSquashMode modeParsed = rootSquashMode;
+
+            // When a squash mode other than None is specified, UID and GID must be provided
+            if (modeParsed != AmlFileSystemSquashMode.None)
+            {
+                if (!squashUid.HasValue)
+                {
+                    throw new ArgumentException("squash-uid must be provided when root-squash-mode is not None.");
+                }
+                if (!squashGid.HasValue)
+                {
+                    throw new ArgumentException("squash-gid must be provided when root-squash-mode is not None.");
+                }
+                if (!string.IsNullOrWhiteSpace(noSquashNidLists))
+                {
+                    throw new ArgumentException("squash-gid must be provided when root-squash-mode is not None.");
+                }
+                if (squashUid.Value < 0)
+                {
+                    throw new ArgumentException("squash-uid must be a non-negative integer.");
+                }
+                if (squashGid.Value < 0)
+                {
+                    throw new ArgumentException("squash-gid must be a non-negative integer.");
+                }
+
+                rootSquashSettings = new AmlFileSystemRootSquashSettings
+                {
+                    Mode = modeParsed,
+                    NoSquashNidLists = noSquashNidLists,
+                    SquashUID = squashUid,
+                    SquashGID = squashGid
+                };
+            }
+        }
+
+        return rootSquashSettings;
+    }
+
+    private static AmlFileSystemPropertiesHsm GenerateHsmSettings(string? hsmContainer, string? hsmLogContainer, string? importPrefix)
+    {
+        // HSM settings if provided
+        if (!string.IsNullOrWhiteSpace(hsmContainer) || !string.IsNullOrWhiteSpace(hsmLogContainer) || !string.IsNullOrWhiteSpace(importPrefix))
+        {
+            if (string.IsNullOrWhiteSpace(hsmContainer) || string.IsNullOrWhiteSpace(hsmLogContainer))
+            {
+                throw new ArgumentException("Both hsm-container and hsm-log-container must be provided when specifying HSM settings.");
+            }
+
+            var hsmSettings = new AmlFileSystemHsmSettings(hsmContainer, hsmLogContainer);
+            if (!string.IsNullOrWhiteSpace(importPrefix))
+            {
+                hsmSettings.ImportPrefix = importPrefix;
+            }
+
+            return new AmlFileSystemPropertiesHsm
+            {
+                Settings = hsmSettings
+            };
+        }
+        else
+        {
+            return new AmlFileSystemPropertiesHsm
+            {
+                Settings = null
+            };
+        }    
+    }
     public async Task<int> GetRequiredAmlFSSubnetsSize(string subscription,
     string sku, int size,
         string? tenant = null,
@@ -135,6 +229,8 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
 
         var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy)
+            ?? throw new Exception($"Subscription '{subscription}' not found");
 
         var data = new AmlFileSystemData(new AzureLocation(location))
         {
@@ -146,9 +242,6 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         // Validate zone support for the specified location before adding
         try
         {
-            var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy)
-            ?? throw new Exception($"Subscription '{subscription}' not found");
-
             bool? supportsZones = null;
 
             await foreach (var loc in sub.GetLocationsAsync())
@@ -177,83 +270,10 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             throw new Exception($"Failed to validate availability zones for location '{location}': {ex.Message}", ex);
         }
 
-
-
-        // HSM settings if provided
-        if (!string.IsNullOrWhiteSpace(hsmContainer) || !string.IsNullOrWhiteSpace(hsmLogContainer) || !string.IsNullOrWhiteSpace(importPrefix))
-        {
-            if (string.IsNullOrWhiteSpace(hsmContainer) || string.IsNullOrWhiteSpace(hsmLogContainer))
-            {
-                throw new ArgumentException("Both hsm-container and hsm-log-container must be provided when specifying HSM settings.");
-            }
-
-            var hsmSettings = new AmlFileSystemHsmSettings(hsmContainer, hsmLogContainer);
-            if (!string.IsNullOrWhiteSpace(importPrefix))
-            {
-                hsmSettings.ImportPrefix = importPrefix;
-            }
-            data.Hsm = new AmlFileSystemPropertiesHsm
-            {
-                Settings = hsmSettings
-            };
-        }
-
-        MaintenanceDayOfWeekType dayEnum;
-
-        if (!Enum.TryParse<MaintenanceDayOfWeekType>(maintenanceDay, true, out dayEnum))
-        {
-            throw new ArgumentException($"Invalid maintenance day '{maintenanceDay}'. Allowed values: Monday..Sunday");
-        }
-
-        data.MaintenanceWindow = new AmlFileSystemPropertiesMaintenanceWindow
-        {
-            DayOfWeek = dayEnum,
-            TimeOfDayUTC = maintenanceTime
-        };
-
-        // Root squash: default to None if not provided; when not None, ensure required squash parameters are provided
-
-        if (!string.IsNullOrWhiteSpace(rootSquashMode))
-        {
-            AmlFileSystemSquashMode modeParsed = rootSquashMode;
-
-            // When a squash mode other than None is specified, UID and GID must be provided
-            if (modeParsed != AmlFileSystemSquashMode.None)
-            {
-                if (!squashUid.HasValue)
-                {
-                    throw new ArgumentException("squash-uid must be provided when root-squash-mode is not None.");
-                }
-                if (!squashGid.HasValue)
-                {
-                    throw new ArgumentException("squash-gid must be provided when root-squash-mode is not None.");
-                }
-                if (squashUid.Value < 0)
-                {
-                    throw new ArgumentException("squash-uid must be a non-negative integer.");
-                }
-                if (squashGid.Value < 0)
-                {
-                    throw new ArgumentException("squash-gid must be a non-negative integer.");
-                }
-
-                data.RootSquashSettings = new AmlFileSystemRootSquashSettings
-                {
-                    Mode = modeParsed,
-                    NoSquashNidLists = modeParsed == AmlFileSystemSquashMode.None ? "" : noSquashNidLists,
-                    SquashUID = modeParsed == AmlFileSystemSquashMode.None ? null : squashUid,
-                    SquashGID = modeParsed == AmlFileSystemSquashMode.None ? null : squashGid
-                };
-            }
-        }
-        else
-        {
-            data.RootSquashSettings = new AmlFileSystemRootSquashSettings
-            {
-                Mode = AmlFileSystemSquashMode.None
-            };
-        }
-
+        data.RootSquashSettings = GenerateRootSquashSettings(rootSquashMode ?? "None", noSquashNidLists, squashUid, squashGid);
+        data.MaintenanceWindow = GenerateMaintenanceWindow(maintenanceDay, maintenanceTime);
+        data.Hsm = GenerateHsmSettings(hsmContainer, hsmLogContainer, importPrefix);
+   
         // Encryption
         if (enableCustomEncryption)
         {
@@ -293,6 +313,63 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         catch (Exception ex)
         {
             throw new Exception($"Failed to create AML file system '{name}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task<LustreFileSystem> UpdateFileSystemAsync(
+        string subscription,
+        string resourceGroup,
+        string name,
+        string? maintenanceDay = null,
+        string? maintenanceTime = null,
+        string? rootSquashMode = null,
+        string? noSquashNidLists = null,
+        long? squashUid = null,
+        long? squashGid = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
+        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        try
+        {
+            var fs = await rg.GetAmlFileSystemAsync(name);
+
+            var patch = new AmlFileSystemPatch();
+
+            // Maintenance window update if any value provided
+            if (!string.IsNullOrWhiteSpace(maintenanceDay) && !string.IsNullOrWhiteSpace(maintenanceTime))
+            {
+                var maintenanceWindowConfiguration = GenerateMaintenanceWindow(maintenanceDay, maintenanceTime);
+
+                patch.MaintenanceWindow = new AmlFileSystemUpdatePropertiesMaintenanceWindow
+                {
+                    DayOfWeek = maintenanceWindowConfiguration.DayOfWeek,
+                    TimeOfDayUTC = maintenanceWindowConfiguration.TimeOfDayUTC
+                };
+            }
+
+            // Root squash updates: if any related field provided, set RootSquashSettings accordingly
+            if (!string.IsNullOrWhiteSpace(rootSquashMode))
+            {
+                patch.RootSquashSettings = GenerateRootSquashSettings(rootSquashMode ?? "None", noSquashNidLists, squashUid, squashGid);
+            }
+
+            var updateOperation = await fs.Value.UpdateAsync(WaitUntil.Completed, patch);
+            return Map(updateOperation.Value);
+        }
+        catch (RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to update AML file system '{name}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to update AML file system '{name}': {ex.Message}", ex);
         }
     }
 }

@@ -23,6 +23,22 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
 
             var fileSystems = result.AssertProperty("fileSystems");
             Assert.Equal(JsonValueKind.Array, fileSystems.ValueKind);
+            var found = false;
+
+            foreach (var fs in fileSystems.EnumerateArray())
+            {
+                if (fs.ValueKind != JsonValueKind.Object) continue;
+
+                if (fs.TryGetProperty("name", out var nameProp) &&
+                    nameProp.ValueKind == JsonValueKind.String &&
+                    string.Equals(nameProp.GetString(), Settings.ResourceBaseName , StringComparison.OrdinalIgnoreCase))
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            Assert.True(found, $"Expected at least one filesystem in resource group with name '{Settings.ResourceBaseName }'.");
         }
 
         [Fact]
@@ -39,6 +55,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
 
             var ips = result.AssertProperty("numberOfRequiredIPs");
             Assert.Equal(JsonValueKind.Number, ips.ValueKind);
+            Assert.Equal(21, ips.GetInt32());
         }
 
         [Fact]
@@ -104,6 +121,59 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
             Assert.True(hasCapacity, "Expected a storage capacity property.");
             Assert.Equal(4, capacityValue);
 
+        }
+
+        [Fact]
+        public async Task Should_update_maintenance_and_verify_with_list()
+        {
+            // Update maintenance window for existing filesystem
+            var updateResult = await CallToolAsync(
+                "azmcp_azuremanagedlustre_filesystem_update",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "name", Settings.ResourceBaseName },
+                    { "maintenance-day", "Wednesday" },
+                    { "maintenance-time", "11:00" }
+                });
+
+            var updatedFs = updateResult.AssertProperty("fileSystem");
+            Assert.Equal(JsonValueKind.Object, updatedFs.ValueKind);
+
+            // Verify via list
+            var listResult = await CallToolAsync(
+                "azmcp_azuremanagedlustre_filesystem_list",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId }
+                });
+
+            var fileSystems = listResult.AssertProperty("fileSystems");
+            Assert.Equal(JsonValueKind.Array, fileSystems.ValueKind);
+
+            var found = false;
+            foreach (var fs in fileSystems.EnumerateArray())
+            {
+                if (fs.ValueKind != JsonValueKind.Object) continue;
+
+                if (fs.TryGetProperty("name", out var nameProp) &&
+                    nameProp.ValueKind == JsonValueKind.String &&
+                    string.Equals(nameProp.GetString(), Settings.ResourceBaseName, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Check maintenance fields
+                    if (fs.TryGetProperty("maintenanceDay", out var dayProp) && dayProp.ValueKind == JsonValueKind.String &&
+                        fs.TryGetProperty("maintenanceTime", out var timeProp) && timeProp.ValueKind == JsonValueKind.String)
+                    {
+                        Assert.Equal("Wednesday", dayProp.GetString());
+                        Assert.Equal("11:00", timeProp.GetString());
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            Assert.True(found, $"Expected filesystem '{Settings.ResourceBaseName}' to have maintenance Wednesday at 11:00.");
         }
 
     }

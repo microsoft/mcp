@@ -822,6 +822,17 @@ azmcp azuremanagedlustre filesystem create --subscription <subscription> \
                                            [--key-url <key-url>] \
                                            [--source-vault <source-vault>] \
                                            [--user-assigned-identity-id <user-assigned-identity-id>]
+
+# Update an existing Azure Managed Lustre filesystem
+azmcp azuremanagedlustre filesystem update --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --name <filesystem-name> \
+                                           [--maintenance-day <maintenance-day>] \
+                                           [--maintenance-time <HH:mm>] \
+                                           [--root-squash-mode <mode>] \
+                                           [--no-squash-nid-list <nid1,nid2,...>] \
+                                           [--squash-uid <uid>] \
+                                           [--squash-gid <gid>]
 ```
 
 ### Azure Native ISV Operations

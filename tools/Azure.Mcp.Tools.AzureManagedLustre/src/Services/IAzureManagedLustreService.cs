@@ -47,5 +47,20 @@ public interface IAzureManagedLustreService
         string? userAssignedIdentityId = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<LustreFileSystem> UpdateFileSystemAsync(
+        string subscription,
+        string resourceGroup,
+        string name,
+        // Maintenance window (optional)
+        string? maintenanceDay = null,
+        string? maintenanceTime = null,
+        // Root squash updates (all optional; if UID/GID provided, both required)
+        string? rootSquashMode = null,
+        string? noSquashNidLists = null,
+        long? squashUid = null,
+        long? squashGid = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
 }
 

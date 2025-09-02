@@ -166,6 +166,31 @@ public class FileSystemCreateCommandTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_RootSquashNotNone_MissingNoSquashNidList_Returns400()
+    {
+        var args = _parser.Parse([
+            "--subscription", Sub,
+            "--resource-group", Rg,
+            "--name", Name,
+            "--location", Location,
+            "--sku", Sku,
+            "--size", Size.ToString(),
+            "--subnet-id", SubnetId,
+            "--zone", Zone,
+            "--maintenance-day", "Monday",
+            "--maintenance-time", "00:00",
+            "--root-squash-mode", "All",
+            "--squash-uid", "1000",
+            "--squash-gid", "1000"
+        ]);
+
+        var response = await _command.ExecuteAsync(_context, args);
+
+        Assert.True(response.Status >= 400);
+        Assert.Contains("no-squash", response.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_EncryptionEnabledWithoutKey_Returns400()
     {
         var args = _parser.Parse([

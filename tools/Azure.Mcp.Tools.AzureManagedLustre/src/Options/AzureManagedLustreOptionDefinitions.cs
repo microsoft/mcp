@@ -97,7 +97,7 @@ public static class AzureManagedLustreOptionDefinitions
 
     public static readonly Option<string> NoSquashNidListsOption = new(
         $"--{noSquashNidLists}",
-        "Comma-separated list of NIDs (network identifiers) not to squash. Example: '10.0.0.5,10.0.0.6' or 'nid1,nid2'.\n");
+        "Comma-separated list of NIDs (network identifiers) not to squash. Example: '10.0.2.4@tcp;10.0.2.[6-8]@tcp'.\n");
 
     public static readonly Option<long?> SquashUidOption = new(
         $"--{squashUid}",
