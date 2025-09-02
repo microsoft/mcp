@@ -13,6 +13,8 @@ All new Azure services and their commands should use the Toolset pattern:
 - **Tests** go in `tools/Azure.Mcp.Tools.{Toolset}/tests`, divided into UnitTests and LiveTests:
   -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests`
   -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests`
+  -  `tools/Azure.Mcp.Tools.Monitor/tests/Azure.Mcp.Tools.Monitor.UnitTests`
+  -  `tools/Azure.Mcp.Tools.Monitor/tests/Azure.Mcp.Tools.Monitor.LiveTests`
 
 This keeps all code, options, models, and tests for an toolset together. See `tools/Azure.Mcp.Tools.Storage` for a reference implementation.
 
@@ -117,7 +119,7 @@ A complete command requires:
 6. Unit test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests/{Resource}/{Resource}{Operation}CommandTests.cs`
 7. Integration test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests/{Toolset}CommandTests.cs`
 8. Command registration in RegisterCommands(): `tools/Azure.Mcp.Tools.{Toolset}/src/{Toolset}Setup.cs`
-9. Toolset registration in RegisterToolsets(): `servers/Azure.Mcp.Server/src/Program.cs`
+9. Toolset registration in RegisterAreas(): `servers/Azure.Mcp.Server/src/Program.cs`
 10. **Live test infrastructure** (for Azure service commands):
    - Bicep template: `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources.bicep`
    - Post-deployment script: `tools/Azure.Mcp.Tools.{Toolset}/tests/test-resources-post.ps1` (required, even if basic template)
@@ -162,7 +164,7 @@ This convention ensures:
 - **Test resource deployment**: Ensure resources are properly configured with RBAC for test application
 - **Resource naming**: Follow consistent naming patterns - many services use just `baseName`, while others may need suffixes for disambiguation (e.g., `{baseName}-suffix`)
 - **Solution file integration**: Add new projects to `AzureMcp.sln` with proper GUID generation to avoid conflicts
-- **Program.cs registration**: Register the new toolset in `Program.cs` `RegisterToolsets()` method in alphabetical order
+- **Program.cs registration**: Register the new toolset in `Program.cs` `RegisterAreas()` method in alphabetical order
 
 ## Implementation Guidelines
 
@@ -766,7 +768,7 @@ private void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFacto
 
 ### 9. Toolset Registration
 ```csharp
-    private static IToolsetSetup[] RegisterToolsets()
+    private static IToolsetSetup[] RegisterAreas()
     {
         return [
             // Register core toolsets
@@ -780,7 +782,7 @@ private void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFacto
     }
 ```
 
-The toolset list in `RegisterToolsets()` should stay sorted alphabetically.
+The toolset list in `RegisterAreas()` should stay sorted alphabetically.
 
 ## Error Handling
 
@@ -1148,7 +1150,8 @@ Use the deployment script with your toolset:
 ./eng/scripts/Deploy-TestResources.ps1 -Tools "{Toolset}"
 
 # Run live tests
-dotnet test --filter "Category=Live&Toolset={Toolset}"
+pushd 'tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests'
+dotnet test
 ```
 
 Live test scenarios should include:
@@ -1722,9 +1725,9 @@ var subscriptionResource = await _subscriptionService.GetSubscription(subscripti
 - **Prevention**: Always update JSON context when adding new model classes
 
 **Issue: Toolset not registered in Program.cs**
-- **Cause**: New toolset setup not added to `RegisterToolsets()` method in `Program.cs`
+- **Cause**: New toolset setup not added to `RegisterAreas()` method in `Program.cs`
 - **Solution**: Add toolset registration to the array in alphabetical order
-- **Fix**: Add `new Azure.Mcp.Tools.{Toolset}.{Toolset}Setup(),` to the `RegisterToolsets()` return array
+- **Fix**: Add `new Azure.Mcp.Tools.{Toolset}.{Toolset}Setup(),` to the `RegisterAreas()` return array
 - **Prevention**: Follow the complete toolset setup checklist including Program.cs registration
 
 **Issue: Using required ResourceGroup option for optional filtering**
@@ -1827,7 +1830,7 @@ Before submitting:
 - [ ] Azure Resource Manager package added to both `Directory.Packages.props` and `Azure.Mcp.Tools.{Toolset}.csproj`
 - [ ] **Package version consistency**: Same version used in both `Directory.Packages.props` and project references
 - [ ] **Solution file integration**: Projects added to `AzureMcp.sln` with unique GUIDs (no GUID conflicts)
-- [ ] **Toolset registration**: Added to `Program.cs` `RegisterToolsets()` method in alphabetical order
+- [ ] **Toolset registration**: Added to `Program.cs` `RegisterAreas()` method in alphabetical order
 - [ ] JSON serialization context includes all new model types
 
 ### Build and Code Quality
