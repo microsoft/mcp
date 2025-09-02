@@ -5,6 +5,7 @@
   <ItemGroup>
     <EmbeddedResource Include="**\Resources\*.txt" />
     <EmbeddedResource Include="**\Resources\*.json" />
+    <EmbeddedResource Include="**\Resources\*.md" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
@@ -14,5 +15,8 @@
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
     <PackageReference Include="System.Text.Json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
   </ItemGroup>
 </Project>

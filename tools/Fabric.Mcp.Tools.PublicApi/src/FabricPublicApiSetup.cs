@@ -17,6 +17,7 @@ public class FabricPublicApiSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<IResourceProviderService, NetworkResourceProviderService>();
         services.AddSingleton<IFabricPublicApiService, FabricPublicApiService>();
         services.AddHttpClient<FabricPublicApiService>();
     }

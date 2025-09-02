@@ -66,20 +66,6 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
 
             context.Response.Results = ResponseResult.Create(new ExampleFileResult(availableExamples), FabricJsonContext.Default.ExampleFileResult);
         }
-        catch (HttpRequestException httpEx)
-        {
-            _logger.LogError(httpEx, "HTTP error getting Fabric public APIs for workload {}", options.WorkloadType);
-            if (httpEx.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                context.Response.Status = 404;
-                context.Response.Message = $"No workload of type '{options.WorkloadType}' exists. A full list of supported workloads can be found using the discover-workloads command";
-            }
-            else
-            {
-                context.Response.Status = (int)(httpEx.StatusCode ?? System.Net.HttpStatusCode.InternalServerError);
-                context.Response.Message = httpEx.Message;
-            }
-        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting examples for workload {}", options.WorkloadType);
