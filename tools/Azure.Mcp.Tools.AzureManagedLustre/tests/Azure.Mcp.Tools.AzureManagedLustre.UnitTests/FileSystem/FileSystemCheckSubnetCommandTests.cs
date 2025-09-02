@@ -54,6 +54,7 @@ public class FileSystemCheckSubnetCommandTests
         var args = _parser.Parse([
             "--sku", "AMLFS-Durable-Premium-40",
             "--size", "48",
+            "--location", "eastus",
             "--subnet-id", "/subscriptions/sub123/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/sn1",
             "--subscription", _knownSubscriptionId
         ]);
@@ -78,6 +79,7 @@ public class FileSystemCheckSubnetCommandTests
         var args = _parser.Parse([
             "--sku", "INVALID-SKU",
             "--size", "48",
+            "--location", "eastus",
             "--subnet-id", "/subscriptions/sub123/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/sn1",
             "--subscription", _knownSubscriptionId
         ]);
@@ -101,6 +103,7 @@ public class FileSystemCheckSubnetCommandTests
         var args = _parser.Parse([
             "--sku", "AMLFS-Durable-Premium-40",
             "--size", "48",
+            "--location", "eastus",
             "--subnet-id", "/subscriptions/sub123/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/sn1",
             "--subscription", _knownSubscriptionId
         ]);
