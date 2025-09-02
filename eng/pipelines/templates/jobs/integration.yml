@@ -6,12 +6,11 @@ jobs:
   - checkout: self
 
   - download: current
-    displayName: Download $(PipelineArtifactName)_packed
-    artifact: $(PipelineArtifactName)_packed
+    displayName: Download artifacts
 
   - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
     parameters:
-      PathToArtifacts: $(Pipeline.Workspace)/$(PipelineArtifactName)_packed
+      PathToArtifacts: $(Pipeline.Workspace)/packages_npm
       Registry: https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/
       ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'IndividualCI')) }}:
         Tag: dev

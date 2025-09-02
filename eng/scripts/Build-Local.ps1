@@ -26,7 +26,7 @@ $prereleaseNumber = [int]::Parse((Get-Date -UFormat %s))
 $versionSuffix = "-$prereleaseLabel.$prereleaseNumber"
 
 function Build($os, $arch) {
-    & "$RepoRoot/eng/scripts/Build-Module.ps1" `
+    & "$RepoRoot/eng/scripts/Build-Servers.ps1" `
         -ServerName $ServerName `
         -VersionSuffix $versionSuffix `
         -OperatingSystem $os `

@@ -5,6 +5,8 @@ parameters:
   type: string
 - name: ServerName
   type: string
+- name: VersionSuffix
+  type: string
 
 jobs:
 - job: CreateDockerArtifact
@@ -15,12 +17,9 @@ jobs:
     os: linux
 
   steps:
-  - task: DownloadPipelineArtifact@2
-    displayName: 'Download signed packages'
-    inputs:
-      buildType: 'current'
-      artifactName: $(PipelineArtifactName)_signed
-      targetPath: $(Build.ArtifactStagingDirectory)
+  - download: current
+    displayName: Download signed_binaries
+    artifact: binaries_signed
 
   - task: CopyFiles@2
     displayName: 'Copy Dockerfile'
@@ -37,10 +36,9 @@ jobs:
         $properties = ./eng/scripts/Get-ProjectProperties.ps1 -ProjectName '${{parameters.ServerName}}.csproj'
         $imageName = $properties.DockerImageName
         $version = $properties.Version
+        $versionSuffix = $env:VERSIONSUFFIX
         Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$imageName"
-        Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version$VersionSuffix"
-    env:
-      VERSION_SUFFIX: '$(VersionSuffix)'
+        Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version$versionSuffix"
 
   - task: 1ES.PublishPipelineArtifact@1
     inputs:

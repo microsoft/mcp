@@ -4,3 +4,12 @@ variables:
   PipelineArtifactName: packages
   nugetMultiFeedWarnLevel: 'none'
   GDN_SUPPRESS_FORKED_BUILD_WARNING: true
+  ${{ if and(or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix/')), eq(variables['Build.Reason'], 'Manual')) }}:
+    # Manual builds of main or hotfix/* are "release builds" and get no dynamic version suffix.
+    VersionSuffix: ''
+  ${{ elseif and(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+    # CI builds of main are "beta"
+    VersionSuffix: '-beta.$(Build.BuildId)'
+  ${{ else }}:
+    # Everything else is an "alpha".
+    VersionSuffix: '-alpha.$(Build.BuildId)'

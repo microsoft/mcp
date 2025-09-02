@@ -2,12 +2,19 @@ parameters:
 - name: TimeoutInMinutes
   type: number
   default: 120
+- name: ServerName
+  type: string
+  default: ''
 
 jobs:
 - job: Analyze
   condition: and(succeededOrFailed(), ne(variables['Skip.Analyze'], 'true'))
   timeoutInMinutes: ${{ parameters.TimeoutInMinutes }}
   dependsOn: []
+  pool:
+    name: $(LINUXPOOL)
+    vmImage: $(LINUXVMIMAGE)
+    os: linux
   steps:
   - checkout: self
     fetchDepth: 0
@@ -25,22 +32,19 @@ jobs:
       packageType: sdk
       version: 9.0.x
 
+  # Static source analysis
   - task: Powershell@2
     displayName: "Run source analysis"
     inputs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Analyze-Code.ps1
 
-  # Run AOT analysis only on Linux x64
-  - template: /eng/pipelines/templates/steps/analyze-aot-compact.yml
-    parameters:
-      runtime: 'linux-x64'
-      sourceDirectory: $(Build.SourcesDirectory)
-
+  # Spell checking
   - template: /eng/common/pipelines/templates/steps/check-spelling.yml
     parameters:
       ContinueOnError: false
 
+  # Link verification
   - template: /eng/common/pipelines/templates/steps/verify-links.yml
     parameters:
       Condition: succeededOrFailed()
@@ -48,3 +52,23 @@ jobs:
       CheckLinkGuidance: $true
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         Urls: (eng/common/scripts/get-markdown-files-from-changed-files.ps1)
+
+  # AOT analysis (only on Linux x64)
+  - task: PowerShell@2
+    displayName: "Run AOT Compatibility Analysis"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Analyze-AotCompact.ps1
+      arguments: >
+        -Runtime 'linux-x64'
+        -OutputFormat Console
+        -ServerName '${{ parameters.ServerName }}'
+        -OutputPath $(Build.ArtifactStagingDirectory)/aot
+      workingDirectory: $(Build.SourcesDirectory)
+    continueOnError: true
+
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      CustomCondition: and(succeeded(), eq(variables['AotReportGenerated'], 'true'))
+      ArtifactPath: $(Build.ArtifactStagingDirectory)/aot
+      ArtifactName: AOTCompatibilityReport

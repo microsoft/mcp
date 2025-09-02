@@ -19,7 +19,7 @@ if(!$ArtifactsPath) {
 }
 
 if(!$OutputPath) {
-    $OutputPath = "$RepoRoot/.work/package"
+    $OutputPath = "$RepoRoot/.work/packages_npm"
 }
 
 if(!(Test-Path $ArtifactsPath)) {

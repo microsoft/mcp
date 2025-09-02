@@ -2,37 +2,41 @@
 #Requires -Version 7
 
 param(
+    [string]$JsonReportPath,
+    [string]$OutputPath,
     [Parameter(Mandatory=$false)]
     [ValidateSet('Html', 'Console')]
     [string]$OutputFormat = 'Html'
 )
 
 $ErrorActionPreference = "Stop"
+. "$PSScriptRoot/../common/scripts/common.ps1"
 
-. "$PSScriptRoot/AOT-Config.ps1"
-$config = Get-AOTConfig
+if (!$JsonReportPath) {
+    $JsonReportPath = "$RepoRoot/.work/aotCompactReport/aot-compact-report.json"
+}
 
-$JsonReportPath = $config.JsonReportPath
-$OutputPath = $config.HtmlReportPath
+if (!$OutputPath) {
+    $OutputPath = "$RepoRoot/.work/aotCompactReport/aot-compact-report.html"
+}
 
 if (-not (Test-Path $JsonReportPath)) {
     Write-Error "JSON report not found at: $JsonReportPath"
     exit 1
 }
 
-$jsonContent = Get-Content $JsonReportPath -Raw | ConvertFrom-Json
-
+$jsonContent = Get-Content $JsonReportPath -Raw | ConvertFrom-Json -AsHashtable
+$serverName = $jsonContent.serverName
 # Calculate statistics
 $totalWarnings = 0
 $dllStats = @()
 
-if ($jsonContent -is [PSCustomObject]) {
-    foreach ($property in $jsonContent.PSObject.Properties) {
-        $dllName = $property.Name
-        $warnings = $property.Value
+if ($jsonContent.libraries) {
+    foreach ($dllName in $jsonContent.libraries.Keys) {
+        $warnings = $jsonContent.libraries[$dllName]
         $warningCount = $warnings.Count
         $totalWarnings += $warningCount
-        
+
         $dllStats += [PSCustomObject]@{
             DllName = $dllName
             WarningCount = $warningCount
@@ -46,15 +50,15 @@ $dllStats = $dllStats | Sort-Object WarningCount -Descending
 
 if ($OutputFormat -eq 'Console') {
     # Render to console (Useful for CI/CD pipelines).
-    Write-Host "##[section]AOT Compatibility Analysis Results"
+    Write-Host "##[section] $serverName AOT Compatibility Analysis Results"
     Write-Host "Total AOT/Trimming Warnings: $totalWarnings"
     Write-Host "Affected DLLs: $($dllStats.Count)"
-    
+
     if ($totalWarnings -gt 0) {
         Write-Host ""
         Write-Host "##[section]Full AOT Analysis Report (JSON):"
         $jsonContent | ConvertTo-Json -Depth 5 | Write-Host
-        
+
         Write-Host ""
         Write-Host "##[warning]AOT compatibility issues found. See artifacts for details."
         Write-Host "##vso[task.logissue type=warning]$totalWarnings AOT/trimming warnings found across $($dllStats.Count) DLLs"
@@ -72,7 +76,7 @@ $html = @"
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AOT Compatibility Analysis Report</title>
+    <title>$serverName AOT Compatibility Analysis Report</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -229,7 +233,7 @@ $html = @"
 <body>
     <div class="container">
         <div class="header">
-            <h1>AOT Compatibility Analysis</h1>
+            <h1>$serverName AOT Compatibility Analysis</h1>
             <p>Ahead-of-Time Compilation Warnings Report</p>
         </div>
 
@@ -319,7 +323,7 @@ $html += @"
         // Chart.js configuration
         const ctx = document.getElementById('warningsChart');
         const dllIds = [$dllIdsArray];
-        
+
         if (ctx && $totalWarnings > 0) {
             new Chart(ctx, {
                 type: 'bar',
@@ -377,22 +381,22 @@ $html += @"
             document.querySelectorAll('.dll-card.highlighted').forEach(card => {
                 card.classList.remove('highlighted');
             });
-            
+
             // Find and highlight the target DLL
             const targetCard = document.getElementById('dll_' + dllId);
             if (targetCard) {
                 targetCard.classList.add('highlighted');
-                targetCard.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center' 
+                targetCard.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
                 });
-                
+
                 // Expand the warnings if not already expanded
                 const warningsElement = document.getElementById('warnings_' + dllId);
                 if (warningsElement && !warningsElement.classList.contains('expanded')) {
                     warningsElement.classList.add('expanded');
                 }
-                
+
                 // Remove highlight after 3 seconds
                 setTimeout(() => {
                     targetCard.classList.remove('highlighted');
@@ -430,7 +434,7 @@ $html | Out-File -FilePath $OutputPath -Encoding utf8
 Write-Host "HTML report generated: $OutputPath" -ForegroundColor Green
 
 # Open in browser if on macOS
-if ($IsMacOS -or $IsWindows) {
+if (!$env:TF_BUILD -and $IsMacOS -or $IsWindows) {
     if ($IsMacOS) {
         & open $OutputPath
     } elseif ($IsWindows) {

@@ -1,0 +1,35 @@
+parameters:
+- name: DependsOn
+  type: object
+  default: []
+
+jobs:
+- job: PackNpm
+  displayName: "Pack Npm"
+  dependsOn: ${{ parameters.DependsOn }}
+  condition: and(succeeded(), ne(variables['NoPackagesChanged'], 'true'))
+  steps:
+  - checkout: self
+
+  # Download the signed MCP server binaries for this OS
+  - download: current
+    artifact: binaries_signed
+    displayName: "Download signed MCP server binaries"
+
+  - task: NodeTool@0
+    displayName: "Use Node.js 20.x"
+    inputs:
+      versionSpec: 20.x
+
+  # --- VS Code Extension Packaging Steps ---
+
+  - pwsh: >
+      eng/scripts/Pack-Npm.ps1
+      -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
+      -OutputPath '$(Build.ArtifactStagingDirectory)'
+    displayName: "Copy signed MCP server binaries to VSIX"
+
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactPath: $(Build.ArtifactStagingDirectory)
+      ArtifactName: packages_npm

@@ -15,8 +15,9 @@ steps:
       registryUrl: ${{parameters.Registry}}
 
   - pwsh: |
+      # /platform will sort before /wrapper
       $tgzFiles = Get-ChildItem -Path . -Filter *.tgz -Recurse
-      | Sort-Object FullName
+      | Sort-Object -Property FullName
 
       if ($tgzFiles.Count -eq 0) {
         Write-Host "No .tgz files found in ${{parameters.PathToArtifacts}}"

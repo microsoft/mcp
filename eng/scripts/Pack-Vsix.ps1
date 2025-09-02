@@ -1,6 +1,5 @@
 [CmdletBinding()]
 param(
-    [string] $ServerName,
     [string] $ArtifactsPath,
     [string] $OutputPath
 )
@@ -15,7 +14,7 @@ if(!$ArtifactsPath) {
 }
 
 if(!$OutputPath) {
-    $OutputPath = "$RepoRoot/.work/vsix"
+    $OutputPath = "$RepoRoot/.work/packages_vsix"
 }
 
 if(!(Test-Path $ArtifactsPath)) {
@@ -24,14 +23,6 @@ if(!(Test-Path $ArtifactsPath)) {
 }
 
 $serverJsonFiles = Get-ChildItem -Path $ArtifactsPath -Filter "wrapper.json" -Recurse
-
-if ($ServerName) {
-    $serverJsonFiles = $serverJsonFiles | Where-Object { $_.Directory.Name -ieq $ServerName }
-    if ($serverJsonFiles.Count -eq 0) {
-        Write-Error "No server directory found with name $ServerName in $ArtifactsPath."
-        exit 1
-    }
-}
 
 if(Test-Path $OutputPath) {
     Write-Host "Cleaning existing output path $OutputPath"

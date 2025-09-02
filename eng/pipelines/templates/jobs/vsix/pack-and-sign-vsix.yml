@@ -2,8 +2,6 @@ parameters:
 - name: DependsOn
   type: object
   default: []
-- name: ServerName
-  type: string
 
 jobs:
 - job:
@@ -15,7 +13,7 @@ jobs:
 
   # Download the signed MCP server binaries for this OS
   - download: current
-    artifact: $(PipelineArtifactName)_signed
+    artifact: binaries_signed
     displayName: "Download signed MCP server binaries"
 
   - task: NodeTool@0
@@ -27,8 +25,7 @@ jobs:
 
   - pwsh: >
       eng/scripts/Pack-Vsix.ps1
-      -ServerName '${{ parameters.ServerName }}'
-      -ArtifactsPath '$(Pipeline.Workspace)/$(PipelineArtifactName)_signed'
+      -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
       -OutputPath '$(Build.ArtifactStagingDirectory)'
     displayName: "Copy signed MCP server binaries to VSIX"
 
@@ -40,4 +37,4 @@ jobs:
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)
-      ArtifactName: vsix_packages_signed
+      ArtifactName: packages_vsix_signed

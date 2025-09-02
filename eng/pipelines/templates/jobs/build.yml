@@ -10,8 +10,11 @@ parameters:
   type: string
 - name: CloudConfig
   type: object
+# Additional parameters
 - name: TestTimeoutInMinutes
   type: number
+- name: IncludeNative
+  type: boolean
 - name: ServerName
   type: string
   default: ''
@@ -51,10 +54,10 @@ jobs:
     condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
     inputs:
       pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Servers.ps1
       arguments: >
         -ServerName '${{ parameters.ServerName }}'
-        -OutputPath '$(Build.ArtifactStagingDirectory)'
+        -OutputPath '$(Build.ArtifactStagingDirectory)/build'
         -VersionSuffix '$(VersionSuffix)'
         -OperatingSystem '${{ parameters.OSName }}'
         -Architecture '$(Architecture)'
@@ -87,29 +90,30 @@ jobs:
     inputs:
       summaryFileLocation: $(CoverageFile)
 
-  - task: Powershell@2
-    displayName: "(Native AOT) Install Linux arm64 cross compile toolchain"
-    condition: and(succeeded(), eq('${{ parameters.OSName }}', 'linux'), eq(variables['Architecture'], 'arm64'))
-    inputs:
-      pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Install-LinuxArm64CrossCompileToolchain.ps1
+  - ${{ if and(eq(parameters.IncludeNative, true) }}:
+    - task: Powershell@2
+      displayName: "(Native AOT) Install Linux arm64 cross compile toolchain"
+      condition: and(succeeded(), eq('${{ parameters.OSName }}', 'linux'), eq(variables['Architecture'], 'arm64'))
+      inputs:
+        pwsh: true
+        filePath: $(Build.SourcesDirectory)/eng/scripts/Install-LinuxArm64CrossCompileToolchain.ps1
 
-  - task: Powershell@2
-    displayName: "(Native AOT) Build module"
-    condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
-    inputs:
-      pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
-      arguments: >
-        -ServerName '${{ parameters.ServerName }}'
-        -OutputPath '$(Build.ArtifactStagingDirectory)'
-        -VersionSuffix '$(VersionSuffix)'
-        -OperatingSystem '${{ parameters.OSName }}'
-        -Architecture '$(Architecture)'
-        -CleanBuild
-        -BuildNative
+    - task: Powershell@2
+      displayName: "(Native AOT) Build module"
+      condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
+      inputs:
+        pwsh: true
+        filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Servers.ps1
+        arguments: >
+          -ServerName '${{ parameters.ServerName }}'
+          -OutputPath '$(Build.ArtifactStagingDirectory)/build'
+          -VersionSuffix '$(VersionSuffix)'
+          -OperatingSystem '${{ parameters.OSName }}'
+          -Architecture '$(Architecture)'
+          -CleanBuild
+          -BuildNative
 
-  # --- VS Code Extension Packaging Steps ---
+  # --- Test VS Code Extension Packaging Steps ---
   - task: NodeTool@0
     displayName: "Use Node.js 20.x"
     inputs:
@@ -130,6 +134,6 @@ jobs:
 
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
-      ArtifactPath: $(Build.ArtifactStagingDirectory)
-      ArtifactName: $(PipelineArtifactName)_$(System.JobName)
+      ArtifactPath: $(Build.ArtifactStagingDirectory)/build
+      ArtifactName: build_$(System.JobName)
       SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
