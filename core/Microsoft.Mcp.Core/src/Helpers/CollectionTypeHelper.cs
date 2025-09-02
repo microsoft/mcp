@@ -3,7 +3,7 @@
 
 using System.Collections;
 
-namespace Azure.Mcp.Core.Helpers;
+namespace Microsoft.Mcp.Core.Helpers;
 
 /// <summary>
 /// Helper class for determining collection type characteristics

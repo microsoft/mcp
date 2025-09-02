@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json.Nodes;
-using Microsoft.Mcp.Core.Areas.Server.Models;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Areas.Server.Models;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using ModelContextProtocol.Protocol;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
@@ -17,19 +17,13 @@ namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// A tool loader that creates MCP tools from the registered command factory.
 /// Exposes AzureMcp commands as MCP tools that can be invoked through the MCP protocol.
 /// </summary>
-public sealed class CommandFactoryToolLoader(
-    IServiceProvider serviceProvider,
-    CommandFactory commandFactory,
-    IOptions<ToolLoaderOptions> options,
-    ILogger<CommandFactoryToolLoader> logger) : IToolLoader
+public sealed class CommandFactoryToolLoader : IToolLoader
 {
-    private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-    private readonly IOptions<ToolLoaderOptions> _options = options;
-    private IReadOnlyDictionary<string, IBaseCommand> _toolCommands =
-        (options.Value.Namespace == null || options.Value.Namespace.Length == 0)
-            ? commandFactory.AllCommands
-            : commandFactory.GroupCommands(options.Value.Namespace);
-    private readonly ILogger<CommandFactoryToolLoader> _logger = logger;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ICommandFactory _commandFactory;
+    private readonly IOptions<ToolLoaderOptions> _options;
+    private readonly IReadOnlyDictionary<string, IBaseCommand> _toolCommands;
+    private readonly ILogger<CommandFactoryToolLoader> _logger;
 
     public const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
 
@@ -50,6 +44,21 @@ public sealed class CommandFactoryToolLoader(
 
         return false;
     }
+    
+    public CommandFactoryToolLoader(
+        IServiceProvider serviceProvider,
+        ICommandFactory commandFactory,
+        IOptions<ToolLoaderOptions> options,
+        ILogger<CommandFactoryToolLoader> logger)
+    {
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _commandFactory = commandFactory;
+        _options = options;
+        _toolCommands = (options.Value.Namespace == null || options.Value.Namespace.Length == 0)
+            ? _commandFactory.AllCommands
+            : _commandFactory.GroupCommands(options.Value.Namespace);
+        _logger = logger;
+    }
 
     /// <summary>
     /// Lists all tools available from the command factory.
@@ -59,7 +68,7 @@ public sealed class CommandFactoryToolLoader(
     /// <returns>A result containing the list of available tools.</returns>
     public ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
-        var tools = CommandFactory.GetVisibleCommands(_toolCommands)
+        var tools = CommandHelper.GetVisibleCommands(_toolCommands)
             .Select(kvp => GetTool(kvp.Key, kvp.Value))
             .Where(tool => !_options.Value.ReadOnly || (tool.Annotations?.ReadOnlyHint == true))
             .ToList();

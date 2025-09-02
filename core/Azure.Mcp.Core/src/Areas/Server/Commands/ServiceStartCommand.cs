@@ -1,12 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
-using Azure.Mcp.Core.Areas.Server.Options;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Helpers;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -156,7 +152,9 @@ public sealed class ServiceStartCommand : BaseCommand
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
-                logging.ConfigureOpenTelemetryLogger();
+
+                // TODO (conniey): Fix.
+                //logging.ConfigureOpenTelemetryLogger();
                 logging.AddEventSourceLogger();
 
                 if (serverOptions.Debug)
@@ -242,7 +240,8 @@ public sealed class ServiceStartCommand : BaseCommand
     /// <param name="options">The server configuration options.</param>
     private static void ConfigureMcpServer(IServiceCollection services, ServiceStartOptions options)
     {
-        services.AddAzureMcpServer(options);
+        // TODO (conniey): Fix.
+        //services.AddAzureMcpServer(options);
     }
 
     /// <summary>
