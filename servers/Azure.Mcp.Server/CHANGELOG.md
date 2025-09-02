@@ -6,11 +6,17 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added the following Azure Managed Lustre commands:
+  - `azmcp_azuremanagedlustre_filesystem_subnetsize_validate`: Check if the subnet can host the target Azure Managed Lustre SKU and size [[#110](https://github.com/microsoft/mcp/issues/110)].
+
 ### Breaking Changes
 
 ### Bugs Fixed
 
 ### Other Changes
+
+- Added the following Azure Managed Lustre commands: 
+  - `azmcp_azuremanagedlustre_filesystem_subnetsize_validate`: Check if the subnet can host the target Azure Managed Lustre SKU and size [[#110](https://github.com/microsoft/mcp/issues/110)]
 
 ## 0.8.4 (2025-10-02)
 

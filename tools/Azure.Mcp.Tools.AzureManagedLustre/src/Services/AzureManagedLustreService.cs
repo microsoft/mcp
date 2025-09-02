@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
@@ -154,6 +155,54 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         catch (Exception ex)
         {
             throw new Exception($"Error retrieving Azure Managed Lustre SKUs for subscription '{subscription}': {ex.Message}", ex);
+        }
+    }
+
+    public async Task<bool> CheckAmlFSSubnetAsync(
+        string subscription,
+        string sku,
+        int size,
+        string subnetId,
+        string location,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters([subscription, sku, subnetId, location]);
+
+        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
+        var content = new AmlFileSystemSubnetContent
+        {
+            FilesystemSubnet = subnetId,
+            SkuName = sku,
+            StorageCapacityTiB = size,
+            Location = location
+        };
+
+        try
+        {
+            var response = await sub.CheckAmlFSSubnetsAsync(content);
+            var status = response.Status;
+            var sizeIsValid = (HttpStatusCode)status == HttpStatusCode.OK;
+            if (!sizeIsValid)
+            {
+                throw new RequestFailedException(status, "Unexpected status code from validation.");
+            }
+
+            return sizeIsValid;
+        }
+        catch (Exception ex)
+        {
+            if (ex is RequestFailedException rfe &&
+                ((HttpStatusCode)rfe.Status == HttpStatusCode.BadRequest &&
+                rfe.Message.Contains("a subnet with a minimum size of", StringComparison.OrdinalIgnoreCase)))
+            {
+                return false;
+            }
+            else
+            {
+                throw new Exception($"Error validating AMLFS subnet: {ex.Message}", ex);
+            }
+
         }
     }
 }
