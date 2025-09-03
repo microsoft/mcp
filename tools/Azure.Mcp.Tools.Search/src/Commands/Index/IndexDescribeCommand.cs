@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
@@ -44,8 +45,8 @@ public sealed class IndexDescribeCommand(ILogger<IndexDescribeCommand> logger) :
     protected override IndexDescribeOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Service = parseResult.GetValue(_serviceOption);
-        options.Index = parseResult.GetValue(_indexOption);
+        options.Service = parseResult.GetValueOrDefault(_serviceOption);
+        options.Index = parseResult.GetValueOrDefault(_indexOption);
         return options;
     }
 

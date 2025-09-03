@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Sql.Options;
 using Microsoft.Extensions.Logging;
@@ -26,7 +27,7 @@ public abstract class BaseSqlCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Server = parseResult.GetValue(_serverOption);
+        options.Server = parseResult.GetValueOrDefault(_serverOption);
         return options;
     }
 }

@@ -80,19 +80,19 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == 404 =>
             "AKS cluster not found. Verify the cluster name, resource group, and subscription, and ensure you have access.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed accessing the AKS cluster. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => reqEx.Status,
+        RequestFailedException reqEx => reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
 
-    internal record ClusterGetCommandResult(Azure.Mcp.Tools.Aks.Models.Cluster Cluster);
+    internal record ClusterGetCommandResult(Models.Cluster Cluster);
 }

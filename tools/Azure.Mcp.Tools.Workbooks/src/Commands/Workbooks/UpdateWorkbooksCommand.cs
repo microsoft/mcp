@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
@@ -42,9 +43,9 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
     protected override UpdateWorkbooksOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkbookId = parseResult.GetValue(_workbookIdOption);
-        options.DisplayName = parseResult.GetValue(_displayNameOption);
-        options.SerializedContent = parseResult.GetValue(_serializedContentOption);
+        options.WorkbookId = parseResult.GetValueOrDefault(_workbookIdOption);
+        options.DisplayName = parseResult.GetValueOrDefault(_displayNameOption);
+        options.SerializedContent = parseResult.GetValueOrDefault(_serializedContentOption);
         return options;
     }
 

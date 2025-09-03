@@ -60,7 +60,7 @@ public class EntraAdminListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+                Arg.Any<Core.Options.RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new List<SqlServerEntraAdministrator>());
         }
@@ -98,7 +98,7 @@ public class EntraAdminListCommandTests
             "testserver",
             "testrg",
             "testsub",
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(administrators);
 
@@ -122,7 +122,7 @@ public class EntraAdminListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new List<SqlServerEntraAdministrator>());
 
@@ -146,7 +146,7 @@ public class EntraAdminListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<SqlServerEntraAdministrator>>(new Exception("Test error")));
 
@@ -166,12 +166,12 @@ public class EntraAdminListCommandTests
     public async Task ExecuteAsync_Handles404Error()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(404, "Server not found");
+        var requestException = new RequestFailedException(404, "Server not found");
         _service.GetEntraAdministratorsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<SqlServerEntraAdministrator>>(requestException));
 
@@ -190,12 +190,12 @@ public class EntraAdminListCommandTests
     public async Task ExecuteAsync_Handles403Error()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(403, "Access denied");
+        var requestException = new RequestFailedException(403, "Access denied");
         _service.GetEntraAdministratorsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<SqlServerEntraAdministrator>>(requestException));
 

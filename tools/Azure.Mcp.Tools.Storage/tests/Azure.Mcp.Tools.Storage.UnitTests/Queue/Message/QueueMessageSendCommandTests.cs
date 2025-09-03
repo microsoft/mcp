@@ -126,7 +126,7 @@ public class QueueMessageSendCommandTests
     public async Task ExecuteAsync_HandlesQueueNotFoundError()
     {
         // Arrange
-        var requestFailedException = new Azure.RequestFailedException(404, "Not found");
+        var requestFailedException = new RequestFailedException(404, "Not found");
 
         _service.SendQueueMessage(
             Arg.Any<string>(),
@@ -153,7 +153,7 @@ public class QueueMessageSendCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationError()
     {
         // Arrange
-        var requestFailedException = new Azure.RequestFailedException(403, "Access denied");
+        var requestFailedException = new RequestFailedException(403, "Access denied");
 
         _service.SendQueueMessage(
             Arg.Any<string>(),

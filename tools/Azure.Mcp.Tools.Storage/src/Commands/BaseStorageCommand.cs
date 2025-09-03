@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Storage.Options;
 
@@ -24,7 +25,7 @@ public abstract class BaseStorageCommand<
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValue(_accountOption);
+        options.Account = parseResult.GetValueOrDefault(_accountOption);
         return options;
     }
 }

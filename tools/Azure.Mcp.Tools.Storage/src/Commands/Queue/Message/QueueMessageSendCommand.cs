@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Queue.Message;
@@ -50,9 +51,9 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
     protected override QueueMessageSendOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Message = parseResult.GetValue(_messageOption);
-        options.TimeToLiveInSeconds = parseResult.GetValue(_timeToLiveOption);
-        options.VisibilityTimeoutInSeconds = parseResult.GetValue(_visibilityTimeoutOption);
+        options.Message = parseResult.GetValueOrDefault(_messageOption);
+        options.TimeToLiveInSeconds = parseResult.GetValueOrDefault(_timeToLiveOption);
+        options.VisibilityTimeoutInSeconds = parseResult.GetValueOrDefault(_visibilityTimeoutOption);
         return options;
     }
 
@@ -103,17 +104,17 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
     // Implementation-specific error handling
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == 404 =>
             "Queue not found. Verify the queue name exists and you have access.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed accessing the storage queue. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => reqEx.Status,
+        RequestFailedException reqEx => reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
 

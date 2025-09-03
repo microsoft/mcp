@@ -107,7 +107,7 @@ public sealed class FunctionAppListCommandTests
 
         var json = JsonSerializer.Serialize(response.Results);
 
-        var result = JsonSerializer.Deserialize<FunctionAppListCommand.FunctionAppListCommandResult>(json, FunctionAppJsonContext.Default.FunctionAppListCommandResult);
+        var result = JsonSerializer.Deserialize(json, FunctionAppJsonContext.Default.FunctionAppListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedFunctionApps.Count, result.Results.Count);

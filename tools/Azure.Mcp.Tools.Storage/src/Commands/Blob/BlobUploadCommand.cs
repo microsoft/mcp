@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob;
 using Azure.Mcp.Tools.Storage.Services;
@@ -44,8 +45,8 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
     protected override BlobUploadOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.LocalFilePath = parseResult.GetValue(_localFilePathOption);
-        options.Overwrite = parseResult.GetValue(_overwriteOption);
+        options.LocalFilePath = parseResult.GetValueOrDefault(_localFilePathOption);
+        options.Overwrite = parseResult.GetValueOrDefault(_overwriteOption);
         return options;
     }
 

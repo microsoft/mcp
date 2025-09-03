@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Index;
@@ -38,7 +39,7 @@ public sealed class IndexListCommand(ILogger<IndexListCommand> logger) : GlobalC
     protected override IndexListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Service = parseResult.GetValue(_serviceOption);
+        options.Service = parseResult.GetValueOrDefault(_serviceOption);
         return options;
     }
 

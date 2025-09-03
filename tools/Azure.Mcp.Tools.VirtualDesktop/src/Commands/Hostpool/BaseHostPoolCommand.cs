@@ -28,8 +28,8 @@ public abstract class BaseHostPoolCommand<
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.HostPoolName = parseResult.GetValue(_hostPoolOption);
-        options.HostPoolResourceId = parseResult.GetValue(_hostPoolResourceIdOption);
+        options.HostPoolName = parseResult.GetValueOrDefault(_hostPoolOption);
+        options.HostPoolResourceId = parseResult.GetValueOrDefault(_hostPoolResourceIdOption);
         return options;
     }
 

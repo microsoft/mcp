@@ -146,7 +146,7 @@ public class ElasticPoolListCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException_NotFound()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(404, "Server not found");
+        var requestException = new RequestFailedException(404, "Server not found");
         _sqlService.GetElasticPoolsAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -169,7 +169,7 @@ public class ElasticPoolListCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException_Forbidden()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(403, "Forbidden");
+        var requestException = new RequestFailedException(403, "Forbidden");
         _sqlService.GetElasticPoolsAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),

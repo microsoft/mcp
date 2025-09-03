@@ -11,7 +11,7 @@ public static class ArgSplitter
     public static string[] SplitArgs(string commandLine)
     {
         if (string.IsNullOrWhiteSpace(commandLine))
-            return Array.Empty<string>();
+            return [];
 
         var args = new List<string>();
         var current = new StringBuilder();

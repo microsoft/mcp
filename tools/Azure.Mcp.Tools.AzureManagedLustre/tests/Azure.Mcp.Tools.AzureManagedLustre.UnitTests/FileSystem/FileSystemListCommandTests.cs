@@ -207,7 +207,7 @@ public class FileSystemListCommandTests
         // Arrange - 404 Not Found
         _amlfsService.ListFileSystemsAsync(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-            .ThrowsAsync(new Azure.RequestFailedException(404, "not found"));
+            .ThrowsAsync(new RequestFailedException(404, "not found"));
 
         var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);
         var response = await _command.ExecuteAsync(_context, args);
@@ -223,7 +223,7 @@ public class FileSystemListCommandTests
         // Arrange - 403 Forbidden
         _amlfsService.ListFileSystemsAsync(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-            .ThrowsAsync(new Azure.RequestFailedException(403, "forbidden"));
+            .ThrowsAsync(new RequestFailedException(403, "forbidden"));
 
         var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);
         var response = await _command.ExecuteAsync(_context, args);

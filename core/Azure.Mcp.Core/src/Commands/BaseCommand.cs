@@ -5,7 +5,9 @@
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using Azure.Mcp.Core.Models.Option;
+using Azure.Mcp.Core.Helpers;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
+using System.Text.RegularExpressions;
 
 namespace Azure.Mcp.Core.Commands;
 
@@ -50,16 +52,17 @@ public abstract class BaseCommand : IBaseCommand
         {
             try
             {
-                // Extract option tokens like --cluster from the exception message
-                var missing = System.Text.RegularExpressions.Regex.Matches(ex.Message, "--[A-Za-z0-9\\-]+")
-                    .Select(m => m.Value)
-                    .Where(s => !string.IsNullOrWhiteSpace(s))
-                    .ToList();
+                // Extract option tokens like --cluster from the exception message and build CSV directly
+                var missingJoined = string.Join(
+                    ", ",
+                    Regex.Matches(ex.Message, "--[A-Za-z0-9\\-]+")
+                        .Select(m => m.Value)
+                        .Where(s => !string.IsNullOrWhiteSpace(s)));
 
-                if (missing.Count > 0)
+                if (!string.IsNullOrEmpty(missingJoined))
                 {
                     response.Status = ValidationErrorStatusCode;
-                    response.Message = $"{MissingRequiredOptionsPrefix}{string.Join(", ", missing)}";
+                    response.Message = $"{MissingRequiredOptionsPrefix}{missingJoined}";
                     response.Results = null;
                     return;
                 }
@@ -97,16 +100,16 @@ public abstract class BaseCommand : IBaseCommand
     {
         var result = new ValidationResult { IsValid = true };
 
-        var missingOptions = commandResult.Command.Options
-            .Where(o => o.Required && !o.HasDefaultValue)
-            .Where(o => !commandResult.HasOptionResult(o))
-            .Select(o => $"--{NormalizeName(o.Name)}")
-            .ToList();
+        var missingOptionsJoined = string.Join(
+            ", ",
+            commandResult.Command.Options
+                .Where(o => o.Required && !o.HasDefaultValue && !commandResult.HasOptionResult(o))
+                .Select(o => $"--{NameNormalization.NormalizeOptionName(o.Name)}"));
 
-        if (missingOptions.Count > 0)
+        if (!string.IsNullOrEmpty(missingOptionsJoined))
         {
             result.IsValid = false;
-            result.ErrorMessage = $"{MissingRequiredOptionsPrefix}{string.Join(", ", missingOptions)}";
+            result.ErrorMessage = $"{MissingRequiredOptionsPrefix}{missingOptionsJoined}";
             SetValidationError(commandResponse, result.ErrorMessage!);
             return result;
         }
@@ -127,8 +130,8 @@ public abstract class BaseCommand : IBaseCommand
                 {
                     try
                     {
-                        var matches = System.Text.RegularExpressions.Regex.Matches(msg, "--[A-Za-z0-9\\-]+");
-                        foreach (System.Text.RegularExpressions.Match m in matches)
+                        var matches = Regex.Matches(msg, "--[A-Za-z0-9\\-]+");
+                        foreach (Match m in matches)
                         {
                             var token = m.Value;
                             if (!string.IsNullOrWhiteSpace(token) && !requiredFromErrors.Contains(token))
@@ -161,8 +164,7 @@ public abstract class BaseCommand : IBaseCommand
         // Check logical requirements (e.g., resource group requirement)
         if (result.IsValid && _requiresResourceGroup)
         {
-            var hasRg = commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup);
-            if (!hasRg)
+            if (!commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup))
             {
                 result.IsValid = false;
                 result.ErrorMessage = $"{MissingRequiredOptionsPrefix}--resource-group";
@@ -181,8 +183,6 @@ public abstract class BaseCommand : IBaseCommand
             }
         }
     }
-
-    private static string NormalizeName(string? name) => (name ?? string.Empty).TrimStart('-', '/');
 
 
     // TODO: jongio - Design a better way for options to exist and either be required or not required.

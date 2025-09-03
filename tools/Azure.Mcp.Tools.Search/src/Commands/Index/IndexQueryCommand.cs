@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
@@ -44,9 +45,9 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : Globa
     protected override IndexQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Service = parseResult.GetValue(_serviceOption);
-        options.Index = parseResult.GetValue(_indexOption);
-        options.Query = parseResult.GetValue(_queryOption);
+        options.Service = parseResult.GetValueOrDefault(_serviceOption);
+        options.Index = parseResult.GetValueOrDefault(_indexOption);
+        options.Query = parseResult.GetValueOrDefault(_queryOption);
         return options;
     }
 

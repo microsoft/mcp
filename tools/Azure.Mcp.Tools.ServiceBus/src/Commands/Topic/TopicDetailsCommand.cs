@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Options;
@@ -44,8 +45,8 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
     protected override BaseTopicOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TopicName = parseResult.GetValue(_topicOption);
-        options.Namespace = parseResult.GetValue(_namespaceOption);
+        options.TopicName = parseResult.GetValueOrDefault(_topicOption);
+        options.Namespace = parseResult.GetValueOrDefault(_namespaceOption);
         return options;
     }
 

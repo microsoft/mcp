@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -32,18 +33,16 @@ public sealed class CommandFactoryToolLoader(
 
     public const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
 
-    private static string NormalizeName(string? name) => (name ?? string.Empty).TrimStart('-', '/');
-
-    private static bool IsRawMcpToolInputOption(global::System.CommandLine.Option option)
+    private static bool IsRawMcpToolInputOption(Option option)
     {
-        if (string.Equals(NormalizeName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
+    if (string.Equals(NameNormalization.NormalizeOptionName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
 
         foreach (var alias in option.Aliases)
         {
-            if (string.Equals(NormalizeName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -202,11 +201,11 @@ public sealed class CommandFactoryToolLoader(
                 foreach (var option in options)
                 {
                     // Use the CreatePropertySchema method to properly handle array types with items
-                    var propName = NormalizeName(option.Name);
+                    var propName = NameNormalization.NormalizeOptionName(option.Name);
                     schema.Properties.Add(propName, TypeToJsonTypeMapper.CreatePropertySchema(option.ValueType, option.Description));
                 }
 
-                schema.Required = [.. options.Where(p => p.Required).Select(p => NormalizeName(p.Name))];
+                schema.Required = [.. options.Where(p => p.Required).Select(p => NameNormalization.NormalizeOptionName(p.Name))];
             }
         }
 

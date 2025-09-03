@@ -64,8 +64,8 @@ public abstract class BaseClusterCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ClusterUri = parseResult.GetValue(_clusterUriOption);
-        options.ClusterName = parseResult.GetValue(_clusterNameOption);
+        options.ClusterUri = parseResult.GetValueOrDefault(_clusterUriOption);
+        options.ClusterName = parseResult.GetValueOrDefault(_clusterNameOption);
 
         return options;
     }

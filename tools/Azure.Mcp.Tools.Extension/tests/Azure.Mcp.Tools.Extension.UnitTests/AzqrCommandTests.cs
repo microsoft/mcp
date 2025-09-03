@@ -33,7 +33,7 @@ public sealed class AzqrCommandTests
         var collection = new ServiceCollection();
         collection.AddSingleton(_processService);
         collection.AddSingleton(_subscriptionService);
-        collection.AddSingleton<IDateTimeProvider>(_dateTimeProvider);
+        collection.AddSingleton(_dateTimeProvider);
         _serviceProvider = collection.BuildServiceProvider();
     }
 

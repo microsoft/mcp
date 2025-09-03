@@ -62,4 +62,15 @@ public static class CommandResultExtensions
         value = default;
         return false;
     }
+
+    public static T? GetValueOrDefault<T>(this CommandResult commandResult, Option<T> option)
+    {
+        if (commandResult.TryGetValue(option, out T? value))
+        {
+            return value;
+        }
+
+        // No explicit result and no option default; return null to indicate absence
+        return default(T?);
+    }
 }

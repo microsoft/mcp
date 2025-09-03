@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Redis.Options.ManagedRedis;
 
@@ -24,7 +25,7 @@ public abstract class BaseClusterCommand<
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Cluster = parseResult.GetValue(_clusterOption);
+        options.Cluster = parseResult.GetValueOrDefault(_clusterOption);
         return options;
     }
 }

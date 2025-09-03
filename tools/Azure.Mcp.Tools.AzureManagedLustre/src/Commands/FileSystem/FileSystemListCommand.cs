@@ -24,6 +24,13 @@ public sealed class FileSystemListCommand(ILogger<FileSystemListCommand> logger)
 
     public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
 
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        UseResourceGroup();
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -59,7 +66,7 @@ public sealed class FileSystemListCommand(ILogger<FileSystemListCommand> logger)
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => reqEx.Status,
+        RequestFailedException reqEx => reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
 

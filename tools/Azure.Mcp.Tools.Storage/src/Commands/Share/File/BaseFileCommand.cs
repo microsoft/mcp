@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Share.File;
 
@@ -23,7 +24,7 @@ public abstract class BaseFileCommand<
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DirectoryPath = parseResult.GetValue(_directoryPathOption);
+        options.DirectoryPath = parseResult.GetValueOrDefault(_directoryPathOption);
         return options;
     }
 }

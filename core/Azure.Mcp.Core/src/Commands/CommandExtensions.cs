@@ -22,7 +22,7 @@ public static class CommandExtensions
     {
         if (arguments == null || arguments.Count == 0)
         {
-            return command.Parse(Array.Empty<string>());
+            return command.Parse([]);
         }
 
         var args = new List<string>();
@@ -31,8 +31,8 @@ public static class CommandExtensions
         {
             // lookup by normalized name or any alias (case-insensitive)
             var option = command.Options.FirstOrDefault(o =>
-                string.Equals(NormalizeName(o.Name), key, StringComparison.OrdinalIgnoreCase)
-                || o.Aliases.Any(a => string.Equals(NormalizeName(a), key, StringComparison.OrdinalIgnoreCase)));
+                string.Equals(NameNormalization.NormalizeOptionName(o.Name), key, StringComparison.OrdinalIgnoreCase)
+                || o.Aliases.Any(a => string.Equals(NameNormalization.NormalizeOptionName(a), key, StringComparison.OrdinalIgnoreCase)));
 
             if (option == null)
             {
@@ -81,15 +81,15 @@ public static class CommandExtensions
 
         // Try to find an option named "raw-mcp-tool-input" (normalized), otherwise fall back to first option
         var option = command.Options.FirstOrDefault(o =>
-            string.Equals(NormalizeName(o.Name), "raw-mcp-tool-input", StringComparison.OrdinalIgnoreCase)
-            || o.Aliases.Any(a => string.Equals(NormalizeName(a), "raw-mcp-tool-input", StringComparison.OrdinalIgnoreCase))
+            string.Equals(NameNormalization.NormalizeOptionName(o.Name), "raw-mcp-tool-input", StringComparison.OrdinalIgnoreCase)
+            || o.Aliases.Any(a => string.Equals(NameNormalization.NormalizeOptionName(a), "raw-mcp-tool-input", StringComparison.OrdinalIgnoreCase))
         );
 
         option ??= command.Options.FirstOrDefault();
 
         if (option == null)
         {
-            return command.Parse(Array.Empty<string>());
+            return command.Parse([]);
         }
 
         args.Add(GetOptionToken(option));
@@ -126,8 +126,6 @@ public static class CommandExtensions
     {
         return CollectionTypeHelper.IsArrayType(option.ValueType);
     }
-
-    private static string NormalizeName(string n) => (n ?? string.Empty).TrimStart('-', '/');
 
     private static string GetOptionToken(Option option)
     {

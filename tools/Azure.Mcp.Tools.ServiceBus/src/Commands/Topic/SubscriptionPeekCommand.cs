@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Topic;
@@ -51,10 +52,10 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
     protected override SubscriptionPeekOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SubscriptionName = parseResult.GetValue(_subscriptionNameOption);
-        options.TopicName = parseResult.GetValue(_topicOption);
-        options.Namespace = parseResult.GetValue(_namespaceOption);
-        options.MaxMessages = parseResult.GetValue(_maxMessagesOption);
+        options.SubscriptionName = parseResult.GetValueOrDefault(_subscriptionNameOption);
+        options.TopicName = parseResult.GetValueOrDefault(_topicOption);
+        options.Namespace = parseResult.GetValueOrDefault(_namespaceOption);
+        options.MaxMessages = parseResult.GetValueOrDefault(_maxMessagesOption);
         return options;
     }
 

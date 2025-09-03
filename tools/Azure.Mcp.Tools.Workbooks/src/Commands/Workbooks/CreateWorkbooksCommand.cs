@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
@@ -45,9 +46,9 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
     protected override CreateWorkbookOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DisplayName = parseResult.GetValue(_displayNameOption);
-        options.SerializedContent = parseResult.GetValue(_serializedContentOption);
-        options.SourceId = parseResult.GetValue(_sourceIdOption);
+        options.DisplayName = parseResult.GetValueOrDefault(_displayNameOption);
+        options.SerializedContent = parseResult.GetValueOrDefault(_serializedContentOption);
+        options.SourceId = parseResult.GetValueOrDefault(_sourceIdOption);
         return options;
     }
 

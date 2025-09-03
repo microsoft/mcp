@@ -210,7 +210,7 @@ public class BlobUploadCommandTests
     public async Task ExecuteAsync_AccessDeniedError_ReturnsError()
     {
         // Arrange
-        var requestFailedException = new Azure.RequestFailedException(403, "Access denied");
+        var requestFailedException = new RequestFailedException(403, "Access denied");
         _storageService.UploadBlob(
             Arg.Any<string>(),
             Arg.Any<string>(),

@@ -115,7 +115,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesStorageAccountNameAlreadyExists()
     {
         // Arrange
-        var conflictException = new Azure.RequestFailedException(409, "Storage account name already exists");
+        var conflictException = new RequestFailedException(409, "Storage account name already exists");
 
         _storageService.CreateStorageAccount(
             Arg.Any<string>(),
@@ -146,7 +146,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesResourceGroupNotFound()
     {
         // Arrange
-        var notFoundException = new Azure.RequestFailedException(404, "Resource group not found");
+        var notFoundException = new RequestFailedException(404, "Resource group not found");
 
         _storageService.CreateStorageAccount(
             Arg.Any<string>(),
@@ -177,7 +177,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
-        var authException = new Azure.RequestFailedException(403, "Authorization failed");
+        var authException = new RequestFailedException(403, "Authorization failed");
 
         _storageService.CreateStorageAccount(
             Arg.Any<string>(),

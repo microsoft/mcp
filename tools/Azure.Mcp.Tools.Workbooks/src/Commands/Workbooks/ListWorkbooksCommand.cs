@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
@@ -45,9 +46,9 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
     protected override ListWorkbooksOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Kind = parseResult.GetValue(_kindOption);
-        options.Category = parseResult.GetValue(_categoryOption);
-        options.SourceId = parseResult.GetValue(_sourceIdOption);
+        options.Kind = parseResult.GetValueOrDefault(_kindOption);
+        options.Category = parseResult.GetValueOrDefault(_categoryOption);
+        options.SourceId = parseResult.GetValueOrDefault(_sourceIdOption);
         return options;
     }
 

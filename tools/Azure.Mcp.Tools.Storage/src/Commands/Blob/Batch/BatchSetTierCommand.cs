@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Batch;
@@ -41,8 +42,8 @@ public sealed class BatchSetTierCommand(ILogger<BatchSetTierCommand> logger) : B
     protected override BatchSetTierOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Tier = parseResult.GetValue(_tierOption);
-        options.BlobNames = parseResult.GetValue(_blobsOption);
+        options.Tier = parseResult.GetValueOrDefault(_tierOption);
+        options.BlobNames = parseResult.GetValueOrDefault(_blobsOption);
         return options;
     }
 

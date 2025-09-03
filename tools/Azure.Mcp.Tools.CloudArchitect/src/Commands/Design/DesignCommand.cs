@@ -122,7 +122,7 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
 
         try
         {
-            var state = JsonSerializer.Deserialize<ArchitectureDesignToolState>(stateJson, CloudArchitectJsonContext.Default.ArchitectureDesignToolState);
+            var state = JsonSerializer.Deserialize(stateJson, CloudArchitectJsonContext.Default.ArchitectureDesignToolState);
             return state ?? new ArchitectureDesignToolState();
         }
         catch (JsonException ex)

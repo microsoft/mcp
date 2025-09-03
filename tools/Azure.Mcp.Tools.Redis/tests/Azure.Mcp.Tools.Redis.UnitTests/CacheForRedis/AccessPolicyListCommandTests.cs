@@ -47,7 +47,7 @@ public class AccessPolicyListCommandTests
             "sub123",
             Arg.Any<string>(),
             Arg.Any<AuthMethod>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions>())
+            Arg.Any<Core.Options.RetryPolicyOptions>())
             .Returns(expectedAssignments);
 
         var command = new AccessPolicyListCommand(_logger);
@@ -83,7 +83,7 @@ public class AccessPolicyListCommandTests
             "sub123",
             Arg.Any<string>(),
             Arg.Any<AuthMethod>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions>())
+            Arg.Any<Core.Options.RetryPolicyOptions>())
             .Returns([]);
 
         var command = new AccessPolicyListCommand(_logger);
@@ -105,7 +105,7 @@ public class AccessPolicyListCommandTests
             "sub123",
             Arg.Any<string>(),
             Arg.Any<AuthMethod>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions>())
+            Arg.Any<Core.Options.RetryPolicyOptions>())
             .ThrowsAsync(new Exception("Test error"));
 
         var command = new AccessPolicyListCommand(_logger);

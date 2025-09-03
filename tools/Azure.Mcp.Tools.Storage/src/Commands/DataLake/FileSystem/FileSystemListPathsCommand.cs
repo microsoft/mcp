@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.DataLake.FileSystem;
@@ -38,8 +39,8 @@ public sealed class FileSystemListPathsCommand(ILogger<FileSystemListPathsComman
     protected override ListPathsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.FilterPath = parseResult.GetValue(StorageOptionDefinitions.FilterPath);
-        options.Recursive = parseResult.GetValue(StorageOptionDefinitions.Recursive);
+        options.FilterPath = parseResult.GetValueOrDefault(StorageOptionDefinitions.FilterPath);
+        options.Recursive = parseResult.GetValueOrDefault(StorageOptionDefinitions.Recursive);
         return options;
     }
 

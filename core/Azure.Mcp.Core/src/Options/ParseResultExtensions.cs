@@ -2,25 +2,14 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
+using Azure.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Core.Options;
 
 public static class ParseResultExtensions
 {
-    public static bool HasAnyRetryOptions(this System.CommandLine.ParseResult parseResult)
+    public static bool HasAnyRetryOptions(this ParseResult parseResult)
     {
-        // Compare normalized names (trim leading '-' or '/') so we don't depend on alias formatting
-        static string Normalize(string s) => (s ?? string.Empty).TrimStart('-', '/');
-
-        var retryNames = new[]
-        {
-            Models.Option.OptionDefinitions.RetryPolicy.DelayName,
-            Models.Option.OptionDefinitions.RetryPolicy.MaxDelayName,
-            Models.Option.OptionDefinitions.RetryPolicy.MaxRetriesName,
-            Models.Option.OptionDefinitions.RetryPolicy.ModeName,
-            Models.Option.OptionDefinitions.RetryPolicy.NetworkTimeoutName,
-        };
-
         foreach (var child in parseResult.CommandResult.Children)
         {
             if (child is OptionResult optionResult)
@@ -31,16 +20,31 @@ public static class ParseResultExtensions
                     continue;
                 }
 
-                var name = Normalize(option.Name);
-                if (retryNames.Any(rn => string.Equals(rn, name, StringComparison.OrdinalIgnoreCase)))
+                var name = NameNormalization.NormalizeOptionName(option.Name);
+                if (RetryOptionNames.Contains(name))
                     return true;
 
-                var aliases = option.Aliases ?? Array.Empty<string>();
-                if (aliases.Any(a => retryNames.Any(rn => string.Equals(rn, Normalize(a), StringComparison.OrdinalIgnoreCase))))
-                    return true;
+                var aliases = option.Aliases ?? [];
+                foreach (var alias in aliases)
+                {
+                    var normalized = NameNormalization.NormalizeOptionName(alias);
+                    if (RetryOptionNames.Contains(normalized))
+                    {
+                        return true;
+                    }
+                }
             }
         }
 
         return false;
     }
+
+    private static readonly HashSet<string> RetryOptionNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        NameNormalization.NormalizeOptionName(Models.Option.OptionDefinitions.RetryPolicy.DelayName),
+        NameNormalization.NormalizeOptionName(Models.Option.OptionDefinitions.RetryPolicy.MaxDelayName),
+        NameNormalization.NormalizeOptionName(Models.Option.OptionDefinitions.RetryPolicy.MaxRetriesName),
+        NameNormalization.NormalizeOptionName(Models.Option.OptionDefinitions.RetryPolicy.ModeName),
+        NameNormalization.NormalizeOptionName(Models.Option.OptionDefinitions.RetryPolicy.NetworkTimeoutName),
+    };
 }

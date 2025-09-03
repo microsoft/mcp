@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
@@ -60,14 +61,14 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     protected override AccountCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValue(_accountCreateOption);
-        options.Location = parseResult.GetValue(_locationOption);
-        options.Sku = parseResult.GetValue(_skuOption);
-        options.Kind = parseResult.GetValue(_kindOption);
-        options.AccessTier = parseResult.GetValue(_accessTierOption);
-        options.EnableHttpsTrafficOnly = parseResult.GetValue(_enableHttpsTrafficOnlyOption);
-        options.AllowBlobPublicAccess = parseResult.GetValue(_allowBlobPublicAccessOption);
-        options.EnableHierarchicalNamespace = parseResult.GetValue(_enableHierarchicalNamespaceOption);
+        options.Account = parseResult.GetValueOrDefault(_accountCreateOption);
+        options.Location = parseResult.GetValueOrDefault(_locationOption);
+        options.Sku = parseResult.GetValueOrDefault(_skuOption);
+        options.Kind = parseResult.GetValueOrDefault(_kindOption);
+        options.AccessTier = parseResult.GetValueOrDefault(_accessTierOption);
+        options.EnableHttpsTrafficOnly = parseResult.GetValueOrDefault(_enableHttpsTrafficOnlyOption);
+        options.AllowBlobPublicAccess = parseResult.GetValueOrDefault(_allowBlobPublicAccessOption);
+        options.EnableHierarchicalNamespace = parseResult.GetValueOrDefault(_enableHierarchicalNamespaceOption);
         return options;
     }
 
@@ -121,19 +122,19 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     // Implementation-specific error handling
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 409 =>
+        RequestFailedException reqEx when reqEx.Status == 409 =>
             "Storage account name already exists. Choose a different name.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed creating the storage account. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == 404 =>
             "Resource group not found. Verify the resource group exists and you have access.",
-        Azure.RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => reqEx.Status,
+        RequestFailedException reqEx => reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
 

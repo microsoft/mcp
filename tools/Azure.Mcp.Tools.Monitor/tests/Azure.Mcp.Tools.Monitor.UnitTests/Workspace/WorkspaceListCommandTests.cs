@@ -101,7 +101,7 @@ public sealed class WorkspaceListCommandTests
         await _monitorService.Received(1).ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<WorkspaceListCommand.WorkspaceListCommandResult>(json, MonitorJsonContext.Default.WorkspaceListCommandResult);
+        var result = JsonSerializer.Deserialize(json, MonitorJsonContext.Default.WorkspaceListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedWorkspaces.Count, result.Workspaces.Count);

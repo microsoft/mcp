@@ -60,7 +60,7 @@ public class FirewallRuleListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+                Arg.Any<Core.Options.RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new List<SqlServerFirewallRule>());
         }
@@ -99,7 +99,7 @@ public class FirewallRuleListCommandTests
             "testserver",
             "testrg",
             "testsub",
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(firewallRules);
 
@@ -123,7 +123,7 @@ public class FirewallRuleListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new List<SqlServerFirewallRule>());
 
@@ -147,7 +147,7 @@ public class FirewallRuleListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<SqlServerFirewallRule>>(new Exception("Test error")));
 
@@ -167,12 +167,12 @@ public class FirewallRuleListCommandTests
     public async Task ExecuteAsync_Handles404Error()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(404, "Server not found");
+        var requestException = new RequestFailedException(404, "Server not found");
         _service.ListFirewallRulesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<SqlServerFirewallRule>>(requestException));
 
@@ -191,12 +191,12 @@ public class FirewallRuleListCommandTests
     public async Task ExecuteAsync_Handles403Error()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(403, "Access denied");
+        var requestException = new RequestFailedException(403, "Access denied");
         _service.ListFirewallRulesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<SqlServerFirewallRule>>(requestException));
 
@@ -223,7 +223,7 @@ public class FirewallRuleListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new List<SqlServerFirewallRule>());
 
@@ -238,7 +238,7 @@ public class FirewallRuleListCommandTests
             serverName,
             resourceGroup,
             subscription,
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -256,7 +256,7 @@ public class FirewallRuleListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(firewallRules);
 
@@ -275,7 +275,7 @@ public class FirewallRuleListCommandTests
             "testserver",
             "testrg",
             "testsub",
-            Arg.Is<Azure.Mcp.Core.Options.RetryPolicyOptions?>(r => r != null && r.MaxRetries == 3),
+            Arg.Is<Core.Options.RetryPolicyOptions?>(r => r != null && r.MaxRetries == 3),
             Arg.Any<CancellationToken>());
     }
 }

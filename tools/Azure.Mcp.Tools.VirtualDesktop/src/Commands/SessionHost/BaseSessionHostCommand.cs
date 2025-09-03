@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.VirtualDesktop.Options;
 using Azure.Mcp.Tools.VirtualDesktop.Options.SessionHost;
 
@@ -21,7 +22,7 @@ public abstract class BaseSessionHostCommand
     protected override SessionHostUserSessionListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SessionHostName = parseResult.GetValue(_sessionHostOption);
+        options.SessionHostName = parseResult.GetValueOrDefault(_sessionHostOption);
         return options;
     }
 }

@@ -356,7 +356,7 @@ public class SessionHostUserSessionListCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException_NotFound()
     {
         // Arrange
-        var exception = new Azure.RequestFailedException(404, "Session host not found");
+        var exception = new RequestFailedException(404, "Session host not found");
         _virtualDesktopService.ListUserSessionsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -388,7 +388,7 @@ public class SessionHostUserSessionListCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException_Forbidden()
     {
         // Arrange
-        var exception = new Azure.RequestFailedException(403, "Access denied");
+        var exception = new RequestFailedException(403, "Access denied");
         _virtualDesktopService.ListUserSessionsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),

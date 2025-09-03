@@ -80,7 +80,7 @@ public sealed class FunctionAppGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<FunctionAppGetCommand.FunctionAppGetCommandResult>(json, FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
+        var result = JsonSerializer.Deserialize(json, FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expected.Name, result.FunctionApp.Name);
         Assert.Equal(expected.ResourceGroupName, result.FunctionApp.ResourceGroupName);

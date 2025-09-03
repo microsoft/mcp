@@ -73,12 +73,12 @@ public static class AzdResourceLogService
         var yamlContent = File.ReadAllText(azureYamlPath);
 
         using var stringReader = new StringReader(yamlContent);
-        var parser = new YamlDotNet.Core.Parser(stringReader);
+        var parser = new Parser(stringReader);
 
         return ParseAzureYamlServices(parser);
     }
 
-    private static Dictionary<string, Service> ParseAzureYamlServices(YamlDotNet.Core.Parser parser)
+    private static Dictionary<string, Service> ParseAzureYamlServices(Parser parser)
     {
         var result = new Dictionary<string, Service>();
 
@@ -157,7 +157,7 @@ public static class AzdResourceLogService
         return result;
     }
 
-    private static void SkipValue(YamlDotNet.Core.Parser parser)
+    private static void SkipValue(Parser parser)
     {
         if (parser.Accept<Scalar>(out _))
         {

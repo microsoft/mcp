@@ -142,7 +142,7 @@ public class DatabaseShowCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(404, "Database not found");
+        var requestException = new RequestFailedException(404, "Database not found");
         _sqlService.GetDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),

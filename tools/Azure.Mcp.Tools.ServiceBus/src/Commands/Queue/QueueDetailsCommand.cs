@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Options;
@@ -44,8 +45,8 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
     protected override BaseQueueOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Name = parseResult.GetValue(_queueOption);
-        options.Namespace = parseResult.GetValue(_namespaceOption);
+        options.Name = parseResult.GetValueOrDefault(_queueOption);
+        options.Namespace = parseResult.GetValueOrDefault(_namespaceOption);
         return options;
     }
 

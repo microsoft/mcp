@@ -129,7 +129,7 @@ public sealed class TableListCommandTests
             Arg.Any<RetryPolicyOptions>());
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TableListCommand.TableListCommandResult>(json, MonitorJsonContext.Default.TableListCommandResult);
+        var result = JsonSerializer.Deserialize(json, MonitorJsonContext.Default.TableListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedTables.Count, result.Tables.Count);

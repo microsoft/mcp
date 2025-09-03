@@ -181,7 +181,7 @@ public class ContainerCreateCommandTests
     public async Task ExecuteAsync_HandlesConflictException()
     {
         // Arrange
-        var conflictException = new Azure.RequestFailedException(409, "Container already exists");
+        var conflictException = new RequestFailedException(409, "Container already exists");
         _storageService.CreateContainer(Arg.Is(_knownAccount), Arg.Is(_knownContainer),
             Arg.Is(_knownSubscription), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(conflictException);
@@ -215,7 +215,7 @@ public class ContainerCreateCommandTests
             ?.SetValue(properties, DateTimeOffset.UtcNow);
         typeof(BlobContainerProperties).GetProperty("ETag", System.Reflection.BindingFlags.Instance
             | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)
-            ?.SetValue(properties, new Azure.ETag("\"0x8D12345678901234\""));
+            ?.SetValue(properties, new ETag("\"0x8D12345678901234\""));
         typeof(BlobContainerProperties).GetProperty("PublicAccess", System.Reflection.BindingFlags.Instance
             | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)
             ?.SetValue(properties, PublicAccessType.None);

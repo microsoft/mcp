@@ -226,7 +226,7 @@ public class BatchSetTierCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException_NotFound()
     {
         // Arrange
-        var requestFailedException = new Azure.RequestFailedException(404, "Not Found");
+        var requestFailedException = new RequestFailedException(404, "Not Found");
 
         _storageService.SetBlobTierBatch(
             Arg.Any<string>(),
@@ -259,7 +259,7 @@ public class BatchSetTierCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException_Forbidden()
     {
         // Arrange
-        var requestFailedException = new Azure.RequestFailedException(403, "Forbidden");
+        var requestFailedException = new RequestFailedException(403, "Forbidden");
 
         _storageService.SetBlobTierBatch(
             Arg.Any<string>(),

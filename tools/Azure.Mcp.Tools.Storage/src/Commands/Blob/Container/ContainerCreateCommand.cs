@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
@@ -37,7 +38,7 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
     protected override ContainerCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.BlobContainerPublicAccess = parseResult.GetValue(_blobContainerPublicAccessOption);
+        options.BlobContainerPublicAccess = parseResult.GetValueOrDefault(_blobContainerPublicAccessOption);
         return options;
     }
 

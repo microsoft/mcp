@@ -164,7 +164,7 @@ public class AccountDetailsCommandTests
 
         _storageService.GetStorageAccountDetails(
             Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .ThrowsAsync(new Azure.RequestFailedException(404, "Storage account not found"));
+            .ThrowsAsync(new RequestFailedException(404, "Storage account not found"));
 
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
@@ -185,7 +185,7 @@ public class AccountDetailsCommandTests
 
         _storageService.GetStorageAccountDetails(
             Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .ThrowsAsync(new Azure.RequestFailedException(403, "Authorization failed"));
+            .ThrowsAsync(new RequestFailedException(403, "Authorization failed"));
 
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 

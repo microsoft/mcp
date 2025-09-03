@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Share.File;
@@ -37,7 +38,7 @@ public sealed class FileListCommand(ILogger<FileListCommand> logger) : BaseFileC
     protected override FileListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Prefix = parseResult.GetValue(StorageOptionDefinitions.Prefix);
+        options.Prefix = parseResult.GetValueOrDefault(StorageOptionDefinitions.Prefix);
         return options;
     }
 
