@@ -632,6 +632,16 @@ azmcp grafana list --subscription <subscription>
 ### Azure Marketplace Operations
 
 ```bash
+# List marketplace products available to a subscription
+azmcp marketplace product list --subscription <subscription> \
+                               [--language <language-code>] \
+                               [--search <terms>] \
+                               [--filter <odata-filter>] \
+                               [--orderby <odata-orderby>] \
+                               [--select <odata-select>] \
+                               [--expand <odata-expand>] \
+                               [--next-cursor <pagination-cursor>]
+
 # Get details about an Azure Marketplace product
 azmcp marketplace product get --subscription <subscription> \
                               --product-id <product-id> \
@@ -771,7 +781,7 @@ azmcp monitor metrics query --subscription <subscription> \
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 azmcp azuremanagedlustre filesystem list --subscription <subscription> \
-                                      --resource-group <resource-group> 
+                                      --resource-group <resource-group>
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
 azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \

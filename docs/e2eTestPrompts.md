@@ -222,6 +222,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | azmcp_marketplace_product_get | Get details about marketplace product <product_name> |
+| azmcp_marketplace_product_list | Search for Microsoft products in the marketplace |
+| azmcp_marketplace_product_list | Show me marketplace products from publisher <publisher_name> |
 
 ## Azure MCP Best Practices
 

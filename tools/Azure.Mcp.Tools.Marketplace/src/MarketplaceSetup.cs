@@ -32,5 +32,7 @@ public class MarketplaceSetup : IAreaSetup
         // Register Product commands
         product.AddCommand("get", new ProductGetCommand(
             loggerFactory.CreateLogger<ProductGetCommand>()));
+        product.AddCommand("list", new ProductListCommand(
+            loggerFactory.CreateLogger<ProductListCommand>()));
     }
 }

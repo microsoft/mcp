@@ -32,8 +32,8 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
 
     public override string Description =>
         """
-        Retrieves a single private product (offer) for a given subscription from Azure Marketplace.
-        Returns detailed information about the specified marketplace product including plans, pricing, and metadata.
+        Retrieves detailed information about a specific Azure Marketplace product (offer) for a given subscription,
+         including available plans, pricing, and product metadata.
         """;
 
     public override string Title => CommandTitle;
