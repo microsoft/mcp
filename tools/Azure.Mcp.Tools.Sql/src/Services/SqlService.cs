@@ -421,7 +421,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
     private static SqlServerFirewallRule ConvertToSqlFirewallRuleModel(JsonElement item)
     {
-        SqlFirewallRuleData? firewallRule = SqlFirewallRuleData.FromJson(item);
+        Azure.Mcp.Tools.Sql.Services.Models.SqlFirewallRuleData? firewallRule = Azure.Mcp.Tools.Sql.Services.Models.SqlFirewallRuleData.FromJson(item);
         if (firewallRule == null)
             throw new InvalidOperationException("Failed to parse SQL firewall rule data");
 
