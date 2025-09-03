@@ -90,11 +90,6 @@ function CreateTestSolution {
 }
 
 function Create-CoverageReport {
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$TestResultsPath
-    )
-
     # Find the coverage file
     $coverageFile = Get-ChildItem -Path $TestResultsPath -Recurse -Filter "coverage.cobertura.xml"
     | Where-Object { $_.FullName.Replace('\','/') -notlike "*/in/*" }
@@ -281,7 +276,7 @@ $testExitCode = $LastExitCode
 
 # Coverage Report Generation - only if coverage collection was enabled
 if ($CollectCoverage) {
-    Create-CoverageReport -TestResultsPath $TestResultsPath -OpenReport:$OpenReport
+    Create-CoverageReport
 }
 
 exit $testExitCode
