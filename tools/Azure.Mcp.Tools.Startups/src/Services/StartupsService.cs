@@ -11,6 +11,7 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.Startups.Options;
 
 namespace Azure.Mcp.Tools.Startups.Services
 {
@@ -21,70 +22,56 @@ namespace Azure.Mcp.Tools.Startups.Services
 
         // Deploy command
         public async Task<StartupsDeployResources> DeployStaticWebAsync(
-            string tenantId,
-            string subscription,
-            string storageAccount,
-            string resourceGroup,
-            string sourcePath,
+            StartupsDeployOptions options,
             RetryPolicyOptions retryPolicy,
-            bool overwrite = false,
             IProgress<string>? progress = null
         )
         {
             progress?.Report("Validating source path");
+            if (options.SourcePath == null || !Directory.Exists(options.SourcePath))
+            {
+                throw new DirectoryNotFoundException($"Source directory is not specified or does not exist");
+            }
+
             progress?.Report("Authenticating with Azure");
             progress?.Report("Creating/updating storage account");
             progress?.Report("Enabling static website hosting");
-            var fileCount = Directory.Exists(sourcePath)
-                ? Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories).Length
-                : 0;
+            var fileCount = Directory.GetFiles(options.SourcePath, "*", SearchOption.AllDirectories).Length;
             progress?.Report($"Uploading {fileCount} files");
             progress?.Report("Deployment completed successfully");
 
-            ValidateRequiredParameters(subscription, storageAccount, resourceGroup, sourcePath);
-
             // Storage account name validation
-            if (!IsValidStorageAccountName(storageAccount))
+            if (string.IsNullOrEmpty(options.StorageAccount) || !IsValidStorageAccountName(options.StorageAccount))
             {
                 throw new ArgumentException("Storage account name must be between 3-24 characters long and only contain letters and numbers");
             }
 
             // Source path validation
-            if (!Directory.Exists(sourcePath))
+            if (!Directory.GetFiles(options.SourcePath, "*", SearchOption.AllDirectories).Any())
             {
-                throw new DirectoryNotFoundException($"Source directory '{sourcePath}' does not exist");
-            }
-
-            if (!Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories).Any())
-            {
-                throw new ArgumentException($"Source directory '{sourcePath}' is empty");
-            }
-
-            if (!Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories).Any())
-            {
-                throw new ArgumentException($"Source directory '{sourcePath}' is empty");
+                throw new ArgumentException($"Source directory '{options.SourcePath}' is empty");
             }
 
             // Get subscription and resource group
-            var armClient = await CreateArmClientAsync(tenantId, retryPolicy);
-            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            var armClient = await CreateArmClientAsync(options.Tenant, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(options.Subscription));
+            var resource = await subscriptionResource.GetResourceGroupAsync(options.ResourceGroup);
 
             // Get or create storage account
             var storageAccounts = resource.Value.GetStorageAccounts();
             StorageAccountResource storageAccountResource;
 
-            if (await storageAccounts.ExistsAsync(storageAccount))
+            if (await storageAccounts.ExistsAsync(options.StorageAccount))
             {
-                storageAccountResource = await storageAccounts.GetAsync(storageAccount, null);
+                storageAccountResource = await storageAccounts.GetAsync(options.StorageAccount, null);
             }
             else
             {
-                var availability = await subscriptionResource.CheckStorageAccountNameAvailabilityAsync(new StorageAccountNameAvailabilityContent(storageAccount));
+                var availability = await subscriptionResource.CheckStorageAccountNameAvailabilityAsync(new StorageAccountNameAvailabilityContent(options.StorageAccount));
 
                 if (availability.Value.IsNameAvailable != true)
                 {
-                    throw new ArgumentException($"Storage account name '{storageAccount}' is not available globally due to {availability.Value.Reason}. Please choose a different name");
+                    throw new ArgumentException($"Storage account name '{options.StorageAccount}' is not available globally due to {availability.Value.Reason}. Please choose a different name");
                 }
                 // Create storage account with static website support
                 var data = new StorageAccountCreateOrUpdateContent(
@@ -97,7 +84,7 @@ namespace Azure.Mcp.Tools.Startups.Services
                     AllowBlobPublicAccess = false
                 };
 
-                storageAccountResource = (await storageAccounts.CreateOrUpdateAsync(WaitUntil.Completed, storageAccount, data)).Value;
+                storageAccountResource = (await storageAccounts.CreateOrUpdateAsync(WaitUntil.Completed, options.StorageAccount, data)).Value;
             }
 
             // Get storage account connection string
@@ -106,19 +93,19 @@ namespace Azure.Mcp.Tools.Startups.Services
             {
                 keys.Add(key);
             }
-            var connectionString = $"DefaultEndpointsProtocol=https;AccountName={storageAccount};AccountKey={keys.First().Value};EndpointSuffix=core.windows.net";
+            var connectionString = $"DefaultEndpointsProtocol=https;AccountName={options.StorageAccount};AccountKey={keys.First().Value};EndpointSuffix=core.windows.net";
 
             // Enable static website hosting and upload files
             await EnableStaticWebsiteAsync(connectionString, cancellationToken: default);
-            await UploadFilesAsync(connectionString, sourcePath, overwrite, cancellationToken: default);
+            await UploadFilesAsync(connectionString, options.SourcePath, options.Overwrite, cancellationToken: default);
 
             var websiteUrl = storageAccountResource.Data.PrimaryEndpoints.WebUri?.ToString() ??
-                 $"https://{storageAccount}.web.core.windows.net/";
-            var portalUrl = $"https://portal.azure.com/#@{tenantId}/resource/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccount}/staticwebsite";
-            var containerUrl = $"https://portal.azure.com/#view/Microsoft_Azure_Storage/ContainerMenuBlade/~/overview/storageAccountId/%2Fsubscriptions%2F{subscription}%2FresourceGroups%2F{resourceGroup}%2Fproviders%2FMicrosoft.Storage%2FstorageAccounts%2F{storageAccount}/path/%24web";
+                 $"https://{options.StorageAccount}.web.core.windows.net/";
+            var portalUrl = $"https://portal.azure.com/#@{options.Tenant}/resource/subscriptions/{options.Subscription}/resourceGroups/{options.ResourceGroup}/providers/Microsoft.Storage/storageAccounts/{options.StorageAccount}/staticwebsite";
+            var containerUrl = $"https://portal.azure.com/#view/Microsoft_Azure_Storage/ContainerMenuBlade/~/overview/storageAccountId/%2Fsubscriptions%2F{options.Subscription}%2FresourceGroups%2F{options.ResourceGroup}%2Fproviders%2FMicrosoft.Storage%2FstorageAccounts%2F{options.StorageAccount}/path/%24web";
 
             return new StartupsDeployResources(
-                StorageAccount: storageAccount,
+                StorageAccount: options.StorageAccount,
                 Container: "$web",
                 Status: "Success",
                 WebsiteUrl: websiteUrl,

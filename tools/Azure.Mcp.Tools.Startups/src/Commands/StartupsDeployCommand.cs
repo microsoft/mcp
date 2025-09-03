@@ -14,7 +14,6 @@ public sealed class StartupsDeployCommand(ILogger<StartupsDeployCommand> logger)
     private const string CommandTitle = "Deploy Static Website for Startups";
     private readonly ILogger<StartupsDeployCommand> _logger = logger;
     private readonly Option<string> _storageAccount = StartupsOptionDefinitions.StorageAccount;
-    private readonly Option<string> _resourceGroup = StartupsOptionDefinitions.ResourceGroup;
     private readonly Option<string> _sourcePath = StartupsOptionDefinitions.SourcePath;
     private readonly Option<bool> _overwrite = StartupsOptionDefinitions.Overwrite;
     public override string Name => "deploy";
@@ -39,7 +38,6 @@ public sealed class StartupsDeployCommand(ILogger<StartupsDeployCommand> logger)
 
         base.RegisterOptions(command);
         command.AddOption(_storageAccount);
-        command.AddOption(_resourceGroup);
         command.AddOption(_sourcePath);
         command.AddOption(_overwrite);
     }
@@ -48,7 +46,6 @@ public sealed class StartupsDeployCommand(ILogger<StartupsDeployCommand> logger)
     {
         var options = base.BindOptions(parseResult);
         options.StorageAccount = parseResult.GetValueForOption(_storageAccount);
-        options.ResourceGroup = parseResult.GetValueForOption(_resourceGroup);
         options.SourcePath = parseResult.GetValueForOption(_sourcePath);
         options.Overwrite = parseResult.GetValueForOption(_overwrite);
         return options;
@@ -70,13 +67,9 @@ public sealed class StartupsDeployCommand(ILogger<StartupsDeployCommand> logger)
 
             var startupsService = context.GetService<IStartupsService>();
             var result = await startupsService.DeployStaticWebAsync(
-                options.Tenant!,
-                options.Subscription!,
-                options.StorageAccount!,
-                options.ResourceGroup!,
-                options.SourcePath!,
+                options,
                 options.RetryPolicy!,
-                options.Overwrite!);
+                null);
 
             _logger.LogInformation("Successfully deployed to storage account {StorageAccount}", options.StorageAccount);
             context.Response.Results = ResponseResult.Create(result, DeployJsonContext.Default.StartupsDeployResources);

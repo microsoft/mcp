@@ -5,19 +5,10 @@ namespace Azure.Mcp.Tools.Startups.Options;
 
 public static class StartupsOptionDefinitions
 {
-    public const string ResourceGroupParam = "resource-group";
     public const string StorageAccountParam = "storage-account";
     public const string SourcePathParam = "source-path";
 
     public const string OverwriteParam = "overwrite";
-
-    public static readonly Option<string> ResourceGroup = new(
-        $"--{ResourceGroupParam}",
-        "The name of the Azure resource group"
-    )
-    {
-        IsRequired = true
-    };
 
     public static readonly Option<string> StorageAccount = new(
         $"--{StorageAccountParam}",
