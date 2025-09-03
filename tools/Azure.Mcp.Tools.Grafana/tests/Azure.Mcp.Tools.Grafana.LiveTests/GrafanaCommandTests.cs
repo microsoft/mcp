@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+
+/*
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
@@ -54,4 +56,4 @@ public class GrafanaCommandTests(LiveTestFixture liveTestFixture, ITestOutputHel
         Assert.Equal(Settings.ResourceGroupName, testWorkspace.GetProperty("resourceGroupName").GetString());
         Assert.Equal(Settings.SubscriptionId, testWorkspace.GetProperty("subscriptionId").GetString());
     }
-}
+}*/

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+
+/*
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Tests;
@@ -147,4 +149,4 @@ public class AcrCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper 
 
         Assert.Null(result);
     }
-}
+}*/

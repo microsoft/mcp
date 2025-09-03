@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+
+/*
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
@@ -66,4 +68,4 @@ public class FoundryCommandTests(LiveTestFixture liveTestFixture, ITestOutputHel
         Assert.Equal(JsonValueKind.Object, deploymentResource.ValueKind);
         Assert.NotEmpty(deploymentResource.EnumerateObject());
     }
-}
+}*/

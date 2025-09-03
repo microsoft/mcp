@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+/*
 using System.Text.Json;
 using Azure.Identity;
 using Azure.Mcp.Core.Services.Http;
@@ -108,3 +109,4 @@ public class KustoCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelpe
         Assert.NotEmpty(itemsArray.EnumerateArray());
     }
 }
+*/

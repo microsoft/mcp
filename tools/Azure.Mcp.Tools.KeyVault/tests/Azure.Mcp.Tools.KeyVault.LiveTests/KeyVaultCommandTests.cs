@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+
+/*
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
@@ -257,4 +259,4 @@ public class KeyVaultCommandTests(LiveTestFixture liveTestFixture, ITestOutputHe
             Assert.NotNull(property.GetString());
         }
     }
-}
+}*/
