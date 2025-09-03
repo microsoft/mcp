@@ -59,7 +59,7 @@ jobs:
       Inline: |
         ./eng/scripts/Test-Code.ps1 `
           -TestType 'Live' `
-          -Path $(Path) `
+          -Path $(PathToTest) `
           -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
 
         exit $LastExitCode
@@ -71,7 +71,7 @@ jobs:
     displayName: "Publish Results"
     inputs:
       testResultsFiles: "$(Build.ArtifactStagingDirectory)/testResults/*.trx"
-      testRunTitle: "live-$(Path)"
+      testRunTitle: "live - $(PathToTest)"
       testResultsFormat: "VSTest"
       mergeTestResults: true
 

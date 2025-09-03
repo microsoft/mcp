@@ -129,7 +129,8 @@ try {
         }
 
         $testMatrix[$path] = [ordered]@{
-            Path = $path
+            # We can't use the name 'Path' here because it would override the Path environment variable in matrix based jobs
+            PathToTest = $path
             UnitTests = $hasUnitTests
             LiveTests = $hasLiveTests
             TestResources = $hasTestResources
