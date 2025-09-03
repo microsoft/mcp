@@ -14,4 +14,14 @@ public static class FabricOptionDefinitions
     {
         IsRequired = true
     };
+
+    public const string TopicName = "topic";
+
+    public static readonly Option<string> Topic = new(
+        $"--{TopicName}",
+        "The topic to get best practices for."
+    )
+    {
+        IsRequired = true
+    };
 }

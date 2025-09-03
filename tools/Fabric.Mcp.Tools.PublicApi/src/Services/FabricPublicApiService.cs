@@ -67,6 +67,13 @@ public class FabricPublicApiService(
         return EmbeddedResourceProviderService.GetEmbeddedResource(workloadItemDefinitionPath);
     }
 
+    public IEnumerable<string> GetTopicBestPractices(string topic)
+    {
+        _logger.LogInformation("Getting best practice resources on {topic}", topic);
+
+        return [EmbeddedResourceProviderService.GetEmbeddedResource(topic)];
+    }
+
     #endregion IFabricPublicApiService
 
     private async Task<IDictionary<string, string>> GetWorkloadSpecDefinitionsAsync(string workloadType)
