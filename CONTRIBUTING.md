@@ -75,7 +75,7 @@ If you are contributing significant changes, or if the issue is already assigned
     - `src` - Source for the server
     - `tests` - Any unit or live tests for the server
     - `README.md` - Specific readme for this server
-    - `CHANGELOG.md` - Specfic changelog for this server
+    - `CHANGELOG.md` - Specific changelog for this server
 - `tools/` - Service-specific implementations
   - `{server}.Mcp.Tools.{tool-name}/` - Individual server tools (e.g., `Azure.Mcp.Tools.Appstorage`, `Fabric.Mcp.Tools.Admin`)
     - `src` - Service specific code
