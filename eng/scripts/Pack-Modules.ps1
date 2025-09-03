@@ -5,6 +5,9 @@
 param(
     [string] $ArtifactsPath,
     [string] $OutputPath,
+    [string] $RepoUrl,
+    [string] $CommitSha,
+    [string] $Branch,
     [switch] $UsePaths
 )
 
@@ -13,7 +16,9 @@ $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 $wrapperSourcePath = "$RepoRoot/eng/npm/wrapper"
 $platformSourcePath = "$RepoRoot/eng/npm/platform"
+$mcpServerjson = "$RepoRoot/eng/dnx/.mcp/server.json"
 $nuspecSourcePath = "$RepoRoot/eng/dnx/nuspec"
+$projectPropertiesScript = "$RepoRoot/eng/scripts/Get-ProjectProperties.ps1"
 
 if(!$ArtifactsPath) {
     $ArtifactsPath = "$RepoRoot/.work/build"
@@ -29,6 +34,7 @@ if(!(Test-Path $ArtifactsPath)) {
 }
 
 $tempFolder = "$RepoRoot/.work/temp"
+$sharedProjectProperties = & "$projectPropertiesScript" -ProjectName "Directory.Build.props"
 
 Push-Location $RepoRoot
 try {
@@ -39,10 +45,11 @@ try {
     foreach($wrapperJsonFile in $wrapperJsonFiles) {
         $serverDirectory = $wrapperJsonFile.Directory
         $serverName = $serverDirectory.Name
-        $npmPlatformOutputPath = "$OutputPath/$serverName/npm/platform"
-        $npmWrapperOutputPath = "$OutputPath/$serverName/npm/wrapper"
-        $nugetPlatformOutputPath = "$OutputPath/$serverName/nuget/platform"
-        $nugetWrapperOutputPath = "$OutputPath/$serverName/nuget/wrapper"
+        $serverProjectProperties = & "$projectPropertiesScript" -ProjectName "$serverName.csproj"
+        $npmPlatformOutputPath = "$OutputPath/npm/$serverName/platform"
+        $npmWrapperOutputPath = "$OutputPath/npm/$serverName/wrapper"
+        $nugetPlatformOutputPath = "$OutputPath/nuget/$serverName/platform"
+        $nugetWrapperOutputPath = "$OutputPath/nuget/$serverName/wrapper"
 
         New-Item -ItemType Directory -Force -Path $npmPlatformOutputPath | Out-Null
         New-Item -ItemType Directory -Force -Path $npmWrapperOutputPath | Out-Null
@@ -52,14 +59,36 @@ try {
         $wrapperPackageJson = Get-Content $wrapperJsonFile -Raw | ConvertFrom-Json -AsHashtable
 
         $platformDirectories = Get-ChildItem -Path $serverDirectory -Directory
-
+        
+        # Create dnx wrapper nuget tool
         $tempNugetWrapperDir = Join-Path $nugetWrapperOutputPath "temp"
-        $wrapperToolDir = "$tempNugetWrapperDir/tools/$($platformPackageJson.targetFramework)/any"
+        $wrapperToolDir = "$tempNugetWrapperDir/tools/$($sharedProjectProperties.TargetFramework)/any"
+        $wrapperToolNuspec = "$tempNugetWrapperDir/$($serverProjectProperties.PackageId).nuspec"
         New-Item -ItemType Directory -Force -Path $wrapperToolDir | Out-Null
-
+        New-Item -ItemType Directory -Force -Path "$tempNugetWrapperDir/.mcp" | Out-Null
+        
         (Get-Content -Path "$nuspecSourcePath/RuntimeAgnosticToolSettingsTemplate.xml") `
-            -replace "__CommandName__", $platformPackageJson.commandName `
+            -replace "__CommandName__", $serverProjectProperties.CliName |
             Set-Content -Path "$wrapperToolDir/DotnetToolSettings.xml"
+
+        (Get-Content -Path $mcpServerjson -Raw) `
+            -replace '\$\(PackageDescription\)', $serverProjectProperties.Description `
+            -replace '\$\(PackageId\)', $serverProjectProperties.PackageId `
+            -replace '\$\(PackageVersion\)', $serverProjectProperties.Version `
+            -replace '\$\(RepositoryUrl\)', $RepoUrl |
+            Set-Content -Path "$tempNugetWrapperDir/.mcp/server.json"
+        
+        (Get-Content -Path "$nuspecSourcePath/RuntimeAgnosticTemplate.nuspec") `
+            -replace "__Id__", $serverProjectProperties.PackageId `
+            -replace "__Version__", $serverProjectProperties.Version `
+            -replace "__Authors__", $wrapperPackageJson.author `
+            -replace "__Description__", $wrapperPackageJson.description `
+            -replace "__Tags__", $serverProjectProperties.PackageTags `
+            -replace "__RepositoryUrl__", $RepoUrl `
+            -replace "__RepositoryBranch__", $Branch `
+            -replace "__CommitSHA__", $CommitSha `
+            -replace "__TargetFramework__", $sharedProjectProperties.TargetFramework |
+            Set-Content -Path $wrapperToolNuspec
         Copy-Item -Path "$serverDirectory/README.md" -Destination $tempNugetWrapperDir -Force
 
         # Build the project
@@ -118,30 +147,48 @@ try {
             }
 
             # Create Nuget Packages
-            $tempPlatformDir = Join-Path $nugetPlatformOutputPath $platformDirectory
-            $platformToolDir = "$tempPlatformDir/tools/any/$platformDirectory"
-            $platformNuspecFile = "$tempPlatformDir/$($platformPackageJson.packageId).nuspec"
+            $platformOSArch = $platformDirectory.Name
+            $tempPlatformDir = Join-Path $nugetPlatformOutputPath $platformOSArch
+            $platformToolDir = "$tempPlatformDir/tools/any/$platformOSArch"
+            $platformPackageId = "$($serverProjectProperties.PackageId).$platformOSArch"
+            $platformNuspecFile = "$tempPlatformDir/$platformPackageId.nuspec"
             New-Item -ItemType Directory -Force -Path $platformToolDir | Out-Null
 
-            Copy-Item -Path "$tempFolder/dist" -Destination $platformToolDir -Force
+            Copy-Item -Path "$tempFolder/dist/*" -Destination $platformToolDir -Recurse -Force
+            $platformToolEntryPoint = (
+                Get-ChildItem -Path $platformToolDir -Filter "$($serverProjectProperties.CliName)*" -Recurse |
+                Where-Object { $_.PSIsContainer -eq $false -and ($_.Extension -eq ".exe" -or $_.Extension -eq "") } |
+                Select-Object -First 1
+            ).Name
             (Get-Content -Path "$nuspecSourcePath/RuntimeSpecificTemplate.nuspec") `
-                -replace "__Id__", $platformPackageJson.packageId `
-                -replace "__Version__", $platformPackageJson.version `
-                -replace "__Authors__", $platformPackageJson.author `
+                -replace "__Id__", $platformPackageId `
+                -replace "__Version__", $serverProjectProperties.version `
+                -replace "__Authors__", $wrapperPackageJson.author `
                 -replace "__Description__", $platformPackageJson.description `
-                -replace "__RepositoryUrl__", $platformPackageJson.repository.url `
-                -replace "__RepositoryBranch__", $platformPackageJson.repository.branch `
-                -replace "__CommitSHA__", $platformPackageJson.repository.commitSHA `
-                -replace "__TargetFramework__", $platformPackageJson.targetFramework |
+                -replace "__RepositoryUrl__", $RepoUrl `
+                -replace "__RepositoryBranch__", $Branch `
+                -replace "__CommitSHA__", $CommitSha `
+                -replace "__TargetFramework__", $sharedProjectProperties.TargetFramework |
                 Set-Content -Path $platformNuspecFile
 
             (Get-Content -Path "$nuspecSourcePath/RuntimeSpecificToolSettingsTemplate.xml") `
-                -replace "__CommandName__", $platformPackageJson.commandName `
-                -replace "__CommandEntryPoint__", $platformPackageJson.entryPoint |
+                -replace "__CommandName__", $serverProjectProperties.CliName `
+                -replace "__CommandEntryPoint__", $platformToolEntryPoint |
                 Set-Content -Path "$platformToolDir/DotnetToolSettings.xml"
 
+            [xml]$wrapperToolSettings = Get-Content -Path "$wrapperToolDir/DotnetToolSettings.xml"
+            $ridNode = $wrapperToolSettings.DotNetCliTool.RuntimeIdentifierPackages
+            if ($ridNode.Count -eq 1 -and $ridNode.RuntimeIdentifierPackage.RuntimeIdentifier -eq "__RuntimeIdentifier__") {
+                $ridNode.RemoveAll()
+            }
+            $newRid = $wrapperToolSettings.CreateElement("RuntimeIdentifierPackage")
+            $newRid.SetAttribute("RuntimeIdentifier", $platformOSArch)
+            $newRid.SetAttribute("Id", $platformPackageId)
+            $ridNode.AppendChild($newRid) | Out-Null
+            $wrapperToolSettings.Save("$wrapperToolDir/DotnetToolSettings.xml")
+
             Write-Host "Creating Nuget Package from $platformNuspecFile"
-            Invoke-LoggedCommand "nuget pack $platformNuspecFile -OutputDirectory '$nugetPlatformOutputPath'" -GroupOutput
+            Invoke-LoggedCommand "nuget pack '$platformNuspecFile' -OutputDirectory '$nugetPlatformOutputPath'" -GroupOutput
             Remove-Item -Path $tempPlatformDir -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
         }
 
@@ -164,6 +211,10 @@ try {
         Write-Host "Packaging $tempFolder into $npmWrapperOutputPath"
         Invoke-LoggedCommand "npm pack $tempFolder --pack-destination '$npmWrapperOutputPath'" -GroupOutput | Tee-Object -Variable fileName
         Write-Host "Package location: $npmWrapperOutputPath/$fileName" -ForegroundColor Yellow
+
+        Write-Host "Creating Nuget Package from $wrapperToolNuspec"
+        Invoke-LoggedCommand "nuget pack '$wrapperToolNuspec' -OutputDirectory '$nugetWrapperOutputPath'" -GroupOutput
+        Remove-Item -Path $tempNugetWrapperDir -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
     }
 
     Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
