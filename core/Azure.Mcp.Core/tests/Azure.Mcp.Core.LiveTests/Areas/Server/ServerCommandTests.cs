@@ -33,10 +33,11 @@ public class ServerCommandTests(ITestOutputHelper output)
             Name = "Test Server",
             Command = executablePath,
             Arguments = arguments,
-            StandardErrorLines = line => 
+            StandardErrorLines = line =>
             {
                 // Safely capture stderr lines without accessing test context from background thread
-                try { Output.WriteLine($"[MCP Server] {line}"); } 
+                try
+                { Output.WriteLine($"[MCP Server] {line}"); }
                 catch { /* Ignore if test context unavailable */ }
             }
         };

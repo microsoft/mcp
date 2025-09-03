@@ -41,7 +41,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     public virtual async ValueTask InitializeAsync()
     {
         bool shouldInitialize = false;
-        
+
         lock (_lock)
         {
             // If client is already initialized, just return
@@ -58,7 +58,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
                 }
                 return;
             }
-            
+
             shouldInitialize = true;
         }
 
@@ -70,15 +70,15 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         // Initialize settings
         var settingsFixture = new LiveTestSettingsFixture();
         await settingsFixture.InitializeAsync();
-        
+
         lock (_lock)
         {
             _sharedSettings = settingsFixture.Settings;
         }
 
         string testAssemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-        string executablePath = OperatingSystem.IsWindows() ? 
-            Path.Combine(testAssemblyPath, "azmcp.exe") : 
+        string executablePath = OperatingSystem.IsWindows() ?
+            Path.Combine(testAssemblyPath, "azmcp.exe") :
             Path.Combine(testAssemblyPath, "azmcp");
 
         // Use custom arguments if provided, otherwise default to debug mode
@@ -114,31 +114,31 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
             var clientTask = McpClientFactory.CreateAsync(clientTransport);
             var client = await clientTask.WaitAsync(cts.Token);
-            
+
             lock (_lock)
             {
                 _sharedClient = client;
             }
-            
+
             Output.WriteLine("MCP client initialized successfully");
         }
         catch (TimeoutException)
         {
             var recentErrors = _serverErrorLog.TakeLast(5).ToList();
-            var errorSummary = recentErrors.Count > 0 ? 
-                $"Recent server errors: {string.Join("; ", recentErrors)}" : 
+            var errorSummary = recentErrors.Count > 0 ?
+                $"Recent server errors: {string.Join("; ", recentErrors)}" :
                 "No server error output captured";
-            
+
             Output.WriteLine($"MCP client initialization timed out after 2 minutes. {errorSummary}");
             throw new TimeoutException($"MCP client initialization timed out after 2 minutes. {errorSummary}");
         }
         catch (OperationCanceledException)
         {
             var recentErrors = _serverErrorLog.TakeLast(5).ToList();
-            var errorSummary = recentErrors.Count > 0 ? 
-                $"Recent server errors: {string.Join("; ", recentErrors)}" : 
+            var errorSummary = recentErrors.Count > 0 ?
+                $"Recent server errors: {string.Join("; ", recentErrors)}" :
                 "No server error output captured";
-            
+
             Output.WriteLine($"MCP client initialization was cancelled or timed out. {errorSummary}");
             throw new OperationCanceledException($"MCP client initialization was cancelled or timed out. {errorSummary}");
         }
@@ -254,7 +254,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     public static async ValueTask CleanupSharedClientAsync()
     {
         IMcpClient? clientToDispose = null;
-        
+
         lock (_lock)
         {
             if (_sharedClient != null)
@@ -265,7 +265,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
                 _serverErrorLog.Clear();
             }
         }
-        
+
         if (clientToDispose != null)
         {
             await clientToDispose.DisposeAsync();
