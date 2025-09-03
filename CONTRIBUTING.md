@@ -313,7 +313,7 @@ To build a local image for testing purposes:
 
 ### Live Tests
 
-> ⚠️ If you are a Microsoft employee with Azure source permissions then please review our [Azure Internal Onboarding Documentation](https://aka.ms/azmcp/intake). As part of reviewing community contributions, Azure team members can run live tests by adding this comment to the PR `/azp run azure - mcp`.
+> ⚠️ If you are a Microsoft employee with Azure source permissions then please review our [Azure Internal Onboarding Documentation](https://aka.ms/azmcp/intake). As part of reviewing community contributions, Azure team members can run live tests by adding this comment to the PR `/azp run  mcp - pullrequest - live`.
 
 Before running live tests:
 
@@ -582,7 +582,7 @@ Packages published to the dev feed will use:
 
 #### PR Validation
 
-To run live tests for a PR, inspect the PR code for any suspicious changes, then add the comment `/azp run azure - mcp` to the pull request. This will queue a PR triggered run which will build, run unit tests, deploy test resources and run live tests.
+To run live tests for a PR, inspect the PR code for any suspicious changes, then add the comment `/azp run  mcp - pullrequest - live` to the pull request. This will queue a PR triggered run which will build, run unit tests, deploy test resources and run live tests.
 
 If you would like to see the product of a PR as a package on the dev feed, after thoroughly inspecting the change, create a branch in the main repo and manually trigger an [azure - mcp](https://dev.azure.com/azure-sdk/internal/_build?definitionId=7571) pipeline run against that branch. This will queue a manually triggered run which will build, run unit tests, deploy test resources, run live tests, sign and publish the packages to the dev feed.
 
