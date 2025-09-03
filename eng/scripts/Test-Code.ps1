@@ -40,11 +40,14 @@ function FilterTestProjects {
     }
 
     $testProjects = Get-ChildItem -Path "$RepoRoot" -Recurse -Filter "*.csproj" -Include $fileNameFilters -File
+    | ForEach-Object { (Resolve-Path -Path $_.FullName -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./') }
 
-    if($Paths.Count -ne 0) {
+    $normalizedPathFilters = $Paths | ForEach-Object { "*$($_.Replace('\', '/'))*" }
+
+    if($normalizedPathFilters) {
         $testProjects = $testProjects | Where-Object {
-            foreach($filter in $Paths) {
-                if ($_.FullName.Replace('\', '/') -like $filter) {
+            foreach($filter in $normalizedPathFilters) {
+                if ($_ -like $filter) {
                     return $true
                 }
             }
@@ -65,7 +68,7 @@ function CreateTestSolution {
         [Parameter(Mandatory=$true)]
         [string]$workPath,
         [Parameter(Mandatory=$true)]
-        [array]$testProjects
+        [string[]]$testProjects
     )
 
     # Create solution and add projects
@@ -74,7 +77,7 @@ function CreateTestSolution {
     Push-Location $workPath
     try {
         dotnet new sln -n "Tests" | Out-Null
-        dotnet sln add $testProjects.FullName --in-root | Out-Host
+        dotnet sln add $testProjects --in-root | Out-Host
     }
     finally {
         Pop-Location

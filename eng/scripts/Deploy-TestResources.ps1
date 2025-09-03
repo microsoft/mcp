@@ -26,22 +26,22 @@ $coreDirectories = Get-ChildItem -Path "$RepoRoot/core" -Directory
 
 $testablePaths = @($toolDirectories + $serverDirectories + $coreDirectories)
 | Where-Object { Test-Path "$_/tests/test-resources.bicep" }
-| ForEach-Object {
-    $relative = Resolve-Path -Path $_ -Relative -RelativeBasePath $RepoRoot
-    $relative.Replace('\', '/').TrimStart('./')
- }
+| ForEach-Object { (Resolve-Path -Path $_ -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./')}
 
-$filteredPaths = @()
-foreach ($path in $testablePaths) {
-    foreach ($filter in $Paths) {
-        if ($path -like $filter.Replace('\', '/')) {
-            $filteredPaths += $path
-            break
+$normalizedPathFilters = $Paths | ForEach-Object { "*$($_.Replace('\', '/'))*" }
+
+if($normalizedPathFilters) {
+    $testablePaths = $testablePaths | Where-Object {
+        foreach($filter in $normalizedPathFilters) {
+            if ($_ -like $filter) {
+                return $true
+            }
         }
+        return $false
     }
 }
 
-if ($filteredPaths.Count -eq 0) {
+if ($testablePaths.Count -eq 0) {
     Write-Error "No paths with test resources match the specified filters: $($Paths -join ', ')"
     exit 1
 }
@@ -107,7 +107,7 @@ Deploying:
     }
 }
 
-$jobInputs = $filteredPaths | ForEach-Object {
+$jobInputs = $testablePaths | ForEach-Object {
     # the suffix is a unique-looking string appended to the resource group and resource base name
     if($Unique) {
         # actually unique suffix
@@ -130,9 +130,14 @@ $jobInputs = $filteredPaths | ForEach-Object {
     }
 }
 
+$failedPaths = @()
 if ($jobInputs.Count -eq 1 -or !$Parallel) {
     foreach ($jobInput in $jobInputs) {
-        Deploy-TestResources @jobInput
+        try {
+            Deploy-TestResources @jobInput
+        } catch {
+            $failedPaths += $jobInput.Path
+        }
     }
 } else {
     $jobs = @()
@@ -144,6 +149,7 @@ if ($jobInputs.Count -eq 1 -or !$Parallel) {
 
     $ErrorActionPreference = 'Continue'
     $runningJobs = @() + $jobs
+    $delay = 0
     while($true) {
         $elapsed = $stopwatch.Elapsed
         Write-Host "`n($($elapsed)) Checking status of deployment jobs..." -ForegroundColor Cyan
@@ -172,6 +178,18 @@ if ($jobInputs.Count -eq 1 -or !$Parallel) {
             break
         }
 
-        Start-Sleep -Seconds 15
+        $delay = [Math]::Min(15, $delay + 5)
+        Start-Sleep -Seconds $delay
+    }
+
+    $failedJobs = $jobs | Where-Object { $_.State -in 'Failed', 'Stopped' }
+    $failedPaths = $failedJobs.Path
+}
+
+if($failedPaths) {
+    $relativePath = Resolve-Path -Path "$RepoRoot/eng/scripts/Deploy-TestResources.ps1" -Relative
+    Write-Host "`nTo retry failed deployments, run:" -ForegroundColor Yellow
+    foreach ($path in $failedPaths) {
+        Write-Host "  $relativePath -Path $path" -ForegroundColor Yellow
     }
 }
