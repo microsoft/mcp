@@ -39,6 +39,7 @@
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
     <!-- AOT native build flags -->
     <PublishTrimmed>true</PublishTrimmed>
+    <SelfContained>true</SelfContained>
   </PropertyGroup>
 
   <!-- Properties for the root (RID-less) .NET Tool package -->
@@ -49,7 +50,7 @@
     <McpServerJsonTemplateFile>$(RepoRoot)/eng/dnx/.mcp/server.json</McpServerJsonTemplateFile>
   </PropertyGroup>
   <ItemGroup Condition="'$(BuildNative)' == 'true' and '$(RuntimeIdentifier)' == ''">
-    <None Include="$(RepoRoot)/README.md" Pack="true" PackagePath="./README.md" />
+    <None Include="../README.md" Pack="true" PackagePath="./README.md" />
   </ItemGroup>
   <!-- Properties for the RID-specific .NET Tool packages -->
   <PropertyGroup Condition="'$(BuildNative)' == 'true' and '$(RuntimeIdentifier)' != ''">
