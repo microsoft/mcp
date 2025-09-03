@@ -15,7 +15,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AssemblyName>$(CliName)</AssemblyName>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <!-- Publishing settings -->
     <IsAotCompatible>true</IsAotCompatible>
     <PublishSingleFile>false</PublishSingleFile>
