@@ -50,13 +50,12 @@ public class ClientToolTests : IAsyncLifetime
         }
 
         var clientTransport = new StdioClientTransport(transportOptions);
-        _client = await McpClientFactory.CreateAsync(clientTransport);
+        _client = await McpClientFactory.CreateAsync(clientTransport, cancellationToken: TestContext.Current.CancellationToken);
     }
 
     public ValueTask DisposeAsync()
     {
-        _client?.DisposeAsync();
-        return ValueTask.CompletedTask;
+        return _client?.DisposeAsync() ?? ValueTask.CompletedTask;
     }
 
     [Fact]
