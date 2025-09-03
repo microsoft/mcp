@@ -50,8 +50,7 @@ public class FileSystemListCommandTests
         Assert.NotEmpty(command.Description);
     }
 
-    // TODO: jongio - Figure out why failing
-    [Fact(Skip = "Skipping for now")]
+    [Fact]
     public async Task ExecuteAsync_ReturnsFileSystems()
     {
         // Arrange
@@ -60,8 +59,8 @@ public class FileSystemListCommandTests
             new LustreFileSystem(
                 "fs1",
                 _knownResourceIdRg1,
-                _knownSubscriptionId,
                 "rg1",
+                _knownSubscriptionId,
                 "eastus",
                 "Succeeded",
                 "Available",
@@ -75,8 +74,8 @@ public class FileSystemListCommandTests
             new LustreFileSystem(
                 "fs2",
                 _knownResourceIdRg2,
-                _knownSubscriptionId,
                 "rg2",
+                _knownSubscriptionId,
                 "eastus",
                 "Succeeded",
                 "Available",
@@ -116,8 +115,7 @@ public class FileSystemListCommandTests
         Assert.Equal("fs1", result.FileSystems[0].Name);
     }
 
-    // TODO: jongio - Figure out why failing
-    [Theory(Skip = "Skipping for now")]
+    [Theory]
     [InlineData("--resource-group testrg", false)] // Missing subscription
     [InlineData("--subscription sub123", true)] // Missing resource group
     [InlineData(" --resource-group testrg --subscription sub123", true)]
@@ -132,8 +130,8 @@ public class FileSystemListCommandTests
                 new LustreFileSystem(
                     "fs1",
                     _knownResourceIdRg1,
-                    _knownSubscriptionId,
                     "rg1",
+                    _knownSubscriptionId,
                     "eastus",
                     "Succeeded",
                     "Available",
@@ -203,8 +201,7 @@ public class FileSystemListCommandTests
         Assert.Null(response.Results);
     }
 
-    // TODO: jongio - Figure out why failing
-    [Fact(Skip = "Skipping for now")]
+    [Fact]
     public async Task ExecuteAsync_HandlesRequestFailedException_NotFound()
     {
         // Arrange - 404 Not Found
@@ -220,8 +217,7 @@ public class FileSystemListCommandTests
         Assert.Contains("not found", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    // TODO: jongio - Figure out why failing
-    [Fact(Skip = "Skipping for now")]
+    [Fact]
     public async Task ExecuteAsync_HandlesRequestFailedException_Forbidden()
     {
         // Arrange - 403 Forbidden
