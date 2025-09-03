@@ -7,7 +7,7 @@ using System.Diagnostics;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Helpers;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
-using System.Text.RegularExpressions;
+using Azure.Mcp.Core.Exceptions;
 
 namespace Azure.Mcp.Core.Commands;
 
@@ -46,31 +46,21 @@ public abstract class BaseCommand : IBaseCommand
 
         var response = context.Response;
 
-        // Map System.CommandLine "Option '--x' is required." exceptions to a 400 validation response
-        // with a standardized missing-options message so callers don't receive a 500.
-        if (ex is InvalidOperationException && ex.Message != null && ex.Message.IndexOf("is required", StringComparison.OrdinalIgnoreCase) >= 0)
+        // Handle structured validation errors first
+        if (ex is CommandValidationException cve)
         {
-            try
+            response.Status = cve.StatusCode;
+            // If specific missing options are provided, format a consistent message
+            if (cve.MissingOptions is { Count: > 0 })
             {
-                // Extract option tokens like --cluster from the exception message and build CSV directly
-                var missingJoined = string.Join(
-                    ", ",
-                    Regex.Matches(ex.Message, "--[A-Za-z0-9\\-]+")
-                        .Select(m => m.Value)
-                        .Where(s => !string.IsNullOrWhiteSpace(s)));
-
-                if (!string.IsNullOrEmpty(missingJoined))
-                {
-                    response.Status = ValidationErrorStatusCode;
-                    response.Message = $"{MissingRequiredOptionsPrefix}{missingJoined}";
-                    response.Results = null;
-                    return;
-                }
+                response.Message = $"{MissingRequiredOptionsPrefix}{string.Join(", ", cve.MissingOptions)}";
             }
-            catch
+            else
             {
-                // Fall through to default behavior if parsing fails
+                response.Message = cve.Message;
             }
+            response.Results = null;
+            return;
         }
 
         var result = new ExceptionResult(
@@ -100,11 +90,12 @@ public abstract class BaseCommand : IBaseCommand
     {
         var result = new ValidationResult { IsValid = true };
 
-        var missingOptionsJoined = string.Join(
-            ", ",
-            commandResult.Command.Options
-                .Where(o => o.Required && !o.HasDefaultValue && !commandResult.HasOptionResult(o))
-                .Select(o => $"--{NameNormalization.NormalizeOptionName(o.Name)}"));
+        var missingOptions = commandResult.Command.Options
+            .Where(o => o.Required && !o.HasDefaultValue && !commandResult.HasOptionResult(o))
+            .Select(o => $"--{NameNormalization.NormalizeOptionName(o.Name)}")
+            .ToList();
+
+        var missingOptionsJoined = string.Join(", ", missingOptions);
 
         if (!string.IsNullOrEmpty(missingOptionsJoined))
         {
@@ -114,46 +105,10 @@ public abstract class BaseCommand : IBaseCommand
             return result;
         }
 
-        // If no missing required options, check for other parse/validation errors produced
-        // by the parser or command validators. System.CommandLine sometimes reports missing
-        // required options via commandResult.Errors (e.g., "Option '--cluster' is required.")
-        // — detect that case and return a standardized missing-options message instead of
-        // surfacing raw errors.
+        // If no missing required options, propagate parser/validator errors as-is.
+        // Commands can throw CommandValidationException for structured handling.
         if (commandResult.Errors != null && commandResult.Errors.Any())
         {
-            // Look for "is required" style messages and extract option tokens like "--cluster"
-            var requiredFromErrors = new List<string>();
-            foreach (var e in commandResult.Errors)
-            {
-                var msg = e.Message ?? string.Empty;
-                if (msg.IndexOf("is required", StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    try
-                    {
-                        var matches = Regex.Matches(msg, "--[A-Za-z0-9\\-]+");
-                        foreach (Match m in matches)
-                        {
-                            var token = m.Value;
-                            if (!string.IsNullOrWhiteSpace(token) && !requiredFromErrors.Contains(token))
-                                requiredFromErrors.Add(token);
-                        }
-                    }
-                    catch
-                    {
-                        // ignore parse failures and continue
-                    }
-                }
-            }
-
-            if (requiredFromErrors.Count > 0)
-            {
-                result.IsValid = false;
-                result.ErrorMessage = $"{MissingRequiredOptionsPrefix}{string.Join(", ", requiredFromErrors)}";
-                SetValidationError(commandResponse, result.ErrorMessage);
-                return result;
-            }
-
-            // Fall back to propagating parser/validator errors as before
             result.IsValid = false;
             var combined = string.Join(", ", commandResult.Errors.Select(e => e.Message));
             result.ErrorMessage = combined;
@@ -161,7 +116,7 @@ public abstract class BaseCommand : IBaseCommand
             return result;
         }
 
-        // Check logical requirements (e.g., resource group requirement)
+        // Enforce logical requirements (e.g., resource group required by this command)
         if (result.IsValid && _requiresResourceGroup)
         {
             if (!commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup))
@@ -185,7 +140,7 @@ public abstract class BaseCommand : IBaseCommand
     }
 
 
-    // TODO: jongio - Design a better way for options to exist and either be required or not required.
+    // TODO(jongio): Consider a stronger, declarative model for option requirements.
 
     protected void UseResourceGroup()
     {
