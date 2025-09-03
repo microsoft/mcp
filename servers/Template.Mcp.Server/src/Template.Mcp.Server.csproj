@@ -5,7 +5,6 @@
     <AssemblyTitle>Template MCP Server</AssemblyTitle>
     <Description>Template MCP Server - Basic Model Context Protocol implementation</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
-
     <NpmPackageName>@azure/mcp-template</NpmPackageName>
     <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>
   </PropertyGroup>
@@ -35,8 +34,8 @@
     <NoWarn>$(NoWarn);IL3000</NoWarn>
   </PropertyGroup>
 
-  <!-- AOT native build flags -->
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
+    <!-- AOT native build flags -->
     <IsAotCompatible>true</IsAotCompatible>
     <PublishAot>true</PublishAot>
     <PublishTrimmed>true</PublishTrimmed>
@@ -45,28 +44,28 @@
     <IlcOptimizationPreference>Size</IlcOptimizationPreference>
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
     <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
-  </PropertyGroup>
-  <!-- .NET Tool Package settings -->
-  <PropertyGroup Condition="'$(BuildNative)' == 'true'">
+
+    <!-- .NET Tool Package settings -->
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
     <PackageType>McpServer</PackageType>
     <PackageId>Microsoft.Template.Mcp</PackageId>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <ToolCommandName>$(CliName)</ToolCommandName>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <!-- Keep these aligned with OS + arch build-matrix.json. -->
     <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
   </PropertyGroup>
+
   <!-- Properties for the root (RID-less) .NET Tool package -->
   <PropertyGroup Condition="'$(BuildNative)' == 'true' and '$(RuntimeIdentifier)' == ''">
     <PackageDescription>Template MCP Server - Basic Model Context Protocol implementation</PackageDescription>
     <PackageTags>template;mcp;</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <McpServerJsonTemplateFile>../../../eng/dnx/.mcp/server.json</McpServerJsonTemplateFile>
+    <McpServerJsonTemplateFile>$(RepoRoot)/eng/dnx/.mcp/server.json</McpServerJsonTemplateFile>
   </PropertyGroup>
   <ItemGroup Condition="'$(BuildNative)' == 'true' and '$(RuntimeIdentifier)' == ''">
-    <None Include="../../../README.md" Pack="true" PackagePath="./README.md" />
+    <None Include="$(RepoRoot)/README.md" Pack="true" PackagePath="./README.md" />
   </ItemGroup>
   <!-- Properties for the RID-specific .NET Tool packages -->
   <PropertyGroup Condition="'$(BuildNative)' == 'true' and '$(RuntimeIdentifier)' != ''">
@@ -85,8 +84,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\core\Template.Mcp.Core\src\Template.Mcp.Core.csproj" />
-    <ProjectReference Include="..\..\..\..\areas\*\src\**\Template.*.csproj" />
+    <ProjectReference Include="$(RepoRoot)\core\Template.Mcp.Core\src\Template.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)\areas\*\src\**\Template.*.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -94,5 +93,5 @@
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 
-  <Import Project="../../../eng/dnx/PackServerJson.targets" />
+  <Import Project="$(RepoRoot)/eng/dnx/PackServerJson.targets" />
 </Project>

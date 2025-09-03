@@ -22,6 +22,7 @@
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <DebugType>embedded</DebugType>
   </PropertyGroup>
+
   <!-- Enable Trim and AOT Analyzers -->
   <PropertyGroup>
     <EnableAotAnalyzer>true</EnableAotAnalyzer>
@@ -32,8 +33,9 @@
     <!-- Suppress IL3000 warning in Microsoft.Identity.Client.NativeInterop -->
     <NoWarn>$(NoWarn);IL3000</NoWarn>
   </PropertyGroup>
-  <!-- AOT native build flags -->
+
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
+    <!-- AOT native build flags -->
     <IsAotCompatible>true</IsAotCompatible>
     <PublishAot>true</PublishAot>
     <PublishTrimmed>true</PublishTrimmed>
@@ -42,28 +44,28 @@
     <IlcOptimizationPreference>Size</IlcOptimizationPreference>
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
     <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
-  </PropertyGroup>
-  <!-- .NET Tool Package settings -->
-  <PropertyGroup Condition="'$(BuildNative)' == 'true'">
+
+    <!-- .NET Tool Package settings -->
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
     <PackageType>McpServer</PackageType>
     <PackageId>Azure.Mcp</PackageId>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <ToolCommandName>$(CliName)</ToolCommandName>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <!-- Keep these aligned with OS + arch build-matrix.json. -->
     <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
   </PropertyGroup>
+
   <!-- Properties for the root (RID-less) .NET Tool package -->
   <PropertyGroup Condition="'$(BuildNative)' == 'true' and '$(RuntimeIdentifier)' == ''">
     <PackageDescription>Azure MCP Server - Model Context Protocol implementation for Azure.</PackageDescription>
     <PackageTags>azure;mcp;</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <McpServerJsonTemplateFile>../../../eng/dnx/.mcp/server.json</McpServerJsonTemplateFile>
+    <McpServerJsonTemplateFile>$(RepoRoot)/eng/dnx/.mcp/server.json</McpServerJsonTemplateFile>
   </PropertyGroup>
   <ItemGroup Condition="'$(BuildNative)' == 'true' and '$(RuntimeIdentifier)' == ''">
-    <None Include="../../../README.md" Pack="true" PackagePath="./README.md" />
+    <None Include="$(RepoRoot)/README.md" Pack="true" PackagePath="./README.md" />
   </ItemGroup>
   <!-- Properties for the RID-specific .NET Tool packages -->
   <PropertyGroup Condition="'$(BuildNative)' == 'true' and '$(RuntimeIdentifier)' != ''">
@@ -84,8 +86,8 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
-    <ProjectReference Include="..\..\..\tools\Azure.*\src\*.csproj" />
+    <ProjectReference Include="$(RepoRoot)\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)\tools\Azure.*\src\*.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" />
@@ -96,7 +98,7 @@
        https://github.com/Azure/azure-mcp/blob/main/docs/aot-compatibility.md
        Do not add ProjectReference removals in this ItemGroup. -->
   <ItemGroup Condition="'$(BuildNative)' == 'true'">
-    <ProjectReference Remove="..\..\..\tools\azuremanagedlustre\src\AzureMcp.AzureManagedLustre\AzureMcp.AzureManagedLustre.csproj" />
+    <ProjectReference Remove="$(RepoRoot)\tools\azuremanagedlustre\src\AzureMcp.AzureManagedLustre\AzureMcp.AzureManagedLustre.csproj" />
   </ItemGroup>
-  <Import Project="../../../eng/dnx/PackServerJson.targets" />
+  <Import Project="$(RepoRoot)\eng\dnx\PackServerJson.targets" />
 </Project>
