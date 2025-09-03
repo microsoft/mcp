@@ -68,9 +68,14 @@ jobs:
       ArtifactName: $(PipelineArtifactName)_signed
       SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
 
-  - task: NuGetToolInstaller@1
-    inputs:
-      versionSpec: '6.x'
+  - script: |
+      brew update
+      brew install mono
+      curl -o /usr/local/bin/nuget.exe https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
+      echo '#!/bin/bash' > /usr/local/bin/nuget
+      echo 'mono /usr/local/bin/nuget.exe "$@"' >> /usr/local/bin/nuget
+      chmod +x /usr/local/bin/nuget
+    displayName: 'Install Mono and Setup NuGet Command'
     
   - task: Powershell@2
     displayName: "Pack modules"
