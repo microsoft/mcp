@@ -86,6 +86,7 @@ internal class Program
             new Azure.Mcp.Tools.ResourceHealth.ResourceHealthSetup(),
             new Azure.Mcp.Tools.Search.SearchSetup(),
             new Azure.Mcp.Tools.ServiceBus.ServiceBusSetup(),
+            new Azure.Mcp.Tools.Sql.SqlSetup(),
             new Azure.Mcp.Tools.Storage.StorageSetup(),
             new Azure.Mcp.Tools.VirtualDesktop.VirtualDesktopSetup(),
             new Azure.Mcp.Tools.Workbooks.WorkbooksSetup(),
@@ -97,7 +98,6 @@ internal class Program
             // https://github.com/Azure/azure-mcp/blob/main/docs/aot-compatibility.md
             new Azure.Mcp.Tools.BicepSchema.BicepSchemaSetup(),
             new Azure.Mcp.Tools.AzureManagedLustre.AzureManagedLustreSetup(),
-            new Azure.Mcp.Tools.Sql.SqlSetup(),
 #endif
         ];
     }
