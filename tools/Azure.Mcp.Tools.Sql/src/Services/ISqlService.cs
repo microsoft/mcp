@@ -131,5 +131,5 @@ public interface ISqlService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
 
-    
+
 }

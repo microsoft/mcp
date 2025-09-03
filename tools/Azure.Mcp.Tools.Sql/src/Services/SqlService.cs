@@ -261,7 +261,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 cancellationToken);
 
             var firewallRule = operation.Value;
-            
+
             return new SqlServerFirewallRule(
                 Name: firewallRule.Data.Name,
                 Id: firewallRule.Data.Id.ToString(),
@@ -309,9 +309,9 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
 
             var firewallRuleResource = await sqlServerResource.Value.GetSqlFirewallRules().GetAsync(firewallRuleName);
-            
+
             await firewallRuleResource.Value.DeleteAsync(Azure.WaitUntil.Completed, cancellationToken);
-            
+
             _logger.LogInformation(
                 "Successfully deleted SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}",
                 serverName, resourceGroup, firewallRuleName);
@@ -323,7 +323,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             _logger.LogWarning(
                 "Firewall rule not found during delete operation. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}",
                 serverName, resourceGroup, firewallRuleName);
-            
+
             // Return false to indicate the rule was not found (idempotent delete)
             return false;
         }
