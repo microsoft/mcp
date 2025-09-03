@@ -242,6 +242,36 @@ try {
         } catch {
             Write-Host "Error retrieving Azure CLI context: $($_.Exception.Message)" -ForegroundColor Red
         }
+        
+        # Check network connectivity
+        Write-Host "`nNetwork connectivity check:" -ForegroundColor Yellow
+        try {
+            $testUrls = @("https://management.azure.com", "https://login.microsoftonline.com", "https://graph.microsoft.com")
+            foreach ($url in $testUrls) {
+                $response = Invoke-WebRequest -Uri $url -Method Head -TimeoutSec 10 -ErrorAction SilentlyContinue
+                if ($response) {
+                    Write-Host "  ✓ $url - Status: $($response.StatusCode)" -ForegroundColor Green
+                } else {
+                    Write-Host "  ✗ $url - Failed to connect" -ForegroundColor Red
+                }
+            }
+        } catch {
+            Write-Host "Error checking network connectivity: $($_.Exception.Message)" -ForegroundColor Red
+        }
+        
+        # Check system resources
+        Write-Host "`nSystem resources:" -ForegroundColor Yellow
+        try {
+            $mem = Get-WmiObject -Class Win32_OperatingSystem
+            $freeMemGB = [math]::Round($mem.FreePhysicalMemory/1MB, 2)
+            $totalMemGB = [math]::Round($mem.TotalVisibleMemorySize/1MB, 2)
+            Write-Host "  Memory: ${freeMemGB}GB free / ${totalMemGB}GB total" -ForegroundColor Cyan
+            
+            $cpu = Get-WmiObject -Class Win32_Processor
+            Write-Host "  CPU: $($cpu.Name) - $($cpu.NumberOfCores) cores" -ForegroundColor Cyan
+        } catch {
+            Write-Host "Error checking system resources: $($_.Exception.Message)" -ForegroundColor Red
+        }
         Write-Host "`n`n"
     }
 
@@ -254,9 +284,63 @@ try {
         $command += " --no-build"
     }
 
+    Write-Host "Executing command: $command" -ForegroundColor Yellow
+    Write-Host "Current working directory: $(Get-Location)" -ForegroundColor Yellow
+    Write-Host "Test results will be saved to: $TestResultsPath" -ForegroundColor Yellow
+    
+    # Add verbose logging for dotnet test
+    if ($debugLogs) {
+        $command += " --verbosity detailed"
+        Write-Host "Debug mode enabled - using detailed verbosity" -ForegroundColor Cyan
+    }
+
     Invoke-LoggedCommand `
         -Command $command `
-        -AllowedExitCodes @(0, 1)
+        -AllowedExitCodes @(0, 1) `
+        -GroupOutput
+        
+    # Post-test diagnostics
+    Write-Host "`n=== POST-TEST DIAGNOSTICS ===" -ForegroundColor Cyan
+    
+    # Check test results
+    if (Test-Path $TestResultsPath) {
+        $trxFiles = Get-ChildItem $TestResultsPath -Filter "*.trx" -ErrorAction SilentlyContinue
+        if ($trxFiles) {
+            Write-Host "Test result files found:" -ForegroundColor Green
+            $trxFiles | ForEach-Object { 
+                Write-Host "  $($_.Name) - Size: $([math]::Round($_.Length/1KB, 2))KB - Created: $($_.CreationTime)" -ForegroundColor Gray
+                
+                # Try to extract test summary from TRX file
+                try {
+                    [xml]$trxContent = Get-Content $_.FullName
+                    $summary = $trxContent.TestRun.ResultSummary
+                    if ($summary) {
+                        Write-Host "    Summary: Total=$($summary.outcome), Passed=$($summary.Counters.passed), Failed=$($summary.Counters.failed), Skipped=$($summary.Counters.notExecuted)" -ForegroundColor Cyan
+                    }
+                } catch {
+                    Write-Host "    Could not parse TRX summary: $($_.Exception.Message)" -ForegroundColor Yellow
+                }
+            }
+        } else {
+            Write-Host "No test result files found in $TestResultsPath" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "Test results directory not found: $TestResultsPath" -ForegroundColor Red
+    }
+    
+    # Check for any remaining test processes
+    $remainingProcesses = Get-Process -Name "dotnet" -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -eq "dotnet" }
+    if ($remainingProcesses) {
+        Write-Host "Remaining dotnet processes after test:" -ForegroundColor Yellow
+        $remainingProcesses | ForEach-Object { 
+            Write-Host "  PID: $($_.Id), CPU Time: $($_.TotalProcessorTime), Memory: $([math]::Round($_.WorkingSet64/1MB, 2))MB" -ForegroundColor Gray
+        }
+    } else {
+        Write-Host "No remaining dotnet processes" -ForegroundColor Green
+    }
+    
+    Write-Host "Test command exit code: $LastExitCode" -ForegroundColor $(if ($LastExitCode -eq 0) { "Green" } else { "Red" })
+    Write-Host "=== END POST-TEST DIAGNOSTICS ===`n" -ForegroundColor Cyan
 }
 finally {
     Pop-Location

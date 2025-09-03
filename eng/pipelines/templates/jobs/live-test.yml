@@ -1,7 +1,7 @@
 parameters:
 - name: TimeoutInMinutes
   type: number
-  default: 60
+  default: 45
 
 jobs:
 - job: LiveTest
@@ -45,22 +45,106 @@ jobs:
   - pwsh: |
       ./eng/scripts/Build-Local.ps1 -VerifyNpx
     displayName: "Build local package"
+    timeoutInMinutes: 10
+    workingDirectory: $(Build.SourcesDirectory)
+
+  - pwsh: |
+      Write-Host "=== PIPELINE ENVIRONMENT DIAGNOSTIC ===" -ForegroundColor Cyan
+      Write-Host "Build Agent: $(Agent.Name)" -ForegroundColor Yellow
+      Write-Host "Agent OS: $(Agent.OS)" -ForegroundColor Yellow
+      Write-Host "Agent Version: $(Agent.Version)" -ForegroundColor Yellow
+      Write-Host "Build ID: $(Build.BuildId)" -ForegroundColor Yellow
+      Write-Host "Build Number: $(Build.BuildNumber)" -ForegroundColor Yellow
+      Write-Host "Pipeline workspace: $(Pipeline.Workspace)" -ForegroundColor Yellow
+      Write-Host "Working Directory: $(Build.SourcesDirectory)" -ForegroundColor Yellow
+      Write-Host "Test Area: $(Area)" -ForegroundColor Yellow
+      Write-Host "Available Memory: " -NoNewline -ForegroundColor Yellow
+      Get-WmiObject -Class Win32_OperatingSystem | Select-Object @{Name="FreeGB";Expression={[math]::Round($_.FreePhysicalMemory/1MB,2)}}, @{Name="TotalGB";Expression={[math]::Round($_.TotalVisibleMemorySize/1MB,2)}} | Out-Host
+      Write-Host "Available Disk Space:" -ForegroundColor Yellow
+      Get-WmiObject -Class Win32_LogicalDisk | Where-Object {$_.DriveType -eq 3} | Select-Object DeviceID, @{Name="FreeGB";Expression={[math]::Round($_.FreeSpace/1GB,2)}}, @{Name="TotalGB";Expression={[math]::Round($_.Size/1GB,2)}} | Out-Host
+      Write-Host "Current Time: $(Get-Date)" -ForegroundColor Yellow
+      Write-Host "TimeZone: $((Get-TimeZone).DisplayName)" -ForegroundColor Yellow
+      Write-Host "PowerShell Version: $($PSVersionTable.PSVersion)" -ForegroundColor Yellow
+      Write-Host "=== END PIPELINE ENVIRONMENT DIAGNOSTIC ===" -ForegroundColor Cyan
+    displayName: "Pipeline Environment Diagnostic"
     workingDirectory: $(Build.SourcesDirectory)
 
   - task: AzurePowershell@5
     displayName: "Run tests - az pwsh"
+    timeoutInMinutes: 45
     env:
       AZURE_TEST_MODE: 'live'
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      SYSTEM_DEBUG: 'true'
     inputs:
       azureSubscription: azure-sdk-tests-public
       azurePowerShellVersion: 'LatestVersion'
       scriptType: InlineScript
       Inline: |
-        ./eng/scripts/Test-Code.ps1 `
-          -TestType 'Live' `
-          -Area $(Area) `
-          -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
+        Write-Host "=== STARTING LIVE TESTS ===" -ForegroundColor Green
+        $startTime = Get-Date
+        Write-Host "Test start time: $startTime" -ForegroundColor Yellow
+        
+        # Set up timeout monitoring
+        $timeout = New-TimeSpan -Minutes 40
+        $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+        
+        # Create background job to monitor progress
+        $progressMonitor = Start-Job -ScriptBlock {
+          param($testDir)
+          while ($true) {
+            Start-Sleep -Seconds 30
+            $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+            Write-Host "[$timestamp] Test still running... checking for hung processes" -ForegroundColor Cyan
+            
+            # Check for any dotnet test processes
+            $testProcesses = Get-Process -Name "dotnet" -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -eq "dotnet" }
+            if ($testProcesses) {
+              Write-Host "Active dotnet processes: $($testProcesses.Count)" -ForegroundColor Yellow
+              $testProcesses | ForEach-Object { 
+                Write-Host "  PID: $($_.Id), CPU Time: $($_.TotalProcessorTime), Memory: $([math]::Round($_.WorkingSet64/1MB, 2))MB" -ForegroundColor Gray
+              }
+            }
+            
+            # Check test result files
+            if (Test-Path "$testDir") {
+              $trxFiles = Get-ChildItem "$testDir" -Filter "*.trx" -ErrorAction SilentlyContinue
+              if ($trxFiles) {
+                Write-Host "Found $($trxFiles.Count) test result files" -ForegroundColor Green
+                $trxFiles | ForEach-Object { 
+                  Write-Host "  $($_.Name) - Size: $([math]::Round($_.Length/1KB, 2))KB - Modified: $($_.LastWriteTime)" -ForegroundColor Gray
+                }
+              }
+            }
+          }
+        } -ArgumentList "$(Build.ArtifactStagingDirectory)/testResults"
+        
+        try {
+          ./eng/scripts/Test-Code.ps1 `
+            -TestType 'Live' `
+            -Area $(Area) `
+            -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults' `
+            -Verbose
+
+          $endTime = Get-Date
+          $duration = $endTime - $startTime
+          Write-Host "=== TESTS COMPLETED ===" -ForegroundColor Green
+          Write-Host "Test end time: $endTime" -ForegroundColor Yellow
+          Write-Host "Total duration: $duration" -ForegroundColor Yellow
+        }
+        catch {
+          Write-Host "=== ERROR DURING TEST EXECUTION ===" -ForegroundColor Red
+          Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
+          Write-Host "Stack trace: $($_.Exception.StackTrace)" -ForegroundColor Red
+          throw
+        }
+        finally {
+          # Stop progress monitoring
+          if ($progressMonitor) {
+            Stop-Job -Job $progressMonitor -ErrorAction SilentlyContinue
+            Remove-Job -Job $progressMonitor -ErrorAction SilentlyContinue
+          }
+        }
 
         exit $LastExitCode
       pwsh: true

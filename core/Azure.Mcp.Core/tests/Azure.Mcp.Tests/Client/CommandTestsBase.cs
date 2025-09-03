@@ -32,38 +32,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         _customArguments = arguments;
     }
 
-    // public virtual async ValueTask InitializeAsync()
-    // {
-    //     var settingsFixture = new LiveTestSettingsFixture();
-    //     await settingsFixture.InitializeAsync();
-    //     Settings = settingsFixture.Settings;
-
-    //     string testAssemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-    //     string executablePath = OperatingSystem.IsWindows() ? Path.Combine(testAssemblyPath, "azmcp.exe") : Path.Combine(testAssemblyPath, "azmcp");
-
-    //     // Use custom arguments if provided, otherwise default to ["server", "start", "--debug"]
-    //     var arguments = _customArguments ?? ["server", "start", "--mode", "all", "--debug"];
-
-    //     StdioClientTransportOptions transportOptions = new()
-    //     {
-    //         Name = "Test Server",
-    //         Command = executablePath,
-    //         Arguments = arguments,
-    //         StandardErrorLines = Output.WriteLine
-    //     };
-
-    //     if (!string.IsNullOrEmpty(Settings.TestPackage))
-    //     {
-    //         Environment.CurrentDirectory = Settings.SettingsDirectory;
-    //         transportOptions.Command = "npx";
-    //         transportOptions.Arguments = ["-y", Settings.TestPackage, .. arguments];
-    //     }
-
-    //     var clientTransport = new StdioClientTransport(transportOptions);
-
-    //     Client = await McpClientFactory.CreateAsync(clientTransport);
-    // }
-
     public virtual async ValueTask InitializeAsync()
     {
         var settingsFixture = new LiveTestSettingsFixture();
@@ -93,7 +61,23 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
 
         var clientTransport = new StdioClientTransport(transportOptions);
 
-        Client = await McpClientFactory.CreateAsync(clientTransport);
+        try
+        {
+            // Add timeout to prevent hanging in CI environments
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            var clientTask = McpClientFactory.CreateAsync(clientTransport);
+            Client = await clientTask.WaitAsync(cts.Token);
+        }
+        catch (TimeoutException)
+        {
+            Output.WriteLine("MCP client initialization timed out after 2 minutes. This may indicate the server failed to start or is hanging.");
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            Output.WriteLine("MCP client initialization was cancelled or timed out.");
+            throw;
+        }
     }
 
     public virtual ValueTask DisposeAsync()
@@ -167,9 +151,17 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     public void Dispose()
     {
         // Failure output may contain request and response details that should be output for failed tests.
-        if (TestContext.Current.TestState?.Result == TestResult.Failed && FailureOutput.Length > 0)
+        try
         {
-            Output.WriteLine(FailureOutput.ToString());
+            if (TestContext.Current?.TestState?.Result == TestResult.Failed && FailureOutput.Length > 0)
+            {
+                Output.WriteLine(FailureOutput.ToString());
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // TestContext.Current may not be available in some test execution contexts
+            // In this case, we skip the failure output logging
         }
     }
 }
