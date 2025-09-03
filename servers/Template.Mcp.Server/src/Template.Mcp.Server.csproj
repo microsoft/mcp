@@ -7,6 +7,8 @@
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
     <NpmPackageName>@azure/mcp-template</NpmPackageName>
     <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>
+    <PackageId>Microsoft.Template.Mcp</PackageId>
+    <ToolCommandName>$(CliName)</ToolCommandName>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -36,25 +38,7 @@
 
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
     <!-- AOT native build flags -->
-    <IsAotCompatible>true</IsAotCompatible>
-    <PublishAot>true</PublishAot>
     <PublishTrimmed>true</PublishTrimmed>
-    <TrimMode>full</TrimMode>
-    <SelfContained>true</SelfContained>
-    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
-    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
-    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
-
-    <!-- .NET Tool Package settings -->
-    <IsPackable>true</IsPackable>
-    <PackAsTool>true</PackAsTool>
-    <PackageType>McpServer</PackageType>
-    <PackageId>Microsoft.Template.Mcp</PackageId>
-    <ToolCommandName>$(CliName)</ToolCommandName>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <!-- Keep these aligned with OS + arch build-matrix.json. -->
-    <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <!-- Properties for the root (RID-less) .NET Tool package -->
