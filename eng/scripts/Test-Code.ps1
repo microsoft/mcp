@@ -40,14 +40,17 @@ function FilterTestProjects {
     }
 
     $testProjects = Get-ChildItem -Path "$RepoRoot" -Recurse -Filter "*.csproj" -Include $fileNameFilters -File
-    | ForEach-Object { (Resolve-Path -Path $_.FullName -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./') }
+    | ForEach-Object { @{
+        FullName = $_.FullName
+        Relative = (Resolve-Path -Path $_.FullName -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./')
+    }}
 
-    $normalizedPathFilters = $Paths | ForEach-Object { "*$($_.Replace('\', '/'))*" }
+    $normalizedPathFilters = $Paths ? ($Paths | ForEach-Object { "*$($_.Replace('\', '/'))*" }) : @()
 
     if($normalizedPathFilters) {
         $testProjects = $testProjects | Where-Object {
             foreach($filter in $normalizedPathFilters) {
-                if ($_ -like $filter) {
+                if ($_.Relative -like $filter) {
                     return $true
                 }
             }
@@ -60,7 +63,7 @@ function FilterTestProjects {
         return $null
     }
 
-    return $testProjects
+    return $testProjects.FullName
 }
 
 function CreateTestSolution {
