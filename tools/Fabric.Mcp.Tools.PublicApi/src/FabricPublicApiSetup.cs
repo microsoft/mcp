@@ -49,10 +49,8 @@ public class FabricPublicApiSetup : IAreaSetup
         fabricPublicApis.AddCommand("get-platform", new GetPlatformApisCommand(loggerFactory.CreateLogger<GetPlatformApisCommand>()));
 
         // Add best practices commands
-        bestPractices.AddCommand("get", new GetExamplesCommand(loggerFactory.CreateLogger<GetExamplesCommand>()));
-        fabricPublicApis.AddCommand("item-definition", new GetWorkloadDefinitionCommand(loggerFactory.CreateLogger<GetWorkloadDefinitionCommand>()));
-        
-        //bestPractices.AddCommand("long-running-operations", new GetWorkloadApisCommand(loggerFactory.CreateLogger<GetWorkloadApisCommand>()));
-        //bestPractices.AddCommand("pagination", new GetWorkloadApisCommand(loggerFactory.CreateLogger<GetWorkloadApisCommand>()));
+        bestPractices.AddCommand("get-example", new GetExamplesCommand(loggerFactory.CreateLogger<GetExamplesCommand>()));
+        bestPractices.AddCommand("item-definition", new GetWorkloadDefinitionCommand(loggerFactory.CreateLogger<GetWorkloadDefinitionCommand>()));
+        bestPractices.AddCommand("get", new GetBestPracticeCommand(loggerFactory.CreateLogger<GetBestPracticeCommand>()));
     }
 }
