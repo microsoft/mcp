@@ -31,7 +31,7 @@ if (!$TestResultsPath) {
 # Clean previous results
 Remove-Item -Recurse -Force $TestResultsPath -ErrorAction SilentlyContinue
 
-# Finds all test projects, then filters them based on the specified path and area filters.
+# Finds all test projects, then filters them based on the specified path filters.
 function FilterTestProjects {
     $fileNameFilters = switch ($testType) {
         'Live' { '*.LiveTests.csproj' }
