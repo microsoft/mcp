@@ -50,10 +50,10 @@
 
 
 # PRLabel: %area-BestPractices
-/tools/Azure.Mcp.Tools.AzureBestPractices/             @g2vinay @conniey @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.AzureBestPractices/             @g2vinay @conniey @fanyang-mono @microsoft/azure-mcp
 
 # ServiceLabel: %area-BestPractices
-# ServiceOwners:                       @g2vinay @conniey
+# ServiceOwners:                       @g2vinay @conniey @fanyang-mono
 
 # PRLabel: %area-CloudArchitect
 /tools/Azure.Mcp.Tools.CloudArchitect/                         @msalaman @microsoft/azure-mcp
