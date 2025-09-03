@@ -251,6 +251,7 @@ public class MarketplaceService(ITenantService tenantService)
         var pipeline = HttpPipelineBuilder.Build(clientOptions);
 
         string accessToken = await GetAccessTokenAsync(tenant);
+        ValidateRequiredParameters(accessToken);
 
         var request = pipeline.CreateRequest();
         request.Method = RequestMethod.Get;
@@ -261,14 +262,8 @@ public class MarketplaceService(ITenantService tenantService)
 
         if (!response.IsError)
         {
-            try
-            {
-                return JsonSerializer.Deserialize(response.Content.ToStream(), jsonTypeInfo)!;
-            }
-            catch (JsonException ex)
-            {
-                throw new JsonException($"Failed to deserialize marketplace response: {ex.Message}", ex);
-            }
+            var result = JsonSerializer.Deserialize(response.Content.ToStream(), jsonTypeInfo);
+            return result ?? throw new JsonException("Marketplace response deserialized to null.");
         }
 
         throw new HttpRequestException($"Request failed with status {response.Status}: {response.ReasonPhrase}");

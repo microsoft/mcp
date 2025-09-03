@@ -75,6 +75,26 @@ public class ProductListCommandTests : CommandTestsBase,
 
     [Fact]
     [Trait("Category", "Live")]
+    public async Task Should_list_marketplace_products_with_french_language_option()
+    {
+        var result = await CallToolAsync(
+            "azmcp_marketplace_product_list",
+            new()
+            {
+                { "subscription", _subscriptionId },
+                { "language", "fr" }
+            });
+
+        var products = result.AssertProperty(ProductsKey);
+        Assert.Equal(JsonValueKind.Array, products.ValueKind);
+
+        // Check that we have at least one product
+        var productArray = products.EnumerateArray().ToArray();
+        Assert.NotEmpty(productArray);
+    }
+
+    [Fact]
+    [Trait("Category", "Live")]
     public async Task Should_list_marketplace_products_with_language_and_search_options()
     {
         var result = await CallToolAsync(
@@ -194,8 +214,6 @@ public class ProductListCommandTests : CommandTestsBase,
 
         // Check that we have at least one product
         var productArray = products.EnumerateArray().ToArray();
-        Assert.NotEmpty(productArray);
-
         // Verify selected properties are present
         Assert.NotEmpty(productArray);
         var product = productArray[0];
