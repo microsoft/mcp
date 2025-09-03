@@ -130,6 +130,4 @@ public interface ISqlService
         string firewallRuleName,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
-
-
 }
