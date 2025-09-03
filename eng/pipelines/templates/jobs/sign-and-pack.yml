@@ -68,6 +68,10 @@ jobs:
       ArtifactName: $(PipelineArtifactName)_signed
       SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
 
+  - task: NuGetToolInstaller@1
+    inputs:
+      versionSpec: '6.x'
+    
   - task: Powershell@2
     displayName: "Pack modules"
     inputs:
