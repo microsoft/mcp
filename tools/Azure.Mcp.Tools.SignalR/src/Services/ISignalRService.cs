@@ -19,7 +19,7 @@ public interface ISignalRService
 
     Task<Runtime?> GetRuntimeAsync(
         string subscription,
-        string resourceGroupName,
+        string resourceGroup,
         string signalRName,
         string? tenant = null,
         AuthMethod? authMethod = null,
@@ -30,7 +30,7 @@ public interface ISignalRService
     /// </summary>
     Task<Key?> ListKeysAsync(
         string subscription,
-        string resourceGroupName,
+        string resourceGroup,
         string signalRName,
         string? tenant = null,
         AuthMethod? authMethod = null,
@@ -39,9 +39,9 @@ public interface ISignalRService
     /// <summary>
     /// Gets identity configuration for a SignalR service.
     /// </summary>
-    Task<Models.Identity?> GetSignalRIdentityAsync(
+    Task<SignalR.Models.Identity?> GetSignalRIdentityAsync(
         string subscription,
-        string resourceGroupName,
+        string resourceGroup,
         string signalRName,
         string? tenant = null,
         AuthMethod? authMethod = null,
