@@ -86,12 +86,14 @@ public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand>
         Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed deleting the firewall rule. Verify you have appropriate permissions. Details: {reqEx.Message}",
         Azure.RequestFailedException reqEx => reqEx.Message,
+        ArgumentException argEx => argEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
         Azure.RequestFailedException reqEx => reqEx.Status,
+        ArgumentException => 400,
         _ => base.GetStatusCode(ex)
     };
 
