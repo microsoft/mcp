@@ -47,12 +47,12 @@ public class FirewallRuleCreateCommandTests
     }
 
     [Theory]
-    [InlineData("--subscription sub --resource-group rg --server server --name rule1 --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255", true)]
-    [InlineData("--subscription sub --resource-group rg --server server --name rule1 --start-ip-address 192.168.1.1", false)] // Missing end IP
+    [InlineData("--subscription sub --resource-group rg --server server --firewall-rule-name rule1 --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255", true)]
+    [InlineData("--subscription sub --resource-group rg --server server --firewall-rule-name rule1 --start-ip-address 192.168.1.1", false)] // Missing end IP
     [InlineData("--subscription sub --resource-group rg --server server --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255", false)] // Missing rule name
-    [InlineData("--subscription sub --resource-group rg --name rule1 --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255", false)] // Missing server
-    [InlineData("--subscription sub --server server --name rule1 --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255", false)] // Missing resource group
-    [InlineData("--resource-group rg --server server --name rule1 --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255", false)] // Missing subscription
+    [InlineData("--subscription sub --resource-group rg --firewall-rule-name rule1 --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255", false)] // Missing server
+    [InlineData("--subscription sub --server server --firewall-rule-name rule1 --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255", false)] // Missing resource group
+    [InlineData("--resource-group rg --server server --firewall-rule-name rule1 --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255", false)] // Missing subscription
     [InlineData("", false)] // Missing all required parameters
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -119,7 +119,7 @@ public class FirewallRuleCreateCommandTests
             .Returns(expectedFirewallRule);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
+        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -146,7 +146,7 @@ public class FirewallRuleCreateCommandTests
             .Returns(Task.FromException<SqlServerFirewallRule>(new Exception("Test error")));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
+        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -174,7 +174,7 @@ public class FirewallRuleCreateCommandTests
             .Returns(Task.FromException<SqlServerFirewallRule>(requestException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
+        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -201,7 +201,7 @@ public class FirewallRuleCreateCommandTests
             .Returns(Task.FromException<SqlServerFirewallRule>(requestException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
+        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -228,7 +228,7 @@ public class FirewallRuleCreateCommandTests
             .Returns(Task.FromException<SqlServerFirewallRule>(requestException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
+        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -255,7 +255,7 @@ public class FirewallRuleCreateCommandTests
             .Returns(Task.FromException<SqlServerFirewallRule>(argumentException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --name TestRule --start-ip-address invalid --end-ip-address invalid");
+        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address invalid --end-ip-address invalid");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -295,7 +295,7 @@ public class FirewallRuleCreateCommandTests
             .Returns(expectedFirewallRule);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse($"--subscription {subscription} --resource-group {resourceGroup} --server {serverName} --name {ruleName} --start-ip-address {startIp} --end-ip-address {endIp}");
+        var parseResult = _parser.Parse($"--subscription {subscription} --resource-group {resourceGroup} --server {serverName} --firewall-rule-name {ruleName} --start-ip-address {startIp} --end-ip-address {endIp}");
 
         // Act
         await _command.ExecuteAsync(context, parseResult);
@@ -335,7 +335,7 @@ public class FirewallRuleCreateCommandTests
             .Returns(expectedFirewallRule);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255 --retry-max-retries 3");
+        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255 --retry-max-retries 3");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -382,7 +382,7 @@ public class FirewallRuleCreateCommandTests
             .Returns(expectedFirewallRule);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse($"--subscription testsub --resource-group testrg --server testserver --name TestRule --start-ip-address {startIp} --end-ip-address {endIp}");
+        var parseResult = _parser.Parse($"--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address {startIp} --end-ip-address {endIp}");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);

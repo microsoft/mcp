@@ -7,7 +7,7 @@ public static class SqlOptionDefinitions
 {
     public const string ServerName = "server";
     public const string DatabaseName = "database";
-    public const string FirewallRuleName = "name";
+    public const string FirewallRuleName = "firewall-rule-name";
     public const string StartIpAddress = "start-ip-address";
     public const string EndIpAddress = "end-ip-address";
 

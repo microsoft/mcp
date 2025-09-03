@@ -294,7 +294,7 @@ public class SqlCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "server", serverName },
-                { "name", ruleName },
+                { "firewall-rule-name", ruleName },
                 { "start-ip-address", startIp },
                 { "end-ip-address", endIp }
             });
@@ -304,7 +304,7 @@ public class SqlCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper 
         Assert.Equal(JsonValueKind.Object, firewallRule.ValueKind);
 
         // Verify firewall rule properties
-        var name = firewallRule.GetProperty("name").GetString();
+        var name = firewallRule.GetProperty("firewall-rule-name").GetString();
         Assert.Equal(ruleName, name);
 
         var ruleType = firewallRule.GetProperty("type").GetString();
@@ -339,7 +339,7 @@ public class SqlCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "server", serverName },
-                { "name", ruleName },
+                { "firewall-rule-name", ruleName },
                 { "start-ip-address", startIp },
                 { "end-ip-address", endIp }
             });
@@ -352,7 +352,7 @@ public class SqlCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "server", serverName },
-                { "name", ruleName }
+                { "firewall-rule-name", ruleName }
             });
 
         // Should successfully delete the firewall rule
@@ -377,7 +377,7 @@ public class SqlCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper 
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "server", serverName },
-                { "name", nonExistentRuleName }
+                { "firewall-rule-name", nonExistentRuleName }
             });
 
         // Should return false when trying to delete non-existent rule (idempotent)
@@ -392,7 +392,7 @@ public class SqlCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper 
     [InlineData("--invalid-param")]
     [InlineData("--subscription invalidSub")]
     [InlineData("--subscription sub --resource-group rg")] // Missing server, name, and IP addresses
-    [InlineData("--subscription sub --resource-group rg --server server --name rule1")] // Missing IP addresses
+    [InlineData("--subscription sub --resource-group rg --server server --firewall-rule-name rule1")] // Missing IP addresses
     public async Task Should_Return400_WithInvalidFirewallRuleCreateInput(string args)
     {
         try
