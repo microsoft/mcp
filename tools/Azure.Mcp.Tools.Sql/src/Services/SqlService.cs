@@ -406,7 +406,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                     State: elasticPool.Properties?.State,
                     CreationDate: elasticPool.Properties?.CreatedOn,
                     MaxSizeBytes: elasticPool.Properties?.MaxSizeBytes,
-                    PerDatabaseSettings: elasticPool.Properties?.PerDatabaseSettings != null ? new ElasticPoolPerDatabaseSettings(
+                    PerDatabaseSettings: elasticPool.Properties?.PerDatabaseSettings != null ? new Azure.Mcp.Tools.Sql.Models.ElasticPoolPerDatabaseSettings(
                         MinCapacity: elasticPool.Properties.PerDatabaseSettings.MinCapacity,
                         MaxCapacity: elasticPool.Properties.PerDatabaseSettings.MaxCapacity
                     ) : null,
