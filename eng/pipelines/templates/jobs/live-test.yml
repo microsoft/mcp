@@ -7,9 +7,9 @@ jobs:
 - job: LiveTest
   displayName: "Live tests -"
   timeoutInMinutes: ${{ parameters.TimeoutInMinutes }}
-  condition: and(succeeded(), eq(stageDependencies.Initialize.Initialize.outputs['GetTestAreasLive.HasTestAreas'], 'true'))
+  condition: and(succeeded(), eq(stageDependencies.Initialize.Initialize.outputs['GetTestPathsLive.HasTestPaths'], 'true'))
   strategy:
-    matrix: $[ stageDependencies.Initialize.Initialize.outputs['GetTestAreasLive.TestMatrix'] ]
+    matrix: $[ stageDependencies.Initialize.Initialize.outputs['GetTestPathsLive.TestMatrix'] ]
   steps:
   - checkout: self
 
@@ -59,7 +59,7 @@ jobs:
       Inline: |
         ./eng/scripts/Test-Code.ps1 `
           -TestType 'Live' `
-          -Area $(Area) `
+          -Path $(PathToTest) `
           -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
 
         exit $LastExitCode
@@ -71,7 +71,7 @@ jobs:
     displayName: "Publish Results"
     inputs:
       testResultsFiles: "$(Build.ArtifactStagingDirectory)/testResults/*.trx"
-      testRunTitle: "live-$(Area)"
+      testRunTitle: "live - $(PathToTest)"
       testResultsFormat: "VSTest"
       mergeTestResults: true
 
