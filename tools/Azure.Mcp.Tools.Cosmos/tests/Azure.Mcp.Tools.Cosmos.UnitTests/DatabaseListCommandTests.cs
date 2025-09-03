@@ -116,7 +116,7 @@ public class DatabaseListCommandTests
             "--subscription", "sub123"
         ]);
 
-        // Act
+        // Act 
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
@@ -131,7 +131,7 @@ public class DatabaseListCommandTests
     [InlineData("--subscription", "sub123")]
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
-        // Arrange & Act
+        // Arrange & Act 
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
 
         // Assert

@@ -122,7 +122,7 @@ public class ContainerListCommandTests
             "--subscription", "sub123"
         ]);
 
-        // Act
+        // Act 
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
@@ -137,7 +137,7 @@ public class ContainerListCommandTests
     [InlineData("--subscription", "sub123", "--account", "account123")] // Missing database-name
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
-        // Arrange & Act
+        // Arrange & Act 
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
 
         // Assert
