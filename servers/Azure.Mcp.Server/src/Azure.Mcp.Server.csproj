@@ -86,6 +86,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
     <ProjectReference Include="..\..\..\tools\Azure.*\src\*.csproj" />
+    <ProjectReference Include="..\..\..\areas\ai\src\AzureMcp.Ai\AzureMcp.Ai.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" />
