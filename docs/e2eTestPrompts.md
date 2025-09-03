@@ -366,7 +366,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | azmcp-startups-deploy | Create a static website hosting environment for my startup using the files in the folder <folder-path> |
-| azmcp-startups-deploy | Deploy my startup's landing page from the folder <folder-path> to a new storage account called <storage-account-name> |
+| azmcp-startups-deploy | Deploy my startup's landing page from the folder <folder_path> to a new storage account called <storage-account-name> |
 | azmcp-startups-deploy | Set up static website hosting and deploy content from the folder <folder-path> to Azure Storage with the default configuration |
 | azmcp-startups-deploy | Create a storage account <storage-account-name> and deploy my static website from the <directory-name> directory |
 | azmcp-startups-guidance | What is Microsoft for Startups? |

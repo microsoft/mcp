@@ -155,37 +155,41 @@ public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> log
         {
             new QuickStartStep(
                 Order: 1,
-                Title: "Azure CLI Authentication Required",
-                Description: "Log into your Azure account using Azure CLI before proceeding",
-                Commands: ["az login", "az account show"]
+                Title: "🌟 Apply to Microsoft for Startups",
+                Description: "Visit the Microsoft for Startups website and submit your application",
+                Commands: ["1. Go to https://startups.microsoft.com/", "2. Click 'Apply Now'", "3. Complete the application form"]
             ),
             new QuickStartStep(
                 Order: 2,
-                Title: "📁 Prepare Your Project",
-                Description: "Have your website files ready for deployment",
+                Title: "� Program Benefits Overview",
+                Description: "Understand the key benefits available to you",
                 Commands: [
-                    "For static sites: Put files in a folder",
-                    "For React: Ensure package.json exists",
-                    "Run 'npm run build' if needed"
+                    "- Up to $150,000 in Azure credits",
+                    "- Technical support and architecture guidance",
+                    "- Go-to-market and sales enablement",
+                    "- Access to Microsoft's partner ecosystem"
                 ]
             ),
             new QuickStartStep(
                 Order: 3,
-                Title: "Deploy to Startups Resource Group",
-                Description: "Deploy your application using the 'startups' resource group automatically",
+                Title: "🚀 Getting Started",
+                Description: "Initial steps after acceptance into the program",
                 Commands: [
-                    "az storage account create --name [your-storage-name] --resource-group startups --location eastus --sku Standard_LRS --kind StorageV2",
-                    "az storage blob service-properties update --account-name [your-storage-name] --static-website --index-document index.html",
-                    "az storage blob upload-batch --account-name [your-storage-name] --destination '$web' --source [your-source-path] --overwrite"
+                    "1. Set up your Microsoft for Startups Founders Hub account",
+                    "2. Activate your Azure benefits",
+                    "3. Schedule your technical onboarding session",
+                    "4. Explore available resources and learning paths"
                 ]
             ),
             new QuickStartStep(
                 Order: 4,
-                Title: "🌐 Access Your Website",
-                Description: "Your site will be available at the Azure static website URL",
+                Title: "🤝 Next Steps",
+                Description: "Explore deployment options and additional resources",
                 Commands: [
-                    "URL format: https://{storage-account}.z13.web.core.windows.net",
-                    "Get URL: az storage account show --name [your-storage-name] --resource-group startups --query \"primaryEndpoints.web\" --output tsv"
+                    "- Use 'startups deploy' command when ready to deploy",
+                    "- Join the Microsoft for Startups community",
+                    "- Connect with other founders",
+                    "- Access exclusive training and events"
                 ]
             )
         };
@@ -203,7 +207,7 @@ public sealed class StartupsGuidanceCommand(ILogger<StartupsGuidanceCommand> log
         context.Response.Results = ResponseResult.Create<StartupsGuidanceCommandResult>(
             new StartupsGuidanceCommandResult(info),
             GuidanceJsonContext.Default.StartupsGuidanceCommandResult);
-
+            
         return Task.FromResult(context.Response);
     }
 
