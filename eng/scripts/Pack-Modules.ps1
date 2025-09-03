@@ -45,7 +45,7 @@ try {
     foreach($wrapperJsonFile in $wrapperJsonFiles) {
         $serverDirectory = $wrapperJsonFile.Directory
         $serverName = $serverDirectory.Name
-        $serverProjectProperties = & "$projectPropertiesScript" -ProjectName "$serverName.csproj"
+        $serverProjectProperties = & "$projectPropertiesScript" -ProjectName "$($serverName -replace '-native', '').csproj"
         $npmPlatformOutputPath = "$OutputPath/npm/$serverName/platform"
         $npmWrapperOutputPath = "$OutputPath/npm/$serverName/wrapper"
         $nugetPlatformOutputPath = "$OutputPath/nuget/$serverName/platform"
