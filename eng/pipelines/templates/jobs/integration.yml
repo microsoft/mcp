@@ -32,8 +32,8 @@ jobs:
   - checkout: self
 
   - download: current
-    displayName: Download nuget_$(PipelineArtifactName)_signed
-    artifact: nuget_$(PipelineArtifactName)_signed
+    displayName: Download nuget_$(PipelineArtifactName)_packed
+    artifact: nuget_$(PipelineArtifactName)_packed
 
   - task: 1ES.PublishNuget@1
     displayName: Publish platform-specific Nugets
