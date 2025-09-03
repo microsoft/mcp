@@ -304,7 +304,7 @@ public class SqlCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper 
         Assert.Equal(JsonValueKind.Object, firewallRule.ValueKind);
 
         // Verify firewall rule properties
-        var name = firewallRule.GetProperty("firewall-rule-name").GetString();
+        var name = firewallRule.GetProperty("name").GetString();
         Assert.Equal(ruleName, name);
 
         var ruleType = firewallRule.GetProperty("type").GetString();
