@@ -5,7 +5,8 @@ param(
     [string]$ResourceGroupName,
     [string]$BaseName,
     [int]$DeleteAfterHours = 12,
-    [switch]$Unique
+    [switch]$Unique,
+    [switch]$Parallel
 )
 
 $ErrorActionPreference = 'Stop'
@@ -83,7 +84,7 @@ Deploying:
     TestResourcesDirectory: '$TestResourcesDirectory'`n
 "@ -ForegroundColor Yellow
     if($AsJob) {
-       Start-ThreadJob -ScriptBlock {
+       Start-Job -ScriptBlock {
             param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $testResourcesDirectory, $DeleteAfterHours)
 
             & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
@@ -129,9 +130,10 @@ $jobInputs = $filteredPaths | ForEach-Object {
     }
 }
 
-if ($jobInputs.Count -eq 1) {
-    $jobInput = $jobInputs[0]
-    Deploy-TestResources @jobInput
+if ($jobInputs.Count -eq 1 -or !$Parallel) {
+    foreach ($jobInput in $jobInputs) {
+        Deploy-TestResources @jobInput
+    }
 } else {
     $jobs = @()
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
@@ -141,28 +143,32 @@ if ($jobInputs.Count -eq 1) {
     }
 
     $ErrorActionPreference = 'Continue'
+    $runningJobs = @() + $jobs
     while($true) {
         $elapsed = $stopwatch.Elapsed
         Write-Host "`n($($elapsed)) Checking status of deployment jobs..." -ForegroundColor Cyan
 
-        foreach ($job in $jobs) {
-            $jobState = Get-Job -Id $job.Id | Select-Object -ExpandProperty State
-            if ($jobState -in 'Failed', 'Stopped') {
-                Write-Warning "  Deployment job $($job.Path) $jobState. Job ID: $($job.Id)"
-                Receive-Job -Id $job.Id
-                Remove-Job -Id $job.Id
-                $jobs = @($jobs | Where-Object { $_.Id -ne $job.Id })
-            } elseif ($jobState -eq 'Completed') {
-                Write-Host "  Deployment job $($job.Path) completed. Job ID: $($job.Id)"
-                Receive-Job -Id $job.Id
-                Remove-Job -Id $job.Id
-                $jobs = @($jobs | Where-Object { $_.Id -ne $job.Id })
-            } else {
-                Write-Host "  Deployment job $($job.Path) $jobState. Job ID: $($job.Id)"
+        foreach ($job in $runningJobs) {
+            $job.State = Get-Job -Id $job.Id | Select-Object -ExpandProperty State
+            if ($job.State -in 'Running', 'NotStarted') {
+                continue
             }
+
+            if ($job.State -in 'Failed', 'Stopped') {
+                Write-Host "## Deployment job '$($job.Path)' $($job.State). ##" -ForegroundColor Red
+                Receive-Job -Id $job.Id
+                Write-Host ''
+            } else {
+                Write-Host "## Deployment job '$($job.Path)' $($job.State). ##" -ForegroundColor Green
+            }
+
+            Remove-Job -Id $job.Id
+            $runningJobs = $runningJobs | Where-Object { $_.Id -ne $job.Id }
         }
 
-        if ($jobs.Count -eq 0) {
+        $jobs | Select-Object -Property Path, State | Format-Table -AutoSize
+
+        if (!$runningJobs) {
             break
         }
 

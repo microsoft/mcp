@@ -5,6 +5,7 @@
 param(
     [string] $TestResultsPath,
     [string[]] $Paths,
+    [string[]] $Members,
     [ValidateSet('Live', 'Unit', 'All')]
     [string] $TestType = 'Unit',
     [switch] $CollectCoverage,
@@ -30,111 +31,33 @@ if (!$TestResultsPath) {
 # Clean previous results
 Remove-Item -Recurse -Force $TestResultsPath -ErrorAction SilentlyContinue
 
-# Gets all area projects those are excluded using BuildNative condition.
-function Get-NativeExcludedTools {
-    $toolsPathPattern = 'tools/.+'
-    $ProjectFile = "$RepoRoot/core/src/AzureMcp.Cli/AzureMcp.Cli.csproj"
-
-    if (!(Test-Path $ProjectFile)) {
-        Write-Error "$ProjectFile not found"
-        exit 1
+# Finds all test projects, then filters them based on the specified path and area filters.
+function FilterTestProjects {
+    $fileNameFilters = switch ($testType) {
+        'Live' { '*.LiveTests.csproj' }
+        'Unit' { '*.UnitTests.csproj' }
+        'All'  { '*.LiveTests.csproj', '*.UnitTests.csproj' }
     }
 
-    [xml]$xml = Get-Content $ProjectFile
-    $buildNativeGroup = $xml.Project.ItemGroup | Where-Object { $_.Condition -eq "'`$(BuildNative)' == 'true'" }
+    $testProjects = Get-ChildItem -Path "$RepoRoot" -Recurse -Filter "*.csproj" -Include $fileNameFilters -File
 
-    if (!$buildNativeGroup) {
-        Write-Warning "No ItemGroup with BuildNative condition found"
-        return @()
-    }
-
-    $excludedTools = @()
-    foreach ($ref in $buildNativeGroup.ProjectReference) {
-        if ($ref.Remove -and $ref.Remove.Replace('\', '/') -match $toolsPathPattern) {
-            $excludedTools += $matches[0].ToLower()
+    if($Paths.Count -ne 0) {
+        $testProjects = $testProjects | Where-Object {
+            foreach($filter in $Paths) {
+                if ($_.FullName.Replace('\', '/') -like $filter) {
+                    return $true
+                }
+            }
+            return $false
         }
     }
 
-    return $excludedTools
-}
-
-# Identifies the root directories to be recursively scanned for tests in the specified areas.
-function GetTestsRootDirs {
-    param(
-        [string[]]$areas
-    )
-
-    $testsRootDirs = @()
-
-    if (!$areas) {
-        return $testsRootDirs += $RepoRoot
+    if($testProjects.Count -eq 0) {
+        Write-Error "No test projects found for test type '$testType' with the specified filters"
+        return $null
     }
 
-    foreach ($area in $areas) {
-        $rootedPath = "$RepoRoot/$area"
-        if (Test-Path $rootedPath) {
-            $testsRootDirs += $rootedPath
-        } else {
-            Write-Error "Area path '$rootedPath' does not exist."
-            return $null
-        }
-    }
-
-    return $testsRootDirs
-}
-
-function BuildNativeBinaryAndPrepareTests {
-    param(
-        [Parameter(Mandatory=$true)]
-        [string[]]$testsRootDirs
-    )
-
-    # Native AOT compilation only occurs during 'dotnet publish', not 'dotnet build'
-    $nativeBinaryPath = PublishNativeBinary
-
-    Write-Host "Building test project(s)"
-    Invoke-LoggedCommand `
-        -Command "dotnet build" `
-        -AllowedExitCodes @(0)
-
-    CopyNativeBinaryToTestDirs -nativeBinaryPath $nativeBinaryPath -testsRootDirs $testsRootDirs
-}
-
-function PublishNativeBinary {
-    $runtimeId = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier
-    Write-Host "Publishing AzureMcp as native binary for $runtimeId"
-
-    $cliProjectDir = "$RepoRoot/core/src/AzureMcp.Cli"
-
-    Invoke-LoggedCommand `
-        -Command "dotnet publish '$cliProjectDir/AzureMcp.Cli.csproj' -c Release -r $runtimeId /p:BuildNative=true" `
-        -AllowedExitCodes @(0) | Out-Null
-
-    $exeName = if ($runtimeId.StartsWith('win-')) { "azmcp.exe" } else { "azmcp" }
-    $nativeExePath = "$cliProjectDir/bin/Release/net9.0/$runtimeId/publish/$exeName"
-
-    if (-not (Test-Path $nativeExePath)) {
-        Write-Error "Native binary not found at $nativeExePath"
-        exit 1
-    }
-
-    return $nativeExePath
-}
-
-function CopyNativeBinaryToTestDirs {
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$nativeBinaryPath,
-        [string[]]$testsRootDirs
-    )
-    Write-Host "Copying native AzureMcp to test directories"
-
-    $testsRootDirs | ForEach-Object {
-        Get-ChildItem -Path $_ -Recurse -Filter "*.LiveTests" -Directory
-    } | ForEach-Object {
-        $targetDirectory = "$($_.FullName)/bin/Debug/net9.0"
-        Copy-Item $nativeBinaryPath $targetDirectory -Force
-    }
+    return $testProjects
 }
 
 function CreateTestSolution {
@@ -142,32 +65,8 @@ function CreateTestSolution {
         [Parameter(Mandatory=$true)]
         [string]$workPath,
         [Parameter(Mandatory=$true)]
-        [string[]]$testsRootDirs,
-        [Parameter(Mandatory=$true)]
-        [string]$testType
+        [array]$testProjects
     )
-
-    $testPatterns = switch ($testType) {
-        'Live' { @('*.LiveTests.csproj') }
-        'Unit' { @('*.UnitTests.csproj') }
-        'All'  { @('*.LiveTests.csproj', '*.UnitTests.csproj') }
-        default {
-            Write-Error "Invalid test type specified: '$testType'. Valid options are 'Live', 'Unit', or 'All'."
-            return $null
-        }
-    }
-
-    $testProjects = @($testsRootDirs | ForEach-Object {
-        $testsRootDir = $_
-        $testPatterns | ForEach-Object {
-            Get-ChildItem $testsRootDir -Recurse -File -Filter $_
-        }
-    })
-
-    if($testProjects.Count -eq 0) {
-        Write-Error "No test projects found in the specified areas for test type '$testType'."
-        return $null
-    }
 
     # Create solution and add projects
     Write-Host "Creating temporary solution file..."
@@ -175,7 +74,7 @@ function CreateTestSolution {
     Push-Location $workPath
     try {
         dotnet new sln -n "Tests" | Out-Null
-        dotnet sln add $testProjects --in-root | Out-Host
+        dotnet sln add $testProjects.FullName --in-root | Out-Host
     }
     finally {
         Pop-Location
@@ -321,29 +220,9 @@ function Create-CoverageReport {
 }
 # main
 
-if ($TestNativeBuild) {
-    $excludedTools = Get-NativeExcludedTools
-    $nonNativeTools = @($tools | Where-Object { 'tools/$_' -in $excludedTools })
-    $tools = @($tools | Where-Object { $_ -notin $excludedTools })
+$testProjects = FilterTestProjects
 
-    if ($tools.Count -eq 0) {
-        Write-Warning "All the specified area(s) [$($nonNativeTools -join ', ')] are native incompatible, specify areas that support native builds or run without -TestNativeBuild."
-        exit 0
-    }
-
-    if ($nonNativeTools.Count -gt 0) {
-        Write-Warning "The following native incompatible areas will be excluded from native tests:"
-        Write-Warning "  $($nonNativeTools -join ', ')"
-    }
-}
-
-$testsRootDirs = GetTestsRootDirs -Tools $tools
-
-if (!$testsRootDirs) {
-    exit 1
-}
-
-$solutionPath = CreateTestSolution -workPath $workPath -testsRootDirs $testsRootDirs -testType $TestType
+$solutionPath = CreateTestSolution -workPath $workPath -testProjects $testProjects
 
 if (!$solutionPath) {
     exit 1
@@ -351,10 +230,6 @@ if (!$solutionPath) {
 
 Push-Location $workPath
 try {
-    if ($TestNativeBuild) {
-        BuildNativeBinaryAndPrepareTests -testsRootDirs $testsRootDirs
-    }
-
     if($debugLogs) {
         Write-Host "`n`n"
         # dump all environment variables
@@ -381,16 +256,16 @@ try {
 
     $coverageArg = $CollectCoverage ? "--collect:'XPlat Code Coverage'" : ""
     $resultsArg = "--results-directory '$TestResultsPath'"
-    $loggerArg = "--logger 'trx'"
+    $loggerArg = "--logger 'trx' --logger 'console;verbosity=detailed'"
 
     $command = "dotnet test $coverageArg $resultsArg $loggerArg"
-    if ($TestNativeBuild) {
-        $command += " --no-build"
+
+    if($Members.Count -gt 0) {
+        $memberFilterString = $Members | ForEach-Object { "FullyQualifiedName~$_" } | Join-String -Separator '|'
+        $command += " --filter '$memberFilterString'"
     }
 
-    Invoke-LoggedCommand `
-        -Command $command `
-        -AllowedExitCodes @(0, 1)
+    Invoke-LoggedCommand -Command $command -AllowedExitCodes @(0, 1)
 }
 finally {
     Pop-Location
