@@ -8,4 +8,5 @@
     <WriteLinesToFile File="$(OutputFile)" Lines="$(_ProjectReferencesJson)" Overwrite="true" />
     <Message Text="Project references written to: $(OutputFile)" Importance="high"/>
   </Target>
+  <Import Project="$(RepoRoot)\eng\dnx\PackServerJson.targets" Condition="'$(IsServerProject)' == 'true' and '$(IsPacking)' == 'true'"/>
 </Project>

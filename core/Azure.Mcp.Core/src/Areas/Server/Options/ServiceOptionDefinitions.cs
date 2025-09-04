@@ -9,6 +9,7 @@ public static class ServiceOptionDefinitions
     public const string NamespaceName = "namespace";
     public const string ModeName = "mode";
     public const string ReadOnlyName = "read-only";
+    public const string EnableInsecureTransportsName = "enable-insecure-transports";
 
     public static readonly Option<string> Transport = new(
         $"--{TransportName}",
@@ -44,4 +45,13 @@ public static class ServiceOptionDefinitions
         $"--{ReadOnlyName}",
         () => null,
         "Whether the MCP server should be read-only. If true, no write operations will be allowed.");
+
+    public static readonly Option<bool> EnableInsecureTransports = new(
+        $"--{EnableInsecureTransportsName}",
+        () => false,
+        "Enable insecure transport")
+    {
+        IsRequired = false,
+        IsHidden = true
+    };
 }
