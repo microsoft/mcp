@@ -21,6 +21,7 @@
     <PackageReference Include="Azure.ResourceManager" />
     <PackageReference Include="Azure.ResourceManager.ResourceGraph" />
     <PackageReference Include="Microsoft.Extensions.Azure" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" />
     <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
 </Project>

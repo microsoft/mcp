@@ -103,7 +103,7 @@ public class BestPracticesCommandTests
         var result = JsonSerializer.Deserialize<string[]>(json);
 
         Assert.NotNull(result);
-        Assert.Contains("flex consumption plan", result[0]);
+        Assert.Contains("Flex Consumption plan (FC1)", result[0]);
         Assert.Contains("Always use Linux OS for Python", result[0]);
         Assert.Contains("Function authentication", result[0]);
         Assert.Contains("Application Insights", result[0]);
@@ -206,7 +206,7 @@ public class BestPracticesCommandTests
         // Should contain content from both code-generation and deployment files
         Assert.Contains("Use the latest programming models (v4 for JavaScript, v2 for Python)", result[0]);
         Assert.Contains("Azure Functions Core Tools for creating Function Apps", result[0]);
-        Assert.Contains("flex consumption plan", result[0]);
+        Assert.Contains("Flex Consumption plan (FC1)", result[0]);
         Assert.Contains("Always use Linux OS for Python", result[0]);
         Assert.Contains("Function authentication", result[0]);
         Assert.Contains("Application Insights", result[0]);
