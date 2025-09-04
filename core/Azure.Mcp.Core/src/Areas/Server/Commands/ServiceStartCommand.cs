@@ -253,15 +253,18 @@ public sealed class ServiceStartCommand : BaseCommand
             throw new InvalidOperationException($"Unsupported scheme '{scheme}' in URL '{url}'.");
         }
 
-        bool allowExternal = EnvironmentHelpers.GetEnvironmentVariableAsBool("ALLOW_INSECURE_EXTERNAL_BINDING");
-
-        // Covers loopback IP: 127.0.0.0/8 range, IPv6 (::1) and localhost when resolved to loopback addresses.
+        // loopback IP: 127.0.0.0/8 range, IPv6 (::1) and localhost when resolved to loopback addresses.
         bool isLoopback = uri.IsLoopback;
-        // Covers both wildcard (uri.Host is "*" or "+" or "0.0.0.0" or "::") and specific external IPs/hostnames,
-        // i.e., anything that isn’t loopback but would be reachable on NICs.
-        bool isExternal = !isLoopback;
 
-        if (isExternal && !allowExternal)
+        // All interfaces, allowed only with ALLOW_INSECURE_EXTERNAL_BINDING opt-in.
+        bool isWildcard = uri.Host is "*" or "+" or "0.0.0.0" or "::" || (IPAddress.TryParse(uri.Host, out var anyIp) && (anyIp.Equals(IPAddress.Any) || anyIp.Equals(IPAddress.IPv6Any)));
+
+        if (!isLoopback && !isWildcard)
+        {
+            throw new InvalidOperationException($"Explicit external binding is not supported for '{url}'.");
+        }
+
+        if (isWildcard && !EnvironmentHelpers.GetEnvironmentVariableAsBool("ALLOW_INSECURE_EXTERNAL_BINDING"))
         {
             throw new InvalidOperationException(
                 $"External binding blocked for '{url}'. " +
