@@ -779,7 +779,7 @@ azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscri
                                       --size <filesystem-size-in-tib>
 
 # Create an Azure Managed Lustre filesystem import job (preview / placeholder)
-azmcp azuremanagedlustre filesystem importjob create --subscription <subscription> \
+azmcp azuremanagedlustre filesystem import-job create --subscription <subscription> \
                                      --resource-group <resource-group> \
                                      --file-system <filesystem-name> \
                                      --import-prefixes <prefix1> <prefix2> ... <prefixN> \

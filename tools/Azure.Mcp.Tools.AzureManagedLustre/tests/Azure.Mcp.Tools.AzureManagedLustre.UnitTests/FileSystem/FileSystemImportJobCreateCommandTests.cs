@@ -65,7 +65,7 @@ public class FileSystemImportJobCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
             .Returns(new ImportJobInfo(
-                "importjob-123",
+                "import-job-123",
                 _fileSystem,
                 _resourceGroup,
                 _subscription,
@@ -91,7 +91,7 @@ public class FileSystemImportJobCreateCommandTests
         var result = JsonSerializer.Deserialize<ImportJobCreateResultJson>(json);
         Assert.NotNull(result);
         Assert.NotNull(result!.ImportJob);
-        Assert.Equal("importjob-123", result.ImportJob.JobName);
+        Assert.Equal("import-job-123", result.ImportJob.JobName);
         Assert.Equal(_fileSystem, result.ImportJob.FileSystemName);
         Assert.Equal("/", result.ImportJob.ImportPrefixes![0]);
     }
@@ -104,7 +104,7 @@ public class FileSystemImportJobCreateCommandTests
     {
         // Arrange
         var prefixes = new[] { "/a", "/b" };
-        var jobName = "customjob";
+        var jobName = "custom-job";
         _amlfsService.CreateImportJobAsync(
             Arg.Is(_subscription),
             Arg.Is(_resourceGroup),

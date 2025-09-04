@@ -30,7 +30,7 @@ public class AzureManagedLustreSetup : IAreaSetup
 
         fileSystem.AddCommand("list", new FileSystemListCommand(loggerFactory.CreateLogger<FileSystemListCommand>()));
         fileSystem.AddCommand("required-subnet-size", new FileSystemSubnetSizeCommand(loggerFactory.CreateLogger<FileSystemSubnetSizeCommand>()));
-        var importJob = new CommandGroup("importjob", "AMLFS import job operations - Create manual import jobs to hydrate the file system namespace.");
+        var importJob = new CommandGroup("import-job", "AMLFS import job operations - Create manual import jobs to hydrate the file system namespace.");
         fileSystem.AddSubGroup(importJob);
         importJob.AddCommand("create", new FileSystemImportJobCreateCommand(loggerFactory.CreateLogger<FileSystemImportJobCreateCommand>()));
     }
