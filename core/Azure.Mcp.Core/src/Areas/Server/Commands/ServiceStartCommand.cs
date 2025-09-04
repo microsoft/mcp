@@ -98,7 +98,7 @@ public sealed class ServiceStartCommand : BaseCommand
             var includeProdCreds = EnvironmentHelpers.GetEnvironmentVariableAsBool("AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS");
             if (!includeProdCreds)
             {
-                throw new InvalidOperationException("unsecure transport requires Managed or Work Load identity enabled host.");
+                throw new InvalidOperationException("insecure transport requires Managed or Work Load identity enabled host.");
             }
         }
 
@@ -212,7 +212,8 @@ public sealed class ServiceStartCommand : BaseCommand
                     });
                 });
 
-                webBuilder.UseUrls("http://localhost:5001");
+                var url = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://localhost:5001";
+                webBuilder.UseUrls(url);
             })
             .Build();
     }
