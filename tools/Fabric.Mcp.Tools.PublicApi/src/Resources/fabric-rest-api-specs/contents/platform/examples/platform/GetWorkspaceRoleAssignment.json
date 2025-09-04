@@ -1,0 +1,18 @@
+{
+    "parameters": {
+        "workspaceId": "0ac682f5-aee3-4968-9d21-692eb3fd4056",
+        "workspaceRoleAssignmentId": "259b6674-74cf-4197-ac05-1bf391800ec2"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "259b6674-74cf-4197-ac05-1bf391800ec2",
+                "principal": {
+                    "id": "259b6674-74cf-4197-ac05-1bf391800ec2",
+                    "type": "User"
+                },
+                "role": "Member"
+            }
+        }
+    }
+}

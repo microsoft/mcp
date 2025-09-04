@@ -1,0 +1,26 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "catalogName": "catalog_1",
+        "databricksWorkspaceConnectionId": "c1128f28-d84f-417c-8234-0feb91e35f86"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "name": "schema_1",
+                        "fullName": "catalog_1.schema_1",
+                        "storageLocation": "abfss://default@externalaccount.dfs.core.windows.net/__unitystorage/schemas/230217cd-94f2-4017-907d-768298b02e2b"
+                    },
+                    {
+                        "name": "schema_2",
+                        "fullName": "catalog_1.schema_2"
+                    }
+                ],
+                "continuationToken": null,
+                "continuationUri": null
+            }
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "parameters": {
+        "workspaceId": "33bae707-5fe7-4352-89bd-061a1318b60a",
+        "updateWorkspaceRequest": {
+            "displayName": "Workspace New displayName",
+            "description": "Workspace New description"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "33bae707-5fe7-4352-89bd-061a1318b60a",
+                "displayName": "Workspace New displayName",
+                "description": "Workspace New description",
+                "type": "Workspace"
+            }
+        }
+    }
+}

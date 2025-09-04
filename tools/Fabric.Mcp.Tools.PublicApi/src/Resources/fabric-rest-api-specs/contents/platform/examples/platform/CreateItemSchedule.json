@@ -1,0 +1,40 @@
+{
+    "parameters": {
+        "workspaceId": "4b218778-e7a5-4d73-8187-f10824047715",
+        "itemId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "jobType": "DefaultJob",
+        "createScheduleRequest": {
+            "enabled": true,
+            "configuration": {
+                "startDateTime": "2024-04-28T00:00:00",
+                "endDateTime": "2024-04-30T23:59:00",
+                "localTimeZoneId": "Central Standard Time",
+                "type": "Cron",
+                "interval": 10
+            }
+        }
+    },
+    "responses": {
+        "201": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/workspaces/4b218778-e7a5-4d73-8187-f10824047715/items/cfafbeb1-8037-4d0c-896e-a46fb27ff229/jobs/DefaultJob/schedules/235faf08-6ca0-488d-a2ca-6d706d530ebc"
+            },
+            "body": {
+                "id": "235faf08-6ca0-488d-a2ca-6d706d530ebc",
+                "enabled": true,
+                "createdDateTime": "2024-04-28T05:35:20.5366667",
+                "configuration": {
+                    "startDateTime": "2024-04-28T00:00:00",
+                    "endDateTime": "2024-04-30T23:59:00",
+                    "localTimeZoneId": "Central Standard Time",
+                    "type": "Cron",
+                    "interval": 10
+                },
+                "owner": {
+                    "id": "8eedb1b0-3af8-4b17-8e7e-663e61e12211",
+                    "type": "User"
+                }
+            }
+        }
+    }
+}

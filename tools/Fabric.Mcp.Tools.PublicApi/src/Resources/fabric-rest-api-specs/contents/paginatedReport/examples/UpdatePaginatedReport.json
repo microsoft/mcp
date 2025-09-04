@@ -1,0 +1,21 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff233",
+        "paginatedReportId": "5b218778-e7a5-4d73-8187-f10824047731",
+        "updatePaginatedReportRequest": {
+            "displayName": "Paginated Report's New name",
+            "description": "A new description for paginated report."
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "displayName": "Paginated Report's New name",
+                "description": "A new description for paginated report.",
+                "type": "PaginatedReport",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff233",
+                "id": "5b218778-e7a5-4d73-8187-f10824047731"
+            }
+        }
+    }
+}

@@ -1,0 +1,141 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Reflex data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "Reflex": {
+            "description": "A Reflex object.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ]
+        },
+        "Reflexes": {
+            "description": "A list of Reflexes.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of Reflexes.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Reflex"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateReflexRequest": {
+            "description": "Create Reflex request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The Reflex display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The Reflex description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the Reflex is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The Reflex public definition.",
+                    "$ref": "#/definitions/ReflexDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateReflexDefinitionRequest": {
+            "description": "Update Reflex public definition request payload.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/ReflexDefinition"
+                }
+            }
+        },
+        "ReflexDefinitionResponse": {
+            "description": "Reflex public definition response.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/ReflexDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "ReflexDefinition" : {
+            "description": "Reflex public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/reflex-definition) for more details on how to craft a Reflex public definition.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "format": {
+                    "description": "The format of the item definition. Supported format: `json`.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ReflexDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "ReflexDefinitionPart": {
+            "description": "Reflex definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The Reflex public definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The Reflex public definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateReflexRequest": {
+            "description": "Update Reflex request.",
+            "properties": {
+                "displayName": {
+                    "description": "The Reflex display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The Reflex description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        }
+    }
+}

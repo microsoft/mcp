@@ -1,0 +1,37 @@
+{
+    "parameters": {
+        "workspaceId": "47482db6-4583-4672-86dd-999d0f8f4d7a"
+    },
+    "responses": {
+        "200": {            
+            "body": {
+                "value": [
+                    {
+                        "id": "59a92b06-6e5a-468c-b748-e28c8ff28da3",
+                        "name": "SqlPE",
+                        "targetPrivateLinkResourceId": "/subscriptions/e3bf3f1a-4d64-4e42-85e9-aa1b84e3874/resourceGroups/testRG/providers/Microsoft.SqlServer/SqlServer/sql1", 
+                        "provisioningState": "Succeeded", 
+                        "connectionState": { 
+                            "status": "Approved", 
+                            "description": "Endpoint approved"
+                        }, 
+                        "targetSubresourceType": "sqlServer"
+                    },
+                    {
+                        "id": "1b56faf6-9cb8-4506-8c6c-83e0aece804f",
+                        "name": "BlobPE",
+                        "targetPrivateLinkResourceId": "/subscriptions/73310022-c811-4844-8b73-f9baa17c0d08/resourceGroups/testRG2/providers/Microsoft.Storage/storageAccounts/storage1", 
+                        "provisioningState": "Succeeded", 
+                        "connectionState": { 
+                            "status": "Approved", 
+                            "description": "Endpoint approval provided"
+                        }, 
+                        "targetSubresourceType": "blob"
+                    }
+                ],
+                "continuationToken": "LDEsMTAwMDAwLDA%3D",
+                "continuationUri": "https://api.fabric.microsoft.com/v1/workspaces/47482db6-4583-4672-86dd-999d0f8f4d7a/managedPrivateEndpoints?continuationToken=LDEsMTAwMDAwLDA%3D"
+            }
+        }
+    }
+}

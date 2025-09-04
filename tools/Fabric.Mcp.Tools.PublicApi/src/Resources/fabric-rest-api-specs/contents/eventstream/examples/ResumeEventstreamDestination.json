@@ -1,0 +1,14 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "eventstreamId": "8c500070-073f-4a88-b478-8fabe1941c52",
+        "destinationId": "2e4c91e7-0c4a-4cc4-abe3-cc7ba4310a37",
+        "resumeEventstreamDestinationRequest": {
+            "startType": "CustomTime",
+            "customStartDateTime": "2023-05-23T16:22:20Z"
+        }
+    },
+    "responses": {
+        "200": {}
+    }
+}

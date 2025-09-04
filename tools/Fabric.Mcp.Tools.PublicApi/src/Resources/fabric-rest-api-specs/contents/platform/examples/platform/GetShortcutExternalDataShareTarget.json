@@ -1,0 +1,22 @@
+{
+	"parameters": {
+		"workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff222",
+		"itemId": "25bac802-080d-4f73-8a42-1b406eb1fceb",
+		"shortcutPath": "Files/blafolder/folder3",
+		"shortcutName": "MyExternalDataShareShortcut"
+	},
+	"responses": {
+		"200": {
+			"body": {
+				"path": "Files/blafolder/folder3",
+				"name": "MyExternalDataShareShortcut",
+				"target": {
+					"type": "ExternalDataShare",
+					"externalDataShare": {
+						"connectionId": "3c976446-0bda-472e-8800-f1d6e4f162dc"
+					}
+				}
+			}				
+		}
+	}
+}

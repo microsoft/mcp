@@ -1,0 +1,799 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Common data types"
+    },
+    "paths": {},
+    "definitions": {
+        "ErrorResponse": {
+            "description": "The error response.",
+            "required": ["message", "errorCode"],
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ErrorResponseDetails"
+                }
+            ],
+            "properties": {
+                "requestId": {
+                    "type": "string",
+                    "description": "ID of the request associated with the error.",
+                    "readOnly": true
+                },
+                "moreDetails": {
+                    "description": "List of additional error details.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ErrorResponseDetails"
+                    },
+                    "readOnly": true
+                }
+            },
+            "readOnly": true
+        },
+        "ErrorResponseDetails": {
+            "description": "The error response details.",
+            "required": ["message", "errorCode"],
+            "properties": {
+                "errorCode": {
+                    "type": "string",
+                    "description": "A specific identifier that provides information about an error condition, allowing for standardized communication between our service and its users.",
+                    "readOnly": true
+                },
+                "message": {
+                    "type": "string",
+                    "description": "A human readable representation of the error.",
+                    "readOnly": true
+                },
+                "relatedResource": {
+                    "description": "The error related resource details.",
+                    "$ref": "#/definitions/ErrorRelatedResource",
+                    "readOnly": true
+                }
+            }
+        },
+        "ErrorRelatedResource": {
+            "description": "The error related resource details object.",
+            "required": ["resourceId", "resourceType"],
+            "properties": {
+                "resourceId": {
+                    "type": "string",
+                    "description": "The resource ID that's involved in the error.",
+                    "readOnly": true
+                },
+                "resourceType": {
+                    "type": "string",
+                    "description": "The type of the resource that's involved in the error.",
+                    "readOnly": true
+                }
+            },
+            "readOnly": true
+        },
+        "Principal": {
+            "description": "Represents an identity or a Microsoft Entra group.",
+            "type": "object",
+            "required": ["id", "type"],
+            "properties": {
+                "id": {
+                    "description": "The principal's ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "displayName": {
+                    "description": "The principal's display name.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "type":{
+                    "description": "The type of the principal. Additional principal types may be added over time.",
+                    "type": "string",
+                    "enum": ["User", "ServicePrincipal", "Group", "ServicePrincipalProfile"],
+                    "x-ms-enum": {
+                        "name": "PrincipalType",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "User",
+                                "description": "Principal is a Microsoft Entra user principal."
+                            },
+                            {
+                                "value": "ServicePrincipal",
+                                "description": "Principal is a Microsoft Entra service principal."
+                            },
+                            {
+                                "value": "Group",
+                                "description": "Principal is a security group."
+                            },
+                            {
+                                "value": "ServicePrincipalProfile",
+                                "description": "Principal is a service principal profile."
+                            }
+                        ]
+                    },
+                    "readOnly": false
+                },
+                "userDetails":{
+                    "description": "User principal specific details. Applicable when the principal type is `User`.",
+                    "type": "object",
+                    "properties": {
+                        "userPrincipalName": {
+                            "description": "The user principal name.",
+                            "type": "string",
+                            "readOnly": true
+                        }
+                    },
+                    "readOnly": true
+                },
+                "servicePrincipalDetails":{
+                    "description": "Service principal specific details. Applicable when the principal type is `ServicePrincipal`.",
+                    "type": "object",
+                    "properties": {
+                        "aadAppId": {
+                            "description": "The service principal's Microsoft Entra AppId.",
+                            "type": "string",
+                            "format": "uuid",
+                            "readOnly": true
+                        }
+                    },
+                    "readOnly": true
+                },
+                "groupDetails":{
+                    "description": "Group specific details. Applicable when the principal type is `Group`.",
+                    "type": "object",
+                    "properties": {
+                        "groupType":{
+                            "description": "The type of the group. Additional group types may be added over time.",
+                            "type": "string",
+                            "enum": ["Unknown", "SecurityGroup", "DistributionList"],
+                            "x-ms-enum": {
+                                "name": "GroupType",
+                                "modelAsString": true,
+                                "values": [
+                                    {
+                                        "value": "Unknown",
+                                        "description": "Principal group type is unknown."
+                                    },
+                                    {
+                                        "value": "SecurityGroup",
+                                        "description": "Principal is a security group."
+                                    },
+                                    {
+                                        "value": "DistributionList",
+                                        "description": "Principal is a distribution list."
+                                    }
+                                ]
+                            },
+                            "readOnly": false
+                        }
+                    },
+                    "readOnly": false
+                },
+                "servicePrincipalProfileDetails":{
+                    "description": "Service principal profile details. Applicable when the principal type is `ServicePrincipalProfile`.",
+                    "type": "object",
+                    "properties": {
+                        "parentPrincipal": {
+                            "description": "The service principal profile's parent principal.",
+                            "$ref": "#/definitions/Principal",
+                            "readOnly": false,
+                            "type": "object"
+                        }
+                    },
+                    "readOnly": false
+                }
+            },
+            "readOnly": false
+        },
+      "ItemType": {
+        "description": "The type of the item. Additional item types may be added over time.",
+        "type": "string",
+        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog" ],
+        "x-ms-enum": {
+          "name": "ItemType",
+          "modelAsString": true,
+          "values": [
+            {
+              "value": "Dashboard",
+              "description": "PowerBI dashboard."
+            },
+            {
+              "value": "Report",
+              "description": "PowerBI report."
+            },
+            {
+              "value": "SemanticModel",
+              "description": "PowerBI semantic model."
+            },
+            {
+              "value": "PaginatedReport",
+              "description": "PowerBI paginated report."
+            },
+            {
+              "value": "Datamart",
+              "description": "PowerBI datamart."
+            },
+            {
+              "value": "Lakehouse",
+              "description": "A lakehouse."
+            },
+            {
+              "value": "Eventhouse",
+              "description": "An eventhouse."
+            },
+            {
+              "value": "Environment",
+              "description": "An environment."
+            },
+            {
+              "value": "KQLDatabase",
+              "description": "A KQL database."
+            },
+            {
+              "value": "KQLQueryset",
+              "description": "A KQL queryset."
+            },
+            {
+              "value": "KQLDashboard",
+              "description": "A KQL dashboard."
+            },
+            {
+              "value": "DataPipeline",
+              "description": "A data pipeline."
+            },
+            {
+              "value": "Notebook",
+              "description": "A notebook."
+            },
+            {
+              "value": "SparkJobDefinition",
+              "description": "A spark job definition."
+            },
+            {
+              "value": "MLExperiment",
+              "description": "A machine learning experiment."
+            },
+            {
+              "value": "MLModel",
+              "description": "A machine learning model."
+            },
+            {
+              "value": "Warehouse",
+              "description": "A warehouse."
+            },
+            {
+              "value": "Eventstream",
+              "description": "An eventstream."
+            },
+            {
+              "value": "SQLEndpoint",
+              "description": "An SQL endpoint."
+            },
+            {
+              "value": "MirroredWarehouse",
+              "description": "A mirrored warehouse."
+            },
+            {
+              "value": "MirroredDatabase",
+              "description": "A mirrored database."
+            },
+            {
+              "value": "Reflex",
+              "description": "A Reflex."
+            },
+            {
+              "value": "GraphQLApi",
+              "description": "An API for GraphQL item."
+            },
+            {
+              "value": "MountedDataFactory",
+              "description": "A MountedDataFactory."
+            },
+            {
+              "value": "ApacheAirflowJob",
+              "description": "An ApacheAirflowJob."
+            },
+            {
+              "value": "SQLDatabase",
+              "description": "A SQLDatabase."
+            },
+            {
+              "value": "CopyJob",
+              "description": "A Copy job."
+            },
+            {
+              "value": "VariableLibrary",
+              "description": "A VariableLibrary."
+            },
+            {
+              "value": "MirroredAzureDatabricksCatalog",
+              "description": "A mirrored azure databricks catalog."
+            },
+            {
+                "value": "Dataflow",
+                "description": "A Dataflow."
+            },
+            {
+              "value": "WarehouseSnapshot",
+              "description": "A Warehouse snapshot."
+            },
+            {
+              "value": "DigitalTwinBuilder",
+              "description": "A DigitalTwinBuilder."
+            },
+            {
+                "value": "DigitalTwinBuilderFlow",
+                "description": "A Digital Twin Builder Flow."
+            }
+          ]
+        },
+        "readOnly": false
+      },
+        "WorkspaceRole": {
+            "type": "string",
+            "description": "A Workspace role. Additional workspace roles may be added over time.",
+            "enum": ["Admin", "Member", "Contributor", "Viewer"],
+            "x-ms-enum": {
+                "name": "WorkspaceRole",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Admin",
+                        "description": "Enables administrative access to the workspace."
+                    },
+                    {
+                        "value": "Member",
+                        "description": "Enables membership access to the workspace."
+                    },
+                    {
+                        "value": "Contributor",
+                        "description": "Enables contribution to the workspace."
+                    },
+                    {
+                        "value": "Viewer",
+                        "description": "Enables viewing of the workspace."
+                    }
+                ]
+            }
+        },
+        "WorkspaceType": {
+            "type": "string",
+            "description": "A workspace type. Additional workspace types may be added over time.",
+            "enum": ["Personal", "Workspace", "AdminWorkspace"],
+            "x-ms-enum": {
+                "name": "WorkspaceType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Personal",
+                        "description": "My folder or My workspace used to manage user items."
+                    },
+                    {
+                        "value": "Workspace",
+                        "description": "Workspace used to manage the Fabric items."
+                    },
+                    {
+                        "value": "AdminWorkspace",
+                        "description": "Admin monitoring workspace. Contains admin reports such as the audit report and the usage and adoption report."
+                    }
+                ]
+            },
+            "readOnly": true
+        },
+        "ItemPermissions": {
+            "type": "string",
+            "description": "Item permissions. Additional item permissions may be added over time.",
+            "enum": ["Read", "Write", "Reshare", "Explore", "Execute"],
+            "x-ms-enum": {
+                "name": "ItemPermissions",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Read",
+                        "description": "User can read the metadata about an item."
+                    },
+                    {
+                        "value": "Write",
+                        "description": "User can perform write operations on an item."
+                    },
+                    {
+                        "value": "Reshare",
+                        "description": "User can share an item with other users."
+                    },
+                    {
+                        "value": "Explore",
+                        "description": "User can build items on other items."
+                    },
+                    {
+                        "value": "Execute",
+                        "description": "User can execute and cancel item jobs."
+                    }
+                ]
+            }
+        },
+        "PayloadType": {
+            "description": "The type of the definition part payload. Additional payload types may be added over time.",
+            "type": "string",
+            "enum": ["InlineBase64"],
+            "x-ms-enum": {
+                "name": "PayloadType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "InlineBase64",
+                        "description": "Inline Base 64."
+                    }
+                ]
+            },
+            "readOnly": false
+        },
+        "PaginatedResponse": {
+            "properties": {
+                "continuationToken": {
+                    "type": "string",
+                    "description": "The token for the next result set batch. If there are no more records, it's removed from the response."
+                },
+                "continuationUri": {
+                    "type": "string",
+                    "description": "The URI of the next result set batch. If there are no more records, it's removed from the response."
+                }
+            }
+        },
+        "Item": {
+            "description": "An item object.",
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+                "id": {
+                    "description": "The item ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "displayName": {
+                    "description": "The item display name.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The item description.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "type": {
+                    "description": "The item type.",
+                    "$ref": "#/definitions/ItemType",
+                    "readOnly": false
+                },
+                "workspaceId": {
+                    "description": "The workspace ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "folderId": {
+                    "description": "The folder ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "tags": {
+                    "description": "List of applied tags.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ItemTag"
+
+                    },
+                    "readOnly": true
+                }
+            }
+        },
+        "Folder": {
+            "description": "A folder object.",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "The folder ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "displayName": {
+                    "description": "The folder display name.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "workspaceId": {
+                    "description": "The workspace ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
+                "parentFolderId": {
+                    "description": "The parent folder ID. If the parent folder is a workspace, `parentFolderId` is either not specified or null.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                }
+            }
+        },
+        "GitProviderType": {
+            "type": "string",
+            "description": "A Git provider type. Additional provider types may be added over time.",
+            "enum": ["AzureDevOps", "GitHub"],
+            "x-ms-enum": {
+                "name": "GitProviderType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "AzureDevOps",
+                        "description": "Azure DevOps provider"
+                    },
+                    {
+                        "value": "GitHub",
+                        "description": "GitHub provider"
+                    }
+                ]
+            }
+        },
+        "GitProviderDetails": {
+            "type": "object",
+            "description": "The Git provider details.",
+            "discriminator": "gitProviderType",
+            "required": ["gitProviderType", "repositoryName", "branchName", "directoryName"],
+            "properties": {
+                "gitProviderType": {
+                    "$ref": "#/definitions/GitProviderType"
+                },
+                "repositoryName": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "description": "The repository name. Maximum length is 128 characters."
+                },
+                "branchName": {
+                    "type": "string",
+                    "maxLength": 250,
+                    "description": "The branch name. Maximum length is 250 characters."
+                },
+                "directoryName": {
+                    "type": "string",
+                    "maxLength": 256,
+                    "description": "The relative path to the directory. Maximum length is 256 characters."
+                }
+            }
+        },
+        "AzureDevOpsDetails": {
+            "type": "object",
+            "description": "Azure DevOps provider details.",
+            "required": ["organizationName", "projectName"],
+            "properties": {
+                "organizationName": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "The organization name. Maximum length is 100 characters."
+                },
+                "projectName": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "The project name. Maximum length is 100 characters."
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/GitProviderDetails"
+                }
+            ],
+            "x-ms-discriminator-value": "AzureDevOps"
+        },
+        "GitHubDetails": {
+            "type": "object",
+            "description": "GitHub provider details.",
+            "required": ["ownerName"],
+            "properties": {
+                "ownerName": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "The owner name. Maximum length is 100 characters."
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/GitProviderDetails"
+                }
+            ],
+            "x-ms-discriminator-value": "GitHub"
+        },
+        "AzureResource": {
+            "description": "The properties of an Azure resource",
+            "type": "object",
+            "required": ["subscriptionId", "resourceGroupName"],
+            "properties": {
+                "subscriptionId": {
+                    "description": "The subscription ID",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "resourceGroupName": {
+                    "description": "The name of the resource group",
+                    "type": "string"
+                }
+            }
+        },
+        "VirtualNetworkAzureResource": {
+            "description": "The properties of a Virtual Network Azure resource",
+            "type": "object",
+            "required": ["virtualNetworkName", "subnetName"],
+            "properties": {
+                "virtualNetworkName": {
+                    "description": "The name of the virtual network",
+                    "type": "string"
+                },
+                "subnetName": {
+                    "description": "The name of the subnet",
+                    "type": "string"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/AzureResource"
+                }
+            ]
+        },
+        "Tag": {
+            "type": "object",
+            "description": "Represents a tag.",
+            "required": [
+                "id",
+                "displayName"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "The tag object ID.",
+                    "format": "uuid"
+                },
+                "displayName": {
+                    "type": "string",
+                    "description": "The name of the tag."
+                }
+            }
+        },
+        "Tags": {
+            "type": "object",
+            "description": "A response wrapper for a list of tags.",
+            "required": [
+                "value"
+            ],
+            "properties": {
+                "value": {
+                    "type": "array",
+                    "description": "An array of tags",
+                    "items": {
+                        "$ref": "#/definitions/Tag"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "ItemTag": {
+            "type": "object",
+            "description": "Represents a tag applied on an item.",
+            "required": [
+                "id",
+                "displayName"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "The tag ID.",
+                    "format": "uuid"
+                },
+                "displayName": {
+                    "type": "string",
+                    "description": "The name of the tag."
+                }
+            }
+        },
+
+        "ItemReference": {
+            "description": "An item reference object.",
+            "type": "object",
+            "required": ["referenceType"],
+            "discriminator": "referenceType",
+            "properties": {
+                "referenceType": {
+                    "description": "The item reference type.",
+                    "$ref": "#/definitions/ItemReferenceType"
+                }
+            }
+        },
+        "ItemReferenceType": {
+            "type": "string",
+            "description": "The Item reference type. Additional `ItemReferenceType` types may be added over time.",
+            "enum": ["ById"],
+            "x-ms-enum": {
+                "name": "ItemReferenceType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "ById",
+                        "description": "The item is referenced by its ID."
+                    }
+                ]
+            }
+        },
+        "ItemReferenceById": {
+            "description": "An item reference by ID object.",
+            "type": "object",
+            "required": [
+                "itemId",
+                "workspaceId"
+            ],
+            "properties": {
+                "itemId": {
+                    "description": "The ID of the item.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "workspaceId": {
+                    "description": "The workspace ID of the item.",
+                    "type": "string",
+                    "format": "uuid"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ItemReference"
+                }
+            ],
+            "x-ms-discriminator-value": "ById"
+        },
+        "Duration": {
+            "description": "A duration.",
+            "type": "object",
+            "required": [
+                "value",
+                "timeUnit"
+            ],
+            "properties": {
+                "value": {
+                    "type": "number",
+                    "description": "The number of timeUnits in the duration."
+                },
+                "timeUnit": {
+                    "type": "string",
+                    "description": "The unit of time for the duration. Additional duration types may be added over time.",
+                    "enum": ["Seconds", "Minutes", "Hours", "Days"],
+                    "x-ms-enum": {
+                        "name": "TimeUnit",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Seconds",
+                                "description": "Duration in seconds."
+                            },
+                            {
+                                "value": "Minutes",
+                                "description": "Duration in minutes."
+                            },
+                            {
+                                "value": "Hours",
+                                "description": "Duration in hours."
+                            },
+                            {
+                                "value": "Days",
+                                "description": "Duration in days."
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
+
+

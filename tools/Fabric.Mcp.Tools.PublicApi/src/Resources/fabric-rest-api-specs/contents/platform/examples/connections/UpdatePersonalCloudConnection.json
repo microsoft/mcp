@@ -1,0 +1,28 @@
+{
+    "parameters": {
+        "connectionId": "7a0369b2-58c4-4b67-b3f3-92156a95f1cd",
+        "updateConnectionRequest": {
+            "connectivityType": "PersonalCloud",
+            "privacyLevel": "Organizational"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "7a0369b2-58c4-4b67-b3f3-92156a95f1cd",
+                "connectivityType": "PersonalCloud",
+                "connectionDetails":{
+                    "type": "SQL",
+                    "path": "contoso.database.windows.net;finances"
+                },
+                "privacyLevel": "Organizational",
+                "credentialDetails": {
+                    "credentialType": "OAuth2",
+                    "singleSignOnType": "None",
+                    "connectionEncryption": "NotEncrypted",
+                    "skipTestConnection": false
+                }
+            }
+        }
+    }
+}

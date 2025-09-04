@@ -1,0 +1,30 @@
+{
+    "parameters": {
+        "gatewayId": "3d1290e1-e3ed-4bd6-93bc-2bbd5b49a789",
+        "updateGatewayRequest": {
+            "type": "OnPremises",
+            "displayName": "ContosoGatewayCluster1",
+            "loadBalancingSetting": "Failover",
+            "allowCloudConnectionRefresh": false,
+            "allowCustomConnectors": false
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "3d1290e1-e3ed-4bd6-93bc-2bbd5b49a789",
+                "type": "OnPremises",
+                "displayName": "ContosoGatewayCluster1",
+                "publicKey": {
+                    "exponent": "AQGB",
+                    "modulus": "od9b...90Jp1Q=="
+                },
+                "version": "3000.1.2",
+                "numberOfMemberGateways": 2,
+                "loadBalancingSetting": "Failover",
+                "allowCloudConnectionRefresh": false,
+                "allowCustomConnectors": false
+            }
+        }
+    }
+}

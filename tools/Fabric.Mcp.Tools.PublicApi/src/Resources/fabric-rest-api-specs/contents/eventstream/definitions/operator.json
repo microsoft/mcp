@@ -1,0 +1,349 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Eventstream operator data types"
+    },
+    "paths": {},
+    "definitions": {
+        "Operator": {
+            "type": "object",
+            "description": "Represents an Eventstream operator.",
+            "required": [
+                "name",
+                "type",
+                "inputNodes"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of the operator."
+                },
+                "type": {
+                    "type": "string",
+                    "description": "The type of the operator. Additional operator types may be added over time.",
+                    "enum": [
+                        "Filter",
+                        "Join",
+                        "ManageFields",
+                        "Aggregate",
+                        "GroupBy",
+                        "Union",
+                        "Expand"
+                    ],
+                    "x-ms-enum": {
+                        "name": "OperatorType",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Filter",
+                                "description": "The operator filters the input data."
+                            },
+                            {
+                                "value": "Join",
+                                "description": "The operator joins the input data."
+                            },
+                            {
+                                "value": "ManageFields",
+                                "description": "The operator manages the fields of the input data."
+                            },
+                            {
+                                "value": "Aggregate",
+                                "description": "The operator aggregates the input data."
+                            },
+                            {
+                                "value": "GroupBy",
+                                "description": "The operator groups the input data."
+                            },
+                            {
+                                "value": "Union",
+                                "description": "The operator unions the input data."
+                            },
+                            {
+                                "value": "Expand",
+                                "description": "The operator expands the input data."
+                            }
+                        ]
+                    }
+                },
+                "inputNodes": {
+                    "type": "array",
+                    "description": "A list of the references to the input nodes of the operator.",
+                    "items": {
+                        "$ref": "./common.json#/definitions/NodeReference"
+                    }
+                },
+                "inputSchemas": {
+                    "type": "array",
+                    "description": "The input schemas of the operator.",
+                    "items": {
+                        "$ref": "operatorCommon.json#/definitions/InputSchema"
+                    }
+                }
+            },
+            "discriminator": "type"
+        },
+        "AggregateOperator": {
+            "type": "object",
+            "description": "Aggregate operator.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "Aggregate operator properties.",
+                    "$ref": "#/definitions/AggregateOperatorProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Operator"
+                }
+            ],
+            "x-ms-discriminator-value": "Aggregate"
+        },
+        "ExpandOperator": {
+            "type": "object",
+            "description": "Expand operator.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "Expand operator properties.",
+                    "$ref": "#/definitions/ExpandOperatorProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Operator"
+                }
+            ],
+            "x-ms-discriminator-value": "Expand"
+        },
+        "FilterOperator": {
+            "type": "object",
+            "description": "Filter operator.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "Filter operator properties.",
+                    "$ref": "#/definitions/FilterOperatorProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Operator"
+                }
+            ],
+            "x-ms-discriminator-value": "Filter"
+        },
+        "GroupByOperator": {
+            "type": "object",
+            "description": "GroupBy operator.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "GroupBy operator properties.",
+                    "$ref": "#/definitions/GroupByOperatorProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Operator"
+                }
+            ],
+            "x-ms-discriminator-value": "GroupBy"
+        },
+        "JoinOperator": {
+            "type": "object",
+            "description": "Join operator.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "Join operator properties.",
+                    "$ref": "#/definitions/JoinOperatorProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Operator"
+                }
+            ],
+            "x-ms-discriminator-value": "Join"
+        },
+        "ManageFieldsOperator": {
+            "type": "object",
+            "description": "ManageFields operator.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "ManageFields operator properties.",
+                    "$ref": "#/definitions/ManageFieldsOperatorProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Operator"
+                }
+            ],
+            "x-ms-discriminator-value": "ManageFields"
+        },
+        "UnionOperator": {
+            "type": "object",
+            "description": "Union operator.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "Union operator properties.",
+                    "$ref": "#/definitions/UnionOperatorProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Operator"
+                }
+            ],
+            "x-ms-discriminator-value": "Union"
+        },
+        "AggregateOperatorProperties": {
+            "type": "object",
+            "description": "Aggregate operator properties.",
+            "required": [
+                "aggregations"
+            ],
+            "properties": {
+                "aggregations": {
+                    "type": "array",
+                    "description": "A list of the aggregations.",
+                    "items": {
+                        "$ref": "./operatorCommon.json#/definitions/InColumnAggregation"
+                    }
+                }
+            }
+        },
+        "ExpandOperatorProperties": {
+            "type": "object",
+            "description": "Expand operator properties.",
+            "required": [
+                "column"
+            ],
+            "properties": {
+                "column": {
+                    "type": "array",
+                    "description": "A list of the columns to expand.",
+                    "items": {
+                        "$ref": "./operatorCommon.json#/definitions/ColumnReferenceExpression"
+                    }
+                },
+                "ignoreMissingOrEmpty": {
+                    "type": "boolean",
+                    "description": "Missing or empty columns setting. True - Ignore the columns, False - Do not ignore the columns."
+                }
+            }
+        },
+        "FilterOperatorProperties": {
+            "type": "object",
+            "description": "Filter operator properties.",
+            "required": [
+                "conditions"
+            ],
+            "properties": {
+                "conditions": {
+                    "type": "array",
+                    "description": "A list of the filter conditions.",
+                    "items": {
+                        "$ref": "./operatorCommon.json#/definitions/FilterCondition"
+                    }
+                }
+            }
+        },
+        "GroupByOperatorProperties": {
+            "type": "object",
+            "description": "GroupBy operator properties.",
+            "required": [
+                "aggregations",
+                "groupBy",
+                "window"
+            ],
+            "properties": {
+                "aggregations": {
+                    "type": "array",
+                    "description": "A list of the aggregations.",
+                    "items": {
+                        "$ref": "./operatorCommon.json#/definitions/Aggregation"
+                    }
+                },
+                "groupBy": {
+                    "type": "array",
+                    "description": "A list of the columns to group by.",
+                    "items": {
+                        "$ref": "./operatorCommon.json#/definitions/ColumnReferenceExpression"
+                    }
+                },
+                "window": {
+                    "$ref": "./operatorCommon.json#/definitions/GroupByWindow"
+                }
+            }
+        },
+        "JoinOperatorProperties": {
+            "type": "object",
+            "description": "Join operator properties.",
+            "required": [
+                "joinType",
+                "duration"
+            ],
+            "properties": {
+                "joinType": {
+                    "type": "string",
+                    "description": "The type of the join.",
+                    "enum": [
+                        "Inner",
+                        "LeftOuter"
+                    ]
+                },
+                "joinOn": {
+                    "type": "array",
+                    "description": "A list of the join conditions.",
+                    "items": {
+                        "$ref": "./operatorCommon.json#/definitions/JoinOn"
+                    }
+                },
+                "duration": {
+                    "$ref": "./operatorCommon.json#/definitions/OperatorCommonDuration"
+                }
+            }
+        },
+        "ManageFieldsOperatorProperties": {
+            "type": "object",
+            "description": "ManageFields operator properties.",
+            "required": [
+                "columns"
+            ],
+            "properties": {
+                "columns": {
+                    "type": "array",
+                    "description": "A list of the columns to manage.",
+                    "items": {
+                        "$ref": "./operatorCommon.json#/definitions/ManageFieldsOperation"
+                    }
+                }
+            }
+        },
+        "UnionOperatorProperties": {
+            "type": "object",
+            "description": "Union operator properties.",
+            "properties": {}
+        }
+    }
+}

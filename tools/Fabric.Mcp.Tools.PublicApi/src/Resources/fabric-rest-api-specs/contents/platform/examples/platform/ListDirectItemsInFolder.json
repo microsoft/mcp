@@ -1,0 +1,24 @@
+{
+    "parameters": {
+        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+        "recursive": false,
+        "rootFolderId": "bbbbbbbb-1111-2222-3333-cccccccccccc"
+    },
+    "responses": {
+        "200": {
+            "body":
+            {
+                "value": [
+                    {
+                        "id": "dddddddd-3333-4444-5555-eeeeeeeeeeee",
+                        "displayName": "Notebook",
+                        "description": "A notebook for refining year 2024 sales data analysis through machine learning algorithms.",
+                        "type": "Notebook",
+                        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+                        "folderId": "bbbbbbbb-1111-2222-3333-cccccccccccc"
+                    }
+                ]
+            }
+        }
+    }
+}

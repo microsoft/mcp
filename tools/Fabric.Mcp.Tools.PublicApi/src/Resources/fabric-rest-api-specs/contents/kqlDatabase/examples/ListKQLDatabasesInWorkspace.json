@@ -1,0 +1,39 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "3546052c-ae64-4526-b1a8-52af7761426f",
+                        "displayName": "KQLDatabase_1",
+                        "description": "A KQL database description.",
+                        "type": "KQLDatabase",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "parentEventhouseItemId": "6a437a7c-1a28-4fd0-a362-11308b94c79b",
+                            "queryServiceUri": "https://trd-f7k1b2rzuqrjmb3wpd.z5.kusto.fabric.microsoft.com",
+                            "ingestionServiceUri": "https://ingest-trd-f7k1b2rzuqrjmb3wpd.z5.kusto.fabric.microsoft.com",
+                            "databaseType": "ReadWrite"
+                        }
+                    },
+                    {
+                        "id": "340d91b9-5a39-409c-b9c0-05ba832c476e",
+                        "displayName": "KQLDatabase_2",
+                        "description": "A KQL database description.",
+                        "type": "KQLDatabase",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "parentEventhouseItemId": "9add9a4d-079a-432a-b43a-70c899f2087b",
+                            "queryServiceUri": "https://trd-f7k1b2rzuqrjmb3wpd.z5.kusto.fabric.microsoft.com",
+                            "ingestionServiceUri": "https://ingest-trd-f7k1b2rzuqrjmb3wpd.z5.kusto.fabric.microsoft.com",
+                            "databaseType": "ReadWrite"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

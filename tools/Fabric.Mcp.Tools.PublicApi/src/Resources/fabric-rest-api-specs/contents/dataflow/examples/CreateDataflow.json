@@ -1,0 +1,46 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "createDataflowRequest": {
+      "displayName": "TestDataflow",
+      "description": "A Dataflow description.",
+      "definition": {
+        "parts": [
+          {
+            "path": "queryMetadata.json",
+            "payload": "ewogICJmb3JtYXRWZXJzaW9uIjogIjIwMjUwMiIsCiAgImNvbXB1dGVFbmdpbmVTZXR0aW5ncyI6IHt9LAogICJuYW1lIjogIlRlc3REYXRhZmxvdyIsCiAgInF1ZXJ5R3JvdXBzIjogW10sCiAgImRvY3VtZW50TG9jYWxlIjogImVuLVVTIiwKICAicXVlcmllc01ldGFkYXRhIjogewogICAgInF1ZXJ5IjogewogICAgICAicXVlcnlJZCI6ICJiZTE3MjEwZi01YWNhLTQyMWEtOGMwYS1iZjYzMTQ4N2JiOGUiLAogICAgICAicXVlcnlOYW1lIjogIlF1ZXJ5IgogICAgfQogIH0sCiAgImNvbm5lY3Rpb25zIjogW10KfQ==",
+            "payloadType": "InlineBase64"
+          },
+          {
+            "path": "mashup.pq",
+            "payload": "W1N0YWdpbmdEZWZpbml0aW9uID0gW0tpbmQgPSAiRmFzdENvcHkiXV0Kc2VjdGlvbiBTZWN0aW9uMTsKc2hhcmVkIFF1ZXJ5ID0gbGV0CiAgU291cmNlID0gVGFibGUuRnJvbVJvd3MoSnNvbi5Eb2N1bWVudChCaW5hcnkuRGVjb21wcmVzcyhCaW5hcnkuRnJvbVRleHQoImk0NVdNbFRTVVhMT3p5bk56VE9LUjdDTmdleFluV2dsSXlSWkl5UlpJNlhZV0FBPSIsIEJpbmFyeUVuY29kaW5nLkJhc2U2NCksIENvbXByZXNzaW9uLkRlZmxhdGUpKSwgbGV0IF90ID0gKCh0eXBlIG51bGxhYmxlIHRleHQpIG1ldGEgW1NlcmlhbGl6ZWQuVGV4dCA9IHRydWVdKSBpbiB0eXBlIHRhYmxlIFtDb2x1bW4xID0gX3QsIENvbHVtbjIgPSBfdCwgQ29sdW1uMyA9IF90XSksCiAgIyJDaGFuZ2VkIGNvbHVtbiB0eXBlIiA9IFRhYmxlLlRyYW5zZm9ybUNvbHVtblR5cGVzKFNvdXJjZSwge3siQ29sdW1uMSIsIEludDY0LlR5cGV9LCB7IkNvbHVtbjIiLCB0eXBlIHRleHR9LCB7IkNvbHVtbjMiLCB0eXBlIHRleHR9fSkKaW4KICAjIkNoYW5nZWQgY29sdW1uIHR5cGUiOwo=",
+            "payloadType": "InlineBase64"
+          },
+          {
+            "path": ".platform",
+            "payload": "ewogICIkc2NoZW1hIjogImh0dHBzOi8vZGV2ZWxvcGVyLm1pY3Jvc29mdC5jb20vanNvbi1zY2hlbWFzL2ZhYnJpYy9naXRJbnRlZ3JhdGlvbi9wbGF0Zm9ybVByb3BlcnRpZXMvMi4wLjAvc2NoZW1hLmpzb24iLAogICJtZXRhZGF0YSI6IHsKICAgICJ0eXBlIjogIkRhdGFmbG93IiwKICAgICJkaXNwbGF5TmFtZSI6ICJUZXN0RGF0YWZsb3ciCiAgfSwKICAiY29uZmlnIjogewogICAgInZlcnNpb24iOiAiMi4wIiwKICAgICJsb2dpY2FsSWQiOiAiZjU4ZDJmODMtYTMwMC1iMTM1LTQ3ODgtMDU5NjgzY2Q1NzFjIgogIH0KfQ==",
+            "payloadType": "InlineBase64"
+          }
+        ]
+      }
+    }
+  },
+  "responses": {
+    "201": {
+      "body": {
+        "displayName": "TestDataflow",
+        "description": "A Dataflow description.",
+        "type": "Dataflow",
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "id": "5b218778-e7a5-4d73-8187-f10824047715"
+      }
+    },
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "Retry-After": 30
+      }
+    }
+  }
+}

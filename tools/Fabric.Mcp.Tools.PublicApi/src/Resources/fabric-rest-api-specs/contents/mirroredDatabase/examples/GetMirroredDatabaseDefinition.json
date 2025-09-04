@@ -1,0 +1,33 @@
+{
+    "parameters": {
+        "workspaceId": "a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1",
+        "mirroredDatabaseId": "b1b1b1b1-cccc-dddd-eeee-f2f2f2f2f2f2"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "definition": {
+                    "parts": [
+                        {
+                            "path": "mirroring.json",
+                            "payload": "eyAicHJvcGVydGllcy..WJsZSIgfSB9IH0gXSB9IH0",
+                            "payloadType": "InlineBase64"
+                        },
+                        {
+                            "path": ".platform",
+                            "payload": "ZG90UGxhdGZvcm1CYXNlNjRTdHJpbmc=",
+                            "payloadType": "InlineBase64"
+                        }
+                    ]
+                }
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/0000aaaa-11bb-cccc-dd22-eeeeee333333",
+                "x-ms-operation-id": "0000aaaa-11bb-cccc-dd22-eeeeee333333",
+                "Retry-After": 30
+            }
+        }
+    }
+}

@@ -1,0 +1,65 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "itemId": "3546052c-ae64-4526-b1a8-52af7761426f",
+        "jobType": "DefaultJob"
+    },
+    "responses": {
+        "200": {
+            "body": 
+            {
+                "value": [
+                    {
+                        "id": "5b218778-e7a5-4d73-8187-f10824047715",
+                        "enabled": true,
+                        "createdDateTime": "2024-04-28T05:35:20.5366667",
+                        "configuration": {
+                            "startDateTime": "2024-04-28T00:00:00",
+                            "endDateTime": "2024-04-30T23:59:00",
+                            "localTimeZoneId": "Central Standard Time",
+                            "type": "Cron",
+                            "interval": 10
+                        },
+                        "owner": {
+                            "id": "8eedb1b0-3af8-4b17-8e7e-663e61e12211",
+                            "type": "User"
+                        }
+                    },
+                    {
+                        "id": "96f3f0ff-4fe2-4712-b61b-05a456ba9357",
+                        "enabled": true,
+                        "createdDateTime": "2024-04-28T05:35:20.5366667",
+                        "configuration": {
+                            "startDateTime": "2024-04-28T00:00:00",
+                            "endDateTime": "2024-04-30T23:59:00",
+                            "localTimeZoneId": "Central Standard Time",
+                            "type": "Weekly",
+                            "weekdays": ["Monday", "Tuesday"],
+                            "times": ["18:09", "17:12"]
+                        },
+                        "owner": {
+                            "id": "8eedb1b0-3af8-4b17-8e7e-663e61e12211",
+                            "type": "User"
+                        }
+                    },
+                    {
+                        "id": "c0ed1d27-32dc-49e6-90ba-cac9b6248c7f",
+                        "enabled": true,
+                        "createdDateTime": "2024-04-28T05:35:20.5366667",
+                        "configuration": {
+                            "startDateTime": "2024-04-28T00:00:00",
+                            "endDateTime": "2024-04-30T23:59:00",
+                            "localTimeZoneId": "Central Standard Time",
+                            "type": "Daily",
+                            "times": ["18:09", "17:12"]
+                        },
+                        "owner": {
+                            "id": "8eedb1b0-3af8-4b17-8e7e-663e61e12211",
+                            "type": "User"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

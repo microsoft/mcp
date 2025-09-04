@@ -1,0 +1,117 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Eventstream stream data types"
+    },
+    "paths": {},
+    "definitions": {
+        "StreamType": {
+            "type": "string",
+            "description": "Represents the type of the stream. Additional stream types may be added over time.",
+            "enum": [
+                "DefaultStream",
+                "DerivedStream"
+            ],
+            "x-ms-enum": {
+                "name": "StreamType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "DefaultStream",
+                        "description": "The stream is a default stream."
+                    },
+                    {
+                        "value": "DerivedStream",
+                        "description": "The stream is derived from another stream."
+                    }
+                ]
+            }
+        },
+        "StreamResponse": {
+            "type": "object",
+            "description": "Represents an Eventstream default or derived stream.",
+            "required": [
+                "id",
+                "name",
+                "type",
+                "inputNodes"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "The unique identifier of the stream.",
+                    "format": "uuid"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The unique name of the stream."
+                },
+                "type": {
+                    "description": "The type of the stream.",
+                    "$ref": "#/definitions/StreamType"
+                },
+                "inputNodes": {
+                    "type": "array",
+                    "description": "A list of the references to the input nodes of the stream.",
+                    "items": {
+                        "$ref": "./common.json#/definitions/NodeReference"
+                    }
+                }
+            },
+            "discriminator": "type"
+        },
+        "DefaultStreamResponse": {
+            "type": "object",
+            "description": "Default stream response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the default stream.",
+                    "$ref": "#/definitions/DefaultStreamProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/StreamResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "DefaultStream"
+        },
+        "DerivedStreamResponse": {
+            "type": "object",
+            "description": "Derived stream response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the derived stream.",
+                    "$ref": "#/definitions/DerivedStreamProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/StreamResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "DerivedStream"
+        },
+        "DefaultStreamProperties": {
+            "type": "object",
+            "description": "The default stream properties.",
+            "properties": {}
+        },
+        "DerivedStreamProperties": {
+            "type": "object",
+            "description": "The derived stream properties.",
+            "properties": {
+                "inputSerialization": {
+                    "$ref": "./serialization.json#/definitions/SerializationInfo"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,136 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Apache Airflow job data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "ApacheAirflowJob": {
+            "description": "An Apache Airflow job object.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ]
+        },
+        "ApacheAirflowJobs": {
+            "description": "A list of Apache Airflow job objects.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of Apache Airflow job objects.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ApacheAirflowJob"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateApacheAirflowJobRequest": {
+            "description": "Create request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The Apache Airflow job display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The Apache Airflow job description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the Apache Airflow is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The Apache Airflow job public definition.",
+                    "$ref": "#/definitions/ApacheAirflowJobDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateApacheAirflowJobDefinitionRequest": {
+            "description": "Update public definition request payload.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/ApacheAirflowJobDefinition"
+                }
+            }
+        },
+        "ApacheAirflowJobDefinitionResponse": {
+            "description": "Apache Airflow job public definition response.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/ApacheAirflowJobDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "ApacheAirflowJobDefinition" : {
+            "description": "Apache Airflow job public definition object.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ApacheAirflowJobDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "ApacheAirflowJobDefinitionPart": {
+            "description": "Apache Airflow job public definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The public definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The public definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateApacheAirflowJobRequest": {
+            "description": "Update Apache Airflow job request.",
+            "properties": {
+                "displayName": {
+                    "description": "The Apache Airflow job display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The Apache Airflow job description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        }
+    }
+}

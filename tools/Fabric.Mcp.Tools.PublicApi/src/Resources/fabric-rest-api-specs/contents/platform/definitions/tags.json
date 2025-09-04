@@ -1,0 +1,46 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Tag data types"
+    },
+    "paths": {},
+    "definitions": {
+        "ApplyTagsRequest": {
+            "type": "object",
+            "required": [
+                "tags"
+            ],
+            "description": "The request payload for applying tags.",
+            "properties": {
+                "tags": {
+                    "description": "The array of tag IDs.",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "readOnly": false
+                    }
+                }
+            }
+        },
+        "UnapplyTagsRequest": {
+            "type": "object",
+            "required": [
+                "tags"
+            ],
+            "description": "The request payload for unapplying tags.",
+            "properties": {
+                "tags": {
+                    "description": "The array of tag IDs.",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "readOnly": false
+                    }
+                }
+            }
+        }
+    }
+}

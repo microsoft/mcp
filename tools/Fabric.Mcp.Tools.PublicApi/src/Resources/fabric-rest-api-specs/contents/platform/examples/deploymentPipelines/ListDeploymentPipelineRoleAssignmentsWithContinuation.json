@@ -1,0 +1,36 @@
+{
+    "parameters": {
+        "deploymentPipelineId": "8ce96c50-85a0-4db3-85c6-7ccc3ed46523"
+    },
+    "responses": {
+        "200": {
+            "body" : {
+                "value": [
+                    {
+                        "principal": {
+                            "id":  "6e335e92-a2a2-4b5a-970a-bd6a89fbb765",
+                            "type": "User"
+                            },
+                        "role": "Admin"
+                    },
+                    {
+                        "principal": {
+                            "id":  "154aef10-47b8-48c4-ab97-f0bf9d5f8fcf",
+                            "type": "Group"
+                            },
+                        "role": "Admin"
+                    },
+                    {
+                        "principal": {
+                            "id":  "a35d842b-90d5-59a1-c56a-5f8fcff0bf9d",
+                            "type": "ServicePrincipal"
+                            },
+                        "role": "Admin"
+                    }
+                ],
+                "continuationToken": "LDEsMTAwMDAwLDA%3D",
+                "continuationUri": "https://api.fabric.microsoft.com/v1/deploymentPipelines/8ce96c50-85a0-4db3-85c6-7ccc3ed46523/roleAssignments?continuationToken=LDEsMTAwMDAwLDA%3D"
+            }
+        }
+    }
+}

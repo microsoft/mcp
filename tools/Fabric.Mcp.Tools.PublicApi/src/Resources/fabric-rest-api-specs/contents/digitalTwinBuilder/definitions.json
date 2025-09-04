@@ -1,0 +1,135 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "v1",
+    "title": "DigitalTwinBuilder data types"
+  },
+  "paths": {},
+  "definitions": {
+    "DigitalTwinBuilders": {
+      "description": "A list of digitaltwinbuilders.",
+      "required": [ "value" ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of digitaltwinbuilders.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DigitalTwinBuilder"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "DigitalTwinBuilder": {
+      "description": "An digitaltwinbuilder object.",
+      "type": "object",
+      "required": [ "type" ],
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/Item"
+        }
+      ]
+    },
+    "CreateDigitalTwinBuilderRequest": {
+      "description": "Create digitaltwinbuilder request payload.",
+      "required": [ "displayName" ],
+      "properties": {
+        "displayName": {
+          "description": "The digitaltwinbuilder display name. The display name must follow naming rules according to item type i.e., It should start with letter, only has numbers and letters or _ and is less than 100.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The digitaltwinbuilder description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        },
+        "definition": {
+          "description": "The [DigitalTwinBuilder public definition](/rest/api/fabric/articles/item-management/definitions/digital-twin-builder-definition).",
+          "$ref": "#/definitions/DigitalTwinBuilderDefinition",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateDigitalTwinBuilderDefinitionRequest": {
+      "description": "Update digitaltwinbuilder public definition request payload.",
+      "required": [ "definition" ],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/DigitalTwinBuilderDefinition"
+        }
+      }
+    },
+    "DigitalTwinBuilderDefinitionResponse": {
+      "description": "DigitalTwinBuilder public definition response.",
+      "required": [ "definition" ],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/DigitalTwinBuilderDefinition",
+          "readOnly": true
+        }
+      }
+    },
+    "DigitalTwinBuilderDefinition": {
+      "description": "DigitalTwinBuilder public definition object.",
+      "type": "object",
+      "required": [ "parts" ],
+      "properties": {
+        "format": {
+          "description": "The format of the item definition.",
+          "type": "string",
+          "readOnly": false
+        },
+        "parts": {
+          "description": "A list of definition parts.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DigitalTwinBuilderDefinitionPart"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "DigitalTwinBuilderDefinitionPart": {
+      "description": "DigitalTwinBuilder definition part object.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "The DigitalTwinBuilder part path.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payload": {
+          "description": "The DigitalTwinBuilder part payload.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payloadType": {
+          "description": "The payload type.",
+          "$ref": "../common/definitions.json#/definitions/PayloadType",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateDigitalTwinBuilderRequest": {
+      "description": "Update DigitalTwinBuilder request.",
+      "properties": {
+        "displayName": {
+          "description": "The DigitalTwinBuilder display name. The display name must follow naming rules according to item type.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The DigitalTwinBuilder description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        }
+      }
+    }
+  }
+}

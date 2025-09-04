@@ -1,0 +1,39 @@
+{
+  "swagger": "2.0",
+  "info": {
+      "version": "v1",
+      "title": "Datamart data types"
+  },
+  "paths": {},
+  "definitions": {
+      "Datamarts": {
+          "description": "A list of datamarts.",
+          "required": ["value"],
+          "type": "object",
+          "properties": {
+              "value": {
+                  "description": "A list of datamarts.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Datamart"
+                  }
+              }
+          },
+          "allOf": [
+              {
+                  "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+              }
+          ]
+      },
+      "Datamart": {
+          "description": "A datamart object.",
+          "type": "object",
+          "required": ["type"],
+          "allOf": [
+            {
+                "$ref": "../common/definitions.json#/definitions/Item"
+            }
+          ]
+      }
+  }
+}

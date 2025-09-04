@@ -1,0 +1,163 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "DigitalTwinBuilderFlow data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "DigitalTwinBuilderFlow": {
+            "description": "A Digital Twin Builder Flow object.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The Digital Twin Builder Flow properties.",
+                    "$ref": "#/definitions/DigitalTwinBuilderFlowProperties"
+                }
+            }
+        },
+        "DigitalTwinBuilderFlowProperties": {
+            "description": "The Digital Twin Builder Flow properties.",
+            "type": "object",
+            "required": ["digitalTwinBuilderItemReference"],
+            "properties": {
+                "digitalTwinBuilderItemReference": {
+                    "description": "The Digital Twin Builder Item Reference.",
+                    "$ref": "../common/definitions.json#/definitions/ItemReference"
+                }
+            }
+        },
+        "DigitalTwinBuilderFlows": {
+            "description": "A list of Digital Twin Builder Flows.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of Digital Twin Builder Flows.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DigitalTwinBuilderFlow"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "DigitalTwinBuilderFlowCreationPayload": {
+            "description": "The Digital Twin Builder Flow creation payload.",
+            "type": "object",
+            "required": ["digitalTwinBuilderItemReference"],
+            "properties": {
+                "digitalTwinBuilderItemReference": {
+                    "description": "The Digital Twin Builder Item Reference.",
+                    "$ref": "../common/definitions.json#/definitions/ItemReference"
+                }
+            }
+        },
+        "CreateDigitalTwinBuilderFlowRequest": {
+            "description": "Create Digital Twin Builder Flow request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The Digital Twin Builder Flow display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The Digital Twin Builder Flow description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "creationPayload": {
+                    "description": "The creation payload. Use `definition` or `creationPayload`. You can't use both at the same time.",
+                    "$ref": "#/definitions/DigitalTwinBuilderFlowCreationPayload",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The Digital Twin Builder Flow public definition.",
+                    "$ref": "#/definitions/DigitalTwinBuilderFlowPublicDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateDigitalTwinBuilderFlowDefinitionRequest": {
+            "description": "Update Digital Twin Builder Flow public definition request payload.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/DigitalTwinBuilderFlowPublicDefinition"
+                }
+            }
+        },
+        "DigitalTwinBuilderFlowDefinitionResponse": {
+            "description": "The Digital Twin Builder Flow public definition response.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/DigitalTwinBuilderFlowPublicDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "DigitalTwinBuilderFlowPublicDefinition" : {
+            "description": "The Digital Twin Builder Flow public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/digital-twin-builder-flow-definition) for more details on how to craft a Digital Twin Builder Flow public definition.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DigitalTwinBuilderFlowPublicDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "DigitalTwinBuilderFlowPublicDefinitionPart": {
+            "description": "Digital Twin Builder Flow definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The Digital Twin Builder Flow public definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The Digital Twin Builder Flow public definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateDigitalTwinBuilderFlowRequest": {
+            "description": "Update Digital Twin Builder Flow request.",
+            "properties": {
+                "displayName": {
+                    "description": "The Digital Twin Builder Flow display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The Digital Twin Builder Flow description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        }
+    }
+}

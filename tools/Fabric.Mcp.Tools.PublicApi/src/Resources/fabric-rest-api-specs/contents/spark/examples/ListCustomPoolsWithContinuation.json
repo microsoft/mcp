@@ -1,0 +1,32 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "2367293d-b70b-4b33-97f2-161b8d04a8d7",
+                        "name": "pool1",
+                        "type": "Workspace",
+                        "nodeFamily": "MemoryOptimized",
+                        "nodeSize": "Small",
+                        "autoScale": {
+                            "enabled": true,
+                            "minNodeCount": 1,
+                            "maxNodeCount": 4
+                        },
+                        "dynamicExecutorAllocation": {
+                            "enabled": true,
+                            "minExecutors": 1,
+                            "maxExecutors": 2
+                        }
+                    }
+                ],
+                "continuationToken": "LDEsMTAwMDAwLDA%3D",
+                "continuationUri": "https://api.fabric.microsoft.com/v1/workspaces/f089354e-8366-4e18-aea3-4cb4a3a50b48/spark/pools?continuationToken=LDEsMTAwMDAwLDA%3D"
+            }
+        }
+    }
+}

@@ -1,0 +1,41 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "createEventhouseRequest": {
+            "displayName": "Eventhouse_1",
+            "description": "An eventhouse description.",
+            "definition": {
+                "parts": [
+                    {
+                        "path": "EventhouseProperties.json",
+                        "payload": "e30=",
+                        "payloadType": "InlineBase64"
+                    },
+                    {
+                        "path": ".platform",
+                        "payload": "ZG90UGxhdGZvcm1CYXNlNjRTdHJpbmc=",
+                        "payloadType": "InlineBase64"
+                    }
+                ]
+            }
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "displayName": "Eventhouse_1",
+                "description": "An eventhouse description.",
+                "type": "Eventhouse",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "5b218778-e7a5-4d73-8187-f10824047655"
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "Retry-After": 30
+            }
+        }
+    }
+}

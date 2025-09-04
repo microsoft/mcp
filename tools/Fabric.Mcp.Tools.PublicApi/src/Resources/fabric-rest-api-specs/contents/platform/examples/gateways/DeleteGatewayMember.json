@@ -1,0 +1,9 @@
+{
+    "parameters": {
+        "gatewayId": "ad457a0a-1fc4-4218-9867-1d84661ca4b8",
+        "gatewayMemberId": "f921ee6b-8feb-4595-8aa7-3ed34338e8b6"
+    },
+    "responses": {
+        "200": {}
+    }
+}

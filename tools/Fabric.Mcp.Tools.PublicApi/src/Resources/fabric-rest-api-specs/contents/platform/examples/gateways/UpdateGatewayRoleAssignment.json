@@ -1,0 +1,21 @@
+{
+    "parameters": {
+        "gatewayId": "8e41c4dd-a382-4937-9bf3-695ab881f7c2",
+        "gatewayRoleAssignmentId": "43970761-afc9-4428-ae6e-3b08bef098ff",
+        "updateGatewayRoleAssignmentRequest": {
+            "role": "ConnectionCreator"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "role": "ConnectionCreator",
+                "principal": {
+                    "id": "43970761-afc9-4428-ae6e-3b08bef098ff",
+                    "type": "User"
+                },
+                "id": "43970761-afc9-4428-ae6e-3b08bef098ff"
+            }
+        }
+    }
+}

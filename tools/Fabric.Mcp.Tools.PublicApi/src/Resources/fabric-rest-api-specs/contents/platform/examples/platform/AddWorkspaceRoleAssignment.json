@@ -1,0 +1,27 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff512",
+        "workspaceRoleAssignmentRequest": {
+            "principal": {
+                "id": "8eedb1b0-3af8-4b17-8e7e-663e61e12211",
+                "type": "User"
+            },
+            "role": "Member"
+        }
+    },
+    "responses": {
+        "201": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/workspaces/cfafbeb1-8037-4d0c-896e-a46fb27ff512/roleAssignments/8eedb1b0-3af8-4b17-8e7e-663e61e12211"
+            },
+            "body": {
+                "id": "8eedb1b0-3af8-4b17-8e7e-663e61e12211",
+                "principal": {
+                    "id": "8eedb1b0-3af8-4b17-8e7e-663e61e12211",
+                    "type": "User"
+                },
+                "role": "Member"
+            }
+        }
+    }
+}

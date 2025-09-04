@@ -1,0 +1,9 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "poolId": "2367293d-b70b-4b33-97f2-161b8d04a8d7"
+    },
+    "responses": {
+        "200": {}
+    }
+}

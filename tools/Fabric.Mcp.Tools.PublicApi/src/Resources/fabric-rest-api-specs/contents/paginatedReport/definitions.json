@@ -1,0 +1,54 @@
+{
+  "swagger": "2.0",
+  "info": {
+      "version": "v1",
+      "title": "PaginatedReport data types"
+  },
+  "paths": {},
+  "definitions": {
+      "PaginatedReports": {
+          "description": "A list of paginated reports.",
+          "required": ["value"],
+          "type": "object",
+          "properties": {
+              "value": {
+                  "description": "A list of paginated reports.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/PaginatedReport"
+                  }
+              }
+          },
+          "allOf": [
+              {
+                  "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+              }
+          ]
+      },
+      "PaginatedReport": {
+          "description": "A paginated report object.",
+          "type": "object",
+          "required": ["type"],
+          "allOf": [
+            {
+                "$ref": "../common/definitions.json#/definitions/Item"
+            }
+          ]
+      },
+      "UpdatePaginatedReportRequest": {
+          "description": "Update paginated report request.",
+          "properties": {
+              "displayName": {
+                  "description": "The paginated report display name. The display name must follow naming rules according to item type.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "description": {
+                  "description": "The paginated report description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              }
+          }
+      }
+  }
+}

@@ -1,0 +1,42 @@
+{
+    "parameters": {
+        "deploymentPipelineId": "a5ded933-57b7-41f4-b072-ed4c1f9d5824",
+        "deployRequest": {
+            "sourceStageId": "db1577e0-0132-4d6d-92b9-952c359988f2",
+            "targetStageId": "f1c39546-6282-4590-8af3-847a6226ad16",
+            "items": [
+                {
+                    "sourceItemId": "6bfe235c-6d7b-41b7-98a6-2b8276b3e82b",
+                    "itemType": "Datamart"
+                },
+                {
+                    "sourceItemId": "1a201f2a-d1d8-45c0-8c61-1676338517de",
+                    "itemType": "SemanticModel"
+                },
+                {
+                    "sourceItemId": "2d225191-65f8-4ec3-b77d-06100602b1f7",
+                    "itemType": "Report"
+                },
+                {
+                    "sourceItemId": "9046e4cc-8aea-4a7a-a3b5-1a78b1447d82",
+                    "itemType": "Dashboard"
+                },
+                {
+                    "sourceItemId": "7f08923c-8f57-49d6-a010-8335bb9cbd1b",
+                    "itemType": "Dashboard"
+                }
+            ],
+            "note": "Deploying business ready items"
+        }
+    },
+    "responses": {
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "x-ms-operation-id": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "deployment-id": "1065e6a3-a020-4c0c-ada7-92b5fe99eec5",
+                "Retry-After": 30
+            }
+        }
+    }
+}

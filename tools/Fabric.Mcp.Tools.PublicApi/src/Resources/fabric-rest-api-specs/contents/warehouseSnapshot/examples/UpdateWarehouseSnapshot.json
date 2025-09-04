@@ -1,0 +1,29 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "warehouseSnapshotId": "5b218778-e7a5-4d73-8187-f10824047715",
+        "updateWarehouseSnapshotRequest": {
+            "displayName": "WarehouseSnapshot's New name",
+            "description": "WarehouseSnapshot's New description",
+            "properties": {
+                "snapshotDateTime": "2024-10-10T15:20:15Z"
+            }
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "displayName": "WarehouseSnapshot's New name",
+                "description": "WarehouseSnapshot's New description",
+                "type": "WarehouseSnapshot",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "5b218778-e7a5-4d73-8187-f10824047715",
+                "properties": {
+                    "connectionString": "qvrmbuxie7we7glrekxgy6npqu-6xgyei3x2xiejip4iime6knh5m.datawarehouse.fabric.microsoft.com",
+                    "parentWarehouseId": "7332259c-fb34-4975-99db-85818fb8664f",
+                    "snapshotDateTime": "2024-10-10T15:20:15Z"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,109 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Tag data types"
+    },
+    "paths": {},
+    "definitions": {
+        "CreateTagRequest": {
+            "type": "object",
+            "required": [
+                "displayName"
+            ],
+            "description": "The request payload for creating a tag.",
+            "properties": {
+                "displayName": {
+                    "description": "The tag display name.\nThe display name cannot contain more than 40 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "CreateTagsRequest": {
+            "required": [
+                "createTagsRequest"
+            ],
+            "description": "This is a request wrapper for a creating a list of tags.",
+            "properties": {
+                "createTagsRequest": {
+                    "type": "array",
+                    "description": "An array of createTagRequest",
+                    "items": {
+                        "$ref": "#/definitions/CreateTagRequest"
+                    }
+                }
+            }
+        },
+        "UpdateTagRequest": {
+            "type": "object",
+            "required": [
+                "displayName"
+            ],
+            "description": "The request payload for updating a tag.",
+            "properties": {
+                "displayName": {
+                    "description": "The tag display name.\nThe display name cannot contain more than 40 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "CreateTagsResponse": {
+            "type": "object",
+            "description": "A response wrapper for a list of created tags.",
+            "required": [
+                "tags"
+            ],
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "description": "An array of tags",
+                    "items": {
+                        "$ref": "../../common/definitions.json#/definitions/Tag"
+                    }
+                }
+            }
+        },
+        "AdminTagInfo": {
+            "type": "object",
+            "description": "Represents a tag.",
+            "required": [
+                "id",
+                "displayName"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "The tag object ID.",
+                    "format": "uuid"
+                },
+                "displayName": {
+                    "type": "string",
+                    "description": "The name of the tag."
+                }
+            }
+        },
+        "AdminTagsInfo": {
+            "type": "object",
+            "description": "A response wrapper for a list of tags.",
+            "required": [
+                "value"
+            ],
+            "properties": {
+                "value": {
+                    "type": "array",
+                    "description": "An array of tags",
+                    "items": {
+                        "$ref": "#/definitions/AdminTagInfo"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        }
+    }
+}

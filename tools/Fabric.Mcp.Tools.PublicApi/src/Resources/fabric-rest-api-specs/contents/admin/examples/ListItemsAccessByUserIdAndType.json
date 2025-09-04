@@ -1,0 +1,32 @@
+{
+    "parameters": {
+        "userId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "type": "Report"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "accessEntities": [
+                    {
+                        "id": "17d8929d-ab32-46d1-858b-fdea74e93bf2",
+                        "displayName": "Test Report",
+                        "category": "Item",
+                        "itemAccessDetails": {
+                            "type": "Report",
+                            "permissions": [
+                                "Read",
+                                "Reshare"
+                            ],
+                            "additionalPermissions" : [
+                                "ReadAll",
+                                "viewOutput"
+                            ]
+                        }
+                    }
+                ],
+                "continuationUri": null,
+                "continuationToken": null
+            }
+        }
+    }
+}

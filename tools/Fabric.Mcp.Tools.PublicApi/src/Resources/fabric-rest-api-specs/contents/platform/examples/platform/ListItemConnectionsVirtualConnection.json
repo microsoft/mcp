@@ -1,0 +1,21 @@
+{
+    "parameters": {
+        "workspaceId": "4b218778-e7a5-4d73-8187-f10824047715",
+        "itemId": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "connectivityType": "Automatic",
+                        "connectionDetails": {
+                            "type": "SQL",
+                            "path": "xqoruksalslrtkdxe2bvrlwgsi-5j2iqepw1i3ucdp6bepe62hcii.datawarehouse.fabric.microsoft.com;532183f5-ac60-4d12-0fc5-4094532f14b5"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

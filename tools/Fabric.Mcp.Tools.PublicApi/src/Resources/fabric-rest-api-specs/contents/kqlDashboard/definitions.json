@@ -1,0 +1,142 @@
+{
+  "swagger": "2.0",
+  "info": {
+      "version": "v1",
+      "title": "KQLDashboard data types"
+  },
+  "paths": {},
+  "definitions": {
+      "KQLDashboards": {
+          "description": "A list of KQL dashboards.",
+          "required": ["value"],
+          "type": "object",
+          "properties": {
+              "value": {
+                  "description": "A list of KQL dashboards.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/KQLDashboard"
+                  }
+              }
+          },
+          "allOf": [
+              {
+                  "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+              }
+          ]
+      },
+      "KQLDashboard": {
+          "description": "A KQL dashboard object.",
+          "type": "object",
+          "required": ["type"],
+          "allOf": [
+            {
+                "$ref": "../common/definitions.json#/definitions/Item"
+            }
+          ]
+      },
+      "CreateKQLDashboardRequest": {
+          "description": "Create KQL dashboard request payload.",
+          "required": ["displayName"],
+          "properties": {
+              "displayName": {
+                  "description": "The KQL dashboard name. The display name must follow naming rules according to item type.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "description": {
+                  "description": "The KQL dashboard description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "folderId": {
+                  "description": "The folder ID. If not specified or null, the KQL dashboard is created with the workspace as its folder.",
+                  "type": "string",
+                  "format": "uuid",
+                  "readOnly": false
+              },
+              "definition": {
+                  "description": "The KQL dashboard public definition.",
+                  "$ref": "#/definitions/KQLDashboardDefinition",
+                  "readOnly": false
+              }
+          }
+      },
+      "KQLDashboardDefinition" : {
+          "description": "KQL dashboard public definition object.",
+          "type": "object",
+          "required": ["parts"],
+          "properties": {
+              "format": {
+                  "description": "The format of the item definition.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "parts": {
+                  "description": "A list of definition parts.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/KQLDashboardDefinitionPart"
+                  },
+                  "readOnly": false
+              }
+          }
+      },
+      "KQLDashboardDefinitionPart": {
+          "description": "KQL dashboard definition part object.",
+          "type": "object",
+          "required": ["path", "payload", "payloadType"],
+          "properties": {
+              "path": {
+                  "description": "The KQL dashboard part path.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payload": {
+                  "description": "The KQL dashboard part payload.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payloadType":{
+                  "description": "The payload type.",
+                  "$ref": "../common/definitions.json#/definitions/PayloadType",
+                  "readOnly": false
+              }
+          }
+      },
+      "UpdateKQLDashboardRequest": {
+          "description": "Update KQL dashboard request.",
+          "properties": {
+              "displayName": {
+                  "description": "The KQL dashboard display name. The display name must follow naming rules according to item type.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "description": {
+                  "description": "The KQL dashboard description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              }
+          }
+      },
+      "UpdateKQLDashboardDefinitionRequest": {
+          "description": "Update KQL dashboard public definition request payload.",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/KQLDashboardDefinition"
+              }
+          }
+      },
+      "KQLDashboardDefinitionResponse": {
+          "description": "KQL dashboard public definition response.",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/KQLDashboardDefinition",
+                  "readOnly": true
+              }
+          }
+      }
+  }
+}

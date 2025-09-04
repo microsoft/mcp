@@ -1,0 +1,397 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "ExternalDataSharing - User APIs data types"
+    },
+    "paths": {},
+    "definitions": {
+        "CreateExternalDataShareRequest": {
+            "type": "object",
+            "description": "The request payload for creating an external data share.",
+            "required": ["paths", "recipient"],
+            "properties": {
+                "paths": {
+                    "type": "array",
+                    "description": "The path or list of paths that are to be externally shared. You can share up to 100 paths in each share. A valid path to an external data share must start with \"Files/\" or \"Tables/\". You can't share the root folder itself (Files or Tables).\n\nFor example, these paths are valid:\n\n* \"Files/MyFolder1\"\n\n* \"Tables/MyTable1\"",
+                    "items": {
+                        "type": "string"
+                    },
+                    "maxItems": 100,
+                    "readOnly": false
+                },
+                "recipient": {
+                    "description": "The recipient who is invited to accept the external data share.",
+                    "$ref": "#/definitions/ExternalDataShareRecipient",
+                    "readOnly": false
+                }
+            }
+        },
+        "ExternalDataShares": {
+            "type": "object",
+            "description": "A list of external data shares with a continuation token.",
+            "required": ["value"],
+            "properties": {
+                "value": {
+                    "type": "array",
+                    "description": "A list of external data shares.",
+                    "items": {
+                        "$ref": "#/definitions/ExternalDataShare"
+                    },
+                    "readOnly": true
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "ExternalDataShare": {
+            "type": "object",
+            "description": "An external data share object.",
+            "required": ["id", "paths", "creatorPrincipal", "recipient", "status", "workspaceId", "itemId"],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The external data share ID.",
+                    "readOnly": true
+                },
+                "paths": {
+                    "type": "array",
+                    "description": "The path or list of paths that are externally shared.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "maxItems": 100,
+                    "readOnly": true
+                },
+                "creatorPrincipal": {
+                    "description": "The principal that created the external data share.",
+                    "$ref": "../../common/definitions.json#/definitions/Principal",
+                    "readOnly": true
+                },
+                "recipient": {
+                    "description": "The recipient who was invited to accept the external data share.",
+                    "$ref": "#/definitions/ExternalDataShareRecipient",
+                    "readOnly": true
+                },
+                "status": {
+                    "description": "The status of the external data share.",
+                    "$ref": "#/definitions/ExternalDataShareStatus",
+                    "readOnly": true
+                },
+                "expirationTimeUtc": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The expiration date and time (UTC) of the invitation to the external data share.",
+                    "readOnly": true
+                },
+                "workspaceId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The workspace ID.",
+                    "readOnly": true
+                },
+                "itemId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The item ID.",
+                    "readOnly": true
+                },
+                "invitationUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "The URL for accepting the invitation to the external data share.",
+                    "readOnly": true
+                },
+                "acceptedByTenantId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The tenant ID in which the external data share was accepted.",
+                    "readOnly": true
+                }
+            }
+        },
+        "ExternalDataShareStatus": {
+            "type": "string",
+            "description": "The status of a given external data share. Additional `ExternalDataShareStatus` types may be added over time.",
+            "enum": ["Pending", "Active", "Revoked", "InvitationExpired"],
+            "x-ms-enum": {
+                "name": "ExternalDataShareStatus",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Pending",
+                        "description": "An invitation was created and is now pending acceptance by the recipient."
+                    },
+                    {
+                        "value": "Active",
+                        "description": "The invitation has been accepted by the recipient and the external data share is active."
+                    },
+                    {
+                        "value": "Revoked",
+                        "description": "The external data share was revoked."
+                    },
+                    {
+                        "value": "InvitationExpired",
+                        "description": "The invitation expired and can no longer be accepted by the recipient."
+                    }
+                ]
+            }
+        },
+        "ExternalDataShareRecipient": {
+            "type": "object",
+            "description": "A representation of the the external data share recipient.",
+            "required": ["userPrincipalName"],
+            "properties": {
+                "userPrincipalName": {
+                    "type": "string",
+                    "description": "The recipient's email address.",
+                    "maxLength": 256
+                },
+                "tenantId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The recipient's tenant ID."
+                }
+            }
+        },
+        "ExternalDataShareInvitationDetails": {
+            "type": "object",
+            "description": "External data share invitation details.",
+            "required": [
+                "providerTenantDetails",
+                "pathsDetails"
+            ],
+            "properties": {
+                "providerTenantDetails": {
+                    "description": "Information about the external data share's provider tenant.",
+                    "$ref": "#/definitions/ExternalDataShareProviderTenantDetails",
+                    "readOnly": true
+                },
+                "pathsDetails": {
+                    "type": "array",
+                    "description": "Information about the paths included in the external data share.",
+                    "items": {
+                        "$ref": "#/definitions/ExternalDataSharePathDetails"
+                    },
+                    "readOnly": true
+                }
+            }
+        },
+        "ExternalDataShareProviderTenantDetails": {
+            "type": "object",
+            "description": "External data share's provider tenant details.",
+            "required": ["tenantId", "displayName", "verifiedDomainName"],
+            "properties": {
+                "tenantId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The provider tenant ID.",
+                    "readOnly": true
+                },
+                "displayName": {
+                    "type": "string",
+                    "description": "The provider tenant display name.",
+                    "readOnly": true
+                },
+                "verifiedDomainName": {
+                    "type": "string",
+                    "description": "The provider tenant verified domain name (in Entra ID).",
+                    "readOnly": true
+                }
+            }
+        },
+        "ExternalDataSharePathDetails": {
+            "type": "object",
+            "description": "Details of a path that was shared as part of external data sharing.",
+            "required": ["pathId", "type", "name"],
+            "properties": {
+                "pathId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Unique identifier of the path.",
+                    "readOnly": true
+                },
+                "type": {
+                    "description": "The type of the external data share.",
+                    "$ref": "#/definitions/ExternalDataSharePathType",
+                    "readOnly": true
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The name of the content that was shared.",
+                    "readOnly": true
+                }
+            }
+        },
+        "ExternalDataSharePathType": {
+            "type": "string",
+            "description": "The type of a path in an external data share. Additional `ExternalDataSharePathType` types may be added over time.",
+            "enum": ["Folder", "Table"],
+            "x-ms-enum": {
+                "name": "ExternalDataSharePathType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Folder",
+                        "description": "The external data share path is of type: Folder"
+                    },
+                    {
+                        "value": "Table",
+                        "description": "The external data share path is of type: Table"
+                    }
+                ]
+            }
+        },
+        "AcceptExternalDataShareInvitationRequest": {
+            "type": "object",
+            "description": "The request payload for accepting an external data share invitation.",
+            "required": [
+                "providerTenantId",
+                "workspaceId",
+                "itemId",
+                "payload"
+            ],
+            "properties": {
+                "providerTenantId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The provider tenant ID.",
+                    "readOnly": false
+                },
+                "workspaceId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The workspace ID.",
+                    "readOnly": false
+                },
+                "itemId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The item ID.",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The payload for the Accept External Data Share invitation request.",
+                    "$ref": "#/definitions/ExternalDataShareAcceptRequestPayload",
+                    "readOnly": false
+                }
+            }
+        },
+        "ExternalDataShareAcceptRequestPayload": {
+            "description": "Payload for the Accept External Data Share invitation request",
+            "type": "object",
+            "required": ["payloadType"],
+            "discriminator": "payloadType",
+            "properties": {
+                "payloadType": {
+                    "description": "The external data share acceptance type. Additional types may be added over time.",
+                    "type": "string",
+                    "enum": ["ShortcutCreation"],
+                    "x-ms-enum": {
+                        "name": "ExternalDataShareAcceptRequestPayloadType",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "ShortcutCreation",
+                                "description": "A OneLake shortcut."
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "ShortcutCreationPayload": {
+            "description": "Request payload for shortcut creation",
+            "type": "object",
+            "x-ms-discriminator-value": "ShortcutCreation",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ExternalDataShareAcceptRequestPayload"
+                }
+            ],
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "A full path in a data item, in which to create the shortcut pointing to the external data. A valid path to accept an external data share in must start with \"Files/\" or \"Tables/\".\n\nFor example, these paths are valid:\n\n* \"Files/\"\n\n* \"Files/MyFolder1\"\n\n* \"Tables/\"",
+                    "readOnly": false
+                },
+                "createShortcutRequests": {
+                    "type": "array",
+                    "description": "A list of definitions for creating the external data share shortcuts.",
+                    "items": {
+                        "$ref": "#/definitions/CreateExternalDataShareShortcutRequest"
+                    },
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "readOnly": false
+                }
+            }
+        },
+        "CreateExternalDataShareShortcutRequest": {
+            "type": "object",
+            "description": "Definitions for creating an external data share shortcut.",
+            "required": ["pathId", "shortcutName"],
+            "properties": {
+                "pathId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Unique identifier of the target path, as returned by 'GetExternalDataShareInvitationDetails' operation.",
+                    "readOnly": false
+                },
+                "shortcutName": {
+                    "type": "string",
+                    "description": "Name of the shortcut.",
+                    "readOnly": false
+                }
+            }
+        },
+        "AcceptExternalDataShareInvitationResponse": {
+            "type": "object",
+            "description": "The response for accepting an external data share invitation.",
+            "required": ["value"],
+            "properties": {
+                "value": {
+                    "type": "array",
+                    "description": "A list of shortcuts that were created by accepting an external data share invitation.",
+                    "items": {
+                        "$ref": "#/definitions/ExternalDataShareShortcutInfo"
+                    },
+                    "readOnly": true
+                }
+            }
+        },
+        "ExternalDataShareShortcutInfo": {
+            "type": "object",
+            "description": "Information about a shortcut that was created by accepting an external data share invitation.",
+            "required": ["workspaceId", "itemId", "path", "name"],
+            "properties": {
+                "workspaceId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The workspace ID.",
+                    "readOnly": true
+                },
+                "itemId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The item ID.",
+                    "readOnly": true
+                },
+                "path": {
+                    "type": "string",
+                    "description": "The path in which the shortcut was created.",
+                    "readOnly": true
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The name of the shortcut.",
+                    "readOnly": true
+                }
+            }
+        }
+    }
+}

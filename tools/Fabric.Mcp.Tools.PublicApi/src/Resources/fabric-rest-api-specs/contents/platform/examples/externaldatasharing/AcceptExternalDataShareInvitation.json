@@ -1,0 +1,44 @@
+{
+    "parameters": {
+        "invitationId": "dccc162f-7a41-4720-83c3-5c7e81187959",
+        "acceptExternalDataShareRequest": {
+            "providerTenantId": "34f92457-fe9d-4c36-92a8-499fdfaf0f8f",
+            "workspaceId": "7c7eb7fa-00e9-4614-8123-715c42497314",
+            "itemId": "a6549838-dfbc-4905-b1c0-67f2946f9cc4",
+            "payload": {
+                "payloadType": "ShortcutCreation",
+                "path": "Files/DataFromContoso",
+                "createShortcutRequests": [
+                    {
+                        "pathId": "5c95314c-ef86-4663-9f1e-dee186f38715",
+                        "shortcutName": "Shortcut_To_Contoso_Sales_2023"
+                    },
+                    {
+                        "pathId": "6c95314c-ef86-4663-9f1e-dee186f38716",
+                        "shortcutName": "Shortcut_To_Contoso_Sales_2024"
+                    }
+                ]
+            }
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "workspaceId": "7c7eb7fa-00e9-4614-8123-715c42497314",
+                        "itemId": "a6549838-dfbc-4905-b1c0-67f2946f9cc4",
+                        "path": "Files/DataFromContoso",
+                        "name": "Shortcut_To_Contoso_Sales_2023"
+                    },
+                    {
+                        "workspaceId": "7c7eb7fa-00e9-4614-8123-715c42497314",
+                        "itemId": "a6549838-dfbc-4905-b1c0-67f2946f9cc4",
+                        "path": "Files/DataFromContoso",
+                        "name": "Shortcut_To_Contoso_Sales_2024"
+                    }
+                ]
+            }
+        }
+    }
+}

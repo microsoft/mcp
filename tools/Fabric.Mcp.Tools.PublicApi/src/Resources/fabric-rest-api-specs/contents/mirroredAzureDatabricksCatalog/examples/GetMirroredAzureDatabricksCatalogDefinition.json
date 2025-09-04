@@ -1,0 +1,33 @@
+{
+  "parameters": {
+    "workspaceId": "6e335e92-a2a2-4b5a-970a-bd6a89fbb765",
+    "mirroredAzureDatabricksCatalogId": "b9429666-fd5a-4a51-a81d-09b1e20ca4be"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "definition": {
+          "parts": [
+            {
+              "path": "mirroredAzureDatabricksCatalog.json",
+              "payload": "eyAicHJvcGVydGllcy..WJsZSIgfSB9IH0gXSB9IH0",
+              "payloadType": "InlineBase64"
+            },
+            {
+              "path": ".platform",
+              "payload": "ZG90UGxhdGZvcm1CYXNlNjRTdHJpbmc=",
+              "payloadType": "InlineBase64"
+            }
+          ]
+        }
+      }
+    },
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/bb614375-d29d-4a81-87f7-bc1fd7d9dfbd",
+        "x-ms-operation-id": "bb614375-d29d-4a81-87f7-bc1fd7d9dfbd",
+        "Retry-After": 30
+      }
+    }
+  }
+}

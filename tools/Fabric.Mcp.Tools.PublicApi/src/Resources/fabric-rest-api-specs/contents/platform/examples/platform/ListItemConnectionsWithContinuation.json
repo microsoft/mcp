@@ -1,0 +1,43 @@
+{
+    "parameters": {
+        "workspaceId": "4b218778-e7a5-4d73-8187-f10824047715",
+        "itemId": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "connectivityType": "ShareableCloud",
+                        "displayName": "ContosoConnection1",
+                        "id": "6952a7b2-aea3-414f-9d85-6c0fe5d34539",
+                        "connectionDetails": {
+                            "type": "Web",
+                            "path": "https://www.contoso.com"
+                        }
+                    },
+                    {
+                        "connectivityType": "OnPremisesDataGateway",
+                        "displayName": "ContosoConnection2",
+                        "id": "0b9af1bd-e974-4893-8947-d89d5a560385",
+                        "gatewayId": "58376c10-5f61-4024-887e-748df4beae45",
+                        "connectionDetails": {
+                            "type": "SQL",
+                            "path": "contoso.database.windows.net;sales"
+                        }
+                    },
+                    {
+                        "connectivityType": "PersonalCloud",
+                        "id": "82078574-ddcc-4d53-8bce-6fb5806d4fee",
+                        "connectionDetails": {
+                            "type": "AzureBlobs",
+                            "path": "https://contoso.blob.core.windows.net/"
+                        }
+                    }
+                ],
+                "continuationToken": "LDEsMTAwMDAwLDA%3D",
+                "continuationUri": "https://api.fabric.microsoft.com/v1/workspaces/4b218778-e7a5-4d73-8187-f10824047715/items/431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7/connections?continuationToken=LDEsMTAwMDAwLDA%3D"
+            }
+        }
+    }
+}

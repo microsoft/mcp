@@ -1,0 +1,274 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Spark common setting data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "LivySessions": {
+            "required": [
+                "value"
+            ],
+            "description": "A paginated list of livy sessions.",
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of livy sessions.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/LivySession"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "./definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "LivySession": {
+            "type": "object",
+            "description": "The livy session response",
+            "properties": {
+                "sparkApplicationId": {
+                    "type": "string",
+                    "description": "A Spark application ID is a unique identifier assigned to each Apache Spark application. It also appears in the Spark UI."
+                },
+                "state": {
+                    "description": "Current state of the job.",
+                    "$ref": "#/definitions/LivySessionState"
+                },
+                "livyId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the Livy session or Livy batch."
+                },
+                "origin": {
+                    "description": "Origin of the job.",
+                    "$ref": "#/definitions/LivySessionOrigin"
+                },
+                "attemptNumber": {
+                    "type": "integer",
+                    "description": "Current attempt number."
+                },
+                "maxNumberOfAttempts": {
+                    "type": "integer",
+                    "description": "Maximum number of attempts."
+                },
+                "livyName": {
+                    "type": "string",
+                    "description": "Name of the Livy session or Livy batch."
+                },
+                "submitter": {
+                    "description": "ID of the submitter.",
+                    "$ref": "./definitions.json#/definitions/Principal"
+                },
+                "item": {
+                    "description": "ID of the item.",
+                    "$ref": "./definitions.json#/definitions/ItemReferenceById"
+                },
+                "itemType": {
+                    "description": "The item type.",
+                    "$ref": "#/definitions/LivySessionItemType"
+                },
+                "itemName": {
+                    "type": "string",
+                    "description": "Name of the item."
+                },
+                "jobType": {
+                    "description": "Current state of the job.",
+                    "$ref": "#/definitions/LivySessionJobType"
+                },
+                "submittedDateTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the job was submitted in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
+                },
+                "startDateTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the job started in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
+                },
+                "endDateTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the job ended in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
+                },
+                "queuedDuration": {
+                    "description": "Duration for which the job was queued.",
+                    "$ref": "./definitions.json#/definitions/Duration"
+                },
+                "runningDuration": {
+                    "description": "Time it took the job to run.",
+                    "$ref": "./definitions.json#/definitions/Duration"
+                },
+                "totalDuration": {
+                    "description": "Total duration of the job.",
+                    "$ref": "./definitions.json#/definitions/Duration"
+                },
+                "jobInstanceId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the job instance."
+                },
+                "creatorItem": {
+                    "description": "ID of the item creator. When `isHighConcurrency` is set to `true` this value might be different than `itemId`.",
+                    "$ref": "./definitions.json#/definitions/ItemReferenceById"
+                },
+                "isHighConcurrency": {
+                    "type": "boolean",
+                    "description": "Flag indicating high concurrency."
+                },
+                "cancellationReason": {
+                    "type": "string",
+                    "description": "Reason for the job cancellation."
+                },
+                "capacityId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the capacity."
+                },
+                "operationName": {
+                    "type": "string",
+                    "description": "Name of the operation. Possible values include: _Notebook run_, _Notebook HC run_ and _Notebook pipeline run_."
+                },
+                "consumerId": {
+                    "description": "ID of the consumer.",
+                    "$ref": "./definitions.json#/definitions/Principal"
+                },
+                "runtimeVersion": {
+                    "type": "string",
+                    "description": "The fabric runtime version."
+                },
+                "livySessionItemResourceUri": {
+                    "type": "string",
+                    "description": "The URI used to retrieve all Livy sessions for a given item."
+                }
+            }
+        },
+        "LivySessionState": {
+            "type": "string",
+            "description": "Current state of the job. Values are: `NotStarted`, `InProgress`, `Cancelled`, `Succeeded`, `Stopped`, `Failed`, `Unknown`. Additional `LivySessionState` types may be added over time.",
+            "enum": [
+                "InProgress",
+                "Cancelled",
+                "NotStarted",
+                "Succeeded",
+                "Failed",
+                "Unknown"
+            ],
+            "x-ms-enum": {
+                "name": "State",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "InProgress",
+                        "description": "Job is in running or is cancelling state."
+                    },
+                    {
+                        "value": "Cancelled",
+                        "description": "Job got cancelled."
+                    },
+                    {
+                        "value": "NotStarted",
+                        "description": "Job is queued, is starting or in library packaging state."
+                    },
+                    {
+                        "value": "Succeeded",
+                        "description": "Job has stopped or is in success state."
+                    },
+                    {
+                        "value": "Failed",
+                        "description": "Job failed or its session timed out."
+                    },
+                    {
+                        "value": "Unknown",
+                        "description": "Job is in invalid state."
+                    }
+                ]
+            }
+        },
+        "LivySessionOrigin": {
+            "type": "string",
+            "description": "Origin of the job. Values are: `SubmittedJob`, `PendingJob`. Additional `LivySessionOrigin` types may be added over time.",
+            "enum": [
+                "SubmittedJob",
+                "PendingJob"
+            ],
+            "x-ms-enum": {
+                "name": "Origin",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "SubmittedJob",
+                        "description": "Job is coming from submitted data source."
+                    },
+                    {
+                        "value": "PendingJob",
+                        "description": "Job is coming from pending data source."
+                    }
+                ]
+            }
+        },
+        "LivySessionItemType": {
+            "type": "string",
+            "description": "The item type. Values are: `Lakehouse`, `SparkJobDefinition`, `Notebook`. Additional `LivySessionItemType` types may be added over time.",
+            "enum": [
+                "Lakehouse",
+                "SparkJobDefinition",
+                "Notebook"
+            ],
+            "x-ms-enum": {
+                "name": "ItemType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Lakehouse",
+                        "description": "Item is a lakehouse item."
+                    },
+                    {
+                        "value": "SparkJobDefinition",
+                        "description": "Item is a spark job definition item."
+                    },
+                    {
+                        "value": "Notebook",
+                        "description": "Item is a notebook item."
+                    }
+                ]
+            }
+        },
+        "LivySessionJobType": {
+            "type": "string",
+            "description": "Type of the job. Values are: `Unknown`, `SparkSession`, `SparkBatch`, `JupyterSession`. Additional `LivySessionJobType` types may be added over time.",
+            "enum": [
+                "Unknown",
+                "SparkSession",
+                "SparkBatch",
+                "JupyterSession"
+            ],
+            "x-ms-enum": {
+                "name": "JobType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Unknown",
+                        "description": "Job type is unknown."
+                    },
+                    {
+                        "value": "SparkSession",
+                        "description": "Job type is from a spark session."
+                    },
+                    {
+                        "value": "SparkBatch",
+                        "description": "Job type is from a spark batch."
+                    },
+                    {
+                        "value": "JupyterSession",
+                        "description": "Job type is from jupyter session."
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "3546052c-ae64-4526-b1a8-52af7761426f",
+                        "displayName": "SemanticModel Name 1",
+                        "description": "A semantic model description.",
+                        "type": "SemanticModel",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                    }
+                ]
+            }
+        }
+    }
+}

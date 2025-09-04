@@ -1,0 +1,45 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "3546052c-ae64-4526-b1a8-52af7761426f",
+                        "displayName": "Lakehouse_1",
+                        "description": "A lakehouse description.",
+                        "type": "Lakehouse",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "oneLakeTablesPath":"https://onelake.dfs.fabric.microsoft.com/2382cdf5-d577-44d0-a1fc-42184f29a7eb/e5fb215b-1934-413e-b33a-debaf844afde/Tables",
+                            "oneLakeFilesPath":"https://onelake.dfs.fabric.microsoft.com/2382cdf5-d577-44d0-a1fc-42184f29a7eb/e5fb215b-1934-413e-b33a-debaf844afde/Files",
+                            "sqlEndpointProperties":{
+                                "connectionString":"qvrmbuxie7we7glrekxgy6npqu-6xgyei3x2xiejip4iime6knh5m.datawarehouse.fabric.microsoft.com",
+                                "id":"37dc8a41-dea9-465d-b528-3e95043b2356",
+                                "provisioningStatus":"Success"
+                            }
+                        }
+                    },
+                    {
+                        "id": "a8a1bffa-7eea-49dc-a1d2-6281c1d031f1",
+                        "displayName": "Lakehouse_2",
+                        "description": "A lakehouse description.",
+                        "type": "Lakehouse",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "oneLakeTablesPath":"https://onelake.dfs.fabric.microsoft.com/fc5d0537-1b22-4de1-a5e9-9b8bb58ed1e1/6dc325f6-46f6-4a2a-930b-10b96a463566/Tables",
+                            "oneLakeFilesPath":"https://onelake.dfs.fabric.microsoft.com/fc5d0537-1b22-4de1-a5e9-9b8bb58ed1e1/6dc325f6-46f6-4a2a-930b-10b96a463566/Files",
+                            "sqlEndpointProperties":{
+                                "connectionString":"qvrmbuxie7we7glrekxgy6npqu-6xgyei3x2xiejip4iime6knh5m.datawarehouse.fabric.microsoft.com",
+                                "id":"37dc8a41-dea9-465d-b528-3e95043b2356",
+                                "provisioningStatus":"Success"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,44 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "5b218778-e7a5-4d73-8187-f10824047715",
+                        "displayName": "Eventhouse_1",
+                        "description": "An eventhouse description.",
+                        "type": "Eventhouse",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "queryServiceUri": "https://trd-f7k1b2rzuqrjmb3wpd.z5.kusto.fabric.microsoft.com",
+                            "ingestionServiceUri": "https://ingest-trd-f7k1b2rzuqrjmb3wpd.z5.kusto.fabric.microsoft.com",
+                            "databasesItemIds": [
+                                "f1082404-7716-5b21-8778-e7a5e7a54d73",
+                                "8187f108-2404-4771-6e7a-5b218778e7a5"
+                            ],
+                            "minimumConsumptionUnits": 2.25
+                        }
+                    },
+                    {
+                        "id": "340d91b9-5a39-409c-b9c0-05ba832c476e",
+                        "displayName": "Eventhouse_2",
+                        "description": "An eventhouse description.",
+                        "type": "Eventhouse",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "queryServiceUri": "https://trd-f7k1b2rzuqrjmb3wpd.z5.kusto.fabric.microsoft.com",
+                            "ingestionServiceUri": "https://ingest-trd-f7k1b2rzuqrjmb3wpd.z5.kusto.fabric.microsoft.com",
+                            "databasesItemIds": [
+                                "4d738187-f108-2404-4771-6e7a5b218778"
+                            ],
+                            "minimumConsumptionUnits": 0
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}
