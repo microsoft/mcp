@@ -3,8 +3,8 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Redis.Options.ManagedRedis;
 
 namespace Azure.Mcp.Tools.Redis.Commands.ManagedRedis;

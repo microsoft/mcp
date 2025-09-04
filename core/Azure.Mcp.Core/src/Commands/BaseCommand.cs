@@ -4,10 +4,10 @@
 
 using System.CommandLine.Parsing;
 using System.Diagnostics;
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Core.Helpers;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 using Azure.Mcp.Core.Exceptions;
+using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Models.Option;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Commands;
 

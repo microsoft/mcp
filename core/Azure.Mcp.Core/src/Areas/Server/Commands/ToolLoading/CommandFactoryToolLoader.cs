@@ -35,7 +35,7 @@ public sealed class CommandFactoryToolLoader(
 
     private static bool IsRawMcpToolInputOption(Option option)
     {
-    if (string.Equals(NameNormalization.NormalizeOptionName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(NameNormalization.NormalizeOptionName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
