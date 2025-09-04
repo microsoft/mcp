@@ -76,10 +76,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             _sharedSettings = settingsFixture.Settings;
         }
 
-        string testAssemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-        string executablePath = OperatingSystem.IsWindows() ?
-            Path.Combine(testAssemblyPath, "azmcp.exe") :
-            Path.Combine(testAssemblyPath, "azmcp");
+        string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
         // Use custom arguments if provided, otherwise default to debug mode
         var arguments = _customArguments ?? ["server", "start", "--mode", "all", "--debug"];

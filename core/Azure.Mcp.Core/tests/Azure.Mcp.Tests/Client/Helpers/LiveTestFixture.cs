@@ -25,8 +25,7 @@ public class LiveTestFixture : LiveTestSettingsFixture
     {
         await base.InitializeAsync();
 
-        string testAssemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-        string executablePath = OperatingSystem.IsWindows() ? Path.Combine(testAssemblyPath, "azmcp.exe") : Path.Combine(testAssemblyPath, "azmcp");
+        string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
         // Use custom arguments if provided, otherwise default to ["server", "start"]
         var arguments = _customArguments ?? ["server", "start", "--mode", "all"];

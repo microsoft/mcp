@@ -25,8 +25,7 @@ public class ServerCommandTests(ITestOutputHelper output)
         await settingsFixture.InitializeAsync();
         var settings = settingsFixture.Settings;
 
-        string testAssemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-        string executablePath = OperatingSystem.IsWindows() ? Path.Combine(testAssemblyPath, "azmcp.exe") : Path.Combine(testAssemblyPath, "azmcp");
+        string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
         StdioClientTransportOptions transportOptions = new()
         {
