@@ -52,11 +52,11 @@ public class RetryPolicyOptions : IComparable<RetryPolicyOptions>, IEquatable<Re
             return false;
         }
 
-     return policy1.HasMaxRetries == policy2.HasMaxRetries && (!policy1.HasMaxRetries || policy1.MaxRetries == policy2.MaxRetries) &&
-         policy1.HasMode == policy2.HasMode && (!policy1.HasMode || policy1.Mode == policy2.Mode) &&
-         policy1.HasDelaySeconds == policy2.HasDelaySeconds && (!policy1.HasDelaySeconds || policy1.DelaySeconds == policy2.DelaySeconds) &&
-         policy1.HasMaxDelaySeconds == policy2.HasMaxDelaySeconds && (!policy1.HasMaxDelaySeconds || policy1.MaxDelaySeconds == policy2.MaxDelaySeconds) &&
-         policy1.HasNetworkTimeoutSeconds == policy2.HasNetworkTimeoutSeconds && (!policy1.HasNetworkTimeoutSeconds || policy1.NetworkTimeoutSeconds == policy2.NetworkTimeoutSeconds);
+        return policy1.HasMaxRetries == policy2.HasMaxRetries && (!policy1.HasMaxRetries || policy1.MaxRetries == policy2.MaxRetries) &&
+            policy1.HasMode == policy2.HasMode && (!policy1.HasMode || policy1.Mode == policy2.Mode) &&
+            policy1.HasDelaySeconds == policy2.HasDelaySeconds && (!policy1.HasDelaySeconds || policy1.DelaySeconds == policy2.DelaySeconds) &&
+            policy1.HasMaxDelaySeconds == policy2.HasMaxDelaySeconds && (!policy1.HasMaxDelaySeconds || policy1.MaxDelaySeconds == policy2.MaxDelaySeconds) &&
+            policy1.HasNetworkTimeoutSeconds == policy2.HasNetworkTimeoutSeconds && (!policy1.HasNetworkTimeoutSeconds || policy1.NetworkTimeoutSeconds == policy2.NetworkTimeoutSeconds);
     }
 
     public int CompareTo(RetryPolicyOptions? other)
