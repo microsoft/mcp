@@ -52,6 +52,7 @@ jobs:
     env:
       AZURE_TEST_MODE: 'live'
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      SYSTEM_DEBUG: true
     inputs:
       azureSubscription: azure-sdk-tests-public
       azurePowerShellVersion: 'LatestVersion'

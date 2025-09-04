@@ -89,12 +89,21 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             Name = "Test Server",
             Command = executablePath,
             Arguments = arguments,
-            // Redirect stderr to shared log for later output during test failure
+            // Redirect stderr to both shared log and current test output
             StandardErrorLines = line =>
             {
                 lock (_lock)
                 {
                     _serverErrorLog.Add(line);
+                }
+                // Also write directly to the current test's output helper
+                try
+                {
+                    Output.WriteLine($"[MCP Server] {line}");
+                }
+                catch (InvalidOperationException)
+                {
+                    // Output helper may not be available in some test execution contexts
                 }
             }
         };

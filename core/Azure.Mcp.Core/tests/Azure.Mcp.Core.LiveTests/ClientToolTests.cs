@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Reflection;
 using System.Text.Json;
 using Azure.Mcp.Tests;
+using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
@@ -12,63 +12,23 @@ using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests;
 
-public class ClientToolTests : IAsyncLifetime
+public class ClientToolTests : CommandTestsBase
 {
-    private readonly ITestOutputHelper _output;
-    private IMcpClient _client = default!;
-    private LiveTestSettings _settings = default!;
-
-    public ClientToolTests(ITestOutputHelper output)
+    public ClientToolTests(ITestOutputHelper output) : base(output)
     {
-        _output = output;
-    }
-
-    public async ValueTask InitializeAsync()
-    {
-        var settingsFixture = new LiveTestSettingsFixture();
-        await settingsFixture.InitializeAsync();
-        _settings = settingsFixture.Settings;
-
-        string testAssemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-        string executablePath = OperatingSystem.IsWindows() ? Path.Combine(testAssemblyPath, "azmcp.exe") : Path.Combine(testAssemblyPath, "azmcp");
-
-        var arguments = new[] { "server", "start", "--mode", "all", "--debug" };
-
-        StdioClientTransportOptions transportOptions = new()
-        {
-            Name = "Test Server",
-            Command = executablePath,
-            Arguments = arguments,
-            StandardErrorLines = _output.WriteLine
-        };
-
-        if (!string.IsNullOrEmpty(_settings.TestPackage))
-        {
-            Environment.CurrentDirectory = _settings.SettingsDirectory;
-            transportOptions.Command = "npx";
-            transportOptions.Arguments = ["-y", _settings.TestPackage, .. arguments];
-        }
-
-        var clientTransport = new StdioClientTransport(transportOptions);
-        _client = await McpClientFactory.CreateAsync(clientTransport, cancellationToken: TestContext.Current.CancellationToken);
-    }
-
-    public ValueTask DisposeAsync()
-    {
-        return _client?.DisposeAsync() ?? ValueTask.CompletedTask;
     }
 
     [Fact]
     public async Task Should_List_Tools()
     {
-        var tools = await _client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var tools = await Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
         Assert.NotEmpty(tools);
     }
 
     [Fact]
     public async Task Client_Should_Invoke_Tool_Successfully()
     {
-        var result = await _client.CallToolAsync("azmcp_subscription_list", new Dictionary<string, object?> { },
+        var result = await Client.CallToolAsync("azmcp_subscription_list", new Dictionary<string, object?> { },
             cancellationToken: TestContext.Current.CancellationToken);
 
         string? content = McpTestUtilities.GetFirstText(result.Content);
@@ -88,7 +48,7 @@ public class ClientToolTests : IAsyncLifetime
     [Fact]
     public async Task Client_Should_Handle_Invalid_Tools()
     {
-        var result = await _client.CallToolAsync("non_existent_tool", new Dictionary<string, object?>(), cancellationToken: TestContext.Current.CancellationToken);
+        var result = await Client.CallToolAsync("non_existent_tool", new Dictionary<string, object?>(), cancellationToken: TestContext.Current.CancellationToken);
 
         // When calling a non-existent tool, the server should return an error response
         Assert.True(result.IsError, "Expected error response for non-existent tool");
@@ -101,14 +61,14 @@ public class ClientToolTests : IAsyncLifetime
     [Fact]
     public async Task Client_Should_Ping_Server_Successfully()
     {
-        await _client.PingAsync(cancellationToken: TestContext.Current.CancellationToken);
+        await Client.PingAsync(cancellationToken: TestContext.Current.CancellationToken);
         // If no exception is thrown, the ping was successful.
     }
 
     [Fact]
     public async Task Should_Error_When_Resources_List_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpException>(async () => await _client.ListResourcesAsync(cancellationToken: TestContext.Current.CancellationToken));
+        var ex = await Assert.ThrowsAsync<McpException>(async () => await Client.ListResourcesAsync(cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
         Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
     }
@@ -116,7 +76,7 @@ public class ClientToolTests : IAsyncLifetime
     [Fact]
     public async Task Should_Error_When_Resources_Read_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpException>(async () => await _client.ReadResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
+        var ex = await Assert.ThrowsAsync<McpException>(async () => await Client.ReadResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
         Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
     }
@@ -124,7 +84,7 @@ public class ClientToolTests : IAsyncLifetime
     [Fact]
     public async Task Should_Error_When_Resources_Templates_List_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpException>(async () => await _client.ListResourceTemplatesAsync(cancellationToken: TestContext.Current.CancellationToken));
+        var ex = await Assert.ThrowsAsync<McpException>(async () => await Client.ListResourceTemplatesAsync(cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
         Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
     }
@@ -132,7 +92,7 @@ public class ClientToolTests : IAsyncLifetime
     [Fact]
     public async Task Should_Error_When_Resources_Subscribe_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpException>(async () => await _client.SubscribeToResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
+        var ex = await Assert.ThrowsAsync<McpException>(async () => await Client.SubscribeToResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
         Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
     }
@@ -140,7 +100,7 @@ public class ClientToolTests : IAsyncLifetime
     [Fact]
     public async Task Should_Error_When_Resources_Unsubscribe_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpException>(async () => await _client.UnsubscribeFromResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
+        var ex = await Assert.ThrowsAsync<McpException>(async () => await Client.UnsubscribeFromResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
         Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
     }
@@ -148,13 +108,13 @@ public class ClientToolTests : IAsyncLifetime
     [Fact]
     public async Task Should_Not_Hang_On_Logging_SetLevel_Not_Supported()
     {
-        await _client.SetLoggingLevel(LoggingLevel.Info, cancellationToken: TestContext.Current.CancellationToken);
+        await Client.SetLoggingLevel(LoggingLevel.Info, cancellationToken: TestContext.Current.CancellationToken);
     }
 
     [Fact]
     public async Task Should_Error_When_Prompts_List_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpException>(async () => await _client.ListPromptsAsync(cancellationToken: TestContext.Current.CancellationToken));
+        var ex = await Assert.ThrowsAsync<McpException>(async () => await Client.ListPromptsAsync(cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
         Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
     }
@@ -162,7 +122,7 @@ public class ClientToolTests : IAsyncLifetime
     [Fact]
     public async Task Should_Error_When_Prompts_Get_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpException>(async () => await _client.GetPromptAsync("unsupported_prompt", cancellationToken: TestContext.Current.CancellationToken));
+        var ex = await Assert.ThrowsAsync<McpException>(async () => await Client.GetPromptAsync("unsupported_prompt", cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
         Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
     }
