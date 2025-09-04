@@ -78,7 +78,7 @@ public class ServerShowCommandTests
             Location: "East US",
             ResourceGroup: "test-rg",
             Subscription: "test-sub",
-            AdministratorLogin: "sqladmin",
+            AdministratorLogin: "sql-admin",
             Version: "12.0",
             State: "Ready",
             PublicNetworkAccess: "Enabled",
