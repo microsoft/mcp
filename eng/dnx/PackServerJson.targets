@@ -9,7 +9,7 @@
 
   It is used by NuGet.org to render the needed MCP client/host configuration (such as VS Code mcp.json). It is also used by VS Code when installing a NuGet-based MCP server so it can generate configuration during installation.
 
-  The server.json file declares the required inputs for the Azure MCP server process, such as CLI arguments that launch the stdio-based MCP server. The server.json file is only included in the root (RID-less) .NET tool package, based on the McpServerJsonTemplateFile property.
+  The server.json file declares the required inputs for the MCP server process, such as CLI arguments that launch the stdio-based MCP server. The server.json file is only included in the root (RID-less) .NET tool package, based on the McpServerJsonTemplateFile property.
 
   For more information about MCP servers in NuGet packages (.NET tool packages), see:
   https://learn.microsoft.com/nuget/concepts/nuget-mcp
