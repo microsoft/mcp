@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
@@ -212,7 +213,7 @@ public sealed class ServiceStartCommand : BaseCommand
                     });
                 });
 
-                var url = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://localhost:5001";
+                var url = GetSafeAspNetCoreUrl();
                 webBuilder.UseUrls(url);
             })
             .Build();
@@ -226,6 +227,48 @@ public sealed class ServiceStartCommand : BaseCommand
     private static void ConfigureMcpServer(IServiceCollection services, ServiceStartOptions options)
     {
         services.AddAzureMcpServer(options);
+    }
+
+    /// <summary>
+    /// Gets a safe ASP.NET Core URL with security validation.
+    /// </summary>
+    /// <returns>A validated URL string for ASP.NET Core binding.</returns>
+    private static string GetSafeAspNetCoreUrl()
+    {
+        string url = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://127.0.0.1:5001";
+
+        if (url.Contains(';'))
+        {
+            throw new InvalidOperationException("Multiple endpoints in ASPNETCORE_URLS are not supported. Provide a single URL.");
+        }
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            throw new InvalidOperationException($"Invalid URL: '{url}'");
+        }
+
+        var scheme = uri.Scheme.ToLowerInvariant();
+        if (scheme is not ("http" or "https"))
+        {
+            throw new InvalidOperationException($"Unsupported scheme '{scheme}' in URL '{url}'.");
+        }
+
+        bool allowExternal = EnvironmentHelpers.GetEnvironmentVariableAsBool("ALLOW_INSECURE_EXTERNAL_BINDING");
+
+        // Covers loopback IP: 127.0.0.0/8 range, IPv6 (::1) and localhost when resolved to loopback addresses.
+        bool isLoopback = uri.IsLoopback;
+        // Covers both wildcard (uri.Host is "*" or "+" or "0.0.0.0" or "::") and specific external IPs/hostnames,
+        // i.e., anything that isn’t loopback but would be reachable on NICs.
+        bool isExternal = !isLoopback;
+
+        if (isExternal && !allowExternal)
+        {
+            throw new InvalidOperationException(
+                $"External binding blocked for '{url}'. " +
+                $"Set ALLOW_INSECURE_EXTERNAL_BINDING=true if you intentionally want to bind beyond loopback.");
+        }
+
+        return url;
     }
 
     /// <summary>
