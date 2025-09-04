@@ -62,14 +62,13 @@ if($Architecture) {
 function BuildServer($serverName) {
     $serverDirectory = "$RepoRoot/servers/$serverName"
     $projectFile = Get-Item "$serverDirectory/src/$serverName.csproj"
-    New-Item -Path "$OutputPath/$ServerName" -ItemType Directory -Force | Out-Null
 
     if(!$projectFile) {
         Write-Error "No project file found for $serverName"
         return
     }
 
-    $properties = & "$PSScriptRoot/Get-ProjectProperties.ps1" -ProjectName "$serverName.csproj"
+    $properties = & "$PSScriptRoot/Get-ProjectProperties.ps1" -ProjectName $projectFile.Name
 
     $cliName = $properties.CliName
     $version = "$($properties.Version)$VersionSuffix"
@@ -77,6 +76,15 @@ function BuildServer($serverName) {
     $packageName = $properties.NpmPackageName
     $keywords = $properties.NpmPackageKeywords -split ','
     $readmeUrl = $properties.ReadmeUrl
+
+    $serverOutputDirectory = "$OutputPath/$serverName"
+
+    if ($BuildNative) {
+        $packageName += '-native'
+        $serverOutputDirectory += '-native'
+    }
+
+    New-Item -Path $serverOutputDirectory -ItemType Directory -Force | Out-Null
 
     $wrapperPackage = [ordered]@{
         name = $packageName
@@ -96,11 +104,11 @@ function BuildServer($serverName) {
         scripts = @{ postinstall = "node ./scripts/post-install-script.js" }
     }
 
-    $wrapperPackage | ConvertTo-Json | Out-File -FilePath "$OutputPath/$ServerName/wrapper.json" -Encoding utf8
-    Write-Host "Created wrapper.json in $OutputPath/$ServerName" -ForegroundColor Yellow
+    $wrapperPackage | ConvertTo-Json | Out-File -FilePath "$serverOutputDirectory/wrapper.json" -Encoding utf8
+    Write-Host "Created wrapper.json in $serverOutputDirectory" -ForegroundColor Yellow
 
-    Copy-Item "$serverDirectory/README.md" -Destination $OutputPath/$ServerName -Force
-    Write-Host "Copied README.md to $OutputPath/$ServerName" -ForegroundColor Yellow
+    Copy-Item "$serverDirectory/README.md" -Destination $serverOutputDirectory -Force
+    Write-Host "Copied README.md to $serverOutputDirectory" -ForegroundColor Yellow
 
     foreach ($os in $operatingSystems) {
         foreach ($arch in $architectures) {
@@ -110,7 +118,7 @@ function BuildServer($serverName) {
                 default { $node_os = $os; $extension = '' }
             }
 
-            $outputDir = "$OutputPath/$ServerName$($BuildNative ? '-native' : '')/$os-$arch"
+            $outputDir = "$serverOutputDirectory/$os-$arch"
             Write-Host "Building version $version, $os-$arch in $outputDir" -ForegroundColor Green
 
             $configuration = if ($DebugBuild) { 'Debug' } else { 'Release' }
@@ -148,8 +156,13 @@ function BuildServer($serverName) {
 
             Invoke-LoggedCommand $command -GroupOutput
 
+            if (-not $DebugBuild) {
+                Write-Host "Removing debug files (.pdb, .dSYM, .dbg) from Release build" -ForegroundColor Yellow
+                Get-ChildItem -Path "$outputDir/dist" -Recurse -Include "*.pdb", "*.dSYM", "*.dbg" | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
+            }
+
             $package = [ordered]@{
-                name = "$packageName$($BuildNative ? '-native' : '')-$node_os-$arch"
+                name = "$packageName-$node_os-$arch"
                 version = $version
                 description = "$description, for $node_os on $arch"
                 author = 'Microsoft Corporation'

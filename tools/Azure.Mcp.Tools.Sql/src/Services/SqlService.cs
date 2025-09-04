@@ -8,6 +8,8 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services.Models;
+using Azure.ResourceManager.Sql;
+using Azure.ResourceManager.Sql.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Sql.Services;
@@ -212,9 +214,131 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         }
     }
 
+    /// <summary>
+    /// Creates a firewall rule for an Azure SQL Server.
+    /// Firewall rules control which IP addresses are allowed to connect to the SQL server.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server to create firewall rule for</param>
+    /// <param name="resourceGroup">The name of the resource group containing the server</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="firewallRuleName">The name of the firewall rule to create</param>
+    /// <param name="startIpAddress">The start IP address of the firewall rule range</param>
+    /// <param name="endIpAddress">The end IP address of the firewall rule range</param>
+    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>The created firewall rule</returns>
+    /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
+    public async Task<SqlServerFirewallRule> CreateFirewallRuleAsync(
+        string serverName,
+        string resourceGroup,
+        string subscription,
+        string firewallRuleName,
+        string startIpAddress,
+        string endIpAddress,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(serverName, resourceGroup, subscription, firewallRuleName, startIpAddress, endIpAddress);
+
+        try
+        {
+            // Use ARM client directly for create operations
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
+
+            var firewallRuleData = new Azure.ResourceManager.Sql.SqlFirewallRuleData()
+            {
+                StartIPAddress = startIpAddress,
+                EndIPAddress = endIpAddress
+            };
+
+            var operation = await sqlServerResource.Value.GetSqlFirewallRules().CreateOrUpdateAsync(
+                Azure.WaitUntil.Completed,
+                firewallRuleName,
+                firewallRuleData,
+                cancellationToken);
+
+            var firewallRule = operation.Value;
+
+            return new SqlServerFirewallRule(
+                Name: firewallRule.Data.Name,
+                Id: firewallRule.Data.Id.ToString(),
+                Type: firewallRule.Data.ResourceType?.ToString() ?? "Unknown",
+                StartIpAddress: firewallRule.Data.StartIPAddress,
+                EndIpAddress: firewallRule.Data.EndIPAddress
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error creating SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Rule: {Rule}",
+                serverName, resourceGroup, subscription, firewallRuleName);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Deletes a firewall rule from an Azure SQL Server.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server</param>
+    /// <param name="resourceGroup">The name of the resource group containing the server</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="firewallRuleName">The name of the firewall rule to delete</param>
+    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>True if the firewall rule was successfully deleted</returns>
+    /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
+    public async Task<bool> DeleteFirewallRuleAsync(
+        string serverName,
+        string resourceGroup,
+        string subscription,
+        string firewallRuleName,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(serverName, resourceGroup, subscription, firewallRuleName);
+
+        try
+        {
+            // Use ARM client directly for delete operations
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
+
+            var firewallRuleResource = await sqlServerResource.Value.GetSqlFirewallRules().GetAsync(firewallRuleName);
+
+            await firewallRuleResource.Value.DeleteAsync(Azure.WaitUntil.Completed, cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully deleted SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}",
+                serverName, resourceGroup, firewallRuleName);
+
+            return true;
+        }
+        catch (Azure.RequestFailedException ex) when (ex.Status == 404)
+        {
+            _logger.LogWarning(
+                "Firewall rule not found during delete operation. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}",
+                serverName, resourceGroup, firewallRuleName);
+
+            // Return false to indicate the rule was not found (idempotent delete)
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error deleting SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Rule: {Rule}",
+                serverName, resourceGroup, subscription, firewallRuleName);
+            throw;
+        }
+    }
+
     private static SqlDatabase ConvertToSqlDatabaseModel(JsonElement item)
     {
-        SqlDatabaseData? sqlDatabase = SqlDatabaseData.FromJson(item);
+        Azure.Mcp.Tools.Sql.Services.Models.SqlDatabaseData? sqlDatabase = Azure.Mcp.Tools.Sql.Services.Models.SqlDatabaseData.FromJson(item);
         if (sqlDatabase == null)
             throw new InvalidOperationException("Failed to parse SQL database data");
 
@@ -282,7 +406,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                     State: elasticPool.Properties?.State,
                     CreationDate: elasticPool.Properties?.CreatedOn,
                     MaxSizeBytes: elasticPool.Properties?.MaxSizeBytes,
-                    PerDatabaseSettings: elasticPool.Properties?.PerDatabaseSettings != null ? new ElasticPoolPerDatabaseSettings(
+                    PerDatabaseSettings: elasticPool.Properties?.PerDatabaseSettings != null ? new Azure.Mcp.Tools.Sql.Models.ElasticPoolPerDatabaseSettings(
                         MinCapacity: elasticPool.Properties.PerDatabaseSettings.MinCapacity,
                         MaxCapacity: elasticPool.Properties.PerDatabaseSettings.MaxCapacity
                     ) : null,
@@ -297,7 +421,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
     private static SqlServerFirewallRule ConvertToSqlFirewallRuleModel(JsonElement item)
     {
-        SqlFirewallRuleData? firewallRule = SqlFirewallRuleData.FromJson(item);
+        Azure.Mcp.Tools.Sql.Services.Models.SqlFirewallRuleData? firewallRule = Azure.Mcp.Tools.Sql.Services.Models.SqlFirewallRuleData.FromJson(item);
         if (firewallRule == null)
             throw new InvalidOperationException("Failed to parse SQL firewall rule data");
 

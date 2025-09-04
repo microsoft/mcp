@@ -12,4 +12,8 @@
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
     <DefineConstants>$(DefineConstants);BUILD_NATIVE</DefineConstants>
   </PropertyGroup>
+    <!-- Windows AOT native build security flags to enable 'Control Flow Guard' (CFG) -->
+  <PropertyGroup Condition="'$(BuildNative)' == 'true' and $(RuntimeIdentifier.StartsWith('win'))">
+    <ControlFlowGuard>Guard</ControlFlowGuard>
+  </PropertyGroup>
 </Project>
