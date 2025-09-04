@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Helpers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -90,13 +91,24 @@ public sealed class ServiceStartCommand : BaseCommand
             throw new ArgumentException($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}.");
         }
 
+        var enableInsecureTransports = parseResult.GetValueForOption(_enableInsecureTransportsOption);
+
+        if (enableInsecureTransports)
+        {
+            var includeProdCreds = EnvironmentHelpers.GetEnvironmentVariableAsBool("AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS");
+            if (!includeProdCreds)
+            {
+                throw new InvalidOperationException("unsecure transport requires Managed or Work Load identity enabled host.");
+            }
+        }
+
         var serverOptions = new ServiceStartOptions
         {
             Transport = parseResult.GetValueForOption(_transportOption) ?? TransportTypes.StdIo,
             Namespace = namespaces,
             Mode = mode,
             ReadOnly = readOnly,
-            EnableInsecureTransports = parseResult.GetValueForOption(_enableInsecureTransportsOption),
+            EnableInsecureTransports = enableInsecureTransports,
         };
 
         using var host = CreateHost(serverOptions);
