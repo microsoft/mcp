@@ -45,7 +45,7 @@ Preparation and deployment steps:
 1. Analyze project and deployment requirements. Generate a deployment plan with the `azmcp_deploy_plan_get` tool, if available.
 2. Execute the generated plan to generate the script/IaC files for deploying the application. Use the `azmcp_deploy_iac_rules_get` tool, if available.
 3. Validate quota and regional availability of the relevant Azure resources. Use the `azmcp_quota_usage_check` and `azmcp_quota_region_availability_list` tools, if available.
-4. Follow the plan to execute the deployment script or set up infra with IaC files with appropriate deployment tools in plan.
+4. Follow the plan to deploy using the appropriate deployment tools or scripts specified in the plan.
 5. Validate successful deployments using the `azmcp_deploy_app_logs_get` tool, if available, or `azd`, `az` commands otherwise.
 
 When asked to deploy resources:
