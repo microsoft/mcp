@@ -3,8 +3,8 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
-using Fabric.Mcp.Tools.PublicApi.Commands.PublicApis;
 using Fabric.Mcp.Tools.PublicApi.Commands.BestPractices;
+using Fabric.Mcp.Tools.PublicApi.Commands.PublicApis;
 using Fabric.Mcp.Tools.PublicApi.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

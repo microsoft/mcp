@@ -46,7 +46,7 @@ public class EmbeddedResourceProviderServiceTests
         var assembly = typeof(EmbeddedResourceProviderService).Assembly;
         var resourceNames = assembly.GetManifestResourceNames();
         Assert.NotEmpty(resourceNames);
-        
+
         var fullResourceName = resourceNames.First();
 
         // Act
@@ -65,9 +65,9 @@ public class EmbeddedResourceProviderServiceTests
 
         // Assert
         Assert.NotEmpty(allResources);
-        
+
         // All returned resources should start with the expected prefix
-        Assert.All(allResources, resource => 
+        Assert.All(allResources, resource =>
             Assert.StartsWith("Fabric.Mcp.Tools.PublicApi.Resources.", resource));
     }
 
@@ -82,7 +82,7 @@ public class EmbeddedResourceProviderServiceTests
         // Assert
         Assert.NotEmpty(allResources);
         Assert.NotEmpty(fileResources);
-        
+
         // Files should have extensions and no underscores after the base prefix
         Assert.All(fileResources, resource =>
         {
@@ -108,16 +108,16 @@ public class EmbeddedResourceProviderServiceTests
 
         // Assert
         Assert.NotEmpty(allResources);
-        
+
         // Filtered results should be a subset of all resources
         Assert.True(filteredResources.Length <= allResources.Length);
-        
+
         // Convert path to expected embedded resource format
         string normalizedPath = path.Replace('/', '_').Replace('\\', '_');
         string expectedPrefix = $"Fabric.Mcp.Tools.PublicApi.Resources.{normalizedPath}.";
-        
+
         // All filtered resources should start with the expected prefix
-        Assert.All(filteredResources, resource => 
+        Assert.All(filteredResources, resource =>
             Assert.StartsWith(expectedPrefix, resource));
     }
 
@@ -134,7 +134,7 @@ public class EmbeddedResourceProviderServiceTests
 
         // Assert
         Assert.NotEmpty(allInPath);
-        
+
         // Files should have extensions and be direct children of the path
         if (filesInPath.Length > 0)
         {
@@ -142,13 +142,13 @@ public class EmbeddedResourceProviderServiceTests
             {
                 string expectedPrefix = "Fabric.Mcp.Tools.PublicApi.Resources.fabric_rest_api_specs_content_admin.";
                 Assert.StartsWith(expectedPrefix, resource);
-                
+
                 var nameAfterPrefix = resource.Substring(expectedPrefix.Length);
                 Assert.True(nameAfterPrefix.Contains('.'), $"File should have extension: {resource}");
                 Assert.False(nameAfterPrefix.Contains('_'), $"File should not have additional underscores: {resource}");
             });
         }
-        
+
         // Total should be sum of files and directories (or at least >= files count)
         Assert.True(allInPath.Length >= filesInPath.Length);
     }
@@ -181,7 +181,7 @@ public class EmbeddedResourceProviderServiceTests
         Assert.NotNull(allResources);
         Assert.NotNull(fileResources);
         Assert.NotNull(directoryResources);
-        
+
         // Total should be >= the sum of filtered results
         Assert.True(allResources.Length >= fileResources.Length);
         Assert.True(allResources.Length >= directoryResources.Length);
@@ -195,14 +195,14 @@ public class EmbeddedResourceProviderServiceTests
 
         // Assert
         Assert.NotNull(rootFiles);
-        
+
         // Should include pagination.md and long-running-operation.md
         var paginationFile = rootFiles.FirstOrDefault(f => f.EndsWith("pagination.md"));
         var longRunningFile = rootFiles.FirstOrDefault(f => f.EndsWith("long-running-operation.md"));
-        
+
         Assert.NotNull(paginationFile);
         Assert.NotNull(longRunningFile);
-        
+
         // These should be direct children (no underscores in the name part)
         Assert.Equal("Fabric.Mcp.Tools.PublicApi.Resources.pagination.md", paginationFile);
         Assert.Equal("Fabric.Mcp.Tools.PublicApi.Resources.long-running-operation.md", longRunningFile);
