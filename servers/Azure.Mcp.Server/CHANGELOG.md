@@ -7,7 +7,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Added the following Azure Managed Lustre command (preview / placeholder implementation):
-  - `azmcp_azuremanagedlustre_filesystem_importjob_create`: Create a manual import job for an Azure Managed Lustre filesystem (hydrates namespace from linked HSM/Blob; current release returns placeholder status until REST API integration ships).
+  - `azmcp_azuremanagedlustre_filesystem_import-job_create`: Create a manual import job for an Azure Managed Lustre filesystem (hydrates namespace from linked HSM/Blob; current release returns placeholder status until REST API integration ships).
 
 ### Breaking Changes
 

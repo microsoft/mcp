@@ -46,7 +46,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
         public async Task Should_create_import_job()
         {
             var result = await CallToolAsync(
-                "azmcp_azuremanagedlustre_filesystem_importjob_create",
+                "azmcp_azuremanagedlustre_filesystem_import-job_create",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },

@@ -122,7 +122,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
 
         // NOTE: The StorageCache SDK (as of current version) does not expose an import job create API.
         // Placeholder implementation constructs a job object. Wire up REST call when SDK/REST details available.
-        jobName ??= $"importjob-{DateTime.UtcNow:yyyyMMddHHmmss}";
+        jobName ??= $"import-job-{DateTime.UtcNow:yyyyMMddHHmmss}";
         importPrefixes ??= new List<string> { "/" };
 
         try
