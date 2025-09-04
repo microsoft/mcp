@@ -94,6 +94,36 @@ Processing VSIX packaging: $vsixBaseName
             Write-Host "Copying $platformDirectory/dist to $tempPath/server"
             Copy-Item -Path "$platformDirectory/dist" -Destination "$tempPath/server" -Recurse -Force -ProgressAction SilentlyContinue
 
+            # --- New: copy native server binaries for this platform if present ---
+            $nativeDirs = @(
+                Join-Path $serverDirectory.FullName ("$($serverName)-native"),
+                Join-Path $serverDirectory.Parent.FullName ("$($serverName)-native"),
+                Join-Path $ArtifactsPath ("$($serverName)-native")
+            )
+            $nativeCopied = $false
+            foreach ($nd in $nativeDirs) {
+                if (Test-Path $nd) {
+                    $nativePlatformDir = Join-Path $nd $platformName
+                    if (Test-Path $nativePlatformDir) {
+                        # Prefer a 'dist' subfolder if present
+                        if (Test-Path (Join-Path $nativePlatformDir "dist")) {
+                            $nativeSource = Join-Path $nativePlatformDir "dist"
+                        } else {
+                            $nativeSource = $nativePlatformDir
+                        }
+                        Write-Host "Copying native binaries from $nativeSource to $tempPath/server/native"
+                        New-Item -ItemType Directory -Force -Path "$tempPath/server/native" | Out-Null
+                        Copy-Item -Path $nativeSource -Destination "$tempPath/server/native" -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+                        $nativeCopied = $true
+                        break
+                    }
+                }
+            }
+            if (-not $nativeCopied) {
+                Write-Host "No native binaries found for $serverName on platform $platformName"
+            }
+            # --- End new native copy logic ---
+
             New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
 
             ## Update the version number

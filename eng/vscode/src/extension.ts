@@ -8,45 +8,67 @@ import * as fs from 'fs';
 export function activate(context: vscode.ExtensionContext) {
     const didChangeEmitter = new vscode.EventEmitter<void>();
 
-    // Determine platform and binary path once at activation
-
-    let binary = '';
-    const arch = process.arch;
-    if (process.platform === 'win32') {
-        if (arch === 'x64' || arch === 'arm64') {
-            binary = 'azmcp.exe';
+    // Function to determine binary path based on configuration
+    function getBinaryPath(): string {
+        let binary = '';
+        const arch = process.arch;
+        if (process.platform === 'win32') {
+            if (arch === 'x64' || arch === 'arm64') {
+                binary = 'azmcp.exe';
+            } else {
+                throw new Error('Unsupported Windows architecture: ' + arch);
+            }
+        } else if (process.platform === 'darwin' || process.platform === 'linux') {
+            if (arch === 'x64' || arch === 'arm64') {
+                binary = 'azmcp';
+            } else {
+                throw new Error(`Unsupported ${process.platform} architecture: ${arch}`);
+            }
         } else {
-            throw new Error('Unsupported Windows architecture: ' + arch);
+            throw new Error('Unsupported platform: ' + process.platform);
         }
-    } else if (process.platform === 'darwin' || process.platform === 'linux') {
-        if (arch === 'x64' || arch === 'arm64') {
-            binary = 'azmcp';
+
+        // Check if user wants to use native binary
+        const config = vscode.workspace.getConfiguration('azureMcp');
+        const useNativeBinary = config.get<boolean>('useNativeBinary') === true;
+
+        let binPath: string;
+        if (useNativeBinary) {
+            // Use native binary from server/native folder
+            binPath = path.join(context.extensionPath, 'server', 'native', binary);
+            if (!fs.existsSync(binPath)) {
+                // Fallback to regular server folder if native binary doesn't exist
+                console.warn(`Native binary not found at ${binPath}, falling back to regular binary`);
+                binPath = path.join(context.extensionPath, 'server', binary);
+            }
         } else {
-            throw new Error(`Unsupported ${process.platform} architecture: ${arch}`);
+            // Use regular binary from server folder
+            binPath = path.join(context.extensionPath, 'server', binary);
         }
-    } else {
-        throw new Error('Unsupported platform: ' + process.platform);
-    }
 
-    // Use the binary from the extension's server/os folder
-    const binPath = path.join(context.extensionPath, 'server', binary);
-    if (!fs.existsSync(binPath)) {
-        throw new Error(`azmcp binary not found at ${binPath}. Please ensure the server binary is present.`);
-    }
-
-    // Ensure executable permission on macOS and Linux (once at activation)
-    if ((process.platform === 'linux' || process.platform === 'darwin') && fs.existsSync(binPath)) {
-        try {
-            fs.chmodSync(binPath, 0o755);
-        } catch (e) {
-            console.warn(`Failed to set executable permission on ${binPath}: ${e}`);
+        if (!fs.existsSync(binPath)) {
+            console.warn("Azure MCP Server binary not found.");
         }
+
+        // Ensure executable permission on macOS and Linux
+        if ((process.platform === 'linux' || process.platform === 'darwin') && fs.existsSync(binPath)) {
+            try {
+                fs.chmodSync(binPath, 0o755);
+            } catch (e) {
+                console.warn(`Failed to set executable permission on ${binPath}: ${e}`);
+            }
+        }
+
+        return binPath;
     }
 
     context.subscriptions.push(
         vscode.lm.registerMcpServerDefinitionProvider('azureMcpProvider', {
             onDidChangeMcpServerDefinitions: didChangeEmitter.event,
             provideMcpServerDefinitions: async () => {
+                // Get the binary path based on current configuration
+                const binPath = getBinaryPath();
+
                 // Read enabled MCP services from user/workspace settings
                 const config = vscode.workspace.getConfiguration('azureMcp');
                 // Example: ["storage", "keyvault", ...]
@@ -98,11 +120,12 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Listen for changes to azureMcp.enabledServices and re-register MCP server
     context.subscriptions.push(
-        vscode.workspace.onDidChangeConfiguration((event) => {
+        vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
             if (
                 event.affectsConfiguration('azureMcp.enabledServices') ||
                 event.affectsConfiguration('azureMcp.serverMode') ||
-                event.affectsConfiguration('azureMcp.readOnly')
+                event.affectsConfiguration('azureMcp.readOnly') ||
+                event.affectsConfiguration('azureMcp.useNativeBinary')
             ) {
                 didChangeEmitter.fire();
             }
