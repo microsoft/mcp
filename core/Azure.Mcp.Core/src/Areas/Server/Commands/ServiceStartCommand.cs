@@ -98,7 +98,7 @@ public sealed class ServiceStartCommand : BaseCommand
             var includeProdCreds = EnvironmentHelpers.GetEnvironmentVariableAsBool("AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS");
             if (!includeProdCreds)
             {
-                throw new InvalidOperationException("insecure transport requires Managed or Work Load identity enabled host.");
+                throw new InvalidOperationException("Using --enable-insecure-transport requires the host to have either Managed Identity or Workload Identity enabled. Please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.");
             }
         }
 
