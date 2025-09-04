@@ -23,6 +23,7 @@ public class AppLensService : BaseAzureService, IAppLensService
     private readonly HttpClient _httpClient;
     private readonly AppLensOptions _options;
     private const string ConversationalDiagnosticsSignalREndpoint = "https://diagnosticschat.azure.com/chatHub";
+
     private const string ResourceQuery = """
         resources
         | where name =~ '{0}'
@@ -89,17 +90,7 @@ public class AppLensService : BaseAzureService, IAppLensService
             return Task.FromResult<FindResourceIdResult>(new DidNotFindResourceResult($"Subscription ID and Resource Group are required to locate resource '{resourceName}'. Please provide both --subscription-name-or-id and --resource-group parameters."));
         }
 
-        // Construct basic resource ID - this is a placeholder implementation
-        var resourceId = resourceType switch
-        {
-            _ when resourceType?.Contains("Microsoft.Web/sites") == true =>
-                $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Web/sites/{resourceName}",
-            _ when resourceType?.Contains("Microsoft.Storage/storageAccounts") == true =>
-                $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{resourceName}",
-            _ when resourceType?.Contains("Microsoft.Sql/servers") == true =>
-                $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Sql/servers/{resourceName}",
-            _ => $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/{resourceType ?? "Microsoft.Resources/resourceGroups"}/{resourceName}"
-        };
+        var resourceId = $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resourceName}";
 
         return Task.FromResult<FindResourceIdResult>(new FoundResourceResult(resourceId, resourceType ?? "Unknown", null));
     }
@@ -227,7 +218,7 @@ public class AppLensService : BaseAzureService, IAppLensService
             StartTime = "",
             EndTime = "",
             IsDiagnosticsCall = true,
-            ClientName = "GitHubCopilotForAzure"
+            ClientName = _options.ClientName
         };
 
         // fire request

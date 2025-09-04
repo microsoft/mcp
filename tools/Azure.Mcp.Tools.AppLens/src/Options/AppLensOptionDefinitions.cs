@@ -31,14 +31,21 @@ public static class AppLensOptionDefinitions
 
         public static readonly Option<string?> SubscriptionNameOrId = new(
             $"--{SubscriptionNameOrIdName}",
-            "Optional subscription name or ID. Only provide if needed to disambiguate between multiple resources with the same name");
-
+            "The subscription the resource belongs to. Try to get this information using the Azure CLI tool before asking the user.")
+        {
+            IsRequired = true
+        };
         public static readonly Option<string?> ResourceGroup = new(
             $"--{ResourceGroupName}",
-            "The name of the Azure resource group. This is a logical container for Azure resources.");
-
+            "The name of the Azure resource group. This is a logical container for Azure resources. Try to get this information using the Azure CLI tool before asking the user.")
+        {
+            IsRequired = true
+        };
         public static readonly Option<string?> ResourceType = new(
             $"--{ResourceTypeName}",
-            "Optional resource type. Only provide if needed to disambiguate between multiple resources with the same name");
+            "Resource type. Try to get this information using the Azure CLI tool before asking the user.")
+        {
+            IsRequired = true
+        };
     }
 }

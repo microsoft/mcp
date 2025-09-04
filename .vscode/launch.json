@@ -326,6 +326,34 @@
             }
         },
         {
+            "name": "Debug Applens Resource Diagnose",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "applens",
+                "resource",
+                "diagnose",
+                "--resource-name",
+                "azcpai-staging-eastus2",
+                "--question",
+                "Please help me diagnose issues with my app.",
+                "--subscription-name-or-id",
+                "52f7abe2-7856-4f03-9306-4432c1d4c65d",
+                "--resource-group",
+                "staging-eastus2",
+                "--resource-type",
+                "Microsoft.Web/sites"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
             "name": "Debug ACR Registry List",
             "type": "coreclr",
             "request": "launch",
@@ -385,7 +413,7 @@
                 "server",
                 "start"
             ],
-            "cwd": "${workspaceFolder}/src",
+            "cwd": "${workspaceFolder}/mcp/servers/Azure.Mcp.Server/src",
             "console": "internalConsole"
         },
         {
