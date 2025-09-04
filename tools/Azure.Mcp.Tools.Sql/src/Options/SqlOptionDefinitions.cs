@@ -28,26 +28,26 @@ public static class SqlOptionDefinitions
     };
 
     public static readonly Option<string> FirewallRuleNameOption = new(
-        $"--{FirewallRuleName}",
-        "The name of the firewall rule."
+        $"--{FirewallRuleName}"
     )
     {
-        IsRequired = true
+        Description = "The name of the firewall rule.",
+        Required = true
     };
 
     public static readonly Option<string> StartIpAddressOption = new(
-        $"--{StartIpAddress}",
-        "The start IP address of the firewall rule range."
+        $"--{StartIpAddress}"
     )
     {
-        IsRequired = true
+        Description = "The start IP address of the firewall rule range.",
+        Required = true
     };
 
     public static readonly Option<string> EndIpAddressOption = new(
-        $"--{EndIpAddress}",
-        "The end IP address of the firewall rule range."
+        $"--{EndIpAddress}"
     )
     {
-        IsRequired = true
+        Description = "The end IP address of the firewall rule range.",
+        Required = true
     };
 }
