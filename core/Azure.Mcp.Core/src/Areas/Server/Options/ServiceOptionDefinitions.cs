@@ -49,7 +49,7 @@ public static class ServiceOptionDefinitions
     public static readonly Option<bool> EnableInsecureTransports = new(
         $"--{EnableInsecureTransportsName}",
         () => false,
-        "Enable insecure transport")
+        "Enables insecure, unauthenticated transport over streamable HTTP. Use with extreme caution, this disables all transport security and may expose sensitive data to interception.")
     {
         IsRequired = false,
         IsHidden = true

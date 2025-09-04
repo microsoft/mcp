@@ -40,6 +40,8 @@ public class ServiceStartOptions
 
     /// <summary>
     /// Gets or sets whether insecure transport mechanisms are enabled.
+    /// Enables insecure, unauthenticated transport over streamable HTTP. Use with extreme caution, this disables
+    /// all transport security and may expose sensitive data to interception.
     /// </summary>
     [JsonPropertyName("enableInsecureTransports")]
     public bool EnableInsecureTransports { get; set; } = false;
