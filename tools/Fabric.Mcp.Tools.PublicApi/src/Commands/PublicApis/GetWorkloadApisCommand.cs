@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Fabric.Mcp.Tools.PublicApi.Commands.PublicApis;
 
-public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logger) : GlobalCommand<GetWorkloadApisOptions>()
+public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logger) : GlobalCommand<WorkloadCommandOptions>()
 {
     private const string CommandTitle = "Get Workload API Specification";
     private readonly ILogger<GetWorkloadApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -35,7 +35,7 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
         command.AddOption(_workloadTypeOption);
     }
 
-    protected override GetWorkloadApisOptions BindOptions(ParseResult parseResult)
+    protected override WorkloadCommandOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.WorkloadType = parseResult.GetValueForOption(_workloadTypeOption);
