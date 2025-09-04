@@ -9,6 +9,9 @@
     <!-- Suppress SYSLIB0020 for generated System.Text.Json code that uses obsolete IgnoreNullValues -->
     <NoWarn>$(NoWarn);SYSLIB0020</NoWarn>
     <BuildNative Condition="'$(BuildNative)' == ''">false</BuildNative>
+    <!-- Identify Server Projects -->
+    <_RelativeProjectDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)').Replace($([System.IO.Path]::GetFullPath('$(RepoRoot)')), ''))</_RelativeProjectDir>
+    <IsServerProject Condition="'$(IsServerProject)' == '' and $(_RelativeProjectDir.StartsWith('servers')) and $(_RelativeProjectDir.EndsWith('src'))">true</IsServerProject>
   </PropertyGroup>
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
     <DefineConstants>$(DefineConstants);BUILD_NATIVE</DefineConstants>
@@ -17,15 +20,7 @@
   <PropertyGroup Condition="'$(BuildNative)' == 'true' and $(RuntimeIdentifier.StartsWith('win'))">
     <ControlFlowGuard>Guard</ControlFlowGuard>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(BuildNative)' == 'true'">
-    <!-- AOT native build flags -->
-    <IsAotCompatible>true</IsAotCompatible>
-    <PublishAot>true</PublishAot>
-    <TrimMode>full</TrimMode>
-    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
-    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
-    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
-
+  <PropertyGroup Condition="'$(IsServerProject)' == 'true'">
     <!-- .NET Tool Package settings -->
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
@@ -34,5 +29,14 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <!-- Keep these aligned with OS + arch build-matrix.json. -->
     <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(IsServerProject)' == 'true' and '$(BuildNative)' == 'true'">
+    <!-- AOT native build flags -->
+    <IsAotCompatible>true</IsAotCompatible>
+    <PublishAot>true</PublishAot>
+    <TrimMode>full</TrimMode>
+    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
+    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
   </PropertyGroup>
 </Project>
