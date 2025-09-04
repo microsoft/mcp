@@ -77,7 +77,7 @@ If you are contributing significant changes, or if the issue is already assigned
     - `README.md` - Specific readme for this server
     - `CHANGELOG.md` - Specific changelog for this server
 - `tools/` - Service-specific implementations
-  - `{server}.Mcp.Tools.{tool-name}/` - Individual server tools (e.g., `Azure.Mcp.Tools.Appstorage`, `Fabric.Mcp.Tools.Admin`)
+  - `{server}.Mcp.Tools.{tool-name}/` - Individual server tools (e.g., `Azure.Mcp.Tools.KeyVault`, `Fabric.Mcp.Tools.Admin`)
     - `src` - Service specific code
       - `Commands/` - Command implementations
       - `Models/` - Service specific models
