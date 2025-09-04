@@ -9,7 +9,6 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.SignalR.Commands.NetworkRule;
 using Azure.Mcp.Tools.SignalR.Models;
 using Azure.Mcp.Tools.SignalR.Services;
-using AzureMcp.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
