@@ -2,15 +2,14 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.5.12 (Unreleased)
+## 0.5.12 (2025-09-04)
 
 ### Features Added
-- add `azmcp sql server firewall-rule create` and `azmcp sql server firewall-rule delete` commands. [#121](https://github.com/microsoft/mcp/pull/121)
-- Fixed a bug in MySQL query validation logic. [[#81](https://github.com/microsoft/mcp/pull/81)]
-
-### Breaking Changes
+- Added `azmcp sql server firewall-rule create` and `azmcp sql server firewall-rule delete` commands. [#121](https://github.com/microsoft/mcp/pull/121)
 
 ### Bugs Fixed
+
+- Fixed a bug in MySQL query validation logic. [[#81](https://github.com/microsoft/mcp/pull/81)]
 
 ### Other Changes
 
