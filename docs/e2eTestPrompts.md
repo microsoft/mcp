@@ -354,18 +354,27 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_sql_server_create | Create a new Azure SQL server named <server_name> in resource group <resource_group_name> |
+| azmcp_sql_server_create | Create an Azure SQL server with name <server_name> in location <location> with admin user <admin_user> |
+| azmcp_sql_server_create | Set up a new SQL server called <server_name> in my resource group <resource_group_name> |
+| azmcp_sql_server_delete | Delete the Azure SQL server <server_name> from resource group <resource_group_name> |
+| azmcp_sql_server_delete | Remove the SQL server <server_name> from my subscription |
+| azmcp_sql_server_delete | Delete SQL server <server_name> permanently |
 | azmcp_sql_server_entra-admin_list | List Microsoft Entra ID administrators for SQL server <server_name> |
 | azmcp_sql_server_entra-admin_list | Show me the Entra ID administrators configured for SQL server <server_name> |
 | azmcp_sql_server_entra-admin_list | What Microsoft Entra ID administrators are set up for my SQL server <server_name>? |
-| azmcp_sql_server_firewall-rule_list | List all firewall rules for SQL server <server_name> |
-| azmcp_sql_server_firewall-rule_list | Show me the firewall rules for SQL server <server_name> |
-| azmcp_sql_server_firewall-rule_list | What firewall rules are configured for my SQL server <server_name>? |
 | azmcp_sql_server_firewall-rule_create | Create a firewall rule for my Azure SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_create | Add a firewall rule to allow access from IP range <start_ip> to <end_ip> for SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_create | Create a new firewall rule named <rule_name> for SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_delete | Delete a firewall rule from my Azure SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_delete | Remove the firewall rule <rule_name> from SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_delete | Delete firewall rule <rule_name> for SQL server <server_name> |
+| azmcp_sql_server_firewall-rule_list | List all firewall rules for SQL server <server_name> |
+| azmcp_sql_server_firewall-rule_list | Show me the firewall rules for SQL server <server_name> |
+| azmcp_sql_server_firewall-rule_list | What firewall rules are configured for my SQL server <server_name>? |
+| azmcp_sql_server_show | Show me the details of Azure SQL server <server_name> in resource group <resource_group_name> |
+| azmcp_sql_server_show | Get the configuration details for SQL server <server_name> |
+| azmcp_sql_server_show | Display the properties of SQL server <server_name> |
 
 ## Azure Storage
 
