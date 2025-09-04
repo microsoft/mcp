@@ -137,7 +137,7 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
             .Where(s => !string.IsNullOrWhiteSpace(s)));
 
         // Assert specific Azure Functions deployment practices are mentioned
-        Assert.Contains("flex consumption plan", combinedText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Flex Consumption plan (FC1)", combinedText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Always use Linux OS for Python", combinedText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Function authentication", combinedText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Application Insights", combinedText, StringComparison.OrdinalIgnoreCase);
@@ -230,7 +230,7 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
         Assert.Contains("Azure Functions Core Tools", combinedText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("extension bundles", combinedText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("isolated process model", combinedText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("flex consumption plan", combinedText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Flex Consumption plan (FC1)", combinedText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Always use Linux OS for Python", combinedText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Function authentication", combinedText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Application Insights", combinedText, StringComparison.OrdinalIgnoreCase);

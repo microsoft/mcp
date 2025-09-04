@@ -66,30 +66,29 @@ If you are contributing significant changes, or if the issue is already assigned
 
 ### Project Structure
 
-The project is organized as follows:
-
-- `core/` - Core functionality and CLI application
-  - `src/` - Core source code
-    - `AzureMcp.Core/` - Core library with shared functionality
-    - `AzureMcp.Cli/` - CLI application entry point
-  - `tests/` - Core test files
-    - `AzureMcp.Core.UnitTests/` - Core unit tests
-    - `AzureMcp.Core.LiveTests/` - Core integration tests
-    - `AzureMcp.Tests/` - Shared test utilities
-- `areas/` - Service-specific implementations
-  - `{area-name}/` - Individual Azure service areas (e.g., `storage`, `cosmos`)
-    - `src/AzureMcp.{AreaName}/` - Service specific code
+- `core\`
+  - `Azure.Mcp.Core` - Azure.Mcp.Core core library, depends on Microsoft.Mcp.Core
+  - `Fabric.Mcp.Core` - Fabric.Mcp.Core, depends on Azure.Mcp.Core (fabric uses azure)
+  - `Microsoft.Mcp.Core` - Microsoft.Mcp.Core library
+- `servers\`
+  - `{server}.Mcp.Server - Individual servers (e.g. `Azure.Mcp.Server`, `Fabric.Mcp.Server`)
+    - `src` - Source for the server
+    - `tests` - Any unit or live tests for the server
+    - `README.md` - Specific readme for this server
+    - `CHANGELOG.md` - Specific changelog for this server
+- `tools/` - Service-specific implementations
+  - `{server}.Mcp.Tools.{tool-name}/` - Individual server tools (e.g., `Azure.Mcp.Tools.KeyVault`, `Fabric.Mcp.Tools.Admin`)
+    - `src` - Service specific code
       - `Commands/` - Command implementations
       - `Models/` - Service specific models
       - `Services/` - Service implementations and interfaces
       - `Options/` - Service specific command options
     - `tests/` - Service specific tests
-      - `AzureMcp.{AreaName}.UnitTests/` - Unit tests require no authentication or test resources
-      - `AzureMcp.{AreaName}.LiveTests/` - Live tests depend on Azure resources and authentication
+      - `{server}.Mcp.Tools.{tool-name}.UnitTests/` - Unit tests require no authentication or test resources
+      - `{server}.Mcp.Tools.{tool-name}.LiveTests/` - Live tests depend on Azure resources and authentication
       - `test-resources.bicep` - Infrastructure templates for testing
-      - `test-resources-post.ps1` - Post-deployment scripts
-- `docs/` - Documentation
-
+- `eng/` - Shared tools, templates, CLI helpers
+- `docs/` - Central documentation and onboarding materials
 ## Development Workflow
 
 ### Development Process
@@ -313,7 +312,7 @@ To build a local image for testing purposes:
 
 ### Live Tests
 
-> ⚠️ If you are a Microsoft employee with Azure source permissions then please review our [Azure Internal Onboarding Documentation](https://aka.ms/azmcp/intake). As part of reviewing community contributions, Azure team members can run live tests by adding this comment to the PR `/azp run azure - mcp`.
+> ⚠️ If you are a Microsoft employee with Azure source permissions then please review our [Azure Internal Onboarding Documentation](https://aka.ms/azmcp/intake). As part of reviewing community contributions, Azure team members can run live tests by adding this comment to the PR `/azp run  mcp - pullrequest - live`.
 
 Before running live tests:
 
@@ -582,7 +581,7 @@ Packages published to the dev feed will use:
 
 #### PR Validation
 
-To run live tests for a PR, inspect the PR code for any suspicious changes, then add the comment `/azp run azure - mcp` to the pull request. This will queue a PR triggered run which will build, run unit tests, deploy test resources and run live tests.
+To run live tests for a PR, inspect the PR code for any suspicious changes, then add the comment `/azp run  mcp - pullrequest - live` to the pull request. This will queue a PR triggered run which will build, run unit tests, deploy test resources and run live tests.
 
 If you would like to see the product of a PR as a package on the dev feed, after thoroughly inspecting the change, create a branch in the main repo and manually trigger an [azure - mcp](https://dev.azure.com/azure-sdk/internal/_build?definitionId=7571) pipeline run against that branch. This will queue a manually triggered run which will build, run unit tests, deploy test resources, run live tests, sign and publish the packages to the dev feed.
 

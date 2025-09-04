@@ -14,7 +14,6 @@
     - [ ] Commit history is clean with descriptive messages ([cleanup guide](https://github.com/Azure/azure-powershell/blob/master/documentation/development-docs/cleaning-up-commits.md))
     - [ ] Added comprehensive tests for new/modified functionality
     - [ ] Updated `CHANGELOG.md` for product changes (`features, bug fixes, UI/UX, updated dependencies`)
-    - [ ] Spelling check passes: `.\eng\common\spelling\Invoke-Cspell.ps1`
 - [ ] For MCP tool changes:
     - [ ] **One tool per PR**: This PR adds or modifies only one MCP tool for faster review cycles
     - [ ] Updated `README.md` documentation
@@ -23,4 +22,4 @@
     - [ ] For new or modified tool descriptions, ran [`ToolDescriptionEvaluator`](https://github.com/microsoft/mcp/blob/main/eng/tools/ToolDescriptionEvaluator/Quickstart.md) and obtained a score of `0.4` or more and a top 3 ranking for all related test prompts
 - [ ] 👉 For Community (non-Azure team member) PRs:
     - [ ] **Security review**: Reviewed code for security vulnerabilities, malicious code, or suspicious activities before running tests (`crypto mining, spam, data exfiltration, etc.`)
-    - [ ] **Manual tests run**: added comment `/azp run azure - mcp` to run *Live Test Pipeline*
+    - [ ] **Manual tests run**: added comment `/azp run mcp - pullrequest - live` to run *Live Test Pipeline*

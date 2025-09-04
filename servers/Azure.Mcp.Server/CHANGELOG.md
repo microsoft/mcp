@@ -5,6 +5,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ## 0.5.12 (Unreleased)
 
 ### Features Added
+- add `azmcp sql server firewall-rule create` and `azmcp sql server firewall-rule delete` commands. [#121](https://github.com/microsoft/mcp/pull/121)
 
 ### Breaking Changes
 
@@ -13,6 +14,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
+- Added instructions about consumption plan for azure functions deployment best practices [[#218](https://github.com/microsoft/mcp/pull/218)]
 
 ## 0.5.11 (2025-09-02)
 

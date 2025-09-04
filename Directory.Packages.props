@@ -36,6 +36,7 @@
     <PackageVersion Include="Azure.ResourceManager.Resources" Version="1.11.0" />
     <PackageVersion Include="Azure.ResourceManager.RedisEnterprise" Version="1.2.1" />
     <PackageVersion Include="Azure.ResourceManager.ResourceHealth" Version="1.1.0-beta.5" />
+    <PackageVersion Include="Azure.ResourceManager.Sql" Version="1.4.0-beta.3" />
     <PackageVersion Include="Azure.ResourceManager.LoadTesting" Version="1.1.2" />
     <PackageVersion Include="Azure.ResourceManager.Network" Version="1.11.2" />
     <PackageVersion Include="Azure.ResourceManager.MachineLearning" Version="1.2.3" />

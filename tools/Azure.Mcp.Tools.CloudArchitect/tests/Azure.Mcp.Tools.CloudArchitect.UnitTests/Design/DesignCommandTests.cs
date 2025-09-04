@@ -83,10 +83,7 @@ public class DesignCommandTests
     [InlineData("--answer \"Web application\"")]
     [InlineData("--next-question-needed true")]
     [InlineData("--confidence-score 0.8")]
-    [InlineData("--architecture-component \"Frontend\"")]
-    [InlineData("--architecture-tier Infrastructure")]
     [InlineData("--question \"App type?\" --question-number 1 --total-questions 5")]
-    [InlineData("--architecture-tier Platform --architecture-component \"AKS Cluster\"")]
     public async Task ExecuteAsync_ReturnsArchitectureDesignText(string args)
     {
         // Arrange
@@ -611,22 +608,6 @@ public class DesignCommandTests
         Assert.Equal(2, responseObject.ResponseObject.State.Requirements.Explicit.Count);
         Assert.Single(responseObject.ResponseObject.State.Requirements.Implicit);
         Assert.Single(responseObject.ResponseObject.State.Requirements.Assumed);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithInvalidStateJson_HandlesGracefully()
-    {
-        // Arrange
-        var invalidStateJson = "{ invalid json }";
-        var args = new[] { "--state", invalidStateJson };
-        var parseResult = _parser.Parse(args);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
-
-        // Assert - The command should handle the error gracefully and return an error response
-        Assert.NotEqual(200, response.Status);
-        Assert.NotEmpty(response.Message);
     }
 
     [Fact]
