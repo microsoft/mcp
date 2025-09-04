@@ -4,7 +4,7 @@
 
 See [servers/Azure.Mcp.Server/SUPPORT.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/SUPPORT.md) for more details specific to the Azure MCP Server.
 
-If you encounter an unexpected issue while working with the Azure MCP Server, check out our [Troubleshooting](http://aka.ms/azmcp/troubleshooting) guide.
+If you encounter an unexpected issue while working with the Azure MCP Server, check out our [Troubleshooting](https://aka.ms/azmcp/troubleshooting) guide.
 
 ## All other MCP Servers
 
