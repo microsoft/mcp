@@ -48,5 +48,7 @@ public class SqlSetup : IAreaSetup
         server.AddSubGroup(firewallRule);
 
         firewallRule.AddCommand("list", new FirewallRuleListCommand(loggerFactory.CreateLogger<FirewallRuleListCommand>()));
+        firewallRule.AddCommand("create", new FirewallRuleCreateCommand(loggerFactory.CreateLogger<FirewallRuleCreateCommand>()));
+        firewallRule.AddCommand("delete", new FirewallRuleDeleteCommand(loggerFactory.CreateLogger<FirewallRuleDeleteCommand>()));
     }
 }

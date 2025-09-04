@@ -87,8 +87,7 @@ jobs:
             ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
             MainPublisher: 'ESRPRELPACMANTEST'
             ProductState: latest
-
-        - if eq('${{ parameters.IncludeNative }}', true):
+        - ${{ if eq(parameters.IncludeNative, true) }}:
           - task: EsrpRelease@9
             displayName: Publish native platform packages to npmjs.com
             inputs:
@@ -123,7 +122,6 @@ jobs:
               ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
               MainPublisher: 'ESRPRELPACMANTEST'
               ProductState: latest
-
         - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
           parameters:
             PathToArtifacts: $(Pipeline.Workspace)/drop

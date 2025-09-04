@@ -1,13 +1,12 @@
 
 # Release History
 
-## 0.5.11 - Unreleased
-
-### Added
-
-### Changed
+## 0.5.11 - 2025-09-02
 
 ### Fixed
+
+- Fixed VSIX signing [[#91](https://github.com/microsoft/mcp/pull/91)]
+- Included native packages in build artifacts and pack/release scripts. [[#51](https://github.com/microsoft/mcp/pull/51)]
 
 ## 0.5.10 - 2025-08-28
 
