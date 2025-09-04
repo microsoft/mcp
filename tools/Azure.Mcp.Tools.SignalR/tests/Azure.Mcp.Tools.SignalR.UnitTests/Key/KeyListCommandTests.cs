@@ -233,4 +233,29 @@ public class KeyListCommandTests
             Arg.Any<AuthMethod?>(),
             Arg.Any<RetryPolicyOptions>());
     }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsError_WhenLocalAuthDisabled()
+    {
+        // Arrange
+        var args = "--subscription sub1 --resource-group rg1 --signalr-name signalr1".Split(' ',
+            StringSplitOptions.RemoveEmptyEntries);
+        var parseResult = _parser.Parse(args);
+        _signalRService.ListKeysAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<AuthMethod?>(),
+                Arg.Any<RetryPolicyOptions>())
+            .Returns(Task.FromException<Models.Key?>(
+                new RequestFailedException(403, "Access keys are disabled for this SignalR service.")));
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult);
+
+        // Assert
+        Assert.Equal(403, response.Status);
+        Assert.Contains("Access keys are disabled", response.Message);
+    }
 }

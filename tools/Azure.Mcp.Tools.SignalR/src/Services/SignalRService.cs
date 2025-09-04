@@ -156,10 +156,30 @@ public class SignalRService(
 
         try
         {
-            // Use Azure Core pipeline approach consistently
+            var localAuth = await ExecuteSingleResourceQueryAsync(
+                "Microsoft.SignalRService/SignalR",
+                resourceGroup,
+                subscription,
+                retryPolicy,
+                r =>
+                {
+                    bool? disableLocalAuth = null;
+                    if (r.TryGetProperty("properties", out var props) &&
+                        props.TryGetProperty("disableLocalAuth", out var d) &&
+                        (d.ValueKind == JsonValueKind.True || d.ValueKind == JsonValueKind.False))
+                    {
+                        disableLocalAuth = d.GetBoolean();
+                    }
+                    return new { DisableLocalAuth = disableLocalAuth };
+                },
+                $"name =~ '{EscapeKqlString(signalRName)}'");
+            if (localAuth?.DisableLocalAuth == true)
+            {
+                throw new RequestFailedException(403, "Access keys are disabled for this SignalR service.");
+            }
+
             var clientOptions = AddDefaultPolicies(new ArmClientOptions());
 
-            // Configure retry policy if provided
             if (retryPolicy != null)
             {
                 clientOptions.Retry.MaxRetries = retryPolicy.MaxRetries;
@@ -169,7 +189,6 @@ public class SignalRService(
                 clientOptions.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
             }
 
-            // Create pipeline
             var pipeline = HttpPipelineBuilder.Build(clientOptions);
             var signalrUrl = BuildPostSignalrUrl(subscription, resourceGroup, signalRName, "listKeys");
             var token = await GetAccessTokenAsync(tenant);
@@ -196,20 +215,6 @@ public class SignalRService(
                 signalRName, resourceGroup, subscription);
             throw new Exception($"Failed to list keys for SignalR service '{signalRName}': {ex.Message}", ex);
         }
-    }
-
-    private static string BuildPostSignalrUrl(string subscription, string resourceGroup, string signalRName,
-        string action)
-    {
-        var queryParams = new List<string> { $"api-version={ApiVersion}" };
-        string queryString = string.Join("&", queryParams);
-        return
-            $"{ManagementApiBaseUrl}/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/{SignalRResourceType}/{signalRName}/{action}?{queryString}";
-    }
-
-    private static string BuildListSignalrUrl(string subscription)
-    {
-        return $"{ManagementApiBaseUrl}/subscriptions/{subscription}/providers/{SignalRResourceType}?api-version={ApiVersion}";
     }
 
     public async Task<SignalRIdentity?> GetSignalRIdentityAsync(
@@ -425,7 +430,7 @@ public class SignalRService(
                         .Select(x => x.GetString())
                         .Where(x => x != null)
                         .Select(x => x!)
-                        .ToList(); // 立即物化
+                        .ToList();
                 }
 
                 if (publicNetwork.TryGetProperty("deny", out var publicDeny) &&
@@ -436,7 +441,7 @@ public class SignalRService(
                         .Select(x => x.GetString())
                         .Where(x => x != null)
                         .Select(x => x!)
-                        .ToList(); // 立即物化
+                        .ToList();
                 }
 
                 networkRule.PublicNetwork = publicAcl;
@@ -444,6 +449,20 @@ public class SignalRService(
         }
 
         return networkRule;
+    }
+
+    private static string BuildPostSignalrUrl(string subscription, string resourceGroup, string signalRName,
+        string action)
+    {
+        var queryParams = new List<string> { $"api-version={ApiVersion}" };
+        string queryString = string.Join("&", queryParams);
+        return
+            $"{ManagementApiBaseUrl}/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/{SignalRResourceType}/{signalRName}/{action}?{queryString}";
+    }
+
+    private static string BuildListSignalrUrl(string subscription)
+    {
+        return $"{ManagementApiBaseUrl}/subscriptions/{subscription}/providers/{SignalRResourceType}?api-version={ApiVersion}";
     }
 
     private async Task<string> GetAccessTokenAsync(string? tenant = null)
