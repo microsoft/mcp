@@ -49,9 +49,9 @@ public static class ServiceOptionDefinitions
     public static readonly Option<bool> EnableInsecureTransports = new(
         $"--{EnableInsecureTransportsName}")
     {
-        IsRequired = false,
-        IsHidden = true,
+        Required = false,
+        Hidden = true,
         Description = "Enable insecure transport",
-        DefaultValueFactory = () => false
+        DefaultValueFactory = _ => false
     };
 }

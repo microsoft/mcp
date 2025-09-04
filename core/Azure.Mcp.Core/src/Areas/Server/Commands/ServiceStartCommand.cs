@@ -84,7 +84,7 @@ public sealed class ServiceStartCommand : BaseCommand
             throw new ArgumentException($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}.");
         }
 
-        var enableInsecureTransports = parseResult.GetValueForOption(_enableInsecureTransportsOption);
+        var enableInsecureTransports = parseResult.GetValueOrDefault(_enableInsecureTransportsOption);
 
         if (enableInsecureTransports)
         {
