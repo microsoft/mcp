@@ -89,17 +89,43 @@ public abstract class GlobalCommand<
             options.ResourceGroup = parseResult.GetValue(_resourceGroupOption);
         }
 
-        // Only create RetryPolicy if any retry options are specified
-        if (Azure.Mcp.Core.Options.ParseResultExtensions.HasAnyRetryOptions(parseResult))
+        // Create a RetryPolicyOptions capturing only explicitly provided values so unspecified settings remain SDK defaults
+        var hasAnyRetry = Azure.Mcp.Core.Options.ParseResultExtensions.HasAnyRetryOptions(parseResult);
+        if (hasAnyRetry)
         {
-            options.RetryPolicy = new RetryPolicyOptions
+            var policy = new RetryPolicyOptions();
+
+            if (parseResult.GetResult(_retryMaxRetries) != null)
             {
-                MaxRetries = parseResult.GetValue(_retryMaxRetries),
-                DelaySeconds = parseResult.GetValue(_retryDelayOption),
-                MaxDelaySeconds = parseResult.GetValue(_retryMaxDelayOption),
-                Mode = parseResult.GetValue(_retryModeOption),
-                NetworkTimeoutSeconds = parseResult.GetValue(_retryNetworkTimeoutOption)
-            };
+                policy.HasMaxRetries = true;
+                policy.MaxRetries = parseResult.GetValue(_retryMaxRetries);
+            }
+            if (parseResult.GetResult(_retryDelayOption) != null)
+            {
+                policy.HasDelaySeconds = true;
+                policy.DelaySeconds = parseResult.GetValue(_retryDelayOption);
+            }
+            if (parseResult.GetResult(_retryMaxDelayOption) != null)
+            {
+                policy.HasMaxDelaySeconds = true;
+                policy.MaxDelaySeconds = parseResult.GetValue(_retryMaxDelayOption);
+            }
+            if (parseResult.GetResult(_retryModeOption) != null)
+            {
+                policy.HasMode = true;
+                policy.Mode = parseResult.GetValue(_retryModeOption);
+            }
+            if (parseResult.GetResult(_retryNetworkTimeoutOption) != null)
+            {
+                policy.HasNetworkTimeoutSeconds = true;
+                policy.NetworkTimeoutSeconds = parseResult.GetValue(_retryNetworkTimeoutOption);
+            }
+
+            // Only assign if at least one flag set (defensive)
+            if (policy.HasMaxRetries || policy.HasDelaySeconds || policy.HasMaxDelaySeconds || policy.HasMode || policy.HasNetworkTimeoutSeconds)
+            {
+                options.RetryPolicy = policy;
+            }
         }
 
         return options;
