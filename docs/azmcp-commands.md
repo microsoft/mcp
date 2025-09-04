@@ -898,8 +898,22 @@ azmcp sql db show --subscription <subscription> \
                   --server <server-name> \
                   --database <database>
 
+# Create a firewall rule for a SQL server
+azmcp sql server firewall-rule create --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --server <server-name> \
+                                      --firewall-rule-name <rule-name> \
+                                      --start-ip-address <start-ip> \
+                                      --end-ip-address <end-ip>
+
+# Delete a firewall rule from a SQL server
+azmcp sql server firewall-rule delete --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --server <server-name> \
+                                      --firewall-rule-name <rule-name>
+
 # Gets a list of firewall rules for a SQL server
-azmcp sql firewall-rule list --subscription <subscription> \
+azmcp sql server firewall-rule list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
 ```
