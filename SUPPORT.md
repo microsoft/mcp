@@ -23,5 +23,5 @@ Support for MCP Servers in this repository is limited to the resources listed ab
 [contribute]: https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md
 [exist-issue]: https://github.com/microsoft/mcp/issues
 [gh-issue]: https://github.com/microsoft/mcp/issues/new/choose
-[servers] : https://github.com/microsoft/mcp/blob/main/servers
+[servers]: https://github.com/microsoft/mcp/blob/main/servers
 
