@@ -15,7 +15,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
 - Added instructions about consumption plan for azure functions deployment best practices [[#218](https://github.com/microsoft/mcp/pull/218)]
-- Added an insecure, undocumented switch to begin the early exploration of self-hosted remote mcp server. [[#310](https://github.com/microsoft/mcp/pull/310)]
 
 ## 0.5.11 (2025-09-02)
 
