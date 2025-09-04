@@ -13,5 +13,6 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
   </ItemGroup>
 </Project>

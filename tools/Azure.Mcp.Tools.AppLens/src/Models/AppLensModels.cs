@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
+
 namespace Azure.Mcp.Tools.AppLens.Models;
 
 /// <summary>
@@ -79,6 +81,124 @@ public class AppLensOptions
     /// The client name to report to AppLens when making a request.
     /// </summary>
     public string ClientName { get; set; } = "AzureMCP";
+}
+
+/// <summary>
+/// Model from https://dev.azure.com/msazure/One/_git/AAPT-Antares-AppServiceDiagnostics?path=%2Fsrc%2FDiagnostics.SemanticService%2FModels%2FDataModels%2FChatContextModels.cs
+/// </summary>
+public enum MessageSource
+{
+    User,
+    System
+}
+
+/// <summary>
+/// Model from https://dev.azure.com/msazure/One/_git/AAPT-Antares-AppServiceDiagnostics?path=%2Fsrc%2FDiagnostics.SemanticService%2FModels%2FDataModels%2FChatContextModels.cs
+/// </summary>
+public enum MessageRenderingType
+{
+    Text,
+    Markdown,
+    Code,
+    Solution,
+    Inference,
+}
+
+/// <summary>
+/// Model from https://dev.azure.com/msazure/One/_git/AAPT-Antares-AppServiceDiagnostics?path=%2Fsrc%2FDiagnostics.SemanticService%2FModels%2FDataModels%2FChatContextModels.cs
+/// </summary>
+public enum MessageStatus
+{
+    Created,
+    Waiting,
+    InProgress,
+    Finished,
+    Cancelled
+}
+
+
+/// <summary>
+/// Model from https://dev.azure.com/msazure/One/_git/AAPT-Antares-AppServiceDiagnostics?path=%2Fsrc%2FDiagnostics.SemanticService%2FModels%2FDataModels%2FChatContextModels.cs
+/// </summary>
+public class ChatMessage
+{
+    public required string Id { get; set; }
+    /// <summary>
+    /// The actual content of the message, suitable for display (but pay attention to the <see cref="MessageSource"/>).
+    /// Note that this should be the same as <see cref="Message"/> for all intents and purposes.
+    /// </summary>
+    public required string DisplayMessage { get; set; }
+    /// <summary>
+    /// The actual content of the message, suitable for display (but pay attention to the <see cref="MessageSource"/>).
+    /// Note that this should be the same as <see cref="DisplayMessage"/> for all intents and purposes.
+    /// </summary>
+    public required string Message { get; set; }
+    public MessageSource MessageSource { get; set; }
+    public long Timestamp { get; set; }
+    public required string MessageDisplayDate { get; set; }
+    public MessageRenderingType RenderingType { get; set; }
+    public required string UserFeedback { get; set; }
+    public MessageStatus Status { get; set; }
+}
+
+/// <summary>
+/// Model from https://dev.azure.com/msazure/One/_git/AAPT-Antares-AppServiceDiagnostics?path=/src/Diagnostics.SemanticService/Models/RequestResponseModels/ChatMessageResponseBody.cs
+/// </summary>
+public enum QueryResponseStatus
+{
+    InProgress,
+    Finished
+}
+
+/// <summary>
+/// Model from https://dev.azure.com/msazure/One/_git/AAPT-Antares-AppServiceDiagnostics?path=/src/Diagnostics.SemanticService/Models/RequestResponseModels/ChatMessageResponseBody.cs
+/// </summary>
+public enum MessageResponseType
+{
+    DebugTrace,
+    SystemMessage,
+    LoadingMessage,
+    SuggestedPrompts
+}
+
+/// <summary>
+/// Model from https://dev.azure.com/msazure/One/_git/AAPT-Antares-AppServiceDiagnostics?path=/src/Diagnostics.SemanticService/Models/RequestResponseModels/ChatMessageRequestBody.cs
+/// </summary>
+public class ChatMessageRequestBody
+{
+    public required string SessionId { get; set; }
+    public required string ResourceId { get; set; }
+    public string? ResourceKind { get; set; }
+    public required string UserId { get; set; }
+    public required string Message { get; set; }
+    public bool IsClearChatRequest { get; set; }
+    public required string StartTime { get; set; }
+    public required string EndTime { get; set; }
+    public bool IsDiagnosticsCall { get; set; } = false;
+    public bool IsCaseSubmission { get; set; } = false;
+    public string? WorkflowUserInputs { get; set; }
+    public string? ClientName { get; set; }
+    public string? UserPreferredLocale { get; set; }
+}
+
+
+/// <summary>
+/// Model from https://dev.azure.com/msazure/One/_git/AAPT-Antares-AppServiceDiagnostics?path=/src/Diagnostics.SemanticService/Models/RequestResponseModels/ChatMessageResponseBody.cs
+/// </summary>
+public class ChatMessageResponseBody
+{
+    public required string SessionId { get; set; }
+    public required ChatMessage Message { get; set; }
+    public QueryResponseStatus ResponseStatus { get; set; }
+    public required List<string> SuggestedPrompts { get; set; }
+    public required string DebugTrace { get; set; }
+    public MessageResponseType ResponseType { get; set; }
+    public required string Error { get; set; }
+
+    public static ChatMessageResponseBody FromJson(string json)
+    {
+        return JsonSerializer.Deserialize<ChatMessageResponseBody>(json, AppLensJsonContext.Default.ChatMessageResponseBody)!;
+    }
 }
 
 /// <summary>

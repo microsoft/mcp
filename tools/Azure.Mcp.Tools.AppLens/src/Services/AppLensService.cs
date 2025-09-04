@@ -1,12 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.IdentityModel.Tokens.Jwt;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Threading.Channels;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppLens.Models;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AppLens.Services;
@@ -18,6 +22,7 @@ public class AppLensService : BaseAzureService, IAppLensService
 {
     private readonly HttpClient _httpClient;
     private readonly AppLensOptions _options;
+    private const string ConversationalDiagnosticsSignalREndpoint = "https://diagnosticschat.azure.com/chatHub";
     private const string ResourceQuery = """
         resources
         | where name =~ '{0}'
@@ -61,7 +66,7 @@ public class AppLensService : BaseAzureService, IAppLensService
         var successfulSession = (SuccessfulAppLensSessionResult)session;
 
         // Step 3: Ask AppLens the diagnostic question (simplified implementation)
-        var insights = await AskAppLensAsync(successfulSession.Session, question);
+        var insights = await CollectInsightsAsync(successfulSession.Session, question);
 
         return new DiagnosticResult(
             insights.Insights,
@@ -119,6 +124,7 @@ public class AppLensService : BaseAzureService, IAppLensService
 
             var response = await _httpClient.SendAsync(request);
 
+
             if (!response.IsSuccessStatusCode)
             {
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -129,15 +135,11 @@ public class AppLensService : BaseAzureService, IAppLensService
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            var sessionData = JsonDocument.Parse(content);
-
-            // Extract session information from the response
-            // Note: This is a simplified implementation - the actual response structure would need to be analyzed
-            var sessionId = Guid.NewGuid().ToString(); // In real implementation, this would come from the API response
-            var sessionToken = sessionData.RootElement.GetProperty("value").GetString() ?? "";
+            AppLensSession? appLensSession;
+            appLensSession = ParseGetTokenResponse(content);
 
             return new SuccessfulAppLensSessionResult(
-                new AppLensSession(sessionId, resourceId, sessionToken, 3600));
+                appLensSession with { ResourceId = resourceId });
         }
         catch (Exception ex)
         {
@@ -145,30 +147,219 @@ public class AppLensService : BaseAzureService, IAppLensService
         }
     }
 
-    private async Task<(List<string> Insights, List<string> Solutions)> AskAppLensAsync(AppLensSession session, string question)
+/// <summary>
+    /// Asks the AppLens API a single <paramref name="question"/> about a resource associated with the given <paramref name="session"/> and returns the response as stream of asynchronous messages.
+    /// </summary>
+    /// <param name="question">The question or query to pose to AppLens.</param>
+    /// <param name="session">The <see cref="AppLensSession"/> representing the overall conversation.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the request.</param>
+    public async IAsyncEnumerable<ChatMessageResponseBody> AskAppLensAsync(
+        AppLensSession session,
+        string question,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        // Note: This is a simplified implementation placeholder
-        // In the real implementation, this would:
-        // 1. Connect to the AppLens SignalR endpoint
-        // 2. Send the diagnostic question
-        // 3. Receive and process the streaming responses
-        // 4. Parse insights and solutions from the response
-
-        await Task.Delay(100); // Simulate API call
-
-        // Return mock data for demonstration
-        var insights = new List<string>
+        // agent using signal r client to stream answers
+        Channel<ChatMessageResponseBody> channel = Channel.CreateUnbounded<ChatMessageResponseBody>(new()
         {
-            $"Analyzing resource {session.ResourceId} for: {question}",
-            "Note: This is a simplified implementation. Full AppLens integration would provide detailed diagnostic insights."
+            SingleWriter = true,
+            SingleReader = true,
+            AllowSynchronousContinuations = false
+        });
+
+        await using HubConnection connection = new HubConnectionBuilder()
+            .WithUrl(ConversationalDiagnosticsSignalREndpoint, options =>
+            {
+                // TODO: every time the token is requested, refresh the token
+                options.AccessTokenProvider = () => Task.FromResult(session.Token)!;
+                // Per documentation, we need to set this because we're not connecting from the Azure Portal.
+                options.Headers.Add("origin", "https://appservice-diagnostics.trafficmanager.net");
+            })
+            .WithAutomaticReconnect()
+            .Build();
+
+        await connection.StartAsync(cancellationToken);
+
+        connection.On<string>("MessageReceived", async (response) =>
+        {
+            ChatMessageResponseBody responseBody = ChatMessageResponseBody.FromJson(response);
+            await channel.Writer.WriteAsync(responseBody);
+        });
+
+        connection.On<string>("MessageCancelled", async (response) =>
+        {
+            // If the API cancels the request just treat it as the conversation being complete.
+            ChatMessageResponseBody responseBody = new()
+            {
+                Error = response,
+                SessionId = "",
+                Message = new ChatMessage
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    DisplayMessage = "Request cancelled",
+                    Message = "Request cancelled",
+                    MessageDisplayDate = DateTime.UtcNow.ToString("O"),
+                    UserFeedback = ""
+                },
+                SuggestedPrompts = [],
+                DebugTrace = "",
+                ResponseStatus = QueryResponseStatus.Finished,
+                ResponseType = MessageResponseType.SystemMessage
+            };
+
+            await channel.Writer.WriteAsync(responseBody);
+        });
+
+        bool completed = false;
+
+        // Read the token so we can get the user ID
+        JwtSecurityTokenHandler tokenHandler = new();
+        JwtSecurityToken jsonToken = (JwtSecurityToken)tokenHandler.ReadToken(session.Token);
+        string userId = jsonToken.Claims.First(claim => claim.Type == "user").Value;
+
+        // fill this from context and request
+        ChatMessageRequestBody appLensRequest = new()
+        {
+            ResourceId = session.ResourceId,
+            SessionId = session.SessionId,
+            Message = question,
+            UserId = userId,
+            ResourceKind = "app",
+            StartTime = "",
+            EndTime = "",
+            IsDiagnosticsCall = true,
+            ClientName = "GitHubCopilotForAzure"
         };
 
-        var solutions = new List<string>
-        {
-            "To complete this implementation, integrate with the AppLens SignalR endpoint at https://diagnosticschat.azure.com/chatHub",
-            "Implement the full conversational diagnostics protocol as documented in the original AppLens plugin"
-        };
+        // fire request
+        Task request = connection.InvokeAsync("sendMessage", JsonSerializer.Serialize(appLensRequest, AppLensJsonContext.Default.ChatMessageRequestBody), cancellationToken: cancellationToken);
 
-        return (insights, solutions);
+        bool waitForRequestToFinish = true;
+        while (!completed)
+        {
+            // HACK: Sometimes we'll just stop getting messages even though the request is still running. This seems to be a problem with the
+            // Conversational Diagnostics service. Here we work around it by bailing out if we don't get any messages for some period of time.
+            using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            cts.CancelAfter(TimeSpan.FromSeconds(_options.MessageTimeOutInSeconds));
+
+            try
+            {
+                await channel.Reader.WaitToReadAsync(cts.Token);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                // Cancellation has been triggered by the timeout waiting for the service to respond. Finish up as if it had completed normally
+                // rather than let the exception propagate.
+                completed = true;
+                // We're bailing out early, so we don't need to wait for the request to finish.
+                waitForRequestToFinish = false;
+            }
+
+            while (channel.Reader.TryRead(out ChatMessageResponseBody? message))
+            {
+                completed |= message.ResponseStatus == QueryResponseStatus.Finished;
+
+                yield return message;
+            }
+        }
+
+        if (waitForRequestToFinish || request.IsFaulted)
+        {
+            await request;
+        }
+
+        await connection.StopAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Collects insights from AppLens diagnostic conversation.
+    /// </summary>
+    /// <param name="session">The AppLens session.</param>
+    /// <param name="question">The diagnostic question.</param>
+    /// <returns>A task containing diagnostic insights and solutions.</returns>
+    private async Task<DiagnosticResult> CollectInsightsAsync(AppLensSession session, string question)
+    {
+        var insights = new List<string>();
+        var solutions = new List<string>();
+
+        await foreach (var message in AskAppLensAsync(session, question))
+        {
+            if (message.ResponseType == MessageResponseType.SystemMessage && !string.IsNullOrEmpty(message.Message?.Message))
+            {
+                insights.Add(message.Message.Message);
+            }
+
+            if (message.ResponseType == MessageResponseType.LoadingMessage && !string.IsNullOrEmpty(message.Message?.Message))
+            {
+                solutions.Add(message.Message.Message);
+            }
+        }
+
+        return new DiagnosticResult(insights, solutions, session.ResourceId, "Resource");
+    }
+
+    private static AppLensSession ParseGetTokenResponse(string rawResponse)
+    {
+        JsonDocument jsonResponse = JsonDocument.Parse(rawResponse);
+
+        AppLensSession? session = null;
+
+        // parse response
+        const int SessionIdColumnIndex = 0;
+        const int TokenColumnIndex = 1;
+        const int ExpiresInColumnIndex = 2;
+
+        if (!jsonResponse.RootElement.TryGetProperty("properties", out JsonElement propertiesElement))
+        {
+            // Sometimes the the call to get the token will indicate success but the JSON response will not have
+            // the expected shape. Here we collect more data.
+            // See: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/2297708
+            if (jsonResponse.RootElement.ValueKind == JsonValueKind.Object)
+            {
+                IEnumerable<string> propertyNames = jsonResponse.RootElement.EnumerateObject().Select(property => property.Name);
+                string joinedPropertyNames = string.Join(", ", propertyNames);
+                throw new Exception($"The top-level property named 'properties' not found. The actual top-level properties are: {joinedPropertyNames}.");
+            }
+
+            throw new Exception("'properties' not found. Root element is not a JSON object.");
+        }
+
+        if (!propertiesElement.TryGetProperty("dataset", out JsonElement datasetElement))
+        {
+            throw new Exception("'properties.dataset' not found.");
+        }
+
+        foreach (JsonElement datasetItem in datasetElement.EnumerateArray())
+        {
+            if (!datasetItem.TryGetProperty("table", out JsonElement tableElement))
+            {
+                throw new Exception("'properties.dataset.table' not found.");
+            }
+
+            if (!tableElement.TryGetProperty("rows", out JsonElement rowsElement))
+            {
+                throw new Exception("'properties.dataset.table.rows' not found.");
+            }
+
+            foreach (JsonElement rowJsonElement in rowsElement.EnumerateArray())
+            {
+                JsonElement[] row = rowJsonElement.Deserialize(AppLensJsonContext.Default.JsonElementArray)!;
+
+                session = new(
+                    SessionId: row[SessionIdColumnIndex].GetString()!,
+                    ResourceId: "", // Filled in by the caller
+                    Token: row[TokenColumnIndex].GetString()!,
+                    ExpiresIn: row[ExpiresInColumnIndex].GetInt32()
+                );
+
+                break;
+            }
+        }
+
+        if (session is null)
+        {
+            throw new Exception("session is null.");
+        }
+
+        return session;
     }
 }
