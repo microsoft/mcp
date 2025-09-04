@@ -47,7 +47,6 @@
     <PackageDescription>Template MCP Server - Basic Model Context Protocol implementation</PackageDescription>
     <PackageTags>template;mcp;</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <McpServerJsonTemplateFile>$(RepoRoot)/eng/dnx/.mcp/server.json</McpServerJsonTemplateFile>
   </PropertyGroup>
   <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
     <None Include="../README.md" Pack="true" PackagePath="./README.md" />
@@ -77,6 +76,4 @@
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
-
-  <Import Project="$(RepoRoot)/eng/dnx/PackServerJson.targets" />
 </Project>
