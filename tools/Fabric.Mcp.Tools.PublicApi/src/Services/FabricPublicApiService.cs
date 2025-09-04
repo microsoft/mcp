@@ -109,7 +109,7 @@ public class FabricPublicApiService(
         // Check if this is a file (not a directory)
         foreach (var example in await _resourceProviderService.ListResourcesInPath(directory, ResourceType.File))
         {
-            
+
             res[example] = await _resourceProviderService.GetResource($"{directory}{example}");
         }
 

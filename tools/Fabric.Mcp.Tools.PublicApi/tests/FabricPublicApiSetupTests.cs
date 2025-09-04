@@ -27,7 +27,7 @@ public class FabricPublicApiSetupTests
         // Assert
         var serviceProvider = services.BuildServiceProvider();
         var fabricService = serviceProvider.GetService<IFabricPublicApiService>();
-        
+
         Assert.NotNull(fabricService);
         Assert.IsType<FabricPublicApiService>(fabricService);
     }
@@ -46,7 +46,7 @@ public class FabricPublicApiSetupTests
         // Assert
         var publicApisGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "publicapis");
         Assert.NotNull(publicApisGroup);
-        
+
         var bestPracticesGroup = publicApisGroup.SubGroup.FirstOrDefault(g => g.Name == "best-practices");
         Assert.NotNull(bestPracticesGroup);
 

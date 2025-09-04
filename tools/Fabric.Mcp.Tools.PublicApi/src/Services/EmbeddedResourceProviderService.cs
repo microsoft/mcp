@@ -36,7 +36,7 @@ namespace Fabric.Mcp.Tools.PublicApi.Services
             string normalizedPath = path.Replace('/', '.').Replace('\\', '.').Replace('-', '_');
 
             // Build the expected resource name prefix
-            string resourcePrefix = string.IsNullOrEmpty(normalizedPath) 
+            string resourcePrefix = string.IsNullOrEmpty(normalizedPath)
                 ? $"{assembly.GetName().Name}.Resources."
                 : $"{assembly.GetName().Name}.Resources.{normalizedPath}";
 
