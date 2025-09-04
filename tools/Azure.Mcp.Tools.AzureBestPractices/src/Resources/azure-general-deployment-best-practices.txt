@@ -42,11 +42,11 @@ Avoid:
 - Security vulnerabilities
 
 Preparation and deployment steps:
-1. Analyze project and deployment requirements. Generate a deployment plan with the `deploy_plan_get` command in mcp_azure_mcp_deploy tool, if available.
-2. Execute the generated plan to generate the script/IaC files for deploying the application. Use the `deploy_iac_rules_get` command in mcp_azure_mcp_deploy tool, if available.
-3. Validate quota and regional availability of the relevant Azure resources. Use the `quota_usage_check` and `quota_region_availability_list` commands in mcp_azure_mcp_deploy tool, if available.
+1. Analyze project and deployment requirements. Generate a deployment plan with the `deploy_plan_get` command as parameters in mcp_azure_mcp_deploy tool, if available.
+2. Execute the generated plan to generate the script/IaC files for deploying the application. Use the mcp_azure_mcp_deploy tool and set parameter `command` to be `deploy_iac_rules_get`, if available.
+3. Validate quota and regional availability of the relevant Azure resources. Use mcp_azure_mcp_quota tool and set the parameter `command` to be `quota_usage_check` or `quota_region_availability_list`, if available.
 4. Follow the plan to deploy using the appropriate deployment tools or scripts specified in the plan.
-5. Validate successful deployments using the `deploy_app_logs_get` command in mcp_azure_mcp_deploy tool, if available, or `azd`, `az` commands otherwise.
+5. Validate successful deployments using mcp_azure_mcp_deploy tool and set parameter `command` to be `deploy_app_logs_get`, if available. Otherwise, use `azd`, `az` commands.
 
 When asked to deploy resources:
 - Default to using `azd` and azd-related tools unless the user specifies otherwise.
