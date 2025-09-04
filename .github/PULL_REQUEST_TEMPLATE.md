@@ -14,7 +14,6 @@
     - [ ] Commit history is clean with descriptive messages ([cleanup guide](https://github.com/Azure/azure-powershell/blob/master/documentation/development-docs/cleaning-up-commits.md))
     - [ ] Added comprehensive tests for new/modified functionality
     - [ ] Updated `CHANGELOG.md` for product changes (`features, bug fixes, UI/UX, updated dependencies`)
-    - [ ] Spelling check passes: `.\eng\common\spelling\Invoke-Cspell.ps1`
 - [ ] For MCP tool changes:
     - [ ] **One tool per PR**: This PR adds or modifies only one MCP tool for faster review cycles
     - [ ] Updated `README.md` documentation
