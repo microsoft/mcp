@@ -85,24 +85,5 @@ public sealed class NetworkRuleListCommand(ILogger<NetworkRuleListCommand> logge
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
-            "SignalR service not found. Verify the service name, resource group, and subscription are correct.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
-            $"Authorization failed accessing the SignalR service. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx => reqEx.Message,
-        _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        Azure.RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
-    /// <summary>
-    /// Result for the network rule list command.
-    /// </summary>
     internal record NetworkRuleListCommandResult(Models.NetworkRule NetworkRules);
 }
