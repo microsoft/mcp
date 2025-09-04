@@ -28,7 +28,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             if (!string.IsNullOrWhiteSpace(resourceGroup))
             {
                 var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy) ?? throw new Exception($"Resource group '{resourceGroup}' not found");
-                foreach (var fs in rg.GetAmlFileSystems())
+                await foreach (var fs in sub.GetAmlFileSystemsAsync())
                 {
                     results.Add(Map(fs));
                 }
@@ -37,7 +37,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             else
             {
                 var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
-                foreach (var fs in sub.GetAmlFileSystems())
+                await foreach (var fs in sub.GetAmlFileSystemsAsync())
                 {
                     results.Add(Map(fs));
                 }
@@ -86,7 +86,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
 
         try
         {
-            var sdkResult = sub.GetRequiredAmlFSSubnetsSize(fileSystemSizeContent);
+            var sdkResult = await sub.GetRequiredAmlFSSubnetsSizeAsync(fileSystemSizeContent);
             var numberOfRequiredIPs = sdkResult.Value.FilesystemSubnetSize ?? throw new Exception($"Failed to retrieve the number of IPs");
             return numberOfRequiredIPs;
         }
