@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Fabric.Mcp.Tools.PublicApi.Commands.BestPractices;
 
-public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCommand> logger) : GlobalCommand<GetWorkloadApisOptions>()
+public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCommand> logger) : GlobalCommand<WorkloadCommandOptions>()
 {
     private const string CommandTitle = "Get Workload Item Definition";
 
@@ -33,7 +33,7 @@ public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCo
         command.AddOption(_workloadTypeOption);
     }
 
-    protected override GetWorkloadApisOptions BindOptions(ParseResult parseResult)
+    protected override WorkloadCommandOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.WorkloadType = parseResult.GetValueForOption(_workloadTypeOption);
@@ -59,9 +59,9 @@ public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCo
             }
 
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var availableExamples = fabricService.GetFabricWorkloadItemDefinition(options.WorkloadType);
+            var workloadItemDefinition = fabricService.GetFabricWorkloadItemDefinition(options.WorkloadType);
 
-            context.Response.Results = ResponseResult.Create(availableExamples, FabricJsonContext.Default.String);
+            context.Response.Results = ResponseResult.Create(workloadItemDefinition, FabricJsonContext.Default.String);
         }
         catch (ArgumentException argEx)
         {
