@@ -360,6 +360,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_server_firewall-rule_list | List all firewall rules for SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_list | Show me the firewall rules for SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_list | What firewall rules are configured for my SQL server <server_name>? |
+| azmcp_sql_server_firewall-rule_create | Create a firewall rule for my Azure SQL server <server_name> |
+| azmcp_sql_server_firewall-rule_create | Add a firewall rule to allow access from IP range <start_ip> to <end_ip> for SQL server <server_name> |
+| azmcp_sql_server_firewall-rule_create | Create a new firewall rule named <rule_name> for SQL server <server_name> |
+| azmcp_sql_server_firewall-rule_delete | Delete a firewall rule from my Azure SQL server <server_name> |
+| azmcp_sql_server_firewall-rule_delete | Remove the firewall rule <rule_name> from SQL server <server_name> |
+| azmcp_sql_server_firewall-rule_delete | Delete firewall rule <rule_name> for SQL server <server_name> |
 
 ## Azure Storage
 
