@@ -7,7 +7,6 @@ using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Models.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Areas.Group.Commands;
@@ -32,15 +31,15 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : Subscri
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var resourceGroupService = context.GetService<IResourceGroupService>();
             var groups = await resourceGroupService.GetResourceGroups(
                 options.Subscription!,

@@ -172,7 +172,15 @@ public static class AzureMcpServiceCollectionExtensions
             });
 
         var mcpServerBuilder = services.AddMcpServer();
-        mcpServerBuilder.WithStdioServerTransport();
+
+        if (serviceStartOptions.EnableInsecureTransports)
+        {
+            mcpServerBuilder.WithHttpTransport();
+        }
+        else
+        {
+            mcpServerBuilder.WithStdioServerTransport();
+        }
 
         return services;
     }

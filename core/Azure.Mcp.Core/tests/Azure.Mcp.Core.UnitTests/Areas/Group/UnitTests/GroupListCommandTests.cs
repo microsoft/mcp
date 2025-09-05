@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Group.Commands;
 using Azure.Mcp.Core.Models.Command;
@@ -26,7 +25,7 @@ public class GroupListCommandTests
     private readonly IResourceGroupService _resourceGroupService;
     private readonly GroupListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public GroupListCommandTests()
     {
@@ -40,7 +39,7 @@ public class GroupListCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -58,7 +57,7 @@ public class GroupListCommandTests
             .GetResourceGroups(Arg.Is<string>(x => x == subscriptionId), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedGroups);
 
-        var args = _parser.Parse($"--subscription {subscriptionId}");
+        var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
 
         // Act
         var result = await _command.ExecuteAsync(_context, args);
@@ -108,7 +107,7 @@ public class GroupListCommandTests
                 Arg.Any<RetryPolicyOptions>())
             .Returns(expectedGroups);
 
-        var args = _parser.Parse($"--subscription {subscriptionId} --tenant {tenantId}");
+        var args = _commandDefinition.Parse($"--subscription {subscriptionId} --tenant {tenantId}");
 
         // Act
         var result = await _command.ExecuteAsync(_context, args);
@@ -131,7 +130,7 @@ public class GroupListCommandTests
             .GetResourceGroups(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns([]);
 
-        var args = _parser.Parse($"--subscription {subscriptionId}");
+        var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
 
         // Act
         var result = await _command.ExecuteAsync(_context, args);
@@ -152,7 +151,7 @@ public class GroupListCommandTests
             .GetResourceGroups(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<List<ResourceGroupInfo>>(new Exception(expectedError)));
 
-        var args = _parser.Parse($"--subscription {subscriptionId}");
+        var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
 
         // Act
         var result = await _command.ExecuteAsync(_context, args);

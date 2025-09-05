@@ -28,7 +28,7 @@ namespace Azure.Mcp.Tools.Sql.Services.Models
         // Read the JSON response content and create a model instance from it.
         public static SqlFirewallRuleData? FromJson(JsonElement source)
         {
-            return JsonSerializer.Deserialize<SqlFirewallRuleData>(source, SqlJsonContext.Default.SqlFirewallRuleData);
+            return JsonSerializer.Deserialize(source, SqlJsonContext.Default.SqlFirewallRuleData);
         }
     }
 }

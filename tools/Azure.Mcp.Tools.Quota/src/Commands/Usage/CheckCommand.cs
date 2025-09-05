@@ -3,13 +3,10 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Quota.Options;
 using Azure.Mcp.Tools.Quota.Options.Usage;
 using Azure.Mcp.Tools.Quota.Services;
 using Azure.Mcp.Tools.Quota.Services.Util;
-using Azure.Mcp.Tools.Quota.Services.Util.Usage;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Usage;
@@ -35,36 +32,36 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_regionOption);
-        command.AddOption(_resourceTypesOption);
+        command.Options.Add(_regionOption);
+        command.Options.Add(_resourceTypesOption);
     }
 
     protected override CheckOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Region = parseResult.GetValueForOption(_regionOption) ?? string.Empty;
-        options.ResourceTypes = parseResult.GetValueForOption(_resourceTypesOption) ?? string.Empty;
+        options.Region = parseResult.GetValue(_regionOption) ?? string.Empty;
+        options.ResourceTypes = parseResult.GetValue(_resourceTypesOption) ?? string.Empty;
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
-            var ResourceTypes = options.ResourceTypes.Split(',')
+            var resourceTypes = options.ResourceTypes.Split(',')
                 .Select(rt => rt.Trim())
                 .Where(rt => !string.IsNullOrWhiteSpace(rt))
                 .ToList();
             var quotaService = context.GetService<IQuotaService>();
             Dictionary<string, List<UsageInfo>> toolResult = await quotaService.GetAzureQuotaAsync(
-                ResourceTypes,
+                resourceTypes,
                 options.Subscription!,
                 options.Region);
 

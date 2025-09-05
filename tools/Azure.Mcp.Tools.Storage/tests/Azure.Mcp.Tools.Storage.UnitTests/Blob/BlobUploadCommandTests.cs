@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Storage.Commands.Blob;
 using Azure.Mcp.Tools.Storage.Models;
@@ -21,7 +21,7 @@ public class BlobUploadCommandTests
     private readonly ILogger<BlobUploadCommand> _logger;
     private readonly BlobUploadCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
     private readonly string _knownAccount = "account123";
     private readonly string _knownContainer = "container123";
     private readonly string _knownBlob = "test-blob.txt";
@@ -38,7 +38,7 @@ public class BlobUploadCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class BlobUploadCommandTests
             Arg.Any<Core.Options.RetryPolicyOptions?>())
             .Returns(uploadResult);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--container", _knownContainer,
             "--blob", _knownBlob,
@@ -95,7 +95,7 @@ public class BlobUploadCommandTests
             Arg.Any<Core.Options.RetryPolicyOptions?>())
             .ThrowsAsync(new FileNotFoundException($"Local file not found: {_knownLocalFilePath}"));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--container", _knownContainer,
             "--blob", _knownBlob,
@@ -125,7 +125,7 @@ public class BlobUploadCommandTests
             Arg.Any<Core.Options.RetryPolicyOptions?>())
             .ThrowsAsync(new InvalidOperationException("Blob 'test-blob.txt' already exists in container 'container123'."));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--container", _knownContainer,
             "--blob", _knownBlob,
@@ -151,8 +151,8 @@ public class BlobUploadCommandTests
     {
         // Arrange
         var args = string.IsNullOrEmpty(argString)
-            ? _parser.Parse([])
-            : _parser.Parse(argString.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            ? _commandDefinition.Parse([])
+            : _commandDefinition.Parse(argString.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -165,7 +165,7 @@ public class BlobUploadCommandTests
     public async Task ExecuteAsync_AccessDeniedError_ReturnsError()
     {
         // Arrange
-        var requestFailedException = new Azure.RequestFailedException(403, "Access denied");
+        var requestFailedException = new RequestFailedException(403, "Access denied");
         _storageService.UploadBlob(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -176,7 +176,7 @@ public class BlobUploadCommandTests
             Arg.Any<Core.Options.RetryPolicyOptions?>())
             .ThrowsAsync(requestFailedException);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--container", _knownContainer,
             "--blob", _knownBlob,

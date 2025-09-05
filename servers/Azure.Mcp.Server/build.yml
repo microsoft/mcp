@@ -10,3 +10,4 @@ extends:
     RunLiveTests: true
     ReleaseRun: ${{ and(eq(variables['Build.Reason'], 'Manual'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startswith(variables['Build.SourceBranch'], 'refs/heads/hotfix/'))) }}
     ServerName: Azure.Mcp.Server
+    IncludeNative: true

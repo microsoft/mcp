@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -43,8 +41,8 @@ public class IndexListCommandTests
             .Returns(expectedIndexes);
 
         var command = new IndexListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--service service123");
+
+        var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -70,8 +68,8 @@ public class IndexListCommandTests
             .Returns(new List<IndexInfo>());
 
         var command = new IndexListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--service service123");
+
+        var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -90,8 +88,8 @@ public class IndexListCommandTests
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new IndexListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse($"--service {serviceName}");
+
+        var args = command.GetCommand().Parse($"--service {serviceName}");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);

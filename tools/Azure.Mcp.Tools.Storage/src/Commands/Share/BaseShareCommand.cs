@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Share;
 
@@ -17,13 +18,13 @@ public abstract class BaseShareCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_shareOption);
+        command.Options.Add(_shareOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Share = parseResult.GetValueForOption(_shareOption);
+        options.Share = parseResult.GetValueOrDefault(_shareOption);
         return options;
     }
 }
