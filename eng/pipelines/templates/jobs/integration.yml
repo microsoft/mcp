@@ -4,6 +4,9 @@ parameters:
 - name: NugetDevFeed
   type: string
   default: 'public/azure-sdk-for-net'
+- name: NugetDevFeedUrl
+  type: string
+  default: 'https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-net/nuget/v3/index.json'
 
 jobs:
 - job: PublishNpmToDev
@@ -42,10 +45,16 @@ jobs:
       packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/platform/*.nupkg'
       publishVstsFeed: ${{ parameters.NugetDevFeed }}
 
-  - pwsh: |
-      Write-Host "Waiting for NuGet indexing..."
-      Start-Sleep -Seconds 5 # Wait 5 seconds
-    displayName: Wait for NuGet indexing
+  - task: Powershell@2
+    displayName: "Confirm that Nugets are in feed"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Confirm-NugetInFeed.ps1
+      arguments: >
+        -PackagesDirectory '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/platform'
+        -ServerName '${{ parameters.ServerName }}'
+        -VersionSuffix '$(VersionSuffix)'
+        -FeedUrl ${{ parameters.NugetDevFeedUrl }}
 
   - task: 1ES.PublishNuget@1
     displayName: Publish wrapper Nuget
