@@ -75,7 +75,7 @@ public class CommandFactoryTests
     public void GetPrefix_Should_Handle_Null_CurrentPrefix()
     {
         // Arrange & Act
-        var result = CallGetPrefix(null, "subscription");
+        var result = CallGetPrefix(null!, "subscription");
 
         // Assert
         Assert.Equal("subscription", result);
@@ -241,9 +241,9 @@ public class CommandFactoryTests
     /// <summary>
     /// Helper method to access the private GetPrefix method via reflection
     /// </summary>
-    private static string CallGetPrefix(string? currentPrefix, string additional)
+    private static string CallGetPrefix(string currentPrefix, string additional)
     {
-        return CommandFactory.GetPrefix(currentPrefix!, additional);
+        return CommandFactory.GetPrefix(currentPrefix, additional);
     }
 
     private static IAreaSetup CreateIAreaSetup(string areaName)
