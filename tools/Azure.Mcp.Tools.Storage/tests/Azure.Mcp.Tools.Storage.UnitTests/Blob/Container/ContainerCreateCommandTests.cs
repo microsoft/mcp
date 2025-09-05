@@ -94,7 +94,7 @@ public class ContainerCreateCommandTests
             .Returns(expectedProperties);
 
         var args = _commandDefinition.Parse([
-                "--account", _knownAccount,
+            "--account", _knownAccount,
             "--container", _knownContainer,
             "--subscription", _knownSubscription
             ]);
