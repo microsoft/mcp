@@ -74,7 +74,7 @@ function Deploy-TestResources
     )
 
     Write-Host @"
-Deploying:
+Deploying$($AsJob ? ' in background job' : ''):
     Path: '$Path'
     SubscriptionId: '$SubscriptionId'
     SubscriptionName: '$SubscriptionName'
@@ -83,8 +83,9 @@ Deploying:
     DeleteAfterHours: $DeleteAfterHours
     TestResourcesDirectory: '$TestResourcesDirectory'`n
 "@ -ForegroundColor Yellow
+
     if($AsJob) {
-       Start-Job -ScriptBlock {
+        Start-Job -ScriptBlock {
             param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $testResourcesDirectory, $DeleteAfterHours)
 
             & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
@@ -140,6 +141,12 @@ if ($jobInputs.Count -eq 1 -or !$Parallel) {
         }
     }
 } else {
+    Write-Host "Deploying resources in parallel for $($jobInputs.Count) paths..." -ForegroundColor Yellow
+    Write-Host "Cancelling this script (Ctrl-C) will not stop its background jobs. To stop the jobs, you must run:" -ForegroundColor Yellow
+    Write-Host "  Get-Job | Stop-Job -PassThrough | Remove-Job`n" -ForegroundColor Yellow
+
+    Start-Sleep -Seconds 2
+
     $jobs = @()
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
     foreach ($jobInput in $jobInputs) {
@@ -152,7 +159,7 @@ if ($jobInputs.Count -eq 1 -or !$Parallel) {
     $delay = 0
     while($true) {
         $elapsed = $stopwatch.Elapsed
-        Write-Host "`n($($elapsed)) Checking status of deployment jobs..." -ForegroundColor Cyan
+        Write-Host "($($elapsed)) Checking status of deployment jobs..." -ForegroundColor Cyan
 
         foreach ($job in $runningJobs) {
             $job.State = Get-Job -Id $job.Id | Select-Object -ExpandProperty State
