@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tests;
@@ -22,7 +21,7 @@ public class KnowledgeIndexSchemaCommandTests
     private readonly ILogger<KnowledgeIndexSchemaCommand> _logger;
     private readonly KnowledgeIndexSchemaCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public KnowledgeIndexSchemaCommandTests()
     {
@@ -33,7 +32,7 @@ public class KnowledgeIndexSchemaCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new();
         _context = new CommandContext(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -67,7 +66,7 @@ public class KnowledgeIndexSchemaCommandTests
                 .Returns(mockSchema);
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -92,7 +91,7 @@ public class KnowledgeIndexSchemaCommandTests
         _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<Azure.Mcp.Tools.Foundry.Models.KnowledgeIndexSchema>(new Exception("Test error")));
 
-        var parseResult = _parser.Parse(["--endpoint", "https://example.com", "--index", "test-index"]);
+        var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com", "--index", "test-index"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -117,7 +116,7 @@ public class KnowledgeIndexSchemaCommandTests
         _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedSchema);
 
-        var parseResult = _parser.Parse(["--endpoint", "https://example.com", "--index", "test-index"]);
+        var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com", "--index", "test-index"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

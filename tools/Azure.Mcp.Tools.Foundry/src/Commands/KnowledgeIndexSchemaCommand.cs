@@ -37,15 +37,15 @@ public sealed class KnowledgeIndexSchemaCommand : GlobalCommand<KnowledgeIndexSc
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_endpointOption);
-        command.AddOption(_indexNameOption);
+        command.Options.Add(_endpointOption);
+        command.Options.Add(_indexNameOption);
     }
 
     protected override KnowledgeIndexSchemaOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValueForOption(_endpointOption);
-        options.IndexName = parseResult.GetValueForOption(_indexNameOption);
+        options.Endpoint = parseResult.GetValue(_endpointOption);
+        options.IndexName = parseResult.GetValue(_indexNameOption);
 
         return options;
     }

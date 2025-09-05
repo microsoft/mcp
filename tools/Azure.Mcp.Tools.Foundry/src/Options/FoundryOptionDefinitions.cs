@@ -75,7 +75,6 @@ public static class FoundryOptionDefinitions
     )
     {
         Description = "If true, filters models to include only those that can be used for free by users for prototyping."
-
     };
 
     public static readonly Option<string> PublisherNameOption = new(
@@ -117,7 +116,6 @@ public static class FoundryOptionDefinitions
         $"--{SkuCapacity}"
     )
     {
-
         Description = "The SKU capacity for the deployment."
     };
 
@@ -125,7 +123,6 @@ public static class FoundryOptionDefinitions
         $"--{ScaleType}"
     )
     {
-
         Description = "The scale type for the deployment."
     };
 
@@ -134,5 +131,13 @@ public static class FoundryOptionDefinitions
     )
     {
         Description = "The scale capacity for the deployment."
+    };
+
+    public static readonly Option<string> IndexNameOption = new(
+        $"--{IndexName}"
+    )
+    {
+        Description = "The name of the knowledge index.",
+        Required = true
     };
 }
