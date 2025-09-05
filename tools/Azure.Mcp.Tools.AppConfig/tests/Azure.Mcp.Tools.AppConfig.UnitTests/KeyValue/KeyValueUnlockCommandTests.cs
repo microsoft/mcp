@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -24,7 +24,7 @@ public class KeyValueUnlockCommandTests
     private readonly ILogger<KeyValueUnlockCommand> _logger;
     private readonly KeyValueUnlockCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public KeyValueUnlockCommandTests()
     {
@@ -32,7 +32,7 @@ public class KeyValueUnlockCommandTests
         _logger = Substitute.For<ILogger<KeyValueUnlockCommand>>();
 
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
         _serviceProvider = new ServiceCollection()
             .AddSingleton(_appConfigService)
             .BuildServiceProvider();
@@ -43,7 +43,7 @@ public class KeyValueUnlockCommandTests
     public async Task ExecuteAsync_UnlocksKeyValue_WhenValidParametersProvided()
     {
         // Arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key"
@@ -75,7 +75,7 @@ public class KeyValueUnlockCommandTests
     public async Task ExecuteAsync_UnlocksKeyValueWithLabel_WhenLabelProvided()
     {
         // Arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key",
@@ -118,7 +118,7 @@ public class KeyValueUnlockCommandTests
             Arg.Any<string>())
             .ThrowsAsync(new Exception("Failed to unlock key-value"));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key"
@@ -139,7 +139,7 @@ public class KeyValueUnlockCommandTests
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
         // Arrange
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

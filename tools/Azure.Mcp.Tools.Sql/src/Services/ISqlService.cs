@@ -90,4 +90,44 @@ public interface ISqlService
         string subscription,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a firewall rule for a SQL server.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server</param>
+    /// <param name="resourceGroup">The name of the resource group</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="firewallRuleName">The name of the firewall rule</param>
+    /// <param name="startIpAddress">The start IP address of the firewall rule range</param>
+    /// <param name="endIpAddress">The end IP address of the firewall rule range</param>
+    /// <param name="retryPolicy">Optional retry policy options</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The created SQL server firewall rule</returns>
+    Task<SqlServerFirewallRule> CreateFirewallRuleAsync(
+        string serverName,
+        string resourceGroup,
+        string subscription,
+        string firewallRuleName,
+        string startIpAddress,
+        string endIpAddress,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes a firewall rule from a SQL server.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server</param>
+    /// <param name="resourceGroup">The name of the resource group</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="firewallRuleName">The name of the firewall rule to delete</param>
+    /// <param name="retryPolicy">Optional retry policy options</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>True if the firewall rule was successfully deleted</returns>
+    Task<bool> DeleteFirewallRuleAsync(
+        string serverName,
+        string resourceGroup,
+        string subscription,
+        string firewallRuleName,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default);
 }

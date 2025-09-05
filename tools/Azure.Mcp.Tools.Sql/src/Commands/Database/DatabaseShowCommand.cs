@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.Database;
 using Azure.Mcp.Tools.Sql.Services;
@@ -35,15 +34,15 @@ public sealed class DatabaseShowCommand(ILogger<DatabaseShowCommand> logger)
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var sqlService = context.GetService<ISqlService>();
 
             var database = await sqlService.GetDatabaseAsync(
@@ -71,18 +70,18 @@ public sealed class DatabaseShowCommand(ILogger<DatabaseShowCommand> logger)
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         KeyNotFoundException => $"SQL database not found. Verify the database name, server name, resource group, and that you have access.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == 404 =>
             "Database or server not found. Verify the database name, server name, resource group, and that you have access.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed accessing the SQL database. Verify you have appropriate permissions. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
         KeyNotFoundException => 404,
-        Azure.RequestFailedException reqEx => reqEx.Status,
+        RequestFailedException reqEx => reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
 

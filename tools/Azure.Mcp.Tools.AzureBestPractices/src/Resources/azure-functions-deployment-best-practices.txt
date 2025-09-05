@@ -2,7 +2,10 @@ Azure Functions deployment best practices:
     - Refer to this GitHub repo for best practices on generating Bicep templates using Azure Verified Modules (AVM):
         - https://github.com/Azure-Samples/functions-quickstart-javascript-azd/tree/main/infra
         - https://github.com/Azure-Samples/functions-quickstart-dotnet-azd-eventgrid-blob/tree/main/infra
-    - Default hosting plan is flex consumption plan.
+    - ALWAYS use Flex Consumption plan (FC1) for deployment, never Y1 dynamic. 
+    - ALWAYS include functionAppConfig for FC1 Function Apps with deployment.storage configuration. Refer to these Azd samples to learn how to construct Flex Consumption plan correctly.
+        - JavaScript Azure Functions AZD Sample: https://github.com/Azure-Samples/functions-quickstart-javascript-azd/tree/main/infra
+        - .NET Azure Functions with EventGrid Sample: https://github.com/Azure-Samples/functions-quickstart-dotnet-azd-eventgrid-blob/tree/main/infra
     - If Flex Consumption is not an option, prefer Elastic Premium (EP) SKU.
     - Always use Linux OS for Python-based Functions.
     - Configure Function authentication or stronger mechanisms; avoid anonymous access.

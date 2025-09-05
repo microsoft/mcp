@@ -4,7 +4,8 @@
 [CmdletBinding()]
 param(
     [string] $TestResultsPath,
-    [string[]] $Areas,  # for PR
+    [string[]] $Paths,
+    [string[]] $Members,
     [ValidateSet('Live', 'Unit', 'All')]
     [string] $TestType = 'Unit',
     [switch] $CollectCoverage,
@@ -30,112 +31,39 @@ if (!$TestResultsPath) {
 # Clean previous results
 Remove-Item -Recurse -Force $TestResultsPath -ErrorAction SilentlyContinue
 
-# Gets all area projects those are excluded using BuildNative condition.
-function Get-NativeExcludedAreas {
-    $areaPathPattern = 'areas[/\\]([^/\\]+)[/\\]src'
-    $ProjectFile = "$RepoRoot/core/src/AzureMcp.Cli/AzureMcp.Cli.csproj"
-
-    if (!(Test-Path $ProjectFile)) {
-        Write-Error "$ProjectFile not found"
-        exit 1
+# Finds all test projects, then filters them based on the specified path filters.
+function FilterTestProjects {
+    $fileNameFilters = switch ($testType) {
+        'Live' { '*.LiveTests.csproj' }
+        'Unit' { '*.UnitTests.csproj' }
+        'All'  { '*.LiveTests.csproj', '*.UnitTests.csproj' }
     }
 
-    [xml]$xml = Get-Content $ProjectFile
-    $buildNativeGroup = $xml.Project.ItemGroup | Where-Object { $_.Condition -eq "'`$(BuildNative)' == 'true'" }
+    $testProjects = Get-ChildItem -Path "$RepoRoot" -Recurse -Filter "*.csproj" -Include $fileNameFilters -File
+    | ForEach-Object { @{
+        FullName = $_.FullName
+        Relative = (Resolve-Path -Path $_.FullName -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./')
+    }}
 
-    if (!$buildNativeGroup) {
-        Write-Warning "No ItemGroup with BuildNative condition found"
-        return @()
-    }
+    $normalizedPathFilters = $Paths ? ($Paths | ForEach-Object { "*$($_.Replace('\', '/'))*" }) : @()
 
-    $excludedAreas = @()
-    foreach ($ref in $buildNativeGroup.ProjectReference) {
-        if ($ref.Remove -match $areaPathPattern) {
-            $excludedAreas += $matches[1].ToLower()
+    if($normalizedPathFilters) {
+        $testProjects = $testProjects | Where-Object {
+            foreach($filter in $normalizedPathFilters) {
+                if ($_.Relative -like $filter) {
+                    return $true
+                }
+            }
+            return $false
         }
     }
 
-    return $excludedAreas
-}
-
-
-# Identifies the root directories to be recursively scanned for tests in the specified areas.
-function GetTestsRootDirs {
-    param(
-        [string[]]$areas
-    )
-
-    $testsRootDirs = @()
-
-    if (!$areas) {
-        return $testsRootDirs += $RepoRoot
+    if($testProjects.Count -eq 0) {
+        Write-Error "No test projects found for test type '$testType' with the specified filters"
+        return $null
     }
 
-    foreach ($area in $areas) {
-        $rootedPath = "$RepoRoot/$area"
-        if (Test-Path $rootedPath) {
-            $testsRootDirs += $rootedPath
-        } else {
-            Write-Error "Area path '$rootedPath' does not exist."
-            return $null
-        }
-    }
-
-    return $testsRootDirs
-}
-
-function BuildNativeBinaryAndPrepareTests {
-    param(
-        [Parameter(Mandatory=$true)]
-        [string[]]$testsRootDirs
-    )
-
-    # Native AOT compilation only occurs during 'dotnet publish', not 'dotnet build'
-    $nativeBinaryPath = PublishNativeBinary
-
-    Write-Host "Building test project(s)"
-    Invoke-LoggedCommand `
-        -Command "dotnet build" `
-        -AllowedExitCodes @(0)
-
-    CopyNativeBinaryToTestDirs -nativeBinaryPath $nativeBinaryPath -testsRootDirs $testsRootDirs
-}
-
-function PublishNativeBinary {
-    $runtimeId = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier
-    Write-Host "Publishing AzureMcp as native binary for $runtimeId"
-
-    $cliProjectDir = "$RepoRoot/core/src/AzureMcp.Cli"
-
-    Invoke-LoggedCommand `
-        -Command "dotnet publish '$cliProjectDir/AzureMcp.Cli.csproj' -c Release -r $runtimeId /p:BuildNative=true" `
-        -AllowedExitCodes @(0) | Out-Null
-
-    $exeName = if ($runtimeId.StartsWith('win-')) { "azmcp.exe" } else { "azmcp" }
-    $nativeExePath = "$cliProjectDir/bin/Release/net9.0/$runtimeId/publish/$exeName"
-
-    if (-not (Test-Path $nativeExePath)) {
-        Write-Error "Native binary not found at $nativeExePath"
-        exit 1
-    }
-
-    return $nativeExePath
-}
-
-function CopyNativeBinaryToTestDirs {
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$nativeBinaryPath,
-        [string[]]$testsRootDirs
-    )
-    Write-Host "Copying native AzureMcp to test directories"
-
-    $testsRootDirs | ForEach-Object {
-        Get-ChildItem -Path $_ -Recurse -Filter "*.LiveTests" -Directory
-    } | ForEach-Object {
-        $targetDirectory = "$($_.FullName)/bin/Debug/net9.0"
-        Copy-Item $nativeBinaryPath $targetDirectory -Force
-    }
+    return $testProjects.FullName
 }
 
 function CreateTestSolution {
@@ -143,32 +71,8 @@ function CreateTestSolution {
         [Parameter(Mandatory=$true)]
         [string]$workPath,
         [Parameter(Mandatory=$true)]
-        [string[]]$testsRootDirs,
-        [Parameter(Mandatory=$true)]
-        [string]$testType
+        [string[]]$testProjects
     )
-
-    $testPatterns = switch ($testType) {
-        'Live' { @('*.LiveTests.csproj') }
-        'Unit' { @('*.UnitTests.csproj') }
-        'All'  { @('*.LiveTests.csproj', '*.UnitTests.csproj') }
-        default {
-            Write-Error "Invalid test type specified: '$testType'. Valid options are 'Live', 'Unit', or 'All'."
-            return $null
-        }
-    }
-
-    $testProjects = @($testsRootDirs | ForEach-Object {
-        $testsRootDir = $_
-        $testPatterns | ForEach-Object {
-            Get-ChildItem $testsRootDir -Recurse -File -Filter $_
-        }
-    })
-
-    if($testProjects.Count -eq 0) {
-        Write-Error "No test projects found in the specified areas for test type '$testType'."
-        return $null
-    }
 
     # Create solution and add projects
     Write-Host "Creating temporary solution file..."
@@ -185,87 +89,7 @@ function CreateTestSolution {
     return "$workPath/Tests.sln"
 }
 
-# main
-
-if ($TestNativeBuild) {
-    $excludedAreas = Get-NativeExcludedAreas
-    $nonNativeAreas = @($areas | Where-Object { $_ -in $excludedAreas })
-    $areas = @($areas | Where-Object { $_ -notin $excludedAreas })
-
-    if ($areas.Count -eq 0) {
-        Write-Warning "All the specified area(s) [$($nonNativeAreas -join ', ')] are native incompatible, specify areas that support native builds or run without -TestNativeBuild."
-        exit 0
-    }
-
-    if ($nonNativeAreas.Count -gt 0) {
-        Write-Warning "The following native incompatible areas will be excluded from native tests:"
-        Write-Warning "  $($nonNativeAreas -join ', ')"
-    }
-}
-
-$testsRootDirs = GetTestsRootDirs -areas $areas
-
-if (!$testsRootDirs) {
-    exit 1
-}
-
-$solutionPath = CreateTestSolution -workPath $workPath -testsRootDirs $testsRootDirs -testType $TestType
-
-if (!$solutionPath) {
-    exit 1
-}
-
-Push-Location $workPath
-try {
-    if ($TestNativeBuild) {
-        BuildNativeBinaryAndPrepareTests -testsRootDirs $testsRootDirs
-    }
-
-    if($debugLogs) {
-        Write-Host "`n`n"
-        # dump all environment variables
-        Write-Host "Current environment variables:" -ForegroundColor Yellow
-        Get-ChildItem Env: | Sort-Object Name | ForEach-Object { "$($_.Name)= $($_.Value)" } | Out-Host
-
-        # dump az powershell context
-        Write-Host "`nCurrent Azure PowerShell context (Get-AzContext):" -ForegroundColor Yellow
-        try {
-            Get-AzContext | ConvertTo-Json | Out-Host
-        } catch {
-            Write-Host "Error retrieving Azure PowerShell context: $($_.Exception.Message)" -ForegroundColor Red
-        }
-
-        # dump az cli context
-        Write-Host "`nCurrent Azure CLI context (az account show):" -ForegroundColor Yellow
-        try {
-            az account show | ConvertTo-Json | Out-Host
-        } catch {
-            Write-Host "Error retrieving Azure CLI context: $($_.Exception.Message)" -ForegroundColor Red
-        }
-        Write-Host "`n`n"
-    }
-
-    $coverageArg = $CollectCoverage ? "--collect:'XPlat Code Coverage'" : ""
-    $resultsArg = "--results-directory '$TestResultsPath'"
-    $loggerArg = "--logger 'trx'"
-
-    $command = "dotnet test $coverageArg $resultsArg $loggerArg"
-    if ($TestNativeBuild) {
-        $command += " --no-build"
-    }
-
-    Invoke-LoggedCommand `
-        -Command $command `
-        -AllowedExitCodes @(0, 1)
-}
-finally {
-    Pop-Location
-}
-
-$testExitCode = $LastExitCode
-
-# Coverage Report Generation - only if coverage collection was enabled
-if ($CollectCoverage) {
+function Create-CoverageReport {
     # Find the coverage file
     $coverageFile = Get-ChildItem -Path $TestResultsPath -Recurse -Filter "coverage.cobertura.xml"
     | Where-Object { $_.FullName.Replace('\','/') -notlike "*/in/*" }
@@ -394,6 +218,65 @@ if ($CollectCoverage) {
         Write-Host "Stack trace: $($_.Exception.StackTrace)"
         exit 1
     }
+}
+# main
+
+$testProjects = FilterTestProjects
+
+$solutionPath = CreateTestSolution -workPath $workPath -testProjects $testProjects
+
+if (!$solutionPath) {
+    exit 1
+}
+
+Push-Location $workPath
+try {
+    if($debugLogs) {
+        Write-Host "`n`n"
+        # dump all environment variables
+        Write-Host "Current environment variables:" -ForegroundColor Yellow
+        Get-ChildItem Env: | Sort-Object Name | ForEach-Object { "$($_.Name)= $($_.Value)" } | Out-Host
+
+        # dump az powershell context
+        Write-Host "`nCurrent Azure PowerShell context (Get-AzContext):" -ForegroundColor Yellow
+        try {
+            Get-AzContext | ConvertTo-Json | Out-Host
+        } catch {
+            Write-Host "Error retrieving Azure PowerShell context: $($_.Exception.Message)" -ForegroundColor Red
+        }
+
+        # dump az cli context
+        Write-Host "`nCurrent Azure CLI context (az account show):" -ForegroundColor Yellow
+        try {
+            az account show | ConvertTo-Json | Out-Host
+        } catch {
+            Write-Host "Error retrieving Azure CLI context: $($_.Exception.Message)" -ForegroundColor Red
+        }
+        Write-Host "`n`n"
+    }
+
+    $coverageArg = $CollectCoverage ? "--collect:'XPlat Code Coverage'" : ""
+    $resultsArg = "--results-directory '$TestResultsPath'"
+    $loggerArg = "--logger 'trx' --logger 'console;verbosity=detailed'"
+
+    $command = "dotnet test $coverageArg $resultsArg $loggerArg"
+
+    if($Members.Count -gt 0) {
+        $memberFilterString = $Members | ForEach-Object { "FullyQualifiedName~$_" } | Join-String -Separator '|'
+        $command += " --filter '$memberFilterString'"
+    }
+
+    Invoke-LoggedCommand -Command $command -AllowedExitCodes @(0, 1)
+}
+finally {
+    Pop-Location
+}
+
+$testExitCode = $LastExitCode
+
+# Coverage Report Generation - only if coverage collection was enabled
+if ($CollectCoverage) {
+    Create-CoverageReport
 }
 
 exit $testExitCode

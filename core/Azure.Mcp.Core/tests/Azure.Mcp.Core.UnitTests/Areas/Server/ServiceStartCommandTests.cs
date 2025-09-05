@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Xunit;
@@ -37,9 +36,9 @@ public class ServiceStartCommandTests
         var parseResult = CreateParseResult(inputService);
 
         // Act
-        var actualServiceArray = parseResult.GetValueForOption(ServiceOptionDefinitions.Namespace);
+        var actualServiceArray = parseResult.GetValue(ServiceOptionDefinitions.Namespace);
         var actualService = (actualServiceArray != null && actualServiceArray.Length > 0) ? actualServiceArray[0] : "";
-        var actualTransport = parseResult.GetValueForOption(ServiceOptionDefinitions.Transport);
+        var actualTransport = parseResult.GetValue(ServiceOptionDefinitions.Transport);
 
         // Assert
         Assert.Equal(expectedService, actualService ?? "");
@@ -62,6 +61,7 @@ public class ServiceStartCommandTests
         // Add required transport default for test
         args.Add("--transport");
         args.Add("stdio");
-        return new Parser(root).Parse(args.ToArray());
+
+        return root.Parse([.. args]);
     }
 }

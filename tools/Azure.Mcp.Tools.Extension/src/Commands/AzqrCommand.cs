@@ -41,15 +41,16 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
         var response = context.Response;
+
         try
         {
-            if (!Validate(parseResult.CommandResult, response).IsValid)
-            {
-                return response;
-            }
-
             ArgumentNullException.ThrowIfNull(options.Subscription);
 
             var azqrPath = FindAzqrCliPath() ?? throw new FileNotFoundException("Azure Quick Review CLI (azqr) executable not found in PATH. Please ensure azqr is installed. Go to https://aka.ms/azqr to learn more about how to install Azure Quick Review CLI.");

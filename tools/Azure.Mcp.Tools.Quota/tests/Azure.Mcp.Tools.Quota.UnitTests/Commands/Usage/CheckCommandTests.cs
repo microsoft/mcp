@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Quota.Commands.Usage;
 using Azure.Mcp.Tools.Quota.Services;
 using Azure.Mcp.Tools.Quota.Services.Util;
-using Azure.Mcp.Tools.Quota.Services.Util.Usage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -23,7 +22,7 @@ public sealed class CheckCommandTests
     private readonly IQuotaService _quotaService;
     private readonly ILogger<CheckCommand> _logger;
     private readonly CheckCommand _command;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public CheckCommandTests()
     {
@@ -35,7 +34,7 @@ public sealed class CheckCommandTests
         _serviceProvider = services.BuildServiceProvider();
 
         _command = new CheckCommand(_logger);
-        _parser = new Parser(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -75,7 +74,7 @@ public sealed class CheckCommandTests
                 region)
             .Returns(expectedQuotaInfo);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--region", region,
             "--resource-types", resourceTypes
@@ -142,7 +141,7 @@ public sealed class CheckCommandTests
                 region)
             .Returns(new Dictionary<string, List<UsageInfo>>());
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--region", region,
             "--resource-types", resourceTypes
@@ -173,7 +172,7 @@ public sealed class CheckCommandTests
                 region)
             .ThrowsAsync(expectedException);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--region", region,
             "--resource-types", resourceTypes
@@ -215,7 +214,7 @@ public sealed class CheckCommandTests
                 region)
             .Returns(expectedQuotaInfo);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--region", region,
             "--resource-types", resourceTypes
@@ -255,7 +254,7 @@ public sealed class CheckCommandTests
                 region)
             .Returns(new Dictionary<string, List<UsageInfo>>());
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--region", region,
             "--resource-types", resourceTypes
@@ -280,7 +279,7 @@ public sealed class CheckCommandTests
         var region = "eastus";
         var resourceTypes = "     ";
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--region", region,
             "--resource-types", resourceTypes
@@ -321,7 +320,7 @@ public sealed class CheckCommandTests
                 region)
             .Returns(expectedQuotaInfo);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--region", region,
             "--resource-types", resourceTypes
@@ -375,7 +374,7 @@ public sealed class CheckCommandTests
                 region)
             .Returns(expectedQuotaInfo);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--region", region,
             "--resource-types", resourceTypes
@@ -449,7 +448,7 @@ public sealed class CheckCommandTests
                 region)
             .Returns(expectedQuotaInfo);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--region", region,
             "--resource-types", resourceTypes
@@ -512,7 +511,7 @@ public sealed class CheckCommandTests
                 region)
             .Returns(expectedQuotaInfo);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--region", region,
             "--resource-types", resourceTypes

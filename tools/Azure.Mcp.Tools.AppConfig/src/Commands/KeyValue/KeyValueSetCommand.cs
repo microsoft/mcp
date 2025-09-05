@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.AppConfig.Options;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
@@ -34,30 +33,30 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger) : Bas
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_valueOption);
-        command.AddOption(_tagsOption);
+        command.Options.Add(_valueOption);
+        command.Options.Add(_tagsOption);
     }
 
     protected override KeyValueSetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Value = parseResult.GetValueForOption(_valueOption);
-        options.Tags = parseResult.GetValueForOption(_tagsOption);
+        options.Value = parseResult.GetValue(_valueOption);
+        options.Tags = parseResult.GetValue(_tagsOption);
         return options;
     }
 
     [McpServerTool(Destructive = true, ReadOnly = false, Title = CommandTitle)]
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var appConfigService = context.GetService<IAppConfigService>();
             await appConfigService.SetKeyValue(
                 options.Account!,
