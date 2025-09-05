@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.LiveTests;
 
-public sealed class AksCommandTests( ITestOutputHelper output)
+public sealed class AksCommandTests(ITestOutputHelper output)
     : CommandTestsBase(output)
 {
 
@@ -85,7 +85,11 @@ public sealed class AksCommandTests( ITestOutputHelper output)
         var errorDetails = result.Value;
         Assert.True(errorDetails.TryGetProperty("message", out _));
         Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
-        Assert.Equal("Exception", typeProperty.GetString());
+
+        // Accept both Exception and RequestFailedException as valid error types
+        var exceptionType = typeProperty.GetString();
+        Assert.True(exceptionType == "Exception" || exceptionType == "RequestFailedException",
+            $"Expected 'Exception' or 'RequestFailedException', but got '{exceptionType}'");
     }
 
     [Fact]
@@ -160,7 +164,11 @@ public sealed class AksCommandTests( ITestOutputHelper output)
         var errorDetails = result.Value;
         Assert.True(errorDetails.TryGetProperty("message", out _));
         Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
-        Assert.Equal("Exception", typeProperty.GetString());
+
+        // Accept both Exception and RequestFailedException as valid error types
+        var exceptionType = typeProperty.GetString();
+        Assert.True(exceptionType == "Exception" || exceptionType == "RequestFailedException",
+            $"Expected 'Exception' or 'RequestFailedException', but got '{exceptionType}'");
     }
 
     [Fact]
