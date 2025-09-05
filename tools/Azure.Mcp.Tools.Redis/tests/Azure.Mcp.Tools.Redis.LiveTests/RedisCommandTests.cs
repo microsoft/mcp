@@ -1,4 +1,3 @@
-/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -10,8 +9,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Redis.LiveTests;
 
-public class RedisCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : CommandTestsBase(liveTestFixture, output),
-    IClassFixture<LiveTestFixture>
+public class RedisCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     [Fact]
     public async Task Should_list_redis_caches_by_subscription_id()
@@ -201,4 +199,3 @@ public class RedisCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelpe
 
 }
 
-*/

@@ -1,4 +1,3 @@
-/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -10,8 +9,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.LiveTests
 {
-    public class StorageCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+    public class StorageCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
     {
         [Fact]
         public async Task Should_list_storage_accounts_by_subscription_id()
@@ -628,4 +626,3 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
     }
 }
 
-*/
