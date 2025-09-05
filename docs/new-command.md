@@ -415,7 +415,8 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,    // Set to true for commands that modify resources
-        ReadOnly = true         // Set to false for commands that modify resources
+        ReadOnly = true,         // Set to false for commands that modify resources
+        Secret = false          // Set to true for commands that may return sensitive information
     };
 
     protected override void RegisterOptions(Command command)
