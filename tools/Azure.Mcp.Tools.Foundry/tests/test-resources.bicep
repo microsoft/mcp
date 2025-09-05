@@ -113,3 +113,55 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-
     }
   }
 }
+
+resource searchService 'Microsoft.Search/searchServices@2023-11-01' = {
+  name: '${baseName}-search'
+  location: location
+  sku: {
+    name: 'basic'
+  }
+  properties: {
+    replicaCount: 1
+    partitionCount: 1
+    hostingMode: 'default'
+    publicNetworkAccess: 'enabled'
+    networkRuleSet: {
+      ipRules: []
+    }
+    encryptionWithCmk: {
+      enforcement: 'Unspecified'
+    }
+    disableLocalAuth: true
+  }
+  identity: {
+    type: 'SystemAssigned'
+  }
+}
+
+resource searchServiceRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid('8ebe5a00-799e-43f5-93ac-243d3dce84a7', testApplicationOid, searchService.id) // Search Index Data Contributor role
+  scope: searchService
+  properties: {
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '8ebe5a00-799e-43f5-93ac-243d3dce84a7')
+    principalId: testApplicationOid
+  }
+}
+
+resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: '${baseName}-deployment-identity'
+  location: location
+}
+
+resource managedIdentityRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid('7ca78c08-252a-4471-8644-bb5ff32d4ba0', managedIdentity.id, searchService.id) // Search Service Contributor role
+  scope: searchService
+  properties: {
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '7ca78c08-252a-4471-8644-bb5ff32d4ba0')
+    principalId: managedIdentity.properties.principalId
+  }
+}
+
+output searchServiceName string = searchService.name
+output searchServiceEndpoint string = 'https://${searchService.name}.search.windows.net'
+output knowledgeIndexName string = '${baseName}-knowledge-index'
+output aiProjectsEndpoint string = 'https://${aiServicesAccount.name}.services.ai.azure.com/api/projects/${aiProjects.name}'

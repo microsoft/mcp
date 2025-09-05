@@ -66,4 +66,66 @@ public class FoundryCommandTests(LiveTestFixture liveTestFixture, ITestOutputHel
         Assert.Equal(JsonValueKind.Object, deploymentResource.ValueKind);
         Assert.NotEmpty(deploymentResource.EnumerateObject());
     }
+
+    [Fact]
+    public async Task Should_list_foundry_knowledge_indexes()
+    {
+        var projectName = $"{Settings.ResourceBaseName}-ai-projects";
+        var accounts = Settings.ResourceBaseName;
+        var result = await CallToolAsync(
+            "azmcp_foundry_knowledge_index_list",
+            new()
+            {
+                { "endpoint", $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}" },
+                { "tenant", Settings.TenantId }
+            });
+
+        // The command may return null if no indexes exist, or an array if indexes are found
+        if (result.HasValue && result.Value.TryGetProperty("indexes", out var indexesArray))
+        {
+            Assert.Equal(JsonValueKind.Array, indexesArray.ValueKind);
+        }
+        // If no "indexes" property or result is null, the command succeeded with no content
+    }
+
+    [Fact]
+    public async Task Should_get_foundry_knowledge_index_schema()
+    {
+        var projectName = $"{Settings.ResourceBaseName}-ai-projects";
+        var accounts = Settings.ResourceBaseName;
+        var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
+
+        // First get list of indexes to find one to test with
+        var listResult = await CallToolAsync(
+            "azmcp_foundry_knowledge_index_list",
+            new()
+            {
+                { "endpoint", endpoint },
+                { "tenant", Settings.TenantId }
+            });
+
+        // Check if we have indexes to test with
+        if (listResult.HasValue && listResult.Value.TryGetProperty("indexes", out var indexesArray) && indexesArray.GetArrayLength() > 0)
+        {
+            var firstIndex = indexesArray[0];
+            var indexName = firstIndex.GetProperty("name").GetString();
+
+            var result = await CallToolAsync(
+                "azmcp_foundry_knowledge_index_schema",
+                new()
+                {
+                    { "endpoint", endpoint },
+                    { "index", indexName! },
+                    { "tenant", Settings.TenantId }
+                });
+
+            var schema = result.AssertProperty("schema");
+            Assert.Equal(JsonValueKind.Object, schema.ValueKind);
+        }
+        else
+        {
+            // Skip test if no indexes are available
+            Output.WriteLine("Skipping knowledge index schema test - no indexes available for testing");
+        }
+    }
 }
