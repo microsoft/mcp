@@ -3,7 +3,7 @@
 
 # Implementing a New Command in Azure MCP
 
-This document provides a comprehensive guide for implementing commands in Azure MCP following established patterns.
+This document is the authoritative guide for adding new commands ("toolset commands") to Azure MCP. Follow it exactly to ensure consistency, testability, AOT safety, and predictable user experience.
 
 ## Toolset Pattern: Organizing code by toolset
 
@@ -13,10 +13,8 @@ All new Azure services and their commands should use the Toolset pattern:
 - **Tests** go in `tools/Azure.Mcp.Tools.{Toolset}/tests`, divided into UnitTests and LiveTests:
   -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests`
   -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests`
-  -  `tools/Azure.Mcp.Tools.Monitor/tests/Azure.Mcp.Tools.Monitor.UnitTests`
-  -  `tools/Azure.Mcp.Tools.Monitor/tests/Azure.Mcp.Tools.Monitor.LiveTests`
 
-This keeps all code, options, models, and tests for an toolset together. See `tools/Azure.Mcp.Tools.Storage` for a reference implementation.
+This keeps all code, options, models, JSON serialization contexts, and tests for a toolset together. See `tools/Azure.Mcp.Tools.Storage` for a reference implementation.
 
 ## ⚠️ Test Infrastructure Requirements
 
@@ -54,7 +52,7 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
      - `Validate()`: Validates command inputs
 
 2. **Command Hierarchy**
-   All commands must implement the hierarchy pattern:
+    All commands implement the layered hierarchy:
      ```
      IBaseCommand
      └── BaseCommand
@@ -72,7 +70,7 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
    - Commands return `ToolMetadata` property to define their behavioral characteristics
 
 3. **Command Pattern**
-   Commands follow the Model-Context-Protocol (MCP) pattern with this naming convention:
+    Commands follow the Model-Context-Protocol (MCP) pattern with this execution naming convention:
    ```
    azmcp <azure service> <resource> <operation>
    ```
@@ -107,15 +105,14 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
 
 ### Required Files
 
-A complete command requires:
+Every new command (whether purely computational or Azure-resource backed) requires the following elements:
 
 1. OptionDefinitions static class: `tools/Azure.Mcp.Tools.{Toolset}/src/Options/{Toolset}OptionDefinitions.cs`
 2. Options class: `tools/Azure.Mcp.Tools.{Toolset}/src/Options/{Resource}/{Operation}Options.cs`
 3. Command class: `tools/Azure.Mcp.Tools.{Toolset}/src/Commands/{Resource}/{Resource}{Operation}Command.cs`
 4. Service interface: `tools/Azure.Mcp.Tools.{Toolset}/src/Services/I{ServiceName}Service.cs`
 5. Service implementation: `tools/Azure.Mcp.Tools.{Toolset}/src/Services/{ServiceName}Service.cs`
-   - It's common for an toolset to have a single service class named after the
-     toolset but some toolsets will have multiple service classes
+    - Most toolsets have one primary service; some may have multiple where domain boundaries justify separation
 6. Unit test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests/{Resource}/{Resource}{Operation}CommandTests.cs`
 7. Integration test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests/{Toolset}CommandTests.cs`
 8. Command registration in RegisterCommands(): `tools/Azure.Mcp.Tools.{Toolset}/src/{Toolset}Setup.cs`
@@ -126,34 +123,39 @@ A complete command requires:
 
 ### File and Class Naming Convention
 
-**IMPORTANT**: All command files and classes must follow the **ObjectVerb** naming pattern for consistency and discoverability:
+Primary pattern: **{Resource}{SubResource?}{Operation}Command**
 
-**Pattern**: `{Resource}{SubResource}{Operation}Command`
+Where:
+- Resource = top-level domain entity (e.g., `Server`, `Database`, `FileSystem`)
+- SubResource (optional) = nested concept (e.g., `Config`, `Param`, `SubnetSize`)
+- Operation = action or computed intent (e.g., `List`, `Get`, `Set`, `Recommend`, `Calculate`, `SubnetSize`)
 
-**Examples**:
-- ✅ `ServerListCommand` (Resource: Server, Operation: List)
-- ✅ `ServerConfigGetCommand` (Resource: Server, SubResource: Config, Operation: Get)
-- ✅ `ServerParamSetCommand` (Resource: Server, SubResource: Param, Operation: Set)
-- ✅ `TableSchemaGetCommand` (Resource: Table, SubResource: Schema, Operation: Get)
-- ✅ `DatabaseListCommand` (Resource: Database, Operation: List)
+Acceptable Operation Forms:
+- Standard verbs (`List`, `Get`, `Set`, `Show`, `Delete`)
+- Domain-calculation nouns treated as operations when producing computed output (e.g., `SubnetSize` in `FileSystemSubnetSizeCommand` producing required size calculation)
 
-**Anti-patterns to avoid**:
-- ❌ `GetConfigCommand` (missing resource prefix)
-- ❌ `GetParamCommand` (missing resource prefix)
-- ❌ `GetSchemaCommand` (missing resource prefix)
+Examples:
+- ✅ `ServerListCommand`
+- ✅ `ServerConfigGetCommand`
+- ✅ `ServerParamSetCommand`
+- ✅ `TableSchemaGetCommand`
+- ✅ `DatabaseListCommand`
+- ✅ `FileSystemSubnetSizeCommand` (computational operation on a resource)
 
-**Apply this pattern to**:
-- Command class names: `ServerConfigGetCommand`, `ServerParamSetCommand`
-- Options class names: `ServerConfigGetOptions`, `ServerParamSetOptions`
-- Test class names: `ServerConfigGetCommandTests`, `ServerParamSetCommandTests`
-- File names: `ServerConfigGetCommand.cs`, `ServerParamSetOptions.cs`
+Avoid:
+- ❌ `GetConfigCommand` (missing resource)
+- ❌ `ListServerCommand` (verb precedes resource)
+- ❌ `FileSystemRequiredSubnetSizeCommand` (overly verbose – prefer concise subresource `SubnetSize`)
 
-This convention ensures:
-- Clear identification of the resource being operated on
-- Logical grouping of related operations
-- Consistent file organization and naming
-- Better IDE intellisense and code navigation
-- Easier maintenance and discovery
+Apply pattern consistently to:
+- Command classes & filenames: `FileSystemListCommand.cs`
+- Options classes: `FileSystemListOptions.cs`
+- Unit test classes: `FileSystemListCommandTests.cs`
+
+Rationale:
+- Predictable discovery in IDE
+- Natural grouping by resource
+- Supports both CRUD and compute-style operations
 
 **IMPORTANT**: If implementing a new toolset, you must also ensure:
 - The Azure Resource Manager package is added to `Directory.Packages.props` first
@@ -164,7 +166,7 @@ This convention ensures:
 - **Test resource deployment**: Ensure resources are properly configured with RBAC for test application
 - **Resource naming**: Follow consistent naming patterns - many services use just `baseName`, while others may need suffixes for disambiguation (e.g., `{baseName}-suffix`)
 - **Solution file integration**: Add new projects to `AzureMcp.sln` with proper GUID generation to avoid conflicts
-- **Program.cs registration**: Register the new toolset in `Program.cs` `RegisterAreas()` method in alphabetical order
+- **Program.cs registration**: Register the new toolset in `Program.cs` `RegisterAreas()` method in alphabetical order (see `Program.cs` `IAreaSetup[] RegisterAreas()`)
 
 ## Implementation Guidelines
 
@@ -369,7 +371,7 @@ Binding example (no manual resource group assignment):
 protected override ListServersOptions BindOptions(ParseResult parseResult)
 {
     var options = base.BindOptions(parseResult);
-    options.Server = parseResult.GetValueForOption(_serverOption);
+    options.Server = parseResult.GetValueOrDefault(_serverOption);
     return options; // options.ResourceGroup already populated (or null)
 }
 ```
@@ -427,7 +429,7 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     protected override {Resource}{Operation}Options BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-    options.NewOption = parseResult.GetValue(_newOption);
+        options.NewOption = parseResult.GetValueOrDefault(_newOption);
         return options;
     }
 
@@ -559,31 +561,17 @@ public abstract class Base{Toolset}Command<
     : SubscriptionCommand<TOptions> where TOptions : Base{Toolset}Options, new()
 {
     protected readonly Option<string> _commonOption = {Toolset}OptionDefinitions.CommonOption;
-    protected readonly Option<string> _resourceGroupOption = OptionDefinitions.Common.ResourceGroup;
-    protected virtual bool RequiresResourceGroup => true;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-    command.Options.Add(_commonOption);
-
-        // Add resource group option if required
-        if (RequiresResourceGroup)
-        {
-            command.Options.Add(_resourceGroupOption);
-        }
+        command.Options.Add(_commonOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-    options.CommonOption = parseResult.GetValue(_commonOption);
-
-        if (RequiresResourceGroup)
-        {
-            options.ResourceGroup = parseResult.GetValue(_resourceGroupOption);
-        }
-
+        options.CommonOption = parseResult.GetValue(_commonOption);
         return options;
     }
 }
@@ -763,7 +751,7 @@ private void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFacto
 }
 ```
 
-**IMPORTANT**: Command group names cannot contain underscores. Use camelCase or concatenated names or dash separator instead:
+**IMPORTANT**: Command group names cannot contain underscores. Use lowercase concatenated or dash-separated names.
 - ✅ Good: `"entraadmin"`, `"resourcegroup"`, `"storageaccount"`, `"entra-admin"`
 - ❌ Bad: `"entra_admin"`, `"resource_group"`, `"storage_account"`
 
@@ -783,7 +771,38 @@ private void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFacto
     }
 ```
 
-The toolset list in `RegisterAreas()` should stay sorted alphabetically.
+The area/toolset list in `RegisterAreas()` must remain alphabetically sorted (excluding the fixed conditional AOT exclusion block guarded by `#if !BUILD_NATIVE`).
+
+### 10. JSON Serialization Context
+
+All models and command result record types returned in `Response.Results` must be registered in a source-generated JSON context for AOT safety and performance.
+
+Create (or update) a `{Toolset}JsonContext` file (common location: `src/Commands/{Toolset}JsonContext.cs` or within `Commands` folder) containing:
+
+```csharp
+using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.{Toolset}.Commands.{Resource};
+using Azure.Mcp.Tools.{Toolset}.Models;
+
+[JsonSerializable(typeof({Resource}{Operation}Command.{Resource}{Operation}CommandResult))]
+[JsonSerializable(typeof(YourModelType))]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+internal partial class {Toolset}JsonContext : JsonSerializerContext;
+```
+
+Usage inside a command when assigning results:
+
+```csharp
+context.Response.Results = ResponseResult.Create(
+    new {Resource}{Operation}CommandResult(results),
+    {Toolset}JsonContext.Default.{Resource}{Operation}CommandResult);
+```
+
+Guidelines:
+- Only include types actually serialized as top-level result payloads
+- Keep attribute list minimal but complete
+- Use one context per toolset (preferred) unless size forces logical grouping
+- Ensure filename matches class for navigation (`{Toolset}JsonContext.cs`)
 
 ## Error Handling
 
@@ -1394,7 +1413,7 @@ protected override void RegisterOptions(Command command)
 protected override MyOptions BindOptions(ParseResult parseResult)
 {
     var options = base.BindOptions(parseResult); // ResourceGroup already set if declared
-    options.Other = parseResult.GetValue(_otherOption);
+    options.Other = parseResult.GetValueOrDefault(_otherOption);
     return options;
 }
 ```
@@ -1730,16 +1749,6 @@ var subscriptionResource = await _subscriptionService.GetSubscription(subscripti
 - **Solution**: Add toolset registration to the array in alphabetical order
 - **Fix**: Add `new Azure.Mcp.Tools.{Toolset}.{Toolset}Setup(),` to the `RegisterAreas()` return array
 - **Prevention**: Follow the complete toolset setup checklist including Program.cs registration
-
-**Issue: Using required ResourceGroup option for optional filtering**
-- **Cause**: Using `OptionDefinitions.Common.ResourceGroup` which has `IsRequired = true` for commands that should support optional resource group filtering
-- **Solution**: Create custom optional resource group option in toolset's OptionDefinitions
-- **Fix**:
-  1. Add `OptionalResourceGroup` option with `IsRequired = false` to `{Toolset}OptionDefinitions.cs`
-  2. Override base `_resourceGroupOption` field with `new` keyword in command class
-  3. Use the pattern: `private readonly new Option<string> _resourceGroupOption = {Toolset}OptionDefinitions.OptionalResourceGroup;`
-- **Prevention**: Check if resource group should be optional (e.g., for list commands) and use the optional pattern
-- **Examples**: Extension (AZQR), Monitor (Metrics), and ACR toolsets all implement this pattern correctly
 
 **Issue: HandleException parameter mismatch**
 - **Cause**: Confusion about the correct HandleException signature
