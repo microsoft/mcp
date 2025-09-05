@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -23,7 +23,7 @@ public class BlobDetailsCommandTests
     private readonly ILogger<BlobDetailsCommand> _logger;
     private readonly BlobDetailsCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
     private readonly string _knownAccount = "account123";
     private readonly string _knownContainer = "container123";
     private readonly string _knownBlob = "test-blob.txt";
@@ -39,7 +39,7 @@ public class BlobDetailsCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public class BlobDetailsCommandTests
             Arg.Is(_knownBlob), Arg.Is(_knownSubscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedProperties);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--container", _knownContainer,
             "--blob", _knownBlob,
@@ -101,7 +101,7 @@ public class BlobDetailsCommandTests
             Arg.Is(_knownBlob), Arg.Is(_knownSubscription), null, Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--container", _knownContainer,
             "--blob", _knownBlob,
@@ -121,7 +121,7 @@ public class BlobDetailsCommandTests
     public async Task ExecuteAsync_ValidatesRequiredParameters()
     {
         // Arrange - missing blob parameter
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--container", _knownContainer,
             "--subscription", _knownSubscription

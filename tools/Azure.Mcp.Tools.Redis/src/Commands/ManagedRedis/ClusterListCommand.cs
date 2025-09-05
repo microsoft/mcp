@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Redis.Models.ManagedRedis;
 using Azure.Mcp.Tools.Redis.Options.ManagedRedis;
 using Azure.Mcp.Tools.Redis.Services;
@@ -32,15 +31,15 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var redisService = context.GetService<IRedisService>() ?? throw new InvalidOperationException("Redis service is not available.");
             var clusters = await redisService.ListClustersAsync(
                 options.Subscription!,

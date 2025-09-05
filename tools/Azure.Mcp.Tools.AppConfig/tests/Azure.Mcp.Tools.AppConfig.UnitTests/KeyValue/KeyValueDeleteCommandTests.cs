@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -24,7 +24,7 @@ public class KeyValueDeleteCommandTests
     private readonly ILogger<KeyValueDeleteCommand> _logger;
     private readonly KeyValueDeleteCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public KeyValueDeleteCommandTests()
     {
@@ -32,7 +32,7 @@ public class KeyValueDeleteCommandTests
         _logger = Substitute.For<ILogger<KeyValueDeleteCommand>>();
 
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
         _serviceProvider = new ServiceCollection()
             .AddSingleton(_appConfigService)
             .BuildServiceProvider();
@@ -43,7 +43,7 @@ public class KeyValueDeleteCommandTests
     public async Task ExecuteAsync_DeletesKeyValue_WhenValidParametersProvided()
     {
         // Arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key"
@@ -76,7 +76,7 @@ public class KeyValueDeleteCommandTests
     public async Task ExecuteAsync_DeletesKeyValueWithLabel_WhenLabelProvided()
     {
         // Arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key",
@@ -119,7 +119,7 @@ public class KeyValueDeleteCommandTests
             Arg.Any<string>())
             .ThrowsAsync(new Exception("Failed to delete key-value"));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key"
@@ -140,7 +140,7 @@ public class KeyValueDeleteCommandTests
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
         // Arrange
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

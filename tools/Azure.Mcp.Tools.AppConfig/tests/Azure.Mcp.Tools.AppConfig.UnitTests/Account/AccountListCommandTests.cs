@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -25,7 +25,7 @@ public class AccountListCommandTests
     private readonly ILogger<AccountListCommand> _logger;
     private readonly AccountListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public AccountListCommandTests()
     {
@@ -33,7 +33,7 @@ public class AccountListCommandTests
         _logger = Substitute.For<ILogger<AccountListCommand>>();
 
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
         _serviceProvider = new ServiceCollection()
             .AddSingleton(_appConfigService)
             .BuildServiceProvider();
@@ -55,7 +55,7 @@ public class AccountListCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .Returns(expectedAccounts);
 
-        var args = _parser.Parse(["--subscription", "sub123"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub123"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -88,7 +88,7 @@ public class AccountListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(expectedAccounts);
 
-        var args = _parser.Parse(["--subscription", "sub123"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub123"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -108,7 +108,7 @@ public class AccountListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<List<AppConfigurationAccount>>(new Exception("Service error")));
 
-        var args = _parser.Parse(["--subscription", "sub123"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub123"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -122,7 +122,7 @@ public class AccountListCommandTests
     public async Task ExecuteAsync_Returns400_WhenSubscriptionIsMissing()
     {
         // Arrange && Act
-        var response = await _command.ExecuteAsync(_context, _parser.Parse([]));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse([]));
 
         // Assert
         Assert.Equal(400, response.Status);
@@ -136,7 +136,7 @@ public class AccountListCommandTests
         _appConfigService.GetAppConfigAccounts(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new HttpRequestException("Service Unavailable", null, System.Net.HttpStatusCode.ServiceUnavailable));
 
-        var args = _parser.Parse(["--subscription", "sub123"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub123"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);

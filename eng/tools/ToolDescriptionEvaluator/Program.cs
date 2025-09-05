@@ -649,8 +649,8 @@ class Program
         if (tools.Count > threshold)
         {
             int half = tools.Count / 2;
-            var leftTask = Task.Run(() => PopulateDatabaseAsync(db, tools.Take(half).ToList(), embeddingService));
-            await PopulateDatabaseAsync(db, tools.Skip(half).ToList(), embeddingService);
+            var leftTask = Task.Run(() => PopulateDatabaseAsync(db, [.. tools.Take(half)], embeddingService));
+            await PopulateDatabaseAsync(db, [.. tools.Skip(half)], embeddingService);
             await leftTask;
             return;
         }

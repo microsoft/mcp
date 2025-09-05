@@ -1,6 +1,17 @@
 
 # Release History
 
+## 0.5.12 - 2025-09-04
+
+### Added
+- Added `azmcp sql server firewall-rule create` and `azmcp sql server firewall-rule delete` commands. [[#121](https://github.com/microsoft/mcp/pull/121)]
+- Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
+- Added instructions about consumption plan for azure functions deployment best practices [[#218](https://github.com/microsoft/mcp/pull/218)]
+
+### Fixed
+
+- Fixed a bug in MySQL query validation logic. [[#81](https://github.com/microsoft/mcp/pull/81)]
+
 ## 0.5.11 - 2025-09-02
 
 ### Fixed

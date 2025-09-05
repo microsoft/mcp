@@ -553,7 +553,7 @@ public class CommandGroupDiscoveryStrategyTests
         // Arrange
         var options = new ServiceStartOptions
         {
-            Namespace = Array.Empty<string>()
+            Namespace = []
         };
         var strategy = CreateStrategy(options: options);
 

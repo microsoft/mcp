@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
@@ -60,8 +59,8 @@ public sealed class TableSchemaCommandTests
                 .Returns(expectedSchema);
         }
         var command = new TableSchemaCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(cliArgs);
+
+        var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -99,8 +98,8 @@ public sealed class TableSchemaCommandTests
                 .ThrowsAsync(new Exception("Test error"));
         }
         var command = new TableSchemaCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(cliArgs);
+
+        var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -133,8 +132,8 @@ public sealed class TableSchemaCommandTests
                 .Returns(Task.FromException<string>(new Exception("Test error")));
         }
         var command = new TableSchemaCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(cliArgs);
+
+        var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -147,8 +146,8 @@ public sealed class TableSchemaCommandTests
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
     {
         var command = new TableSchemaCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("");
+
+        var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure;
 using Azure.Core;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.ResourceManager;
@@ -60,9 +59,7 @@ public class DefaultRegionChecker(ArmClient armClient, string subscriptionId, IL
                 return [];
             }
 
-            return resourceTypeInfo.Locations
-                .Select(location => location.Replace(" ", "").ToLowerInvariant())
-                .ToList();
+            return [.. resourceTypeInfo.Locations.Select(location => location.Replace(" ", "").ToLowerInvariant())];
         }
         catch (Exception error)
         {

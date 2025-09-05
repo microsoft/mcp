@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
@@ -24,14 +24,14 @@ public class DatabaseListCommandTests
     private readonly ILogger<DatabaseListCommand> _logger;
     private readonly DatabaseListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public DatabaseListCommandTests()
     {
         _cosmosService = Substitute.For<ICosmosService>();
         _logger = Substitute.For<ILogger<DatabaseListCommand>>();
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
         _serviceProvider = new ServiceCollection()
             .AddSingleton(_cosmosService)
             .BuildServiceProvider();
@@ -51,7 +51,7 @@ public class DatabaseListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(expectedDatabases);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", "account123",
             "--subscription", "sub123"
         ]);
@@ -84,7 +84,7 @@ public class DatabaseListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(new List<string>());
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", "account123",
             "--subscription", "sub123"
         ]);
@@ -111,7 +111,7 @@ public class DatabaseListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", "account123",
             "--subscription", "sub123"
         ]);
@@ -132,7 +132,7 @@ public class DatabaseListCommandTests
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
         // Arrange & Act 
-        var response = await _command.ExecuteAsync(_context, _parser.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
 
         // Assert
         Assert.Equal(400, response.Status);

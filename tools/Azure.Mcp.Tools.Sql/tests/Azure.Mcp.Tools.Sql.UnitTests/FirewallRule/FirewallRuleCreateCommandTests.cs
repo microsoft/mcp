@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 using Azure.Mcp.Tools.Sql.Models;
@@ -20,7 +20,7 @@ public class FirewallRuleCreateCommandTests
     private readonly ILogger<FirewallRuleCreateCommand> _logger;
     private readonly FirewallRuleCreateCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public FirewallRuleCreateCommandTests()
     {
@@ -33,7 +33,7 @@ public class FirewallRuleCreateCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -73,13 +73,13 @@ public class FirewallRuleCreateCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+                Arg.Any<Core.Options.RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedFirewallRule);
         }
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -114,12 +114,12 @@ public class FirewallRuleCreateCommandTests
             "TestRule",
             "192.168.1.1",
             "192.168.1.255",
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedFirewallRule);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -141,12 +141,12 @@ public class FirewallRuleCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServerFirewallRule>(new Exception("Test error")));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -161,7 +161,7 @@ public class FirewallRuleCreateCommandTests
     public async Task ExecuteAsync_Handles404Error()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(404, "Server not found");
+        var requestException = new RequestFailedException(404, "Server not found");
         _service.CreateFirewallRuleAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -169,12 +169,12 @@ public class FirewallRuleCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServerFirewallRule>(requestException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -188,7 +188,7 @@ public class FirewallRuleCreateCommandTests
     public async Task ExecuteAsync_Handles403Error()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(403, "Access denied");
+        var requestException = new RequestFailedException(403, "Access denied");
         _service.CreateFirewallRuleAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -196,12 +196,12 @@ public class FirewallRuleCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServerFirewallRule>(requestException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -215,7 +215,7 @@ public class FirewallRuleCreateCommandTests
     public async Task ExecuteAsync_Handles409Error()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(409, "Conflict - rule already exists");
+        var requestException = new RequestFailedException(409, "Conflict - rule already exists");
         _service.CreateFirewallRuleAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -223,12 +223,12 @@ public class FirewallRuleCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServerFirewallRule>(requestException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -250,12 +250,12 @@ public class FirewallRuleCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServerFirewallRule>(argumentException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address invalid --end-ip-address invalid");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address invalid --end-ip-address invalid");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -290,12 +290,12 @@ public class FirewallRuleCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedFirewallRule);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse($"--subscription {subscription} --resource-group {resourceGroup} --server {serverName} --firewall-rule-name {ruleName} --start-ip-address {startIp} --end-ip-address {endIp}");
+        var parseResult = _commandDefinition.Parse($"--subscription {subscription} --resource-group {resourceGroup} --server {serverName} --firewall-rule-name {ruleName} --start-ip-address {startIp} --end-ip-address {endIp}");
 
         // Act
         await _command.ExecuteAsync(context, parseResult);
@@ -308,7 +308,7 @@ public class FirewallRuleCreateCommandTests
             ruleName,
             startIp,
             endIp,
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -330,12 +330,12 @@ public class FirewallRuleCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedFirewallRule);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255 --retry-max-retries 3");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255 --retry-max-retries 3");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -352,7 +352,7 @@ public class FirewallRuleCreateCommandTests
             "TestRule",
             "192.168.1.1",
             "192.168.1.255",
-            Arg.Is<Azure.Mcp.Core.Options.RetryPolicyOptions?>(r => r != null && r.MaxRetries == 3),
+            Arg.Is<Core.Options.RetryPolicyOptions?>(r => r != null && r.MaxRetries == 3),
             Arg.Any<CancellationToken>());
     }
 
@@ -377,12 +377,12 @@ public class FirewallRuleCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedFirewallRule);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse($"--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address {startIp} --end-ip-address {endIp}");
+        var parseResult = _commandDefinition.Parse($"--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address {startIp} --end-ip-address {endIp}");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);

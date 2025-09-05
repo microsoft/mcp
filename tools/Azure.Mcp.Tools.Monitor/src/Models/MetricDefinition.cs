@@ -62,7 +62,7 @@ public class MetricDefinition
     /// The allowed time intervals for this metric (e.g., "PT1M", "PT5M", "PT1H", "P1D")
     /// </summary>
     [JsonPropertyName("allowedIntervals")]
-    public string[] AllowedIntervals { get; set; } = Array.Empty<string>();
+    public string[] AllowedIntervals { get; set; } = [];
 
     /// <summary>
     /// The available dimensions for this metric
