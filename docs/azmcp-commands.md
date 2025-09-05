@@ -864,6 +864,20 @@ azmcp resourcehealth availability-status list --subscription <subscription> \
                                               [--resource-group <resource-group>]
 ```
 
+### Azure for Startups Operations
+
+```bash
+# Get guidance about Microsoft for Startups program
+azmcp startups guidance get
+
+# Deploy static web resources to Azure storage accounts for startups
+azmcp startups deploy --subscription <subscription> \
+                      --resource-group <resource-group> \
+                      --storage-account <storage-account> \
+                      --source-path <source-directory-path> \
+                      --overwrite <true|false> \
+```
+
 ### Azure Service Bus Operations
 
 ```bash

@@ -367,6 +367,18 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_server_firewall-rule_delete | Remove the firewall rule <rule_name> from SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_delete | Delete firewall rule <rule_name> for SQL server <server_name> |
 
+## Azure for Startups
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp-startups-deploy | Create a static website hosting environment for my startup using the files in the folder <folder-path> |
+| azmcp-startups-deploy | Deploy my startup's landing page from the folder <folder_path> to a new storage account called <storage-account-name> |
+| azmcp-startups-deploy | Set up static website hosting and deploy content from the folder <folder-path> to Azure Storage with the default configuration |
+| azmcp-startups-deploy | Create a storage account <storage-account-name> and deploy my static website from the <directory-name> directory |
+| azmcp-startups-guidance | What is Microsoft for Startups? |
+| azmcp-startups-guidance | How can Microsoft for Startups help my business? |
+| azmcp-startups-guidance | I'm a startup user. How can I get started? |
+
 ## Azure Storage
 
 | Tool Name | Test Prompt |
