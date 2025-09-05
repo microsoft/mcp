@@ -33,7 +33,7 @@ public static class AzureManagedLustreOptionDefinitions
     };
 
     public static readonly Option<string> OptionalLocationOption = new(
-        $"{location}"
+        $"--{location}"
     )
     {
         Description = LocationOption.Description,
