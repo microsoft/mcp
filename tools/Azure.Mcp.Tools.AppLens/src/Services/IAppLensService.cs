@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AppLens.Models;
 
 namespace Azure.Mcp.Tools.AppLens.Services;
@@ -16,16 +15,14 @@ public interface IAppLensService
     /// </summary>
     /// <param name="question">The diagnostic question from the user.</param>
     /// <param name="resourceName">The name of the Azure resource to diagnose.</param>
-    /// <param name="subscriptionNameOrId">Optional subscription name or ID for disambiguation.</param>
-    /// <param name="resourceGroup">Optional resource group for disambiguation.</param>
-    /// <param name="resourceType">Optional resource type for disambiguation.</param>
-    /// <param name="retryPolicy">Optional retry policy options.</param>
+    /// <param name="subscription">The subscription of the Azure resource to diagnose.</param>
+    /// <param name="resourceGroup">The resource group of the Azure resource to diagnose.</param>
+    /// <param name="resourceType">The resource type of the Azure resource to diagnose.</param>
     /// <returns>A diagnostic result containing insights and solutions.</returns>
     Task<DiagnosticResult> DiagnoseResourceAsync(
         string question,
         string resourceName,
-        string? subscriptionNameOrId = null,
+        string? subscription = null,
         string? resourceGroup = null,
-        string? resourceType = null,
-        RetryPolicyOptions? retryPolicy = null);
+        string? resourceType = null);
 }

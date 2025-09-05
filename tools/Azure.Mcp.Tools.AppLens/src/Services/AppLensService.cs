@@ -24,30 +24,23 @@ public class AppLensService : BaseAzureService, IAppLensService
     private readonly AppLensOptions _options;
     private const string ConversationalDiagnosticsSignalREndpoint = "https://diagnosticschat.azure.com/chatHub";
 
-    private const string ResourceQuery = """
-        resources
-        | where name =~ '{0}'
-        | project id, subscriptionId, resourceGroup, resourceType = type, resourceKind = kind, resourceName = name
-        """;
-
     public AppLensService(HttpClient httpClient, ITenantService? tenantService = null, ILoggerFactory? loggerFactory = null)
         : base(tenantService, loggerFactory)
     {
         _httpClient = httpClient;
-        _options = new AppLensOptions(); // In real implementation, this would come from configuration
+        _options = new AppLensOptions();
     }
 
     /// <inheritdoc />
     public async Task<DiagnosticResult> DiagnoseResourceAsync(
         string question,
         string resourceName,
-        string? subscriptionNameOrId = null,
+        string? subscription = null,
         string? resourceGroup = null,
-        string? resourceType = null,
-        RetryPolicyOptions? retryPolicy = null)
+        string? resourceType = null)
     {
         // Step 1: Find the resource using Azure Resource Graph
-        var findResult = await FindResourceIdAsync(resourceName, subscriptionNameOrId, resourceGroup, resourceType);
+        var findResult = await FindResourceIdAsync(resourceName, subscription, resourceGroup, resourceType);
 
         if (findResult is DidNotFindResourceResult notFound)
         {
@@ -82,8 +75,7 @@ public class AppLensService : BaseAzureService, IAppLensService
         string? resourceGroup,
         string? resourceType)
     {
-        // TODO: Implement Azure Resource Graph query when stable package is available
-        // For now, construct a resource ID from the provided information
+        // Construct a resource ID from the provided information
 
         if (string.IsNullOrEmpty(subscriptionId) || string.IsNullOrEmpty(resourceGroup))
         {
@@ -122,7 +114,7 @@ public class AppLensService : BaseAzureService, IAppLensService
                 {
                     return new FailedAppLensSessionResult("The specified resource could not be found or does not support diagnostics.");
                 }
-                return new FailedAppLensSessionResult($"Failed to create diagnostics session: {response.StatusCode}, {response}, {request.RequestUri}, {resourceId}");
+                return new FailedAppLensSessionResult($"Failed to create diagnostics session for resource {resourceId}, http response code: {response.StatusCode}");
             }
 
             var content = await response.Content.ReadAsStringAsync();
@@ -160,9 +152,7 @@ public class AppLensService : BaseAzureService, IAppLensService
         await using HubConnection connection = new HubConnectionBuilder()
             .WithUrl(ConversationalDiagnosticsSignalREndpoint, options =>
             {
-                // TODO: every time the token is requested, refresh the token
                 options.AccessTokenProvider = () => Task.FromResult(session.Token)!;
-                // Per documentation, we need to set this because we're not connecting from the Azure Portal.
                 options.Headers.Add("origin", "https://appservice-diagnostics.trafficmanager.net");
             })
             .WithAutomaticReconnect()
@@ -227,8 +217,7 @@ public class AppLensService : BaseAzureService, IAppLensService
         bool waitForRequestToFinish = true;
         while (!completed)
         {
-            // HACK: Sometimes we'll just stop getting messages even though the request is still running. This seems to be a problem with the
-            // Conversational Diagnostics service. Here we work around it by bailing out if we don't get any messages for some period of time.
+            // Ending session if we don't get any messages for some period of time.
             using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             cts.CancelAfter(TimeSpan.FromSeconds(_options.MessageTimeOutInSeconds));
 
@@ -301,9 +290,6 @@ public class AppLensService : BaseAzureService, IAppLensService
 
         if (!jsonResponse.RootElement.TryGetProperty("properties", out JsonElement propertiesElement))
         {
-            // Sometimes the the call to get the token will indicate success but the JSON response will not have
-            // the expected shape. Here we collect more data.
-            // See: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/2297708
             if (jsonResponse.RootElement.ValueKind == JsonValueKind.Object)
             {
                 IEnumerable<string> propertyNames = jsonResponse.RootElement.EnumerateObject().Select(property => property.Name);

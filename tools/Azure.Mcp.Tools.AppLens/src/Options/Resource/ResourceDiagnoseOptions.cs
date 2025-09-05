@@ -21,12 +21,17 @@ public class ResourceDiagnoseOptions : GlobalOptions
     public string ResourceName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Optional subscription name or ID for disambiguation.
+    /// The Subscription ID of the resource to diagnose
     /// </summary>
-    public string? SubscriptionNameOrId { get; set; }
+    public string? Subscription { get; set; }
 
     /// <summary>
-    /// Optional resource type for disambiguation.
+    /// The Resource Group of the resource to diagnose
+    /// </summary>
+    public new string? ResourceGroup { get; set; }
+
+    /// <summary>
+    /// The Resource Type of the resource to diagnose
     /// </summary>
     public string? ResourceType { get; set; }
 }

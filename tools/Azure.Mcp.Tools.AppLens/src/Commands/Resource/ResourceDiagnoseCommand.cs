@@ -21,7 +21,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
 
     private readonly Option<string> _questionOption = AppLensOptionDefinitions.Resource.Question;
     private readonly Option<string> _resourceNameOption = AppLensOptionDefinitions.Resource.ResourceName;
-    private readonly Option<string?> _subscriptionNameOrIdOption = AppLensOptionDefinitions.Resource.SubscriptionNameOrId;
+    private readonly Option<string?> _subscriptionOption = AppLensOptionDefinitions.Resource.Subscription;
     private readonly Option<string?> _resourceGroupOption = AppLensOptionDefinitions.Resource.ResourceGroup;
     private readonly Option<string?> _resourceTypeOption = AppLensOptionDefinitions.Resource.ResourceType;
 
@@ -29,19 +29,18 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
 
     public override string Description =>
         """
-        This tool can be used to ask questions about application state using AppLens diagnostics, helping when doing diagnostics and addressing issues about performance and failures.
+        This tool can be used to ask questions about application state, this tool can help when doing diagnostics and address issues about performance and failures.
 
-        This is able to investigate logs, telemetry and other performance sensors to provide insights and recommendations using AppLens conversational diagnostics.
+        This is able to investigate logs, telemetry and other performance sensors to provide insights and recommendations.
 
         For example, the user may say: 'Why is my app slow?' or 'Please help me diagnose issues with my app' or 'Is my web site experiencing problems?'.
 
-        Do _not_ ask for the 'subscriptionNameOrId', 'resourceGroup', or 'resourceType'; just pass null if they aren't known. If we can't find any resources matching 'resourceName', this returns an error message.
+        Use the azure cli tool to find the 'subscription', 'resourceGroup', and 'resourceType' of the resource before asking user to provide that information.
 
-        Ask the user to check the spelling. If we find more than one resource matching 'resourceName', this returns the list of resources.
+        If you get a resourceId, you can parse it to get the 'subscription', 'resourceGroup', and 'resourceType' of the resource. ResourceIds are in the format:
+        /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceType}/{resourceName}
 
-        Ask the user which one they are interested in, and then try again by filling in the 'subscriptionNameOrId' and 'resourceGroup'.
-
-        If we find exactly one resource matching 'resourceName', this returns a list of insights and solutions to the user question.
+        Once proper input parameters are provided using the azure cli tool results or from asking user, this tool returns a list of insights and solutions to the user question.
         """;
 
     public override string Title => CommandTitle;
@@ -52,7 +51,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
         base.RegisterOptions(command);
         command.AddOption(_questionOption);
         command.AddOption(_resourceNameOption);
-        command.AddOption(_subscriptionNameOrIdOption);
+        command.AddOption(_subscriptionOption);
         command.AddOption(_resourceGroupOption);
         command.AddOption(_resourceTypeOption);
     }
@@ -63,7 +62,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
         {
             Question = parseResult.GetValueForOption(_questionOption) ?? string.Empty,
             ResourceName = parseResult.GetValueForOption(_resourceNameOption) ?? string.Empty,
-            SubscriptionNameOrId = parseResult.GetValueForOption(_subscriptionNameOrIdOption),
+            Subscription= parseResult.GetValueForOption(_subscriptionOption),
             ResourceGroup = parseResult.GetValueForOption(_resourceGroupOption),
             ResourceType = parseResult.GetValueForOption(_resourceTypeOption)
         };
@@ -88,10 +87,9 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
             var result = await service.DiagnoseResourceAsync(
                 options.Question,
                 options.ResourceName,
-                options.SubscriptionNameOrId,
+                options.Subscription,
                 options.ResourceGroup,
-                options.ResourceType,
-                options.RetryPolicy);
+                options.ResourceType);
 
             var commandResult = new ResourceDiagnoseCommandResult(result);
             context.Response.Results = ResponseResult.Create(commandResult, AppLensJsonContext.Default.ResourceDiagnoseCommandResult);

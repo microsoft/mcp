@@ -11,7 +11,7 @@ public static class AppLensOptionDefinitions
     {
         public const string QuestionName = "question";
         public const string ResourceNameName = "resource-name";
-        public const string SubscriptionNameOrIdName = "subscription-name-or-id";
+        public const string SubscriptionName = "subscription";
         public const string ResourceGroupName = "resource-group";
         public const string ResourceTypeName = "resource-type";
 
@@ -29,8 +29,8 @@ public static class AppLensOptionDefinitions
             IsRequired = true
         };
 
-        public static readonly Option<string?> SubscriptionNameOrId = new(
-            $"--{SubscriptionNameOrIdName}",
+        public static readonly Option<string?> Subscription = new(
+            $"--{SubscriptionName}",
             "The subscription the resource belongs to. Try to get this information using the Azure CLI tool before asking the user.")
         {
             IsRequired = true
