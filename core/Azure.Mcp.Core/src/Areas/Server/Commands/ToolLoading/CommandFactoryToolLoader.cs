@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -31,6 +32,24 @@ public sealed class CommandFactoryToolLoader(
     private readonly ILogger<CommandFactoryToolLoader> _logger = logger;
 
     public const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
+
+    private static bool IsRawMcpToolInputOption(Option option)
+    {
+        if (string.Equals(NameNormalization.NormalizeOptionName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        foreach (var alias in option.Aliases)
+        {
+            if (string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Lists all tools available from the command factory.
@@ -94,7 +113,7 @@ public sealed class CommandFactoryToolLoader(
         var realCommand = command.GetCommand();
         ParseResult? commandOptions = null;
 
-        if (realCommand.Options.Count == 1 && realCommand.Options[0].Name == RawMcpToolInputOptionName)
+        if (realCommand.Options.Count == 1 && IsRawMcpToolInputOption(realCommand.Options[0]))
         {
             commandOptions = realCommand.ParseFromRawMcpToolInput(request.Params.Arguments);
         }
@@ -171,7 +190,7 @@ public sealed class CommandFactoryToolLoader(
 
         if (options != null && options.Count > 0)
         {
-            if (options.Count == 1 && options[0].Name == RawMcpToolInputOptionName)
+            if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
             {
                 var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? new JsonObject();
                 tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
@@ -182,10 +201,11 @@ public sealed class CommandFactoryToolLoader(
                 foreach (var option in options)
                 {
                     // Use the CreatePropertySchema method to properly handle array types with items
-                    schema.Properties.Add(option.Name, TypeToJsonTypeMapper.CreatePropertySchema(option.ValueType, option.Description));
+                    var propName = NameNormalization.NormalizeOptionName(option.Name);
+                    schema.Properties.Add(propName, TypeToJsonTypeMapper.CreatePropertySchema(option.ValueType, option.Description));
                 }
 
-                schema.Required = [.. options.Where(p => p.IsRequired).Select(p => p.Name)];
+                schema.Required = [.. options.Where(p => p.Required).Select(p => NameNormalization.NormalizeOptionName(p.Name))];
             }
         }
 

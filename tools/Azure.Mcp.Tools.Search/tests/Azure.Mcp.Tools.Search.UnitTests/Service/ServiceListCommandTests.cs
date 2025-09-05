@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -43,8 +41,8 @@ public class ServiceListCommandTests
             .Returns(expectedServices);
 
         var command = new ServiceListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--subscription sub123");
+
+        var args = command.GetCommand().Parse("--subscription sub123");
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -69,8 +67,8 @@ public class ServiceListCommandTests
             .Returns(new List<string>());
 
         var command = new ServiceListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--subscription sub123");
+
+        var args = command.GetCommand().Parse("--subscription sub123");
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -92,8 +90,8 @@ public class ServiceListCommandTests
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new ServiceListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse($"--subscription {subscriptionId}");
+
+        var args = command.GetCommand().Parse($"--subscription {subscriptionId}");
         var context = new CommandContext(_serviceProvider);
 
         // Act

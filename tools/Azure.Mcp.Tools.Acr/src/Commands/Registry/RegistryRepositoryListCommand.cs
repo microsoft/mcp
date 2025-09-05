@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Acr.Options;
 using Azure.Mcp.Tools.Acr.Options.Registry;
 using Azure.Mcp.Tools.Acr.Services;
@@ -32,20 +31,20 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
     {
         base.RegisterOptions(command);
         UseResourceGroup();
-        command.AddOption(AcrOptionDefinitions.Registry);
+        command.Options.Add(AcrOptionDefinitions.Registry);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var service = context.GetService<IAcrService>();
             var map = await service.ListRegistryRepositories(
                 options.Subscription!,

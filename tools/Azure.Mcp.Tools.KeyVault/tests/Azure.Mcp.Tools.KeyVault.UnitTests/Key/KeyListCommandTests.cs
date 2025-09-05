@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -24,7 +24,7 @@ public class KeyListCommandTests
     private readonly ILogger<KeyListCommand> _logger;
     private readonly KeyListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     private const string _knownSubscriptionId = "knownSubscriptionId";
     private const string _knownVaultName = "knownVaultName";
@@ -40,7 +40,7 @@ public class KeyListCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public class KeyListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(expectedKeys);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVaultName,
             "--subscription", _knownSubscriptionId
         ]);
@@ -88,7 +88,7 @@ public class KeyListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns([]);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVaultName,
             "--subscription", _knownSubscriptionId
         ]);
@@ -115,7 +115,7 @@ public class KeyListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVaultName,
             "--subscription", _knownSubscriptionId
         ]);

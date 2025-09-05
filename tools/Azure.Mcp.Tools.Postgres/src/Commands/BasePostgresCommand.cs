@@ -21,13 +21,13 @@ public abstract class BasePostgresCommand<
     {
         base.RegisterOptions(command);
         RequireResourceGroup();
-        command.AddOption(_userOption);
+        command.Options.Add(_userOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.User = parseResult.GetValueForOption(_userOption);
+        options.User = parseResult.GetValue(_userOption);
         return options;
     }
 }

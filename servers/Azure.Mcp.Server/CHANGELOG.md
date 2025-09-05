@@ -2,15 +2,43 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.5.11 (Unreleased)
+## 0.5.13 (Unreleased)
 
 ### Features Added
 
 ### Breaking Changes
 
+- Changed the following commands to change / remove available options
+  - Storage account create removed the ability to configure `enable-https-traffic-only` (always true now), `allow-blob-public-access` (always false now), and `kind` (always StorageV2 now).
+  - Storage blob container create removed the ability to configure `blob-container-public-access` (always false now).
+  - Storage blob upload removed the ability to configure `overwrite` (always false now).
+
 ### Bugs Fixed
 
 ### Other Changes
+
+- Updated `Azure.Identity` and `Azure.Identity.Broker` dependencies. [[#352](https://github.com/microsoft/mcp/pull/352)]
+
+## 0.5.12 (2025-09-04)
+
+### Features Added
+- Added `azmcp sql server firewall-rule create` and `azmcp sql server firewall-rule delete` commands. [#121](https://github.com/microsoft/mcp/pull/121)
+
+### Bugs Fixed
+
+- Fixed a bug in MySQL query validation logic. [[#81](https://github.com/microsoft/mcp/pull/81)]
+
+### Other Changes
+
+- Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
+- Added instructions about consumption plan for azure functions deployment best practices [[#218](https://github.com/microsoft/mcp/pull/218)]
+
+## 0.5.11 (2025-09-02)
+
+### Other Changes
+
+- Fixed VSIX signing [[#91](https://github.com/microsoft/mcp/pull/91)]
+- Included native packages in build artifacts and pack/release scripts. [[#51](https://github.com/microsoft/mcp/pull/51)]
 
 ## 0.5.10 (2025-08-28)
 

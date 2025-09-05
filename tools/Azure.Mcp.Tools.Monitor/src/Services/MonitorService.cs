@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Nodes;
-using Azure;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;

@@ -263,69 +263,6 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         }
 
         [Fact]
-        public async Task Should_upload_blob_with_overwrite()
-        {
-            // Create a temporary file to upload
-            var tempFileName = $"test-overwrite-{DateTime.UtcNow.Ticks}.txt";
-            var tempFilePath = Path.Combine(Path.GetTempPath(), tempFileName);
-            var testContent = "This is a test file for blob overwrite";
-
-            try
-            {
-                await File.WriteAllTextAsync(tempFilePath, testContent, TestContext.Current.CancellationToken);
-
-                // First upload
-                await CallToolAsync(
-                    "azmcp_storage_blob_upload",
-                    new()
-                    {
-                        { "subscription", Settings.SubscriptionName },
-                        { "tenant", Settings.TenantId },
-                        { "account", Settings.ResourceBaseName },
-                        { "container", "bar" },
-                        { "blob", tempFileName },
-                        { "local-file-path", tempFilePath }
-                    });
-
-                // Second upload with overwrite
-                var result = await CallToolAsync(
-                    "azmcp_storage_blob_upload",
-                    new()
-                    {
-                        { "subscription", Settings.SubscriptionName },
-                        { "tenant", Settings.TenantId },
-                        { "account", Settings.ResourceBaseName },
-                        { "container", "bar" },
-                        { "blob", tempFileName },
-                        { "local-file-path", tempFilePath },
-                        { "overwrite", true }
-                    });
-
-                // Verify upload details
-                var blobName = result.AssertProperty("blob");
-                Assert.Equal(tempFileName, blobName.GetString());
-
-                var containerName = result.AssertProperty("container");
-                Assert.Equal("bar", containerName.GetString());
-
-                var uploadedFile = result.AssertProperty("uploadedFile");
-                Assert.Equal(tempFilePath, uploadedFile.GetString());
-
-                var eTag = result.AssertProperty("eTag");
-                Assert.NotNull(eTag.GetString());
-                Assert.NotEmpty(eTag.GetString()!);
-            }
-            finally
-            {
-                // Clean up the temporary file
-                if (File.Exists(tempFilePath))
-                {
-                    File.Delete(tempFilePath);
-                }
-            }
-        }
-
-        [Fact]
         public async Task Should_list_containers()
         {
             var result = await CallToolAsync(

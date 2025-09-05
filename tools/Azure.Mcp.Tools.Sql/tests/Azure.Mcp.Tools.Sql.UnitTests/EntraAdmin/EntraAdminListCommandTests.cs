@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Sql.Commands.EntraAdmin;
 using Azure.Mcp.Tools.Sql.Models;
@@ -20,7 +20,7 @@ public class EntraAdminListCommandTests
     private readonly ILogger<EntraAdminListCommand> _logger;
     private readonly EntraAdminListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public EntraAdminListCommandTests()
     {
@@ -33,7 +33,7 @@ public class EntraAdminListCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -60,13 +60,13 @@ public class EntraAdminListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+                Arg.Any<Core.Options.RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(new List<SqlServerEntraAdministrator>());
         }
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -98,12 +98,12 @@ public class EntraAdminListCommandTests
             "testserver",
             "testrg",
             "testsub",
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(administrators);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -122,12 +122,12 @@ public class EntraAdminListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(new List<SqlServerEntraAdministrator>());
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -146,12 +146,12 @@ public class EntraAdminListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<SqlServerEntraAdministrator>>(new Exception("Test error")));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -166,17 +166,17 @@ public class EntraAdminListCommandTests
     public async Task ExecuteAsync_Handles404Error()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(404, "Server not found");
+        var requestException = new RequestFailedException(404, "Server not found");
         _service.GetEntraAdministratorsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<SqlServerEntraAdministrator>>(requestException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -190,17 +190,17 @@ public class EntraAdminListCommandTests
     public async Task ExecuteAsync_Handles403Error()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(403, "Access denied");
+        var requestException = new RequestFailedException(403, "Access denied");
         _service.GetEntraAdministratorsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<SqlServerEntraAdministrator>>(requestException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
