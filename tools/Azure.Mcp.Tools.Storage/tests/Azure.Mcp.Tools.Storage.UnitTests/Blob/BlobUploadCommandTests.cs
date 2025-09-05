@@ -59,7 +59,6 @@ public class BlobUploadCommandTests
             _knownContainer,
             _knownBlob,
             _knownLocalFilePath,
-            false,
             _knownSubscription,
             Arg.Any<string?>(),
             Arg.Any<Core.Options.RetryPolicyOptions?>())
@@ -70,48 +69,6 @@ public class BlobUploadCommandTests
             "--container", _knownContainer,
             "--blob", _knownBlob,
             "--local-file-path", _knownLocalFilePath,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithOverwriteOption_UploadsBlobWithOverwrite()
-    {
-        // Arrange
-        var uploadResult = new BlobUploadResult(
-            Blob: _knownBlob,
-            Container: _knownContainer,
-            UploadedFile: Path.GetFileName(_knownLocalFilePath),
-            LastModified: DateTimeOffset.UtcNow,
-            ETag: "\"0x8D123456789ABCD\"",
-            MD5Hash: "abc123def456"
-        );
-
-        _storageService.UploadBlob(
-            _knownAccount,
-            _knownContainer,
-            _knownBlob,
-            _knownLocalFilePath,
-            true,
-            _knownSubscription,
-            Arg.Any<string?>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>())
-            .Returns(uploadResult);
-
-        var args = _commandDefinition.Parse([
-            "--account", _knownAccount,
-            "--container", _knownContainer,
-            "--blob", _knownBlob,
-            "--local-file-path", _knownLocalFilePath,
-            "--overwrite",
             "--subscription", _knownSubscription
         ]);
 
@@ -133,7 +90,6 @@ public class BlobUploadCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<bool>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<Core.Options.RetryPolicyOptions?>())
@@ -164,11 +120,10 @@ public class BlobUploadCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<bool>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<Core.Options.RetryPolicyOptions?>())
-            .ThrowsAsync(new InvalidOperationException("Blob 'test-blob.txt' already exists in container 'container123'. Use --overwrite to replace it."));
+            .ThrowsAsync(new InvalidOperationException("Blob 'test-blob.txt' already exists in container 'container123'."));
 
         var args = _commandDefinition.Parse([
             "--account", _knownAccount,
@@ -216,7 +171,6 @@ public class BlobUploadCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<bool>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<Core.Options.RetryPolicyOptions?>())
