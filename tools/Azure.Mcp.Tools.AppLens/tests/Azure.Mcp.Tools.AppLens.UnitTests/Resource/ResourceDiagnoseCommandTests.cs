@@ -24,7 +24,6 @@ public class ResourceDiagnoseCommandTests
     private readonly ILogger<ResourceDiagnoseCommand> _logger;
     private readonly ResourceDiagnoseCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
 
     public ResourceDiagnoseCommandTests()
     {
@@ -32,7 +31,6 @@ public class ResourceDiagnoseCommandTests
         _logger = Substitute.For<ILogger<ResourceDiagnoseCommand>>();
 
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
         _serviceProvider = new ServiceCollection()
             .AddSingleton(_appLensService)
             .BuildServiceProvider();
@@ -58,7 +56,7 @@ public class ResourceDiagnoseCommandTests
             "Microsoft.Web/sites")
             .Returns(expectedResult);
 
-        var args = _parser.Parse([
+        var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
             "--resource-name", "myapp",
             "--subscription", "sub123",
@@ -94,7 +92,7 @@ public class ResourceDiagnoseCommandTests
     public async Task ExecuteAsync_Returns400_WhenQuestionIsMissing()
     {
         // Arrange && Act
-        var response = await _command.ExecuteAsync(_context, _parser.Parse([
+        var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
             "--resource-name", "myapp",
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -110,7 +108,7 @@ public class ResourceDiagnoseCommandTests
     public async Task ExecuteAsync_Returns400_WhenResourceNameIsMissing()
     {
         // Arrange && Act
-        var response = await _command.ExecuteAsync(_context, _parser.Parse([
+        var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
             "--subscription", "sub123",
             "--resource-group", "rg1",
@@ -126,7 +124,7 @@ public class ResourceDiagnoseCommandTests
     public async Task ExecuteAsync_Returns400_WhenSubscriptionIsMissing()
     {
         // Arrange && Act
-        var response = await _command.ExecuteAsync(_context, _parser.Parse([
+        var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
             "--resource-name", "myapp",
             "--resource-group", "rg1",
@@ -142,7 +140,7 @@ public class ResourceDiagnoseCommandTests
     public async Task ExecuteAsync_Returns400_WhenResourceGroupIsMissing()
     {
         // Arrange && Act
-        var response = await _command.ExecuteAsync(_context, _parser.Parse([
+        var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
             "--resource-name", "myapp",
             "--subscription", "sub123",
@@ -158,7 +156,7 @@ public class ResourceDiagnoseCommandTests
     public async Task ExecuteAsync_Returns400_WhenResourceTypeIsMissing()
     {
         // Arrange && Act
-        var response = await _command.ExecuteAsync(_context, _parser.Parse([
+        var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
             "--resource-name", "myapp",
             "--subscription", "sub123",
@@ -182,7 +180,7 @@ public class ResourceDiagnoseCommandTests
             Arg.Any<string>())
             .ThrowsAsync(new Exception("Service error"));
 
-        var args = _parser.Parse([
+        var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
             "--resource-name", "myapp",
             "--subscription", "sub123",
@@ -210,7 +208,7 @@ public class ResourceDiagnoseCommandTests
             Arg.Any<string>())
             .ThrowsAsync(new InvalidOperationException("Resource not found"));
 
-        var args = _parser.Parse([
+        var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
             "--resource-name", "myapp",
             "--subscription", "sub123",
@@ -238,7 +236,7 @@ public class ResourceDiagnoseCommandTests
             Arg.Any<string>())
             .ThrowsAsync(new HttpRequestException("Service Unavailable", null, System.Net.HttpStatusCode.ServiceUnavailable));
 
-        var args = _parser.Parse([
+        var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
             "--resource-name", "myapp",
             "--subscription", "sub123",
@@ -273,7 +271,7 @@ public class ResourceDiagnoseCommandTests
             "Microsoft.Web/sites")
             .Returns(expectedResult);
 
-        var args = _parser.Parse([
+        var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
             "--resource-name", "myapp",
             "--subscription", "sub123",
@@ -317,7 +315,7 @@ public class ResourceDiagnoseCommandTests
         if (!string.IsNullOrEmpty(resourceGroup)) { args.AddRange(["--resource-group", resourceGroup]); }
         if (!string.IsNullOrEmpty(resourceType)) { args.AddRange(["--resource-type", resourceType]); }
 
-        var parseResult = _parser.Parse(args.ToArray());
+        var parseResult = _command.GetCommand().Parse(args.ToArray());
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -346,7 +344,7 @@ public class ResourceDiagnoseCommandTests
             "Microsoft.Web/sites")
             .Returns(expectedResult);
 
-        var args = _parser.Parse([
+        var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
             "--resource-name", "myapp",
             "--subscription", "sub123",
@@ -378,7 +376,7 @@ public class ResourceDiagnoseCommandTests
             Arg.Any<string>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var args = _parser.Parse([
+        var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
             "--resource-name", "myapp",
             "--subscription", "sub123",

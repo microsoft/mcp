@@ -63,22 +63,22 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_questionOption);
-        command.AddOption(_resourceNameOption);
-        command.AddOption(_subscriptionOption);
-        command.AddOption(_resourceGroupOption);
-        command.AddOption(_resourceTypeOption);
+        command.Options.Add(_questionOption);
+        command.Options.Add(_resourceNameOption);
+        command.Options.Add(_subscriptionOption);
+        command.Options.Add(_resourceGroupOption);
+        command.Options.Add(_resourceTypeOption);
     }
 
     private ResourceDiagnoseOptions BindOptions(ParseResult parseResult)
     {
         return new ResourceDiagnoseOptions
         {
-            Question = parseResult.GetValueForOption(_questionOption) ?? string.Empty,
-            ResourceName = parseResult.GetValueForOption(_resourceNameOption) ?? string.Empty,
-            Subscription= parseResult.GetValueForOption(_subscriptionOption),
-            ResourceGroup = parseResult.GetValueForOption(_resourceGroupOption),
-            ResourceType = parseResult.GetValueForOption(_resourceTypeOption)
+            Question = parseResult.GetValue(_questionOption) ?? string.Empty,
+            ResourceName = parseResult.GetValue(_resourceNameOption) ?? string.Empty,
+            Subscription= parseResult.GetValue(_subscriptionOption),
+            ResourceGroup = parseResult.GetValue(_resourceGroupOption),
+            ResourceType = parseResult.GetValue(_resourceTypeOption)
         };
     }
 

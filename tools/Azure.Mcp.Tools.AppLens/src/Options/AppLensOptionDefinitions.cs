@@ -16,36 +16,36 @@ public static class AppLensOptionDefinitions
         public const string ResourceTypeName = "resource-type";
 
         public static readonly Option<string> Question = new(
-            $"--{QuestionName}",
-            "User question")
+            $"--{QuestionName}")
         {
-            IsRequired = true
+            Description = "User question",
+            Required = true
         };
 
         public static readonly Option<string> ResourceName = new(
-            $"--{ResourceNameName}",
-            "The name of the resource to investigate or diagnose")
+            $"--{ResourceNameName}")
         {
-            IsRequired = true
+            Description = "The name of the resource to investigate or diagnose",
+            Required = true
         };
 
         public static readonly Option<string?> Subscription = new(
-            $"--{SubscriptionName}",
-            "The subscription the resource belongs to. Try to get this information using the Azure CLI tool before asking the user.")
+            $"--{SubscriptionName}")
         {
-            IsRequired = true
+            Description = "The subscription the resource belongs to. Try to get this information using the Azure CLI tool before asking the user.",
+            Required = true
         };
         public static readonly Option<string?> ResourceGroup = new(
-            $"--{ResourceGroupName}",
-            "The name of the Azure resource group. This is a logical container for Azure resources. Try to get this information using the Azure CLI tool before asking the user.")
+            $"--{ResourceGroupName}")
         {
-            IsRequired = true
+            Description = "The name of the Azure resource group. This is a logical container for Azure resources. Try to get this information using the Azure CLI tool before asking the user.",
+            Required = true
         };
         public static readonly Option<string?> ResourceType = new(
-            $"--{ResourceTypeName}",
-            "Resource type. Try to get this information using the Azure CLI tool before asking the user.")
+            $"--{ResourceTypeName}")
         {
-            IsRequired = true
+            Description = "Resource type. Try to get this information using the Azure CLI tool before asking the user.",
+            Required = true
         };
     }
 }
