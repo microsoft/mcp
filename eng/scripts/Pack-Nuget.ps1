@@ -36,7 +36,6 @@ if(!(Test-Path $ArtifactsPath)) {
 	return
 }
 
-$tempFolder = "$RepoRoot/.work/temp"
 $sharedProjectProperties = & "$projectPropertiesScript" -ProjectName "Directory.Build.props"
 
 Push-Location $RepoRoot
@@ -94,9 +93,6 @@ try {
 
 		# Build the project
 		foreach ($platformDirectory in $platformDirectories) {
-			Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
-			Copy-Item -Path $platformDirectory -Destination $tempFolder -Recurse -Force
-			
 			$platformOSArch = $platformDirectory.Name
 			$tempPlatformDir = Join-Path $platformOutputPath $platformOSArch
 			$platformToolDir = "$tempPlatformDir/tools/any/$platformOSArch"
@@ -137,6 +133,13 @@ try {
 			$ridNode.AppendChild($newRid) | Out-Null
 			$wrapperToolSettings.Save("$wrapperToolDir/DotnetToolSettings.xml")
 
+			LogInfo "Creating Nuget Symbol Package from $platformNuspecFile"
+			Invoke-LoggedCommand "nuget pack '$platformNuspecFile' -OutputDirectory '$platformOutputPath'" -GroupOutput
+			$generatedNupkg = Get-ChildItem -Path $platformOutputPath -Filter "*.nupkg" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+			$symbolPkgName = $generatedNupkg.Name -replace ".nupkg$", ".symbols.nupkg"
+			Rename-Item -Path $generatedNupkg.FullName -NewName $symbolPkgName -Force
+
+			Get-ChildItem -Path $platformToolDir -Recurse -Include "*.pdb", "*.dSYM", "*.dbg" | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
 			LogInfo "Creating Nuget Package from $platformNuspecFile"
 			Invoke-LoggedCommand "nuget pack '$platformNuspecFile' -OutputDirectory '$platformOutputPath'" -GroupOutput
 			Remove-Item -Path $tempPlatformDir -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
