@@ -642,6 +642,54 @@ public class McpRuntimeTests
     }
 
     [Fact]
+    public async Task CallToolHandler_SetsActivityTags()
+    {
+        // Arrange
+        var serviceProvider = CreateServiceProvider();
+        var logger = serviceProvider.GetRequiredService<ILogger<McpRuntime>>();
+        var mockToolLoader = Substitute.For<IToolLoader>();
+        var testSubscriptionId = "test-subscription-id";
+        var toolName = "existing-tool";
+
+        var activity = new Activity("test");
+        var mockTelemetry = CreateMockTelemetryService();
+        mockTelemetry.StartActivity(Arg.Any<string>(), Arg.Any<Implementation?>()).Returns(activity);
+
+        var options = CreateOptions();
+        var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
+
+        var expectedResult = new CallToolResult
+        {
+            Content = new List<ContentBlock>
+            {
+                new TextContentBlock { Text = "Tool executed successfully without prior listing" }
+            }
+        };
+
+        var request = CreateCallToolRequest(toolName, new Dictionary<string, JsonElement>
+        {
+            { "action", JsonDocument.Parse("\"execute\"").RootElement },
+            { OptionDefinitions.Common.SubscriptionName, JsonDocument.Parse($"\"{testSubscriptionId}\"").RootElement }
+        });
+        mockToolLoader.CallToolHandler(request, Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<CallToolResult>(expectedResult));
+
+        // Act - Call tool directly without listing tools first
+        var result = await runtime.CallToolHandler(request, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(expectedResult, result);
+
+        var actualSubscription = activity.Tags.SingleOrDefault(e => TagName.SubscriptionGuid == e.Key);
+        Assert.Equal(testSubscriptionId, actualSubscription.Value);
+
+        var actualToolName = activity.Tags.SingleOrDefault(e => TagName.ToolName == e.Key);
+        Assert.Equal(toolName, actualToolName.Value);
+
+        Assert.Equal(ActivityStatusCode.Ok, activity.Status);
+    }
+
+    [Fact]
     public async Task DisposeAsync_ShouldDisposeToolLoader()
     {
         // Arrange
