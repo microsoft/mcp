@@ -22,11 +22,11 @@ public class DatabaseAddCommandLiveTests(LiveTestFixture liveTestFixture, ITestO
             new Dictionary<string, object?>
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", "test-rg" },
-                { "app", "test-app" },
+                { "resource-group", Settings.ResourceGroupName },
+                { "app", Settings.ResourceBaseName + "-webapp" },
                 { "database-type", "SqlServer" },
-                { "database-server", "test-server.database.windows.net" },
-                { "database", "test-db" }
+                { "database-server", Settings.ResourceBaseName + "-sql.database.windows.net" },
+                { "database", Settings.ResourceBaseName + "db" }
             });
 
         // Test should validate actual command execution and error handling
