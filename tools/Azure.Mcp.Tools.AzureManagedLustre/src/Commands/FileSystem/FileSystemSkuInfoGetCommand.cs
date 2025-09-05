@@ -9,35 +9,35 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.Commands.FileSystem;
 
-public sealed class FileSystemGetSkuInfoCommand(ILogger<FileSystemGetSkuInfoCommand> logger)
-    : BaseAzureManagedLustreCommand<FileSystemGetSkuInfoOptions>(logger)
+public sealed class FileSystemSkuInfoGetCommand(ILogger<FileSystemSkuInfoGetCommand> logger)
+    : BaseAzureManagedLustreCommand<FileSystemSkuInfoGetOptions>(logger)
 {
     private const string CommandTitle = "Get AMLFS SKU information";
 
-    public override string Name => "get-sku-info";
+    public override string Name => "sku-info-get";
 
     public override string Description =>
         """
-        Retrieves available Azure Managed Lustre in all the regions or in a specific regions. Use to discover capabilities, SKU names and zone support.
+        Retrieves the available Azure Managed Lustre SKU, including increments, bandwidth, scale targets and zonal support. If a location is specified, the results will be filtered to that location.
         """;
 
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
 
-    private static readonly Option<string> _locationOption = AzureManagedLustreOptionDefinitions.LocationOption;
+    private static readonly Option<string> _optionalLocationOption = AzureManagedLustreOptionDefinitions.OptionalLocationOption;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        _locationOption.IsRequired = false;
-        command.AddOption(_locationOption);
+        _optionalLocationOption.IsRequired = false;
+        command.AddOption(_optionalLocationOption);
     }
 
-    protected override FileSystemGetSkuInfoOptions BindOptions(ParseResult parseResult)
+    protected override FileSystemSkuInfoGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Location = parseResult.GetValueForOption(_locationOption);
+        options.Location = parseResult.GetValueForOption(_optionalLocationOption);
         return options;
     }
 
@@ -53,8 +53,8 @@ public sealed class FileSystemGetSkuInfoCommand(ILogger<FileSystemGetSkuInfoComm
             var skus = await service.GetSkuInfoAsync(options.Subscription!, options.Tenant, options.Location, options.RetryPolicy);
 
             context.Response.Results = skus.Count > 0 ? ResponseResult.Create(
-                new FileSystemGetSkuInfoResult(skus),
-                AzureManagedLustreJsonContext.Default.FileSystemGetSkuInfoResult) : null;
+                new FileSystemSkuInfoGetResult(skus),
+                AzureManagedLustreJsonContext.Default.FileSystemSkuInfoGetResult) : null;
         }
         catch (Exception ex)
         {
@@ -64,5 +64,5 @@ public sealed class FileSystemGetSkuInfoCommand(ILogger<FileSystemGetSkuInfoComm
         return context.Response;
     }
 
-    internal record FileSystemGetSkuInfoResult(List<Models.AzureManagedLustreSkuInfo> Skus);
+    internal record FileSystemSkuInfoGetResult(List<Models.AzureManagedLustreSkuInfo> Skus);
 }

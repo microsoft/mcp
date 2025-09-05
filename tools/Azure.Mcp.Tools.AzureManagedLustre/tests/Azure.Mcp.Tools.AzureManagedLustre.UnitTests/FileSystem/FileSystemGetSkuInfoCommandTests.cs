@@ -20,8 +20,8 @@ public class FileSystemGetSkuInfoCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IAzureManagedLustreService _amlfsService;
-    private readonly ILogger<FileSystemGetSkuInfoCommand> _logger;
-    private readonly FileSystemGetSkuInfoCommand _command;
+    private readonly ILogger<FileSystemSkuInfoGetCommand> _logger;
+    private readonly FileSystemSkuInfoGetCommand _command;
     private readonly CommandContext _context;
     private readonly Parser _parser;
     private readonly string _knownSubscriptionId = "sub123";
@@ -29,7 +29,7 @@ public class FileSystemGetSkuInfoCommandTests
     public FileSystemGetSkuInfoCommandTests()
     {
         _amlfsService = Substitute.For<IAzureManagedLustreService>();
-        _logger = Substitute.For<ILogger<FileSystemGetSkuInfoCommand>>();
+        _logger = Substitute.For<ILogger<FileSystemSkuInfoGetCommand>>();
 
         var services = new ServiceCollection().AddSingleton(_amlfsService);
         _serviceProvider = services.BuildServiceProvider();
@@ -43,7 +43,7 @@ public class FileSystemGetSkuInfoCommandTests
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = _command.GetCommand();
-        Assert.Equal("get-sku-info", command.Name);
+        Assert.Equal("sku-info-get", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }

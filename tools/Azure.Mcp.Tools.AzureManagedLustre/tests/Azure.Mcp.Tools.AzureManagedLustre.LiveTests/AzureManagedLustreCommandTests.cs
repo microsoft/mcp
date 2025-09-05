@@ -45,7 +45,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
         public async Task Should_get_sku_info()
         {
             var result = await CallToolAsync(
-                "azmcp_azuremanagedlustre_filesystem_get-sku-info",
+                "azmcp_azuremanagedlustre_filesystem_sku-info-get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId }
@@ -59,7 +59,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
         public async Task Should_get_sku_info_zonal_support()
         {
             var result = await CallToolAsync(
-                "azmcp_azuremanagedlustre_filesystem_get-sku-info",
+                "azmcp_azuremanagedlustre_filesystem_sku-info-get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -78,7 +78,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
         public async Task Should_get_sku_info_no_zonal_support()
         {
             var result = await CallToolAsync(
-                "azmcp_azuremanagedlustre_filesystem_get-sku-info",
+                "azmcp_azuremanagedlustre_filesystem_sku-info-get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
