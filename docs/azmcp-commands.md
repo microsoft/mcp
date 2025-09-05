@@ -771,7 +771,7 @@ azmcp monitor metrics query --subscription <subscription> \
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 azmcp azuremanagedlustre filesystem list --subscription <subscription> \
-                                      --resource-group <resource-group> 
+                                      --resource-group <resource-group>
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
 azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \
@@ -882,6 +882,33 @@ azmcp servicebus topic subscription details --subscription <subscription> \
                                             --namespace <service-bus-namespace> \
                                             --topic <topic> \
                                             --subscription-name <subscription-name>
+```
+
+### Azure SignalR Service Operations
+
+```bash
+# List SignalR Service resources in a subscription
+azmcp signalr runtime list --subscription <subscription>
+
+# Show details of a specific SignalR Service
+azmcp signalr runtime show --subscription <subscription> \
+                           --resource-group <resource-group> \
+                           --signalr-name <signalr-name>
+
+# List access keys for a SignalR Service
+azmcp signalr key list --subscription <subscription> \
+                       --resource-group <resource-group> \
+                       --signalr-name <signalr-name>
+
+# List network access control rules for a SignalR Service
+azmcp signalr network-rule list --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --signalr-name <signalr-name>
+
+# Show managed identity configuration of a SignalR Service
+azmcp signalr identity show --subscription <subscription> \
+                            --resource-group <resource-group> \
+                            --signalr-name <signalr-name>
 ```
 
 ### Azure SQL Database Operations

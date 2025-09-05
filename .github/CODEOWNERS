@@ -192,3 +192,9 @@
 
 # ServiceLabel: %tools-VirtualDesktop
 # ServiceOwners:                       @vladimisms
+
+# PRLabel: %area-SignalR
+/tools/Azure.Mcp.Tools.SignalR/        @kenchennt @JialinXin @HaofanLiao @Azure/azure-mcp
+
+# ServiceLabel: %area-SignalR
+# ServiceOwners:                       @kenchennt @JialinXin
