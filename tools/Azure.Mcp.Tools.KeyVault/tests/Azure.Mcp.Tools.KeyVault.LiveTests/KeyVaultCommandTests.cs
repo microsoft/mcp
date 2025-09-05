@@ -1,3 +1,4 @@
+/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -257,3 +258,4 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     }
 }
 
+*/

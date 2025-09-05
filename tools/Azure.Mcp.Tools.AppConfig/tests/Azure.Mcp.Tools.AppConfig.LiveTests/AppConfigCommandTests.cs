@@ -514,4 +514,3 @@ public class AppConfigCommandTests : CommandTestsBase
         }
     }
 }
-

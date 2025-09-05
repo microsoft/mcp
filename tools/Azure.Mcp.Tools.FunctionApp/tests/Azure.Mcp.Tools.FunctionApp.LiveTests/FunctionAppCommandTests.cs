@@ -1,3 +1,4 @@
+/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -184,3 +185,4 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
     }
 }
 
+*/

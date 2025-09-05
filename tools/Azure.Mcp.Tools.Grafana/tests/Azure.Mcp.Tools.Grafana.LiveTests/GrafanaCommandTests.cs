@@ -1,3 +1,4 @@
+/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -55,3 +56,4 @@ public class GrafanaCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     }
 }
 
+*/

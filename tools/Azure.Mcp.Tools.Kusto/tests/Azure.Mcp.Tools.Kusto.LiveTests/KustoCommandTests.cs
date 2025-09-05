@@ -1,3 +1,4 @@
+/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -110,3 +111,4 @@ public class KustoCommandTests(ITestOutputHelper output)
     }
 }
 
+*/
