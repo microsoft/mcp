@@ -117,6 +117,12 @@ Below are Microsoft's official MCP server implementations:
 
 ---
 
+### 💻 NuGet MCP Server
+- **Repository**: [NuGet/Home](https://github.com/NuGet/Home)
+- **Description**: This is a Model Context Protocol (MCP) server for NuGet, enabling advanced tooling and automation scenarios for NuGet package management.
+
+---
+
 ## 📎 Related Resources
 
 - [Microsoft MCP Resources](https://github.com/microsoft/mcp/tree/main/Resources)
