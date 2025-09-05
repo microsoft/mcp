@@ -17,14 +17,14 @@ public abstract class BaseCacheCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_cacheOption);
+        command.Options.Add(_cacheOption);
         RequireResourceGroup();
     }
 
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Cache = parseResult.GetValueForOption(_cacheOption);
+        options.Cache = parseResult.GetValue(_cacheOption);
         return options;
     }
 }

@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Queue;
@@ -38,29 +38,29 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_namespaceOption);
-        command.AddOption(_queueOption);
+        command.Options.Add(_namespaceOption);
+        command.Options.Add(_queueOption);
     }
 
     protected override BaseQueueOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Name = parseResult.GetValueForOption(_queueOption);
-        options.Namespace = parseResult.GetValueForOption(_namespaceOption);
+        options.Name = parseResult.GetValueOrDefault(_queueOption);
+        options.Namespace = parseResult.GetValueOrDefault(_namespaceOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var service = context.GetService<IServiceBusService>();
             var details = await service.GetQueueDetails(
                 options.Namespace!,

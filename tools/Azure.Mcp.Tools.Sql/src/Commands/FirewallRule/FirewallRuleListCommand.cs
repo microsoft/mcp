@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.FirewallRule;
 using Azure.Mcp.Tools.Sql.Services;
@@ -19,7 +18,7 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
 
     public override string Description =>
         """
-        Gets a list of firewall rules for a SQL server. This command retrieves all 
+        Gets a list of firewall rules for a SQL server. This command retrieves all
         firewall rules configured for the specified SQL server, including their IP address ranges
         and rule names. Returns an array of firewall rule objects with their properties.
         """;
@@ -30,15 +29,15 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var sqlService = context.GetService<ISqlService>();
 
             var firewallRules = await sqlService.ListFirewallRulesAsync(
@@ -66,17 +65,17 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == 404 =>
             "SQL server not found. Verify the server name, resource group, and that you have access.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed accessing the SQL server. Verify you have appropriate permissions. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => reqEx.Status,
+        RequestFailedException reqEx => reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
 

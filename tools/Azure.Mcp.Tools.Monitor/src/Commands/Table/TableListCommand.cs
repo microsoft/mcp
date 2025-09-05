@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
@@ -31,28 +29,28 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseMon
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_tableTypeOption);
+        command.Options.Add(_tableTypeOption);
         RequireResourceGroup();
     }
 
     protected override TableListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TableType = parseResult.GetValueForOption(_tableTypeOption) ?? MonitorOptionDefinitions.TableType.GetDefaultValue();
+        options.TableType = parseResult.GetValue(_tableTypeOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var monitorService = context.GetService<IMonitorService>();
             var tables = await monitorService.ListTables(
                 options.Subscription!,

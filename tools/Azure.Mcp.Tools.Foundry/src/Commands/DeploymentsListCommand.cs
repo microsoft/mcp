@@ -37,27 +37,28 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_endpointOption);
+        command.Options.Add(_endpointOption);
     }
 
     protected override DeploymentsListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValueForOption(_endpointOption);
+        options.Endpoint = parseResult.GetValue(_endpointOption);
 
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
 
             var service = context.GetService<IFoundryService>();
             var deployments = await service.ListDeployments(

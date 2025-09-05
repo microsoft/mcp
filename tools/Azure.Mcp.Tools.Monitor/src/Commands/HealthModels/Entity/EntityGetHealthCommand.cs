@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Options.HealthModels.Entity;
 using Azure.Mcp.Tools.Monitor.Services;
@@ -35,30 +34,30 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_entityOption);
-        command.AddOption(_healthModelOption);
+        command.Options.Add(_entityOption);
+        command.Options.Add(_healthModelOption);
         RequireResourceGroup();
     }
 
     protected override EntityGetHealthOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Entity = parseResult.GetValueForOption(_entityOption);
-        options.HealthModelName = parseResult.GetValueForOption(_healthModelOption);
+        options.Entity = parseResult.GetValue(_entityOption);
+        options.HealthModelName = parseResult.GetValue(_healthModelOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var service = context.GetService<IMonitorHealthModelService>();
             var result = await service.GetEntityHealth(
                 options.Entity!,
