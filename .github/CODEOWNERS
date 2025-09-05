@@ -16,14 +16,14 @@
 ##################
 # Catch all
 ##################
-*                                      @microsoft/azure-mcp
+*                                      @microsoft/azure-mcp @microsoft/fabric-mcp
 
 ##################
 # Eng Sys
 ##################
-/eng/                                  @microsoft/azure-mcp @microsoft/azure-sdk-eng
-/.github/                              @microsoft/azure-mcp @microsoft/azure-sdk-eng
-/.config/                              @microsoft/azure-mcp @microsoft/azure-sdk-eng
+/eng/                                  @microsoft/azure-mcp @microsoft/azure-sdk-eng @microsoft/fabric-mcp
+/.github/                              @microsoft/azure-mcp @microsoft/azure-sdk-eng @microsoft/fabric-mcp
+/.config/                              @microsoft/azure-mcp @microsoft/azure-sdk-eng @microsoft/fabric-mcp
 
 ##################
 # Services
