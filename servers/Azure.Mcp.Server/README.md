@@ -24,7 +24,7 @@ The Azure MCP Server implements the [MCP specification](https://modelcontextprot
     - You should see the Azure MCP Server in the list of tools
 1. Try a prompt that tells the agent to use the Azure MCP Server, such as `List my Azure Storage containers`
     - The agent should be able to use the Azure MCP Server tools to complete your query
-1. Check out the [documentation](https://learn.microsoft.com/azure/developer/azure-mcp-server/) and review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/TROUBLESHOOTING.md) for commonly asked questions
+1. Check out the [documentation](https://learn.microsoft.com/azure/developer/azure-mcp-server/) and review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md) for commonly asked questions
 1. We're building this in the open. Your feedback is much appreciated, and will help us shape the future of the Azure MCP server
     - 👉 [Open an issue in the public repository](https://github.com/microsoft/mcp/issues/new/choose)
 
@@ -466,7 +466,7 @@ To opt out, set the environment variable `AZURE_MCP_COLLECT_TELEMETRY` to `false
 
 ## 📝 Troubleshooting
 
-See [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/TROUBLESHOOTING.md#128-tool-limit-issue) for help with common issues and logging.
+See [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md) for help with common issues and logging.
 
 ### 🔑 Authentication
 
@@ -475,7 +475,7 @@ See [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/TROUBLESH
 
 The Azure MCP Server uses the Azure Identity library for .NET to authenticate to Microsoft Entra ID. For detailed information, see [Authentication Fundamentals](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md#authentication-fundamentals).
 
-If you're running into any issues with authentication, visit our [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/TROUBLESHOOTING.md#authentication).
+If you're running into any issues with authentication, visit our [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#authentication).
 
 For enterprise authentication scenarios, including network restrictions, security policies, and protected resources, see [Authentication Scenarios in Enterprise Environments](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md#authentication-scenarios-in-enterprise-environments).
 </details>
