@@ -1,4 +1,3 @@
-/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -146,4 +145,3 @@ public class SearchCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     }
 }
 
-*/

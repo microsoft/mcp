@@ -1,4 +1,3 @@
-/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -68,4 +67,3 @@ public class FoundryCommandTests(ITestOutputHelper output)
     }
 }
 
-*/

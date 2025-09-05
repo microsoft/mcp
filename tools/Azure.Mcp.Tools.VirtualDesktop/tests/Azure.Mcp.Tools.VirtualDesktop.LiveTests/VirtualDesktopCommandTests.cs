@@ -1,4 +1,3 @@
-/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -415,5 +414,4 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
         }
     }
 }
-*/
 
