@@ -30,7 +30,7 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
         This is not going to trigger or create any test runs and only will setup your configuration for your test plan. Also, this is NOT going to create any test resource in azure. 
         It will only create a test in an already existing load test resource.
         Example:
-        azmcp loadtesting test create --test-id my-test --test-resource-name <test-resource-name> --duration 5 --virtual-users 50 --endpoint-url https://example.com --display-name "SmokeTest"
+        azmcp loadtesting test create --test-id <test-id> --test-resource-name <test-resource-name> --duration 5 --virtual-users 50 --endpoint-url https://example.com --display-name "SmokeTest"
         Returns: the created test configuration (TestId and LoadTestConfiguration).
         """;
     public override string Title => _commandTitle;
