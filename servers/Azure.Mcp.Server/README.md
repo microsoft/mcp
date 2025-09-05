@@ -175,7 +175,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * Support for template discovery, template initialization, provisioning and deployment
 * Cross-platform compatibility
 
-### �🚀 Azure Deploy
+### 🚀 Azure Deploy
 
 * Generate Azure service architecture diagrams from source code
 * Create a deploy plan for provisioning and deploying the application
