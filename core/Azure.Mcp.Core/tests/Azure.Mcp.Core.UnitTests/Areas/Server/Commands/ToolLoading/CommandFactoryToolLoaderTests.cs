@@ -440,4 +440,41 @@ public class CommandFactoryToolLoaderTests
         Assert.True(itemsProperty.TryGetProperty("type", out var itemTypeProperty));
         Assert.Equal("string", itemTypeProperty.GetString());
     }
+
+    [Fact]
+    public async Task ListToolsHandler_ToolsWithSecretMetadata_HaveSecretHintInMeta()
+    {
+        // Arrange - include KeyVault tools which should have Secret = true
+        var keyVaultOptions = new ToolLoaderOptions
+        {
+            Namespace = new[] { "keyvault" }
+        };
+        var (toolLoader, _) = CreateToolLoader(keyVaultOptions);
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+
+        // Find secret-related tools (like keyvault secret get/create)
+        var secretTools = result.Tools.Where(t =>
+            t.Name.Contains("secret", StringComparison.OrdinalIgnoreCase) &&
+            (t.Name.Contains("get", StringComparison.OrdinalIgnoreCase) ||
+             t.Name.Contains("create", StringComparison.OrdinalIgnoreCase))
+        ).ToList();
+
+        // Verify that at least one secret tool is found
+        Assert.NotEmpty(secretTools);
+
+        // Check that secret tools have SecretHint in their Meta
+        foreach (var tool in secretTools)
+        {
+            Assert.NotNull(tool.Meta);
+            Assert.True(tool.Meta.TryGetPropertyValue("SecretHint", out var secretHintNode));
+            Assert.True(secretHintNode?.GetValue<bool>());
+        }
+    }
 }

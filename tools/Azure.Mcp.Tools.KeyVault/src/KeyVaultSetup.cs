@@ -41,7 +41,7 @@ public class KeyVaultSetup : IAreaSetup
 
         secret.AddCommand("list", new SecretListCommand(loggerFactory.CreateLogger<SecretListCommand>()));
         secret.AddCommand("create", new SecretCreateCommand(loggerFactory.CreateLogger<SecretCreateCommand>()));
-        //secret.AddCommand("get", new SecretGetCommand(loggerFactory.CreateLogger<SecretGetCommand>()));
+        secret.AddCommand("get", new SecretGetCommand(loggerFactory.CreateLogger<SecretGetCommand>()));
 
         certificate.AddCommand("list", new CertificateListCommand(loggerFactory.CreateLogger<CertificateListCommand>()));
         certificate.AddCommand("get", new CertificateGetCommand(loggerFactory.CreateLogger<CertificateGetCommand>()));
