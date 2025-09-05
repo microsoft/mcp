@@ -180,7 +180,7 @@ Azure MCP's dynamic proxy mode exposes one tool that routes to all Azure service
 2. Run "MCP: List Servers"
 3. Check the tool count for each server in the output window
 
-### VS Code only shows a subset of tools available?
+### VS Code only shows a subset of tools available
 
 The Azure MCP Server can run in multiple modes. Review your MCP configuration to ensure it matches your expectations:
 
