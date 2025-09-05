@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
 using Xunit;
 
