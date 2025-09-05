@@ -5,6 +5,7 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Options.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Topic;
 
@@ -34,15 +35,15 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var eventGridService = context.GetService<IEventGridService>();
             var topics = await eventGridService.GetTopicsAsync(
                 options.Subscription!,
@@ -55,7 +56,9 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing Event Grid topics for subscription {Subscription}", options.Subscription);
+            _logger.LogError(ex,
+                "Error listing Event Grid topics. Subscription: {Subscription}, Options: {@Options}",
+                options.Subscription, options);
             HandleException(context, ex);
         }
 

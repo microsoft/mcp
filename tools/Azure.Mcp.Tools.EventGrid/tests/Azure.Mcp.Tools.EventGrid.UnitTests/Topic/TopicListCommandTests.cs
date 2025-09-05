@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -16,6 +17,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.EventGrid.UnitTests.Topic;
 
+[Trait("Area", "EventGrid")]
 public class TopicListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
@@ -23,7 +25,7 @@ public class TopicListCommandTests
     private readonly ILogger<TopicListCommand> _logger;
     private readonly TopicListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public TopicListCommandTests()
     {
@@ -35,7 +37,7 @@ public class TopicListCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -52,7 +54,7 @@ public class TopicListCommandTests
         _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedTopics));
 
-        var args = _parser.Parse(["--subscription", subscriptionId]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -79,7 +81,7 @@ public class TopicListCommandTests
         _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(new List<Azure.Mcp.Tools.EventGrid.Models.EventGridTopicInfo>()));
 
-        var args = _parser.Parse(["--subscription", subscriptionId]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -99,7 +101,7 @@ public class TopicListCommandTests
         _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), null, Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse(["--subscription", subscriptionId]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -108,6 +110,45 @@ public class TopicListCommandTests
         Assert.NotNull(response);
         Assert.Equal(500, response.Status);
         Assert.StartsWith(expectedError, response.Message);
+    }
+
+    [Theory]
+    [InlineData("--subscription test-sub", true)]
+    [InlineData("--subscription test-sub --tenant test-tenant", true)]
+    [InlineData("--subscription test-sub --resource-group test-rg", true)]
+    [InlineData("--subscription test-sub --resource-group test-rg --tenant test-tenant", true)]
+    [InlineData("", false)]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        // Arrange
+        if (shouldSucceed)
+        {
+            var expectedTopics = new List<Azure.Mcp.Tools.EventGrid.Models.EventGridTopicInfo>
+            {
+                new("topic1", "eastus", "https://topic1.eastus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema"),
+                new("topic2", "westus", "https://topic2.westus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema")
+            };
+            _eventGridService.GetTopicsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+                .Returns(Task.FromResult(expectedTopics));
+        }
+
+        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult);
+
+        // Assert
+        if (shouldSucceed)
+        {
+            Assert.Equal(200, response.Status);
+            Assert.NotNull(response.Results);
+            Assert.Equal("Success", response.Message);
+        }
+        else
+        {
+            Assert.Equal(400, response.Status);
+            Assert.Contains("required", response.Message?.ToLower() ?? "");
+        }
     }
 
     private class TopicListResult

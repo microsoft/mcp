@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Services;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.EventGrid.Models;
-using Azure.ResourceManager.EventGrid;
 
 namespace Azure.Mcp.Tools.EventGrid.Services;
 
