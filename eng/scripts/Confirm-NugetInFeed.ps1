@@ -14,7 +14,7 @@ $serverProjectProperties = & "$projectPropertiesScript" -ProjectName "$($ServerN
 $packagesVersion = "$($serverProjectProperties.Version)$VersionSuffix"
 
 $ErrorActionPreference = "Stop"
-$nupkgFiles = Get-ChildItem -Path $PackagesDirectory -Filter *.nupkg
+$nupkgFiles = Get-ChildItem -Path $PackagesDirectory -Filter *.nupkg | Where-Object { $_.Name -notlike '*.symbols.nupkg' }
 if (-not $nupkgFiles) {
   LogWarning "No NuGet packages found in $PackagesDirectory"
   exit 1

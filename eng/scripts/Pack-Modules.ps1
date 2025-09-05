@@ -55,6 +55,9 @@ try {
             Copy-Item -Path "$platformSourcePath/*" -Destination $tempFolder -Force
             Write-Host "Copied platform script files into $tempFolder"
 
+            # Remove symbols files before packing
+            Get-ChildItem -Path $tempFolder -Recurse -Include "*.pdb", "*.dSYM", "*.dbg" | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
+
             $platformFile = "$tempFolder/package.json"
             $platformPackageJson = Get-Content $platformFile -Raw | ConvertFrom-Json -AsHashtable
 

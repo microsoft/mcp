@@ -42,7 +42,7 @@ jobs:
     displayName: Publish platform-specific Nugets
     inputs:
       packageParentPath: '$(Pipeline.Workspace)'
-      packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/platform/*.nupkg'
+      packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/platform/*.nupkg;!$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/platform/*.symbols.nupkg'
       publishVstsFeed: ${{ parameters.NugetDevFeed }}
 
   - task: Powershell@2
@@ -60,7 +60,7 @@ jobs:
     displayName: Publish wrapper Nuget
     inputs:
       packageParentPath: '$(Pipeline.Workspace)'
-      packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/wrapper/*.nupkg'
+      packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/wrapper/*.nupkg;!$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/wrapper/*.symbols.nupkg'
       publishVstsFeed: ${{ parameters.NugetDevFeed }}
 
 # - job: PublishDocsToNightly
