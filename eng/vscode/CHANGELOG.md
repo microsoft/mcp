@@ -11,6 +11,7 @@
 ### Fixed
 
 - Fixed a bug in MySQL query validation logic. [[#81](https://github.com/microsoft/mcp/pull/81)]
+- Enhanced the confidence score for ALT commands [[#92](https://github.com/microsoft/mcp/pull/92)]
 
 ## 0.5.11 - 2025-09-02
 
