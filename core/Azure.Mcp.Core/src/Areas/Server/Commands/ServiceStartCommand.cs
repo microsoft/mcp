@@ -83,7 +83,7 @@ public sealed class ServiceStartCommand : BaseCommand
 
         var debug = parseResult.GetValueForOption(_debugOption);
 
-        var debug = parseResult.GetValue(_debugOption);
+        var debug = parseResult.GetValueOrDefault(_debugOption);
 
         if (!IsValidMode(mode))
         {
