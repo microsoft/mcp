@@ -29,6 +29,7 @@ public sealed class ServiceStartCommand : BaseCommand
     private readonly Option<string[]?> _namespaceOption = ServiceOptionDefinitions.Namespace;
     private readonly Option<string?> _modeOption = ServiceOptionDefinitions.Mode;
     private readonly Option<bool?> _readOnlyOption = ServiceOptionDefinitions.ReadOnly;
+    private readonly Option<bool> _debugOption = ServiceOptionDefinitions.Debug;
     private readonly Option<bool> _enableInsecureTransportsOption = ServiceOptionDefinitions.EnableInsecureTransports;
 
     /// <summary>
@@ -82,6 +83,8 @@ public sealed class ServiceStartCommand : BaseCommand
 
         var debug = parseResult.GetValueForOption(_debugOption);
 
+        var debug = parseResult.GetValue(_debugOption);
+
         if (!IsValidMode(mode))
         {
             throw new ArgumentException($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}.");
@@ -104,6 +107,7 @@ public sealed class ServiceStartCommand : BaseCommand
             Namespace = namespaces,
             Mode = mode,
             ReadOnly = readOnly,
+            Debug = debug,
             EnableInsecureTransports = enableInsecureTransports,
         };
 
@@ -156,6 +160,25 @@ public sealed class ServiceStartCommand : BaseCommand
                 logging.ClearProviders();
                 logging.ConfigureOpenTelemetryLogger();
                 logging.AddEventSourceLogger();
+
+                if (serverOptions.Debug)
+                {
+                    // Configure console logger to emit Debug+ to stderr so tests can capture logs from StandardError
+                    logging.AddConsole(options =>
+                    {
+                        options.LogToStandardErrorThreshold = LogLevel.Debug;
+                        options.FormatterName = Microsoft.Extensions.Logging.Console.ConsoleFormatterNames.Simple;
+                    });
+                    logging.AddSimpleConsole(simple =>
+                    {
+                        simple.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Disabled;
+                        simple.IncludeScopes = false;
+                        simple.SingleLine = true;
+                        simple.TimestampFormat = "[HH:mm:ss] ";
+                    });
+                    logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", LogLevel.Debug);
+                    logging.SetMinimumLevel(LogLevel.Debug);
+                }
             })
             .ConfigureServices(services =>
             {
