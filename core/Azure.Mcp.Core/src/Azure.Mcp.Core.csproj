@@ -23,5 +23,6 @@
     <PackageReference Include="Microsoft.Extensions.Azure" />
     <PackageReference Include="ModelContextProtocol.AspNetCore" />
     <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="System.Linq.Async" />
   </ItemGroup>
 </Project>
