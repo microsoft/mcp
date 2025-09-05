@@ -25,7 +25,7 @@ $os = "linux"
 $arch = "x64"
 $tag = "$dockerImageName`:$Version$VersionSuffix";
 
-& "$root/eng/scripts/Build-Module.ps1" -ServerName $ServerName -VersionSuffix $VersionSuffix -SelfContained -Trimmed:$Trimmed -DebugBuild:$DebugBuild -OperatingSystem $os -Architecture $arch
+& "$root/eng/scripts/Build-Code.ps1" -ServerName $ServerName -VersionSuffix $VersionSuffix -SelfContained -Trimmed:$Trimmed -DebugBuild:$DebugBuild -OperatingSystem $os -Architecture $arch
 
 [string]$publishDirectory = $([System.IO.Path]::Combine($distPath, "$os-$arch", "dist"))
 $relativeDirectory = $(Resolve-Path $publishDirectory -Relative).Replace('\', '/')

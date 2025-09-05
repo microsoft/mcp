@@ -1,0 +1,28 @@
+parameters:
+- name: DependsOn
+  type: object
+  default: []
+
+jobs:
+- job: CreateDockerArtifact
+  displayName: 'Prepare Docker artifact'
+  dependsOn: ${{ parameters.DependsOn }}
+
+  steps:
+  - download: 'current'
+    artifact: binaries_signed
+    displayName: "Download signed MCP server binaries"
+
+  - task: Powershell@2
+    displayName: "Prepare docker artifacts files"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Copy-DockerFiles.ps1
+      arguments: >
+        -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
+        -OutputPath '$(Build.ArtifactStagingDirectory)'
+
+  - task: 1ES.PublishPipelineArtifact@1
+    inputs:
+      path: $(Build.ArtifactStagingDirectory)
+      artifact: docker_drops

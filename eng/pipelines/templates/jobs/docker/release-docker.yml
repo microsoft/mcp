@@ -1,0 +1,62 @@
+parameters:
+- name: ContainerRegistry
+  type: string
+- name: DeploymentEnvironment
+  type: string
+- name: ServerName
+  type: string
+
+jobs:
+- job: PublishDocker
+  displayName: "Publish Docker to ACR"
+  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+
+  templateContext:
+    inputs:
+    - input: pipelineArtifact
+      artifactName: docker_drops
+      targetPath: $(Pipeline.Workspace)/docker_drops
+
+    outputs:
+    - output: containerImage
+      image: image:tag
+      remoteImage:
+      - ${{ format('{0}.azurecr.io', parameters.ContainerRegistry) }}/${{ format('{0}/{1}', parameters.DeploymentEnvironment, '$(DockerImageName)')}}:$(DockerImageVersion)
+      - ${{ format('{0}.azurecr.io', parameters.ContainerRegistry) }}/${{ format('{0}/{1}', parameters.DeploymentEnvironment, '$(DockerImageName)')}}:latest
+
+  timeoutInMinutes: 120
+  pool:
+    name: azsdk-pool
+    image: ubuntu-24.04
+    os: linux
+
+  steps:
+  - pwsh: |
+        $variables = Get-Content "$(Pipeline.Workspace)/docker_drops/${{ parameters.ServerName }}/variables.json" | ConvertFrom-Json
+
+        $imageName = $variables.DockerImageName
+        $version = $variables.Version
+
+        Write-Host "##vso[task.setvariable variable=DockerImageName]$imageName"
+        Write-Host "##vso[task.setvariable variable=DockerImageVersion]$version"
+    displayName: 'Set Docker Variables'
+
+  - task: AzureCLI@2
+    condition: succeeded()
+    displayName: Login to ${{ parameters.ContainerRegistry }}
+    inputs:
+      azureSubscription: "Azure SDK Engineering System"
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        az acr login --name ${{ parameters.ContainerRegistry }}
+
+  - task: 1ES.BuildContainerImage@1
+    displayName: Build Docker Image
+    inputs:
+      path: '$(Pipeline.Workspace)/docker_drops/${{ parameters.ServerName }}'
+      image: image:tag
+      buildArguments: |
+        --build-arg PUBLISH_DIR="dist"
+      enableNetwork: true
+      useBuildKit: true

@@ -2,20 +2,22 @@ parameters:
 - name: DependsOn
   type: object
   default: []
-- name: ServerName
-  type: string
 
 jobs:
 - job: SignAndPackVSIX
   displayName: "Sign and Pack VSIX"
   dependsOn: ${{ parameters.DependsOn }}
   condition: and(succeeded(), ne(variables['NoPackagesChanged'], 'true'))
+  pool:
+    name: $(WINDOWSPOOL) # Signing verification must happen on windows
+    image: $(WINDOWSVMIMAGE)
+    os: windows
   steps:
   - checkout: self
 
   # Download the signed MCP server binaries for this OS
   - download: current
-    artifact: $(PipelineArtifactName)_signed
+    artifact: binaries_signed
     displayName: "Download signed MCP server binaries"
 
   - task: NodeTool@0
@@ -27,8 +29,7 @@ jobs:
 
   - pwsh: >
       eng/scripts/Pack-Vsix.ps1
-      -ServerName '${{ parameters.ServerName }}'
-      -ArtifactsPath '$(Pipeline.Workspace)/$(PipelineArtifactName)_signed'
+      -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
       -OutputPath '$(Build.ArtifactStagingDirectory)'
     displayName: "Copy signed MCP server binaries to VSIX"
 
@@ -37,30 +38,10 @@ jobs:
       Path: $(Build.ArtifactStagingDirectory)
       Pattern: '**/*.signature.p7s'
 
-  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
-    parameters:
-      ArtifactPath: $(Build.ArtifactStagingDirectory)
-      ArtifactName: vsix_packages_signed
-
-- job: VerifyVSIXSigning
-  displayName: "Verify VSIX Signing"
-  dependsOn: SignAndPackVSIX
-  pool:
-    name: $(WINDOWSPOOL) # Signing verification must happen on windows
-    image: $(WINDOWSVMIMAGE)
-    os: windows
-  variables:
-  - template: /eng/pipelines/templates/variables/image.yml
-  - template: /eng/pipelines/templates/variables/globals.yml
-  steps:
-  - checkout: none
-  - download: current
-    artifact: vsix_$(PipelineArtifactName)_signed
-    displayName: "Download signed MCP server VSIX files"
   - pwsh: |
       Write-Host "Verifying VSIX signing by parsing CodeSignSummary markdown files..."
 
-      $root = "$(Pipeline.Workspace)/vsix_$(PipelineArtifactName)_signed"
+      $root = "$(Build.ArtifactStagingDirectory)"
       $summaries = Get-ChildItem -Path $root -Recurse -Filter 'CodeSignSummary-*.md'
 
       if (-not $summaries) {
@@ -126,3 +107,8 @@ jobs:
         Write-Host "All 'Sign' entries report 'Pass'."
       }
     displayName: "Verify VSIX Signing"
+
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactPath: $(Build.ArtifactStagingDirectory)
+      ArtifactName: packages_vsix_signed
