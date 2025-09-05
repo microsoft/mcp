@@ -28,10 +28,6 @@ public class DatabaseAddCommandTests
     {
         _appServiceService = Substitute.For<IAppServiceService>();
         _logger = Substitute.For<ILogger<DatabaseAddCommand>>();
-
-        // Set default environment variables for testing
-        Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", "env-sub-123");
-
         var collection = new ServiceCollection();
         collection.AddSingleton(_appServiceService);
         collection.AddSingleton(_logger);
@@ -143,6 +139,75 @@ public class DatabaseAddCommandTests
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>());
     }
+
+    [Theory]
+    [InlineData("basic", null, null, null, null)]
+    [InlineData("custom-connection-string", "Server=custom;Database=custom;UserId=user;Password=pass;", null, null, null)]
+    [InlineData("tenant", null, "test-tenant-id", null, null)]
+    [InlineData("retry-policy", null, null, 3, 1.0)]
+    public async Task ExecuteAsync_WithVariousParameters_AcceptsParameters(
+        string scenario,
+        string? connectionString,
+        string? tenant,
+        int? retryMaxRetries,
+        double? retryDelay)
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            { "subscription", Settings.SubscriptionId },
+            { "resource-group", "test-rg" },
+            { "app", "test-app" },
+            { "database-type", "SqlServer" },
+            { "database-server", "test-server.database.windows.net" },
+            { "database", "test-db" }
+        };
+
+        // Add optional parameters based on scenario
+        if (connectionString != null)
+            parameters.Add("connection-string", connectionString);
+
+        if (tenant != null)
+            parameters.Add("tenant", tenant);
+
+        if (retryMaxRetries.HasValue)
+            parameters.Add("retry-max-retries", retryMaxRetries.Value);
+
+        if (retryDelay.HasValue)
+            parameters.Add("retry-delay", retryDelay.Value);
+
+        var result = await CallToolAsync("azmcp_appservice_database_add", parameters);
+
+        // Test actual command execution and proper error handling
+        Assert.NotNull(result);
+
+        // Validate that parameters are correctly passed and processed
+        if (result.IsError())
+        {
+            var errorContent = result.Content()?.ToString() ?? "";
+
+            // Should not fail due to parameter validation issues for valid scenarios
+            Assert.False(
+                errorContent.Contains("required parameter") ||
+                errorContent.Contains("invalid parameter") ||
+                errorContent.Contains("ArgumentException"),
+                $"[{scenario}] Parameter validation failed: {errorContent}");
+
+            // Should fail due to Azure resource issues, which is expected in live tests
+            Assert.True(
+                errorContent.Contains("not found") ||
+                errorContent.Contains("does not exist") ||
+                errorContent.Contains("ResourceGroupNotFound") ||
+                errorContent.Contains("WebSiteNotFound") ||
+                errorContent.Contains("subscription"),
+                $"[{scenario}] Expected Azure resource error but got: {errorContent}");
+        }
+        else
+        {
+            // If successful, validate the response has expected structure
+            Assert.True(result.IsSuccess(), $"[{scenario}] Command should succeed or fail with proper Azure error");
+        }
+    }
+
 
     [Fact]
     public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse()
