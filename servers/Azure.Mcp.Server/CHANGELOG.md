@@ -10,6 +10,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Fixed telemetry bug where ToolArea was incorrectly populated in with ToolName. [[#346](https://github.com/microsoft/mcp/pull/346)]
+
 ### Other Changes
 
 ## 0.5.12 (2025-09-04)
