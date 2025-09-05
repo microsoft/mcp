@@ -23,7 +23,6 @@
     <PublishReadyToRun>false</PublishReadyToRun>
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
   <!-- Enable Trim and AOT Analyzers -->
@@ -56,13 +55,6 @@
   <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
     <PackageDescription>Azure MCP Server - Model Context Protocol implementation for Azure. Internal
       implementation package for $(RuntimeIdentifier).</PackageDescription>
-  </PropertyGroup>
-  <!-- Debug configuration -->
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <PublishSingleFile>false</PublishSingleFile>
-    <SelfContained>false</SelfContained>
-    <DebugType>portable</DebugType>
-    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
