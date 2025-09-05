@@ -484,7 +484,7 @@ The Azure MCP Server supports connecting to external MCP servers through an embe
 
 #### Registry Configuration
 
-External MCP servers are defined in the embedded resource file `core/AzureMcp.Core/src/Areas/Server/Resources/registry.json`. This file contains server configurations that support both SSE (Server-Sent Events) and stdio transport mechanisms, following the standard MCP configuration format.
+External MCP servers are defined in the embedded resource file `core/Azure.Mcp.Core/src/Areas/Server/Resources/registry.json`. This file contains server configurations that support both SSE (Server-Sent Events) and stdio transport mechanisms, following the standard MCP configuration format.
 
 The registry structure follows this format:
 
