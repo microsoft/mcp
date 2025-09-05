@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Storage.Commands.Share.File;
 using Azure.Mcp.Tools.Storage.Services;
@@ -19,7 +19,7 @@ public class FileListCommandTests
     private readonly ILogger<FileListCommand> _logger;
     private readonly FileListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public FileListCommandTests()
     {
@@ -31,7 +31,7 @@ public class FileListCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]

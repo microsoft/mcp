@@ -2,11 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Collections.Immutable;
-using System.Text;
 using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Options;
-using Azure.ResourceManager.Network.Models;
-using Microsoft.Extensions.ObjectPool;
 
 namespace Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
 

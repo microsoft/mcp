@@ -60,11 +60,11 @@ public sealed class ServiceStartCommand : BaseCommand
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_transportOption);
-        command.AddOption(_namespaceOption);
-        command.AddOption(_modeOption);
-        command.AddOption(_readOnlyOption);
-        command.AddOption(_enableInsecureTransportsOption);
+        command.Options.Add(_transportOption);
+        command.Options.Add(_namespaceOption);
+        command.Options.Add(_modeOption);
+        command.Options.Add(_readOnlyOption);
+        command.Options.Add(_enableInsecureTransportsOption);
     }
 
     /// <summary>
@@ -75,24 +75,16 @@ public sealed class ServiceStartCommand : BaseCommand
     /// <returns>A command response indicating the result of the operation.</returns>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        var namespaces = parseResult.GetValueForOption(_namespaceOption) == default
-            ? ServiceOptionDefinitions.Namespace.GetDefaultValue()
-            : parseResult.GetValueForOption(_namespaceOption);
-
-        var mode = parseResult.GetValueForOption(_modeOption) == default
-            ? ServiceOptionDefinitions.Mode.GetDefaultValue()
-            : parseResult.GetValueForOption(_modeOption);
-
-        var readOnly = parseResult.GetValueForOption(_readOnlyOption) == default
-            ? ServiceOptionDefinitions.ReadOnly.GetDefaultValue()
-            : parseResult.GetValueForOption(_readOnlyOption);
+        string[]? namespaces = parseResult.GetValue(_namespaceOption);
+        string? mode = parseResult.GetValue(_modeOption);
+        bool? readOnly = parseResult.GetValue(_readOnlyOption);
 
         if (!IsValidMode(mode))
         {
             throw new ArgumentException($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}.");
         }
 
-        var enableInsecureTransports = parseResult.GetValueForOption(_enableInsecureTransportsOption);
+        var enableInsecureTransports = parseResult.GetValueOrDefault(_enableInsecureTransportsOption);
 
         if (enableInsecureTransports)
         {
@@ -105,7 +97,7 @@ public sealed class ServiceStartCommand : BaseCommand
 
         var serverOptions = new ServiceStartOptions
         {
-            Transport = parseResult.GetValueForOption(_transportOption) ?? TransportTypes.StdIo,
+            Transport = parseResult.GetValue(_transportOption) ?? TransportTypes.StdIo,
             Namespace = namespaces,
             Mode = mode,
             ReadOnly = readOnly,

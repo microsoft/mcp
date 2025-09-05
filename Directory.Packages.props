@@ -62,7 +62,8 @@
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.4" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.6" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="9.0.6" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.6" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables"
+      Version="9.0.6" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="9.0.6" />
     <PackageVersion Include="Microsoft.HybridRow" Version="1.1.0-preview3" />
     <PackageVersion Include="Microsoft.Azure.Cosmos.Aot" Version="0.1.1-preview.1" />
@@ -72,11 +73,11 @@
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="Npgsql" Version="9.0.3" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
-    <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    <PackageVersion Include="System.CommandLine" Version="2.0.0-beta7.25380.108" />
     <PackageVersion Include="System.Formats.Asn1" Version="9.0.6" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.11.0" />
-    <PackageVersion Include="System.Linq.AsyncEnumerable" Version="10.0.0-preview.5.25277.114" />
-    <PackageVersion Include="System.Net.ServerSentEvents" Version="10.0.0-preview.5.25277.114" />
+    <PackageVersion Include="System.Linq.Async" Version="6.0.1" />
+    <PackageVersion Include="System.Net.ServerSentEvents" Version="10.0.0-preview.7.25380.108" />
     <PackageVersion Include="System.Numerics.Tensors" Version="9.0.0" />
     <PackageVersion Include="System.Text.Json" Version="9.0.8" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.12.0" />
@@ -92,5 +93,5 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <!-- Pin to 6.0.2 until https://github.com/coverlet-coverage/coverlet/issues/1737 is resolved -->
-    </ItemGroup>
+  </ItemGroup>
 </Project>

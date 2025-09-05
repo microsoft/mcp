@@ -32,7 +32,7 @@ namespace Azure.Mcp.Tools.Sql.Services.Models
         // Read the JSON response content and create a model instance from it.
         public static SqlElasticPoolData? FromJson(JsonElement source)
         {
-            return JsonSerializer.Deserialize<SqlElasticPoolData>(source, SqlJsonContext.Default.SqlElasticPoolData);
+            return JsonSerializer.Deserialize(source, SqlJsonContext.Default.SqlElasticPoolData);
         }
     }
 }

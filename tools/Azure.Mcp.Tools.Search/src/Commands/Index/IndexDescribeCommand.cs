@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Index;
 using Azure.Mcp.Tools.Search.Services;
@@ -37,29 +38,29 @@ public sealed class IndexDescribeCommand(ILogger<IndexDescribeCommand> logger) :
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_serviceOption);
-        command.AddOption(_indexOption);
+        command.Options.Add(_serviceOption);
+        command.Options.Add(_indexOption);
     }
 
     protected override IndexDescribeOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Service = parseResult.GetValueForOption(_serviceOption);
-        options.Index = parseResult.GetValueForOption(_indexOption);
+        options.Service = parseResult.GetValueOrDefault(_serviceOption);
+        options.Index = parseResult.GetValueOrDefault(_indexOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var searchService = context.GetService<ISearchService>();
 
             var indexDefinition = await searchService.DescribeIndex(

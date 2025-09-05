@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob;
 
@@ -21,13 +22,13 @@ public abstract class BaseContainerCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_containerOption);
+        command.Options.Add(_containerOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Container = parseResult.GetValueForOption(_containerOption);
+        options.Container = parseResult.GetValueOrDefault(_containerOption);
         return options;
     }
 }

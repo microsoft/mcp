@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Storage.Commands.Queue.Message;
 using Azure.Mcp.Tools.Storage.Models;
@@ -21,7 +21,7 @@ public class QueueMessageSendCommandTests
     private readonly ILogger<QueueMessageSendCommand> _logger;
     private readonly QueueMessageSendCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public QueueMessageSendCommandTests()
     {
@@ -32,7 +32,7 @@ public class QueueMessageSendCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public class QueueMessageSendCommandTests
                 .Returns(mockResult);
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -111,7 +111,7 @@ public class QueueMessageSendCommandTests
             Arg.Any<Core.Options.RetryPolicyOptions?>())
             .Returns(Task.FromException<QueueMessageSendResult>(new Exception("Test error")));
 
-        var parseResult = _parser.Parse(["--account", "testaccount", "--queue", "testqueue", "--message", "test message", "--subscription", "sub123"]);
+        var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--queue", "testqueue", "--message", "test message", "--subscription", "sub123"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -126,7 +126,7 @@ public class QueueMessageSendCommandTests
     public async Task ExecuteAsync_HandlesQueueNotFoundError()
     {
         // Arrange
-        var requestFailedException = new Azure.RequestFailedException(404, "Not found");
+        var requestFailedException = new RequestFailedException(404, "Not found");
 
         _service.SendQueueMessage(
             Arg.Any<string>(),
@@ -139,7 +139,7 @@ public class QueueMessageSendCommandTests
             Arg.Any<Core.Options.RetryPolicyOptions?>())
             .ThrowsAsync(requestFailedException);
 
-        var parseResult = _parser.Parse(["--account", "testaccount", "--queue", "testqueue", "--message", "test message", "--subscription", "sub123"]);
+        var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--queue", "testqueue", "--message", "test message", "--subscription", "sub123"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -153,7 +153,7 @@ public class QueueMessageSendCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationError()
     {
         // Arrange
-        var requestFailedException = new Azure.RequestFailedException(403, "Access denied");
+        var requestFailedException = new RequestFailedException(403, "Access denied");
 
         _service.SendQueueMessage(
             Arg.Any<string>(),
@@ -166,7 +166,7 @@ public class QueueMessageSendCommandTests
             Arg.Any<Core.Options.RetryPolicyOptions?>())
             .ThrowsAsync(requestFailedException);
 
-        var parseResult = _parser.Parse(["--account", "testaccount", "--queue", "testqueue", "--message", "test message", "--subscription", "sub123"]);
+        var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--queue", "testqueue", "--message", "test message", "--subscription", "sub123"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

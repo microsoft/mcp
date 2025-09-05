@@ -35,39 +35,39 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_loadTestIdOption);
-        command.AddOption(_loadTestDescriptionOption);
-        command.AddOption(_loadTestDisplayNameOption);
-        command.AddOption(_loadTestEndpointOption);
-        command.AddOption(_loadTestVirtualUsersOption);
-        command.AddOption(_loadTestDurationOption);
-        command.AddOption(_loadTestRampUpTimeOption);
+        command.Options.Add(_loadTestIdOption);
+        command.Options.Add(_loadTestDescriptionOption);
+        command.Options.Add(_loadTestDisplayNameOption);
+        command.Options.Add(_loadTestEndpointOption);
+        command.Options.Add(_loadTestVirtualUsersOption);
+        command.Options.Add(_loadTestDurationOption);
+        command.Options.Add(_loadTestRampUpTimeOption);
     }
 
     protected override TestCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestId = parseResult.GetValueForOption(_loadTestIdOption);
-        options.Description = parseResult.GetValueForOption(_loadTestDescriptionOption);
-        options.DisplayName = parseResult.GetValueForOption(_loadTestDisplayNameOption);
-        options.Endpoint = parseResult.GetValueForOption(_loadTestEndpointOption);
-        options.VirtualUsers = parseResult.GetValueForOption(_loadTestVirtualUsersOption);
-        options.Duration = parseResult.GetValueForOption(_loadTestDurationOption);
-        options.RampUpTime = parseResult.GetValueForOption(_loadTestRampUpTimeOption);
+        options.TestId = parseResult.GetValue(_loadTestIdOption);
+        options.Description = parseResult.GetValue(_loadTestDescriptionOption);
+        options.DisplayName = parseResult.GetValue(_loadTestDisplayNameOption);
+        options.Endpoint = parseResult.GetValue(_loadTestEndpointOption);
+        options.VirtualUsers = parseResult.GetValue(_loadTestVirtualUsersOption);
+        options.Duration = parseResult.GetValue(_loadTestDurationOption);
+        options.RampUpTime = parseResult.GetValue(_loadTestRampUpTimeOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
+
         try
         {
-            // Required validation step using the base Validate method
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             // Get the appropriate service from DI
             var service = context.GetService<ILoadTestingService>();
 

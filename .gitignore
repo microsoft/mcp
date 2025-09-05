@@ -17,3 +17,4 @@ node_modules/
 .env.*.local
 
 generated/
+/docs/commandline

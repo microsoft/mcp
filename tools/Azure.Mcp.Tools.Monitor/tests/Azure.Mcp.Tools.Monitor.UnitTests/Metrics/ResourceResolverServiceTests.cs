@@ -4,7 +4,6 @@
 using System.ClientModel.Primitives;
 using System.Text;
 using System.Text.Json;
-using Azure;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Subscription;

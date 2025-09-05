@@ -15,38 +15,36 @@ public static partial class OptionDefinitions
         public const string AuthMethodName = "auth-method";
 
         public static readonly Option<string> Tenant = new(
-            $"--{TenantName}",
-            "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant."
+            $"--{TenantName}"
         )
         {
-            IsRequired = false,
-            IsHidden = true
+            Required = false,
+            Description = "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant."
         };
 
         public static readonly Option<string> Subscription = new(
-            $"--{SubscriptionName}",
-    "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. " +
-    "If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead."
+            $"--{SubscriptionName}"
         )
         {
-            IsRequired = false
+            Description = "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. " +
+                "If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+            Required = false
         };
 
         public static readonly Option<AuthMethod> AuthMethod = new(
-            $"--{AuthMethodName}",
-            () => Models.AuthMethod.Credential,
-            "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'."
+            $"--{AuthMethodName}"
         )
         {
-            IsRequired = false
+            Description = "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+            Required = false
         };
 
         public static readonly Option<string> ResourceGroup = new(
-            $"--{ResourceGroupName}",
-            "The name of the Azure resource group. This is a logical container for Azure resources."
+            $"--{ResourceGroupName}"
         )
         {
-            IsRequired = false
+            Description = "The name of the Azure resource group. This is a logical container for Azure resources.",
+            Required = false
         };
     }
 
@@ -59,53 +57,43 @@ public static partial class OptionDefinitions
         public const string NetworkTimeoutName = "retry-network-timeout";
 
         public static readonly Option<double> Delay = new(
-            $"--{DelayName}",
-            () => 2.0,
-            "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base."
+            $"--{DelayName}"
         )
         {
-            IsRequired = false,
-            IsHidden = true
+            Description = "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+            Required = false
         };
 
         public static readonly Option<double> MaxDelay = new(
-            $"--{MaxDelayName}",
-            () => 10.0,
-            "Maximum delay in seconds between retries, regardless of the retry strategy."
+            $"--{MaxDelayName}"
         )
         {
-            IsRequired = false,
-            IsHidden = true
+            Description = "Maximum delay in seconds between retries, regardless of the retry strategy.",
+            Required = false
         };
 
         public static readonly Option<int> MaxRetries = new(
-            $"--{MaxRetriesName}",
-            () => 3,
-            "Maximum number of retry attempts for failed operations before giving up."
+            $"--{MaxRetriesName}"
         )
         {
-            IsRequired = false,
-            IsHidden = true
+            Description = "Maximum number of retry attempts for failed operations before giving up.",
+            Required = false
         };
 
         public static readonly Option<RetryMode> Mode = new(
-            $"--{ModeName}",
-            () => RetryMode.Exponential,
-            "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts."
+            $"--{ModeName}"
         )
         {
-            IsRequired = false,
-            IsHidden = true
+            Description = "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+            Required = false
         };
 
         public static readonly Option<double> NetworkTimeout = new(
-            $"--{NetworkTimeoutName}",
-            () => 100.0,
-            "Network operation timeout in seconds. Operations taking longer than this will be cancelled."
+            $"--{NetworkTimeoutName}"
         )
         {
-            IsRequired = false,
-            IsHidden = true
+            Description = "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+            Required = false
         };
     }
 
@@ -114,11 +102,11 @@ public static partial class OptionDefinitions
         public const string ScopeName = "scope";
 
         public static readonly Option<string> Scope = new(
-            $"--{ScopeName}",
-            "Scope at which the role assignment or definition applies to, e.g., /subscriptions/0b1f6471-1bf0-4dda-aec3-111122223333, /subscriptions/0b1f6471-1bf0-4dda-aec3-111122223333/resourceGroups/myGroup, or /subscriptions/0b1f6471-1bf0-4dda-aec3-111122223333/resourceGroups/myGroup/providers/Microsoft.Compute/virtualMachines/myVM."
+            $"--{ScopeName}"
         )
         {
-            IsRequired = true,
+            Description = "Scope at which the role assignment or definition applies to, e.g., /subscriptions/0b1f6471-1bf0-4dda-aec3-111122223333, /subscriptions/0b1f6471-1bf0-4dda-aec3-111122223333/resourceGroups/myGroup, or /subscriptions/0b1f6471-1bf0-4dda-aec3-111122223333/resourceGroups/myGroup/providers/Microsoft.Compute/virtualMachines/myVM.",
+            Required = true,
         };
     }
 
@@ -135,77 +123,75 @@ public static partial class OptionDefinitions
         public const string RampUpTimeOption = "ramp-up-time";
         public const string EndpointOption = "endpoint";
         public static readonly Option<string> TestResource = new(
-            $"--{TestResourceName}",
-            "The name of the load test resource for which you want to fetch the details."
+            $"--{TestResourceName}"
         )
         {
-            IsRequired = false
+            Description = "The name of the load test resource for which you want to fetch the details.",
+            Required = false
         };
         public static readonly Option<string> TestRun = new(
-            $"--{TestRunId}",
-            "The ID of the load test run for which you want to fetch the details."
+            $"--{TestRunId}"
         )
         {
-            IsRequired = false
+            Description = "The ID of the load test run for which you want to fetch the details.",
+            Required = false
         };
         public static readonly Option<string> Test = new(
-            $"--{TestId}",
-            "The ID of the load test for which you want to fetch the details."
+            $"--{TestId}"
         )
         {
-            IsRequired = true
+            Description = "The ID of the load test for which you want to fetch the details.",
+            Required = true
         };
         public static readonly Option<string> DisplayName = new(
-            $"--{DisplayNameOption}",
-            "The display name for the load test run. This is a user-friendly name to identify the test run."
+            $"--{DisplayNameOption}"
         )
         {
-            IsRequired = false
+            Description = "The display name for the load test run. This is a user-friendly name to identify the test run.",
+            Required = false
         };
         public static readonly Option<string> Description = new(
-            $"--{DescriptionOption}",
-            "The description for the load test run. This provides additional context about the test run."
+            $"--{DescriptionOption}"
         )
         {
-            IsRequired = false
+            Description = "The description for the load test run. This provides additional context about the test run.",
+            Required = false
         };
         public static readonly Option<string> OldTestRunId = new(
-            $"--{OldTestRunIdOption}",
-            "The ID of an existing test run to update. If provided, the command will trigger a rerun of the given test run id."
+            $"--{OldTestRunIdOption}"
         )
         {
-            IsRequired = false
+            Description = "The ID of an existing test run to update. If provided, the command will trigger a rerun of the given test run id.",
+            Required = false
         };
+
         public static readonly Option<int> VirtualUsers = new(
-            $"--{VirtualUsersOption}",
-            () => 50,
-            "Virtual users is a measure of load that is simulated to test the HTTP endpoint. (Default - 50)"
+            $"--{VirtualUsersOption}"
         )
         {
-            IsRequired = false
+            Description = "Virtual users is a measure of load that is simulated to test the HTTP endpoint. (Default - 50)",
+            Required = false
         };
         public static readonly Option<int> Duration = new(
-            $"--{DurationOption}",
-            () => 20,
-            "This is the duration for which the load is simulated against the endpoint. Enter decimals for fractional minutes (e.g., 1.5 for 1 minute and 30 seconds). Default is 20 mins"
+            $"--{DurationOption}"
         )
         {
-            IsRequired = false
+            Description = "This is the duration for which the load is simulated against the endpoint. Enter decimals for fractional minutes (e.g., 1.5 for 1 minute and 30 seconds). Default is 20 mins",
+            Required = false
         };
         public static readonly Option<int> RampUpTime = new(
-            $"--{RampUpTimeOption}",
-            () => 1,
-            "The ramp-up time is the time it takes for the system to ramp-up to the total load specified. Enter decimals for fractional minutes (e.g., 1.5 for 1 minute and 30 seconds). Default is 1 min"
+            $"--{RampUpTimeOption}"
         )
         {
-            IsRequired = false
+            Description = "The ramp-up time is the time it takes for the system to ramp-up to the total load specified. Enter decimals for fractional minutes (e.g., 1.5 for 1 minute and 30 seconds). Default is 1 min",
+            Required = false
         };
         public static readonly Option<string> Endpoint = new(
-            $"--{EndpointOption}",
-            "The endpoint URL to be tested. This is the URL of the HTTP endpoint that will be subjected to load testing."
+            $"--{EndpointOption}"
         )
         {
-            IsRequired = false
+            Description = "The endpoint URL to be tested. This is the URL of the HTTP endpoint that will be subjected to load testing.",
+            Required = false
         };
     }
 
@@ -222,80 +208,75 @@ public static partial class OptionDefinitions
         public const string PricingAudienceName = "pricing-audience";
 
         public static readonly Option<string> ProductId = new(
-            $"--{ProductIdName}",
-            "The ID of the marketplace product to retrieve. This is the unique identifier for the product in the Azure Marketplace."
+            $"--{ProductIdName}"
         )
         {
-            IsRequired = true
+            Description = "The ID of the marketplace product to retrieve. This is the unique identifier for the product in the Azure Marketplace.",
+            Required = true
         };
 
         public static readonly Option<bool> IncludeStopSoldPlans = new(
-            $"--{IncludeStopSoldPlansName}",
-            () => false,
-            "Include stop-sold or hidden plans in the response."
+            $"--{IncludeStopSoldPlansName}"
         )
         {
-            IsRequired = false
+            Description = "Include stop-sold or hidden plans in the response.",
+            Required = false
         };
 
         public static readonly Option<string> Language = new(
-            $"--{LanguageName}",
-            () => "en",
-            "Product language code (e.g., 'en' for English, 'fr' for French)."
+            $"--{LanguageName}"
         )
         {
-            IsRequired = false
+            Description = "Product language code (e.g., 'en' for English, 'fr' for French).",
+            Required = false
         };
 
         public static readonly Option<string> Market = new(
-            $"--{MarketName}",
-            () => "US",
-            "Product market code (e.g., 'US' for United States, 'UK' for United Kingdom)."
-        )
+            $"--{MarketName}"
+            )
         {
-            IsRequired = false
+            Description = "Product market code (e.g., 'US' for United States, 'UK' for United Kingdom).",
+            Required = false
         };
 
         public static readonly Option<bool> LookupOfferInTenantLevel = new(
-            $"--{LookupOfferInTenantLevelName}",
-            () => false,
-            "Check against tenant private audience when retrieving the product."
-        )
+            $"--{LookupOfferInTenantLevelName}"
+            )
         {
-            IsRequired = false
+            Description = "Check against tenant private audience when retrieving the product.",
+            Required = false
         };
 
         public static readonly Option<string> PlanId = new(
-            $"--{PlanIdName}",
-            "Filter results by a specific plan ID."
+            $"--{PlanIdName}"
         )
         {
-            IsRequired = false
+            Description = "Filter results by a specific plan ID.",
+            Required = false
         };
 
         public static readonly Option<string> SkuId = new(
-            $"--{SkuIdName}",
-            "Filter results by a specific SKU ID."
+            $"--{SkuIdName}"
         )
         {
-            IsRequired = false
+            Description = "Filter results by a specific SKU ID.",
+            Required = false
         };
 
         public static readonly Option<bool> IncludeServiceInstructionTemplates = new(
-            $"--{IncludeServiceInstructionTemplatesName}",
-            () => false,
-            "Include service instruction templates in the response."
+            $"--{IncludeServiceInstructionTemplatesName}"
         )
         {
-            IsRequired = false
+            Description = "Include service instruction templates in the response.",
+            Required = false
         };
 
         public static readonly Option<string> PricingAudience = new(
-            $"--{PricingAudienceName}",
-            "Pricing audience for the request header."
+            $"--{PricingAudienceName}"
         )
         {
-            IsRequired = false
+            Description = "Pricing audience for the request header.",
+            Required = false
         };
 
     }

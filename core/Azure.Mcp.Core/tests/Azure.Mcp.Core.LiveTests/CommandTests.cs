@@ -32,7 +32,7 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
     public async Task Should_get_general_code_generation_best_practices()
     {
         // Act
-        JsonElement? result = await CallToolAsync("azmcp_bestpractices_get", new Dictionary<string, object?>
+        JsonElement? result = await CallToolAsync("azmcp_get_bestpractices_get", new Dictionary<string, object?>
         {
             { "resource", "general" },
             { "action", "code-generation" }
@@ -60,7 +60,7 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
     public async Task Should_get_general_deployment_best_practices()
     {
         // Act
-        JsonElement? result = await CallToolAsync("azmcp_bestpractices_get", new Dictionary<string, object?>
+        JsonElement? result = await CallToolAsync("azmcp_get_bestpractices_get", new Dictionary<string, object?>
         {
             { "resource", "general" },
             { "action", "deployment" }
@@ -89,7 +89,7 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
     public async Task Should_get_azure_functions_code_generation_best_practices()
     {
         // Act
-        JsonElement? result = await CallToolAsync("azmcp_bestpractices_get", new Dictionary<string, object?>
+        JsonElement? result = await CallToolAsync("azmcp_get_bestpractices_get", new Dictionary<string, object?>
         {
             { "resource", "azurefunctions" },
             { "action", "code-generation" }
@@ -118,7 +118,7 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
     public async Task Should_get_azure_functions_deployment_best_practices()
     {
         // Act
-        JsonElement? result = await CallToolAsync("azmcp_bestpractices_get", new Dictionary<string, object?>
+        JsonElement? result = await CallToolAsync("azmcp_get_bestpractices_get", new Dictionary<string, object?>
         {
             { "resource", "azurefunctions" },
             { "action", "deployment" }
@@ -147,7 +147,7 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
     public async Task Should_get_static_web_app_best_practices()
     {
         // Act
-        JsonElement? result = await CallToolAsync("azmcp_bestpractices_get", new Dictionary<string, object?>
+        JsonElement? result = await CallToolAsync("azmcp_get_bestpractices_get", new Dictionary<string, object?>
         {
             { "resource", "static-web-app" },
             { "action", "all" }
@@ -176,7 +176,7 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
     public async Task Should_get_general_all_best_practices()
     {
         // Act
-        JsonElement? result = await CallToolAsync("azmcp_bestpractices_get", new Dictionary<string, object?>
+        JsonElement? result = await CallToolAsync("azmcp_get_bestpractices_get", new Dictionary<string, object?>
         {
             { "resource", "general" },
             { "action", "all" }
@@ -207,7 +207,7 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
     public async Task Should_get_azure_functions_all_best_practices()
     {
         // Act
-        JsonElement? result = await CallToolAsync("azmcp_bestpractices_get", new Dictionary<string, object?>
+        JsonElement? result = await CallToolAsync("azmcp_get_bestpractices_get", new Dictionary<string, object?>
         {
             { "resource", "azurefunctions" },
             { "action", "all" }
