@@ -58,6 +58,11 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
                 return Task.FromResult(context.Response);
             }
 
+            context.Activity?
+                .AddTag(DeployTelemetryTags.DeploymentTool, options.DeploymentTool)
+                .AddTag(DeployTelemetryTags.IacType, options.IacType)
+                .AddTag(DeployTelemetryTags.ComputeHostResources, options.ResourceTypes);
+
             var resourceTypes = options.ResourceTypes.Split(',')
                 .Select(rt => rt.Trim())
                 .Where(rt => !string.IsNullOrWhiteSpace(rt))
