@@ -12,7 +12,7 @@ namespace Azure.Mcp.Tools.AppService;
 
 public class AppServiceSetup : IAreaSetup
 {
-    public string Name => "AppService";
+    public string Name => "appservice";
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAppServiceService, AppServiceService>();

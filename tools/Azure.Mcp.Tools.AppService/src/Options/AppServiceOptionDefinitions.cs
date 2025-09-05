@@ -5,10 +5,10 @@ namespace Azure.Mcp.Tools.AppService.Options;
 
 public static class AppServiceOptionDefinitions
 {
-    public const string AppName = "app-name";
+    public const string AppName = "app";
     public const string DatabaseType = "database-type";
     public const string DatabaseServer = "database-server";
-    public const string DatabaseName = "database-name";
+    public const string DatabaseName = "database";
     public const string ConnectionString = "connection-string";
 
     public static readonly Option<string> AppServiceName = new(
