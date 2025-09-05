@@ -42,13 +42,11 @@ Avoid:
 - Security vulnerabilities
 
 Preparation and deployment steps:
-1. Analyze service requirements. Use the `azure_recommend_service_config` tool, if available.
-2. Recommend Azure resources if they aren't already defined. Use the results of the `azure_recommend_service_config` tool.
-3. Generate and/or update IaC files. Use the `azure_bicep_schemas-get_bicep_resource_schema` tool, if available.
-4. Validate the IaC files and run pre-deployment checks. Use the `azure_check_predeploy` tool, if available.
-5. Validate quota and regional availability of the relevant Azure resources. Use the `azure_check_region` and `azure_check_quota` tools, if available.
-6. Deploy the resources. Use the `azure_azd-up_deploy` tool, if available, or `azd up` or `azd provision` commands otherwise.
-7. Validate successful deployments using the `azure_get_azd_app_logs` too, if available, or `azd logs` command otherwise.
+1. Analyze project and deployment requirements. Generate a deployment plan with the `deploy_plan_get` command as parameters in mcp_azure_mcp_deploy tool, if available.
+2. Execute the generated plan to generate the script/IaC files for deploying the application. Use the mcp_azure_mcp_deploy tool and set parameter `command` to be `deploy_iac_rules_get`, if available.
+3. Validate quota and regional availability of the relevant Azure resources. Use mcp_azure_mcp_quota tool and set the parameter `command` to be `quota_usage_check` or `quota_region_availability_list`, if available.
+4. Follow the plan to deploy using the appropriate deployment tools or scripts specified in the plan.
+5. Validate successful deployments using mcp_azure_mcp_deploy tool and set parameter `command` to be `deploy_app_logs_get`, if available. Otherwise, use `azd`, `az` commands.
 
 When asked to deploy resources:
 - Default to using `azd` and azd-related tools unless the user specifies otherwise.
