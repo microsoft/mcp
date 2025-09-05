@@ -26,11 +26,11 @@ public static class AzureManagedLustreOptionDefinitions
     };
 
     public static readonly Option<string> SubnetIdOption = new(
-        $"--{subnetId}",
-        "The subnet resource ID to validate for AMLFS."
+        $"--{subnetId}"
     )
     {
-        IsRequired = true
+        Description = "The subnet resource ID to validate for AMLFS.",
+        Required = true
     };
 
     public static readonly Option<string> LocationOption = new(

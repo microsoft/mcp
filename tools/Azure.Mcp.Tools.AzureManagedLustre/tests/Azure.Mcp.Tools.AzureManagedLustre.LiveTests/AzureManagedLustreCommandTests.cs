@@ -29,7 +29,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
         public async Task Should_calculate_required_subnet_size()
         {
             var result = await CallToolAsync(
-                "azmcp_azuremanagedlustre_filesystem_subnet-size-required",
+                "azmcp_azuremanagedlustre_filesystem_subnetsize_ask",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -99,7 +99,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
         public async Task Should_check_subnet_size_and_succeed()
         {
             var result = await CallToolAsync(
-                "azmcp_azuremanagedlustre_filesystem_subnet-size-validate",
+                "azmcp_azuremanagedlustre_filesystem_subnetsize_validate",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -118,7 +118,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
         public async Task Should_check_subnet_size_and_fail()
         {
             var result = await CallToolAsync(
-                "azmcp_azuremanagedlustre_filesystem_subnet-size-validate",
+                "azmcp_azuremanagedlustre_filesystem_subnetsize_validate",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },

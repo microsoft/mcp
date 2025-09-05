@@ -166,9 +166,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
-        ArgumentException.ThrowIfNullOrWhiteSpace(sku);
-        ArgumentException.ThrowIfNullOrWhiteSpace(subnetId);
+        ValidateRequiredParameters([subscription, sku, subnetId, location]);
 
         var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
         var content = new AmlFileSystemSubnetContent
@@ -183,20 +181,13 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         {
             var response = await sub.CheckAmlFSSubnetsAsync(content);
             var status = response.Status;
-            if (status == 200)
+            var sizeIsValid = status == 200;
+            if (!sizeIsValid && status != 400)
             {
-                return true;
-            }
-            else if (status == 400)
-            {
-                return false;
+                throw new Exception($"Unexpected status code {status} while validating AMLFS subnet.");
             }
 
-            throw new Exception($"Unexpected status code {status} while validating AMLFS subnet.");
-        }
-        catch (RequestFailedException ex)
-        {
-            throw new Exception($"Request to validate AMLFS subnet failed: {ex.Message}", ex);
+            return sizeIsValid;
         }
         catch (Exception ex)
         {

@@ -16,7 +16,7 @@ public sealed class FileSystemSubnetSizeRequiredCommand(ILogger<FileSystemSubnet
 {
     private const string CommandTitle = "Calculate AMLFS Subnet Size required number of IP Addresses";
 
-    public override string Name => "subnet-size-required";
+    public override string Name => "ask";
 
     public override string Description =>
         """

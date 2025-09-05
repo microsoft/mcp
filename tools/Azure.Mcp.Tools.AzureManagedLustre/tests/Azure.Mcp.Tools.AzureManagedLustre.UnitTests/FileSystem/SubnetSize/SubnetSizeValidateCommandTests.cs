@@ -15,20 +15,20 @@ using NSubstitute.ExceptionExtensions;
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.UnitTests.FileSystem;
 
-public class FileSystemSubnetSizeCommandTests
+public class FileSystemCheckSubnetCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IAzureManagedLustreService _amlfsService;
-    private readonly ILogger<FileSystemSubnetSizeRequiredCommand> _logger;
-    private readonly FileSystemSubnetSizeRequiredCommand _command;
-    private readonly CommandContext _context;
+    private readonly ILogger<FileSystemSubnetSizeCheckCommand> _logger;
+    private readonly FileSystemSubnetSizeCheckCommand _command;
     private readonly Command _commandDefinition;
+    private readonly CommandContext _context;
     private readonly string _knownSubscriptionId = "sub123";
 
-    public FileSystemSubnetSizeCommandTests()
+    public FileSystemCheckSubnetCommandTests()
     {
         _amlfsService = Substitute.For<IAzureManagedLustreService>();
-        _logger = Substitute.For<ILogger<FileSystemSubnetSizeRequiredCommand>>();
+        _logger = Substitute.For<ILogger<FileSystemSubnetSizeCheckCommand>>();
 
         var services = new ServiceCollection().AddSingleton(_amlfsService);
         _serviceProvider = services.BuildServiceProvider();
@@ -42,27 +42,25 @@ public class FileSystemSubnetSizeCommandTests
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = _command.GetCommand();
-        Assert.Equal("subnet-size-required", command.Name);
+        Assert.Equal("validate", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
 
-
     [Fact]
-    public async Task ExecuteAsync_ReturnsRequiredIPs()
+    public async Task ExecuteAsync_Succeeds_ForValidInput()
     {
         // Arrange
-        _amlfsService.GetRequiredAmlFSSubnetsSize(
-            Arg.Is(_knownSubscriptionId),
-            Arg.Is("AMLFS-Durable-Premium-40"),
-            Arg.Is(480),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
-            .Returns(21);
+        _amlfsService.CheckAmlFSSubnetAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions?>())
+            .Returns(Task.FromResult(true));
 
+        // Arrange
         var args = _commandDefinition.Parse([
             "--sku", "AMLFS-Durable-Premium-40",
-            "--size", "480",
+            "--size", "48",
+            "--location", "eastus",
+            "--subnet-id", "/subscriptions/sub123/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/sn1",
             "--subscription", _knownSubscriptionId
         ]);
 
@@ -70,38 +68,24 @@ public class FileSystemSubnetSizeCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
+        Assert.NotNull(response);
         Assert.NotNull(response.Results);
+
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize<ResultJson>(json);
         Assert.NotNull(result);
-        Assert.Equal(21, result!.NumberOfRequiredIPs);
-    }
-
-    [Theory]
-    [InlineData("AMLFS-Durable-Premium-125")]
-    [InlineData("AMLFS-Durable-Premium-250")]
-    [InlineData("AMLFS-Durable-Premium-500")]
-    public async Task ExecuteAsync_ValidSkus_DoNotThrow(string sku)
-    {
-        // Arrange
-        _amlfsService.GetRequiredAmlFSSubnetsSize(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).Returns(10);
-        var args = _commandDefinition.Parse(["--sku", sku, "--size", "32", "--subscription", _knownSubscriptionId]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.True(response.Status == 200 || response.Results != null);
+        Assert.True(result!.Valid);
     }
 
     [Fact]
     public async Task ExecuteAsync_InvalidSku_Returns400()
     {
-        // Arrange: The command validates SKU in BindOptions and throws ArgumentException
+        // Arrange
         var args = _commandDefinition.Parse([
             "--sku", "INVALID-SKU",
-            "--size", "100",
+            "--size", "48",
+            "--location", "eastus",
+            "--subnet-id", "/subscriptions/sub123/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/sn1",
             "--subscription", _knownSubscriptionId
         ]);
 
@@ -117,22 +101,29 @@ public class FileSystemSubnetSizeCommandTests
     public async Task ExecuteAsync_ServiceThrows_IsHandled()
     {
         // Arrange
-        _amlfsService.GetRequiredAmlFSSubnetsSize(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-            .ThrowsAsync(new Exception("boom"));
+        _amlfsService.CheckAmlFSSubnetAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions?>())
+            .ThrowsAsync(new Exception("kaboom"));
 
-        var args = _commandDefinition.Parse(["--sku", "AMLFS-Durable-Premium-40", "--size", "100", "--subscription", _knownSubscriptionId]);
+        var args = _commandDefinition.Parse([
+            "--sku", "AMLFS-Durable-Premium-40",
+            "--size", "48",
+            "--location", "eastus",
+            "--subnet-id", "/subscriptions/sub123/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/sn1",
+            "--subscription", _knownSubscriptionId
+        ]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
         Assert.True(response.Status >= 500);
-        Assert.Contains("boom", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("kaboom", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     private class ResultJson
     {
-        [JsonPropertyName("numberOfRequiredIPs")]
-        public int NumberOfRequiredIPs { get; set; }
+        [JsonPropertyName("valid")]
+        public bool Valid { get; set; }
     }
 }

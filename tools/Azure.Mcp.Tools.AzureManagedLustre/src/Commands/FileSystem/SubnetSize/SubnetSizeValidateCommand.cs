@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.AzureManagedLustre.Options;
 using Azure.Mcp.Tools.AzureManagedLustre.Options.FileSystem;
@@ -14,7 +15,7 @@ public sealed class FileSystemSubnetSizeCheckCommand(ILogger<FileSystemSubnetSiz
 {
     private const string CommandTitle = "Validate AMLFS subnet against SKU and size";
 
-    public override string Name => "subnet-size-validate";
+    public override string Name => "validate";
 
     public override string Description =>
         "Validates that the provided subnet can host an Azure Managed Lustre filesystem for the given SKU and size.";
@@ -38,19 +39,19 @@ public sealed class FileSystemSubnetSizeCheckCommand(ILogger<FileSystemSubnetSiz
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_skuOption);
-        command.AddOption(_sizeOption);
-        command.AddOption(_subnetIdOption);
-        command.AddOption(_locationOption);
+        command.Options.Add(_skuOption);
+        command.Options.Add(_sizeOption);
+        command.Options.Add(_subnetIdOption);
+        command.Options.Add(_locationOption);
     }
 
     protected override FileSystemSubnetSizeCheckOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Sku = parseResult.GetValueForOption(_skuOption);
-        options.Size = parseResult.GetValueForOption(_sizeOption);
-        options.SubnetId = parseResult.GetValueForOption(_subnetIdOption);
-        options.Location = parseResult.GetValueForOption(_locationOption);
+        options.Sku = parseResult.GetValue(_skuOption);
+        options.Size = parseResult.GetValue(_sizeOption);
+        options.SubnetId = parseResult.GetValue(_subnetIdOption);
+        options.Location = parseResult.GetValue(_locationOption);
         return options;
     }
 
@@ -60,7 +61,7 @@ public sealed class FileSystemSubnetSizeCheckCommand(ILogger<FileSystemSubnetSiz
         if (!result.IsValid)
             return result;
 
-        var sku = commandResult.GetValueForOption(_skuOption);
+        var sku = commandResult.GetValue(_skuOption);
         if (!string.IsNullOrWhiteSpace(sku) && !AllowedSkus.Contains(sku))
         {
             result.IsValid = false;
@@ -77,12 +78,12 @@ public sealed class FileSystemSubnetSizeCheckCommand(ILogger<FileSystemSubnetSiz
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        var options = BindOptions(parseResult);
         try
         {
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
                 return context.Response;
 
+            var options = BindOptions(parseResult);
             var svc = context.GetService<IAzureManagedLustreService>();
             var subnetIsValid = await svc.CheckAmlFSSubnetAsync(
                                 options.Subscription!,
@@ -97,7 +98,7 @@ public sealed class FileSystemSubnetSizeCheckCommand(ILogger<FileSystemSubnetSiz
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error validating AMLFS subnet. Options: {@Options}", options);
+            _logger.LogError(ex, "Error validating AMLFS subnet.");
             HandleException(context, ex);
         }
         return context.Response;
