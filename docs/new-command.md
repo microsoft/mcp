@@ -753,7 +753,7 @@ private void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFacto
 }
 ```
 
-**IMPORTANT**: Command group names cannot contain underscores. Use lowercase concatenated, camelCase, or dash-separated names.
+**IMPORTANT**: Command group names cannot contain underscores. Use lowercase concatenated or dash-separated names.
 - ✅ Good: `"entraadmin"`, `"resourcegroup"`, `"storageaccount"`, `"entra-admin"`
 - ❌ Bad: `"entra_admin"`, `"resource_group"`, `"storage_account"`
 
