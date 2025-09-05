@@ -1,4 +1,3 @@
-/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -10,16 +9,13 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.LoadTesting.LiveTests;
 
-public class LoadTestingCommandTests : CommandTestsBase,
-    IClassFixture<LiveTestFixture>
+public class LoadTestingCommandTests : CommandTestsBase
 {
-    private readonly string _subscriptionId;
     private const string TestResourceName = "TestResourceName";
     private const string TestRunId = "TestRunId";
-    public LoadTestingCommandTests(LiveTestFixture fixture, ITestOutputHelper output)
-        : base(fixture, output)
+    public LoadTestingCommandTests(ITestOutputHelper output)
+        : base(output)
     {
-        _subscriptionId = Settings.SubscriptionId;
     }
 
     [Fact]
@@ -30,7 +26,7 @@ public class LoadTestingCommandTests : CommandTestsBase,
             "azmcp_loadtesting_testresource_list",
             new()
             {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "tenant", Settings.TenantId },
                 { "resource-group", Settings.ResourceGroupName }
             });
@@ -46,4 +42,3 @@ public class LoadTestingCommandTests : CommandTestsBase,
     }
 }
 
-*/
