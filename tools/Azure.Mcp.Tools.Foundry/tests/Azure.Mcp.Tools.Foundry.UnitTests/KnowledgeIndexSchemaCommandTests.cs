@@ -46,9 +46,9 @@ public class KnowledgeIndexSchemaCommandTests
     }
 
     [Theory]
-    [InlineData("--endpoint https://example.com --index-name test-index", true)]
+    [InlineData("--endpoint https://example.com --index test-index", true)]
     [InlineData("--endpoint https://example.com", false)] // Missing index name
-    [InlineData("--index-name test-index", false)] // Missing endpoint
+    [InlineData("--index test-index", false)] // Missing endpoint
     [InlineData("", false)] // Missing both
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -92,7 +92,7 @@ public class KnowledgeIndexSchemaCommandTests
         _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<Azure.Mcp.Tools.Foundry.Models.KnowledgeIndexSchema>(new Exception("Test error")));
 
-        var parseResult = _parser.Parse(["--endpoint", "https://example.com", "--index-name", "test-index"]);
+        var parseResult = _parser.Parse(["--endpoint", "https://example.com", "--index", "test-index"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -117,7 +117,7 @@ public class KnowledgeIndexSchemaCommandTests
         _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedSchema);
 
-        var parseResult = _parser.Parse(["--endpoint", "https://example.com", "--index-name", "test-index"]);
+        var parseResult = _parser.Parse(["--endpoint", "https://example.com", "--index", "test-index"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

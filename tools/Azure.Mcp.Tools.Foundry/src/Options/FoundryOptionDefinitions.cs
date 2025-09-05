@@ -20,7 +20,7 @@ public static class FoundryOptionDefinitions
     public const string SkuCapacity = "sku-capacity";
     public const string ScaleType = "scale-type";
     public const string ScaleCapacity = "scale-capacity";
-    public const string IndexName = "index-name";
+    public const string IndexName = "index";
 
     public static readonly Option<string> EndpointOption = new(
         $"--{Endpoint}",

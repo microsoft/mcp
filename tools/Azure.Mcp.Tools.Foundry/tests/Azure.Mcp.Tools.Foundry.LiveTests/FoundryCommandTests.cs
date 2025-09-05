@@ -115,7 +115,7 @@ public class FoundryCommandTests(LiveTestFixture liveTestFixture, ITestOutputHel
                 new()
                 {
                     { "endpoint", endpoint },
-                    { "index-name", indexName! },
+                    { "index", indexName! },
                     { "tenant", Settings.TenantId }
                 });
 
