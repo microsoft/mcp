@@ -122,7 +122,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
-                    { "sku", "AMLFS-Durable-Premium-48" },
+                    { "sku", "AMLFS-Durable-Premium-40" },
                     { "size", 1008 },
                     { "location", Environment.GetEnvironmentVariable("LOCATION") },
                     { "subnet-id", Environment.GetEnvironmentVariable("AMLFS_SUBNET_SMALL_ID") }

@@ -10,8 +10,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.Commands.FileSystem;
 
-public sealed class FileSystemSubnetSizeCheckCommand(ILogger<FileSystemSubnetSizeCheckCommand> logger)
-    : BaseAzureManagedLustreCommand<FileSystemSubnetSizeCheckOptions>(logger)
+public sealed class SubnetSizeValidateCommand(ILogger<SubnetSizeValidateCommand> logger)
+    : BaseAzureManagedLustreCommand<SubnetSizeValidateOptions>(logger)
 {
     private const string CommandTitle = "Validate AMLFS subnet against SKU and size";
 
@@ -45,7 +45,7 @@ public sealed class FileSystemSubnetSizeCheckCommand(ILogger<FileSystemSubnetSiz
         command.Options.Add(_locationOption);
     }
 
-    protected override FileSystemSubnetSizeCheckOptions BindOptions(ParseResult parseResult)
+    protected override SubnetSizeValidateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Sku = parseResult.GetValue(_skuOption);

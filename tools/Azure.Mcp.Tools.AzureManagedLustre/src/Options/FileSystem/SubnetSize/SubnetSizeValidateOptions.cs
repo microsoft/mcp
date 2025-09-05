@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.Options.FileSystem;
 
-public sealed class FileSystemSubnetSizeCheckOptions : BaseAzureManagedLustreOptions
+public sealed class SubnetSizeValidateOptions : BaseAzureManagedLustreOptions
 {
 
     [JsonPropertyName(AzureManagedLustreOptionDefinitions.sku)]
