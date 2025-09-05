@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Deploy.Options;
 using Azure.Mcp.Tools.Deploy.Options.Pipeline;
 using Azure.Mcp.Tools.Deploy.Services.Util;
@@ -35,32 +34,33 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_useAZDPipelineConfigOption);
-        command.AddOption(_organizationNameOption);
-        command.AddOption(_repositoryNameOption);
-        command.AddOption(_githubEnvironmentNameOption);
+        command.Options.Add(_useAZDPipelineConfigOption);
+        command.Options.Add(_organizationNameOption);
+        command.Options.Add(_repositoryNameOption);
+        command.Options.Add(_githubEnvironmentNameOption);
     }
 
     protected override GuidanceGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.UseAZDPipelineConfig = parseResult.GetValueForOption(_useAZDPipelineConfigOption);
-        options.OrganizationName = parseResult.GetValueForOption(_organizationNameOption);
-        options.RepositoryName = parseResult.GetValueForOption(_repositoryNameOption);
-        options.GithubEnvironmentName = parseResult.GetValueForOption(_githubEnvironmentNameOption);
+        options.UseAZDPipelineConfig = parseResult.GetValue(_useAZDPipelineConfigOption);
+        options.OrganizationName = parseResult.GetValue(_organizationNameOption);
+        options.RepositoryName = parseResult.GetValue(_repositoryNameOption);
+        options.GithubEnvironmentName = parseResult.GetValue(_githubEnvironmentNameOption);
         return options;
     }
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return Task.FromResult(context.Response);
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return Task.FromResult(context.Response);
-            }
             var result = PipelineGenerationUtil.GeneratePipelineGuidelines(options);
 
             context.Response.Message = result;

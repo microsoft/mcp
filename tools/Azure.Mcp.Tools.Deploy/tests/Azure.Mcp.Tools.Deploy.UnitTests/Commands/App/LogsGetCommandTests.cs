@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Deploy.Commands.App;
 using Azure.Mcp.Tools.Deploy.Services;
@@ -19,7 +19,7 @@ public class LogsGetCommandTests
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<LogsGetCommand> _logger;
     private readonly IDeployService _deployService;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
     private readonly CommandContext _context;
     private readonly LogsGetCommand _command;
 
@@ -33,7 +33,7 @@ public class LogsGetCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _context = new(_serviceProvider);
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class LogsGetCommandTests
             Arg.Any<int?>())
             .Returns(expectedLogs);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
             "--workspace-folder", "C:/Users/",
             "--azd-env-name", "dotnet-demo",
@@ -79,7 +79,7 @@ public class LogsGetCommandTests
             Arg.Any<int?>())
             .Returns(expectedLogs);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
             "--workspace-folder", "C:/project",
             "--azd-env-name", "my-env"
@@ -107,7 +107,7 @@ public class LogsGetCommandTests
             Arg.Any<int?>())
             .Returns("No logs found.");
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
             "--workspace-folder", "C:/empty-project",
             "--azd-env-name", "empty-env",
@@ -135,7 +135,7 @@ public class LogsGetCommandTests
             Arg.Any<int?>())
             .Returns(errorMessage);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
             "--workspace-folder", "C:/invalid-project",
             "--azd-env-name", "test-env"
@@ -163,7 +163,7 @@ public class LogsGetCommandTests
             Arg.Any<int?>())
             .ThrowsAsync(new InvalidOperationException("Failed to connect to Azure"));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
             "--workspace-folder", "C:/project",
             "--azd-env-name", "test-env"
@@ -183,7 +183,7 @@ public class LogsGetCommandTests
     public async Task Should_validate_required_parameters()
     {
         // arrange - missing required workspace-folder parameter
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
             "--azd-env-name", "test-env"
             // Missing workspace-folder

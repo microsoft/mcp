@@ -17,10 +17,11 @@ public static class FunctionAppOptionDefinitions
     public const string ContainerAppsEnvironmentName = "container-apps-environment";
 
     public static readonly Option<string> FunctionApp = new(
-        $"--{FunctionAppName}",
-        "The Function App name.")
+        $"--{FunctionAppName}"
+    )
     {
-        IsRequired = true
+        Description = "The name of the Function App.",
+        Required = true
     };
 
     public static readonly Option<string> Location = new(

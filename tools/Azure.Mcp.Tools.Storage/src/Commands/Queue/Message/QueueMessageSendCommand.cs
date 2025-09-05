@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Queue.Message;
@@ -27,7 +28,7 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
         """
         Send messages to an Azure Storage queue for asynchronous processing. This tool sends a message to a specified queue
         with optional time-to-live and visibility delay settings. Messages are returned with receipt handles for tracking.
-        Returns a QueueMessageSendResult object containing message ID, insertion time, expiration time, pop receipt, 
+        Returns a QueueMessageSendResult object containing message ID, insertion time, expiration time, pop receipt,
         next visible time, and message content.
         """;
 
@@ -42,32 +43,31 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_messageOption);
-        command.AddOption(_timeToLiveOption);
-        command.AddOption(_visibilityTimeoutOption);
+        command.Options.Add(_messageOption);
+        command.Options.Add(_timeToLiveOption);
+        command.Options.Add(_visibilityTimeoutOption);
     }
 
     protected override QueueMessageSendOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Message = parseResult.GetValueForOption(_messageOption);
-        options.TimeToLiveInSeconds = parseResult.GetValueForOption(_timeToLiveOption);
-        options.VisibilityTimeoutInSeconds = parseResult.GetValueForOption(_visibilityTimeoutOption);
+        options.Message = parseResult.GetValueOrDefault(_messageOption);
+        options.TimeToLiveInSeconds = parseResult.GetValueOrDefault(_timeToLiveOption);
+        options.VisibilityTimeoutInSeconds = parseResult.GetValueOrDefault(_visibilityTimeoutOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             // Get the storage service from DI
             var service = context.GetService<IStorageService>();
 
@@ -104,17 +104,17 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
     // Implementation-specific error handling
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == 404 =>
             "Queue not found. Verify the queue name exists and you have access.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed accessing the storage queue. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => reqEx.Status,
+        RequestFailedException reqEx => reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
 

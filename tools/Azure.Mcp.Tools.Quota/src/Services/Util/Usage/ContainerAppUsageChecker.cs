@@ -3,7 +3,6 @@
 
 using Azure.Core;
 using Azure.ResourceManager.AppContainers;
-using Azure.ResourceManager.AppContainers.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;

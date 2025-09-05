@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -53,7 +51,7 @@ public sealed class ClusterListCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            var testClusters = new List<Azure.Mcp.Tools.Aks.Models.Cluster>
+            var testClusters = new List<Models.Cluster>
             {
                 new() { Name = "cluster1", Location = "eastus" },
                 new() { Name = "cluster2", Location = "westus" }
@@ -85,7 +83,7 @@ public sealed class ClusterListCommandTests
     public async Task ExecuteAsync_ReturnsClustersList()
     {
         // Arrange
-        var expectedClusters = new List<Azure.Mcp.Tools.Aks.Models.Cluster>
+        var expectedClusters = new List<Models.Cluster>
         {
             new() { Name = "cluster1", Location = "eastus", KubernetesVersion = "1.28.0" },
             new() { Name = "cluster2", Location = "westus", KubernetesVersion = "1.29.0" },
@@ -109,7 +107,7 @@ public sealed class ClusterListCommandTests
         // Debug: Output the actual JSON to understand the structure
         Console.WriteLine($"Actual JSON: {json}");
 
-        var result = JsonSerializer.Deserialize<ClusterListCommand.ClusterListCommandResult>(json, AksJsonContext.Default.ClusterListCommandResult);
+        var result = JsonSerializer.Deserialize(json, AksJsonContext.Default.ClusterListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedClusters.Count, result.Clusters.Count);
@@ -123,7 +121,7 @@ public sealed class ClusterListCommandTests
     {
         // Arrange
         _aksService.ListClusters(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<Azure.Mcp.Tools.Aks.Models.Cluster>());
+            .Returns(new List<Models.Cluster>());
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub123");
@@ -141,7 +139,7 @@ public sealed class ClusterListCommandTests
     {
         // Arrange
         _aksService.ListClusters(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromException<List<Azure.Mcp.Tools.Aks.Models.Cluster>>(new Exception("Test error")));
+            .Returns(Task.FromException<List<Models.Cluster>>(new Exception("Test error")));
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub123");

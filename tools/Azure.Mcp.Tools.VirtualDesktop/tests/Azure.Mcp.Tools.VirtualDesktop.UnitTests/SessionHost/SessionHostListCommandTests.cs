@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
@@ -22,7 +22,7 @@ public class SessionHostListCommandTests
     private readonly ILogger<SessionHostListCommand> _logger;
     private readonly SessionHostListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public SessionHostListCommandTests()
     {
@@ -35,7 +35,7 @@ public class SessionHostListCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -94,7 +94,7 @@ public class SessionHostListCommandTests
         }
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -131,7 +131,7 @@ public class SessionHostListCommandTests
             .Returns(expectedSessionHosts);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription sub123 --hostpool pool1");
+        var parseResult = _commandDefinition.Parse("--subscription sub123 --hostpool pool1");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -167,7 +167,7 @@ public class SessionHostListCommandTests
             .Returns(expectedSessionHosts);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse($"--subscription sub123 --hostpool-resource-id {resourceId}");
+        var parseResult = _commandDefinition.Parse($"--subscription sub123 --hostpool-resource-id {resourceId}");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -194,7 +194,7 @@ public class SessionHostListCommandTests
     public async Task ExecuteAsync_WithResourceGroup_CallsServiceCorrectly()
     {
         // First test: Can we parse the command line correctly?
-        var parseResult = _parser.Parse("--subscription sub123 --hostpool pool1 --resource-group rg1");
+        var parseResult = _commandDefinition.Parse("--subscription sub123 --hostpool pool1 --resource-group rg1");
 
         // Check for parse errors
         if (parseResult.Errors.Any())
@@ -265,7 +265,7 @@ public class SessionHostListCommandTests
             .Returns(new List<SessionHostModel>());
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription sub123 --hostpool pool1");
+        var parseResult = _commandDefinition.Parse("--subscription sub123 --hostpool pool1");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -295,7 +295,7 @@ public class SessionHostListCommandTests
             .Returns(Task.FromException<IReadOnlyList<SessionHostModel>>(new Exception("Test error")));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription sub123 --hostpool pool1");
+        var parseResult = _commandDefinition.Parse("--subscription sub123 --hostpool pool1");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -318,7 +318,7 @@ public class SessionHostListCommandTests
         // Act & Assert
         try
         {
-            var parseResult = _parser.Parse(invalidArgs);
+            var parseResult = _commandDefinition.Parse(invalidArgs);
             var response = await _command.ExecuteAsync(context, parseResult);
 
             // If parsing succeeds but validation fails, expect 400

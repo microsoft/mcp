@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Database;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -25,26 +24,27 @@ public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) :
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_queryOption);
+        command.Options.Add(_queryOption);
     }
 
     protected override DatabaseQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValueForOption(_queryOption);
+        options.Query = parseResult.GetValue(_queryOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
+        var options = BindOptions(parseResult);
+
         try
         {
-            var options = BindOptions(parseResult);
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
             List<string> queryResult = await pgService.ExecuteQueryAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!, options.Query!);
             context.Response.Results = queryResult?.Count > 0 ?

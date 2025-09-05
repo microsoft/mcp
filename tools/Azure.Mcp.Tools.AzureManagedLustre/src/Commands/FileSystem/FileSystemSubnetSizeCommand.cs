@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureManagedLustre.Options;
 using Azure.Mcp.Tools.AzureManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.AzureManagedLustre.Services;
@@ -38,15 +40,15 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_skuOption);
-        command.AddOption(_sizeOption);
+        command.Options.Add(_skuOption);
+        command.Options.Add(_sizeOption);
     }
 
     protected override FileSystemSubnetSizeOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Sku = parseResult.GetValueForOption(_skuOption);
-        options.Size = parseResult.GetValueForOption(_sizeOption);
+        options.Sku = parseResult.GetValue(_skuOption);
+        options.Size = parseResult.GetValue(_sizeOption);
         return options;
     }
 
@@ -56,10 +58,9 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
 
         if (result.IsValid)
         {
-            string skuName = commandResult.GetValueForOption(_skuOption)!;
-
-
-            if (!AllowedSkus.Contains(skuName))
+            if (commandResult.TryGetValue(_skuOption, out var skuName)
+                && !string.IsNullOrWhiteSpace(skuName)
+                && !AllowedSkus.Contains(skuName))
             {
                 result.IsValid = false;
                 result.ErrorMessage = $"Invalid SKU '{skuName}'. Allowed values: {string.Join(", ", AllowedSkus)}";
@@ -77,12 +78,13 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            return context.Response;
+
         var options = BindOptions(parseResult);
+
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-                return context.Response;
-
             var svc = context.GetService<IAzureManagedLustreService>();
             var result = await svc.GetRequiredAmlFSSubnetsSize(
                 options.Subscription!,

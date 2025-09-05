@@ -28,16 +28,15 @@ public sealed class AccountDetailsCommand(ILogger<AccountDetailsCommand> logger)
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             // Get the storage service from DI
             var storageService = context.GetService<IStorageService>();
 
@@ -68,17 +67,17 @@ public sealed class AccountDetailsCommand(ILogger<AccountDetailsCommand> logger)
     // Implementation-specific error handling
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == 404 =>
             "Storage account not found. Verify the account name exists and you have access.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed accessing the storage account. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => reqEx.Status,
+        RequestFailedException reqEx => reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
 

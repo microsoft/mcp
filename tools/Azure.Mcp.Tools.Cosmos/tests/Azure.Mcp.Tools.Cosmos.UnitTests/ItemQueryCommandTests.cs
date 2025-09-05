@@ -1,4 +1,4 @@
-﻿using System.CommandLine.Parsing;
+﻿using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NSubstitute.Core;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 using static Azure.Mcp.Tools.Cosmos.Commands.ItemQueryCommand;
@@ -22,14 +21,14 @@ public class ItemQueryCommandTests
     private readonly ILogger<ItemQueryCommand> _logger;
     private readonly ItemQueryCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public ItemQueryCommandTests()
     {
         _cosmosService = Substitute.For<ICosmosService>();
         _logger = Substitute.For<ILogger<ItemQueryCommand>>();
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
         _serviceProvider = new ServiceCollection()
             .AddSingleton(_cosmosService)
             .BuildServiceProvider();
@@ -56,7 +55,7 @@ public class ItemQueryCommandTests
             Arg.Any<AuthMethod>(), null, Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedItems));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", "account123",
             "--database", "database123",
             "--container", "container123",
@@ -101,7 +100,7 @@ public class ItemQueryCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromResult(expectedItems));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", "account123",
             "--database", "database123",
             "--container", "container123",
@@ -138,7 +137,7 @@ public class ItemQueryCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .Returns(new List<JsonElement>());
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", "account123",
             "--database", "database123",
             "--container", "container123",
@@ -171,14 +170,14 @@ public class ItemQueryCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", "account123",
             "--database", "database123",
             "--container", "container123",
             "--subscription", "sub123"
         ]);
 
-        // Act 
+        // Act
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
@@ -194,8 +193,8 @@ public class ItemQueryCommandTests
     [InlineData("--subscription", "sub123", "--account", "account123", "--database", "database123")] // Missing container-name
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
-        // Arrange & Act 
-        var response = await _command.ExecuteAsync(_context, _parser.Parse(args));
+        // Arrange & Act
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
 
         // Assert
         Assert.Equal(400, response.Status);

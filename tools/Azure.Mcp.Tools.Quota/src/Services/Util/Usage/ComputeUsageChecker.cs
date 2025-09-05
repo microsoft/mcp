@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
-using Azure.ResourceManager;
 using Azure.ResourceManager.Compute;
 using Azure.ResourceManager.Compute.Models;
 using Microsoft.Extensions.Logging;
@@ -24,7 +23,7 @@ public class ComputeUsageChecker(TokenCredential credential, string subscription
                 result.Add(new UsageInfo(
                     Name: item.Name?.LocalizedValue ?? item.Name?.Value ?? string.Empty,
                     Limit: (int)item.Limit,
-                    Used: (int)item.CurrentValue,
+                    Used: item.CurrentValue,
                     Unit: item.Unit.ToString()
                 ));
             }

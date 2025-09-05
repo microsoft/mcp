@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 using Azure.Mcp.Tools.Sql.Services;
@@ -19,7 +19,7 @@ public class FirewallRuleDeleteCommandTests
     private readonly ILogger<FirewallRuleDeleteCommand> _logger;
     private readonly FirewallRuleDeleteCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public FirewallRuleDeleteCommandTests()
     {
@@ -32,7 +32,7 @@ public class FirewallRuleDeleteCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -69,13 +69,13 @@ public class FirewallRuleDeleteCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+                Arg.Any<Core.Options.RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(true);
         }
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -101,12 +101,12 @@ public class FirewallRuleDeleteCommandTests
             "testrg",
             "testsub",
             "TestRule",
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -126,12 +126,12 @@ public class FirewallRuleDeleteCommandTests
             "testrg",
             "testsub",
             "NonExistentRule",
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(false);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name NonExistentRule");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name NonExistentRule");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -151,12 +151,12 @@ public class FirewallRuleDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(new Exception("Test error")));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -171,18 +171,18 @@ public class FirewallRuleDeleteCommandTests
     public async Task ExecuteAsync_Handles404Error()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(404, "Server not found");
+        var requestException = new RequestFailedException(404, "Server not found");
         _service.DeleteFirewallRuleAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(requestException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -196,18 +196,18 @@ public class FirewallRuleDeleteCommandTests
     public async Task ExecuteAsync_Handles403Error()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(403, "Access denied");
+        var requestException = new RequestFailedException(403, "Access denied");
         _service.DeleteFirewallRuleAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(requestException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -231,12 +231,12 @@ public class FirewallRuleDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse($"--subscription {subscription} --resource-group {resourceGroup} --server {serverName} --firewall-rule-name {ruleName}");
+        var parseResult = _commandDefinition.Parse($"--subscription {subscription} --resource-group {resourceGroup} --server {serverName} --firewall-rule-name {ruleName}");
 
         // Act
         await _command.ExecuteAsync(context, parseResult);
@@ -247,7 +247,7 @@ public class FirewallRuleDeleteCommandTests
             resourceGroup,
             subscription,
             ruleName,
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -260,12 +260,12 @@ public class FirewallRuleDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --retry-max-retries 3");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --retry-max-retries 3");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -280,7 +280,7 @@ public class FirewallRuleDeleteCommandTests
             "testrg",
             "testsub",
             "TestRule",
-            Arg.Is<Azure.Mcp.Core.Options.RetryPolicyOptions?>(r => r != null && r.MaxRetries == 3),
+            Arg.Is<Core.Options.RetryPolicyOptions?>(r => r != null && r.MaxRetries == 3),
             Arg.Any<CancellationToken>());
     }
 
@@ -298,12 +298,12 @@ public class FirewallRuleDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse($"--subscription testsub --resource-group testrg --server testserver --firewall-rule-name {ruleName}");
+        var parseResult = _commandDefinition.Parse($"--subscription testsub --resource-group testrg --server testserver --firewall-rule-name {ruleName}");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -318,7 +318,7 @@ public class FirewallRuleDeleteCommandTests
             "testrg",
             "testsub",
             ruleName,
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -332,12 +332,12 @@ public class FirewallRuleDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(argumentException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name InvalidRule");
+        var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name InvalidRule");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -357,12 +357,12 @@ public class FirewallRuleDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse($"--subscription testsub --resource-group testrg --server testserver --firewall-rule-name {ruleName}");
+        var parseResult = _commandDefinition.Parse($"--subscription testsub --resource-group testrg --server testserver --firewall-rule-name {ruleName}");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);

@@ -353,7 +353,7 @@ protected override void RegisterOptions(Command command)
 {
     base.RegisterOptions(command);
     RequireResourceGroup();   // Command cannot run without a resource group
-    command.AddOption(_clusterNameOption);
+    command.Options.Add(_clusterNameOption);
 }
 
 protected override void RegisterOptions(Command command)
@@ -421,28 +421,28 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_newOption);
+    command.Options.Add(_newOption);
     }
 
     protected override {Resource}{Operation}Options BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.NewOption = parseResult.GetValueForOption(_newOption);
+    options.NewOption = parseResult.GetValue(_newOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        // Required validation step
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             context.Activity?.WithSubscriptionTag(options);
 
             // Get the appropriate service from DI
@@ -565,23 +565,23 @@ public abstract class Base{Toolset}Command<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_commonOption);
+    command.Options.Add(_commonOption);
 
         // Add resource group option if required
         if (RequiresResourceGroup)
         {
-            command.AddOption(_resourceGroupOption);
+            command.Options.Add(_resourceGroupOption);
         }
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.CommonOption = parseResult.GetValueForOption(_commonOption);
+    options.CommonOption = parseResult.GetValue(_commonOption);
 
         if (RequiresResourceGroup)
         {
-            options.ResourceGroup = parseResult.GetValueForOption(_resourceGroupOption);
+            options.ResourceGroup = parseResult.GetValue(_resourceGroupOption);
         }
 
         return options;
@@ -654,7 +654,8 @@ public class {Resource}{Operation}CommandTests
                 .Returns(new List<ResultType>());
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    // Build args from a single string in tests using the test-only splitter
+    var parseResult = _parser.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -1387,13 +1388,13 @@ protected override void RegisterOptions(Command command)
 {
     base.RegisterOptions(command);
     UseResourceGroup(); // or RequireResourceGroup();
-    command.AddOption(_otherOption);
+    command.Options.Add(_otherOption);
 }
 
 protected override MyOptions BindOptions(ParseResult parseResult)
 {
     var options = base.BindOptions(parseResult); // ResourceGroup already set if declared
-    options.Other = parseResult.GetValueForOption(_otherOption);
+    options.Other = parseResult.GetValue(_otherOption);
     return options;
 }
 ```
