@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -12,38 +12,37 @@ using Azure.Mcp.Tools.AzureManagedLustre.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.UnitTests.FileSystem;
 
-public class FileSystemGetSkuInfoCommandTests
+public class SkuGetCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IAzureManagedLustreService _amlfsService;
-    private readonly ILogger<FileSystemSkuInfoGetCommand> _logger;
-    private readonly FileSystemSkuInfoGetCommand _command;
+    private readonly ILogger<SkuGetCommand> _logger;
+    private readonly SkuGetCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
     private readonly string _knownSubscriptionId = "sub123";
 
-    public FileSystemGetSkuInfoCommandTests()
+    public SkuGetCommandTests()
     {
         _amlfsService = Substitute.For<IAzureManagedLustreService>();
-        _logger = Substitute.For<ILogger<FileSystemSkuInfoGetCommand>>();
+        _logger = Substitute.For<ILogger<SkuGetCommand>>();
 
         var services = new ServiceCollection().AddSingleton(_amlfsService);
         _serviceProvider = services.BuildServiceProvider();
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = _command.GetCommand();
-        Assert.Equal("sku-info-get", command.Name);
+        Assert.Equal("get", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
@@ -71,7 +70,7 @@ public class FileSystemGetSkuInfoCommandTests
             )
         };
 
-        _amlfsService.GetSkuInfoAsync(
+        _amlfsService.SkuGetInfoAsync(
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -79,7 +78,7 @@ public class FileSystemGetSkuInfoCommandTests
             )
             .Returns(expected);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", _knownSubscriptionId
         ]);
 
@@ -106,11 +105,11 @@ public class FileSystemGetSkuInfoCommandTests
     {
         if (shouldSucceed)
         {
-            _amlfsService.GetSkuInfoAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+            _amlfsService.SkuGetInfoAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
                 .Returns(new List<AzureManagedLustreSkuInfo> { new("n", "eastus", false, []) });
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         Assert.Equal(shouldSucceed ? 200 : 400, response.Status);

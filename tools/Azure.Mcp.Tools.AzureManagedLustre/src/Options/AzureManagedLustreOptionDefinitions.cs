@@ -25,14 +25,18 @@ public static class AzureManagedLustreOptionDefinitions
     };
 
     public static readonly Option<string> LocationOption = new(
-        $"--{location}",
-        "Azure region/region short name (use Azure location token, lowercase). Examples: uaenorth, swedencentral, eastus.")
-    { IsRequired = true };
+        $"--{location}"
+    )
+    {
+        Description = "Azure region/region short name (use Azure location token, lowercase). Examples: uaenorth, swedencentral, eastus.",
+        Required = true
+    };
 
     public static readonly Option<string> OptionalLocationOption = new(
-        $"{location}",
-        LocationOption.Description + " (optional).")
+        $"{location}"
+    )
     {
-        IsRequired = false
+        Description = LocationOption.Description,
+        Required = false
     };
 }

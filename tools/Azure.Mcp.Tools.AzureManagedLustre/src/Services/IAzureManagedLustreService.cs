@@ -19,7 +19,7 @@ public interface IAzureManagedLustreService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<Models.AzureManagedLustreSkuInfo>> GetSkuInfoAsync(
+    Task<List<Models.AzureManagedLustreSkuInfo>> SkuGetInfoAsync(
         string subscription,
         string? tenant = null,
         string? region = null,

@@ -9,12 +9,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.Commands.FileSystem;
 
-public sealed class FileSystemSkuInfoGetCommand(ILogger<FileSystemSkuInfoGetCommand> logger)
-    : BaseAzureManagedLustreCommand<FileSystemSkuInfoGetOptions>(logger)
+public sealed class SkuGetCommand(ILogger<SkuGetCommand> logger)
+    : BaseAzureManagedLustreCommand<SkuGetOptions>(logger)
 {
     private const string CommandTitle = "Get AMLFS SKU information";
 
-    public override string Name => "sku-info-get";
+    public override string Name => "get";
 
     public override string Description =>
         """
@@ -30,39 +30,38 @@ public sealed class FileSystemSkuInfoGetCommand(ILogger<FileSystemSkuInfoGetComm
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        _optionalLocationOption.IsRequired = false;
-        command.AddOption(_optionalLocationOption);
+        command.Options.Add(_optionalLocationOption);
     }
 
-    protected override FileSystemSkuInfoGetOptions BindOptions(ParseResult parseResult)
+    protected override SkuGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Location = parseResult.GetValueForOption(_optionalLocationOption);
+        options.Location = parseResult.GetValue(_optionalLocationOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        var options = BindOptions(parseResult);
         try
         {
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
                 return context.Response;
 
+            var options = BindOptions(parseResult);
             var service = context.GetService<IAzureManagedLustreService>();
-            var skus = await service.GetSkuInfoAsync(options.Subscription!, options.Tenant, options.Location, options.RetryPolicy);
+            var skus = await service.SkuGetInfoAsync(options.Subscription!, options.Tenant, options.Location, options.RetryPolicy);
 
             context.Response.Results = skus.Count > 0 ? ResponseResult.Create(
-                new FileSystemSkuInfoGetResult(skus),
-                AzureManagedLustreJsonContext.Default.FileSystemSkuInfoGetResult) : null;
+                new SkuGetResult(skus),
+                AzureManagedLustreJsonContext.Default.SkuGetResult) : null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving AMLFS SKU info. Options: {@Options}", options);
+            _logger.LogError(ex, "Error retrieving AMLFS SKU info.");
             HandleException(context, ex);
         }
         return context.Response;
     }
 
-    internal record FileSystemSkuInfoGetResult(List<Models.AzureManagedLustreSkuInfo> Skus);
+    internal record SkuGetResult(List<Models.AzureManagedLustreSkuInfo> Skus);
 }

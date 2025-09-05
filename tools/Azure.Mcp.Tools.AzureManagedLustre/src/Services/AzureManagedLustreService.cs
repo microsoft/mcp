@@ -71,6 +71,21 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         );
     }
 
+    private static List<AzureManagedLustreSkuCapability> MapCapabilities(IEnumerable<StorageCacheSkuCapability>? caps)
+    {
+        var list = new List<AzureManagedLustreSkuCapability>();
+        if (caps is null)
+            return list;
+        foreach (var cap in caps)
+        {
+            var name = cap?.Name;
+            if (string.IsNullOrWhiteSpace(name))
+                continue;
+            list.Add(new AzureManagedLustreSkuCapability(name!, cap?.Value ?? string.Empty));
+        }
+        return list;
+    }
+
     public async Task<int> GetRequiredAmlFSSubnetsSize(string subscription,
     string sku, int size,
         string? tenant = null,
@@ -96,7 +111,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         }
     }
 
-    public async Task<List<AzureManagedLustreSkuInfo>> GetSkuInfoAsync(
+    public async Task<List<AzureManagedLustreSkuInfo>> SkuGetInfoAsync(
         string subscription,
         string? tenant = null,
         string? region = null,
@@ -109,54 +124,33 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
 
         try
         {
+            // Refactored: flattened logic, early-continue guards, extracted capability mapping
             var results = new List<AzureManagedLustreSkuInfo>();
+
             await foreach (var sku in sub.GetStorageCacheSkusAsync())
             {
-                if (sku is null)
+
+                if (sku is null ||
+                    !string.Equals(sku.ResourceType, "amlFilesystems", StringComparison.OrdinalIgnoreCase) ||
+                    sku.LocationInfo is null ||
+                    string.IsNullOrEmpty(sku.Name))
                     continue;
 
-                var resourceType = sku.ResourceType ?? string.Empty;
+                var name = sku.Name;
+                var capabilities = MapCapabilities(sku.Capabilities);
 
-
-                if (resourceType != "amlFilesystems")
-                    continue;
-
-
-                var name = sku.Name ?? string.Empty;
-
-                var capabilities = new List<AzureManagedLustreSkuCapability>();
-
-                foreach (var capability in sku.Capabilities ?? [])
+                foreach (var locationInfo in sku.LocationInfo)
                 {
-                    var capName = capability?.Name ?? string.Empty;
-                    var capValue = capability?.Value ?? string.Empty;
-                    if (!string.IsNullOrWhiteSpace(capName))
-                    {
-                        capabilities.Add(new AzureManagedLustreSkuCapability(capName, capValue));
-                    }
-                }
+                    var location = locationInfo?.Location;
+                    if (string.IsNullOrWhiteSpace(location) || (!string.IsNullOrWhiteSpace(region) && !string.Equals(location, region, StringComparison.OrdinalIgnoreCase)))
+                        continue;
+                    var supportsZones = (locationInfo?.Zones?.Count ?? 0) > 1;
 
-
-                if (sku.LocationInfo is not null)
-                {
-                    foreach (var locationInfo in sku.LocationInfo)
-                    {
-                        var location = locationInfo?.Location;
-                        if (string.IsNullOrWhiteSpace(location))
-                            continue;
-
-                        if (!string.IsNullOrWhiteSpace(region) && !string.Equals(location, region, StringComparison.OrdinalIgnoreCase))
-                            continue;
-
-                        bool supportsZones = false;
-
-                        var zones = locationInfo?.Zones;
-                        supportsZones = zones != null && zones.Count > 1;
-
-                        results.Add(new AzureManagedLustreSkuInfo(name, location, supportsZones, new List<AzureManagedLustreSkuCapability>(capabilities)));
-                    }
+                    // Preserve original behavior: copy capabilities list per result instance
+                    results.Add(new AzureManagedLustreSkuInfo(name, location, supportsZones, [.. capabilities]));
                 }
             }
+
             return results;
         }
         catch (Exception ex)
