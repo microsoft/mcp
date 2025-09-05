@@ -1,4 +1,3 @@
-/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -11,8 +10,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.VirtualDesktop.LiveTests;
 
 [Trait("Area", "VirtualDesktop")]
-public class VirtualDesktopCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     [Fact]
     [Trait("Category", "Live")]
@@ -417,4 +415,3 @@ public class VirtualDesktopCommandTests(LiveTestFixture liveTestFixture, ITestOu
     }
 }
 
-*/
