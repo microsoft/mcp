@@ -125,7 +125,7 @@ azmcp foundry knowledge index list --endpoint <endpoint>
 
 # Get knowledge index schema information
 azmcp foundry knowledge index schema --endpoint <endpoint> \
-                                     --index-name <index-name>
+                                     --index <index>
 
 # Deploy an AI Foundry model
 azmcp foundry models deploy --subscription <subscription> \
