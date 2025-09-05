@@ -540,7 +540,7 @@ azmcp server start --mode namespace
 
 To add a new external MCP server to the registry:
 
-1. Edit `core/AzureMcp.Core/src/Areas/Server/Resources/registry.json`
+1. Edit `core/Azure.Mcp.Core/src/Areas/Server/Resources/registry.json`
 2. Add your server configuration under the `servers` object using VS Code's MCP configuration schema
 3. Use a unique identifier as the key
 4. Provide either a `url` for SSE transport or `type: "stdio"` with `command` for stdio transport
