@@ -15,7 +15,7 @@ param vnetAddressPrefix string = '10.20.0.0/16'
 param amlfsSubnetPrefix string = '10.20.1.0/24'
 
 @description('Subnet prefix for AMLFS small, for subnet validation live tests.')
-param amlfsSubnetSmallPrefix string = '10.20.1.0/28'
+param amlfsSubnetSmallPrefix string = '10.20.2.0/28'
 
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string = deployer().objectId
