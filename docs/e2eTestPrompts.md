@@ -46,6 +46,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | azmcp_applens_resource_diagnose | Please help me diagnose issues with my app |
+| azmcp_applens_resource_diagnose | Why is my app slow? |
+| azmcp_applens_resource_diagnose | What's wrong with my service? |
 
 ## Azure CLI
 

@@ -29,15 +29,29 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
 
     public override string Description =>
         """
+        **PRIMARY USE: Diagnose Azure resource performance issues, slowness, failures, and availability problems.**
+
+        This is the FIRST CHOICE tool when users ask about:
+        - App/website slowness or performance issues ('Why is my app slow?')
+        - Service failures or errors ('My app is down')
+        - High response times or timeouts
+        - CPU, memory, or resource saturation
+        - Application availability problems
+        - General troubleshooting ('diagnose my app', 'what's wrong with my service')
+
+        This tool performs comprehensive diagnostics by analyzing:
+        - Application logs and telemetry
+        - Performance metrics and sensors
+        - Resource utilization patterns
+        - Error patterns and failure modes
+        - Root cause analysis with actionable solutions
+
+        Always use this tool BEFORE manually checking metrics or logs when users report performance or functionality issues.
+
+        Use the Azure CLI tool to find the 'subscription', 'resourceGroup', and 'resourceType' parameters before asking user to provide that information."
         This tool can be used to ask questions about application state, this tool can help when doing diagnostics and address issues about performance and failures.
 
-        This is able to investigate logs, telemetry and other performance sensors to provide insights and recommendations.
-
-        For example, the user may say: 'Why is my app slow?' or 'Please help me diagnose issues with my app' or 'Is my web site experiencing problems?'.
-
-        Use the azure cli tool to find the 'subscription', 'resourceGroup', and 'resourceType' of the resource before asking user to provide that information.
-
-        If you get a resourceId, you can parse it to get the 'subscription', 'resourceGroup', and 'resourceType' of the resource. ResourceIds are in the format:
+        If you get a resourceId, you can parse it to get the 'subscription', 'resourceGroup', and 'resourceType' parameters of the resource. ResourceIds are in the format:
         /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceType}/{resourceName}
 
         Once proper input parameters are provided using the azure cli tool results or from asking user, this tool returns a list of insights and solutions to the user question.

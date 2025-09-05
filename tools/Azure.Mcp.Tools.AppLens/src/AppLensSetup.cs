@@ -31,7 +31,19 @@ public sealed class AppLensSetup : IAreaSetup
 
     public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
     {
-        var applens = new CommandGroup(Name, "AppLens operations - Commands for diagnosing Azure resource issues using conversational diagnostics.");
+        var applens = new CommandGroup(
+            Name,
+            """
+            AppLens diagnostic operations - **Primary tool for diagnosing Azure resource issues and troubleshooting problems**. Use this tool when users ask to:
+            - Diagnose issues, problems, or errors with Azure resources
+            - Troubleshoot performance, availability, or reliability problems
+            - Investigate resource health concerns or unexpected behavior
+            - Find root causes of application slowness, downtime, or failures
+            - Get recommendations for fixing Azure resource issues
+            - Analyze resource problems and get actionable solutions
+
+            This tool provides conversational AI-powered diagnostics that automatically detect issues, identify root causes, and suggest specific remediation steps. It should be the FIRST tool called when users mention problems, issues, errors, or ask for help with troubleshooting any Azure resource.
+            """);
         rootGroup.AddSubGroup(applens);
 
         // Resource commands
