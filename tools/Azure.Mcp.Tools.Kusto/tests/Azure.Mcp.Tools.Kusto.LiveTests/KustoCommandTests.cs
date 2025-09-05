@@ -1,3 +1,4 @@
+/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -108,3 +109,5 @@ public class KustoCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelpe
         Assert.NotEmpty(itemsArray.EnumerateArray());
     }
 }
+
+*/

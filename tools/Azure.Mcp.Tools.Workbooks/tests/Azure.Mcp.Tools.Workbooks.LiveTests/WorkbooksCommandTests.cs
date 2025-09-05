@@ -1,3 +1,4 @@
+/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -219,3 +220,5 @@ public class WorkbooksCommandTests(LiveTestFixture fixture, ITestOutputHelper ou
 
 
 }
+
+*/

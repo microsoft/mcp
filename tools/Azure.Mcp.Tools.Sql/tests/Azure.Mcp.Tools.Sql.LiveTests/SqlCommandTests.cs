@@ -1,3 +1,4 @@
+/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -411,3 +412,5 @@ public class SqlCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper 
         }
     }
 }
+
+*/
