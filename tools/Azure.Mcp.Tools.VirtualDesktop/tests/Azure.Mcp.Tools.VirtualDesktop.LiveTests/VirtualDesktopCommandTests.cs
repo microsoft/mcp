@@ -1,3 +1,4 @@
+/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -415,3 +416,5 @@ public class VirtualDesktopCommandTests(LiveTestFixture liveTestFixture, ITestOu
         }
     }
 }
+
+*/

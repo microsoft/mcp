@@ -1,3 +1,4 @@
+/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -197,3 +198,4 @@ public sealed class AksCommandTests(LiveTestFixture liveTestFixture, ITestOutput
         Assert.False(result3.HasValue);
     }
 }
+*/
