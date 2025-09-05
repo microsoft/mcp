@@ -15,7 +15,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
       - [Root Cause](#root-cause)
       - [Workarounds](#workarounds)
       - [How to Check Your Tool Count](#how-to-check-your-tool-count)
-    - [VS Code only shows a subset of tools available?](#vs-code-only-shows-a-subset-of-tools-available)
+    - [VS Code only shows a subset of tools available](#vs-code-only-shows-a-subset-of-tools-available)
     - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
     - [VS Code Cache Problems](#vs-code-cache-problems)
   - [Authentication](#authentication)
