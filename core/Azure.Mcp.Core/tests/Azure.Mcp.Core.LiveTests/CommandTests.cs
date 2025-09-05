@@ -105,14 +105,15 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
             { "action", "deployment" }
         };
 
-        //{
-        //  "command": "azure_bestpractices_get",
-        //  "parameters": {
-        //    "resource": "general",
-        //    "action": "all"
-        //  },
-        //  "intent": "Get best practices for deploying Azure Resources"
-        //}
+        // Example expected payload:
+        // {
+        //   "command": "azure_bestpractices_get",
+        //   "parameters": {
+        //     "resource": "general",
+        //     "action": "all"
+        //   },
+        //   "intent": "Get best practices for deploying Azure Resources"
+        // }
         var parametersString =
             """
                 {
