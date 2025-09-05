@@ -1,4 +1,3 @@
-/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -11,14 +10,10 @@ using Xunit;
 namespace Azure.Mcp.Tools.Quota.LiveTests;
 
 [Trait("Area", "Quota")]
-public class QuotaCommandTests : CommandTestsBase,
-    IClassFixture<LiveTestFixture>
+public class QuotaCommandTests : CommandTestsBase
 {
-    private readonly string _subscriptionId;
-
-    public QuotaCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : base(liveTestFixture, output)
+    public QuotaCommandTests(ITestOutputHelper output) : base(output)
     {
-        _subscriptionId = Settings.SubscriptionId;
     }
 
     [Fact]
@@ -30,7 +25,7 @@ public class QuotaCommandTests : CommandTestsBase,
         JsonElement? result = await CallToolAsync(
             "azmcp_quota_usage_check",
             new() {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "region", "eastus" },
                 { "resource-types", resourceTypes }
             });
@@ -79,7 +74,7 @@ public class QuotaCommandTests : CommandTestsBase,
             "azmcp_quota_region_availability_list",
             new()
             {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "resource-types", "Microsoft.Web/sites, Microsoft.Storage/storageAccounts, microsoft.dbforpostgresql/flexibleServers" },
             });
 
@@ -113,7 +108,7 @@ public class QuotaCommandTests : CommandTestsBase,
             "azmcp_quota_region_availability_list",
             new()
             {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "resource-types", "Microsoft.CognitiveServices/accounts" },
                 { "cognitive-service-model-name", "gpt-4o" },
                 { "cognitive-service-deployment-sku-name", "Standard" }
@@ -137,4 +132,3 @@ public class QuotaCommandTests : CommandTestsBase,
     }
 }
 
-*/

@@ -1,4 +1,3 @@
-/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -13,13 +12,13 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Deploy.LiveTests;
 
-public class DeployCommandTests : CommandTestsBase,
-    IClassFixture<LiveTestFixture>
+public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
-    private readonly string _subscriptionId;
+    private string _subscriptionId = default!;
 
-    public DeployCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : base(liveTestFixture, output)
+    public override async ValueTask InitializeAsync()
     {
+        await base.InitializeAsync();
         _subscriptionId = Settings.SubscriptionId;
     }
 
@@ -171,5 +170,3 @@ public class DeployCommandTests : CommandTestsBase,
     }
 
 }
-
-*/
