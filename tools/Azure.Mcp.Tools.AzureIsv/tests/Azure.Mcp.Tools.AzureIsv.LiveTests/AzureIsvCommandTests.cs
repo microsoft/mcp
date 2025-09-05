@@ -1,4 +1,3 @@
-/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -10,9 +9,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AzureIsv.LiveTests;
 
-public class AzureIsvCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output),
-    IClassFixture<LiveTestFixture>
+public class AzureIsvCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     [Fact]
     public async Task Should_list_datadog_monitored_resources()
@@ -36,4 +33,3 @@ public class AzureIsvCommandTests(LiveTestFixture liveTestFixture, ITestOutputHe
     }
 }
 
-*/
