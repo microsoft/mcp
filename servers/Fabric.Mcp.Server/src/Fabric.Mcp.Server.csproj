@@ -5,9 +5,10 @@
     <AssemblyTitle>Fabric MCP Server</AssemblyTitle>
     <Description>Microsoft Fabric MCP Server - Model Context Protocol implementation for Fabric</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
-
     <NpmPackageName>@microsoft/fabric-mcp</NpmPackageName>
     <NpmPackageKeywords>fabric,mcp,model-context-protocol</NpmPackageKeywords>
+    <PackageId>Microsoft.Fabric.Mcp</PackageId>
+    <ToolCommandName>$(CliName)</ToolCommandName>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -35,15 +36,24 @@
     <NoWarn>$(NoWarn);IL3000</NoWarn>
   </PropertyGroup>
 
-  <!-- AOT native build flags -->
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
-    <IsAotCompatible>true</IsAotCompatible>
-    <PublishAot>true</PublishAot>
+    <!-- AOT native build flags -->
     <PublishTrimmed>true</PublishTrimmed>
-    <TrimMode>full</TrimMode>
     <SelfContained>true</SelfContained>
-    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
-    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+  </PropertyGroup>
+
+  <!-- Properties for the root (RID-less) .NET Tool package -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
+    <PackageDescription>Microsoft Fabric MCP Server - Model Context Protocol implementation for Fabric.</PackageDescription>
+    <PackageTags>fabric;mcp;</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
+    <None Include="../README.md" Pack="true" PackagePath="./README.md" />
+  </ItemGroup>
+  <!-- Properties for the RID-specific .NET Tool packages -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <PackageDescription>Microsoft Fabric MCP Server - Model Context Protocol implementation for Fabric. Internal implementation package for $(RuntimeIdentifier).</PackageDescription>
   </PropertyGroup>
 
   <!-- Debug configuration -->
@@ -58,13 +68,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\core\Microsoft.Fabric.Mcp.Core\src\Microsoft.Fabric.Mcp.Core.csproj" />
-    <ProjectReference Include="..\..\..\..\areas\*\src\**\Fabric.*.csproj" />
+    <ProjectReference Include="$(RepoRoot)\core\Microsoft.Fabric.Mcp.Core\src\Microsoft.Fabric.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)\areas\*\src\**\Fabric.*.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
-
 </Project>

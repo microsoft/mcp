@@ -44,4 +44,10 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("debug")]
     public bool Debug { get; set; } = false;
+  
+    /// <summary>
+    /// Gets or sets whether insecure transport mechanisms are enabled.
+    /// </summary>
+    [JsonPropertyName("enableInsecureTransports")]
+    public bool EnableInsecureTransports { get; set; } = false;
 }
