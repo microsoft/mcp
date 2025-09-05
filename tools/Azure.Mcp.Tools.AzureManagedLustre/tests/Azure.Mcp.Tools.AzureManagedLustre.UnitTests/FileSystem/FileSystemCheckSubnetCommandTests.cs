@@ -51,6 +51,11 @@ public class FileSystemCheckSubnetCommandTests
     public async Task ExecuteAsync_Succeeds_ForValidInput()
     {
         // Arrange
+        _amlfsService.CheckAmlFSSubnetAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions?>())
+            .Returns(Task.FromResult(true));
+
+        // Arrange
         var args = _parser.Parse([
             "--sku", "AMLFS-Durable-Premium-40",
             "--size", "48",
