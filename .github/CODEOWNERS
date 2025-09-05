@@ -197,8 +197,4 @@
 /tools/Azure.Mcp.Tools.EventGrid/     @microsoft/azure-mcp
 
 # ServiceLabel: %area-EventGrid
-<<<<<<< HEAD
 # ServiceOwners:                      @microsoft/azure-mcp
-=======
-# ServiceOwners:                       @microsoft/azure-mcp
->>>>>>> cc69b1ea (Adding Tool to list event grid topics)
