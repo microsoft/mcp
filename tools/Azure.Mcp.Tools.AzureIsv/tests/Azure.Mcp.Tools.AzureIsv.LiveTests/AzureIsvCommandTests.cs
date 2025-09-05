@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+
+/*
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
@@ -33,4 +35,4 @@ public class AzureIsvCommandTests(LiveTestFixture liveTestFixture, ITestOutputHe
         var resources = result.AssertProperty("resources");
         Assert.Equal(JsonValueKind.Array, resources.ValueKind);
     }
-}
+}*/

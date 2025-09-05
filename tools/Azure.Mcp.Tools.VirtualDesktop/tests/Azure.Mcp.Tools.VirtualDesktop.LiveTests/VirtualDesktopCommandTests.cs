@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+
+/*
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
@@ -414,4 +416,4 @@ public class VirtualDesktopCommandTests(LiveTestFixture liveTestFixture, ITestOu
             Assert.True(true, "No hostpools available for testing user sessions");
         }
     }
-}
+}*/

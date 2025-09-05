@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+
+/*
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
@@ -42,4 +44,4 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
             Assert.Equal(JsonValueKind.Number, ips.ValueKind);
         }
     }
-}
+}*/

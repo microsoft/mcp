@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+
+/*
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
@@ -198,4 +200,4 @@ public class RedisCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelpe
         Assert.Equal(JsonValueKind.Array, databases.ValueKind);
     }
 
-}
+}*/

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+
+/*
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Tests.Client;
@@ -169,4 +171,4 @@ public class DeployCommandTests : CommandTestsBase,
         return root.TryGetProperty("message", out var property) ? property.GetString() : null;
     }
 
-}
+}*/

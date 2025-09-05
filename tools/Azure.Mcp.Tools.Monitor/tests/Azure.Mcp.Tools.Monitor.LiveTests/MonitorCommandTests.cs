@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+
+/*
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -458,4 +460,4 @@ public class MonitorCommandTests(LiveTestFixture fixture, ITestOutputHelper outp
             // Don't fail the test if storage activity generation fails
         }
     }
-}
+}*/

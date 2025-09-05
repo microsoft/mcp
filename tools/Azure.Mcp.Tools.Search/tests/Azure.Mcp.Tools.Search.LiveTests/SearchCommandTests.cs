@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+
+/*
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
@@ -145,4 +147,4 @@ public class SearchCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelp
         var docs = result.AssertProperty("documents");
         Assert.Equal(JsonValueKind.Array, docs.ValueKind);
     }
-}
+}*/

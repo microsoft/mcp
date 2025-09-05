@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Tests;
@@ -12,8 +13,7 @@ namespace Azure.Mcp.Tools.Acr.LiveTests;
 
 [Trait("Area", "Acr")]
 [Trait("Category", "Live")]
-public class AcrCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+public class AcrCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     [Theory]
     [InlineData(AuthMethod.Credential)]
@@ -148,3 +148,4 @@ public class AcrCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper 
         Assert.Null(result);
     }
 }
+

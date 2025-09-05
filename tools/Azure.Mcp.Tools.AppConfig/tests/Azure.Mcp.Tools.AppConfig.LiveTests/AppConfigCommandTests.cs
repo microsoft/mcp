@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -14,22 +15,26 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.LiveTests;
 
-public class AppConfigCommandTests : CommandTestsBase,
-    IClassFixture<LiveTestFixture>
+public class AppConfigCommandTests : CommandTestsBase
 {
     private const string AccountsKey = "accounts";
     private const string SettingsKey = "settings";
     private readonly AppConfigService _appConfigService;
-    private readonly string _subscriptionId;
-    private readonly string _accountName;
+    private string _subscriptionId = null!;
+    private string _accountName = null!;
 
-    public AppConfigCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : base(liveTestFixture, output)
+    public AppConfigCommandTests(ITestOutputHelper output) : base(output)
     {
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new CacheService(memoryCache);
         var tenantService = new TenantService(cacheService);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);
         _appConfigService = new AppConfigService(subscriptionService, tenantService);
+    }
+
+    public override async ValueTask InitializeAsync()
+    {
+        await base.InitializeAsync();
         _subscriptionId = Settings.SubscriptionId;
         _accountName = Settings.ResourceBaseName;
     }
@@ -61,8 +66,8 @@ public class AppConfigCommandTests : CommandTestsBase,
         const string key1 = "bar";
         const string value1 = "bar-value";
 
-        await _appConfigService.SetKeyValue(_accountName, key0, value0, _subscriptionId);
-        await _appConfigService.SetKeyValue(_accountName, key1, value1, _subscriptionId);
+        await _appConfigService.SetKeyValue(_accountName, key0, value0, _subscriptionId, Settings.TenantId);
+        await _appConfigService.SetKeyValue(_accountName, key1, value1, _subscriptionId, Settings.TenantId);
 
         // act
         var result = await CallToolAsync(
@@ -70,7 +75,8 @@ public class AppConfigCommandTests : CommandTestsBase,
             new()
             {
                 { "subscription", _subscriptionId },
-                { "account", _accountName }
+                { "account", _accountName },
+                { "tenant", Settings.TenantId }
             });
 
         // assert
@@ -519,3 +525,4 @@ public class AppConfigCommandTests : CommandTestsBase,
         }
     }
 }
+
