@@ -133,6 +133,11 @@ try {
 			$ridNode.AppendChild($newRid) | Out-Null
 			$wrapperToolSettings.Save("$wrapperToolDir/DotnetToolSettings.xml")
 
+			if ((Get-Content -Raw -Path $platformNuspecFile) + (Get-Content -Raw -Path "$platformToolDir/DotnetToolSettings.xml") -match '__') {
+				Write-Error "Placeholder(s) with '__' still found in $platformNuspecFile or DotnetToolSettings.xml. Please check your replacements."
+				exit 1
+			}
+
 			LogInfo "Creating Nuget Symbol Package from $platformNuspecFile"
 			Invoke-LoggedCommand "nuget pack '$platformNuspecFile' -OutputDirectory '$platformOutputPath'" -GroupOutput
 			$generatedNupkg = Get-ChildItem -Path $platformOutputPath -Filter "*.nupkg" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
@@ -143,6 +148,11 @@ try {
 			LogInfo "Creating Nuget Package from $platformNuspecFile"
 			Invoke-LoggedCommand "nuget pack '$platformNuspecFile' -OutputDirectory '$platformOutputPath'" -GroupOutput
 			Remove-Item -Path $tempPlatformDir -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+		}
+
+		if ((Get-Content -Raw -Path $wrapperToolNuspec) + (Get-Content -Raw -Path "$wrapperToolDir/DotnetToolSettings.xml") -match '__') {
+			Write-Error "Placeholder(s) with '__' still found in $wrapperToolNuspec or DotnetToolSettings.xml. Please check your replacements."
+			exit 1
 		}
 
 		LogInfo "Creating Nuget Package from $wrapperToolNuspec"
