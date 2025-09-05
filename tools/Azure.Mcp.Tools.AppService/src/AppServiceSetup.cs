@@ -25,10 +25,11 @@ public class AppServiceSetup : IAreaSetup
         rootGroup.AddSubGroup(appService);
 
         // Create database subgroup
-        var database = new CommandGroup("database", "App Service database operations");
+    var database = new CommandGroup("database", "Operations for configuring database connections for Azure App Service web apps");
         appService.AddSubGroup(database);
 
         // Add database commands
-        database.AddCommand("add", new DatabaseAddCommand(loggerFactory.CreateLogger<DatabaseAddCommand>()));
+    // Register the 'add' command for database connections, allowing users to configure a new database connection for an App Service web app.
+    database.AddCommand("add", new DatabaseAddCommand(loggerFactory.CreateLogger<DatabaseAddCommand>()));
     }
 }
