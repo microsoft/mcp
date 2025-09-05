@@ -81,7 +81,7 @@ public sealed class ServiceStartCommand : BaseCommand
         string? mode = parseResult.GetValue(_modeOption);
         bool? readOnly = parseResult.GetValue(_readOnlyOption);
 
-        var debug = parseResult.GetValue(_debugOption);
+        var debug = parseResult.GetValueOrDefault(_debugOption);
 
         if (!IsValidMode(mode))
         {
