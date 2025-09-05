@@ -137,12 +137,9 @@ public class CommandFactory
         {
             var cmd = command.GetCommand();
 
-            if (cmd.Handler == null)
-            {
-                ConfigureCommandHandler(cmd, command);
-            }
+            ConfigureCommandHandler(cmd, command);
 
-            group.Command.Add(cmd);
+            group.Command.Subcommands.Add(cmd);
         }
 
         // Recursively configure subgroup commands
@@ -152,27 +149,9 @@ public class CommandFactory
         }
     }
 
-    private RootCommand CreateRootCommand()
-    {
-        var rootCommand = new RootCommand("Azure MCP Server - A Model Context Protocol (MCP) server that enables AI agents to interact with Azure services through standardized communication patterns.");
-
-        RegisterCommandGroup();
-
-        // Copy the root group's subcommands to the RootCommand
-        foreach (var subGroup in _rootGroup.SubGroup)
-        {
-            rootCommand.Add(subGroup.Command);
-        }
-
-        // Configure all commands in the hierarchy
-        ConfigureCommands(_rootGroup);
-
-        return rootCommand;
-    }
-
     private void ConfigureCommandHandler(Command command, IBaseCommand implementation)
     {
-        command.SetHandler(async context =>
+        command.SetAction(async (ParseResult parseResult, CancellationToken ct) =>
         {
             _logger.LogTrace("Executing '{Command}'.", command.Name);
 
@@ -182,7 +161,15 @@ public class CommandFactory
             var startTime = DateTime.UtcNow;
             try
             {
-                var response = await implementation.ExecuteAsync(cmdContext, context.ParseResult);
+                // Centralized preflight validation before executing the command
+                var validation = implementation.Validate(parseResult.CommandResult, cmdContext.Response);
+                if (!validation.IsValid)
+                {
+                    Console.WriteLine(JsonSerializer.Serialize(cmdContext.Response, _srcGenWithOptions.CommandResponse));
+                    return cmdContext.Response.Status;
+                }
+
+                var response = await implementation.ExecuteAsync(cmdContext, parseResult);
 
                 // Calculate execution time
                 var endTime = DateTime.UtcNow;
@@ -193,23 +180,50 @@ public class CommandFactory
                     response.Results = ResponseResult.Create(new List<string>(), JsonSourceGenerationContext.Default.ListString);
                 }
 
-                var isServiceStartCommand = implementation is Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
+                var isServiceStartCommand = implementation is Areas.Server.Commands.ServiceStartCommand;
                 if (!isServiceStartCommand)
                 {
                     Console.WriteLine(JsonSerializer.Serialize(response, _srcGenWithOptions.CommandResponse));
                 }
+
+                var status = response.Status;
+                if (status < 200 || status >= 300)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error).AddTag(TagName.ErrorDetails, response.Message);
+                }
+
+                return status;
             }
             catch (Exception ex)
             {
                 _logger.LogError("An exception occurred while executing '{Command}'. Exception: {Exception}",
                     command.Name, ex);
                 activity?.SetStatus(ActivityStatusCode.Error)?.AddTag(TagName.ErrorDetails, ex.Message);
+                return 1;
             }
             finally
             {
                 _logger.LogTrace("Finished running '{Command}'.", command.Name);
             }
         });
+    }
+
+    private RootCommand CreateRootCommand()
+    {
+        // RootCommand title/description comes from the root group
+        var root = new RootCommand(_rootGroup.Description);
+
+        // Register area groups and their commands
+        RegisterCommandGroup();
+
+        // Attach subgroups to the root and configure their commands/actions
+        foreach (var subGroup in _rootGroup.SubGroup)
+        {
+            ConfigureCommands(subGroup);
+            root.Subcommands.Add(subGroup.Command);
+        }
+
+        return root;
     }
 
     private static IBaseCommand? FindCommandInGroup(CommandGroup group, Queue<string> nameParts)

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -25,7 +24,7 @@ public sealed class WorkspaceListCommandTests
     private readonly ILogger<WorkspaceListCommand> _logger;
     private readonly WorkspaceListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
 
     private const string _knownSubscription = "knownSubscription";
@@ -41,7 +40,7 @@ public sealed class WorkspaceListCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Theory]
@@ -63,7 +62,7 @@ public sealed class WorkspaceListCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _parser.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
 
         // Assert
         Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
@@ -92,7 +91,7 @@ public sealed class WorkspaceListCommandTests
             .Returns(expectedWorkspaces);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _parser.Parse($"--subscription {_knownSubscription}"));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription}"));
 
         // Assert
         Assert.Equal(200, response.Status);
@@ -102,7 +101,7 @@ public sealed class WorkspaceListCommandTests
         await _monitorService.Received(1).ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<WorkspaceListCommand.WorkspaceListCommandResult>(json, MonitorJsonContext.Default.WorkspaceListCommandResult);
+        var result = JsonSerializer.Deserialize(json, MonitorJsonContext.Default.WorkspaceListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedWorkspaces.Count, result.Workspaces.Count);
@@ -120,7 +119,7 @@ public sealed class WorkspaceListCommandTests
             .Returns(new List<WorkspaceInfo>());
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _parser.Parse($"--subscription {_knownSubscription}"));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription}"));
 
         // Assert
         Assert.Equal(200, response.Status);
@@ -135,7 +134,7 @@ public sealed class WorkspaceListCommandTests
             .Returns(Task.FromException<List<WorkspaceInfo>>(new Exception("Test error")));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _parser.Parse($"--subscription {_knownSubscription}"));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription}"));
 
         // Assert
         Assert.Equal(500, response.Status);

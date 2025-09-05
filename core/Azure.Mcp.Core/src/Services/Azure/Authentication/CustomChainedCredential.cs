@@ -141,7 +141,7 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
         return new DefaultAzureCredential(defaultCredentialOptions);
     }
 
-    private static TokenCredential? CreateVsCodeBrokerCredential(string? tenantId, Microsoft.Extensions.Logging.ILogger<CustomChainedCredential>? logger = null)
+    private static TokenCredential? CreateVsCodeBrokerCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null)
     {
         const string vsCodeClientId = "aebc6443-996d-45c2-90f0-388ff96faa56";
         string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);

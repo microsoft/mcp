@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.AzureBestPractices.Commands;
@@ -18,7 +18,7 @@ public class BestPracticesCommandTests
     private readonly ILogger<BestPracticesCommand> _logger;
     private readonly CommandContext _context;
     private readonly BestPracticesCommand _command;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public BestPracticesCommandTests()
     {
@@ -28,13 +28,13 @@ public class BestPracticesCommandTests
         _context = new(_serviceProvider);
         _logger = Substitute.For<ILogger<BestPracticesCommand>>();
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
     public async Task ExecuteAsync_GeneralCodeGeneration_ReturnsAzureBestPractices()
     {
-        var args = _parser.Parse(["--resource", "general", "--action", "code-generation"]);
+        var args = _commandDefinition.Parse(["--resource", "general", "--action", "code-generation"]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
@@ -53,7 +53,7 @@ public class BestPracticesCommandTests
     [Fact]
     public async Task ExecuteAsync_GeneralDeployment_ReturnsAzureBestPractices()
     {
-        var args = _parser.Parse(["--resource", "general", "--action", "deployment"]);
+        var args = _commandDefinition.Parse(["--resource", "general", "--action", "deployment"]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
@@ -72,7 +72,7 @@ public class BestPracticesCommandTests
     [Fact]
     public async Task ExecuteAsync_AzureFunctionsCodeGeneration_ReturnsAzureBestPractices()
     {
-        var args = _parser.Parse(["--resource", "azurefunctions", "--action", "code-generation"]);
+        var args = _commandDefinition.Parse(["--resource", "azurefunctions", "--action", "code-generation"]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
@@ -91,7 +91,7 @@ public class BestPracticesCommandTests
     [Fact]
     public async Task ExecuteAsync_AzureFunctionsDeployment_ReturnsAzureBestPractices()
     {
-        var args = _parser.Parse(["--resource", "azurefunctions", "--action", "deployment"]);
+        var args = _commandDefinition.Parse(["--resource", "azurefunctions", "--action", "deployment"]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
@@ -112,7 +112,7 @@ public class BestPracticesCommandTests
     [Fact]
     public async Task ExecuteAsync_StaticWebAppAll_ReturnsAzureBestPractices()
     {
-        var args = _parser.Parse(["--resource", "static-web-app", "--action", "all"]);
+        var args = _commandDefinition.Parse(["--resource", "static-web-app", "--action", "all"]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
@@ -133,7 +133,7 @@ public class BestPracticesCommandTests
     [Fact]
     public async Task ExecuteAsync_InvalidResource_ReturnsBadRequest()
     {
-        var args = _parser.Parse(["--resource", "invalid", "--action", "code-generation"]);
+        var args = _commandDefinition.Parse(["--resource", "invalid", "--action", "code-generation"]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
@@ -145,7 +145,7 @@ public class BestPracticesCommandTests
     [Fact]
     public async Task ExecuteAsync_StaticWebAppWithInvalidAction_ReturnsBadRequest()
     {
-        var args = _parser.Parse(["--resource", "static-web-app", "--action", "code-generation"]);
+        var args = _commandDefinition.Parse(["--resource", "static-web-app", "--action", "code-generation"]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
@@ -157,7 +157,7 @@ public class BestPracticesCommandTests
     [Fact]
     public async Task ExecuteAsync_InvalidAction_ReturnsBadRequest()
     {
-        var args = _parser.Parse(["--resource", "general", "--action", "invalid"]);
+        var args = _commandDefinition.Parse(["--resource", "general", "--action", "invalid"]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
@@ -169,7 +169,7 @@ public class BestPracticesCommandTests
     [Fact]
     public async Task ExecuteAsync_GeneralWithAllAction_ReturnsAzureBestPractices()
     {
-        var args = _parser.Parse(["--resource", "general", "--action", "all"]);
+        var args = _commandDefinition.Parse(["--resource", "general", "--action", "all"]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
@@ -191,7 +191,7 @@ public class BestPracticesCommandTests
     [Fact]
     public async Task ExecuteAsync_AzureFunctionsWithAllAction_ReturnsAzureBestPractices()
     {
-        var args = _parser.Parse(["--resource", "azurefunctions", "--action", "all"]);
+        var args = _commandDefinition.Parse(["--resource", "azurefunctions", "--action", "all"]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
@@ -215,7 +215,7 @@ public class BestPracticesCommandTests
     [Fact]
     public async Task ExecuteAsync_MissingResource_ReturnsBadRequest()
     {
-        var args = _parser.Parse(["--action", "code-generation"]);
+        var args = _commandDefinition.Parse(["--action", "code-generation"]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
@@ -227,7 +227,7 @@ public class BestPracticesCommandTests
     [Fact]
     public async Task ExecuteAsync_MissingAction_ReturnsBadRequest()
     {
-        var args = _parser.Parse(["--resource", "general"]);
+        var args = _commandDefinition.Parse(["--resource", "general"]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert

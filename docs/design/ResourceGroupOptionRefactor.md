@@ -38,14 +38,14 @@ protected override void RegisterOptions(Command command)
 {
    base.RegisterOptions(command);
    RequireResourceGroup();        // RG now logically required
-   command.AddOption(_nameOption); // other options
+   command.Options.Add(_nameOption); // other options
 }
 
 protected override void RegisterOptions(Command command)
 {
    base.RegisterOptions(command);
    UseResourceGroup();            // RG optional filter
-   command.AddOption(_filterOption);
+   command.Options.Add(_filterOption);
 }
 
 protected override MyOptions BindOptions(ParseResult parseResult)
@@ -65,7 +65,7 @@ Implemented:
 * Migrated representative commands and base classes (AKS, Workbooks, ACR registry, Metrics, LoadTesting, Postgres, Redis, SQL, Storage create, Extension Azqr, Monitor health / tables, Foundry, AzureIsv).
 
 Pending / Follow‑ups (if desired):
-* Ensure every remaining command uses `UseResourceGroup()` / `RequireResourceGroup()` instead of direct `command.AddOption(_resourceGroupOption)`.
+* Ensure every remaining command uses `UseResourceGroup()` / `RequireResourceGroup()` instead of direct `command.Options.Add(_resourceGroupOption)`.
 * Update `docs/new-command.md` to reference helpers (remove any legacy guidance).
 * Add / adjust tests:
   - Required command without RG -> 400 + standard message.

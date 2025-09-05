@@ -42,24 +42,24 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_resourceIdOption);
-        command.AddOption(_tableNameOption);
-        command.AddOption(_queryOption);
-        command.AddOption(_hoursOption);
-        command.AddOption(_limitOption);
+        command.Options.Add(_resourceIdOption);
+        command.Options.Add(_tableNameOption);
+        command.Options.Add(_queryOption);
+        command.Options.Add(_hoursOption);
+        command.Options.Add(_limitOption);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var monitorService = context.GetService<IMonitorService>();
             var results = await monitorService.QueryResourceLogs(
                 options.Subscription!,
@@ -85,11 +85,11 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
     protected override ResourceLogQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceId = parseResult.GetValueForOption(_resourceIdOption);
-        options.TableName = parseResult.GetValueForOption(_tableNameOption);
-        options.Query = parseResult.GetValueForOption(_queryOption);
-        options.Hours = parseResult.GetValueForOption(_hoursOption);
-        options.Limit = parseResult.GetValueForOption(_limitOption);
+        options.ResourceId = parseResult.GetValue(_resourceIdOption);
+        options.TableName = parseResult.GetValue(_tableNameOption);
+        options.Query = parseResult.GetValue(_queryOption);
+        options.Hours = parseResult.GetValue(_hoursOption);
+        options.Limit = parseResult.GetValue(_limitOption);
         return options;
     }
 }

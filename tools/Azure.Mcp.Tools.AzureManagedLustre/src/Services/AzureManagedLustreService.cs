@@ -64,7 +64,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             data.Health?.ToString(),
             data.ClientInfo?.MgsAddress,
             data.SkuName,
-            data.StorageCapacityTiB.HasValue ? (long?)Convert.ToInt64(Math.Round(data.StorageCapacityTiB.Value)) : null,
+            data.StorageCapacityTiB.HasValue ? Convert.ToInt64(Math.Round(data.StorageCapacityTiB.Value)) : null,
             data.Hsm?.Settings?.Container,
             data.MaintenanceWindow?.DayOfWeek?.ToString(),
             data.MaintenanceWindow?.TimeOfDayUTC?.ToString()

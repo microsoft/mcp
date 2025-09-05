@@ -19,17 +19,17 @@ public abstract class BaseKeyValueCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_keyOption);
-        command.AddOption(_labelOption);
-        command.AddOption(_contentTypeOption);
+        command.Options.Add(_keyOption);
+        command.Options.Add(_labelOption);
+        command.Options.Add(_contentTypeOption);
     }
 
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Key = parseResult.GetValueForOption(_keyOption);
-        options.Label = parseResult.GetValueForOption(_labelOption);
-        options.ContentType = parseResult.GetValueForOption(_contentTypeOption);
+        options.Key = parseResult.GetValue(_keyOption);
+        options.Label = parseResult.GetValue(_labelOption);
+        options.ContentType = parseResult.GetValue(_contentTypeOption);
         return options;
     }
 }

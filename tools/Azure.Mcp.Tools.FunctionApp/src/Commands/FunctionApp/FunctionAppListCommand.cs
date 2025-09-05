@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.Mcp.Tools.FunctionApp.Options.FunctionApp;
@@ -30,13 +29,13 @@ public sealed class FunctionAppListCommand(ILogger<FunctionAppListCommand> logge
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            return context.Response;
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-                return context.Response;
-
             var functionAppService = context.GetService<IFunctionAppService>();
             var functionApps = await functionAppService.ListFunctionApps(
                 options.Subscription!,

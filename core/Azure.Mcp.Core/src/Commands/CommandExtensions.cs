@@ -3,7 +3,6 @@
 
 using System.Buffers;
 using System.Text;
-using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Core.Commands;
@@ -23,15 +22,17 @@ public static class CommandExtensions
     {
         if (arguments == null || arguments.Count == 0)
         {
-            return command.Parse(Array.Empty<string>());
+            return command.Parse([]);
         }
 
         var args = new List<string>();
 
         foreach (var (key, value) in arguments)
         {
+            // lookup by normalized name or any alias (case-insensitive)
             var option = command.Options.FirstOrDefault(o =>
-                o.Name.Equals(key, StringComparison.OrdinalIgnoreCase));
+                string.Equals(NameNormalization.NormalizeOptionName(o.Name), key, StringComparison.OrdinalIgnoreCase)
+                || o.Aliases.Any(a => string.Equals(NameNormalization.NormalizeOptionName(a), key, StringComparison.OrdinalIgnoreCase)));
 
             if (option == null)
             {
@@ -48,7 +49,7 @@ public static class CommandExtensions
             {
                 foreach (var arrayElement in value.EnumerateArray())
                 {
-                    args.Add($"--{option.Name}");
+                    args.Add(GetOptionToken(option));
 
                     var elementValue = ConvertJsonElementToString(arrayElement);
 
@@ -60,7 +61,7 @@ public static class CommandExtensions
             }
             else
             {
-                args.Add($"--{option.Name}");
+                args.Add(GetOptionToken(option));
 
                 var strValue = ConvertJsonElementToString(value);
 
@@ -77,8 +78,21 @@ public static class CommandExtensions
     public static ParseResult ParseFromRawMcpToolInput(this Command command, IReadOnlyDictionary<string, JsonElement>? arguments)
     {
         var args = new List<string>();
-        var option = command.Options[0];
-        args.Add($"--{option.Name}");
+
+        // Try to find an option named "raw-mcp-tool-input" (normalized), otherwise fall back to first option
+        var option = command.Options.FirstOrDefault(o =>
+            string.Equals(NameNormalization.NormalizeOptionName(o.Name), "raw-mcp-tool-input", StringComparison.OrdinalIgnoreCase)
+            || o.Aliases.Any(a => string.Equals(NameNormalization.NormalizeOptionName(a), "raw-mcp-tool-input", StringComparison.OrdinalIgnoreCase))
+        );
+
+        option ??= command.Options.FirstOrDefault();
+
+        if (option == null)
+        {
+            return command.Parse([]);
+        }
+
+        args.Add(GetOptionToken(option));
 
         if (arguments == null || arguments.Count == 0)
         {
@@ -100,7 +114,7 @@ public static class CommandExtensions
             args.Add(Encoding.UTF8.GetString(buffer.WrittenSpan));
         }
 
-        return command.Parse(args.ToArray());
+        return command.Parse([.. args]);
     }
 
     /// <summary>
@@ -111,6 +125,16 @@ public static class CommandExtensions
     private static bool IsArrayOption(Option option)
     {
         return CollectionTypeHelper.IsArrayType(option.ValueType);
+    }
+
+    private static string GetOptionToken(Option option)
+    {
+        // Prefer an alias that already contains a prefix
+        var aliasWithDash = option.Aliases.FirstOrDefault(a => a.StartsWith('-') || a.StartsWith('/'));
+        if (!string.IsNullOrEmpty(aliasWithDash))
+            return aliasWithDash;
+
+        return option.Name.StartsWith('-') || option.Name.StartsWith('/') ? option.Name : $"--{option.Name}";
     }
 
     /// <summary>

@@ -13232,7 +13232,7 @@ SOFTWARE.
 
 ---------------------------------------------------------
 
-System.Linq.AsyncEnumerable 10.0.0-preview.5.25277.114 - MIT
+System.Linq.AsyncEnumerable 10.0.0-preview.7.25380.108 - MIT
 
 
 Copyright (c) 2021

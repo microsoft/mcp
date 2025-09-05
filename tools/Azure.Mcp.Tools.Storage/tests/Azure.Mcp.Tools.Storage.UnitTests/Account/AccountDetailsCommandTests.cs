@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -23,7 +23,7 @@ public class AccountDetailsCommandTests
     private readonly ILogger<AccountDetailsCommand> _logger;
     private readonly AccountDetailsCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public AccountDetailsCommandTests()
     {
@@ -35,7 +35,7 @@ public class AccountDetailsCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public class AccountDetailsCommandTests
                     .Returns(Task.FromResult(expectedAccount));
             }
 
-            var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            var parseResult = _commandDefinition.Parse(args);
 
             // Act
             var response = await _command.ExecuteAsync(_context, parseResult);
@@ -113,7 +113,7 @@ public class AccountDetailsCommandTests
             Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedAccount));
 
-        var args = _parser.Parse(["--account", account, "--subscription", subscription]);
+        var args = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -144,7 +144,7 @@ public class AccountDetailsCommandTests
             Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var parseResult = _parser.Parse(["--account", account, "--subscription", subscription]);
+        var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -164,9 +164,9 @@ public class AccountDetailsCommandTests
 
         _storageService.GetStorageAccountDetails(
             Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .ThrowsAsync(new Azure.RequestFailedException(404, "Storage account not found"));
+            .ThrowsAsync(new RequestFailedException(404, "Storage account not found"));
 
-        var parseResult = _parser.Parse(["--account", account, "--subscription", subscription]);
+        var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -185,9 +185,9 @@ public class AccountDetailsCommandTests
 
         _storageService.GetStorageAccountDetails(
             Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .ThrowsAsync(new Azure.RequestFailedException(403, "Authorization failed"));
+            .ThrowsAsync(new RequestFailedException(403, "Authorization failed"));
 
-        var parseResult = _parser.Parse(["--account", account, "--subscription", subscription]);
+        var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

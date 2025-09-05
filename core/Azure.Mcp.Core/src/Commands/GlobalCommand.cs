@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
-using Azure;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Mcp.Core.Models.Option;
@@ -30,13 +29,13 @@ public abstract class GlobalCommand<
         base.RegisterOptions(command);
 
         // Add global options
-        command.AddOption(_tenantOption);
-        command.AddOption(_authMethodOption);
-        command.AddOption(_retryDelayOption);
-        command.AddOption(_retryMaxDelayOption);
-        command.AddOption(_retryMaxRetries);
-        command.AddOption(_retryModeOption);
-        command.AddOption(_retryNetworkTimeoutOption);
+        command.Options.Add(_tenantOption);
+        command.Options.Add(_authMethodOption);
+        command.Options.Add(_retryDelayOption);
+        command.Options.Add(_retryMaxDelayOption);
+        command.Options.Add(_retryMaxRetries);
+        command.Options.Add(_retryModeOption);
+        command.Options.Add(_retryNetworkTimeoutOption);
     }
 
     // Helper to get the command path for examples
@@ -81,26 +80,52 @@ public abstract class GlobalCommand<
     {
         var options = new TOptions
         {
-            Tenant = parseResult.GetValueForOption(_tenantOption),
-            AuthMethod = parseResult.GetValueForOption(_authMethodOption)
+            Tenant = parseResult.GetValue(_tenantOption),
+            AuthMethod = parseResult.GetValue(_authMethodOption)
         };
 
         if (UsesResourceGroup)
         {
-            options.ResourceGroup = parseResult.GetValueForOption(_resourceGroupOption);
+            options.ResourceGroup = parseResult.GetValue(_resourceGroupOption);
         }
 
-        // Only create RetryPolicy if any retry options are specified
-        if (parseResult.HasAnyRetryOptions())
+        // Create a RetryPolicyOptions capturing only explicitly provided values so unspecified settings remain SDK defaults
+        var hasAnyRetry = Azure.Mcp.Core.Options.ParseResultExtensions.HasAnyRetryOptions(parseResult);
+        if (hasAnyRetry)
         {
-            options.RetryPolicy = new RetryPolicyOptions
+            var policy = new RetryPolicyOptions();
+
+            if (parseResult.GetResult(_retryMaxRetries) != null)
             {
-                MaxRetries = parseResult.GetValueForOption(_retryMaxRetries),
-                DelaySeconds = parseResult.GetValueForOption(_retryDelayOption),
-                MaxDelaySeconds = parseResult.GetValueForOption(_retryMaxDelayOption),
-                Mode = parseResult.GetValueForOption(_retryModeOption),
-                NetworkTimeoutSeconds = parseResult.GetValueForOption(_retryNetworkTimeoutOption)
-            };
+                policy.HasMaxRetries = true;
+                policy.MaxRetries = parseResult.GetValue(_retryMaxRetries);
+            }
+            if (parseResult.GetResult(_retryDelayOption) != null)
+            {
+                policy.HasDelaySeconds = true;
+                policy.DelaySeconds = parseResult.GetValue(_retryDelayOption);
+            }
+            if (parseResult.GetResult(_retryMaxDelayOption) != null)
+            {
+                policy.HasMaxDelaySeconds = true;
+                policy.MaxDelaySeconds = parseResult.GetValue(_retryMaxDelayOption);
+            }
+            if (parseResult.GetResult(_retryModeOption) != null)
+            {
+                policy.HasMode = true;
+                policy.Mode = parseResult.GetValue(_retryModeOption);
+            }
+            if (parseResult.GetResult(_retryNetworkTimeoutOption) != null)
+            {
+                policy.HasNetworkTimeoutSeconds = true;
+                policy.NetworkTimeoutSeconds = parseResult.GetValue(_retryNetworkTimeoutOption);
+            }
+
+            // Only assign if at least one flag set (defensive)
+            if (policy.HasMaxRetries || policy.HasDelaySeconds || policy.HasMaxDelaySeconds || policy.HasMode || policy.HasNetworkTimeoutSeconds)
+            {
+                options.RetryPolicy = policy;
+            }
         }
 
         return options;

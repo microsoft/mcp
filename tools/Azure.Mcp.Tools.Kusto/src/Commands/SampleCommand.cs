@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
@@ -19,13 +19,13 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_limitOption);
+        command.Options.Add(_limitOption);
     }
 
     protected override SampleOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Limit = parseResult.GetValueForOption(_limitOption);
+        options.Limit = parseResult.GetValueOrDefault(_limitOption);
         return options;
     }
 
@@ -44,15 +44,15 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var kusto = context.GetService<IKustoService>();
             List<JsonElement> results;
             var query = $"{options.Table} | sample {options.Limit}";

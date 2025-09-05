@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Account;
@@ -46,43 +47,43 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_accountCreateOption);
+        command.Options.Add(_accountCreateOption);
         RequireResourceGroup();
-        command.AddOption(_locationOption);
-        command.AddOption(_skuOption);
-        command.AddOption(_kindOption);
-        command.AddOption(_accessTierOption);
-        command.AddOption(_enableHttpsTrafficOnlyOption);
-        command.AddOption(_allowBlobPublicAccessOption);
-        command.AddOption(_enableHierarchicalNamespaceOption);
+        command.Options.Add(_locationOption);
+        command.Options.Add(_skuOption);
+        command.Options.Add(_kindOption);
+        command.Options.Add(_accessTierOption);
+        command.Options.Add(_enableHttpsTrafficOnlyOption);
+        command.Options.Add(_allowBlobPublicAccessOption);
+        command.Options.Add(_enableHierarchicalNamespaceOption);
     }
 
     protected override AccountCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueForOption(_accountCreateOption);
-        options.Location = parseResult.GetValueForOption(_locationOption);
-        options.Sku = parseResult.GetValueForOption(_skuOption);
-        options.Kind = parseResult.GetValueForOption(_kindOption);
-        options.AccessTier = parseResult.GetValueForOption(_accessTierOption);
-        options.EnableHttpsTrafficOnly = parseResult.GetValueForOption(_enableHttpsTrafficOnlyOption);
-        options.AllowBlobPublicAccess = parseResult.GetValueForOption(_allowBlobPublicAccessOption);
-        options.EnableHierarchicalNamespace = parseResult.GetValueForOption(_enableHierarchicalNamespaceOption);
+        options.Account = parseResult.GetValueOrDefault(_accountCreateOption);
+        options.Location = parseResult.GetValueOrDefault(_locationOption);
+        options.Sku = parseResult.GetValueOrDefault(_skuOption);
+        options.Kind = parseResult.GetValueOrDefault(_kindOption);
+        options.AccessTier = parseResult.GetValueOrDefault(_accessTierOption);
+        options.EnableHttpsTrafficOnly = parseResult.GetValueOrDefault(_enableHttpsTrafficOnlyOption);
+        options.AllowBlobPublicAccess = parseResult.GetValueOrDefault(_allowBlobPublicAccessOption);
+        options.EnableHierarchicalNamespace = parseResult.GetValueOrDefault(_enableHierarchicalNamespaceOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             // Get the storage service from DI
             var storageService = context.GetService<IStorageService>();
 
@@ -121,19 +122,19 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     // Implementation-specific error handling
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 409 =>
+        RequestFailedException reqEx when reqEx.Status == 409 =>
             "Storage account name already exists. Choose a different name.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed creating the storage account. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == 404 =>
             "Resource group not found. Verify the resource group exists and you have access.",
-        Azure.RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => reqEx.Status,
+        RequestFailedException reqEx => reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
 

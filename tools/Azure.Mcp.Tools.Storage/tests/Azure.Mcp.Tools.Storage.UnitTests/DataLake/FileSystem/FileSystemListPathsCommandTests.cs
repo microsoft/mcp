@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -24,7 +24,7 @@ public class FileSystemListPathsCommandTests
     private readonly ILogger<FileSystemListPathsCommand> _logger;
     private readonly FileSystemListPathsCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
     private readonly string _knownAccount = "account123";
     private readonly string _knownFileSystem = "filesystem123";
     private readonly string _knownSubscription = "sub123";
@@ -39,7 +39,7 @@ public class FileSystemListPathsCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class FileSystemListPathsCommandTests
         _storageService.ListDataLakePaths(Arg.Is(_knownAccount), Arg.Is(_knownFileSystem), false, Arg.Is(_knownSubscription),
             null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>()).Returns(expectedPaths);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--file-system", _knownFileSystem,
             "--subscription", _knownSubscription
@@ -84,7 +84,7 @@ public class FileSystemListPathsCommandTests
         _storageService.ListDataLakePaths(Arg.Is(_knownAccount), Arg.Is(_knownFileSystem), false, Arg.Is(_knownSubscription),
             null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>()).Returns([]);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--file-system", _knownFileSystem,
             "--subscription", _knownSubscription
@@ -113,7 +113,7 @@ public class FileSystemListPathsCommandTests
         _storageService.ListDataLakePaths(Arg.Is(_knownAccount), Arg.Is(_knownFileSystem), false, Arg.Is(_knownSubscription),
             null, null, Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--file-system", _knownFileSystem,
             "--subscription", _knownSubscription
@@ -143,7 +143,7 @@ public class FileSystemListPathsCommandTests
             Arg.Is(_knownSubscription), Arg.Is(filterPath), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedPaths);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--file-system", _knownFileSystem,
             "--subscription", _knownSubscription,
@@ -182,7 +182,7 @@ public class FileSystemListPathsCommandTests
             Arg.Is(_knownSubscription), null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedPaths);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--file-system", _knownFileSystem,
             "--subscription", _knownSubscription,
@@ -221,7 +221,7 @@ public class FileSystemListPathsCommandTests
             Arg.Is(_knownSubscription), null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedPaths);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--file-system", _knownFileSystem,
             "--subscription", _knownSubscription
@@ -259,7 +259,7 @@ public class FileSystemListPathsCommandTests
             Arg.Is(_knownSubscription), Arg.Is(filterPath), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedPaths);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--file-system", _knownFileSystem,
             "--subscription", _knownSubscription,
@@ -299,7 +299,7 @@ public class FileSystemListPathsCommandTests
             Arg.Is(_knownSubscription), Arg.Is(""), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedPaths);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--file-system", _knownFileSystem,
             "--subscription", _knownSubscription,
@@ -334,7 +334,7 @@ public class FileSystemListPathsCommandTests
                 null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>()).Returns([]);
         }
 
-        var parseResult = _parser.Parse(args.Split(' '));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

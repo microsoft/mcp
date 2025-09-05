@@ -23,13 +23,13 @@ public abstract class BaseServerCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_serverOption);
+        command.Options.Add(_serverOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Server = parseResult.GetValueForOption(_serverOption);
+        options.Server = parseResult.GetValue(_serverOption);
         return options;
     }
 }

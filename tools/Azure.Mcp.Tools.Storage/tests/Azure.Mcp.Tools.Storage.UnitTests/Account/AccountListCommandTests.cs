@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -23,7 +23,7 @@ public class AccountListCommandTests
     private readonly ILogger<AccountListCommand> _logger;
     private readonly AccountListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public AccountListCommandTests()
     {
@@ -35,7 +35,7 @@ public class AccountListCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public class AccountListCommandTests
         _storageService.GetStorageAccounts(Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedAccounts));
 
-        var args = _parser.Parse(["--subscription", subscription]);
+        var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -79,7 +79,7 @@ public class AccountListCommandTests
         _storageService.GetStorageAccounts(Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(new List<Models.StorageAccountInfo>()));
 
-        var args = _parser.Parse(["--subscription", subscription]);
+        var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -99,7 +99,7 @@ public class AccountListCommandTests
         _storageService.GetStorageAccounts(Arg.Is(subscription), null, Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse(["--subscription", subscription]);
+        var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);

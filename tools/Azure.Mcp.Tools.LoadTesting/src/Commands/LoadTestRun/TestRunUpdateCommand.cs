@@ -33,32 +33,33 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_testRunIdOption);
-        command.AddOption(_testIdOption);
-        command.AddOption(_displayNameOption);
-        command.AddOption(_descriptionOption);
+        command.Options.Add(_testRunIdOption);
+        command.Options.Add(_testIdOption);
+        command.Options.Add(_displayNameOption);
+        command.Options.Add(_descriptionOption);
     }
 
     protected override TestRunUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestRunId = parseResult.GetValueForOption(_testRunIdOption);
-        options.TestId = parseResult.GetValueForOption(_testIdOption);
-        options.DisplayName = parseResult.GetValueForOption(_displayNameOption);
-        options.Description = parseResult.GetValueForOption(_descriptionOption);
+        options.TestRunId = parseResult.GetValue(_testRunIdOption);
+        options.TestId = parseResult.GetValue(_testIdOption);
+        options.DisplayName = parseResult.GetValue(_displayNameOption);
+        options.Description = parseResult.GetValue(_descriptionOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
+
         try
         {
-            // Required validation step using the base Validate method
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
             // Get the appropriate service from DI
             var service = context.GetService<ILoadTestingService>();
             // Call service operation(s)

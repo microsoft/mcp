@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
@@ -31,27 +32,27 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_blobContainerPublicAccessOption);
+        command.Options.Add(_blobContainerPublicAccessOption);
     }
 
     protected override ContainerCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.BlobContainerPublicAccess = parseResult.GetValueForOption(_blobContainerPublicAccessOption);
+        options.BlobContainerPublicAccess = parseResult.GetValueOrDefault(_blobContainerPublicAccessOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var storageService = context.GetService<IStorageService>();
             var containerProperties = await storageService.CreateContainer(
                 options.Account!,

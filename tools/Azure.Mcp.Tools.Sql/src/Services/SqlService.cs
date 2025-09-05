@@ -9,7 +9,6 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services.Models;
 using Azure.ResourceManager.Sql;
-using Azure.ResourceManager.Sql.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Sql.Services;
@@ -248,7 +247,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
             var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
 
-            var firewallRuleData = new Azure.ResourceManager.Sql.SqlFirewallRuleData()
+            var firewallRuleData = new ResourceManager.Sql.SqlFirewallRuleData()
             {
                 StartIPAddress = startIpAddress,
                 EndIPAddress = endIpAddress
@@ -318,7 +317,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
             return true;
         }
-        catch (Azure.RequestFailedException ex) when (ex.Status == 404)
+        catch (RequestFailedException ex) when (ex.Status == 404)
         {
             _logger.LogWarning(
                 "Firewall rule not found during delete operation. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}",
@@ -338,7 +337,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
     private static SqlDatabase ConvertToSqlDatabaseModel(JsonElement item)
     {
-        Azure.Mcp.Tools.Sql.Services.Models.SqlDatabaseData? sqlDatabase = Azure.Mcp.Tools.Sql.Services.Models.SqlDatabaseData.FromJson(item);
+        Models.SqlDatabaseData? sqlDatabase = Azure.Mcp.Tools.Sql.Services.Models.SqlDatabaseData.FromJson(item);
         if (sqlDatabase == null)
             throw new InvalidOperationException("Failed to parse SQL database data");
 
@@ -406,7 +405,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                     State: elasticPool.Properties?.State,
                     CreationDate: elasticPool.Properties?.CreatedOn,
                     MaxSizeBytes: elasticPool.Properties?.MaxSizeBytes,
-                    PerDatabaseSettings: elasticPool.Properties?.PerDatabaseSettings != null ? new Azure.Mcp.Tools.Sql.Models.ElasticPoolPerDatabaseSettings(
+                    PerDatabaseSettings: elasticPool.Properties?.PerDatabaseSettings != null ? new Sql.Models.ElasticPoolPerDatabaseSettings(
                         MinCapacity: elasticPool.Properties.PerDatabaseSettings.MinCapacity,
                         MaxCapacity: elasticPool.Properties.PerDatabaseSettings.MaxCapacity
                     ) : null,
@@ -421,7 +420,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
     private static SqlServerFirewallRule ConvertToSqlFirewallRuleModel(JsonElement item)
     {
-        Azure.Mcp.Tools.Sql.Services.Models.SqlFirewallRuleData? firewallRule = Azure.Mcp.Tools.Sql.Services.Models.SqlFirewallRuleData.FromJson(item);
+        Models.SqlFirewallRuleData? firewallRule = Azure.Mcp.Tools.Sql.Services.Models.SqlFirewallRuleData.FromJson(item);
         if (firewallRule == null)
             throw new InvalidOperationException("Failed to parse SQL firewall rule data");
 

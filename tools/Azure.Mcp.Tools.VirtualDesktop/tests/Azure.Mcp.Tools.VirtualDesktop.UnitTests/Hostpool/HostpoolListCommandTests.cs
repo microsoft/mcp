@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
@@ -22,7 +22,7 @@ public class HostpoolListCommandTests
     private readonly ILogger<HostpoolListCommand> _logger;
     private readonly HostpoolListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public HostpoolListCommandTests()
     {
@@ -34,7 +34,7 @@ public class HostpoolListCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public class HostpoolListCommandTests
                 .Returns(hostpools);
         }
 
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -99,7 +99,7 @@ public class HostpoolListCommandTests
         _virtualDesktopService.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(new List<HostPool>().AsReadOnly());
 
-        var parseResult = _parser.Parse("--subscription test-sub");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -116,7 +116,7 @@ public class HostpoolListCommandTests
         _virtualDesktopService.ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<IReadOnlyList<HostPool>>(new Exception("Test error")));
 
-        var parseResult = _parser.Parse("--subscription test-sub");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -139,7 +139,7 @@ public class HostpoolListCommandTests
         _virtualDesktopService.ListHostpoolsAsync("test-sub", null, Arg.Any<RetryPolicyOptions>())
             .Returns(expectedHostpools);
 
-        var parseResult = _parser.Parse("--subscription test-sub");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -163,7 +163,7 @@ public class HostpoolListCommandTests
         _virtualDesktopService.ListHostpoolsByResourceGroupAsync("test-sub", "test-rg", null, Arg.Any<RetryPolicyOptions>())
             .Returns(expectedHostpools);
 
-        var parseResult = _parser.Parse("--subscription test-sub --resource-group test-rg");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -188,7 +188,7 @@ public class HostpoolListCommandTests
         _virtualDesktopService.ListHostpoolsAsync("test-sub", null, Arg.Any<RetryPolicyOptions>())
             .Returns(expectedHostpools);
 
-        var parseResult = _parser.Parse("--subscription test-sub");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -208,7 +208,7 @@ public class HostpoolListCommandTests
         _virtualDesktopService.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(new List<HostPool>().AsReadOnly());
 
-        var parseResult = _parser.Parse("--subscription test-sub --resource-group test-rg");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

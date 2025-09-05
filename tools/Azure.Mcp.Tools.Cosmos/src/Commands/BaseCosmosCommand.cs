@@ -18,13 +18,13 @@ public abstract class BaseCosmosCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_accountOption);
+        command.Options.Add(_accountOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueForOption(_accountOption);
+        options.Account = parseResult.GetValue(_accountOption);
         return options;
     }
 

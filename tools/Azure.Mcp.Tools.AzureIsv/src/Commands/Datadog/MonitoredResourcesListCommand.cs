@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.AzureIsv.Options;
 using Azure.Mcp.Tools.AzureIsv.Options.Datadog;
 using Azure.Mcp.Tools.AzureIsv.Services;
@@ -34,27 +33,28 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_datadogResourceOption);
+        command.Options.Add(_datadogResourceOption);
         RequireResourceGroup();
     }
 
     protected override MonitoredResourcesListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DatadogResource = parseResult.GetValueForOption(_datadogResourceOption);
+        options.DatadogResource = parseResult.GetValue(_datadogResourceOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
+
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var service = context.GetService<IDatadogService>();
             List<string> results = await service.ListMonitoredResources(
                 options.ResourceGroup!,

@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Cosmos.Commands;
@@ -25,7 +23,7 @@ public class AccountListCommandTests
     private readonly ILogger<AccountListCommand> _logger;
     private readonly AccountListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public AccountListCommandTests()
     {
@@ -33,7 +31,7 @@ public class AccountListCommandTests
         _logger = Substitute.For<ILogger<AccountListCommand>>();
 
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
 
         _serviceProvider = new ServiceCollection()
             .AddSingleton(_cosmosService)
@@ -49,7 +47,7 @@ public class AccountListCommandTests
         _cosmosService.GetCosmosAccounts(Arg.Is("sub123"), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedAccounts);
 
-        var args = _parser.Parse(["--subscription", "sub123"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub123"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -75,7 +73,7 @@ public class AccountListCommandTests
         _cosmosService.GetCosmosAccounts("sub123", null, null)
             .Returns([]);
 
-        var args = _parser.Parse(["--subscription", "sub123"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -90,7 +88,7 @@ public class AccountListCommandTests
     public async Task ExecuteAsync_Returns400_WhenSubscriptionIsMissing()
     {
         // Arrange && Act
-        var response = await _command.ExecuteAsync(_context, _parser.Parse([]));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse([]));
 
         // Assert
         Assert.Equal(400, response.Status);
@@ -107,7 +105,7 @@ public class AccountListCommandTests
         _cosmosService.GetCosmosAccounts(subscriptionId, null, Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse(["--subscription", subscriptionId]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -126,7 +124,7 @@ public class AccountListCommandTests
         _cosmosService.GetCosmosAccounts(subscriptionId, null, Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new HttpRequestException("Service Unavailable", null, System.Net.HttpStatusCode.ServiceUnavailable));
 
-        var args = _parser.Parse(["--subscription", subscriptionId]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.ElasticPool;
 using Azure.Mcp.Tools.Sql.Services;
@@ -20,7 +19,7 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
     public override string Description =>
         """
         Lists all SQL elastic pools in an Azure SQL Server with their SKU, capacity, state, and database limits.
-        Use when you need to: view elastic pool inventory, check pool utilization, compare pool configurations, 
+        Use when you need to: view elastic pool inventory, check pool utilization, compare pool configurations,
         or find available pools for database placement.
         Requires: subscription ID, resource group name, server name.
         Returns: JSON array of elastic pools with complete configuration details.
@@ -33,15 +32,15 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var sqlService = context.GetService<ISqlService>();
 
             var elasticPools = await sqlService.GetElasticPoolsAsync(
@@ -67,17 +66,17 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == 404 =>
             "SQL server not found. Verify the server name, resource group, and that you have access.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed accessing the SQL server. Verify you have appropriate permissions. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => reqEx.Status,
+        RequestFailedException reqEx => reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
 

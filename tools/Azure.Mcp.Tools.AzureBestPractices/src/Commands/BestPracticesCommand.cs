@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using System.Reflection;
 using System.Text;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Tools.AzureBestPractices.Options;
 using Microsoft.Extensions.Logging;
@@ -22,12 +24,12 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
     public override string Name => "get";
 
     public override string Description =>
-        @"This tool returns a list of best practices for code generation, operations and deployment 
-        when working with Azure services. It should be called for any code generation, deployment or 
-        operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container 
-        Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory, 
-        Azure App Services, or any other Azure technology or programming language. Only call this function 
-        when you are confident the user is discussing Azure. If this tool needs to be categorized, 
+        @"This tool returns a list of best practices for code generation, operations and deployment
+        when working with Azure services. It should be called for any code generation, deployment or
+        operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container
+        Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory,
+        Azure App Services, or any other Azure technology or programming language. Only call this function
+        when you are confident the user is discussing Azure. If this tool needs to be categorized,
         it belongs to the Azure Best Practices category.";
 
     public override string Title => CommandTitle;
@@ -36,24 +38,38 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
 
     protected override void RegisterOptions(Command command)
     {
-        command.AddOption(_resourceOption);
-        command.AddOption(_actionOption);
+        command.Options.Add(_resourceOption);
+        command.Options.Add(_actionOption);
+    }
+
+    private BestPracticesOptions BindOptions(ParseResult parseResult)
+    {
+        return new BestPracticesOptions
+        {
+            Resource = parseResult.CommandResult.GetValue(BestPracticesOptionDefinitions.Resource),
+            Action = parseResult.CommandResult.GetValue(BestPracticesOptionDefinitions.Action)
+        };
     }
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return Task.FromResult(context.Response);
+        }
+
+        var options = BindOptions(parseResult);
+
         try
         {
-            var validationResult = Validate(parseResult.CommandResult, context.Response);
-            if (!validationResult.IsValid)
+            if (string.IsNullOrEmpty(options.Resource) || string.IsNullOrEmpty(options.Action))
             {
+                context.Response.Status = 400;
+                context.Response.Message = "Both resource and action parameters are required.";
                 return Task.FromResult(context.Response);
             }
 
-            var resource = parseResult.GetValueForOption(_resourceOption);
-            var action = parseResult.GetValueForOption(_actionOption);
-
-            var resourceFileName = GetResourceFileName(resource!, action!);
+            var resourceFileName = GetResourceFileName(options.Resource, options.Action);
             var bestPractices = GetBestPracticesText(resourceFileName);
 
             context.Response.Status = 200;
@@ -62,8 +78,9 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         }
         catch (Exception ex)
         {
+
             _logger.LogError(ex, "Error getting best practices for Resource: {Resource}, Action: {Action}",
-                parseResult.GetValueForOption(_resourceOption), parseResult.GetValueForOption(_actionOption));
+                options.Resource, options.Action);
             HandleException(context, ex);
         }
 
@@ -72,39 +89,45 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
 
     public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
     {
-        var validationResult = new ValidationResult { IsValid = true };
+        var result = new ValidationResult { IsValid = true };
 
-        var resource = commandResult.GetValueForOption(BestPracticesOptionDefinitions.Resource);
-        var action = commandResult.GetValueForOption(BestPracticesOptionDefinitions.Action);
+        commandResult.TryGetValue(BestPracticesOptionDefinitions.Resource, out string? resource);
+        commandResult.TryGetValue(BestPracticesOptionDefinitions.Action, out string? action);
 
-        if (string.IsNullOrEmpty(resource) || string.IsNullOrEmpty(action))
+        if (string.IsNullOrWhiteSpace(resource) || string.IsNullOrWhiteSpace(action))
         {
-            validationResult.IsValid = false;
-            validationResult.ErrorMessage = "Both resource and action parameters are required.";
+            result.IsValid = false;
+            result.ErrorMessage = "Both resource and action parameters are required.";
         }
-        else if (resource != "general" && resource != "azurefunctions" && resource != "static-web-app")
+        else
         {
-            validationResult.IsValid = false;
-            validationResult.ErrorMessage = "Invalid resource. Must be 'general', 'azurefunctions', or 'static-web-app'.";
-        }
-        else if (action != "all" && action != "code-generation" && action != "deployment")
-        {
-            validationResult.IsValid = false;
-            validationResult.ErrorMessage = "Invalid action. Must be 'all', 'code-generation' or 'deployment'.";
-        }
-        else if (resource == "static-web-app" && action != "all")
-        {
-            validationResult.IsValid = false;
-            validationResult.ErrorMessage = "The 'static-web-app' resource only supports 'all' action.";
+            bool validResource = resource == "general" || resource == "azurefunctions" || resource == "static-web-app";
+            bool validAction = action == "all" || action == "code-generation" || action == "deployment";
+
+            if (!validResource)
+            {
+                result.IsValid = false;
+                result.ErrorMessage = "Invalid resource. Must be 'general', 'azurefunctions', or 'static-web-app'.";
+            }
+            else if (!validAction)
+            {
+                result.IsValid = false;
+                result.ErrorMessage = "Invalid action. Must be 'all', 'code-generation' or 'deployment'.";
+            }
+            else if (resource == "static-web-app" && action != "all")
+            {
+                result.IsValid = false;
+                result.ErrorMessage = "The 'static-web-app' resource only supports 'all' action.";
+            }
         }
 
-        if (!validationResult.IsValid && commandResponse != null)
+        if (!result.IsValid && commandResponse != null)
         {
             commandResponse.Status = 400;
-            commandResponse.Message = validationResult.ErrorMessage!;
+            commandResponse.Message = result.ErrorMessage!;
         }
 
-        return validationResult;
+        return result;
     }
 
     private static string GetResourceFileName(string resource, string action)

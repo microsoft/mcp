@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
@@ -24,14 +24,14 @@ public class ContainerListCommandTests
     private readonly ILogger<ContainerListCommand> _logger;
     private readonly ContainerListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public ContainerListCommandTests()
     {
         _cosmosService = Substitute.For<ICosmosService>();
         _logger = Substitute.For<ILogger<ContainerListCommand>>();
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
         _serviceProvider = new ServiceCollection()
             .AddSingleton(_cosmosService)
             .BuildServiceProvider();
@@ -52,7 +52,7 @@ public class ContainerListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(expectedContainers);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", "account123",
             "--database", "database123",
             "--subscription", "sub123"
@@ -87,7 +87,7 @@ public class ContainerListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(new List<string>());
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", "account123",
             "--database", "database123",
             "--subscription", "sub123"
@@ -116,7 +116,7 @@ public class ContainerListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", "account123",
             "--database", "database123",
             "--subscription", "sub123"
@@ -138,7 +138,7 @@ public class ContainerListCommandTests
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
         // Arrange & Act 
-        var response = await _command.ExecuteAsync(_context, _parser.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
 
         // Assert
         Assert.Equal(400, response.Status);

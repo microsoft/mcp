@@ -8,10 +8,10 @@ public static class AksOptionDefinitions
     public const string ClusterName = "cluster";
 
     public static readonly Option<string> Cluster = new(
-        $"--{ClusterName}",
-        "AKS Cluster name."
+        $"--{ClusterName}"
     )
     {
-        IsRequired = true
+        Description = "AKS Cluster name.",
+        Required = true
     };
 }

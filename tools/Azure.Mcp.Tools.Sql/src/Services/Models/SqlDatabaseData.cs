@@ -32,7 +32,7 @@ namespace Azure.Mcp.Tools.Sql.Services.Models
         // Read the JSON response content and create a model instance from it.
         public static SqlDatabaseData? FromJson(JsonElement source)
         {
-            return JsonSerializer.Deserialize<SqlDatabaseData>(source, SqlJsonContext.Default.SqlDatabaseData);
+            return JsonSerializer.Deserialize(source, SqlJsonContext.Default.SqlDatabaseData);
         }
     }
 }

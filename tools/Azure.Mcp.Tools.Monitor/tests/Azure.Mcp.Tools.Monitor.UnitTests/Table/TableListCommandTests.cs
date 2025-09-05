@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -24,7 +23,7 @@ public sealed class TableListCommandTests
     private readonly ILogger<TableListCommand> _logger;
     private readonly TableListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     private const string _knownSubscription = "knownSubscription";
     private const string _knownWorkspace = "knownWorkspace";
@@ -42,7 +41,7 @@ public sealed class TableListCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Theory]
@@ -72,7 +71,7 @@ public sealed class TableListCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _parser.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
 
         // Assert
         Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
@@ -107,7 +106,7 @@ public sealed class TableListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(expectedTables);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", _knownSubscription,
             "--workspace", _knownWorkspace,
             "--resource-group", _knownResourceGroupName
@@ -130,7 +129,7 @@ public sealed class TableListCommandTests
             Arg.Any<RetryPolicyOptions>());
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TableListCommand.TableListCommandResult>(json, MonitorJsonContext.Default.TableListCommandResult);
+        var result = JsonSerializer.Deserialize(json, MonitorJsonContext.Default.TableListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedTables.Count, result.Tables.Count);
@@ -154,7 +153,7 @@ public sealed class TableListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(expectedTables);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", _knownSubscription,
             "--workspace", _knownWorkspace,
             "--resource-group", _knownResourceGroupName,
@@ -188,7 +187,7 @@ public sealed class TableListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(new List<string>());
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", _knownSubscription,
             "--workspace", _knownWorkspace,
             "--resource-group", _knownResourceGroupName
@@ -215,7 +214,7 @@ public sealed class TableListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<List<string>>(new Exception("Test error")));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", _knownSubscription,
             "--workspace", _knownWorkspace,
             "--resource-group", _knownResourceGroupName

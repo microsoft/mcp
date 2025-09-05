@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -25,7 +25,7 @@ public class QueueDetailsCommandTests
     private readonly ILogger<QueueDetailsCommand> _logger;
     private readonly QueueDetailsCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     // Test constants
     private const string SubscriptionId = "sub123";
@@ -42,7 +42,7 @@ public class QueueDetailsCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public class QueueDetailsCommandTests
             Arg.Any<RetryPolicyOptions>()
         ).Returns(expectedDetails);
 
-        var args = _parser.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--queue", QueueName]);
+        var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--queue", QueueName]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -104,7 +104,7 @@ public class QueueDetailsCommandTests
             Arg.Any<RetryPolicyOptions>()
         ).ThrowsAsync(serviceBusException);
 
-        var args = _parser.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--queue", QueueName]);
+        var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--queue", QueueName]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -128,7 +128,7 @@ public class QueueDetailsCommandTests
             Arg.Any<RetryPolicyOptions>()
         ).ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--queue", QueueName]);
+        var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--queue", QueueName]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -165,7 +165,7 @@ public class QueueDetailsCommandTests
                 .Returns(expectedDetails);
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

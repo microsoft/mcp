@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
@@ -37,31 +38,31 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
     {
         base.RegisterOptions(command);
         RequireResourceGroup();
-        command.AddOption(_displayNameOption);
-        command.AddOption(_serializedContentOption);
-        command.AddOption(_sourceIdOption);
+        command.Options.Add(_displayNameOption);
+        command.Options.Add(_serializedContentOption);
+        command.Options.Add(_sourceIdOption);
     }
 
     protected override CreateWorkbookOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DisplayName = parseResult.GetValueForOption(_displayNameOption);
-        options.SerializedContent = parseResult.GetValueForOption(_serializedContentOption);
-        options.SourceId = parseResult.GetValueForOption(_sourceIdOption);
+        options.DisplayName = parseResult.GetValueOrDefault(_displayNameOption);
+        options.SerializedContent = parseResult.GetValueOrDefault(_serializedContentOption);
+        options.SourceId = parseResult.GetValueOrDefault(_sourceIdOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var workbooksService = context.GetService<IWorkbooksService>();
             var createdWorkbook = await workbooksService.CreateWorkbook(
                 options.Subscription!,

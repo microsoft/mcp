@@ -19,8 +19,8 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
     public override string Name => "list";
     public override string Description =>
         $"""
-        Retrieves a comprehensive list of all test run executions for a specific load test configuration. 
-        This command provides an overview of test execution history, allowing you to track performance 
+        Retrieves a comprehensive list of all test run executions for a specific load test configuration.
+        This command provides an overview of test execution history, allowing you to track performance
         trends, compare results across multiple runs, and analyze testing patterns over time.
         """;
     public override string Title => _commandTitle;
@@ -30,26 +30,27 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_loadTestIdOption);
+        command.Options.Add(_loadTestIdOption);
     }
 
     protected override TestRunListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestId = parseResult.GetValueForOption(_loadTestIdOption);
+        options.TestId = parseResult.GetValue(_loadTestIdOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
+
         try
         {
-            // Required validation step using the base Validate method
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
             // Get the appropriate service from DI
             var service = context.GetService<ILoadTestingService>();
             // Call service operation(s)

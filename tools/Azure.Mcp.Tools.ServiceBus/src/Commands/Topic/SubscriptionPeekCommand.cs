@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Topic;
 using Azure.Mcp.Tools.ServiceBus.Services;
@@ -43,32 +43,33 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_namespaceOption);
-        command.AddOption(_topicOption);
-        command.AddOption(_subscriptionNameOption);
-        command.AddOption(_maxMessagesOption);
+        command.Options.Add(_namespaceOption);
+        command.Options.Add(_topicOption);
+        command.Options.Add(_subscriptionNameOption);
+        command.Options.Add(_maxMessagesOption);
     }
 
     protected override SubscriptionPeekOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SubscriptionName = parseResult.GetValueForOption(_subscriptionNameOption);
-        options.TopicName = parseResult.GetValueForOption(_topicOption);
-        options.Namespace = parseResult.GetValueForOption(_namespaceOption);
-        options.MaxMessages = parseResult.GetValueForOption(_maxMessagesOption);
+        options.SubscriptionName = parseResult.GetValueOrDefault(_subscriptionNameOption);
+        options.TopicName = parseResult.GetValueOrDefault(_topicOption);
+        options.Namespace = parseResult.GetValueOrDefault(_namespaceOption);
+        options.MaxMessages = parseResult.GetValueOrDefault(_maxMessagesOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
 
             var service = context.GetService<IServiceBusService>();
             var messages = await service.PeekSubscriptionMessages(

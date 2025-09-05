@@ -54,7 +54,8 @@
   </ItemGroup>
   <!-- Properties for the RID-specific .NET Tool packages -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
-    <PackageDescription>Azure MCP Server - Model Context Protocol implementation for Azure. Internal implementation package for $(RuntimeIdentifier).</PackageDescription>
+    <PackageDescription>Azure MCP Server - Model Context Protocol implementation for Azure. Internal
+      implementation package for $(RuntimeIdentifier).</PackageDescription>
   </PropertyGroup>
   <!-- Debug configuration -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
@@ -79,6 +80,7 @@
        https://github.com/Azure/azure-mcp/blob/main/docs/aot-compatibility.md
        Do not add ProjectReference removals in this ItemGroup. -->
   <ItemGroup Condition="'$(BuildNative)' == 'true'">
-    <ProjectReference Remove="$(RepoRoot)\tools\azuremanagedlustre\src\AzureMcp.AzureManagedLustre\AzureMcp.AzureManagedLustre.csproj" />
+    <ProjectReference
+      Remove="$(RepoRoot)\tools\azuremanagedlustre\src\AzureMcp.AzureManagedLustre\AzureMcp.AzureManagedLustre.csproj" />
   </ItemGroup>
 </Project>

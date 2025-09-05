@@ -34,222 +34,215 @@ public static class StorageOptionDefinitions
     public const string EnableHierarchicalNamespaceName = "enable-hierarchical-namespace";
 
     public static readonly Option<string> Account = new(
-        $"--{AccountName}",
-        "The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount')."
+        $"--{AccountName}"
     )
     {
-        IsRequired = true
+        Description = "The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').",
+        Required = true
     };
 
     public static readonly Option<string> AccountCreate = new(
-        $"--{AccountCreateName}",
-        "The name of the Azure Storage account to create. Must be globally unique, 3-24 characters, lowercase letters and numbers only."
+        $"--{AccountCreateName}"
     )
     {
-        IsRequired = true
+        Description = "The name of the Azure Storage account to create. Must be globally unique, 3-24 characters, lowercase letters and numbers only.",
+        Required = true
     };
 
     public static readonly Option<string> Location = new(
-        $"--{LocationName}",
-        "The Azure region where the storage account will be created (e.g., 'eastus', 'westus2')."
+        $"--{LocationName}"
     )
     {
-        IsRequired = true
+        Description = "The Azure region where the storage account will be created (e.g., 'eastus', 'westus2').",
+        Required = true
     };
 
     public static readonly Option<string> Sku = new(
-        $"--{SkuName}",
-        "The storage account SKU. Valid values: Standard_LRS, Standard_GRS, Standard_RAGRS, Standard_ZRS, Premium_LRS, Premium_ZRS, Standard_GZRS, Standard_RAGZRS."
+        $"--{SkuName}"
     )
     {
-        IsRequired = false
+        Description = "The storage account SKU. Valid values: Standard_LRS, Standard_GRS, Standard_RAGRS, Standard_ZRS, Premium_LRS, Premium_ZRS, Standard_GZRS, Standard_RAGZRS.",
+        Required = false
     };
 
     public static readonly Option<string> Kind = new(
-        $"--{KindName}",
-        "The storage account kind. Valid values: Storage, StorageV2, BlobStorage, FileStorage, BlockBlobStorage."
+        $"--{KindName}"
     )
     {
-        IsRequired = false
+        Description = "The storage account kind. Valid values: Storage, StorageV2, BlobStorage, FileStorage, BlockBlobStorage.",
+        Required = false
     };
 
     public static readonly Option<string> AccessTier = new(
-        $"--{AccessTierName}",
-        "The default access tier for blob storage. Valid values: Hot, Cool."
+        $"--{AccessTierName}"
     )
     {
-        IsRequired = false
+        Description = "The default access tier for blob storage. Valid values: Hot, Cool.",
+        Required = false
     };
 
-    public static readonly Option<bool> EnableHttpsTrafficOnly = new(
-        $"--{EnableHttpsTrafficOnlyName}",
-        () => true,
-        "Whether to require secure transfer (HTTPS) for the storage account."
-    )
+    public static readonly Option<bool> EnableHttpsTrafficOnly = new($"--{EnableHttpsTrafficOnlyName}")
     {
-        IsRequired = false
+        Description = "Whether to require secure transfer (HTTPS) for the storage account.",
+        DefaultValueFactory = _ => true,
+        Required = false
     };
 
-    public static readonly Option<bool> AllowBlobPublicAccess = new(
-        $"--{AllowBlobPublicAccessName}",
-        () => false,
-        "Whether to allow public access to blobs in the storage account."
-    )
+    public static readonly Option<bool> AllowBlobPublicAccess = new($"--{AllowBlobPublicAccessName}")
     {
-        IsRequired = false
+        Description = "Whether to allow public access to blobs in the storage account.",
+        DefaultValueFactory = _ => false,
+        Required = false
     };
 
-    public static readonly Option<bool> EnableHierarchicalNamespace = new(
-        $"--{EnableHierarchicalNamespaceName}",
-        () => false,
-        "Whether to enable hierarchical namespace (Data Lake Storage Gen2) for the storage account."
-    )
+    public static readonly Option<bool> EnableHierarchicalNamespace = new($"--{EnableHierarchicalNamespaceName}")
     {
-        IsRequired = false
+        Description = "Whether to enable hierarchical namespace (Data Lake Storage Gen2) for the storage account.",
+        DefaultValueFactory = _ => false,
+        Required = false
     };
 
     public static readonly Option<string> BlobContainerPublicAccess = new(
-        $"--{BlobContainerPublicAccessName}",
-        "The public access level for the blob container. Valid values: blob (allows public read access to blobs), container (allows public read access to both blobs and container metadata). If not specified, the container will be private."
+        $"--{BlobContainerPublicAccessName}"
     )
     {
-        IsRequired = false
+        Description = "The public access level for the blob container. Valid values: blob (allows public read access to blobs), container (allows public read access to both blobs and container metadata). If not specified, the container will be private.",
+        Required = false
     };
 
     public static readonly Option<string> Container = new(
-        $"--{ContainerName}",
-        "The name of the container to access within the storage account."
+        $"--{ContainerName}"
     )
     {
-        IsRequired = true
+        Description = "The name of the container to access within the storage account.",
+        Required = true
     };
 
     public static readonly Option<string> Table = new(
-        $"--{TableName}",
-        "The name of the table to access within the storage account."
+        $"--{TableName}"
     )
     {
-        IsRequired = true
+        Description = "The name of the table to access within the storage account.",
+        Required = true
     };
 
     public static readonly Option<string> FileSystem = new(
-        $"--{FileSystemName}",
-        "The name of the Data Lake file system to access within the storage account."
+        $"--{FileSystemName}"
     )
     {
-        IsRequired = true
+        Description = "The name of the Data Lake file system to access within the storage account.",
+        Required = true
     };
 
     public static readonly Option<string> DirectoryPath = new(
-        $"--{DirectoryPathName}",
-        "The full path of the directory to create in the Data Lake, including the file system name (e.g., 'myfilesystem/data/logs' or 'myfilesystem/archives/2024'). Use forward slashes (/) to separate the file system name from the directory path and for subdirectories."
+        $"--{DirectoryPathName}"
     )
     {
-        IsRequired = true
+        Description = "The full path of the directory to create in the Data Lake, including the file system name (e.g., 'myfilesystem/data/logs' or 'myfilesystem/archives/2024'). Use forward slashes (/) to separate the file system name from the directory path and for subdirectories.",
+        Required = true
     };
 
     public static readonly Option<string> Tier = new(
-        $"--{TierName}",
-        "The access tier to set for the blobs. Valid values include Hot, Cool, Archive, and others depending on the storage account type. See Azure documentation for the complete list of supported access tiers."
+        $"--{TierName}"
     )
     {
-        IsRequired = true
+        Description = "The access tier to set for the blobs. Valid values include Hot, Cool, Archive, and others depending on the storage account type. See Azure documentation for the complete list of supported access tiers.",
+        Required = true
     };
 
     public static readonly Option<string[]> Blobs = new(
-        $"--{BlobsName}",
-        "The names of the blobs to set the access tier for. Provide multiple blob names separated by spaces. Each blob name should be the full path within the container (e.g., 'file1.txt' or 'folder/file2.txt')."
+        $"--{BlobsName}"
     )
     {
-        IsRequired = true,
+        Description = "The names of the blobs to set the access tier for. Provide multiple blob names separated by spaces. Each blob name should be the full path within the container (e.g., 'file1.txt' or 'folder/file2.txt').",
+        Required = true,
         AllowMultipleArgumentsPerToken = true
     };
 
     public static readonly Option<string> Blob = new(
-        $"--{BlobName}",
-        "The name of the blob to access within the container. This should be the full path within the container (e.g., 'file.txt' or 'folder/file.txt')."
+        $"--{BlobName}"
     )
     {
-        IsRequired = true
+        Description = "The name of the blob to access within the container. This should be the full path within the container (e.g., 'file.txt' or 'folder/file.txt').",
+        Required = true
     };
 
     public static readonly Option<string> FilterPath = new(
-        $"--{FilterPathName}",
-        "The prefix to filter paths in the Data Lake. Only paths that start with this prefix will be listed."
+        $"--{FilterPathName}"
     )
     {
-        IsRequired = false
+        Description = "The prefix to filter paths in the Data Lake. Only paths that start with this prefix will be listed.",
+        Required = false
     };
 
-    public static readonly Option<bool> Recursive = new(
-        $"--{RecursiveName}",
-        () => false,
-        "Flag to indicate whether the command will operate recursively on all subdirectories."
-    )
+    public static readonly Option<bool> Recursive = new($"--{RecursiveName}")
     {
-        IsRequired = false
+        Description = "Flag to indicate whether the command will operate recursively on all subdirectories.",
+        DefaultValueFactory = _ => false,
+        Required = false
     };
 
     public static readonly Option<string> Share = new(
-        $"--{ShareName}",
-        "The name of the file share to access within the storage account."
+        $"--{ShareName}"
     )
     {
-        IsRequired = true
+        Description = "The name of the file share to access within the storage account.",
+        Required = true
     };
 
     public static readonly Option<string> Prefix = new(
-        $"--{PrefixName}",
-        "Optional prefix to filter results. Only items that start with this prefix will be returned."
+        $"--{PrefixName}"
     )
     {
-        IsRequired = false
+        Description = "Optional prefix to filter results. Only items that start with this prefix will be returned.",
+        Required = false
     };
 
     public static readonly Option<string> Queue = new(
-        $"--{QueueName}",
-        "The name of the queue to access within the storage account."
+        $"--{QueueName}"
     )
     {
-        IsRequired = true
+        Description = "The name of the queue to access within the storage account.",
+        Required = true
     };
 
     public static readonly Option<string> Message = new(
-        $"--{MessageName}",
-        "The content of the message to send to the queue."
+        $"--{MessageName}"
     )
     {
-        IsRequired = true
+        Description = "The content of the message to send to the queue.",
+        Required = true
     };
 
     public static readonly Option<int?> TimeToLiveInSeconds = new(
-        $"--{TimeToLiveInSecondsName}",
-        "The time-to-live for the message in seconds. If not specified, the message will use the queue's default TTL. Set to -1 for messages that never expire.")
+        $"--{TimeToLiveInSecondsName}"
+    )
     {
-        IsRequired = false
+        Description = "The time-to-live for the message in seconds. If not specified, the message will use the queue's default TTL. Set to -1 for messages that never expire.",
+        Required = false
     };
 
     public static readonly Option<int?> VisibilityTimeoutInSeconds = new(
-        $"--{VisibilityTimeoutInSecondsName}",
-        "The visibility timeout for the message in seconds. This determines how long the message will be invisible after it's retrieved. If not specified, defaults to 0 (immediately visible)."
+        $"--{VisibilityTimeoutInSecondsName}"
     )
     {
-        IsRequired = false
+        Description = "The visibility timeout for the message in seconds. This determines how long the message will be invisible after it's retrieved. If not specified, defaults to 0 (immediately visible).",
+        Required = false
     };
 
     public static readonly Option<string> LocalFilePath = new(
-        $"--{LocalFilePathName}",
-        "The local file path to read content from or to write content to. This should be the full path to the file on your local system."
+        $"--{LocalFilePathName}"
     )
     {
-        IsRequired = true
+        Description = "The local file path to read content from or to write content to. This should be the full path to the file on your local system.",
+        Required = true
     };
 
     public static readonly Option<bool> Overwrite = new(
-        $"--{OverwriteName}",
-        "Whether to overwrite content if it already exists. Defaults to false."
+        $"--{OverwriteName}"
     )
     {
-        IsRequired = false
+        Description = "Whether to overwrite content if it already exists. Defaults to false.",
+        Required = false
     };
 }

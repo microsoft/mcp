@@ -105,11 +105,26 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     {
         if (retryPolicy != null)
         {
-            clientOptions.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
-            clientOptions.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
-            clientOptions.Retry.MaxRetries = retryPolicy.MaxRetries;
-            clientOptions.Retry.Mode = retryPolicy.Mode;
-            clientOptions.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
+            if (retryPolicy.HasDelaySeconds)
+            {
+                clientOptions.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
+            }
+            if (retryPolicy.HasMaxDelaySeconds)
+            {
+                clientOptions.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
+            }
+            if (retryPolicy.HasMaxRetries)
+            {
+                clientOptions.Retry.MaxRetries = retryPolicy.MaxRetries;
+            }
+            if (retryPolicy.HasMode)
+            {
+                clientOptions.Retry.Mode = retryPolicy.Mode;
+            }
+            if (retryPolicy.HasNetworkTimeoutSeconds)
+            {
+                clientOptions.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
+            }
         }
 
         return clientOptions;

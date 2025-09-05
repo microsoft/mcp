@@ -65,7 +65,7 @@ public class CacheService(IMemoryCache memoryCache) : ICacheService
             return new ValueTask<IEnumerable<string>>(keys.AsEnumerable());
         }
 
-        return new ValueTask<IEnumerable<string>>(Array.Empty<string>());
+        return new ValueTask<IEnumerable<string>>([]);
     }
 
     public ValueTask ClearAsync()

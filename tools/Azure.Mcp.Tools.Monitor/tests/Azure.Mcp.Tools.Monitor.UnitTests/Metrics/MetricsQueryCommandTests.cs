@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -78,24 +76,24 @@ public class MetricsQueryCommandTests
         var options = command.Options.Select(o => o.Name).ToList();
 
         // Base options from BaseMetricsCommand
-        Assert.Contains("resource-group", options);
-        Assert.Contains("resource-type", options);
-        Assert.Contains("resource", options);
+        Assert.Contains("--resource-group", options);
+        Assert.Contains("--resource-type", options);
+        Assert.Contains("--resource", options);
 
         // MetricsQueryCommand specific options
-        Assert.Contains("metric-names", options);
-        Assert.Contains("start-time", options);
-        Assert.Contains("end-time", options);
-        Assert.Contains("interval", options);
-        Assert.Contains("aggregation", options);
-        Assert.Contains("filter", options);
-        Assert.Contains("metric-namespace", options);
-        Assert.Contains("max-buckets", options);
+        Assert.Contains("--metric-names", options);
+        Assert.Contains("--start-time", options);
+        Assert.Contains("--end-time", options);
+        Assert.Contains("--interval", options);
+        Assert.Contains("--aggregation", options);
+        Assert.Contains("--filter", options);
+        Assert.Contains("--metric-namespace", options);
+        Assert.Contains("--max-buckets", options);
 
         // Verify required options are marked as required
-        var requiredOptions = command.Options.Where(o => o.IsRequired).Select(o => o.Name).ToList();
-        Assert.Contains("resource", requiredOptions);
-        Assert.Contains("metric-names", requiredOptions);
+        var requiredOptions = command.Options.Where(o => o.Required).Select(o => o.Name).ToList();
+        Assert.Contains("--resource", requiredOptions);
+        Assert.Contains("--metric-names", requiredOptions);
     }
 
     #endregion

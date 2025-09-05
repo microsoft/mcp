@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -49,8 +47,8 @@ public class IndexDescribeCommandTests
             .Returns(expectedDefinition);
 
         var command = new IndexDescribeCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse($"--service {serviceName} --index {indexName}");
+
+        var args = command.GetCommand().Parse($"--service {serviceName} --index {indexName}");
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -89,8 +87,8 @@ public class IndexDescribeCommandTests
             .Returns(Task.FromResult((SearchIndexProxy?)null));
 
         var command = new IndexDescribeCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse($"--service {serviceName} --index {indexName}");
+
+        var args = command.GetCommand().Parse($"--service {serviceName} --index {indexName}");
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -117,8 +115,8 @@ public class IndexDescribeCommandTests
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new IndexDescribeCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse($"--service {serviceName} --index {indexName}");
+
+        var args = command.GetCommand().Parse($"--service {serviceName} --index {indexName}");
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -135,8 +133,8 @@ public class IndexDescribeCommandTests
     {
         // Arrange
         var command = new IndexDescribeCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(""); // Missing required options
+
+        var args = command.GetCommand().Parse(""); // Missing required options
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -163,8 +161,8 @@ public class IndexDescribeCommandTests
         Assert.NotEmpty(cmd.Description!);
 
         // Verify options
-        var serviceOption = cmd.Options.FirstOrDefault(o => o.Name == "service");
-        var indexOption = cmd.Options.FirstOrDefault(o => o.Name == "index");
+        var serviceOption = cmd.Options.FirstOrDefault(o => o.Name == "--service");
+        var indexOption = cmd.Options.FirstOrDefault(o => o.Name == "--index");
 
         Assert.NotNull(serviceOption);
         Assert.NotNull(indexOption);

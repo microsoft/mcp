@@ -5,7 +5,7 @@ namespace Azure.Mcp.Tools.VirtualDesktop.Models;
 
 public class SessionHostHealthCheckFailureDetails
 {
-    public SessionHostHealthCheckFailureDetails(Azure.ResourceManager.DesktopVirtualization.Models.SessionHostHealthCheckFailureDetails details)
+    public SessionHostHealthCheckFailureDetails(ResourceManager.DesktopVirtualization.Models.SessionHostHealthCheckFailureDetails details)
     {
         Message = details.Message;
         ErrorCode = details.ErrorCode;

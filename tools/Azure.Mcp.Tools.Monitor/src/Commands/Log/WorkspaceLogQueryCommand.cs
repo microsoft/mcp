@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
@@ -36,33 +35,34 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_tableNameOption);
-        command.AddOption(_queryOption);
-        command.AddOption(_hoursOption);
-        command.AddOption(_limitOption);
+        command.Options.Add(_tableNameOption);
+        command.Options.Add(_queryOption);
+        command.Options.Add(_hoursOption);
+        command.Options.Add(_limitOption);
     }
 
     protected override WorkspaceLogQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TableName = parseResult.GetValueForOption(_tableNameOption);
-        options.Query = parseResult.GetValueForOption(_queryOption);
-        options.Hours = parseResult.GetValueForOption(_hoursOption);
-        options.Limit = parseResult.GetValueForOption(_limitOption);
+        options.TableName = parseResult.GetValueOrDefault(_tableNameOption);
+        options.Query = parseResult.GetValueOrDefault(_queryOption);
+        options.Hours = parseResult.GetValueOrDefault(_hoursOption);
+        options.Limit = parseResult.GetValueOrDefault(_limitOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var monitorService = context.GetService<IMonitorService>();
             var results = await monitorService.QueryWorkspaceLogs(
                 options.Subscription!,

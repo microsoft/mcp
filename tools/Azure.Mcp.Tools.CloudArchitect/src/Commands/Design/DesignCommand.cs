@@ -1,14 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Text.Json;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Models;
 using Azure.Mcp.Tools.CloudArchitect.Models;
 using Azure.Mcp.Tools.CloudArchitect.Options;
 using Microsoft.Extensions.Logging;
@@ -69,52 +64,52 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_questionOption);
-        command.AddOption(_questionNumberOption);
-        command.AddOption(_questionTotalQuestions);
-        command.AddOption(_answerOption);
-        command.AddOption(_nextQuestionNeededOption);
-        command.AddOption(_confidenceScoreOption);
-        command.AddOption(_architectureDesignToolState);
+        command.Options.Add(_questionOption);
+        command.Options.Add(_questionNumberOption);
+        command.Options.Add(_questionTotalQuestions);
+        command.Options.Add(_answerOption);
+        command.Options.Add(_nextQuestionNeededOption);
+        command.Options.Add(_confidenceScoreOption);
+        command.Options.Add(_architectureDesignToolState);
 
-        command.AddValidator(result =>
-        {
-            // Validate confidence score is between 0.0 and 1.0
-            var confidenceScore = result.GetValueForOption(_confidenceScoreOption);
-            if (confidenceScore < 0.0 || confidenceScore > 1.0)
+        command.Validators.Add(result =>
             {
-                result.ErrorMessage = "Confidence score must be between 0.0 and 1.0";
-                return;
-            }
+                // Validate confidence score is between 0.0 and 1.0
+                var confidenceScore = result.GetValue(_confidenceScoreOption);
+                if (confidenceScore < 0.0 || confidenceScore > 1.0)
+                {
+                    result.AddError("Confidence score must be between 0.0 and 1.0");
+                    return;
+                }
 
-            // Validate question number is not negative
-            var questionNumber = result.GetValueForOption(_questionNumberOption);
-            if (questionNumber < 0)
-            {
-                result.ErrorMessage = "Question number cannot be negative";
-                return;
-            }
+                // Validate question number is not negative
+                var questionNumber = result.GetValue(_questionNumberOption);
+                if (questionNumber < 0)
+                {
+                    result.AddError("Question number cannot be negative");
+                    return;
+                }
 
-            // Validate total questions is not negative
-            var totalQuestions = result.GetValueForOption(_questionTotalQuestions);
-            if (totalQuestions < 0)
-            {
-                result.ErrorMessage = "Total questions cannot be negative";
-                return;
-            }
-        });
+                // Validate total questions is not negative
+                var totalQuestions = result.GetValue(_questionTotalQuestions);
+                if (totalQuestions < 0)
+                {
+                    result.AddError("Total questions cannot be negative");
+                    return;
+                }
+            });
     }
 
     protected override ArchitectureDesignToolOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Question = parseResult.GetValueForOption(_questionOption) ?? string.Empty;
-        options.QuestionNumber = parseResult.GetValueForOption(_questionNumberOption);
-        options.TotalQuestions = parseResult.GetValueForOption(_questionTotalQuestions);
-        options.Answer = parseResult.GetValueForOption(_answerOption);
-        options.NextQuestionNeeded = parseResult.GetValueForOption(_nextQuestionNeededOption);
-        options.ConfidenceScore = parseResult.GetValueForOption(_confidenceScoreOption);
-        options.State = DeserializeState(parseResult.GetValueForOption(_architectureDesignToolState));
+        options.Question = parseResult.GetValue(_questionOption) ?? string.Empty;
+        options.QuestionNumber = parseResult.GetValue(_questionNumberOption);
+        options.TotalQuestions = parseResult.GetValue(_questionTotalQuestions);
+        options.Answer = parseResult.GetValue(_answerOption);
+        options.NextQuestionNeeded = parseResult.GetValue(_nextQuestionNeededOption);
+        options.ConfidenceScore = parseResult.GetValue(_confidenceScoreOption);
+        options.State = DeserializeState(parseResult.GetValue(_architectureDesignToolState));
         return options;
     }
 
@@ -127,7 +122,7 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
 
         try
         {
-            var state = JsonSerializer.Deserialize<ArchitectureDesignToolState>(stateJson, CloudArchitectJsonContext.Default.ArchitectureDesignToolState);
+            var state = JsonSerializer.Deserialize(stateJson, CloudArchitectJsonContext.Default.ArchitectureDesignToolState);
             return state ?? new ArchitectureDesignToolState();
         }
         catch (JsonException ex)
@@ -138,15 +133,15 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return Task.FromResult(context.Response);
+        }
+
+        var options = BindOptions(parseResult);
+
         try
         {
-            var options = BindOptions(parseResult);
-
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return Task.FromResult(context.Response);
-            }
-
             var designArchitecture = GetArchitectureDesignText();
             var responseObject = new CloudArchitectResponseObject
             {

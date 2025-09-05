@@ -223,7 +223,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         var pages = response.AsPages();
         await foreach (var page in pages)
         {
-            foreach (global::Azure.Monitor.Query.Models.MetricDefinition definition in page.Values)
+            foreach (Azure.Monitor.Query.Models.MetricDefinition definition in page.Values)
             {
                 if (string.IsNullOrEmpty(definition.Name))
                 {
@@ -290,7 +290,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         var pages = response.AsPages();
         await foreach (var page in pages)
         {
-            foreach (global::Azure.Monitor.Query.Models.MetricNamespace ns in page.Values)
+            foreach (Azure.Monitor.Query.Models.MetricNamespace ns in page.Values)
             {
                 // Apply search string filtering if provided
                 if (!string.IsNullOrEmpty(searchString) &&

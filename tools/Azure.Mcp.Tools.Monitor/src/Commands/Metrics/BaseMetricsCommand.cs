@@ -24,16 +24,16 @@ public abstract class BaseMetricsCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_resourceTypeOption);
-        command.AddOption(_resourceNameOption);
+        command.Options.Add(_resourceTypeOption);
+        command.Options.Add(_resourceNameOption);
         UseResourceGroup();
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceType = parseResult.GetValueForOption(_resourceTypeOption);
-        options.ResourceName = parseResult.GetValueForOption(_resourceNameOption);
+        options.ResourceType = parseResult.GetValue(_resourceTypeOption);
+        options.ResourceName = parseResult.GetValue(_resourceNameOption);
         return options;
     }
 }

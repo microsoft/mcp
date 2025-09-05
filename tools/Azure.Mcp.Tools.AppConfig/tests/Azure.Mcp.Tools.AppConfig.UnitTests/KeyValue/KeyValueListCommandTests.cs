@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -25,7 +25,7 @@ public class KeyValueListCommandTests
     private readonly ILogger<KeyValueListCommand> _logger;
     private readonly KeyValueListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public KeyValueListCommandTests()
     {
@@ -33,7 +33,7 @@ public class KeyValueListCommandTests
         _logger = Substitute.For<ILogger<KeyValueListCommand>>();
 
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
         _serviceProvider = new ServiceCollection()
             .AddSingleton(_appConfigService)
             .BuildServiceProvider();
@@ -58,7 +58,7 @@ public class KeyValueListCommandTests
           Arg.Any<RetryPolicyOptions>())
           .Returns(expectedSettings);
 
-        var args = _parser.Parse(["--subscription", "sub123", "--account", "account1"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub123", "--account", "account1"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -96,7 +96,7 @@ public class KeyValueListCommandTests
           Arg.Any<RetryPolicyOptions>())
           .Returns(expectedSettings);
 
-        var args = _parser.Parse(["--subscription", "sub123", "--account", "account1", "--key", "key1"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub123", "--account", "account1", "--key", "key1"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -135,7 +135,7 @@ public class KeyValueListCommandTests
           Arg.Any<RetryPolicyOptions>())
           .Returns(expectedSettings);
 
-        var args = _parser.Parse(["--subscription", "sub123", "--account", "account1", "--label", "prod"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub123", "--account", "account1", "--label", "prod"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -169,7 +169,7 @@ public class KeyValueListCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception("Service error"));
 
-        var args = _parser.Parse(["--subscription", "sub123", "--account", "account1"]);
+        var args = _commandDefinition.Parse(["--subscription", "sub123", "--account", "account1"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -185,7 +185,7 @@ public class KeyValueListCommandTests
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
         // Arrange
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

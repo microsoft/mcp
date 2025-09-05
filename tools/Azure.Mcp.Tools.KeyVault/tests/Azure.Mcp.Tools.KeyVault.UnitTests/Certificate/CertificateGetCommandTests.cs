@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -22,7 +22,7 @@ public class CertificateGetCommandTests
     private readonly ILogger<CertificateGetCommand> _logger;
     private readonly CertificateGetCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     private const string _knownSubscriptionId = "knownSubscription";
     private const string _knownVaultName = "knownVaultName";
@@ -39,7 +39,7 @@ public class CertificateGetCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public class CertificateGetCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVaultName,
             "--certificate", _knownCertificateName,
             "--subscription", _knownSubscriptionId
@@ -83,7 +83,7 @@ public class CertificateGetCommandTests
     public async Task ExecuteAsync_ReturnsInvalidObject_IfCertificateNameIsEmpty()
     {
         // Arrange - No need to mock service since validation should fail before service is called
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVaultName,
             "--certificate", "",
             "--subscription", _knownSubscriptionId
@@ -112,7 +112,7 @@ public class CertificateGetCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--vault", _knownVaultName,
             "--certificate", _knownCertificateName,
             "--subscription", _knownSubscriptionId
