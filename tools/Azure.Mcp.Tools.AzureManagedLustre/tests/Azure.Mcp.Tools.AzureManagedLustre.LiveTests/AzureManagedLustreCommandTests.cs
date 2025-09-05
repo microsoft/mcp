@@ -29,7 +29,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
         public async Task Should_calculate_required_subnet_size()
         {
             var result = await CallToolAsync(
-                "azmcp_azuremanagedlustre_filesystem_required-subnet-size",
+                "azmcp_azuremanagedlustre_filesystem_subnet-size-required",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -96,10 +96,10 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
 
 
         [Fact]
-        public async Task Should_check_subnet_size()
+        public async Task Should_check_subnet_size_and_succeed()
         {
             var result = await CallToolAsync(
-                "azmcp_azuremanagedlustre_filesystem_check-subnet-size",
+                "azmcp_azuremanagedlustre_filesystem_subnet-size-validate",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -112,6 +112,25 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
             var valid = result.AssertProperty("valid");
             Assert.Equal(JsonValueKind.True, valid.ValueKind);
             Assert.True(valid.GetBoolean());
+        }
+
+        [Fact]
+        public async Task Should_check_subnet_size_and_fail()
+        {
+            var result = await CallToolAsync(
+                "azmcp_azuremanagedlustre_filesystem_subnet-size-validate",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "sku", "AMLFS-Durable-Premium-48" },
+                    { "size", 1008 },
+                    { "location", Environment.GetEnvironmentVariable("LOCATION") },
+                    { "subnet-id", Environment.GetEnvironmentVariable("AMLFS_SUBNET_SMALL_ID") }
+                });
+
+            var valid = result.AssertProperty("valid");
+            Assert.Equal(JsonValueKind.False, valid.ValueKind);
+            Assert.False(valid.GetBoolean());
         }
     }
 }

@@ -157,12 +157,12 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         }
     }
 
-    public async Task CheckAmlFSSubnetAsync(
+    public async Task<bool> CheckAmlFSSubnetAsync(
         string subscription,
         string sku,
         int size,
         string subnetId,
-        string? location = null,
+        string location,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
@@ -175,16 +175,32 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         {
             FilesystemSubnet = subnetId,
             SkuName = sku,
-            StorageCapacityTiB = size
+            StorageCapacityTiB = size,
+            Location = location
         };
-        if (!string.IsNullOrWhiteSpace(location))
-        {
-            content.Location = location;
-        }
 
         try
         {
-            _ = await sub.CheckAmlFSSubnetsAsync(content);
+            var response = await sub.CheckAmlFSSubnetsAsync(content);
+            var status = response.Status;
+            if (status == 200)
+            {
+                return true;
+            }
+            else if (status == 400)
+            {
+                return false;
+            }
+
+            throw new Exception($"Unexpected status code {status} while validating AMLFS subnet.");
+        }
+        catch (RequestFailedException ex) when (ex.Status == 400)
+        {
+            throw new Exception("Subnet is not valid.", ex);
+        }
+        catch (RequestFailedException ex)
+        {
+            throw new Exception($"Request to validate AMLFS subnet failed: {ex.Message}", ex);
         }
         catch (Exception ex)
         {

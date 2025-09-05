@@ -9,12 +9,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.Commands.FileSystem;
 
-public sealed class FileSystemCheckSubnetCommand(ILogger<FileSystemCheckSubnetCommand> logger)
-    : BaseAzureManagedLustreCommand<FileSystemCheckSubnetOptions>(logger)
+public sealed class FileSystemSubnetSizeCheckCommand(ILogger<FileSystemSubnetSizeCheckCommand> logger)
+    : BaseAzureManagedLustreCommand<FileSystemSubnetSizeCheckOptions>(logger)
 {
     private const string CommandTitle = "Validate AMLFS subnet against SKU and size";
 
-    public override string Name => "check-subnet-size";
+    public override string Name => "subnet-size-validate";
 
     public override string Description =>
         "Validates that the provided subnet can host an Azure Managed Lustre filesystem for the given SKU and size.";
@@ -44,7 +44,7 @@ public sealed class FileSystemCheckSubnetCommand(ILogger<FileSystemCheckSubnetCo
         command.AddOption(_locationOption);
     }
 
-    protected override FileSystemCheckSubnetOptions BindOptions(ParseResult parseResult)
+    protected override FileSystemSubnetSizeCheckOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Sku = parseResult.GetValueForOption(_skuOption);
@@ -84,16 +84,16 @@ public sealed class FileSystemCheckSubnetCommand(ILogger<FileSystemCheckSubnetCo
                 return context.Response;
 
             var svc = context.GetService<IAzureManagedLustreService>();
-            await svc.CheckAmlFSSubnetAsync(
-                options.Subscription!,
-                options.Sku!,
-                options.Size,
-                options.SubnetId!,
-                options.Location,
-                options.Tenant,
-                options.RetryPolicy);
+            var subnetIsValid = await svc.CheckAmlFSSubnetAsync(
+                                options.Subscription!,
+                                options.Sku!,
+                                options.Size,
+                                options.SubnetId!,
+                                options.Location!,
+                                options.Tenant,
+                                options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(new FileSystemCheckSubnetResult(true), AzureManagedLustreJsonContext.Default.FileSystemCheckSubnetResult);
+            context.Response.Results = ResponseResult.Create(new FileSystemCheckSubnetResult(subnetIsValid), AzureManagedLustreJsonContext.Default.FileSystemCheckSubnetResult);
         }
         catch (Exception ex)
         {

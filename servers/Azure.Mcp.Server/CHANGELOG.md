@@ -54,7 +54,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added support for listing all Event Grid topics in a subscription via the command `azmcp_eventgrid_topic_list`. [[#43](https://github.com/microsoft/mcp/pull/43)]
 - Added support for retrieving knowledge index schema information in Azure AI Foundry projects via the command `azmcp_foundry_knowledge_index_schema`. [[#41](https://github.com/microsoft/mcp/pull/41)]
 - Added the following Azure Managed Lustre commands: [[#110](https://github.com/microsoft/mcp/issues/110)]
-  - `azmcp_azuremanagedlustre_filesystem_check-subnet-size`: Check if the subnet can host the target Azure Managed Lustre SKU and size.
+  - `azmcp_azuremanagedlustre_filesystem_subnet-size-validate`: Check if the subnet can host the target Azure Managed Lustre SKU and size.
 - Added support for listing service health events in a subscription via the command `azmcp_resourcehealth_service-health-events_list`. [[#367](https://github.com/microsoft/mcp/pull/367)]
 
 ### Breaking Changes
@@ -127,7 +127,7 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 - Added support for getting details of an Azure Function App via the command `azmcp_functionapp_get`. [[#970](https://github.com/Azure/azure-mcp/pull/970)]
 - Added the following Azure Managed Lustre commands: [[#1003](https://github.com/Azure/azure-mcp/issues/1003)]
   - `azmcp_azuremanagedlustre_filesystem_list`: List available Azure Managed Lustre filesystems.
-  - `azmcp_azuremanagedlustre_filesystem_required-subnet-size`: Returns the number of IP addresses required for a specific SKU and size of Azure Managed Lustre filesystem.
+  - `azmcp_azuremanagedlustre_filesystem_subnet-size-required`: Returns the number of IP addresses required for a specific SKU and size of Azure Managed Lustre filesystem.
 - Added support for designing Azure Cloud Architecture through guided questions via the command `azmcp_cloudarchitect_design`. [[#890](https://github.com/Azure/azure-mcp/pull/890)]
 - Added support for the following Azure MySQL operations: [[#855](https://github.com/Azure/azure-mcp/issues/855)]
   - `azmcp_mysql_database_list` - List all databases in a MySQL server.

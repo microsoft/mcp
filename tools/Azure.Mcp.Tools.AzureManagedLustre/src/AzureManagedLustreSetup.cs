@@ -29,12 +29,12 @@ public class AzureManagedLustreSetup : IAreaSetup
         azureManagedLustre.AddSubGroup(fileSystem);
 
         fileSystem.AddCommand("list", new FileSystemListCommand(loggerFactory.CreateLogger<FileSystemListCommand>()));
-        fileSystem.AddCommand("required-subnet-size", new FileSystemSubnetSizeCommand(loggerFactory.CreateLogger<FileSystemSubnetSizeCommand>()));
+        fileSystem.AddCommand("subnet-size-required", new FileSystemSubnetSizeRequiredCommand(loggerFactory.CreateLogger<FileSystemSubnetSizeRequiredCommand>()));
+        fileSystem.AddCommand("subnet-size-validate", new FileSystemSubnetSizeCheckCommand(loggerFactory.CreateLogger<FileSystemSubnetSizeCheckCommand>()));
 
         var sku = new CommandGroup("sku", "This group provides commands to discover and retrieve information about available Azure Managed Lustre SKUs, including supported tiers, performance characteristics, and regional availability. Use these commands to validate SKU options prior to provisioning or updating a filesystem.");
         fileSystem.AddSubGroup(sku);
 
         sku.AddCommand("get", new SkuGetCommand(loggerFactory.CreateLogger<SkuGetCommand>()));
-        fileSystem.AddCommand("check-subnet-size", new FileSystemCheckSubnetCommand(loggerFactory.CreateLogger<FileSystemCheckSubnetCommand>()));
-    }
+        }
 }

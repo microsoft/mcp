@@ -19,8 +19,8 @@ public class FileSystemCheckSubnetCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IAzureManagedLustreService _amlfsService;
-    private readonly ILogger<FileSystemCheckSubnetCommand> _logger;
-    private readonly FileSystemCheckSubnetCommand _command;
+    private readonly ILogger<FileSystemSubnetSizeCheckCommand> _logger;
+    private readonly FileSystemSubnetSizeCheckCommand _command;
     private readonly CommandContext _context;
     private readonly Parser _parser;
     private readonly string _knownSubscriptionId = "sub123";
@@ -28,7 +28,7 @@ public class FileSystemCheckSubnetCommandTests
     public FileSystemCheckSubnetCommandTests()
     {
         _amlfsService = Substitute.For<IAzureManagedLustreService>();
-        _logger = Substitute.For<ILogger<FileSystemCheckSubnetCommand>>();
+        _logger = Substitute.For<ILogger<FileSystemSubnetSizeCheckCommand>>();
 
         var services = new ServiceCollection().AddSingleton(_amlfsService);
         _serviceProvider = services.BuildServiceProvider();
@@ -42,7 +42,7 @@ public class FileSystemCheckSubnetCommandTests
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = _command.GetCommand();
-        Assert.Equal("check-subnet-size", command.Name);
+        Assert.Equal("subnet-size-validate", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
@@ -97,7 +97,7 @@ public class FileSystemCheckSubnetCommandTests
     {
         // Arrange
         _amlfsService.CheckAmlFSSubnetAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Exception("kaboom"));
 
         var args = _parser.Parse([
