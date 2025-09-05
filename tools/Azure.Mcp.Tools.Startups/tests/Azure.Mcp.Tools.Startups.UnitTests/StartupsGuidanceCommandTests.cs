@@ -22,6 +22,8 @@ public sealed class StartupsGuidanceCommandTests
     private readonly IStartupsService _startupsService;
     private readonly ILogger<StartupsGuidanceCommand> _logger;
     private readonly StartupsGuidanceCommand _command;
+    private readonly CommandContext _context;
+    private readonly Parser _parser;
 
     public StartupsGuidanceCommandTests()
     {
@@ -32,8 +34,8 @@ public sealed class StartupsGuidanceCommandTests
 
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
-        _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _context = new CommandContext(_serviceProvider);
+        _parser = new Parser(_command.GetCommand());
     }
 
     [Fact]

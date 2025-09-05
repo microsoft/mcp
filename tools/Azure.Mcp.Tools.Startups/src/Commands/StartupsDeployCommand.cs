@@ -37,6 +37,7 @@ public sealed class StartupsDeployCommand(ILogger<StartupsDeployCommand> logger)
         _subscriptionOption.IsRequired = true;
 
         base.RegisterOptions(command);
+        RequireResourceGroup();
         command.AddOption(_storageAccount);
         command.AddOption(_sourcePath);
         command.AddOption(_overwrite);

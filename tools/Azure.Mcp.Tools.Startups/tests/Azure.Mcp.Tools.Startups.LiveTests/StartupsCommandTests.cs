@@ -19,16 +19,16 @@ namespace Azure.Mcp.Tools.Startups.LiveTests
                 "azmcp_startups_guidance",
                 new());
 
-            var guidance = result.AssertProperty("guidance");
-            Assert.Equal(JsonValueKind.Object, guidance.ValueKind);
+            var info = result.AssertProperty("Info");
+            Assert.Equal(JsonValueKind.Object, info.ValueKind);
 
-            // Verify guidance has expected properties
-            var programInfo = guidance.GetProperty("programInfo");
-            Assert.NotNull(programInfo.GetString());
+            // Verify info has expected properties
+            var description = info.GetProperty("Description");
+            Assert.NotNull(description.GetString());
 
-            var benefits = guidance.GetProperty("benefits");
-            Assert.Equal(JsonValueKind.Array, benefits.ValueKind);
-            Assert.NotEmpty(benefits.EnumerateArray());
+            var capabilities = info.GetProperty("Capabilities");
+            Assert.Equal(JsonValueKind.Array, capabilities.ValueKind);
+            Assert.NotEmpty(capabilities.EnumerateArray());
         }
 
         [Fact]
