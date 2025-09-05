@@ -68,6 +68,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * "List the Azure Managed Lustre clusters in resource group 'my-resourcegroup'"
 * "How many IP Addresses I need to create a 128 TiB cluster of AMLFS 500?"
+* Create a 4 TIB Azure Managed Lustre filesystem in 'my-region' attaching to 'my-subnet' in virtual network 'my-virtual-network'
 
 ### 📊 Azure Monitor
 
