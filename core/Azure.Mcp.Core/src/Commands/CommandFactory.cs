@@ -54,7 +54,7 @@ public class CommandFactory
         _logger = logger;
         _rootGroup = new CommandGroup(RootCommandGroupName, "Azure MCP Server");
         _rootCommand = CreateRootCommand();
-        _commandMap = CreateCommmandDictionary(_rootGroup, string.Empty);
+        _commandMap = CreateCommandDictionary(_rootGroup, string.Empty);
         _telemetryService = telemetryService;
         _srcGenWithOptions = new ModelsJsonContext(new JsonSerializerOptions
         {
@@ -84,7 +84,7 @@ public class CommandFactory
             {
                 if (string.Equals(group.Name, groupName, StringComparison.OrdinalIgnoreCase))
                 {
-                    var commandsInGroup = CreateCommmandDictionary(group, string.Empty);
+                    var commandsInGroup = CreateCommandDictionary(group, string.Empty);
                     foreach (var (key, value) in commandsInGroup)
                     {
                         commandsFromGroups[key] = value;
@@ -136,7 +136,7 @@ public class CommandFactory
 
             area.RegisterCommands(tempRoot, loggerFactory);
 
-            var commandDictionary = CreateCommmandDictionary(tempRoot, string.Empty);
+            var commandDictionary = CreateCommandDictionary(tempRoot, string.Empty);
             foreach (var item in commandDictionary)
             {
                 _commandNamesToArea.Add(item.Key, area);
@@ -288,7 +288,7 @@ public class CommandFactory
             : null;
     }
 
-    internal static Dictionary<string, IBaseCommand> CreateCommmandDictionary(CommandGroup node, string prefix)
+    internal static Dictionary<string, IBaseCommand> CreateCommandDictionary(CommandGroup node, string prefix)
     {
         var aggregated = new Dictionary<string, IBaseCommand>();
         var updatedPrefix = GetPrefix(prefix, node.Name);
@@ -309,7 +309,7 @@ public class CommandFactory
 
         foreach (var command in node.SubGroup)
         {
-            var subcommandsDictionary = CreateCommmandDictionary(command, updatedPrefix);
+            var subcommandsDictionary = CreateCommandDictionary(command, updatedPrefix);
             foreach (var item in subcommandsDictionary)
             {
                 aggregated.Add(item.Key, item.Value);

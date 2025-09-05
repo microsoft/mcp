@@ -201,7 +201,7 @@ public class CommandFactoryTests
         var commandGroup = CreateCommandGroup();
 
         // Act
-        var commandDictionary = CommandFactory.CreateCommmandDictionary(commandGroup, prefix);
+        var commandDictionary = CommandFactory.CreateCommandDictionary(commandGroup, prefix);
 
         // Assert
         Assert.NotNull(commandDictionary);
@@ -223,7 +223,7 @@ public class CommandFactoryTests
         var commandGroup = CreateCommandGroup();
 
         // Act
-        var commandDictionary = CommandFactory.CreateCommmandDictionary(commandGroup, string.Empty);
+        var commandDictionary = CommandFactory.CreateCommandDictionary(commandGroup, string.Empty);
 
         // Assert
         Assert.NotNull(commandDictionary);
