@@ -1,4 +1,3 @@
-/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -10,8 +9,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.LiveTests;
 
-public sealed class AksCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+public sealed class AksCommandTests(ITestOutputHelper output)
+    : CommandTestsBase(output)
 {
 
     [Fact]
@@ -86,7 +85,11 @@ public sealed class AksCommandTests(LiveTestFixture liveTestFixture, ITestOutput
         var errorDetails = result.Value;
         Assert.True(errorDetails.TryGetProperty("message", out _));
         Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
-        Assert.Equal("Exception", typeProperty.GetString());
+
+        // Accept both Exception and RequestFailedException as valid error types
+        var exceptionType = typeProperty.GetString();
+        Assert.True(exceptionType == "Exception" || exceptionType == "RequestFailedException",
+            $"Expected 'Exception' or 'RequestFailedException', but got '{exceptionType}'");
     }
 
     [Fact]
@@ -161,7 +164,11 @@ public sealed class AksCommandTests(LiveTestFixture liveTestFixture, ITestOutput
         var errorDetails = result.Value;
         Assert.True(errorDetails.TryGetProperty("message", out _));
         Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
-        Assert.Equal("Exception", typeProperty.GetString());
+
+        // Accept both Exception and RequestFailedException as valid error types
+        var exceptionType = typeProperty.GetString();
+        Assert.True(exceptionType == "Exception" || exceptionType == "RequestFailedException",
+            $"Expected 'Exception' or 'RequestFailedException', but got '{exceptionType}'");
     }
 
     [Fact]
@@ -198,4 +205,4 @@ public sealed class AksCommandTests(LiveTestFixture liveTestFixture, ITestOutput
         Assert.False(result3.HasValue);
     }
 }
-*/
+

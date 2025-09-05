@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -11,14 +12,67 @@ using Xunit;
 
 namespace Azure.Mcp.Tests.Client;
 
-public abstract class CommandTestsBase(LiveTestFixture liveTestFixture, ITestOutputHelper output) : IDisposable
+public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetime, IDisposable
 {
     protected const string TenantNameReason = "Service principals cannot use TenantName for lookup";
 
-    protected IMcpClient Client { get; } = liveTestFixture.Client;
-    protected LiveTestSettings Settings { get; } = liveTestFixture.Settings;
+    protected IMcpClient Client { get; private set; } = default!;
+    protected LiveTestSettings Settings { get; private set; } = default!;
     protected StringBuilder FailureOutput { get; } = new();
     protected ITestOutputHelper Output { get; } = output;
+
+    private string[]? _customArguments;
+
+    /// <summary>
+    /// Sets custom arguments for the MCP server. Call this before InitializeAsync().
+    /// </summary>
+    /// <param name="arguments">Custom arguments to pass to the server (e.g., ["server", "start", "--mode", "single"])</param>
+    public void SetArguments(params string[] arguments)
+    {
+        _customArguments = arguments;
+    }
+
+    public virtual async ValueTask InitializeAsync()
+    {
+        // Initialize settings
+        var settingsFixture = new LiveTestSettingsFixture();
+        await settingsFixture.InitializeAsync();
+        Settings = settingsFixture.Settings;
+
+        string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
+
+        // Use custom arguments if provided, otherwise default to debug mode
+        var arguments = _customArguments ?? ["server", "start", "--mode", "all", "--debug"];
+
+        StdioClientTransportOptions transportOptions = new()
+        {
+            Name = "Test Server",
+            Command = executablePath,
+            Arguments = arguments,
+            // Direct stderr to test output helper as required by task
+            StandardErrorLines = line => Output.WriteLine($"[MCP Server] {line}")
+        };
+
+        if (!string.IsNullOrEmpty(Settings.TestPackage))
+        {
+            Environment.CurrentDirectory = Settings.SettingsDirectory;
+            transportOptions.Command = "npx";
+            transportOptions.Arguments = ["-y", Settings.TestPackage, .. arguments];
+        }
+
+        var clientTransport = new StdioClientTransport(transportOptions);
+        Client = await McpClientFactory.CreateAsync(clientTransport);
+
+        Output.WriteLine("MCP client initialized successfully");
+    }
+
+    public virtual async ValueTask DisposeAsync()
+    {
+        if (Client != null)
+        {
+            await Client.DisposeAsync();
+        }
+    }
 
     protected async Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
     {
@@ -37,7 +91,6 @@ public abstract class CommandTestsBase(LiveTestFixture liveTestFixture, ITestOut
         catch (ModelContextProtocol.McpException ex)
         {
             // MCP client throws exceptions for error responses, but we want to handle them gracefully
-            // Check if the exception contains error response information that we can parse
             writeOutput($"MCP exception: {ex.Message}");
 
             // For validation errors, we'll return a synthetic error response
@@ -85,7 +138,7 @@ public abstract class CommandTestsBase(LiveTestFixture liveTestFixture, ITestOut
     public void Dispose()
     {
         // Failure output may contain request and response details that should be output for failed tests.
-        if (TestContext.Current.TestState?.Result == TestResult.Failed && FailureOutput.Length > 0)
+        if (TestContext.Current?.TestState?.Result == TestResult.Failed && FailureOutput.Length > 0)
         {
             Output.WriteLine(FailureOutput.ToString());
         }
