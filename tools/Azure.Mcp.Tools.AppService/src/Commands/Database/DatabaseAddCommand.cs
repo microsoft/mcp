@@ -7,8 +7,6 @@ using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Options.Database;
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
 
@@ -44,21 +42,11 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
     protected override DatabaseAddOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.AppName = parseResult.CommandResult.Children
-            .OfType<OptionResult>()
-            .FirstOrDefault(o => o.Option == AppServiceOptionDefinitions.AppServiceName)?.GetValueOrDefault<string>();
-        options.DatabaseType = parseResult.CommandResult.Children
-            .OfType<OptionResult>()
-            .FirstOrDefault(o => o.Option == AppServiceOptionDefinitions.DatabaseTypeOption)?.GetValueOrDefault<string>();
-        options.DatabaseServer = parseResult.CommandResult.Children
-            .OfType<OptionResult>()
-            .FirstOrDefault(o => o.Option == AppServiceOptionDefinitions.DatabaseServerOption)?.GetValueOrDefault<string>();
-        options.DatabaseName = parseResult.CommandResult.Children
-            .OfType<OptionResult>()
-            .FirstOrDefault(o => o.Option == AppServiceOptionDefinitions.DatabaseNameOption)?.GetValueOrDefault<string>();
-        options.ConnectionString = parseResult.CommandResult.Children
-            .OfType<OptionResult>()
-            .FirstOrDefault(o => o.Option == AppServiceOptionDefinitions.ConnectionStringOption)?.GetValueOrDefault<string>();
+        options.AppName = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.AppServiceName);
+        options.DatabaseType = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.DatabaseTypeOption);
+        options.DatabaseServer = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.DatabaseServerOption);
+        options.DatabaseName = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.DatabaseNameOption);
+        options.ConnectionString = parseResult.GetValueOrDefault(AppServiceOptionDefinitions.ConnectionStringOption);
         return options;
     }
 

@@ -5,8 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.AppService.Options;
-using System.CommandLine;
-using System.CommandLine.Parsing;
 
 namespace Azure.Mcp.Tools.AppService.Commands;
 
@@ -18,15 +16,14 @@ public abstract class BaseAppServiceCommand<
     protected override void RegisterOptions(Command command)
     {
     base.RegisterOptions(command);
+    UseResourceGroup(); 
     command.Options.Add(_resourceGroupOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup = parseResult.CommandResult.Children
-            .OfType<OptionResult>()
-            .FirstOrDefault(o => o.Option == _resourceGroupOption)?.GetValueOrDefault<string>();
+        options.ResourceGroup = parseResult.GetValueOrDefault(_resourceGroupOption);
         return options;
     }
 }
