@@ -41,8 +41,13 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
 
         string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
-        // Use custom arguments if provided, otherwise default to debug mode
-        var arguments = _customArguments ?? ["server", "start", "--mode", "all", "--debug"];
+        // Use custom arguments if provided, otherwise use standard mode (debug can be enabled via environment variable)
+        var debugEnvVar = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_DEBUG");
+        var enableDebug = string.Equals(debugEnvVar, "true", StringComparison.OrdinalIgnoreCase) || Settings.DebugOutput;
+        string[] defaultArgs = enableDebug
+            ? ["server", "start", "--mode", "all", "--debug"]
+            : ["server", "start", "--mode", "all"];
+        var arguments = _customArguments ?? defaultArgs;
 
         StdioClientTransportOptions transportOptions = new()
         {
@@ -76,8 +81,12 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
 
     protected async Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
     {
+        // Use the same debug logic as MCP server initialization
+        var debugEnvVar = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_DEBUG");
+        var enableDebug = string.Equals(debugEnvVar, "true", StringComparison.OrdinalIgnoreCase) || Settings.DebugOutput;
+
         // Output will be streamed, so if we're not in debug mode, hold the debug output for logging in the failure case
-        Action<string> writeOutput = Settings.DebugOutput
+        Action<string> writeOutput = enableDebug
             ? s => Output.WriteLine(s)
             : s => FailureOutput.AppendLine(s);
 
