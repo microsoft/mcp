@@ -33,12 +33,12 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
 
     protected override void RegisterOptions(Command command)
     {
-        base.RegisterOptions(command);
-        command.AddOption(AppServiceOptionDefinitions.AppServiceName);
-        command.AddOption(AppServiceOptionDefinitions.DatabaseTypeOption);
-        command.AddOption(AppServiceOptionDefinitions.DatabaseServerOption);
-        command.AddOption(AppServiceOptionDefinitions.DatabaseNameOption);
-        command.AddOption(AppServiceOptionDefinitions.ConnectionStringOption);
+    base.RegisterOptions(command);
+    command.Options.Add(AppServiceOptionDefinitions.AppServiceName);
+    command.Options.Add(AppServiceOptionDefinitions.DatabaseTypeOption);
+    command.Options.Add(AppServiceOptionDefinitions.DatabaseServerOption);
+    command.Options.Add(AppServiceOptionDefinitions.DatabaseNameOption);
+    command.Options.Add(AppServiceOptionDefinitions.ConnectionStringOption);
     }
 
     protected override DatabaseAddOptions BindOptions(ParseResult parseResult)

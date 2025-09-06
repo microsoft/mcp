@@ -17,8 +17,8 @@ public abstract class BaseAppServiceCommand<
 {
     protected override void RegisterOptions(Command command)
     {
-        base.RegisterOptions(command);
-        command.AddOption(_resourceGroupOption);
+    base.RegisterOptions(command);
+    command.Options.Add(_resourceGroupOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
