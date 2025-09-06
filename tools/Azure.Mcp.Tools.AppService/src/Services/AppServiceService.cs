@@ -38,7 +38,7 @@ public class AppServiceService(
         try
         {
             // Validate inputs
-            ValidateInputs(appName, resourceGroup, databaseType, databaseServer, databaseName, subscription);
+            ValidateParameters(appName, resourceGroup, databaseType, databaseServer, databaseName, subscription);
 
             // Get Azure resources
             var webApp = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy);
@@ -66,7 +66,7 @@ public class AppServiceService(
         }
     }
 
-    private static void ValidateInputs(string appName, string resourceGroup, string databaseType,
+    private static void ValidateParameters(string appName, string resourceGroup, string databaseType,
         string databaseServer, string databaseName, string subscription)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(appName);

@@ -11,28 +11,33 @@ public static class AppServiceOptionDefinitions
     public const string DatabaseName = "database";
     public const string ConnectionString = "connection-string";
 
-    public static readonly Option<string> AppServiceName = new(
-        $"--{AppName}",
-        "The name of the Azure App Service."
-    );
+    public static readonly Option<string> AppServiceName = new($"--{AppName}")
+    {
+        Description = "The name of the Azure App Service (e.g., my-webapp).",
+        Required = true
+    };
 
-    public static readonly Option<string> DatabaseTypeOption = new(
-        $"--{DatabaseType}",
-        "The type of database (e.g., SqlServer, MySQL, PostgreSQL, CosmosDB)."
-    );
+    public static readonly Option<string> DatabaseTypeOption = new($"--{DatabaseType}")
+    {
+        Description = "The type of database (e.g., SqlServer, MySQL, PostgreSQL, CosmosDB).",
+        Required = true
+    };
 
-    public static readonly Option<string> DatabaseServerOption = new(
-        $"--{DatabaseServer}",
-        "The server name or endpoint for the database."
-    );
+    public static readonly Option<string> DatabaseServerOption = new($"--{DatabaseServer}")
+    {
+        Description = "The server name or endpoint for the database (e.g., myserver.database.windows.net).",
+        Required = true
+    };
 
-    public static readonly Option<string> DatabaseNameOption = new(
-        $"--{DatabaseName}",
-        "The name of the database."
-    );
+    public static readonly Option<string> DatabaseNameOption = new($"--{DatabaseName}")
+    {
+        Description = "The name of the database to connect to (e.g., mydb).",
+        Required = true
+    };
 
-    public static readonly Option<string> ConnectionStringOption = new(
-        $"--{ConnectionString}",
-        "The connection string for the database. If not provided, a default will be generated."
-    );
+    public static readonly Option<string> ConnectionStringOption = new($"--{ConnectionString}")
+    {
+        Description = "The connection string for the database. If not provided, a default will be generated.",
+        Required = false
+    };
 }
