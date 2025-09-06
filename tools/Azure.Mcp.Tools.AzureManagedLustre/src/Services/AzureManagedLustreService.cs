@@ -194,13 +194,15 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             if (ex.Status == 400)
             {
                 return false;
-            } else {
+            }
+            else
+            {
                 throw new Exception($"Unexpected status code {ex.Status} while validating AMLFS subnet.");
             }
         }
         catch (Exception ex)
         {
-                throw new Exception($"Error validating AMLFS subnet: {ex.Message}", ex);
+            throw new Exception($"Error validating AMLFS subnet: {ex.Message}", ex);
         }
     }
 }
