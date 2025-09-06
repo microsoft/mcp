@@ -7,7 +7,8 @@ using Azure.Mcp.Tools.AzureManagedLustre.Models;
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.Commands;
 
-[JsonSerializable(typeof(FileSystemSubnetSizeCommand.FileSystemSubnetSizeResult))]
+[JsonSerializable(typeof(SubnetSizeAskCommand.FileSystemSubnetSizeResult))]
+[JsonSerializable(typeof(SubnetSizeValidateCommand.FileSystemCheckSubnetResult))]
 [JsonSerializable(typeof(FileSystemListCommand.FileSystemListResult))]
 [JsonSerializable(typeof(LustreFileSystem))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
