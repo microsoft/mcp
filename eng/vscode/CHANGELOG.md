@@ -7,6 +7,7 @@
 - Added `azmcp sql server firewall-rule create` and `azmcp sql server firewall-rule delete` commands. [[#121](https://github.com/microsoft/mcp/pull/121)]
 - Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
 - Added instructions about consumption plan for azure functions deployment best practices [[#218](https://github.com/microsoft/mcp/pull/218)]
+- Improved description of Load Test commands [[#92](https://github.com/microsoft/mcp/pull/92)]
 
 ### Fixed
 
