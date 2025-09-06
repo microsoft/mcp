@@ -9,9 +9,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Cosmos.LiveTests;
 
-public class CosmosCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output),
-    IClassFixture<LiveTestFixture>,
+public class CosmosCommandTests(ITestOutputHelper output)
+    : CommandTestsBase(output),
     IClassFixture<CosmosDbFixture>
 {
 
@@ -207,3 +206,4 @@ public class CosmosCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelp
         }
     }
 }
+
