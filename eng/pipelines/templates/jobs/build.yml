@@ -51,7 +51,7 @@ jobs:
     condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
     inputs:
       pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Code.ps1
       arguments: >
         -ServerName '${{ parameters.ServerName }}'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
@@ -99,7 +99,7 @@ jobs:
     condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
     inputs:
       pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Code.ps1
       arguments: >
         -ServerName '${{ parameters.ServerName }}'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
@@ -131,5 +131,4 @@ jobs:
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)
-      ArtifactName: $(PipelineArtifactName)_$(System.JobName)
-      SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
+      ArtifactName: build_$(System.JobName)

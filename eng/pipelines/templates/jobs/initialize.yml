@@ -31,19 +31,3 @@ jobs:
     name: GetTestPathsLive
     displayName: "Get paths to test (Live)"
     workingDirectory: $(Build.SourcesDirectory)
-
-  - pwsh: |
-      $label = $env:PRERELEASE_LABEL
-      $number = $env:PRERELEASE_NUMBER
-      $suffix = ($label -and $number) ? "-$label.$number" : ""
-
-      Write-Host "##vso[task.setvariable variable=VersionSuffix;isOutput=true]$suffix"
-    name: GetVersion
-    displayName: "Get version suffix"
-    ${{ if eq(parameters.DynamicPrereleaseVersion, true) }}:
-      env:
-        PRERELEASE_NUMBER: '$(Build.BuildId)'
-        ${{ if and(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
-            PRERELEASE_LABEL: 'beta'
-        ${{ else }}:
-            PRERELEASE_LABEL: 'alpha'
