@@ -18,4 +18,20 @@ public interface IFunctionAppService
         string resourceGroup,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<FunctionAppInfo> CreateFunctionApp(
+        string subscription,
+        string resourceGroup,
+        string functionAppName,
+        string location,
+        string? planName = null,
+        string? hostingKind = null,
+        string? sku = null,
+        string? runtime = null,
+        string? runtimeVersion = null,
+        string? os = null,
+        string? storageAccountName = null,
+        string? containerAppsEnvironmentName = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
 }
