@@ -66,7 +66,7 @@ public class AcrCommandTests(ITestOutputHelper output)
             var objName = nameProp.GetString();
             Assert.False(string.IsNullOrWhiteSpace(objName));
             Assert.Matches("^[a-zA-Z0-9]+([a-zA-Z0-9-]*[a-zA-Z0-9])?$", objName!); // Basic ACR naming pattern (alphanumeric, may contain hyphens, 5-50 chars)
-            
+
             if (item.TryGetProperty("location", out var locationProp))
             {
                 Assert.False(string.IsNullOrWhiteSpace(locationProp.GetString()));
