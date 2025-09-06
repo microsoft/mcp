@@ -213,6 +213,17 @@ azmcp appconfig kv unlock --subscription <subscription> \
                           [--label <label>]
 ```
 
+### Azure App Lens Operations
+
+```bash
+# Diagnose resource using Azure App Lens
+azmcp applens reosurce diganose --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --question <question> \
+                                --resource-type <resource-type> \
+                                --resource-name <resource-name>
+```
+
 ### Azure CLI Operations
 
 ```bash
@@ -771,7 +782,7 @@ azmcp monitor metrics query --subscription <subscription> \
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 azmcp azuremanagedlustre filesystem list --subscription <subscription> \
-                                      --resource-group <resource-group> 
+                                      --resource-group <resource-group>
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
 azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \

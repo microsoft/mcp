@@ -41,6 +41,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_appconfig_kv_show | Show the content for the key <key_name> in App Configuration store <app_config_store_name> |
 | azmcp_appconfig_kv_unlock | Unlock the key <key_name> in App Configuration store <app_config_store_name> |
 
+## Azure App Lens
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_applens_resource_diagnose | Please help me diagnose issues with my app |
+| azmcp_applens_resource_diagnose | Why is my app slow? |
+| azmcp_applens_resource_diagnose | What's wrong with my service? |
+
 ## Azure CLI
 
 | Tool Name | Test Prompt |
