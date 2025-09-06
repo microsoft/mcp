@@ -5,6 +5,8 @@ using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.AppService.Options;
+using System.CommandLine;
+using System.CommandLine.Parsing;
 
 namespace Azure.Mcp.Tools.AppService.Commands;
 

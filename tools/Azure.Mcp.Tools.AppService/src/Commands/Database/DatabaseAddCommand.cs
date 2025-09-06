@@ -7,6 +7,8 @@ using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Options;
 using Azure.Mcp.Tools.AppService.Options.Database;
+using System.CommandLine;
+using System.CommandLine.Parsing;
 using Azure.Mcp.Tools.AppService.Services;
 using Microsoft.Extensions.Logging;
 
