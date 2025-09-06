@@ -172,4 +172,24 @@ public interface IKeyVaultService
         string subscriptionId,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    /// <summary>
+    /// Retrieves administration settings for a Key Vault using the Key Vault Administration SDK
+    /// (data plane). Currently limited to purge protection state and soft delete retention days.
+    /// </summary>
+    /// <param name="vaultName">The name of the Key Vault.</param>
+    /// <param name="subscriptionId">The subscription ID or name.</param>
+    /// <param name="tenantId">Optional tenant ID for cross-tenant operations.</param>
+    /// <param name="retryPolicy">Optional retry policy for the operation.</param>
+    /// <returns>Structured vault settings.</returns>
+    Task<VaultSettings> GetVaultSettings(
+        string vaultName,
+        string subscriptionId,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null);
 }
+
+public record VaultSettings(
+    string Name,
+    bool? EnablePurgeProtection,
+    int? SoftDeleteRetentionDays);

@@ -6,11 +6,15 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Security.KeyVault.Certificates;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Secrets;
+using Azure.Security.KeyVault.Administration;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 
 namespace Azure.Mcp.Tools.KeyVault.Services;
 
-public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
+public sealed class KeyVaultService(ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IKeyVaultService
 {
+    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     public async Task<List<string>> ListKeys(
         string vaultName,
         bool includeManagedKeys,
@@ -284,6 +288,53 @@ public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
         catch (Exception ex)
         {
             throw new Exception($"Error importing certificate '{certificateName}' into vault {vaultName}: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<VaultSettings> GetVaultSettings(
+        string vaultName,
+        string subscriptionId,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        // For administration client we only need vault URI + credential.
+        ValidateRequiredParameters(vaultName, subscriptionId);
+
+        var credential = await GetCredential(tenantId);
+        var vaultUri = new Uri($"https://{vaultName}.vault.azure.net");
+
+        try
+        {
+            var settingsClient = new KeyVaultSettingsClient(vaultUri, credential);
+
+            bool? enablePurgeProtection = null;
+            int? softDeleteRetentionDays = null;
+
+            var settingsResponse = await settingsClient.GetSettingsAsync();
+            foreach (var setting in settingsResponse.Value.Settings)
+            {
+                var settingValue = setting.Value.ToString();
+                if (string.Equals(setting.Name, "PurgeProtection", StringComparison.OrdinalIgnoreCase))
+                {
+                    enablePurgeProtection = string.Equals(settingValue, "Enabled", StringComparison.OrdinalIgnoreCase);
+                }
+                else if (string.Equals(setting.Name, "SoftDeleteRetentionInDays", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (int.TryParse(settingValue, out int days))
+                    {
+                        softDeleteRetentionDays = days;
+                    }
+                }
+            }
+
+            return new VaultSettings(
+                Name: vaultName,
+                EnablePurgeProtection: enablePurgeProtection,
+                SoftDeleteRetentionDays: softDeleteRetentionDays);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving Key Vault administration settings for '{vaultName}': {ex.Message}", ex);
         }
     }
 }

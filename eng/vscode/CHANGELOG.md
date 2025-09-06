@@ -1,3 +1,8 @@
+# 0.5.13 - Unreleased
+
+## Added
+- Added `azmcp-keyvault-admin-settings-get` command to retrieve Key Vault administration settings (currently only purge protection state and soft delete retention days).
+
 
 # Release History
 
