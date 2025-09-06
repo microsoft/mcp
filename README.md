@@ -1,25 +1,4 @@
-# Microsoft MCP Servers
-
-
-
-Welcome to the Microsoft MCP Servers repository! This repo catalogs official and community MCP Server implementations that enable AI agents to connect with external data, tools, and services.
-
----
-
-## 📑 Table of Contents
-
-- [What is MCP?](#what-is-mcp)
-- [Featured MCP Servers](#featured-mcp-servers)
-  - [Azure MCP Server](#azure-mcp-server)
-  - [Microsoft Fabric MCP Server](#microsoft-fabric-mcp-server)
-  - [Request a New MCP Server](#request-a-new-mcp-server)
-- [Microsoft MCP Server Catalog](#mcp-server-catalog)
-- [Related Resources](#related-resources)
-- [Templates](#templates)
-- [Contributing](#contributing)
-- [Trademarks](#trademarks)
-
----
+# 🌟 Microsoft MCP Servers
 
 ## 📘 What is MCP?
 
@@ -31,46 +10,34 @@ Welcome to the Microsoft MCP Servers repository! This repo catalogs official and
 
 For more details, visit the [official MCP website](https://modelcontextprotocol.io).
 
----
+## 📁 Which MCP Servers are built from this repository?
 
-## 🌟 Featured MCP Servers
+This repository contains core libraries, test frameworks, engineering systems, pipelines, and tooling for Microsoft MCP Server contributors to unify engineering investments; and reduce duplication and divergence:
 
-### 🔷 [Azure MCP Server](servers/Azure.Mcp.Server/README.md)
+| MCP Server           |  README              | Source Code             |    CHANGELOG          | Releases             | Documentation             | Troubleshooting             | Support             |
+|:---------------------|:--------------------:|:-----------------------:|:---------------------:|:--------------------:|:-------------------------:|:---------------------------:|:-------------------:|
+| Azure MCP            | [Azure MCP README]   | [Azure MCP Source Code] | [Azure MCP CHANGELOG] | [Azure MCP Releases] | [Azure MCP Documentation] | [Azure MCP Troubleshooting] | [Azure MCP Support] |
 
-Implements the MCP standard to manage Azure resources, enabling declarative provisioning and integration with AI workflows. See the [Azure MCP Server README](servers/Azure.Mcp.Server/README.md) for install instructions, usage, and troubleshooting.
+[Azure MCP README]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md
+[Azure MCP CHANGELOG]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/CHANGELOG.md
+[Azure MCP Source Code]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server
+[Azure MCP Releases]: https://github.com/microsoft/mcp/releases?q=Azure
+[Azure MCP Documentation]: https://learn.microsoft.com/azure/developer/azure-mcp-server/
+[Azure MCP Troubleshooting]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md
+[Azure MCP Support]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/SUPPORT.md
 
-### 🛢️ [Microsoft Fabric MCP Server](servers/Fabric.Mcp.Server/README.md)
 
-Provides MCP-based access to Microsoft Fabric Real-Time Intelligence and related services. See the [Microsoft Fabric MCP Server README](servers/Fabric.Mcp.Server/README.md) for details.
+## 📚 Looking for the full list of MCP Servers from Microsoft?
+See the [Microsoft MCP Server Catalog](https://github.com/microsoft/mcp/blob/main/CATALOG.md) for all the latest MCP Servers, including public preview and experimental servers.
 
----
-
-## 📚 Microsoft MCP Server Catalog
-
-Looking for the full list of MCP Servers? See the [Microsoft MCP Server Catalog](CATALOG.md) for all the latest MCP Servers from Microsoft, including public preview and experimental servers.
-
----
-
-## 🆕 Request a New MCP Server
-
-Want to add a new MCP Server to this repository? [Open an MCP Server Request](issues/new?template=02_mcp_server_request.yml) using our issue template.
-
----
+## 🏗️ Looking for starter templates that use MCP? 
+Check out the [Azure Developer CLI (azd) templates](https://azure.github.io/awesome-azd/?tags=mcp) tagged with MCP.
 
 ## 📎 Related Resources
-
 - [Microsoft MCP Resources](https://github.com/microsoft/mcp/tree/main/Resources)
 - [MCP Pattern Overview](https://modelcontextprotocol.io/introduction)
 - [MCP SDKs and Building Blocks](https://modelcontextprotocol.io/sdk)
 - [MCP Specification](https://spec.modelcontextprotocol.io/specification/)
-
----
-
-## 🏗️ Templates
-
-Looking for starter templates that use MCP? Check out the [Azure Developer CLI (azd) templates](https://azure.github.io/awesome-azd/?tags=mcp) tagged with MCP.
-
----
 
 ## Contributing
 
