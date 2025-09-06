@@ -182,16 +182,25 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             var response = await sub.CheckAmlFSSubnetsAsync(content);
             var status = response.Status;
             var sizeIsValid = status == 200;
-            if (!sizeIsValid && status != 400)
+            if (!sizeIsValid)
             {
-                throw new Exception($"Unexpected status code {status} while validating AMLFS subnet.");
+                throw new RequestFailedException(status, "Unexpected status code from validation.");
             }
 
             return sizeIsValid;
         }
+        catch (RequestFailedException ex)
+        {
+            if (ex.Status == 400)
+            {
+                return false;
+            } else {
+                throw new Exception($"Unexpected status code {ex.Status} while validating AMLFS subnet.");
+            }
+        }
         catch (Exception ex)
         {
-            throw new Exception($"Error validating AMLFS subnet: {ex.Message}", ex);
+                throw new Exception($"Error validating AMLFS subnet: {ex.Message}", ex);
         }
     }
 }
