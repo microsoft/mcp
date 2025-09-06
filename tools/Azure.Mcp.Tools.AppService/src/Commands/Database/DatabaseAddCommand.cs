@@ -44,11 +44,21 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
     protected override DatabaseAddOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-    options.AppName = parseResult.CommandResult.ValueForOption(AppServiceOptionDefinitions.AppServiceName);
-    options.DatabaseType = parseResult.CommandResult.ValueForOption(AppServiceOptionDefinitions.DatabaseTypeOption);
-    options.DatabaseServer = parseResult.CommandResult.ValueForOption(AppServiceOptionDefinitions.DatabaseServerOption);
-    options.DatabaseName = parseResult.CommandResult.ValueForOption(AppServiceOptionDefinitions.DatabaseNameOption);
-    options.ConnectionString = parseResult.CommandResult.ValueForOption(AppServiceOptionDefinitions.ConnectionStringOption);
+        options.AppName = parseResult.CommandResult.Children
+            .OfType<OptionResult>()
+            .FirstOrDefault(o => o.Option == AppServiceOptionDefinitions.AppServiceName)?.GetValueOrDefault<string>();
+        options.DatabaseType = parseResult.CommandResult.Children
+            .OfType<OptionResult>()
+            .FirstOrDefault(o => o.Option == AppServiceOptionDefinitions.DatabaseTypeOption)?.GetValueOrDefault<string>();
+        options.DatabaseServer = parseResult.CommandResult.Children
+            .OfType<OptionResult>()
+            .FirstOrDefault(o => o.Option == AppServiceOptionDefinitions.DatabaseServerOption)?.GetValueOrDefault<string>();
+        options.DatabaseName = parseResult.CommandResult.Children
+            .OfType<OptionResult>()
+            .FirstOrDefault(o => o.Option == AppServiceOptionDefinitions.DatabaseNameOption)?.GetValueOrDefault<string>();
+        options.ConnectionString = parseResult.CommandResult.Children
+            .OfType<OptionResult>()
+            .FirstOrDefault(o => o.Option == AppServiceOptionDefinitions.ConnectionStringOption)?.GetValueOrDefault<string>();
         return options;
     }
 
