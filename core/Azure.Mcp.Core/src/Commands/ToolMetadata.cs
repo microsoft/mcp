@@ -71,6 +71,42 @@ public sealed class ToolMetadata
     public bool ReadOnly { get; init; } = false;
 
     /// <summary>
+    /// Gets or sets whether this tool deals with sensitive or secret information.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// If <see langword="true"/>, the tool handles sensitive data such as secrets, credentials, keys, or other confidential information.
+    /// If <see langword="false"/>, the tool does not handle sensitive information.
+    /// </para>
+    /// <para>
+    /// This metadata helps MCP clients understand when a tool might expose or require access to sensitive data,
+    /// allowing for appropriate security measures and user confirmation flows.
+    /// </para>
+    /// <para>
+    /// The default is <see langword="false"/>.
+    /// </para>
+    /// </remarks>
+    public bool Secret { get; init; } = false;
+
+    /// <summary>
+    /// Gets or sets whether this tool requires local execution or resources.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// If <see langword="true"/>, the tool requires local execution environment or local resources to function properly.
+    /// If <see langword="false"/>, the tool can operate without local dependencies.
+    /// </para>
+    /// <para>
+    /// This metadata helps MCP clients understand whether the tool needs to be executed locally
+    /// or can be delegated to remote execution environments.
+    /// </para>
+    /// <para>
+    /// The default is <see langword="false"/>.
+    /// </para>
+    /// </remarks>
+    public bool LocalRequired { get; init; } = false;
+
+    /// <summary>
     /// Creates a new instance of <see cref="ToolMetadata"/> with default values.
     /// All properties default to their MCP specification defaults.
     /// </summary>
