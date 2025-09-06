@@ -44,7 +44,7 @@ public static class ServiceOptionDefinitions
         $"--{ReadOnlyName}")
     {
         Description = "Whether the MCP server should be read-only. If true, no write operations will be allowed.",
-        DefaultValueFactory = _ => null
+        DefaultValueFactory = _ => false
     };
 
     public static readonly Option<bool> Debug = new(
