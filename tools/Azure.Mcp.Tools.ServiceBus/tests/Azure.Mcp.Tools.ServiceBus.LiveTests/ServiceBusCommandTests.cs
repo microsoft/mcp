@@ -120,8 +120,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
         private async Task SendTestMessages(string queueOrTopicName, int numberOfMessages)
         {
             var credentials = new CustomChainedCredential(Settings.TenantId);
-            var serviceBusNamespace = $"{Settings.ResourceBaseName}.servicebus.windows.net";
-            await using (var client = new ServiceBusClient(serviceBusNamespace, credentials))
+            await using (var client = new ServiceBusClient($"{Settings.ResourceBaseName}.servicebus.windows.net", credentials))
             await using (var sender = client.CreateSender(queueOrTopicName))
             {
                 var batch = await sender.CreateMessageBatchAsync(TestContext.Current.CancellationToken);
