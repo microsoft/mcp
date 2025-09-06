@@ -41,6 +41,20 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_appconfig_kv_show | Show the content for the key <key_name> in App Configuration store <app_config_store_name> |
 | azmcp_appconfig_kv_unlock | Unlock the key <key_name> in App Configuration store <app_config_store_name> |
 
+## Azure App Service
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_appservice_database_add | Add a database connection to my app service <app_name> in resource group <resource_group> |
+| azmcp_appservice_database_add | Configure a SQL Server database for app service <app_name> |
+| azmcp_appservice_database_add | Add a MySQL database to app service <app_name> |
+| azmcp_appservice_database_add | Add a PostgreSQL database to app service <app_name> |
+| azmcp_appservice_database_add | Add a CosmosDB database to app service <app_name> |
+| azmcp_appservice_database_add | Add database <database_name> on server <database_server> to app service <app_name> |
+| azmcp_appservice_database_add | Set connection string for database <database_name> in app service <app_name> |
+| azmcp_appservice_database_add | Configure tenant <tenant> for database <database_name> in app service <app_name> |
+| azmcp_appservice_database_add | Add database <database_name> with retry policy to app service <app_name> |
+
 ## Azure CLI
 
 | Tool Name | Test Prompt |
