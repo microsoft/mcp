@@ -6,6 +6,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added support for Azure Event Grid operations: [[#43](https://github.com/microsoft/mcp/pull/43)]
+  - `azmcp_eventgrid_topic_list` - List all Event Grid topics in a subscription.
+
 ### Breaking Changes
 
 - Changed the following commands to change / remove available options

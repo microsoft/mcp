@@ -64,6 +64,12 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "Get Azure Data Explorer databases in cluster 'mycluster'"
 * "Sample 10 rows from table 'StormEvents' in Azure Data Explorer database 'db1'"
 
+### 📣 Azure Event Grid
+
+* "List all Event Grid topics in subscription 'my-subscription'"
+* "Show me the Event Grid topics in my subscription"
+* "List all Event Grid topics in resource group 'my-resourcegroup' in my subscription"
+
 ### ⚡ Azure Managed Lustre
 
 * "List the Azure Managed Lustre clusters in resource group 'my-resourcegroup'"
@@ -176,6 +182,12 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * Get the application service log for a specific azd environment
 * Get the bicep or terraform file generation rules for an application
 * Get the GitHub pipeline creation guideline for an application
+
+### 📣 Azure Event Grid
+
+* List Event Grid topics in subscription or resource group
+* View topic configuration and status information
+* Access endpoint and key details for event publishing
 
 ### 🧮 Azure Foundry
 
