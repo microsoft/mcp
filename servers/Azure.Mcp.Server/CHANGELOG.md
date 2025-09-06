@@ -5,6 +5,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ## 0.5.13 (Unreleased)
 
 ### Features Added
+- Added support for retrieving administration settings (currently purge protection state and soft delete retention days) of an Azure Key Vault via the command `azmcp-keyvault-admin-settings-get`.
 
 ### Breaking Changes
 
