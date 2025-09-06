@@ -42,6 +42,7 @@
     <PackageVersion Include="Azure.ResourceManager.MachineLearning" Version="1.2.3" />
     <PackageVersion Include="Azure.Security.KeyVault.Keys" Version="4.7.0" />
     <PackageVersion Include="Azure.Security.KeyVault.Secrets" Version="4.7.0" />
+    <PackageVersion Include="Azure.Security.KeyVault.Administration" Version="4.5.0" />
     <PackageVersion Include="Azure.Security.KeyVault.Certificates" Version="4.7.0" />
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.24.0" />
     <PackageVersion Include="Azure.Storage.Blobs.Batch" Version="12.21.0" />
@@ -62,8 +63,7 @@
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.4" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.6" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="9.0.6" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables"
-      Version="9.0.6" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.6" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="9.0.6" />
     <PackageVersion Include="Microsoft.HybridRow" Version="1.1.0-preview3" />
     <PackageVersion Include="Microsoft.Azure.Cosmos.Aot" Version="0.1.1-preview.1" />
