@@ -10,7 +10,7 @@ ms.date: 05/17/2024
 
 # Spark Job definition
 
-This article provides a breakdown of the structure for Spark job definition items. For detailed information, see: [How to create and update a Spark Job Definition with Microsoft Fabric Rest API](/fabric/data-engineering/spark-job-definition-api).
+This article provides a breakdown of the structure for Spark job definition items. For detailed information, see: [How to create and update a Spark Job Definition with Microsoft Fabric Rest API](https://learn.microsoft.com/en-us/fabric/data-engineering/spark-job-definition-api).
 
 ## Supported formats
 

@@ -62,7 +62,7 @@ Create two notebooks.
 
 ### Stage 2: Poll the notebooks
 
-Poll the notebook cretion using [Get Operation State](/rest/api/fabric/core/long-running-operations/get-operation-state).
+Poll the notebook cretion using [Get Operation State](https://learn.microsoft.com/en-us/rest/api/fabric/core/long-running-operations/get-operation-state).
 
 **Notebook 1** - Returns `201`. The operation is complete.
 
@@ -89,7 +89,7 @@ Poll the notebook cretion using [Get Operation State](/rest/api/fabric/core/long
 
 ### Stage 3: Poll notebook 2
 
-Wait 20 minutes then poll notebook 2 using [Get Operation State](/rest/api/fabric/core/long-running-operations/get-operation-state).
+Wait 20 minutes then poll notebook 2 using [Get Operation State](https://learn.microsoft.com/en-us/rest/api/fabric/core/long-running-operations/get-operation-state).
 
 GET `https://api.fabric.microsoft.com/v1/operations/b80e135a-adca-42e7-aaf0-59849af2ed78`
 
@@ -109,7 +109,7 @@ Operation is completed - got 200-OK http status code. Response body:
 
 ### Stage 4: Get notebook 2 operation result
 
-Get the operation result for notebook 2 with [Get Operation Result](/rest/api/fabric/core/long-running-operations/get-operation-result).
+Get the operation result for notebook 2 with [Get Operation Result](https://learn.microsoft.com/en-us/rest/api/fabric/core/long-running-operations/get-operation-result).
 
 GET `https://api.fabric.microsoft.com/v1/operations/b80e135a-adca-42e7-aaf0-59849af2ed78/result`
 

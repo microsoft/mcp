@@ -33,13 +33,13 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_workloadTypeOption);
+        command.Options.Add(_workloadTypeOption);
     }
 
     protected override WorkloadCommandOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkloadType = parseResult.GetValueForOption(_workloadTypeOption);
+        options.WorkloadType = parseResult.GetValue(_workloadTypeOption);
         return options;
     }
 

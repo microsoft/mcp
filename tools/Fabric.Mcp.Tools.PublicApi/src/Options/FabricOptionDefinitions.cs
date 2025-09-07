@@ -12,7 +12,7 @@ public static class FabricOptionDefinitions
         "The type of Microsoft Fabric workload."
     )
     {
-        IsRequired = true
+        Required = true
     };
 
     public const string TopicName = "topic";
@@ -22,6 +22,6 @@ public static class FabricOptionDefinitions
         "The topic to get best practices for."
     )
     {
-        IsRequired = true
+        Required = true
     };
 }

@@ -30,13 +30,13 @@ public sealed class GetBestPracticeCommand(ILogger<GetBestPracticeCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_topicOption);
+        command.Options.Add(_topicOption);
     }
 
     protected override GetBestPracticesOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Topic = parseResult.GetValueForOption(_topicOption);
+        options.Topic = parseResult.GetValue(_topicOption);
         return options;
     }
 

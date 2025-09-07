@@ -32,13 +32,13 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_workloadTypeOption);
+        command.Options.Add(_workloadTypeOption);
     }
 
     protected override WorkloadCommandOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkloadType = parseResult.GetValueForOption(_workloadTypeOption);
+        options.WorkloadType = parseResult.GetValue(_workloadTypeOption);
         return options;
     }
 

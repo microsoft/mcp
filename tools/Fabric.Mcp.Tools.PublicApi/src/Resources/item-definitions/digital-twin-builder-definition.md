@@ -113,9 +113,9 @@ The lakehouse cannot be deleted if DigitalTwinBuilder still exists.
 ## PlatformDetails
 
 The platform part is a file that contains the environment metadata information.
-* [Create Item](/rest/api/fabric/core/items/create-item) with definition respects the platform file if provided
-* [Get Item](/rest/api/fabric/core/items/get-item) definition always returns the platform file.
-* [Update Item](/rest/api/fabric/core/items/update-item) definition accepts the platform file if provided, but only if you set a new URL parameter `updateMetadata=true`.
+* [Create Item](https://learn.microsoft.com/en-us/rest/api/fabric/core/items/create-item) with definition respects the platform file if provided
+* [Get Item](https://learn.microsoft.com/en-us/rest/api/fabric/core/items/get-item) definition always returns the platform file.
+* [Update Item](https://learn.microsoft.com/en-us/rest/api/fabric/core/items/update-item) definition accepts the platform file if provided, but only if you set a new URL parameter `updateMetadata=true`.
 
 ## EntityTypes directory: EntityType file
 
@@ -184,7 +184,7 @@ The EntityTypeRelationship file name is the entity type relationship ID.
 
 ## ContextualizationOperations directory: ContextualizationOperation file
 
-The ContextualizationOperation file name is the contextualization operation ID. A ContextualizationOperation can be run using a [DigitalTwinBuilderFlow](digital-twin-builder-flow-definition.md) artifact.
+The ContextualizationOperation file name is the contextualization operation ID. A ContextualizationOperation can be run using a [DigitalTwinBuilderFlow](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/digital-twin-builder-flow-definition.md) artifact.
 
 | Property | Type | Required | Description |
 |---|---|---|---|
@@ -231,7 +231,7 @@ The ContextualizationOperation file name is the contextualization operation ID. 
 
 ## MappingOperations directory: MappingOperation file
 
-The MappingOperation file name is the mapping operation ID. A MappingOperation can be run using a [DigitalTwinBuilderFlow](digital-twin-builder-flow-definition.md) artifact.
+The MappingOperation file name is the mapping operation ID. A MappingOperation can be run using a [DigitalTwinBuilderFlow](./digital-twin-builder-flow-definition.md) artifact.
 
 | Property | Type | Required | Description |
 |---|---|---|---|
