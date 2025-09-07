@@ -57,25 +57,28 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_languageOption);
-        command.AddOption(_searchOption);
-        command.AddOption(_filterOption);
-        command.AddOption(_orderByOption);
-        command.AddOption(_selectOption);
-        command.AddOption(_nextCursorOption);
-        command.AddOption(_expandOption);
+
+        // Add marketplace-specific options
+        var options = command.Options;
+        options.Add(_languageOption);
+        options.Add(_searchOption);
+        options.Add(_filterOption);
+        options.Add(_orderByOption);
+        options.Add(_selectOption);
+        options.Add(_nextCursorOption);
+        options.Add(_expandOption);
     }
 
     protected override ProductListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Language = parseResult.GetValueForOption(_languageOption);
-        options.Search = parseResult.GetValueForOption(_searchOption);
-        options.Filter = parseResult.GetValueForOption(_filterOption);
-        options.OrderBy = parseResult.GetValueForOption(_orderByOption);
-        options.Select = parseResult.GetValueForOption(_selectOption);
-        options.NextCursor = parseResult.GetValueForOption(_nextCursorOption);
-        options.Expand = parseResult.GetValueForOption(_expandOption);
+        options.Language = parseResult.GetValue(_languageOption);
+        options.Search = parseResult.GetValue(_searchOption);
+        options.Filter = parseResult.GetValue(_filterOption);
+        options.OrderBy = parseResult.GetValue(_orderByOption);
+        options.Select = parseResult.GetValue(_selectOption);
+        options.NextCursor = parseResult.GetValue(_nextCursorOption);
+        options.Expand = parseResult.GetValue(_expandOption);
         return options;
     }
 
