@@ -231,7 +231,7 @@ The ContextualizationOperation file name is the contextualization operation ID. 
 
 ## MappingOperations directory: MappingOperation file
 
-The MappingOperation file name is the mapping operation ID. A MappingOperation can be run using a [DigitalTwinBuilderFlow](./digital-twin-builder-flow-definition.md) artifact.
+The MappingOperation file name is the mapping operation ID. A MappingOperation can be run using a [DigitalTwinBuilderFlow](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/digital-twin-builder-flow-definition) artifact.
 
 | Property | Type | Required | Description |
 |---|---|---|---|
