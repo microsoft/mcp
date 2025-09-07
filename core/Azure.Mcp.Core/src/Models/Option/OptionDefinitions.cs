@@ -286,50 +286,50 @@ public static partial class OptionDefinitions
         };
 
         public static readonly Option<string> Search = new(
-            $"--{SearchName}",
-            "Search for products using a short general term (up to 25 characters)"
+            $"--{SearchName}"
         )
         {
+            Description = "Search for products using a short general term (up to 25 characters)",
             Required = false
         };
 
         public static readonly Option<string> Filter = new(
-            $"--{FilterName}",
-            "OData filter expression to filter results based on ProductSummary properties (e.g., \"displayName eq 'Azure'\")."
+            $"--{FilterName}"
         )
         {
+            Description = "OData filter expression to filter results based on ProductSummary properties (e.g., \"displayName eq 'Azure'\").",
             Required = false
         };
 
         public static readonly Option<string> OrderBy = new(
-            $"--{OrderByName}",
-            "OData orderby expression to sort results by ProductSummary fields (e.g., \"displayName asc\" or \"popularity desc\")."
+            $"--{OrderByName}"
         )
         {
+            Description = "OData orderby expression to sort results by ProductSummary fields (e.g., \"displayName asc\" or \"popularity desc\").",
             Required = false
         };
 
         public static readonly Option<string> Select = new(
-            $"--{SelectName}",
-            "OData select expression to choose specific ProductSummary fields to return (e.g., \"displayName,publisherDisplayName,uniqueProductId\")."
+            $"--{SelectName}"
         )
         {
+            Description = "OData select expression to choose specific ProductSummary fields to return (e.g., \"displayName,publisherDisplayName,uniqueProductId\").",
             Required = false
         };
 
         public static readonly Option<string> NextCursor = new(
-            $"--{NextCursorName}",
-            "Pagination cursor to retrieve the next page of results. Use the NextPageLink value from a previous response."
+            $"--{NextCursorName}"
         )
         {
+            Description = "Pagination cursor to retrieve the next page of results. Use the NextPageLink value from a previous response.",
             Required = false
         };
 
         public static readonly Option<string> Expand = new(
-            $"--{ExpandName}",
-            "OData expand expression to include related data in the response (e.g., \"plans\" to include plan details)."
+            $"--{ExpandName}"
         )
         {
+            Description = "OData expand expression to include related data in the response (e.g., \"plans\" to include plan details).",
             Required = false
         };
 
