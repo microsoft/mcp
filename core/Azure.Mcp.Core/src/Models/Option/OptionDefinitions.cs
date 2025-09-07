@@ -290,7 +290,7 @@ public static partial class OptionDefinitions
             "Search for products using a short general term (up to 25 characters)"
         )
         {
-            IsRequired = false
+            Required = false
         };
 
         public static readonly Option<string> Filter = new(
@@ -298,7 +298,7 @@ public static partial class OptionDefinitions
             "OData filter expression to filter results based on ProductSummary properties (e.g., \"displayName eq 'Azure'\")."
         )
         {
-            IsRequired = false
+            Required = false
         };
 
         public static readonly Option<string> OrderBy = new(
@@ -306,7 +306,7 @@ public static partial class OptionDefinitions
             "OData orderby expression to sort results by ProductSummary fields (e.g., \"displayName asc\" or \"popularity desc\")."
         )
         {
-            IsRequired = false
+            Required = false
         };
 
         public static readonly Option<string> Select = new(
@@ -314,7 +314,7 @@ public static partial class OptionDefinitions
             "OData select expression to choose specific ProductSummary fields to return (e.g., \"displayName,publisherDisplayName,uniqueProductId\")."
         )
         {
-            IsRequired = false
+            Required = false
         };
 
         public static readonly Option<string> NextCursor = new(
@@ -322,7 +322,7 @@ public static partial class OptionDefinitions
             "Pagination cursor to retrieve the next page of results. Use the NextPageLink value from a previous response."
         )
         {
-            IsRequired = false
+            Required = false
         };
 
         public static readonly Option<string> Expand = new(
@@ -330,7 +330,7 @@ public static partial class OptionDefinitions
             "OData expand expression to include related data in the response (e.g., \"plans\" to include plan details)."
         )
         {
-            IsRequired = false
+            Required = false
         };
 
     }
