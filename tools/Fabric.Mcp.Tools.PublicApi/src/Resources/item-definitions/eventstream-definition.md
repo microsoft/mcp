@@ -41,7 +41,7 @@ Describe the topology of Eventstream item.
 
 ## `eventstream.json` example
 
-To see how to create a JSON file describing an Eventstream item, see [Eventstream REST API](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/event-streams/eventstream-rest-api).
+To see how to create a JSON file describing an Eventstream item, see [Eventstream REST API](https://learn.microsoft.com/fabric/real-time-intelligence/event-streams/eventstream-rest-api).
 
 ```json
 {

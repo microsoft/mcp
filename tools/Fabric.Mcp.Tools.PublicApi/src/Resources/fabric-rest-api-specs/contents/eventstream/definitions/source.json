@@ -975,7 +975,7 @@
                 },
                 "filters": {
                     "type": "object",
-                    "description": "The advanced filters defined in https://learn.microsoft.com/en-us/azure/event-grid/event-filtering#advanced-filtering."
+                    "description": "The advanced filters defined in https://learn.microsoft.com/azure/event-grid/event-filtering#advanced-filtering."
                 }
             }
         },
@@ -1017,7 +1017,7 @@
                 },
                 "filters": {
                     "type": "object",
-                    "description": "The advanced filters defined in https://learn.microsoft.com/en-us/azure/event-grid/event-filtering#advanced-filtering."
+                    "description": "The advanced filters defined in https://learn.microsoft.com/azure/event-grid/event-filtering#advanced-filtering."
                 }
             }
         },
@@ -1062,7 +1062,7 @@
                 },
                 "filters": {
                     "type": "object",
-                    "description": "The advanced filters defined in https://learn.microsoft.com/en-us/azure/event-grid/event-filtering#advanced-filtering."
+                    "description": "The advanced filters defined in https://learn.microsoft.com/azure/event-grid/event-filtering#advanced-filtering."
                 }
             }
         },
@@ -1103,7 +1103,7 @@
                 },
                 "filters": {
                     "type": "object",
-                    "description": "The advanced filters defined in https://learn.microsoft.com/en-us/azure/event-grid/event-filtering#advanced-filtering."
+                    "description": "The advanced filters defined in https://learn.microsoft.com/azure/event-grid/event-filtering#advanced-filtering."
                 }
             }
         }

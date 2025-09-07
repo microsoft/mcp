@@ -60,8 +60,8 @@ Once all the records are retrieved, the `continuationUri` and `continuationToken
 
 ## Code example
 
-In this example, you create a client and call the [list workspaces](https://learn.microsoft.com/en-us/rest/api/fabric/admin/workspaces/list-workspaces) API. The `continuationToken` parameter is used to get the next paginated chunk of workspaces, until it returns empty or null.
-In this example, you create a client and call the [list workspaces](https://learn.microsoft.com/en-us/rest/api/fabric/admin/workspaces/list-workspaces) API. The `continuationToken` parameter is used to get the next paginated chunk of workspaces, until it returns empty or null.
+In this example, you create a client and call the [list workspaces](https://learn.microsoft.com/rest/api/fabric/admin/workspaces/list-workspaces) API. The `continuationToken` parameter is used to get the next paginated chunk of workspaces, until it returns empty or null.
+In this example, you create a client and call the [list workspaces](https://learn.microsoft.com/rest/api/fabric/admin/workspaces/list-workspaces) API. The `continuationToken` parameter is used to get the next paginated chunk of workspaces, until it returns empty or null.
 
 ```csharp
 using (HttpClient client = new HttpClient()) 

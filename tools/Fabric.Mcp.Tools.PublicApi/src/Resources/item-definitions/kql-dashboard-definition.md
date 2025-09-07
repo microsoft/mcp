@@ -26,7 +26,7 @@ The definition of a Real-Time Dashboard item is constructed as follows:
 
 ## Example of payload content decoded from Base64
 
-To see how to create a JSON file describing a dashboard, see [export dashboards](https://learn.microsoft.com/en-us/fabric/real-time-intelligence/dashboard-real-time-create#export-dashboards).
+To see how to create a JSON file describing a dashboard, see [export dashboards](https://learn.microsoft.com/fabric/real-time-intelligence/dashboard-real-time-create#export-dashboards).
 
 ```json
 {

@@ -20,19 +20,19 @@ Report items support the `PBIR-Legacy` and `PBIR` format.
 
 Report has different parts that make up its definition:
 
-- [CustomVisuals\\](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report#customvisuals)
-- [StaticResources\\](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report#registeredresources)
-- [definition.pbir](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report#definitionpbir) <sup>[1](#required1)</sup>
-- [report.json](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report#reportjson) or [\definition](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report#definition-folder) <sup>[1](#required1)</sup>
-- [semanticModelDiagramLayout.json](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report#semanticmodeldiagramlayoutjson)
-- [mobileState.json](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report#mobilestatejson)
+- [CustomVisuals\\](https://learn.microsoft.com/power-bi/developer/projects/projects-report#customvisuals)
+- [StaticResources\\](https://learn.microsoft.com/power-bi/developer/projects/projects-report#registeredresources)
+- [definition.pbir](https://learn.microsoft.com/power-bi/developer/projects/projects-report#definitionpbir) <sup>[1](#required1)</sup>
+- [report.json](https://learn.microsoft.com/power-bi/developer/projects/projects-report#reportjson) or [\definition](https://learn.microsoft.com/power-bi/developer/projects/projects-report#definition-folder) <sup>[1](#required1)</sup>
+- [semanticModelDiagramLayout.json](https://learn.microsoft.com/power-bi/developer/projects/projects-report#semanticmodeldiagramlayoutjson)
+- [mobileState.json](https://learn.microsoft.com/power-bi/developer/projects/projects-report#mobilestatejson)
 
 <a name="required1">1</a> - This file or folder is required. 
 
 > [!IMPORTANT]
 > definition.pbir holds the reference to the semantic model used by the report that can be a relative path (byPath) or a connection to a remote semantic model (byConnection). Fabric REST API only supports `byConnection` references.
 
-For more information about the report files, refer to the Power BI Project report folder [documentation](https://learn.microsoft.com/en-us/power-bi/developer/projects/projects-report).
+For more information about the report files, refer to the Power BI Project report folder [documentation](https://learn.microsoft.com/power-bi/developer/projects/projects-report).
 
 
 ## Definition payload example using PBIR-Legacy
