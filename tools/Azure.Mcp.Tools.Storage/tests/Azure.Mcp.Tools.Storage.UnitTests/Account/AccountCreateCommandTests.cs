@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -24,7 +24,7 @@ public class AccountCreateCommandTests
     private readonly ILogger<AccountCreateCommand> _logger;
     private readonly AccountCreateCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public AccountCreateCommandTests()
     {
@@ -36,7 +36,7 @@ public class AccountCreateCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public class AccountCreateCommandTests
     [Theory]
     [InlineData("--account testaccount --resource-group testrg --location eastus --subscription sub123", true)]
     [InlineData("--account testaccount --resource-group testrg --location eastus --sku Standard_GRS --subscription sub123", true)]
-    [InlineData("--account testaccount --resource-group testrg --location eastus --kind StorageV2 --access-tier Cool --subscription sub123", true)]
+    [InlineData("--account testaccount --resource-group testrg --location eastus --access-tier Cool --subscription sub123", true)]
     [InlineData("--resource-group testrg --location eastus --subscription sub123", false)] // Missing account name
     [InlineData("--account testaccount --location eastus --subscription sub123", false)] // Missing resource group
     [InlineData("--account testaccount --resource-group testrg --subscription sub123", false)] // Missing location
@@ -78,16 +78,13 @@ public class AccountCreateCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<bool?>(),
-                Arg.Any<bool?>(),
                 Arg.Any<bool?>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>())
                 .Returns(expectedAccount);
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -115,7 +112,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesStorageAccountNameAlreadyExists()
     {
         // Arrange
-        var conflictException = new Azure.RequestFailedException(409, "Storage account name already exists");
+        var conflictException = new RequestFailedException(409, "Storage account name already exists");
 
         _storageService.CreateStorageAccount(
             Arg.Any<string>(),
@@ -124,15 +121,12 @@ public class AccountCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<bool?>(),
-            Arg.Any<bool?>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(conflictException);
 
-        var parseResult = _parser.Parse(["--account", "existingaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
+        var parseResult = _commandDefinition.Parse(["--account", "existingaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -146,7 +140,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesResourceGroupNotFound()
     {
         // Arrange
-        var notFoundException = new Azure.RequestFailedException(404, "Resource group not found");
+        var notFoundException = new RequestFailedException(404, "Resource group not found");
 
         _storageService.CreateStorageAccount(
             Arg.Any<string>(),
@@ -155,15 +149,12 @@ public class AccountCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<bool?>(),
-            Arg.Any<bool?>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(notFoundException);
 
-        var parseResult = _parser.Parse(["--account", "testaccount", "--resource-group", "nonexistentrg", "--location", "eastus", "--subscription", "sub123"]);
+        var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "nonexistentrg", "--location", "eastus", "--subscription", "sub123"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -177,7 +168,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
-        var authException = new Azure.RequestFailedException(403, "Authorization failed");
+        var authException = new RequestFailedException(403, "Authorization failed");
 
         _storageService.CreateStorageAccount(
             Arg.Any<string>(),
@@ -186,15 +177,12 @@ public class AccountCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<bool?>(),
-            Arg.Any<bool?>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(authException);
 
-        var parseResult = _parser.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
+        var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -215,15 +203,12 @@ public class AccountCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<bool?>(),
-            Arg.Any<bool?>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<StorageAccountInfo>(new Exception("Test error")));
 
-        var parseResult = _parser.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
+        var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -254,25 +239,19 @@ public class AccountCreateCommandTests
             "eastus",
             "sub123",
             "Standard_GRS",
-            "StorageV2",
             "Cool",
-            true,
-            false,
             true,
             null,
             Arg.Any<RetryPolicyOptions>())
             .Returns(expectedAccount);
 
-        var parseResult = _parser.Parse([
+        var parseResult = _commandDefinition.Parse([
             "--account", "testaccount",
             "--resource-group", "testrg",
             "--location", "eastus",
             "--subscription", "sub123",
             "--sku", "Standard_GRS",
-            "--kind", "StorageV2",
             "--access-tier", "Cool",
-            "--enable-https-traffic-only", "true",
-            "--allow-blob-public-access", "false",
             "--enable-hierarchical-namespace", "true"
         ]);
 
@@ -287,10 +266,7 @@ public class AccountCreateCommandTests
             "eastus",
             "sub123",
             "Standard_GRS",
-            "StorageV2",
             "Cool",
-            true,
-            false,
             true,
             null,
             Arg.Any<RetryPolicyOptions>());

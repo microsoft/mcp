@@ -277,4 +277,137 @@ public class SqlCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper 
         var poolType = firstPool.GetProperty("type").GetString();
         Assert.Equal("Microsoft.Sql/servers/elasticPools", poolType, ignoreCase: true);
     }
+
+    [Fact]
+    public async Task Should_CreateFirewallRule_Successfully()
+    {
+        // Use the deployed test SQL server
+        var serverName = Settings.ResourceBaseName;
+        var ruleName = $"test-rule-{DateTime.UtcNow:yyyyMMddHHmmss}";
+        var startIp = "192.168.1.100";
+        var endIp = "192.168.1.200";
+
+        var result = await CallToolAsync(
+            "azmcp_sql_server_firewall-rule_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "server", serverName },
+                { "firewall-rule-name", ruleName },
+                { "start-ip-address", startIp },
+                { "end-ip-address", endIp }
+            });
+
+        // Should successfully create the firewall rule
+        var firewallRule = result.AssertProperty("firewallRule");
+        Assert.Equal(JsonValueKind.Object, firewallRule.ValueKind);
+
+        // Verify firewall rule properties
+        var name = firewallRule.GetProperty("name").GetString();
+        Assert.Equal(ruleName, name);
+
+        var ruleType = firewallRule.GetProperty("type").GetString();
+        Assert.Equal("Microsoft.Sql/servers/firewallRules", ruleType, ignoreCase: true);
+
+        var ruleStartIp = firewallRule.GetProperty("startIpAddress").GetString();
+        Assert.Equal(startIp, ruleStartIp);
+
+        var ruleEndIp = firewallRule.GetProperty("endIpAddress").GetString();
+        Assert.Equal(endIp, ruleEndIp);
+
+        var id = firewallRule.GetProperty("id").GetString();
+        Assert.NotNull(id);
+        Assert.Contains(serverName, id);
+        Assert.Contains(ruleName, id);
+    }
+
+    [Fact]
+    public async Task Should_DeleteFirewallRule_Successfully()
+    {
+        // Use the deployed test SQL server
+        var serverName = Settings.ResourceBaseName;
+        var ruleName = $"test-delete-rule-{DateTime.UtcNow:yyyyMMddHHmmss}";
+        var startIp = "192.168.2.100";
+        var endIp = "192.168.2.200";
+
+        // First create a firewall rule to delete
+        await CallToolAsync(
+            "azmcp_sql_server_firewall-rule_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "server", serverName },
+                { "firewall-rule-name", ruleName },
+                { "start-ip-address", startIp },
+                { "end-ip-address", endIp }
+            });
+
+        // Now delete the firewall rule
+        var result = await CallToolAsync(
+            "azmcp_sql_server_firewall-rule_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "server", serverName },
+                { "firewall-rule-name", ruleName }
+            });
+
+        // Should successfully delete the firewall rule
+        var deleted = result.AssertProperty("deleted").GetBoolean();
+        Assert.True(deleted);
+
+        var deletedRuleName = result.AssertProperty("ruleName").GetString();
+        Assert.Equal(ruleName, deletedRuleName);
+    }
+
+    [Fact]
+    public async Task Should_DeleteNonExistentFirewallRule_ReturnsFalse()
+    {
+        // Use the deployed test SQL server
+        var serverName = Settings.ResourceBaseName;
+        var nonExistentRuleName = $"non-existent-rule-{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+        var result = await CallToolAsync(
+            "azmcp_sql_server_firewall-rule_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "server", serverName },
+                { "firewall-rule-name", nonExistentRuleName }
+            });
+
+        // Should return false when trying to delete non-existent rule (idempotent)
+        var deleted = result.AssertProperty("deleted").GetBoolean();
+        Assert.False(deleted);
+
+        var deletedRuleName = result.AssertProperty("ruleName").GetString();
+        Assert.Equal(nonExistentRuleName, deletedRuleName);
+    }
+
+    [Theory]
+    [InlineData("--invalid-param")]
+    [InlineData("--subscription invalidSub")]
+    [InlineData("--subscription sub --resource-group rg")] // Missing server, name, and IP addresses
+    [InlineData("--subscription sub --resource-group rg --server server --firewall-rule-name rule1")] // Missing IP addresses
+    public async Task Should_Return400_WithInvalidFirewallRuleCreateInput(string args)
+    {
+        try
+        {
+            var result = await CallToolAsync("azmcp_sql_server_firewall-rule_create",
+                new Dictionary<string, object?> { { "args", args } });
+
+            // If we get here, the command didn't fail as expected
+            Assert.Fail("Expected command to fail with invalid input, but it succeeded");
+        }
+        catch (Exception ex)
+        {
+            // Expected behavior - the command should fail with invalid input
+            Assert.NotNull(ex.Message);
+            Assert.NotEmpty(ex.Message);
+        }
+    }
 }

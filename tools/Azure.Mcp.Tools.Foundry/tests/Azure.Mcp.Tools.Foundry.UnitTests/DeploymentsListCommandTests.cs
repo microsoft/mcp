@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
 using Azure.AI.Projects;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;

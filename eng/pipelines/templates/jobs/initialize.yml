@@ -28,8 +28,8 @@ jobs:
       -SetDevOpsVariables
       -TestType 'Live'
       -ServerName '${{ iif(eq(parameters.ServerName, 'none'), '', parameters.ServerName) }}'
-    name: GetTestAreasLive
-    displayName: "Get areas to test (Live)"
+    name: GetTestPathsLive
+    displayName: "Get paths to test (Live)"
     workingDirectory: $(Build.SourcesDirectory)
 
   - pwsh: |

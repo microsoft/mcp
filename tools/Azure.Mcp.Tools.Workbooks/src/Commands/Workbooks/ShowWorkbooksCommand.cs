@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
@@ -32,27 +33,27 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_workbookIdOption);
+        command.Options.Add(_workbookIdOption);
     }
 
     protected override ShowWorkbooksOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkbookId = parseResult.GetValueForOption(_workbookIdOption);
+        options.WorkbookId = parseResult.GetValueOrDefault(_workbookIdOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var workbooksService = context.GetService<IWorkbooksService>();
             var workbook = await workbooksService.GetWorkbook(options.WorkbookId!, options.RetryPolicy, options.Tenant) ?? throw new InvalidOperationException("Failed to retrieve workbook");
 

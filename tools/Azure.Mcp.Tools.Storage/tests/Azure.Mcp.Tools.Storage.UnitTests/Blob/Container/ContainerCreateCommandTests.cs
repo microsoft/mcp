@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -24,7 +24,7 @@ public class ContainerCreateCommandTests
     private readonly ILogger<ContainerCreateCommand> _logger;
     private readonly ContainerCreateCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
     private readonly string _knownAccount = "account123";
     private readonly string _knownContainer = "container123";
     private readonly string _knownSubscription = "sub123";
@@ -38,7 +38,7 @@ public class ContainerCreateCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -52,8 +52,6 @@ public class ContainerCreateCommandTests
 
     [Theory]
     [InlineData("--account account123 --container container123 --subscription sub123", true)]
-    [InlineData("--account account123 --container container123 --subscription sub123 --blob-container-public-access blob", true)]
-    [InlineData("--account account123 --container container123 --subscription sub123 --blob-container-public-access container", true)]
     [InlineData("--container container123 --subscription sub123", false)] // Missing account
     [InlineData("--account account123 --subscription sub123", false)] // Missing container
     [InlineData("--account account123 --container container123", false)] // Missing subscription
@@ -64,11 +62,11 @@ public class ContainerCreateCommandTests
         {
             var expectedProperties = CreateMockBlobContainerProperties();
             _storageService.CreateContainer(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(expectedProperties);
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -85,19 +83,19 @@ public class ContainerCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CreatesContainerWithoutPublicAccess()
+    public async Task ExecuteAsync_CreatesContainer()
     {
         // Arrange
         var expectedProperties = CreateMockBlobContainerProperties();
         _storageService.CreateContainer(Arg.Is(_knownAccount), Arg.Is(_knownContainer),
-            Arg.Is(_knownSubscription), Arg.Is((string?)null), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            Arg.Is(_knownSubscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedProperties);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--container", _knownContainer,
             "--subscription", _knownSubscription
-        ]);
+            ]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -116,57 +114,20 @@ public class ContainerCreateCommandTests
         Assert.Equal(expectedProperties.PublicAccess, result.Container.PublicAccess);
     }
 
-    [Theory]
-    [InlineData("blob", PublicAccessType.Blob)]
-    [InlineData("container", PublicAccessType.BlobContainer)]
-    public async Task ExecuteAsync_CreatesContainerWithPublicAccess(string publicAccessInput, PublicAccessType expectedPublicAccess)
-    {
-        // Arrange
-        var expectedProperties = CreateMockBlobContainerProperties();
-        typeof(BlobContainerProperties).GetProperty("PublicAccess", System.Reflection.BindingFlags.Instance
-            | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)
-            ?.SetValue(expectedProperties, expectedPublicAccess);
-
-        _storageService.CreateContainer(Arg.Is(_knownAccount), Arg.Is(_knownContainer),
-            Arg.Is(_knownSubscription), Arg.Is(publicAccessInput), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedProperties);
-
-        var args = _parser.Parse([
-            "--account", _knownAccount,
-            "--container", _knownContainer,
-            "--subscription", _knownSubscription,
-            "--blob-container-public-access", publicAccessInput
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.NotNull(response.Results);
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ContainerCreateResult>(json);
-
-        Assert.NotNull(result);
-        Assert.NotNull(result.Container);
-        Assert.Equal(expectedPublicAccess, result.Container.PublicAccess);
-    }
-
     [Fact]
     public async Task ExecuteAsync_HandlesException()
     {
         // Arrange
         var expectedError = "Test error";
         _storageService.CreateContainer(Arg.Is(_knownAccount), Arg.Is(_knownContainer),
-            Arg.Is(_knownSubscription), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            Arg.Is(_knownSubscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse([
-            "--account", _knownAccount,
+        var args = _commandDefinition.Parse([
+                "--account", _knownAccount,
             "--container", _knownContainer,
             "--subscription", _knownSubscription
-        ]);
+            ]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -181,16 +142,16 @@ public class ContainerCreateCommandTests
     public async Task ExecuteAsync_HandlesConflictException()
     {
         // Arrange
-        var conflictException = new Azure.RequestFailedException(409, "Container already exists");
+        var conflictException = new RequestFailedException(409, "Container already exists");
         _storageService.CreateContainer(Arg.Is(_knownAccount), Arg.Is(_knownContainer),
-            Arg.Is(_knownSubscription), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            Arg.Is(_knownSubscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(conflictException);
 
-        var args = _parser.Parse([
-            "--account", _knownAccount,
+        var args = _commandDefinition.Parse([
+                "--account", _knownAccount,
             "--container", _knownContainer,
             "--subscription", _knownSubscription
-        ]);
+            ]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -215,7 +176,7 @@ public class ContainerCreateCommandTests
             ?.SetValue(properties, DateTimeOffset.UtcNow);
         typeof(BlobContainerProperties).GetProperty("ETag", System.Reflection.BindingFlags.Instance
             | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)
-            ?.SetValue(properties, new Azure.ETag("\"0x8D12345678901234\""));
+            ?.SetValue(properties, new ETag("\"0x8D12345678901234\""));
         typeof(BlobContainerProperties).GetProperty("PublicAccess", System.Reflection.BindingFlags.Instance
             | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)
             ?.SetValue(properties, PublicAccessType.None);

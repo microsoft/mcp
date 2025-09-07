@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Deploy.Commands.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +16,7 @@ public class GuidanceGetCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<GuidanceGetCommand> _logger;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
     private readonly CommandContext _context;
     private readonly GuidanceGetCommand _command;
 
@@ -28,14 +28,14 @@ public class GuidanceGetCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _context = new(_serviceProvider);
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
     public async Task Should_generate_pipeline()
     {
         // arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
             "--use-azd-pipeline-config", "true"
         ]);
@@ -54,7 +54,7 @@ public class GuidanceGetCommandTests
     public async Task Should_generate_pipeline_with_github_details()
     {
         // arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
             "--use-azd-pipeline-config", "false",
             "--organization-name", "test-org",
@@ -79,7 +79,7 @@ public class GuidanceGetCommandTests
     public async Task Should_generate_pipeline_with_default_azd_pipeline_config()
     {
         // arrange - not providing use-azd-pipeline-config should default to false
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id"
         ]);
 
@@ -98,7 +98,7 @@ public class GuidanceGetCommandTests
     public async Task Should_generate_pipeline_with_minimal_github_info()
     {
         // arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
             "--use-azd-pipeline-config", "false"
         ]);
@@ -121,7 +121,7 @@ public class GuidanceGetCommandTests
     {
         // arrange
         var guidSubscriptionId = "12345678-1234-1234-1234-123456789abc";
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", guidSubscriptionId,
             "--use-azd-pipeline-config", "false"
         ]);
@@ -140,7 +140,7 @@ public class GuidanceGetCommandTests
     public async Task Should_handle_non_guid_subscription_id()
     {
         // arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "my-subscription-name",
             "--use-azd-pipeline-config", "false"
         ]);
@@ -159,7 +159,7 @@ public class GuidanceGetCommandTests
     public async Task Should_include_service_principal_creation_steps()
     {
         // arrange
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
             "--use-azd-pipeline-config", "false"
         ]);

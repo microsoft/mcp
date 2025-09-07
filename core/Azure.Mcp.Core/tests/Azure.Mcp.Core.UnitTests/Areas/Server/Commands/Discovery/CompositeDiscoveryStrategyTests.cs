@@ -66,7 +66,7 @@ public class CompositeDiscoveryStrategyTests
         // Act & Assert
         var logger = Substitute.For<Microsoft.Extensions.Logging.ILogger<CompositeDiscoveryStrategy>>();
         var exception = Assert.Throws<ArgumentException>(() =>
-            new CompositeDiscoveryStrategy(Array.Empty<IMcpDiscoveryStrategy>(), logger));
+            new CompositeDiscoveryStrategy([], logger));
         Assert.Equal("strategies", exception.ParamName);
         Assert.Contains("At least one discovery strategy must be provided", exception.Message);
     }
@@ -77,7 +77,7 @@ public class CompositeDiscoveryStrategyTests
         // Act & Assert
         var logger = Substitute.For<Microsoft.Extensions.Logging.ILogger<CompositeDiscoveryStrategy>>();
         var exception = Assert.Throws<ArgumentException>(() =>
-            new CompositeDiscoveryStrategy(Array.Empty<IMcpDiscoveryStrategy>(), logger));
+            new CompositeDiscoveryStrategy([], logger));
         Assert.Equal("strategies", exception.ParamName);
         Assert.Contains("At least one discovery strategy must be provided", exception.Message);
     }

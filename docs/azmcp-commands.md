@@ -908,8 +908,22 @@ azmcp sql db show --subscription <subscription> \
                   --server <server-name> \
                   --database <database>
 
+# Create a firewall rule for a SQL server
+azmcp sql server firewall-rule create --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --server <server-name> \
+                                      --firewall-rule-name <rule-name> \
+                                      --start-ip-address <start-ip> \
+                                      --end-ip-address <end-ip>
+
+# Delete a firewall rule from a SQL server
+azmcp sql server firewall-rule delete --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --server <server-name> \
+                                      --firewall-rule-name <rule-name>
+
 # Gets a list of firewall rules for a SQL server
-azmcp sql firewall-rule list --subscription <subscription> \
+azmcp sql server firewall-rule list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
 ```
@@ -941,10 +955,7 @@ azmcp storage account create --subscription <subscription> \
                              --resource-group <resource-group> \
                              --location <location> \
                              --sku <sku> \
-                             --kind <kind> \
                              --access-tier <access-tier> \
-                             --enable-https-traffic-only true \
-                             --allow-blob-public-access false \
                              --enable-hierarchical-namespace false
 
 # Get detailed information about a specific Storage account
@@ -965,8 +976,7 @@ azmcp storage blob batch set-tier --subscription <subscription> \
 # Create a blob container with optional public access
 azmcp storage blob container create --subscription <subscription> \
                                     --account <account> \
-                                    --container <container> \
-                                    [--blob-container-public-access <blob|container>]
+                                    --container <container>
 
 # Get detailed properties of a storage container
 azmcp storage blob container details --subscription <subscription> \
@@ -993,8 +1003,7 @@ azmcp storage blob upload --subscription <subscription> \
                           --account <account> \
                           --container <container> \
                           --blob <blob> \
-                          --local-file-path <path-to-local-file> \
-                          [--overwrite]
+                          --local-file-path <path-to-local-file>
 
 # Create a directory in DataLake using a specific path
 azmcp storage datalake directory create --subscription <subscription> \

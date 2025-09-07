@@ -16,74 +16,74 @@ public static class KeyVaultOptionDefinitions
     public const string CertificatePasswordParam = "password";
 
     public static readonly Option<string> VaultName = new(
-        $"--{VaultNameParam}",
-        "The name of the Key Vault."
+        $"--{VaultNameParam}"
     )
     {
-        IsRequired = true
+        Description = "The name of the Key Vault.",
+        Required = true
     };
 
     public static readonly Option<string> KeyName = new(
-        $"--{KeyNameParam}",
-        "The name of the key to retrieve/modify from the Key Vault."
+        $"--{KeyNameParam}"
     )
     {
-        IsRequired = true
+        Description = "The name of the key to retrieve/modify from the Key Vault.",
+        Required = true
     };
 
     public static readonly Option<string> KeyType = new(
-        $"--{KeyTypeParam}",
-        "The type of key to create (RSA, EC)."
+        $"--{KeyTypeParam}"
     )
     {
-        IsRequired = true
+        Description = "The type of key to create (RSA, EC).",
+        Required = true
     };
 
     public static readonly Option<bool> IncludeManagedKeys = new(
-        $"--{IncludeManagedKeysParam}",
-        "Whether or not to include managed keys in results."
+        $"--{IncludeManagedKeysParam}"
     )
     {
-        IsRequired = false
+        Description = "Whether or not to include managed keys in results.",
+        Required = false
     };
 
     public static readonly Option<string> SecretName = new(
-        $"--{SecretNameParam}",
-        "The name of the secret."
+        $"--{SecretNameParam}"
     )
     {
-        IsRequired = true
+        Description = "The name of the secret.",
+        Required = true
     };
 
     public static readonly Option<string> SecretValue = new(
-        $"--{SecretValueParam}",
-        "The value to set for the secret."
+        $"--{SecretValueParam}"
     )
     {
-        IsRequired = true
+        Description = "The value to set for the secret.",
+        Required = true
     };
 
     public static readonly Option<string> CertificateName = new(
-        $"--{CertificateNameParam}",
-        "The name of the certificate."
+        $"--{CertificateNameParam}"
     )
     {
-        IsRequired = true
+        Description = "The name of the certificate.",
+        Required = true
     };
 
     public static readonly Option<string> CertificateData = new(
-        $"--{CertificateDataParam}",
-        "The certificate content: path to a PFX/PEM file, a base64 encoded PFX, or raw PEM text beginning with -----BEGIN."
+        $"--{CertificateDataParam}"
     )
     {
-        IsRequired = true
+        Description = "The certificate content: path to a PFX/PEM file, a base64 encoded PFX, or raw PEM text beginning with -----BEGIN.",
+        Required = true
     };
 
     public static readonly Option<string> CertificatePassword = new(
-        $"--{CertificatePasswordParam}",
-        "Optional password for a protected PFX being imported."
+        $"--{CertificatePasswordParam}"
     )
     {
-        IsRequired = false
+        Description = "Optional password for a protected PFX being imported.",
+        Required = false
     };
 }
