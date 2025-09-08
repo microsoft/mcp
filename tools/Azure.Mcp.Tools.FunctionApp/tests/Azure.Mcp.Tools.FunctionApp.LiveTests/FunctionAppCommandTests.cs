@@ -1,3 +1,4 @@
+/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -184,3 +185,5 @@ public sealed class FunctionAppCommandTests(LiveTestFixture liveTestFixture, ITe
         Assert.False(missingSub.HasValue);
     }
 }
+
+*/

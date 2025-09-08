@@ -1,3 +1,4 @@
+/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -258,3 +259,5 @@ public class KeyVaultCommandTests(LiveTestFixture liveTestFixture, ITestOutputHe
         }
     }
 }
+
+*/

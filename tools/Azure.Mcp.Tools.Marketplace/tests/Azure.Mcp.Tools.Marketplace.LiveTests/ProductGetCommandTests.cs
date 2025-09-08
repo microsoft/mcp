@@ -122,3 +122,4 @@ public class ProductGetCommandTests : CommandTestsBase,
         Assert.Contains(ProductId, id.GetString());
     }
 }
+

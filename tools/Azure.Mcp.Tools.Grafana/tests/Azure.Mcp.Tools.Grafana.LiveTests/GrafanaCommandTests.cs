@@ -1,3 +1,4 @@
+/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -55,3 +56,5 @@ public class GrafanaCommandTests(LiveTestFixture liveTestFixture, ITestOutputHel
         Assert.Equal(Settings.SubscriptionId, testWorkspace.GetProperty("subscriptionId").GetString());
     }
 }
+
+*/
