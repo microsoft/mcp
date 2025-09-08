@@ -22,7 +22,6 @@ public class ProductGetCommandTests : CommandTestsBase,
     private const string Language = "en";
     private const string Market = "US";
     private readonly MarketplaceService _marketplaceService;
-    private readonly string _subscriptionId;
 
     public ProductGetCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : base(liveTestFixture, output)
     {
@@ -30,7 +29,6 @@ public class ProductGetCommandTests : CommandTestsBase,
         var cacheService = new CacheService(memoryCache);
         var tenantService = new TenantService(cacheService);
         _marketplaceService = new MarketplaceService(tenantService);
-        _subscriptionId = Settings.SubscriptionId;
     }
 
     [Fact]
@@ -41,7 +39,7 @@ public class ProductGetCommandTests : CommandTestsBase,
             "azmcp_marketplace_product_get",
             new()
             {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "product-id", ProductId }
             });
 
@@ -61,7 +59,7 @@ public class ProductGetCommandTests : CommandTestsBase,
             "azmcp_marketplace_product_get",
             new()
             {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "product-id", ProductId },
                 { "language", Language }
             });
@@ -84,7 +82,7 @@ public class ProductGetCommandTests : CommandTestsBase,
             "azmcp_marketplace_product_get",
             new()
             {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "product-id", ProductId },
                 { "market", Market }
             });
@@ -106,7 +104,7 @@ public class ProductGetCommandTests : CommandTestsBase,
             "azmcp_marketplace_product_get",
             new()
             {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "product-id", ProductId },
                 { "language", Language },
                 { "market", Market },
