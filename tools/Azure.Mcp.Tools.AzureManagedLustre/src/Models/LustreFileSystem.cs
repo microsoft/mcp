@@ -22,7 +22,7 @@ public sealed record LustreFileSystem(
 );
 
 public sealed record ImportJobInfo(
-    [property: JsonPropertyName("jobName")] string JobName,
+    [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("fileSystemName")] string FileSystemName,
     [property: JsonPropertyName("resourceGroupName")] string ResourceGroupName,
     [property: JsonPropertyName("subscriptionId")] string SubscriptionId,

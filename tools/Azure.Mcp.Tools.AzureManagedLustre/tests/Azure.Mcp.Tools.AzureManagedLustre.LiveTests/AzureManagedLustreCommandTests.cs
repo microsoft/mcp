@@ -107,7 +107,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
 
             var importJob = result.AssertProperty("importJob");
             Assert.Equal(JsonValueKind.Object, importJob.ValueKind);
-            Assert.True(importJob.TryGetProperty("jobName", out _));
+            Assert.True(importJob.TryGetProperty("name", out _));
             Assert.True(importJob.TryGetProperty("fileSystemName", out var fsName));
             Assert.Equal(Settings.ResourceBaseName, fsName.GetString());
         }

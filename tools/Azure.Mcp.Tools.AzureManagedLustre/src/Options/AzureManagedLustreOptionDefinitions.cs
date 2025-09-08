@@ -13,7 +13,7 @@ public static class AzureManagedLustreOptionDefinitions
     public const string conflictResolutionMode = "conflict-resolution-mode";
     public const string maximumErrors = "maximum-errors";
     public const string adminStatus = "admin-status";
-    public const string jobName = "job-name";
+    public const string name = "name";
     public static readonly Option<string> SkuOption = new(
         $"--{sku}"
     )
@@ -87,8 +87,8 @@ public static class AzureManagedLustreOptionDefinitions
         IsRequired = false
     };
 
-    public static readonly Option<string> JobNameOption = new(
-        $"--{jobName}",
+    public static readonly Option<string> NameOption = new(
+        $"--{name}",
         "An optional name for the import job. If omitted a timestamp-based name will be generated."
     )
     {
