@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server.Options;
-using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
