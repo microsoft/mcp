@@ -128,7 +128,3 @@ public class FoundryCommandTests(ITestOutputHelper output)
         }
     }
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> 8b946de5 (Merge conflicts redis and VirtualDesktop)
