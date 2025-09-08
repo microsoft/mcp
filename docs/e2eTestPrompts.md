@@ -149,8 +149,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azmcp_eventgrid_topic_list | List all Event Grid topics in my subscription |
 | azmcp_eventgrid_topic_list | Show me the Event Grid topics in my subscription |
-| azmcp_eventgrid_topic_list | List all Event Grid topics in subscription <subscription_id> |
-| azmcp_eventgrid_topic_list | List all Event Grid topics in resource group <resource_group_name> in subscription <subscription_id> |
+| azmcp_eventgrid_topic_list | List all Event Grid topics in subscription <subscription> |
+| azmcp_eventgrid_topic_list | List all Event Grid topics in resource group <resource_group_name> in subscription <subscription> |
 
 ## Azure Function App
 

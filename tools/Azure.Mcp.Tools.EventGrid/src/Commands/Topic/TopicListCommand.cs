@@ -20,7 +20,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
         """
         List all Event Grid topics in a subscription with configuration and status information. This tool retrieves 
         topic details including endpoints, access keys, and subscription information for event publishing and management. 
-        Returns topic information as JSON array. Requires subscription-id.
+        Returns topic information as JSON array. Requires subscription.
         """;
 
     public override string Title => CommandTitle;
