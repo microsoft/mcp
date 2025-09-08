@@ -14,7 +14,7 @@ using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.AppConfig.Services;
 
-using ETag = Azure.Mcp.Core.Models.ETag;
+using ETag = Core.Models.ETag;
 
 public class AppConfigService(ISubscriptionService subscriptionService, ITenantService tenantService)
     : BaseAzureService(tenantService), IAppConfigService
@@ -201,9 +201,10 @@ public class AppConfigService(ISubscriptionService subscriptionService, ITenantS
         var configStore = await FindAppConfigStore(subscriptionResource, accountName, subscription);
         var endpoint = configStore.Data.Endpoint;
         var credential = await GetCredential(tenant);
-        AddDefaultPolicies(new ConfigurationClientOptions());
+        var options = new ConfigurationClientOptions();
+        AddDefaultPolicies(options);
 
-        return new ConfigurationClient(new Uri(endpoint), credential);
+        return new ConfigurationClient(new Uri(endpoint), credential, options);
     }
 
     private static async Task<AppConfigurationStoreResource> FindAppConfigStore(SubscriptionResource subscription, string accountName, string subscriptionIdentifier)

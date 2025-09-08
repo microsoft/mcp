@@ -331,4 +331,4 @@ When working with administrators, provide:
 4. **Authentication Method:** Which credential type you're trying to use
 5. **Logs:** Relevant log entries showing the authentication attempt
 
-For additional support, see the [Troubleshooting Guide](https://github.com/microsoft/mcp/blob/main/TROUBLESHOOTING.md). For further assistance, [open a GitHub issue](https://github.com/microsoft/mcp/issues/new).
+For additional support, see the [Troubleshooting Guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md). For further assistance, [open a GitHub issue](https://github.com/microsoft/mcp/issues/new).

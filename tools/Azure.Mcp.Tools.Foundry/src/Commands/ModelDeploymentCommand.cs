@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Models;
@@ -41,46 +40,47 @@ public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeployment
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_deploymentNameOption);
-        command.AddOption(_modelNameOption);
-        command.AddOption(_modelFormatOption);
-        command.AddOption(_azureAiServicesNameOption);
+        command.Options.Add(_deploymentNameOption);
+        command.Options.Add(_modelNameOption);
+        command.Options.Add(_modelFormatOption);
+        command.Options.Add(_azureAiServicesNameOption);
         RequireResourceGroup();
-        command.AddOption(_modelVersionOption);
-        command.AddOption(_modelSourceOption);
-        command.AddOption(_skuNameOption);
-        command.AddOption(_skuCapacityOption);
-        command.AddOption(_scaleTypeOption);
-        command.AddOption(_scaleCapacityOption);
+        command.Options.Add(_modelVersionOption);
+        command.Options.Add(_modelSourceOption);
+        command.Options.Add(_skuNameOption);
+        command.Options.Add(_skuCapacityOption);
+        command.Options.Add(_scaleTypeOption);
+        command.Options.Add(_scaleCapacityOption);
     }
 
     protected override ModelDeploymentOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DeploymentName = parseResult.GetValueForOption(_deploymentNameOption);
-        options.ModelName = parseResult.GetValueForOption(_modelNameOption);
-        options.ModelFormat = parseResult.GetValueForOption(_modelFormatOption);
-        options.AzureAiServicesName = parseResult.GetValueForOption(_azureAiServicesNameOption);
-        options.ModelVersion = parseResult.GetValueForOption(_modelVersionOption);
-        options.ModelSource = parseResult.GetValueForOption(_modelSourceOption);
-        options.SkuName = parseResult.GetValueForOption(_skuNameOption);
-        options.SkuCapacity = parseResult.GetValueForOption(_skuCapacityOption);
-        options.ScaleType = parseResult.GetValueForOption(_scaleTypeOption);
-        options.ScaleCapacity = parseResult.GetValueForOption(_scaleCapacityOption);
+        options.DeploymentName = parseResult.GetValue(_deploymentNameOption);
+        options.ModelName = parseResult.GetValue(_modelNameOption);
+        options.ModelFormat = parseResult.GetValue(_modelFormatOption);
+        options.AzureAiServicesName = parseResult.GetValue(_azureAiServicesNameOption);
+        options.ModelVersion = parseResult.GetValue(_modelVersionOption);
+        options.ModelSource = parseResult.GetValue(_modelSourceOption);
+        options.SkuName = parseResult.GetValue(_skuNameOption);
+        options.SkuCapacity = parseResult.GetValue(_skuCapacityOption);
+        options.ScaleType = parseResult.GetValue(_scaleTypeOption);
+        options.ScaleCapacity = parseResult.GetValue(_scaleCapacityOption);
 
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
 
             var service = context.GetService<IFoundryService>();
             var deploymentResource = await service.DeployModel(

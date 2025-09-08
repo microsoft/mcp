@@ -4,6 +4,8 @@ parameters:
   default: []
 - name: ServerName
   type: string
+- name: IncludeNative
+  type: boolean
 
 jobs:
 - job: TagRepository
@@ -25,8 +27,7 @@ jobs:
       $tag = "$serverName-$version$versionSuffix"
 
       gh release create $tag --title "$serverName $version$versionSuffix"
-      gh release upload $tag $(Pipeline.Workspace)/$(PipelineArtifactName)_packed/**/*.tgz
-      gh release upload $tag $(Pipeline.Workspace)/vsix_package_*/**/*.vsix
+      gh release upload $tag $(Pipeline.Workspace)/$(PipelineArtifactName)_packed/*/*/*.tgz
     displayName: Create GitHub Release and upload artifacts
     env:
       GH_TOKEN: $(azuresdk-github-pat)
@@ -63,7 +64,7 @@ jobs:
             SignCertName: 'azure-sdk-esrp-release-certificate'
             Intent: 'PackageDistribution'
             ContentType: 'npm'
-            FolderLocation: $(Pipeline.Workspace)/drop/platform
+            FolderLocation: $(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform
             Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
@@ -80,12 +81,47 @@ jobs:
             SignCertName: 'azure-sdk-esrp-release-certificate'
             Intent: 'PackageDistribution'
             ContentType: 'npm'
-            FolderLocation: $(Pipeline.Workspace)/drop/wrapper
+            FolderLocation: $(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper
             Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
             MainPublisher: 'ESRPRELPACMANTEST'
             ProductState: latest
+        - ${{ if eq(parameters.IncludeNative, true) }}:
+          - task: EsrpRelease@9
+            displayName: Publish native platform packages to npmjs.com
+            inputs:
+              ConnectedServiceName: 'Azure SDK PME Managed Identity'
+              ClientId: '5f81938c-2544-4f1f-9251-dd9de5b8a81b'
+              DomainTenantId: '975f013f-7f24-47e8-a7d3-abc4752bf346'
+              UseManagedIdentity: true
+              KeyVaultName: 'kv-azuresdk-codesign'
+              SignCertName: 'azure-sdk-esrp-release-certificate'
+              Intent: 'PackageDistribution'
+              ContentType: 'npm'
+              FolderLocation: $(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform
+              Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
+              Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
+              ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
+              MainPublisher: 'ESRPRELPACMANTEST'
+              ProductState: latest
+          - task: EsrpRelease@9
+            displayName: Publish native wrapper package to npmjs.com
+            inputs:
+              ConnectedServiceName: 'Azure SDK PME Managed Identity'
+              ClientId: '5f81938c-2544-4f1f-9251-dd9de5b8a81b'
+              DomainTenantId: '975f013f-7f24-47e8-a7d3-abc4752bf346'
+              UseManagedIdentity: true
+              KeyVaultName: 'kv-azuresdk-codesign'
+              SignCertName: 'azure-sdk-esrp-release-certificate'
+              Intent: 'PackageDistribution'
+              ContentType: 'npm'
+              FolderLocation: $(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/wrapper
+              Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
+              Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
+              ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
+              MainPublisher: 'ESRPRELPACMANTEST'
+              ProductState: latest
         - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
           parameters:
             PathToArtifacts: $(Pipeline.Workspace)/drop
@@ -103,7 +139,7 @@ jobs:
       isProduction: true
       inputs:
       - input: pipelineArtifact
-        artifactName: vsix_package_${{ VsixTarget }}_signed
+        artifactName: vsix_packages_signed
         targetPath: $(Pipeline.Workspace)/drop
     environment: package-publish
     pool:
@@ -120,7 +156,7 @@ jobs:
               azureSubscription: azure-sdk-vsmarketplace
               scriptType: pscore
               scriptLocation: inlineScript
-              workingDirectory: $(Pipeline.Workspace)/drop
+              workingDirectory: $(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/${{ VsixTarget }}
               inlineScript: |
                 Write-Host "Publishing VSIX for ${{ VsixTarget }}"
                 $baseName = Get-ChildItem *.vsix | Select-Object -First 1 | ForEach-Object { $_.BaseName }
@@ -150,3 +186,4 @@ jobs:
       PRBranchName: increment-package-version-$(Build.BuildId)
       CommitMsg: "Increment package version after release"
       PRTitle: "Increment version after release"
+      RepoOwner: microsoft

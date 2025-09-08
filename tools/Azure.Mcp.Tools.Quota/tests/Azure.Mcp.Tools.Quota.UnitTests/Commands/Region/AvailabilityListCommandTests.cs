@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Quota.Commands.Region;
@@ -21,7 +21,7 @@ public sealed class AvailabilityListCommandTests
     private readonly IQuotaService _quotaService;
     private readonly ILogger<AvailabilityListCommand> _logger;
     private readonly AvailabilityListCommand _command;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public AvailabilityListCommandTests()
     {
@@ -33,7 +33,7 @@ public sealed class AvailabilityListCommandTests
         _serviceProvider = services.BuildServiceProvider();
 
         _command = new AvailabilityListCommand(_logger);
-        _parser = new Parser(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public sealed class AvailabilityListCommandTests
                 Arg.Any<string?>())
             .Returns(expectedRegions);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--resource-types", resourceTypes
         ]);
@@ -136,7 +136,7 @@ public sealed class AvailabilityListCommandTests
                 cognitiveServiceDeploymentSkuName)
             .Returns(expectedRegions);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--resource-types", resourceTypes,
             "--cognitive-service-model-name", cognitiveServiceModelName,
@@ -189,7 +189,7 @@ public sealed class AvailabilityListCommandTests
         var subscriptionId = "test-subscription-id";
         var resourceTypes = "";
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--resource-types", resourceTypes
         ]);
@@ -229,7 +229,7 @@ public sealed class AvailabilityListCommandTests
                 Arg.Any<string?>())
             .ThrowsAsync(expectedException);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--resource-types", resourceTypes
         ]);
@@ -266,7 +266,7 @@ public sealed class AvailabilityListCommandTests
                 Arg.Any<string?>())
             .Returns(expectedRegions);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--resource-types", resourceTypes
         ]);
@@ -308,7 +308,7 @@ public sealed class AvailabilityListCommandTests
                 Arg.Any<string?>())
             .Returns(new List<string>());
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--resource-types", resourceTypes
         ]);
@@ -344,7 +344,7 @@ public sealed class AvailabilityListCommandTests
                 cognitiveServiceDeploymentSkuName)
             .Returns(expectedRegions);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--resource-types", resourceTypes,
             "--cognitive-service-model-name", cognitiveServiceModelName,
@@ -379,7 +379,7 @@ public sealed class AvailabilityListCommandTests
         var subscriptionId = "test-subscription-id";
         var resourceTypes = "   ";
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--resource-types", resourceTypes
         ]);
@@ -424,7 +424,7 @@ public sealed class AvailabilityListCommandTests
                 Arg.Any<string?>())
             .Returns(expectedRegions);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--resource-types", resourceTypes
         ]);
@@ -482,7 +482,7 @@ public sealed class AvailabilityListCommandTests
                 Arg.Any<string?>())
             .Returns(expectedRegions);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--resource-types", resourceTypes
         ]);

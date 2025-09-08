@@ -420,7 +420,7 @@ The Azure MCP Server provides tools for interacting with **28 Azure service area
 
 ## Feedback & Support
 
-- Check the [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/TROUBLESHOOTING.md) to diagnose and resolve common issues with the Azure MCP Server.
+- Check the [Troubleshooting guide](https://aka.ms/azmcp/troubleshooting) to diagnose and resolve common issues with the Azure MCP Server.
 - We're building this in the open. Your feedback is much appreciated, and will help us shape the future of the Azure MCP server.
     - 👉 Open an issue in the public [GitHub repository](https://github.com/microsoft/mcp/issues) — we’d love to hear from you!
 

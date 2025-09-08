@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 using Azure.Mcp.Core.Commands;
@@ -38,36 +37,36 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_workspaceFolderOption);
-        command.AddOption(_projectNameOption);
-        command.AddOption(_deploymentTargetServiceOption);
-        command.AddOption(_provisioningToolOption);
-        command.AddOption(_azdIacOptionsOption);
+        command.Options.Add(_workspaceFolderOption);
+        command.Options.Add(_projectNameOption);
+        command.Options.Add(_deploymentTargetServiceOption);
+        command.Options.Add(_provisioningToolOption);
+        command.Options.Add(_azdIacOptionsOption);
     }
 
     private GetOptions BindOptions(ParseResult parseResult)
     {
         return new GetOptions
         {
-            WorkspaceFolder = parseResult.GetValueForOption(_workspaceFolderOption) ?? string.Empty,
-            ProjectName = parseResult.GetValueForOption(_projectNameOption) ?? string.Empty,
-            TargetAppService = parseResult.GetValueForOption(_deploymentTargetServiceOption) ?? string.Empty,
-            ProvisioningTool = parseResult.GetValueForOption(_provisioningToolOption) ?? string.Empty,
-            AzdIacOptions = parseResult.GetValueForOption(_azdIacOptionsOption) ?? string.Empty
+            WorkspaceFolder = parseResult.GetValue(_workspaceFolderOption) ?? string.Empty,
+            ProjectName = parseResult.GetValue(_projectNameOption) ?? string.Empty,
+            TargetAppService = parseResult.GetValue(_deploymentTargetServiceOption) ?? string.Empty,
+            ProvisioningTool = parseResult.GetValue(_provisioningToolOption) ?? string.Empty,
+            AzdIacOptions = parseResult.GetValue(_azdIacOptionsOption) ?? string.Empty
         };
     }
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return Task.FromResult(context.Response);
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return Task.FromResult(context.Response);
-            }
-
             using (SHA256 sha256Hash = SHA256.Create())
             {
                 byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(options.ProjectName));

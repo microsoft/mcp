@@ -12,6 +12,9 @@ parameters:
   type: object
 - name: TestTimeoutInMinutes
   type: number
+- name: ServerName
+  type: string
+  default: ''
 
 jobs:
 - job: Build_${{ parameters.OSName }}
@@ -50,6 +53,7 @@ jobs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
       arguments: >
+        -ServerName '${{ parameters.ServerName }}'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
         -VersionSuffix '$(VersionSuffix)'
         -OperatingSystem '${{ parameters.OSName }}'
@@ -97,7 +101,8 @@ jobs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
       arguments: >
-        -OutputPath '$(Agent.TempDirectory)/native-build'
+        -ServerName '${{ parameters.ServerName }}'
+        -OutputPath '$(Build.ArtifactStagingDirectory)'
         -VersionSuffix '$(VersionSuffix)'
         -OperatingSystem '${{ parameters.OSName }}'
         -Architecture '$(Architecture)'
