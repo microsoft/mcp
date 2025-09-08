@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Account;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
@@ -18,9 +19,8 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
 
     public override string Description =>
         $"""
-        List all Storage accounts in a subscription. This command retrieves all Storage accounts available
-        in the specified subscription. Results are returned as a JSON array of objects including common
-        metadata (name, location, kind, skuName, skuTier, hnsEnabled, allowBlobPublicAccess, enableHttpsTrafficOnly).
+        Lists Storage accounts in a subscription, returning account name, location, SKU, access settings, and configuration
+        details for each Storage account.
         """;
 
     public override string Title => CommandTitle;
@@ -57,5 +57,5 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
         return context.Response;
     }
 
-    internal record AccountListCommandResult(List<Models.StorageAccountInfo> Accounts);
+    internal record AccountListCommandResult(List<StorageAccountInfo> Accounts);
 }

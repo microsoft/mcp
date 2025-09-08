@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options.Account;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.Logging;
@@ -17,9 +18,8 @@ public sealed class AccountDetailsCommand(ILogger<AccountDetailsCommand> logger)
 
     public override string Description =>
         """
-        Get detailed information about a specific Azure Storage account. This command retrieves comprehensive
-        metadata for the specified storage account including name, location, SKU, access settings, and configuration
-        details. Returns a JSON object with all storage account properties.
+        Gets detailed information about an Azure Storage account, including account name, location,
+        SKU, access settings, and configuration details.
         """;
 
     public override string Title => CommandTitle;
@@ -75,12 +75,6 @@ public sealed class AccountDetailsCommand(ILogger<AccountDetailsCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
     // Strongly-typed result record
-    internal record AccountDetailsCommandResult(Models.StorageAccountInfo Account);
+    internal record AccountDetailsCommandResult(StorageAccountInfo Account);
 }

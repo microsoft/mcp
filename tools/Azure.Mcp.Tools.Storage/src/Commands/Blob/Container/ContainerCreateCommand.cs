@@ -20,7 +20,7 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
 
     public override string Description =>
         """
-        Creates a blob container with optional blob public access. Returns the last modified time and the ETag of the blob container as JSON.
+        Creates an Azure Storage container, returning the last modified time and the ETag of the created container.
         """;
 
     public override string Title => CommandTitle;
@@ -49,7 +49,7 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
             var result = new ContainerCreateResult(
                 containerProperties.LastModified,
                 containerProperties.ETag.ToString(),
-                containerProperties.PublicAccess);
+                containerProperties.PublicAccess?.ToString());
 
             context.Response.Results = ResponseResult.Create(
                 new ContainerCreateCommandResult(result),
@@ -69,7 +69,7 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
     internal record ContainerCreateResult(
         DateTimeOffset LastModified,
         string ETag,
-        PublicAccessType? PublicAccess);
+        string? PublicAccess);
 
     internal record ContainerCreateCommandResult(ContainerCreateResult Container);
 }

@@ -19,7 +19,7 @@ public sealed class ContainerDetailsCommand(ILogger<ContainerDetailsCommand> log
 
     public override string Description =>
         $"""
-        Get detailed properties of a storage container including metadata, lease status, and access level.
+        Gets the details of an Azure Storage container, including metadata, lease status, and access level.
         """;
 
     public override string Title => CommandTitle;
@@ -70,10 +70,10 @@ public sealed class ContainerDetailsCommand(ILogger<ContainerDetailsCommand> log
         }
 
         public DateTimeOffset LastModified => props.LastModified;
-        public LeaseStatus? LeaseStatus => props.LeaseStatus;
-        public LeaseState? LeaseState => props.LeaseState;
-        public LeaseDurationType? LeaseDuration => props.LeaseDuration;
-        public PublicAccessType? PublicAccess => props.PublicAccess;
+        public string? LeaseStatus => props.LeaseStatus?.ToString();
+        public string? LeaseState => props.LeaseState?.ToString();
+        public string? LeaseDuration => props.LeaseDuration?.ToString();
+        public string? PublicAccess => props.PublicAccess?.ToString();
         public bool? HasImmutabilityPolicy => props.HasImmutabilityPolicy;
         public bool? HasLegalHold => props.HasLegalHold;
         public string DefaultEncryptionScope => props.DefaultEncryptionScope;

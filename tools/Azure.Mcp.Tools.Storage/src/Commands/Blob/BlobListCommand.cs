@@ -18,9 +18,7 @@ public sealed class BlobListCommand(ILogger<BlobListCommand> logger) : BaseConta
 
     public override string Description =>
         $"""
-        List all blobs in a Storage container. This command retrieves and displays all blobs available
-        in the specified container and Storage account. Results include blob names, sizes, and content types,
-        returned as a JSON array.
+        Lists blobs in an Azure Storage container, returning the names of the blobs in the container.
         """;
 
     public override string Title => CommandTitle;

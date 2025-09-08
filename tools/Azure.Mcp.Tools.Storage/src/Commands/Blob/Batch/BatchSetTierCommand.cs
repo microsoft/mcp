@@ -23,9 +23,8 @@ public sealed class BatchSetTierCommand(ILogger<BatchSetTierCommand> logger) : B
 
     public override string Description =>
         $"""
-        Set access tier for multiple blobs in a single batch operation. This tool efficiently changes the
-        storage tier for multiple blobs simultaneously in a single request. Different tiers offer different
-        trade-offs between storage costs, access costs, and retrieval latency.
+        Sets access tier for multiple blobs in a single batch operation, returning the names of blobs that had their access
+        tier set and blobs that failed to have their access tier set.
         """;
 
     public override string Title => CommandTitle;

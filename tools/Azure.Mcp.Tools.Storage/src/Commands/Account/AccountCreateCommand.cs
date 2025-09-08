@@ -28,9 +28,8 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
 
     public override string Description =>
         """
-        Create a new Azure Storage account in the specified resource group and location.
-        Creates a storage account with the specified configuration options. Returns the
-        created storage account information including name, location, SKU, and other properties.
+        Creates an Azure Storage account in the specified resource group and location and returns the created storage account
+        information including name, location, SKU, access settings, and configuration details.
         """;
 
     public override string Title => CommandTitle;
@@ -118,12 +117,6 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
             "Resource group not found. Verify the resource group exists and you have access.",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     // Strongly-typed result record

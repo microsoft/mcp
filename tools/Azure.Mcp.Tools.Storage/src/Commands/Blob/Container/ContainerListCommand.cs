@@ -17,8 +17,7 @@ public sealed class ContainerListCommand(ILogger<ContainerListCommand> logger) :
 
     public override string Description =>
         $"""
-        List all containers in a Storage account. This command retrieves and displays all containers available
-        in the specified account. Results include container names and are returned as a JSON array.
+        Lists containers in an Azure Storage account, returning the names of the containers.
         """;
 
     public override string Title => CommandTitle;

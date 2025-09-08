@@ -18,8 +18,7 @@ public sealed class BlobDetailsCommand(ILogger<BlobDetailsCommand> logger) : Bas
 
     public override string Description =>
         $"""
-        Get blob properties, metadata, and general information. This tool retrieves blob configuration including metadata properties,
-        approximate size, and last modification time information. Returns blob properties as JSON.
+        Gets the details of an Azure Storage blob, including metadata properties, approximate size, last modification time, and more.
         """;
 
     public override string Title => CommandTitle;
@@ -79,19 +78,19 @@ public sealed class BlobDetailsCommand(ILogger<BlobDetailsCommand> logger) : Bas
         public string ContentDisposition => props.ContentDisposition;
         public string CacheControl => props.CacheControl;
         public long BlobSequenceNumber => props.BlobSequenceNumber;
-        public BlobType BlobType => props.BlobType;
-        public LeaseStatus LeaseStatus => props.LeaseStatus;
-        public LeaseState LeaseState => props.LeaseState;
-        public LeaseDurationType LeaseDuration => props.LeaseDuration;
+        public string BlobType => props.BlobType.ToString();
+        public string LeaseStatus => props.LeaseStatus.ToString();
+        public string LeaseState => props.LeaseState.ToString();
+        public string LeaseDuration => props.LeaseDuration.ToString();
         public string CopyId => props.CopyId;
-        public CopyStatus? CopyStatus => props.CopyStatus;
+        public string CopyStatus => props.CopyStatus.ToString();
         public Uri CopySource => props.CopySource;
         public string CopyProgress => props.CopyProgress;
         public DateTimeOffset? CopyCompletedOn => props.CopyCompletedOn;
         public string CopyStatusDescription => props.CopyStatusDescription;
         public bool? IsIncrementalCopy => props.IsIncrementalCopy;
         public string DestinationSnapshot => props.DestinationSnapshot;
-        public AccessTier? AccessTier => props.AccessTier;
+        public string AccessTier => props.AccessTier.ToString();
         public DateTimeOffset? AccessTierChangedOn => props.AccessTierChangedOn;
         public BlobImmutabilityPolicy ImmutabilityPolicy => props.ImmutabilityPolicy;
         public bool? HasLegalHold => props.HasLegalHold;
