@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.ResourceHealth.Models;
+using Azure.Mcp.Tools.ResourceHealth.Models.Internal;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Services;
 
@@ -38,31 +39,19 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
             var url = $"{resourceId}/providers/Microsoft.ResourceHealth/availabilityStatuses/current?api-version={ResourceHealthApiVersion}";
-            var response = await client.GetAsync(url);
-
+            
+            using var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
+            
             var content = await response.Content.ReadAsStringAsync();
-            var jsonDocument = JsonDocument.Parse(content);
-            var root = jsonDocument.RootElement;
+            var apiResponse = JsonSerializer.Deserialize<AvailabilityStatusResponse>(content, ResourceHealthJsonContext.Default.AvailabilityStatusResponse);
 
-            var properties = root.GetProperty("properties");
-
-            // Map REST API response to our model
-            return new AvailabilityStatus
+            if (apiResponse == null)
             {
-                ResourceId = resourceId,
-                AvailabilityState = GetOptionalStringProperty(properties, "availabilityState"),
-                Summary = GetOptionalStringProperty(properties, "summary"),
-                DetailedStatus = GetOptionalStringProperty(properties, "detailedStatus"),
-                ReasonType = GetOptionalStringProperty(properties, "reasonType"),
-                OccurredTime = GetOptionalDateTimeProperty(properties, "occuredTime"),
-                ReportedTime = GetOptionalDateTimeProperty(properties, "reportedTime"),
-                CauseType = GetOptionalStringProperty(properties, "reasonChronicity"),
-                RootCauseAttributionTime = GetOptionalStringProperty(properties, "rootCauseAttributionTime"),
-                Category = GetOptionalStringProperty(properties, "healthEventCategory"),
-                Title = GetOptionalStringProperty(properties, "title"),
-                Location = GetOptionalStringProperty(root, "location") ?? "Unknown"
-            };
+                throw new InvalidOperationException($"Failed to deserialize availability status response for resource '{resourceId}'");
+            }
+
+            return apiResponse.ToAvailabilityStatus();
         }
         catch (HttpRequestException ex)
         {
@@ -99,39 +88,18 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
                 ? $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.ResourceHealth/availabilityStatuses?api-version={ResourceHealthApiVersion}"
                 : $"/subscriptions/{subscriptionId}/providers/Microsoft.ResourceHealth/availabilityStatuses?api-version={ResourceHealthApiVersion}";
 
-            var response = await client.GetAsync(url);
+            using var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
+            
             var content = await response.Content.ReadAsStringAsync();
-            var jsonDocument = JsonDocument.Parse(content);
-            var root = jsonDocument.RootElement;
+            var apiResponse = JsonSerializer.Deserialize<AvailabilityStatusListResponse>(content, ResourceHealthJsonContext.Default.AvailabilityStatusListResponse);
 
-            var availabilityStatuses = new List<AvailabilityStatus>();
-
-            if (root.TryGetProperty("value", out var valuesArray))
+            if (apiResponse?.Value == null)
             {
-                foreach (var item in valuesArray.EnumerateArray())
-                {
-                    var properties = item.GetProperty("properties");
-
-                    availabilityStatuses.Add(new AvailabilityStatus
-                    {
-                        ResourceId = GetOptionalStringProperty(item, "id"),
-                        AvailabilityState = GetOptionalStringProperty(properties, "availabilityState"),
-                        Summary = GetOptionalStringProperty(properties, "summary"),
-                        DetailedStatus = GetOptionalStringProperty(properties, "detailedStatus"),
-                        ReasonType = GetOptionalStringProperty(properties, "reasonType"),
-                        OccurredTime = GetOptionalDateTimeProperty(properties, "occuredTime"),
-                        ReportedTime = GetOptionalDateTimeProperty(properties, "reportedTime"),
-                        CauseType = GetOptionalStringProperty(properties, "reasonChronicity"),
-                        RootCauseAttributionTime = GetOptionalStringProperty(properties, "rootCauseAttributionTime"),
-                        Category = GetOptionalStringProperty(properties, "healthEventCategory"),
-                        Title = GetOptionalStringProperty(properties, "title"),
-                        Location = GetOptionalStringProperty(item, "location") ?? "Unknown"
-                    });
-                }
+                return new List<AvailabilityStatus>();
             }
 
-            return availabilityStatuses;
+            return apiResponse.Value.Select(item => item.ToAvailabilityStatus()).ToList();
         }
         catch (HttpRequestException ex)
         {
@@ -216,95 +184,22 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
                 url += $"&$filter={Uri.EscapeDataString(combinedFilter)}";
             }
 
-            var response = await client.GetAsync(url);
+            using var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
 
-            var jsonDocument = JsonDocument.Parse(content);
-            var root = jsonDocument.RootElement;
+            var apiResponse = JsonSerializer.Deserialize<ServiceHealthEventListResponse>(content, ResourceHealthJsonContext.Default.ServiceHealthEventListResponse);
 
-            var serviceHealthEvents = new List<ServiceHealthEvent>();
-
-            if (root.TryGetProperty("value", out var valuesArray))
+            if (apiResponse?.Value == null)
             {
-                foreach (var item in valuesArray.EnumerateArray())
-                {
-                    // Service Health Events API structure (2025-05-01)
-                    var eventId = GetOptionalStringProperty(item, "id");
-                    var eventName = GetOptionalStringProperty(item, "name");
-
-                    if (!item.TryGetProperty("properties", out var properties))
-                        continue;
-
-                    // Get service health event details from properties
-                    var eventTitle = GetOptionalStringProperty(properties, "title");
-                    var eventSummary = GetOptionalStringProperty(properties, "summary");
-                    var eventTypeValue = GetOptionalStringProperty(properties, "eventType");
-                    var eventStatus = GetOptionalStringProperty(properties, "status");
-                    var eventLevel = GetOptionalStringProperty(properties, "eventLevel");
-                    var eventTrackingId = GetOptionalStringProperty(properties, "trackingId");
-
-                    // Get timestamps from Service Health Events API
-                    DateTime? eventStartTime = GetOptionalDateTimeProperty(properties, "impactStartTime")?.DateTime;
-                    DateTime? eventEndTime = GetOptionalDateTimeProperty(properties, "impactMitigationTime")?.DateTime;
-                    DateTime? lastModified = GetOptionalDateTimeProperty(properties, "lastUpdateTime")?.DateTime;
-
-                    // Extract affected services and regions from impact array
-                    var affectedServices = new List<string>();
-                    var affectedRegions = new List<string>();
-                    var affectedSubscriptions = new List<string> { subscription };
-
-                    if (properties.TryGetProperty("impact", out var impactArray))
-                    {
-                        foreach (var impactItem in impactArray.EnumerateArray())
-                        {
-                            // Extract service name from impact
-                            var serviceName = GetOptionalStringProperty(impactItem, "impactedService");
-                            if (!string.IsNullOrEmpty(serviceName) && !affectedServices.Contains(serviceName))
-                            {
-                                affectedServices.Add(serviceName);
-                            }
-
-                            // Extract regions from impactedRegions array
-                            if (impactItem.TryGetProperty("impactedRegions", out var regionsArray))
-                            {
-                                foreach (var regionItem in regionsArray.EnumerateArray())
-                                {
-                                    var regionName = GetOptionalStringProperty(regionItem, "impactedRegion");
-                                    if (!string.IsNullOrEmpty(regionName) && !affectedRegions.Contains(regionName))
-                                    {
-                                        affectedRegions.Add(regionName);
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    serviceHealthEvents.Add(new ServiceHealthEvent
-                    {
-                        Id = eventId,
-                        Name = eventName,
-                        Title = eventTitle,
-                        Summary = eventSummary,
-                        Details = GetOptionalStringProperty(properties, "description"),
-                        EventType = eventTypeValue,
-                        Status = eventStatus,
-                        Level = eventLevel,
-                        TrackingId = eventTrackingId,
-                        AffectedServices = affectedServices.Count > 0 ? affectedServices : null,
-                        AffectedRegions = affectedRegions.Count > 0 ? affectedRegions : null,
-                        AffectedSubscriptions = affectedSubscriptions,
-                        StartTime = eventStartTime,
-                        EndTime = eventEndTime,
-                        LastModified = lastModified,
-                        Communication = GetOptionalStringProperty(properties, "communicationId"),
-                        Category = GetOptionalStringProperty(properties, "eventSource"),
-                        Location = affectedRegions.Count > 0 ? affectedRegions.First() : "Global"
-                    });
-                }
+                return new List<ServiceHealthEvent>();
             }
 
-            return serviceHealthEvents;
+            return apiResponse.Value
+                .Select(item => item.ToServiceHealthEvent(subscriptionId))
+                .Where(evt => !string.IsNullOrEmpty(evt.Id)) // Filter out any invalid entries
+                .ToList();
+
         }
         catch (HttpRequestException ex)
         {
@@ -314,23 +209,5 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
         {
             throw new Exception($"Failed to parse service health events response: {ex.Message}", ex);
         }
-    }
-
-    private static string? GetOptionalStringProperty(JsonElement element, string propertyName)
-    {
-        return element.TryGetProperty(propertyName, out var property) ? property.GetString() : null;
-    }
-
-    private static DateTimeOffset? GetOptionalDateTimeProperty(JsonElement element, string propertyName)
-    {
-        if (element.TryGetProperty(propertyName, out var property) && property.ValueKind != JsonValueKind.Null)
-        {
-            var dateString = property.GetString();
-            if (!string.IsNullOrEmpty(dateString) && DateTimeOffset.TryParse(dateString, out var date))
-            {
-                return date;
-            }
-        }
-        return null;
     }
 }
