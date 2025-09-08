@@ -20,10 +20,10 @@ public static class AppLensOptionDefinitions
 
     public static readonly Option<string> Resource = new(
         $"--{ResourceName}")
-        {
-            Description = "The name of the resource to investigate or diagnose",
-            Required = true
-        };
+    {
+        Description = "The name of the resource to investigate or diagnose",
+        Required = true
+    };
 
     public static readonly Option<string?> ResourceType = new(
         $"--{ResourceTypeName}")
