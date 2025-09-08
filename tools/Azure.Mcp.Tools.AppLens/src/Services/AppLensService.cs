@@ -130,7 +130,7 @@ public class AppLensService : BaseAzureService, IAppLensService
         }
     }
 
-/// <summary>
+    /// <summary>
     /// Asks the AppLens API a single <paramref name="question"/> about a resource associated with the given <paramref name="session"/> and returns the response as stream of asynchronous messages.
     /// </summary>
     /// <param name="question">The question or query to pose to AppLens.</param>

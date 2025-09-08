@@ -309,11 +309,16 @@ public class ResourceDiagnoseCommandTests
     {
         // Arrange
         var args = new List<string>();
-        if (!string.IsNullOrEmpty(question)) { args.AddRange(["--question", question]); }
-        if (!string.IsNullOrEmpty(resourceName)) { args.AddRange(["--resource-name", resourceName]); }
-        if (!string.IsNullOrEmpty(subscription)) { args.AddRange(["--subscription", subscription]); }
-        if (!string.IsNullOrEmpty(resourceGroup)) { args.AddRange(["--resource-group", resourceGroup]); }
-        if (!string.IsNullOrEmpty(resourceType)) { args.AddRange(["--resource-type", resourceType]); }
+        if (!string.IsNullOrEmpty(question))
+        { args.AddRange(["--question", question]); }
+        if (!string.IsNullOrEmpty(resourceName))
+        { args.AddRange(["--resource-name", resourceName]); }
+        if (!string.IsNullOrEmpty(subscription))
+        { args.AddRange(["--subscription", subscription]); }
+        if (!string.IsNullOrEmpty(resourceGroup))
+        { args.AddRange(["--resource-group", resourceGroup]); }
+        if (!string.IsNullOrEmpty(resourceType))
+        { args.AddRange(["--resource-type", resourceType]); }
 
         var parseResult = _command.GetCommand().Parse(args.ToArray());
 
