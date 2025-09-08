@@ -5,8 +5,8 @@ using System.Text;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Identity.Broker;
-using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Core.Services.Azure.Authentication;
 

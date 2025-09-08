@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Services.ProcessExecution;
 
 namespace Azure.Mcp;
 
+[JsonSerializable(typeof(AzureCredentials))]
 [JsonSerializable(typeof(ExternalProcessService.ParseError))]
 [JsonSerializable(typeof(ExternalProcessService.ParseOutput))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
