@@ -4,7 +4,7 @@
 using System.Diagnostics;
 using ModelContextProtocol.Protocol;
 
-namespace Azure.Mcp.Core.Services.Telemetry;
+namespace Microsoft.Mcp.Core.Services.Telemetry;
 
 public interface ITelemetryService : IDisposable
 {
