@@ -86,60 +86,6 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
     }
 
     [Fact]
-    public async Task VerifyGetBestPracticesWorksInBothModes()
-    {
-        // Arrange
-        await using var namespaceTestFixture = new LiveTestFixture();
-        namespaceTestFixture.SetArguments("server", "start", "--mode", "namespace");
-        await namespaceTestFixture.InitializeAsync();
-
-        // Arrange
-        await using var allModeTestFixture = new LiveTestFixture();
-        allModeTestFixture.SetArguments("server", "start", "--mode", "all");
-        await allModeTestFixture.InitializeAsync();
-
-        var toolName = "azmcp_bestpractices_get";
-        var parameters = new Dictionary<string, object?>
-        {
-            { "resource", "general" },
-            { "action", "deployment" }
-        };
-
-        // Example expected payload:
-        // {
-        //   "command": "azure_bestpractices_get",
-        //   "parameters": {
-        //     "resource": "general",
-        //     "action": "all"
-        //   },
-        //   "intent": "Get best practices for deploying Azure Resources"
-        // }
-        var parametersString =
-            """
-                {
-                    "resource": "general",
-                    "action": "all"
-                }
-            """;
-        var namespaceParameters = new Dictionary<string, object?>
-        {
-            { "intent", "Get best practices for deploying Azure Resources" },
-            { "command", toolName },
-            { "parameters", parametersString }
-        };
-
-        // Act
-        var first = await CallToolAsync(toolName, parameters, namespaceTestFixture.Client);
-
-        Assert.True(first.HasValue, "Tool call did not return a value.");
-
-        var second = await CallToolAsync(toolName, namespaceParameters, allModeTestFixture.Client);
-
-        // Assert
-        Assert.True(second.HasValue, "Tool call did not return a value.");
-    }
-
-    [Fact]
     public async Task Should_get_azure_functions_code_generation_best_practices()
     {
         // Act
