@@ -20,13 +20,13 @@ public class ToolsListCommandTests
 {
     private const int SuccessStatusCode = 200;
     private const int ErrorStatusCode = 500;
+    private const int MinimumExpectedCommands = 3;
 
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ToolsListCommand> _logger;
     private readonly CommandContext _context;
     private readonly ToolsListCommand _command;
     private readonly Command _commandDefinition;
-    private readonly Parser _parser;
     private readonly MockCommandFactory _commandFactory;
 
     public ToolsListCommandTests()
