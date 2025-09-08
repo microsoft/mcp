@@ -41,6 +41,30 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
         command.Options.Add(ResourceHealthOptionDefinitions.Filter);
         command.Options.Add(ResourceHealthOptionDefinitions.QueryStartTime);
         command.Options.Add(ResourceHealthOptionDefinitions.QueryEndTime);
+
+        // Add validators for enum values
+        command.Validators.Add(commandResult =>
+        {
+            // Validate event-type enum values
+            if (commandResult.TryGetValue(ResourceHealthOptionDefinitions.EventType, out var eventType) && !string.IsNullOrEmpty(eventType))
+            {
+                var validEventTypes = new[] { "ServiceIssue", "PlannedMaintenance", "HealthAdvisory", "Security" };
+                if (!validEventTypes.Contains(eventType, StringComparer.OrdinalIgnoreCase))
+                {
+                    commandResult.AddError($"Invalid event-type '{eventType}'. Valid values are: {string.Join(", ", validEventTypes)}");
+                }
+            }
+
+            // Validate status enum values
+            if (commandResult.TryGetValue(ResourceHealthOptionDefinitions.Status, out var status) && !string.IsNullOrEmpty(status))
+            {
+                var validStatuses = new[] { "Active", "Resolved" };
+                if (!validStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
+                {
+                    commandResult.AddError($"Invalid status '{status}'. Valid values are: {string.Join(", ", validStatuses)}");
+                }
+            }
+        });
     }
 
     protected override ServiceHealthEventsListOptions BindOptions(ParseResult parseResult)

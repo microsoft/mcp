@@ -43,21 +43,56 @@ public class ServiceHealthEventsListCommandTests
     [InlineData("--subscription sub123 --status Active", true)]
     [InlineData("--subscription sub123 --status InvalidStatus", false)]
     [InlineData("--subscription sub123 --tracking-id TRACK123", true)]
-    [InlineData("--subscription sub123 --filter \"startTime ge 2023-01-01\"", true)]
+    [InlineData("--subscription sub123 --filter startTime ge 2023-01-01", true)]
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
     {
         // Arrange
-        var parsedArgs = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-
-        // Act & Assert
         if (shouldSucceed)
         {
-            var response = await _command.ExecuteAsync(_context, parsedArgs);
-            Assert.NotNull(response);
+            // Setup service mock for successful cases
+            var mockEvents = new List<Models.ServiceHealthEvent>();
+            _resourceHealthService.ListServiceHealthEventsAsync(
+                Arg.Any<string>(), 
+                Arg.Any<string>(), 
+                Arg.Any<string>(), 
+                Arg.Any<string>(), 
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>())
+                .Returns(Task.FromResult(mockEvents));
+        }
+
+        // Special parsing for complex arguments
+        ParseResult parsedArgs;
+        if (args.Contains("--filter"))
+        {
+            parsedArgs = _commandDefinition.Parse(["--subscription", "sub123", "--filter", "startTime ge 2023-01-01"]);
         }
         else
         {
-            await Assert.ThrowsAsync<ArgumentException>(() => _command.ExecuteAsync(_context, parsedArgs));
+            parsedArgs = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        }
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parsedArgs);
+
+        // Assert
+        if (shouldSucceed)
+        {
+            Assert.Equal(200, response.Status);
+            Assert.NotNull(response);
+            Assert.Equal("Success", response.Message);
+        }
+        else
+        {
+            Assert.Equal(400, response.Status);
+            // Error message might contain "required" for missing subscription or "Invalid" for enum validation
+            Assert.True(
+                response.Message?.ToLower().Contains("required") == true ||
+                response.Message?.ToLower().Contains("invalid") == true,
+                $"Expected error message to contain 'required' or 'invalid', but got: {response.Message}");
         }
     }
 
@@ -65,6 +100,19 @@ public class ServiceHealthEventsListCommandTests
     public async Task ExecuteAsync_WithValidSubscription_ReturnsSuccess()
     {
         // Arrange
+        var mockEvents = new List<Models.ServiceHealthEvent>();
+        _resourceHealthService.ListServiceHealthEventsAsync(
+            Arg.Any<string>(), 
+            Arg.Any<string>(), 
+            Arg.Any<string>(), 
+            Arg.Any<string>(), 
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(Task.FromResult(mockEvents));
+
         var parsedArgs = _commandDefinition.Parse(["--subscription", "sub123"]);
 
         // Act
@@ -72,19 +120,36 @@ public class ServiceHealthEventsListCommandTests
 
         // Assert
         Assert.NotNull(response);
+        Assert.Equal(200, response.Status);
+        Assert.Equal("Success", response.Message);
     }
 
     [Fact]
     public async Task ExecuteAsync_HandlesServiceError()
     {
         // Arrange
-        _resourceHealthService.When(x => x.ListServiceHealthEventsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>()))
-            .Do(x => throw new InvalidOperationException("Service error"));
+        var expectedError = "Service error";
+        _resourceHealthService.When(x => x.ListServiceHealthEventsAsync(
+            Arg.Any<string>(), 
+            Arg.Any<string>(), 
+            Arg.Any<string>(), 
+            Arg.Any<string>(), 
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>()))
+            .Do(x => throw new InvalidOperationException(expectedError));
 
         var parsedArgs = _commandDefinition.Parse(["--subscription", "nonexistent-sub"]);
 
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _command.ExecuteAsync(_context, parsedArgs));
+        // Act
+        var response = await _command.ExecuteAsync(_context, parsedArgs);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(500, response.Status);
+        Assert.Contains(expectedError, response.Message ?? "");
     }
 
     [Theory]
