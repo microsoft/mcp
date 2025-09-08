@@ -206,6 +206,12 @@ public static partial class OptionDefinitions
         public const string SkuIdName = "sku-id";
         public const string IncludeServiceInstructionTemplatesName = "include-service-instruction-templates";
         public const string PricingAudienceName = "pricing-audience";
+        public const string SearchName = "search";
+        public const string FilterName = "filter";
+        public const string OrderByName = "orderby";
+        public const string SelectName = "select";
+        public const string ExpandName = "expand";
+        public const string NextCursorName = "next-cursor";
 
         public static readonly Option<string> ProductId = new(
             $"--{ProductIdName}"
@@ -276,6 +282,54 @@ public static partial class OptionDefinitions
         )
         {
             Description = "Pricing audience for the request header.",
+            Required = false
+        };
+
+        public static readonly Option<string> Search = new(
+            $"--{SearchName}"
+        )
+        {
+            Description = "Search for products using a short general term (up to 25 characters)",
+            Required = false
+        };
+
+        public static readonly Option<string> Filter = new(
+            $"--{FilterName}"
+        )
+        {
+            Description = "OData filter expression to filter results based on ProductSummary properties (e.g., \"displayName eq 'Azure'\").",
+            Required = false
+        };
+
+        public static readonly Option<string> OrderBy = new(
+            $"--{OrderByName}"
+        )
+        {
+            Description = "OData orderby expression to sort results by ProductSummary fields (e.g., \"displayName asc\" or \"popularity desc\").",
+            Required = false
+        };
+
+        public static readonly Option<string> Select = new(
+            $"--{SelectName}"
+        )
+        {
+            Description = "OData select expression to choose specific ProductSummary fields to return (e.g., \"displayName,publisherDisplayName,uniqueProductId\").",
+            Required = false
+        };
+
+        public static readonly Option<string> NextCursor = new(
+            $"--{NextCursorName}"
+        )
+        {
+            Description = "Pagination cursor to retrieve the next page of results. Use the NextPageLink value from a previous response.",
+            Required = false
+        };
+
+        public static readonly Option<string> Expand = new(
+            $"--{ExpandName}"
+        )
+        {
+            Description = "OData expand expression to include related data in the response (e.g., \"plans\" to include plan details).",
             Required = false
         };
 

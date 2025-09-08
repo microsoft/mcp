@@ -20,7 +20,12 @@ public abstract class CommandTestsBase(LiveTestFixture liveTestFixture, ITestOut
     protected StringBuilder FailureOutput { get; } = new();
     protected ITestOutputHelper Output { get; } = output;
 
-    protected async Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
+    protected Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
+    {
+        return CallToolAsync(command, parameters, Client);
+    }
+
+    protected async Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters, IMcpClient mcpClient)
     {
         // Output will be streamed, so if we're not in debug mode, hold the debug output for logging in the failure case
         Action<string> writeOutput = Settings.DebugOutput
@@ -32,7 +37,7 @@ public abstract class CommandTestsBase(LiveTestFixture liveTestFixture, ITestOut
         CallToolResult result;
         try
         {
-            result = await Client.CallToolAsync(command, parameters);
+            result = await mcpClient.CallToolAsync(command, parameters);
         }
         catch (ModelContextProtocol.McpException ex)
         {

@@ -7,6 +7,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 - Added support for retrieving administration settings (currently purge protection state and soft delete retention days) of an Azure Key Vault via the command `azmcp-keyvault-admin-settings-get`.
 
+- Added support for Azure Event Grid operations: [[#43](https://github.com/microsoft/mcp/pull/43)]
+  - `azmcp_eventgrid_topic_list` - List all Event Grid topics in a subscription.
+- Added support for retrieving knowledge index schema information in Azure AI Foundry projects via the command `azmcp_foundry_knowledge_index_schema`. This command provides detailed schema configuration including field definitions, data types, and searchable attributes for specific knowledge indexes.
+
 ### Breaking Changes
 
 - Changed the following commands to change / remove available options
@@ -16,9 +20,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Fixed telemetry bug where ToolArea was incorrectly populated in with ToolName. [[#346](https://github.com/microsoft/mcp/pull/346)]
+
 ### Other Changes
 
 - Updated `Azure.Identity` and `Azure.Identity.Broker` dependencies. [[#352](https://github.com/microsoft/mcp/pull/352)]
+- Updated the following dependencies to improve .NET Ahead-of-Time (AOT) compilation support: 
+  - Azure.ResourceManager.StorageCache: `1.3.1` → `1.3.2`
 
 ## 0.5.12 (2025-09-04)
 
@@ -31,7 +39,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
+AOT- Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
 - Added instructions about consumption plan for azure functions deployment best practices [[#218](https://github.com/microsoft/mcp/pull/218)]
 
 ## 0.5.11 (2025-09-02)

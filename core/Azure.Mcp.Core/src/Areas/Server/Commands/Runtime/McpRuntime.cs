@@ -4,6 +4,7 @@
 using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
@@ -78,8 +79,10 @@ public sealed class McpRuntime : IMcpRuntime
 
         activity?.AddTag(TagName.ToolName, request.Params.Name);
 
+        var symbol = OptionDefinitions.Common.Subscription;
+
         var subscriptionArgument = request.Params?.Arguments?
-            .Where(kvp => string.Equals(kvp.Key, OptionDefinitions.Common.Subscription.Name, StringComparison.OrdinalIgnoreCase))
+            .Where(kvp => string.Equals(kvp.Key, NameNormalization.NormalizeOptionName(symbol.Name), StringComparison.OrdinalIgnoreCase))
             .Select(kvp => kvp.Value)
             .FirstOrDefault();
         if (subscriptionArgument != null

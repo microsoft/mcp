@@ -192,3 +192,9 @@
 
 # ServiceLabel: %tools-VirtualDesktop
 # ServiceOwners:                       @vladimisms
+
+# PRLabel: %tools-EventGrid
+/tools/Azure.Mcp.Tools.EventGrid/     @microsoft/azure-mcp
+ 
+# ServiceLabel: %tools-EventGrid
+# ServiceOwners:                      @microsoft/azure-mcp
