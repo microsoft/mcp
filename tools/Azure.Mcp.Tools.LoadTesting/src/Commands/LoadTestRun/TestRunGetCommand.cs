@@ -21,8 +21,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
         $"""
         Retrieve details for a specific load test run (TestRun ID) in the specified Load Testing resource. Here the input is going to be the test run id and we get the details of that specific run only NOT the list of test runs.
             Returns run-level execution information: status, start/end times, progress, aggregated metrics, and available artifacts (logs/traces).
-            Does NOT return the test definition/configuration; to inspect the test configuration use:
-            azmcp loadtesting test get --test-id <test-id> --test-resource-name <resource> --resource-group <rg>
+            Does NOT return the test definition/configuration; to inspect the test configuration use: azmcp loadtesting test get --test-id <test-id> --test-resource-name <resource> --resource-group <rg>
             Required parameters: --testrun-id and --test-resource-name (and --subscription). Use --resource-group when needed.
             Example:
             azmcp loadtesting testrun get --testrun-id <id> --test-resource-name <resource> --resource-group <rg> --subscription <sub>

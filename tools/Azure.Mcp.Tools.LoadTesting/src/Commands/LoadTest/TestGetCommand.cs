@@ -22,7 +22,10 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
         Retrieve the configuration for a load test (Test ID) defined in a Load Testing resource.
         Returns only the test definition and configuration (duration, ramp-up, virtual users, endpoint, etc.).
         Does NOT return any test runs or run-level data. To get run details (status, metrics, artifacts), use:
-        azmcp loadtesting testrun get --testrun-id <id> --test-resource-name <resource> --resource-group <rg>
+        azmcp loadtesting testrun get --testrun-id <id> --test-resource-name <resource> --resource-group <rg>. 
+        Required parameters: --test-id <test-id> and --test-resource-name (and --subscription). Use --resource-group when needed.
+        Example:
+        azmcp loadtesting test get --subscription <subscription> --resource-group <resource-group> --test-resource-name <test-resource-name> --test-id <test-id>
         """;
     public override string Title => _commandTitle;
 
