@@ -293,12 +293,12 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
 
     public async Task<VaultSettings> GetVaultSettings(
         string vaultName,
-        string subscriptionId,
+        string subscription,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
         // For administration client we only need vault URI + credential.
-        ValidateRequiredParameters(vaultName, subscriptionId);
+        ValidateRequiredParameters(vaultName, subscription);
 
         var credential = await GetCredential(tenantId);
         var vaultUri = new Uri($"https://{vaultName}.vault.azure.net");

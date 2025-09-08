@@ -178,13 +178,13 @@ public interface IKeyVaultService
     /// (data plane). Currently limited to purge protection state and soft delete retention days.
     /// </summary>
     /// <param name="vaultName">The name of the Key Vault.</param>
-    /// <param name="subscriptionId">The subscription ID or name.</param>
+    /// <param name="subscription">The subscription ID or name.</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations.</param>
     /// <param name="retryPolicy">Optional retry policy for the operation.</param>
     /// <returns>Structured vault settings.</returns>
     Task<VaultSettings> GetVaultSettings(
         string vaultName,
-        string subscriptionId,
+        string subscription,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null);
 }

@@ -21,7 +21,7 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
     public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
 
     public override string Description =>
-        "Retrieves Key Vault administration settings using the data plane Administration SDK: currently returns purge protection state and soft delete retention (days). Other fields are not yet included.";
+        "Retrieves all Key Vault account settings for a given vault. This includes settings such as purge protection and soft-delete retention days.";
 
     protected override void RegisterOptions(Command command)
     {
