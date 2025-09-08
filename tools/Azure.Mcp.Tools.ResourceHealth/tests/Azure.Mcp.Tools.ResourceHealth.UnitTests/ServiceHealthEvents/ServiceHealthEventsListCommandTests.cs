@@ -52,10 +52,10 @@ public class ServiceHealthEventsListCommandTests
             // Setup service mock for successful cases
             var mockEvents = new List<Models.ServiceHealthEvent>();
             _resourceHealthService.ListServiceHealthEventsAsync(
-                Arg.Any<string>(), 
-                Arg.Any<string>(), 
-                Arg.Any<string>(), 
-                Arg.Any<string>(), 
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -102,10 +102,10 @@ public class ServiceHealthEventsListCommandTests
         // Arrange
         var mockEvents = new List<Models.ServiceHealthEvent>();
         _resourceHealthService.ListServiceHealthEventsAsync(
-            Arg.Any<string>(), 
-            Arg.Any<string>(), 
-            Arg.Any<string>(), 
-            Arg.Any<string>(), 
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -130,10 +130,10 @@ public class ServiceHealthEventsListCommandTests
         // Arrange
         var expectedError = "Service error";
         _resourceHealthService.When(x => x.ListServiceHealthEventsAsync(
-            Arg.Any<string>(), 
-            Arg.Any<string>(), 
-            Arg.Any<string>(), 
-            Arg.Any<string>(), 
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
