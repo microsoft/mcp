@@ -1,4 +1,3 @@
-/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -462,4 +461,3 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     }
 }
 
-*/
