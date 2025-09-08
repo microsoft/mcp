@@ -1,19 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 using System.Diagnostics;
+using Microsoft.Mcp.Core.Exceptions;
+using Microsoft.Mcp.Core.Helpers;
 using static Microsoft.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Microsoft.Mcp.Core.Commands;
 
 public abstract class BaseCommand : IBaseCommand
 {
-    private const string MissingRequiredOptionsPrefix = "Missing Required options: ";
     private const int ValidationErrorStatusCode = 400;
-    private const string TroubleshootingUrl = "https://aka.ms/azmcp/troubleshooting";
 
     private readonly Command _command;
+
+    protected const string MissingRequiredOptionsPrefix = "Missing Required options: ";
+    protected const string TroubleshootingUrl = "https://aka.ms/azmcp/troubleshooting";
 
     protected BaseCommand()
     {
@@ -39,8 +41,26 @@ public abstract class BaseCommand : IBaseCommand
         context.Activity?.SetStatus(ActivityStatusCode.Error)?.AddTag(TagName.ErrorDetails, ex.Message);
 
         var response = context.Response;
+
+        // Handle structured validation errors first
+        if (ex is CommandValidationException cve)
+        {
+            response.Status = cve.StatusCode;
+            // If specific missing options are provided, format a consistent message
+            if (cve.MissingOptions is { Count: > 0 })
+            {
+                response.Message = $"{MissingRequiredOptionsPrefix}{string.Join(", ", cve.MissingOptions)}";
+            }
+            else
+            {
+                response.Message = cve.Message;
+            }
+            response.Results = null;
+            return;
+        }
+
         var result = new ExceptionResult(
-            Message: ex.Message,
+            Message: ex.Message ?? string.Empty,
 #if DEBUG
             StackTrace: ex.StackTrace,
 #else
@@ -67,34 +87,40 @@ public abstract class BaseCommand : IBaseCommand
         var result = new ValidationResult { IsValid = true };
 
         var missingOptions = commandResult.Command.Options
-            .Where(o => o.IsRequired && IsOptionValueMissing(commandResult.GetValueForOption(o)))
-            .Select(o => $"--{o.Name}")
+            .Where(o => o.Required && !o.HasDefaultValue && !commandResult.HasOptionResult(o))
+            .Select(o => $"--{NameNormalization.NormalizeOptionName(o.Name)}")
             .ToList();
 
-        if (missingOptions.Count > 0 || !string.IsNullOrEmpty(commandResult.ErrorMessage))
+        var missingOptionsJoined = string.Join(", ", missingOptions);
+
+        if (!string.IsNullOrEmpty(missingOptionsJoined))
         {
             result.IsValid = false;
-            result.ErrorMessage = missingOptions.Count > 0
-                ? $"{MissingRequiredOptionsPrefix}{string.Join(", ", missingOptions)}"
-                : commandResult.ErrorMessage;
-
+            result.ErrorMessage = $"{MissingRequiredOptionsPrefix}{missingOptionsJoined}";
             SetValidationError(commandResponse, result.ErrorMessage!);
+            return result;
+        }
+
+        // If no missing required options, propagate parser/validator errors as-is.
+        // Commands can throw CommandValidationException for structured handling.
+        if (commandResult.Errors != null && commandResult.Errors.Any())
+        {
+            result.IsValid = false;
+            var combined = string.Join(", ", commandResult.Errors.Select(e => e.Message));
+            result.ErrorMessage = combined;
+            SetValidationError(commandResponse, result.ErrorMessage);
+            return result;
         }
 
         return result;
     }
 
-    protected void SetValidationError(CommandResponse? response, string errorMessage)
+    protected static void SetValidationError(CommandResponse? response, string errorMessage)
     {
         if (response != null)
         {
             response.Status = ValidationErrorStatusCode;
             response.Message = errorMessage;
         }
-    }
-
-    private static bool IsOptionValueMissing(object? value)
-    {
-        return value == null || (value is string str && string.IsNullOrWhiteSpace(str));
     }
 }
