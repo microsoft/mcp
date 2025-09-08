@@ -10,6 +10,7 @@
 
 For more details, visit the [official MCP website](https://modelcontextprotocol.io).
 
+## 📁 Which MCP Servers are built from this repository?
 
 This repository contains core libraries, test frameworks, engineering systems, pipelines, and tooling for Microsoft MCP Server contributors to unify engineering investments; and reduce duplication and divergence:
 
