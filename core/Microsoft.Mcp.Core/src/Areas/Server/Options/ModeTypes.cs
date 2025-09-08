@@ -6,7 +6,7 @@ namespace Microsoft.Mcp.Core.Areas.Server.Options;
 /// <summary>
 /// Defines the supported proxy modes for the Azure MCP server.
 /// </summary>
-internal static class ModeTypes
+public static class ModeTypes
 {
     /// <summary>
     /// Single tool proxy mode - exposes a single "azure" tool that handles internal routing across all Azure MCP tools.
