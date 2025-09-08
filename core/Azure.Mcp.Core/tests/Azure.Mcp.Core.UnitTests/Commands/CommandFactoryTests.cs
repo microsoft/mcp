@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Telemetry;
@@ -278,15 +279,20 @@ public class CommandFactoryTests
 
         var directCommand = Substitute.For<IBaseCommand>();
         directCommand.Name.Returns(nameof(directCommand));
+        directCommand.GetCommand().Returns(new Command(nameof(directCommand)));
 
         var directCommand2 = Substitute.For<IBaseCommand>();
         directCommand2.Name.Returns(nameof(directCommand2));
+        directCommand2.GetCommand().Returns(new Command(nameof(directCommand2)));
+
 
         var directCommand3 = Substitute.For<IBaseCommand>();
         directCommand3.Name.Returns(nameof(directCommand3));
+        directCommand3.GetCommand().Returns(new Command(nameof(directCommand3)));
 
         var directCommand4 = Substitute.For<IBaseCommand>();
         directCommand4.Name.Returns(nameof(directCommand4));
+        directCommand4 .GetCommand().Returns(new Command(nameof(directCommand4)));
 
         // Add commands to each group
         group.Commands.Add(nameof(directCommand), directCommand);
