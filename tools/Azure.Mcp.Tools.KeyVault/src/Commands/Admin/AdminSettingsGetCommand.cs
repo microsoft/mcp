@@ -3,8 +3,8 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.KeyVault.Options.Admin; // removed AdminSettingsGetOptions; will use BaseKeyVaultOptions directly
 using Azure.Mcp.Tools.KeyVault.Options;
+using Azure.Mcp.Tools.KeyVault.Options.Admin; // removed AdminSettingsGetOptions; will use BaseKeyVaultOptions directly
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
 

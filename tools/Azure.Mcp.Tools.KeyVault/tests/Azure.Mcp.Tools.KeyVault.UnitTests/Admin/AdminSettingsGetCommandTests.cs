@@ -66,11 +66,11 @@ public class AdminSettingsGetCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         var expectedError = "Test error";
-    _keyVaultService.GetVaultSettings(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>()).ThrowsAsync(new Exception(expectedError));
+        _keyVaultService.GetVaultSettings(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions?>()).ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
             "--vault", KnownVaultName,

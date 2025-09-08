@@ -3,10 +3,10 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.KeyVault.Commands.Admin;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 using Azure.Mcp.Tools.KeyVault.Commands.Key;
 using Azure.Mcp.Tools.KeyVault.Commands.Secret;
-using Azure.Mcp.Tools.KeyVault.Commands.Admin;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -35,8 +35,8 @@ public class KeyVaultSetup : IAreaSetup
 
         var certificate = new CommandGroup("certificate", "Key Vault certificate operations - Commands for managing and accessing certificates in Azure Key Vault.");
         keyVault.AddSubGroup(certificate);
-    var admin = new CommandGroup("admin", "Key Vault administrative operations - Management plane settings.");
-    keyVault.AddSubGroup(admin);
+        var admin = new CommandGroup("admin", "Key Vault administrative operations - Management plane settings.");
+        keyVault.AddSubGroup(admin);
 
         keys.AddCommand("list", new KeyListCommand(loggerFactory.CreateLogger<KeyListCommand>()));
         //keys.AddCommand("get", new KeyGetCommand(loggerFactory.CreateLogger<KeyGetCommand>()));
@@ -51,8 +51,8 @@ public class KeyVaultSetup : IAreaSetup
         certificate.AddCommand("create", new CertificateCreateCommand(loggerFactory.CreateLogger<CertificateCreateCommand>()));
         certificate.AddCommand("import", new CertificateImportCommand(loggerFactory.CreateLogger<CertificateImportCommand>()));
 
-    var settings = new CommandGroup("settings", "Key Vault settings operations.");
-    admin.AddSubGroup(settings);
-    settings.AddCommand("get", new AdminSettingsGetCommand(loggerFactory.CreateLogger<AdminSettingsGetCommand>()));
+        var settings = new CommandGroup("settings", "Key Vault settings operations.");
+        admin.AddSubGroup(settings);
+        settings.AddCommand("get", new AdminSettingsGetCommand(loggerFactory.CreateLogger<AdminSettingsGetCommand>()));
     }
 }
