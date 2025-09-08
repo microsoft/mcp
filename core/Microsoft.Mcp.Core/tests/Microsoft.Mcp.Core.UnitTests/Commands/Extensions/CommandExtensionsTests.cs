@@ -3,10 +3,10 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using Azure.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Xunit;
 
-namespace Azure.Mcp.Core.UnitTests.Commands.Extensions;
+namespace Microsoft.Mcp.Core.UnitTests.Commands.Extensions;
 
 public class CommandExtensionsTests
 {
