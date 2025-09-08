@@ -217,7 +217,7 @@ azmcp appconfig kv unlock --subscription <subscription> \
 
 ```bash
 # Diagnose resource using Azure App Lens
-azmcp applens reosurce diganose --subscription <subscription> \
+azmcp applens resource diagnose --subscription <subscription> \
                                 --resource-group <resource-group> \
                                 --question <question> \
                                 --resource-type <resource-type> \
