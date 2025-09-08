@@ -1,0 +1,46 @@
+---
+name: "/microsoft/mcp Repository Onboarding Request"
+description: "Request to add a new Server to the repository"
+title: "[MCP Server Request] <Proposed Server Name>"
+labels: ["onboarding", "Template.Mcp.Server"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## MCP Server Addition Request
+        Thank you for your interest in contributing a new MCP Server!
+        Please fill out the following details to help us review your request.
+  - type: input
+    id: server_name
+    attributes:
+      label: "Server Name"
+      description: "What is the name of the MCP Server you want to add?"
+      placeholder: "e.g., Contoso Data MCP Server"
+    validations:
+      required: true
+  - type: input
+    id: contacts
+    attributes:
+      label: Contacts
+      description: List of contacts who own the Microsoft Server being onboarded
+      placeholder: ex. Alice Cooper (alcoop), Bob Dylan (bdylan)
+    validations:
+      required: true
+  - type: textarea
+    id: scenarios
+    attributes:
+      label: Intended Agent Scenarios
+      description: What customer scenarios are you trying to solve with this server or tool? Please provide a brief description of the scenarios and how they relate to MCP.
+      placeholder: Description
+    validations:
+      required: true
+  - type: textarea
+    id: timeline
+    attributes:
+      label: Timeline
+      description: November 2025, February 2026, TBD, etc.
+        Please provide your desired timeline
+      placeholder: TBD
+    validations:
+      required: true

@@ -294,7 +294,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * List and create Storage accounts
 * Get detailed information about specific Storage accounts
 * Manage blob containers and blobs
-* Upload files to blob containers
+* Upload files to blobs
 * List and query Storage tables
 * List paths in Data Lake file systems
 * Get container properties and metadata

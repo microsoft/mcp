@@ -8,9 +8,16 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
+- Changed the following commands to change / remove available options
+  - Storage account create removed the ability to configure `enable-https-traffic-only` (always true now), `allow-blob-public-access` (always false now), and `kind` (always StorageV2 now).
+  - Storage blob container create removed the ability to configure `blob-container-public-access` (always false now).
+  - Storage blob upload removed the ability to configure `overwrite` (always false now).
+
 ### Bugs Fixed
 
 ### Other Changes
+
+- Updated `Azure.Identity` and `Azure.Identity.Broker` dependencies. [[#352](https://github.com/microsoft/mcp/pull/352)]
 
 ## 0.5.12 (2025-09-04)
 

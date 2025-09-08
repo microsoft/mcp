@@ -21,10 +21,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     private readonly Option<string> _accountCreateOption = StorageOptionDefinitions.AccountCreate;
     private readonly Option<string> _locationOption = StorageOptionDefinitions.Location;
     private readonly Option<string> _skuOption = StorageOptionDefinitions.Sku;
-    private readonly Option<string> _kindOption = StorageOptionDefinitions.Kind;
     private readonly Option<string> _accessTierOption = StorageOptionDefinitions.AccessTier;
-    private readonly Option<bool> _enableHttpsTrafficOnlyOption = StorageOptionDefinitions.EnableHttpsTrafficOnly;
-    private readonly Option<bool> _allowBlobPublicAccessOption = StorageOptionDefinitions.AllowBlobPublicAccess;
     private readonly Option<bool> _enableHierarchicalNamespaceOption = StorageOptionDefinitions.EnableHierarchicalNamespace;
 
     public override string Name => "create";
@@ -51,10 +48,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
         RequireResourceGroup();
         command.Options.Add(_locationOption);
         command.Options.Add(_skuOption);
-        command.Options.Add(_kindOption);
         command.Options.Add(_accessTierOption);
-        command.Options.Add(_enableHttpsTrafficOnlyOption);
-        command.Options.Add(_allowBlobPublicAccessOption);
         command.Options.Add(_enableHierarchicalNamespaceOption);
     }
 
@@ -64,10 +58,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
         options.Account = parseResult.GetValueOrDefault(_accountCreateOption);
         options.Location = parseResult.GetValueOrDefault(_locationOption);
         options.Sku = parseResult.GetValueOrDefault(_skuOption);
-        options.Kind = parseResult.GetValueOrDefault(_kindOption);
         options.AccessTier = parseResult.GetValueOrDefault(_accessTierOption);
-        options.EnableHttpsTrafficOnly = parseResult.GetValueOrDefault(_enableHttpsTrafficOnlyOption);
-        options.AllowBlobPublicAccess = parseResult.GetValueOrDefault(_allowBlobPublicAccessOption);
         options.EnableHierarchicalNamespace = parseResult.GetValueOrDefault(_enableHierarchicalNamespaceOption);
         return options;
     }
@@ -94,10 +85,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
                 options.Location!,
                 options.Subscription!,
                 options.Sku,
-                options.Kind,
                 options.AccessTier,
-                options.EnableHttpsTrafficOnly,
-                options.AllowBlobPublicAccess,
                 options.EnableHierarchicalNamespace,
                 options.Tenant,
                 options.RetryPolicy);

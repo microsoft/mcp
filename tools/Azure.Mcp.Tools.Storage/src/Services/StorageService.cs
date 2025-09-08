@@ -122,10 +122,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         string location,
         string subscription,
         string? sku = null,
-        string? kind = null,
         string? accessTier = null,
-        bool? enableHttpsTrafficOnly = null,
-        bool? allowBlobPublicAccess = null,
         bool? enableHierarchicalNamespace = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
@@ -144,18 +141,17 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
             }
 
             // Set default values
-            var storageKind = string.IsNullOrEmpty(kind) ? StorageKind.StorageV2 : ParseStorageKind(kind);
             var storageSku = new StorageSku(string.IsNullOrEmpty(sku) ? StorageSkuName.StandardLrs : ParseStorageSkuName(sku));
             var defaultAccessTier = string.IsNullOrEmpty(accessTier) ? StorageAccountAccessTier.Hot : ParseAccessTier(accessTier);
 
             var createOptions = new StorageAccountCreateOrUpdateContent(
                 storageSku,
-                storageKind,
+                StorageKind.StorageV2,
                 location)
             {
                 AccessTier = defaultAccessTier,
-                EnableHttpsTrafficOnly = enableHttpsTrafficOnly ?? true,
-                AllowBlobPublicAccess = allowBlobPublicAccess ?? false,
+                EnableHttpsTrafficOnly = true,
+                AllowBlobPublicAccess = false,
                 IsHnsEnabled = enableHierarchicalNamespace ?? false
             };
 
@@ -381,7 +377,6 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         string account,
         string container,
         string subscription,
-        string? blobContainerPublicAccess = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
@@ -392,19 +387,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
 
         try
         {
-            PublicAccessType publicAccessType = PublicAccessType.None;
-
-            if (!string.IsNullOrEmpty(blobContainerPublicAccess))
-            {
-                publicAccessType = blobContainerPublicAccess.ToLowerInvariant() switch
-                {
-                    "blob" => PublicAccessType.Blob,
-                    "container" => PublicAccessType.BlobContainer,
-                    _ => throw new Exception($"Unknown blob-container-public-access {blobContainerPublicAccess}, only 'blob' or 'container' are allowed.")
-                };
-            }
-
-            await containerClient.CreateAsync(publicAccessType);
+            await containerClient.CreateAsync(PublicAccessType.None);
             var properties = await containerClient.GetPropertiesAsync();
             return properties.Value;
         }
@@ -820,7 +803,6 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         string container,
         string blob,
         string localFilePath,
-        bool overwrite,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
@@ -838,7 +820,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
 
         // Upload the file
         using var fileStream = File.OpenRead(localFilePath);
-        var response = await blobClient.UploadAsync(fileStream, overwrite);
+        var response = await blobClient.UploadAsync(fileStream, false);
 
         return new BlobUploadResult(
             Blob: blob,

@@ -17,13 +17,12 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
 
     // Define options from OptionDefinitions
     private readonly Option<string> _localFilePathOption = StorageOptionDefinitions.LocalFilePath;
-    private readonly Option<bool> _overwriteOption = StorageOptionDefinitions.Overwrite;
 
     public override string Name => "upload";
 
     public override string Description =>
         """
-        Uploads a local file to a blob in Azure Storage with the option to overwrite if the blob already exists.
+        Uploads a local file to a blob in Azure Storage only if the blob does not exist.
         Returns details about the uploaded blob including last modified time, ETag, and content hash.
         """;
 
@@ -39,14 +38,12 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
     {
         base.RegisterOptions(command);
         command.Options.Add(_localFilePathOption);
-        command.Options.Add(_overwriteOption);
     }
 
     protected override BlobUploadOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.LocalFilePath = parseResult.GetValueOrDefault(_localFilePathOption);
-        options.Overwrite = parseResult.GetValueOrDefault(_overwriteOption);
         return options;
     }
 
@@ -68,22 +65,21 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
                 options.Container!,
                 options.Blob!,
                 options.LocalFilePath!,
-                options.Overwrite ?? false,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(result, StorageJsonContext.Default.BlobUploadResult);
 
-            _logger.LogInformation("Successfully uploaded file {LocalFilePath} to blob {Blob} in container {Container} (Overwrite: {Overwrite}).",
-                options.LocalFilePath, options.Blob, options.Container, options.Overwrite);
+            _logger.LogInformation("Successfully uploaded file {LocalFilePath} to blob {Blob} in container {Container}.",
+                options.LocalFilePath, options.Blob, options.Container);
 
             return context.Response;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error uploading file {LocalFilePath} to blob {Blob} in container {Container} (Overwrite {Overwrite}).",
-                options.LocalFilePath, options.Blob, options.Container, options.Overwrite);
+            _logger.LogError(ex, "Error uploading file {LocalFilePath} to blob {Blob} in container {Container}.",
+                options.LocalFilePath, options.Blob, options.Container);
             HandleException(context, ex);
             return context.Response;
         }
