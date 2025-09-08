@@ -38,7 +38,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 
 ### ✨ Azure AI Foundry
 - **REPOSITORY**: [azure-ai-foundry/mcp-foundry](https://github.com/azure-ai-foundry/mcp-foundry)
-- **DESCRIPTION**: A Model Context Protocol server for Azure AI Foundry, providing a unified set of tools for models, knowledge, evaluation, and more
+- **DESCRIPTION**: A Model Context Protocol server for Azure AI Foundry, providing a unified set of tools for models, knowledge, evaluation, and more.
 - **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
 - **TYPE**: `Local`
   
