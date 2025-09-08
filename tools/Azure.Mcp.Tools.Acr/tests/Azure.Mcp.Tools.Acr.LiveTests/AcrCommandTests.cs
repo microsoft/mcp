@@ -148,4 +148,3 @@ public class AcrCommandTests(ITestOutputHelper output)
         Assert.Null(result);
     }
 }
-
