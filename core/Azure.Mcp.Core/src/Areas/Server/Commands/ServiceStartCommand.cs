@@ -83,6 +83,8 @@ public sealed class ServiceStartCommand : BaseCommand
 
         var debug = parseResult.GetValueOrDefault(_debugOption);
 
+        var debug = parseResult.GetValueForOption(_debugOption);
+
         if (!IsValidMode(mode))
         {
             throw new ArgumentException($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}.");
