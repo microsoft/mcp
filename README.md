@@ -79,7 +79,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **TYPE**: `Local`
 
 ### 💻 Microsoft Dev Box
-- **REPOSITORY**: [@microsoft/devbox-mcp](https://www.npmjs.com/package/@microsoft/devbox-mcp?activeTab=readme))
+- **REPOSITORY**: [@microsoft/devbox-mcp](https://www.npmjs.com/package/@microsoft/devbox-mcp?activeTab=readme)
 - **DESCRIPTION**: An MCP server for Microsoft Dev Box. Enables natural language interactions for developer-focused operations like managing Dev Boxes, configuring environments, and handling pools.
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
