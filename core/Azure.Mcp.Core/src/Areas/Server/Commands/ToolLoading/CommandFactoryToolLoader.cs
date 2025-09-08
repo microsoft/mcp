@@ -126,7 +126,7 @@ public sealed class CommandFactoryToolLoader(
 
         if (commandContext.Activity != null)
         {
-            var serviceArea = commandFactory.GetServiceArea(realCommand.Name) ?? toolName;
+            var serviceArea = commandFactory.GetServiceArea(toolName);
             commandContext.Activity.AddTag(TelemetryConstants.TagName.ToolArea, serviceArea);
         }
 
