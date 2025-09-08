@@ -292,7 +292,7 @@ public class CommandFactoryTests
 
         var directCommand4 = Substitute.For<IBaseCommand>();
         directCommand4.Name.Returns(nameof(directCommand4));
-        directCommand4 .GetCommand().Returns(new Command(nameof(directCommand4)));
+        directCommand4.GetCommand().Returns(new Command(nameof(directCommand4)));
 
         // Add commands to each group
         group.Commands.Add(nameof(directCommand), directCommand);
