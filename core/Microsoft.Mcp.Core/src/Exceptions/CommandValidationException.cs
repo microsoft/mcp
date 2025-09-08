@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Core.Exceptions;
+namespace Microsoft.Mcp.Core.Exceptions;
 
 /// <summary>
 /// Represents a structured validation failure during command handling.
