@@ -17,7 +17,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
-    
+
     private const string AzureManagementBaseUrl = "https://management.azure.com";
     private const string ResourceHealthApiVersion = "2025-05-01";
 
@@ -171,25 +171,25 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 
             // Build OData filter - using correct property paths for Azure Resource Health API
             var filterParts = new List<string>();
-            
+
             if (!string.IsNullOrWhiteSpace(eventType))
             {
                 // Use correct property path for event type
                 filterParts.Add($"properties/eventType eq '{eventType}'");
             }
-            
+
             if (!string.IsNullOrWhiteSpace(status))
             {
                 // Use correct property path for status
                 filterParts.Add($"properties/status eq '{status}'");
             }
-            
+
             if (!string.IsNullOrWhiteSpace(trackingId))
             {
                 // Use correct property path for tracking ID
                 filterParts.Add($"properties/trackingId eq '{trackingId}'");
             }
-            
+
             if (!string.IsNullOrWhiteSpace(filter))
             {
                 filterParts.Add(filter);
@@ -197,18 +197,18 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 
             // Use Service Health Events API with 2025-05-01 version
             var url = $"/subscriptions/{subscriptionId}/providers/Microsoft.ResourceHealth/events?api-version=2025-05-01";
-            
+
             // Add time range query parameters if provided (not as OData filters)
             if (!string.IsNullOrWhiteSpace(queryStartTime))
             {
                 url += $"&queryStartTime={Uri.EscapeDataString(queryStartTime)}";
             }
-            
+
             if (!string.IsNullOrWhiteSpace(queryEndTime))
             {
                 url += $"&queryEndTime={Uri.EscapeDataString(queryEndTime)}";
             }
-            
+
             // Add OData filters if provided
             if (filterParts.Count > 0)
             {
@@ -219,7 +219,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
             var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
-            
+
             var jsonDocument = JsonDocument.Parse(content);
             var root = jsonDocument.RootElement;
 
@@ -232,10 +232,10 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
                     // Service Health Events API structure (2025-05-01)
                     var eventId = GetOptionalStringProperty(item, "id");
                     var eventName = GetOptionalStringProperty(item, "name");
-                    
+
                     if (!item.TryGetProperty("properties", out var properties))
                         continue;
-                    
+
                     // Get service health event details from properties
                     var eventTitle = GetOptionalStringProperty(properties, "title");
                     var eventSummary = GetOptionalStringProperty(properties, "summary");
@@ -243,7 +243,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
                     var eventStatus = GetOptionalStringProperty(properties, "status");
                     var eventLevel = GetOptionalStringProperty(properties, "eventLevel");
                     var eventTrackingId = GetOptionalStringProperty(properties, "trackingId");
-                    
+
                     // Get timestamps from Service Health Events API
                     DateTime? eventStartTime = GetOptionalDateTimeProperty(properties, "impactStartTime")?.DateTime;
                     DateTime? eventEndTime = GetOptionalDateTimeProperty(properties, "impactMitigationTime")?.DateTime;

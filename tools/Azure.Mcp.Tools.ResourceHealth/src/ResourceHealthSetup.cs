@@ -44,7 +44,7 @@ public class ResourceHealthSetup : IAreaSetup
         // Register commands
         availabilityStatus.AddCommand("get", new AvailabilityStatusGetCommand(loggerFactory.CreateLogger<AvailabilityStatusGetCommand>()));
         availabilityStatus.AddCommand("list", new AvailabilityStatusListCommand(loggerFactory.CreateLogger<AvailabilityStatusListCommand>()));
-        
+
         serviceHealthEvents.AddCommand("list", new ServiceHealthEventsListCommand(loggerFactory.CreateLogger<ServiceHealthEventsListCommand>()));
     }
 }
