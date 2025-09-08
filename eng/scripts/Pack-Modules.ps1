@@ -38,8 +38,8 @@ try {
     foreach($wrapperJsonFile in $wrapperJsonFiles) {
         $serverDirectory = $wrapperJsonFile.Directory
         $serverName = $serverDirectory.Name
-        $platformOutputPath = "$OutputPath/$serverName/platform"
-        $wrapperOutputPath = "$OutputPath/$serverName/wrapper"
+        $platformOutputPath = "$OutputPath/npm/$serverName/platform"
+        $wrapperOutputPath = "$OutputPath/npm/$serverName/wrapper"
 
         New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
         New-Item -ItemType Directory -Force -Path $wrapperOutputPath | Out-Null
@@ -54,6 +54,9 @@ try {
             Copy-Item -Path $platformDirectory -Destination $tempFolder -Recurse -Force
             Copy-Item -Path "$platformSourcePath/*" -Destination $tempFolder -Force
             Write-Host "Copied platform script files into $tempFolder"
+
+            # Remove symbols files before packing
+            Get-ChildItem -Path $tempFolder -Recurse -Include "*.pdb", "*.dSYM", "*.dbg" | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
 
             $platformFile = "$tempFolder/package.json"
             $platformPackageJson = Get-Content $platformFile -Raw | ConvertFrom-Json -AsHashtable
@@ -131,3 +134,4 @@ try {
 finally {
     Pop-Location
 }
+

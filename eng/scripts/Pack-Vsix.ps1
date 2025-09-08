@@ -94,6 +94,9 @@ Processing VSIX packaging: $vsixBaseName
             Write-Host "Copying $platformDirectory/dist to $tempPath/server"
             Copy-Item -Path "$platformDirectory/dist" -Destination "$tempPath/server" -Recurse -Force -ProgressAction SilentlyContinue
 
+            # Remove symbols files before packing
+            Get-ChildItem -Path "$tempPath/server" -Recurse -Include "*.pdb", "*.dSYM", "*.dbg" | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
+
             New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
 
             ## Update the version number
