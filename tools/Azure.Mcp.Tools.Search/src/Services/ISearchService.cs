@@ -18,6 +18,14 @@ public interface ISearchService
         string? indexName,
         RetryPolicyOptions? retryPolicy = null);
 
+    Task<List<KnowledgeSourceInfo>> ListKnowledgeSources(
+        string serviceName,
+        RetryPolicyOptions? retryPolicy = null);
+
+    Task<List<KnowledgeAgentInfo>> ListKnowledgeAgents(
+        string serviceName,
+        RetryPolicyOptions? retryPolicy = null);
+
     Task<List<JsonElement>> QueryIndex(
         string serviceName,
         string indexName,

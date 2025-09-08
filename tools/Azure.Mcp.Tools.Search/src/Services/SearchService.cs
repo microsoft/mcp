@@ -106,6 +106,52 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
         return indexes;
     }
 
+    public async Task<List<KnowledgeSourceInfo>> ListKnowledgeSources(
+        string serviceName,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters((nameof(serviceName), serviceName));
+
+        var sources = new List<KnowledgeSourceInfo>();
+
+        try
+        {
+            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy);
+            await foreach (var source in searchClient.GetKnowledgeSourcesAsync())
+            {
+                sources.Add(new KnowledgeSourceInfo(source.Name, source.GetType().Name, source.Description));
+            }
+            return sources;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving Search knowledge sources: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<List<KnowledgeAgentInfo>> ListKnowledgeAgents(
+        string serviceName,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters((nameof(serviceName), serviceName));
+
+        var agents = new List<KnowledgeAgentInfo>();
+
+        try
+        {
+            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy);
+            await foreach (var agent in searchClient.GetKnowledgeAgentsAsync())
+            {
+                agents.Add(new KnowledgeAgentInfo(agent.Name, agent.Description, [.. agent.KnowledgeSources.Select(ks => ks.Name)]));
+            }
+            return agents;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving Search knowledge agents: {ex.Message}", ex);
+        }
+    }
+
     public async Task<List<JsonElement>> QueryIndex(
         string serviceName,
         string indexName,
