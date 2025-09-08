@@ -979,7 +979,7 @@ azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
 azmcp azuremanagedlustre filesystem import-job create --subscription <subscription> \
                                      --resource-group <resource-group> \
                                      --file-system <filesystem-name> \
-                                     --import-prefixes <prefix1> <prefix2> ... <prefixN> \
+                                     [--import-prefixes <prefix1> <prefix2> ... <prefixN>] \
                                      [--conflict-resolution-mode <conflict-mode>] \
                                      [--maximum-errors <maximum-errors>] \
                                      [--admin-status <admin-status>] \

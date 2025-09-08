@@ -19,7 +19,7 @@ public sealed class FileSystemImportJobCreateCommand(ILogger<FileSystemImportJob
     private readonly Option<string> _conflictResolutionModeOption = AzureManagedLustreOptionDefinitions.ConflictResolutionModeOption;
     private readonly Option<int?> _maximumErrorsOption = AzureManagedLustreOptionDefinitions.MaximumErrorsOption;
     private readonly Option<string> _adminStatusOption = AzureManagedLustreOptionDefinitions.AdminStatusOption;
-    private readonly Option<string> _jobNameOption = AzureManagedLustreOptionDefinitions.JobNameOption;
+    private readonly Option<string> _nameOption = AzureManagedLustreOptionDefinitions.NameOption;
 
     public override string Name => "create";
 
@@ -41,7 +41,7 @@ public sealed class FileSystemImportJobCreateCommand(ILogger<FileSystemImportJob
         command.AddOption(_conflictResolutionModeOption);
         command.AddOption(_maximumErrorsOption);
         command.AddOption(_adminStatusOption);
-        command.AddOption(_jobNameOption);
+        command.AddOption(_nameOption);
     }
 
     protected override FileSystemImportJobCreateOptions BindOptions(ParseResult parseResult)
@@ -53,7 +53,7 @@ public sealed class FileSystemImportJobCreateCommand(ILogger<FileSystemImportJob
         options.ConflictResolutionMode = parseResult.GetValueForOption(_conflictResolutionModeOption) ?? "OverwriteAlways";
         options.MaximumErrors = parseResult.GetValueForOption(_maximumErrorsOption) ?? -1;
         options.AdminStatus = parseResult.GetValueForOption(_adminStatusOption) ?? "Active";
-        options.JobName = parseResult.GetValueForOption(_jobNameOption);
+        options.Name = parseResult.GetValueForOption(_nameOption);
         return options;
     }
 
@@ -72,7 +72,7 @@ public sealed class FileSystemImportJobCreateCommand(ILogger<FileSystemImportJob
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystem!,
-                options.JobName,
+                options.Name,
                 options.ImportPrefixes,
                 options.ConflictResolutionMode ?? "OverwriteAlways",
                 options.MaximumErrors ?? -1,

@@ -161,7 +161,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         string subscription,
         string resourceGroup,
         string fileSystemName,
-        string? jobName = null,
+        string? name = null,
         IList<string>? importPrefixes = null,
         string conflictResolutionMode = "OverwriteAlways",
         int? maximumErrors = 0,
@@ -173,17 +173,9 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup);
         ArgumentException.ThrowIfNullOrWhiteSpace(fileSystemName);
 
-        // Resolve to ensure file system exists - TODO: REMOVE
-        // var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy) ?? throw new Exception($"Resource group '{resourceGroup}' not found");
-        // var fs = await rg.GetAmlFileSystems().GetAsync(fileSystemName);
-        // if (fs == null)
-        // {
-        //     throw new Exception($"File system '{fileSystemName}' not found in resource group '{resourceGroup}'.");
-        // }
-
         // NOTE: The StorageCache SDK (as of current version) does not expose an import job create API.
         // Placeholder implementation constructs a job object. Wire up REST call when SDK/REST details available.
-        jobName ??= $"import-job-{DateTime.UtcNow:yyyyMMddHHmmss}";
+        name ??= $"import-job-{DateTime.UtcNow:yyyyMMddHHmmss}";
         importPrefixes ??= new List<string> { "/" };
 
         try
@@ -208,20 +200,20 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
                 data.ImportPrefixes.Add(prefix);
             }
 
-            var operation = await jobs.CreateOrUpdateAsync(WaitUntil.Completed, jobName, data);
+            var operation = await jobs.CreateOrUpdateAsync(WaitUntil.Completed, name, data);
             var created = operation.Value;
         }
         catch (RequestFailedException rfe)
         {
-            throw new Exception($"Failed to create import job '{jobName}' for AMLFS '{fileSystemName}': {rfe.Message}", rfe);
+            throw new Exception($"Failed to create import job '{name}' for AMLFS '{fileSystemName}': {rfe.Message}", rfe);
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to create import job '{jobName}' for AMLFS '{fileSystemName}': {ex.Message}", ex);
+            throw new Exception($"Failed to create import job '{name}' for AMLFS '{fileSystemName}': {ex.Message}", ex);
         }
 
         return new ImportJobInfo(
-            jobName!,
+            name!,
             fileSystemName,
             resourceGroup,
             subscription,
