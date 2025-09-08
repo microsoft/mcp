@@ -72,24 +72,75 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
 
     private ResourceDiagnoseOptions BindOptions(ParseResult parseResult)
     {
-        return new ResourceDiagnoseOptions
+        try
         {
-            Question = parseResult.GetValue(_questionOption) ?? string.Empty,
-            ResourceName = parseResult.GetValue(_resourceNameOption) ?? string.Empty,
-            Subscription= parseResult.GetValue(_subscriptionOption),
-            ResourceGroup = parseResult.GetValue(_resourceGroupOption),
-            ResourceType = parseResult.GetValue(_resourceTypeOption)
-        };
+            return new ResourceDiagnoseOptions
+            {
+                Question = TryGetOptionValue(parseResult, _questionOption) ?? string.Empty,
+                ResourceName = TryGetOptionValue(parseResult, _resourceNameOption) ?? string.Empty,
+                Subscription = TryGetNullableOptionValue(parseResult, _subscriptionOption),
+                ResourceGroup = TryGetNullableOptionValue(parseResult, _resourceGroupOption),
+                ResourceType = TryGetNullableOptionValue(parseResult, _resourceTypeOption)
+            };
+        }
+        catch (InvalidOperationException)
+        {
+            // Handle required option validation error
+            return new ResourceDiagnoseOptions
+            {
+                Question = string.Empty,
+                ResourceName = string.Empty,
+                Subscription = null,
+                ResourceGroup = null,
+                ResourceType = null
+            };
+        }
+    }
+
+    private static string? TryGetOptionValue(ParseResult parseResult, Option<string> option)
+    {
+        try
+        {
+            return parseResult.GetValueOrDefault(option);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    private static string? TryGetNullableOptionValue(ParseResult parseResult, Option<string?> option)
+    {
+        try
+        {
+            return parseResult.GetValueOrDefault(option);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        var options = BindOptions(parseResult);
-
         try
         {
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
             {
+                return context.Response;
+            }
+
+            ResourceDiagnoseOptions options;
+            try
+            {
+                options = BindOptions(parseResult);
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("is required"))
+            {
+                // Handle the case where System.CommandLine throws for required options
+                // This should have been caught by Validate, but as a fallback we handle it here
+                context.Response.Status = 400;
+                context.Response.Message = ex.Message;
                 return context.Response;
             }
 
@@ -112,8 +163,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in diagnose. Question: {Question}, Resource: {ResourceName}, Options: {Options}",
-                options.Question, options.ResourceName, options);
+            _logger.LogError(ex, "Error in diagnose. Exception: {Exception}", ex.Message);
             HandleException(context, ex);
         }
 
