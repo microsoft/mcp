@@ -9,6 +9,88 @@ The Azure MCP Server implements the [MCP specification](https://modelcontextprot
 > SSE was deprecated in MCP `2025-03-26` due to [security vulnerabilities and architectural limitations](https://blog.fka.dev/blog/2025-06-06-why-mcp-deprecated-sse-and-go-with-streamable-http/). Users must discontinue use of SSE transport mode and upgrade to version `0.4.0` or newer to maintain compatibility with current MCP clients.
 
 
+## Table of Contents
+
+- [VS Code Install Guide (Recommended)](#vs-code-install-guide-recommended)
+  - [Install VS Code (Stable / Insiders)](#vs-code-install-guide-recommended)
+  - [Install Copilot & Copilot Chat extensions](#vs-code-install-guide-recommended)
+  - [Install Azure MCP Server extension](#vs-code-install-guide-recommended)
+- [IntelliJ Install Guide](#intellij-install-guide)
+  - [Install IntelliJ IDEA](#intellij-install-guide)
+  - [Install Copilot plugin](#intellij-install-guide)
+  - [Install Azure Toolkit for IntelliJ](#intellij-install-guide)
+- [Quick Start](#quick-start)
+- [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
+  - [Azure AI Search](#azure-ai-search)
+  - [Azure App Configuration](#azure-app-configuration)
+  - [Azure Container Registry (ACR)](#azure-container-registry-acr)
+  - [AKS (Kubernetes)](#azure-kubernetes-service-aks)
+  - [Azure Cosmos DB](#azure-cosmos-db)
+  - [Azure Data Explorer](#azure-data-explorer)
+  - [Azure Managed Lustre](#azure-managed-lustre)
+  - [Azure Monitor](#azure-monitor)
+  - [Azure Resource Management](#azure-resource-management)
+  - [Azure SQL Database](#azure-sql-database)
+  - [Azure Storage](#azure-storage)
+- [Currently Supported Tools](#currently-supported-tools)
+  - [Azure AI Search (search engine/vector database)](#azure-ai-search-search-engine-vector-database)
+  - [Azure App Configuration](#azure-app-configuration)
+  - [Azure Best Practices](#azure-best-practices)
+  - [Azure CLI Extension](#azure-cli-extension)
+  - [Azure Container Registry (ACR)](#azure-container-registry-acr)
+  - [Azure Cosmos DB (NoSQL Databases)](#azure-cosmos-db-nosql-databases)
+  - [Azure Data Explorer](#azure-data-explorer)
+  - [Azure Database for MySQL - Flexible Server](#azure-database-for-mysql---flexible-server)
+  - [Azure Database for PostgreSQL - Flexible Server](#azure-database-for-postgresql---flexible-server)
+  - [Azure Developer CLI (azd) Extension](#azure-developer-cli-azd-extension)
+  - [Azure Deploy](#azure-deploy)
+  - [Azure Foundry](#azure-foundry)
+  - [Azure Function App](#azure-function-app)
+  - [Azure Key Vault](#azure-key-vault)
+  - [Azure Kubernetes Service (AKS)](#azure-kubernetes-service-aks)
+  - [Azure Load Testing](#azure-load-testing)
+  - [Azure Managed Grafana](#azure-managed-grafana)
+  - [Azure Managed Lustre](#azure-managed-lustre)
+  - [Azure Marketplace](#azure-marketplace)
+  - [Azure Monitor](#azure-monitor)
+    - [Log Analytics](#log-analytics)
+    - [Health Models](#health-models)
+    - [Metrics](#metrics)
+  - [Azure Service Health](#azure-service-health)
+  - [Azure Native ISV Services](#azure-native-isv-services)
+  - [Azure Quick Review CLI Extension](#azure-quick-review-cli-extension)
+  - [Azure Quota](#azure-quota)
+  - [Azure Redis Cache](#azure-redis-cache)
+  - [Azure Resource Groups](#azure-resource-groups)
+  - [Azure Role-Based Access Control (RBAC)](#azure-role-based-access-control-rbac)
+  - [Azure Service Bus](#azure-service-bus)
+  - [Azure SQL Database / Elastic Pools / SQL Server](#azure-sql-database)
+  - [Azure Storage](#azure-storage)
+  - [Azure Subscription](#azure-subscription)
+  - [Azure Terraform Best Practices](#azure-terraform-best-practices)
+  - [Azure Virtual Desktop](#azure-virtual-desktop)
+  - [Azure Workbooks](#azure-workbooks)
+  - [Bicep](#bicep)
+  - [Cloud Architect](#cloud-architect)
+- [Upgrading Existing Installs to the Latest Version](#upgrading-existing-installs-to-the-latest-version)
+  - [NPX](#npx)
+  - [NPM](#npm)
+  - [Docker](#docker)
+  - [VS Code](#vs-code)
+  - [IntelliJ](#intellij)
+- [Advanced Install Scenarios (Optional)](#advanced-install-scenarios-optional)
+  - [Docker Install Steps (Optional)](#docker-install-steps-optional)
+  - [Custom MCP Client Install Steps (Optional)](#custom-mcp-client-install-steps-optional)
+  - [Manual Install Steps (Optional)](#manual-install-steps-optional)
+- [Data Collection](#data-collection)
+  - [Telemetry Configuration](#telemetry-configuration)
+- [Troubleshooting](#troubleshooting)
+  - [Authentication](#authentication)
+- [Authentication](#authentication)
+- [Security Note](#security-note)
+- [Contributing](#contributing)
+- [Code of Conduct](#code-of-conduct)
+
 ### ✅ VS Code Install Guide (Recommended)
 
 1. Install either the stable or Insiders release of VS Code:
@@ -17,9 +99,16 @@ The Azure MCP Server implements the [MCP specification](https://modelcontextprot
 1. Install the [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions
 1. Install the [Azure MCP Server](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server) extension
 
+
+### ✅ IntelliJ Install Guide
+
+1. Install either the [IntelliJ IDEA Ultimate](https://www.jetbrains.com/idea/download) or [IntelliJ IDEA Community](https://www.jetbrains.com/idea/download) edition.
+1. Install the [GitHub Copilot](https://plugins.jetbrains.com/plugin/17718-github-copilot) plugin.
+1. Install the [Azure Toolkit for Intellij](https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij) plugin.
+
 ### 🚀 Quick Start
 
-1. Open GitHub Copilot in VS Code and [switch to Agent mode](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode)
+1. Open GitHub Copilot in [VS Code]((https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode)) or [IntelliJ](https://github.blog/changelog/2025-05-19-agent-mode-and-mcp-support-for-copilot-in-jetbrains-eclipse-and-xcode-now-in-public-preview/#agent-mode) and switch to Agent mode.
 1. Click `refresh` on the tools list
     - You should see the Azure MCP Server in the list of tools
 1. Try a prompt that tells the agent to use the Azure MCP Server, such as `List my Azure Storage containers`
@@ -356,6 +445,11 @@ There is no version update built into the docker image.  To update, just pull th
 #### VS Code
 
 Installation in VS Code should be in one of the previous forms and the update instructions are the same. If you installed the mcp server with the `npx` command and  `-y @azure/mcp@latest` args, npx will check for package updates each time VS Code starts the server. Using a docker container in VS Code has the same no-update limitation described above.
+
+#### IntelliJ
+
+If the Azure MCP server is configured by Azure Toolkit for IntelliJ plugin, the version is automatically updated to the latest version when the IntelliJ project starts. If the Azure MCP server is manually configured with `npx` command and `-y @azure/mcp@latest` args, npx will check for package updates each time VS Code starts the server. Using a docker container in VS Code has the same no-update limitation described above.
+
 </details>
 
 ## ⚙️ Advanced Install Scenarios (Optional)
