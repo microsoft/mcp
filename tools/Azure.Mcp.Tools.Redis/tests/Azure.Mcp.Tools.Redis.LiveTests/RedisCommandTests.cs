@@ -1,4 +1,3 @@
-/*
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -199,8 +198,3 @@ public class RedisCommandTests(ITestOutputHelper output) : CommandTestsBase(outp
     }
 
 }
-
-<<<<<<< HEAD
-=======
-*/
->>>>>>> 9900c73e (Run pipeline to see status of Core)
