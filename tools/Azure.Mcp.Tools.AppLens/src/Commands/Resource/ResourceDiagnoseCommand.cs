@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.AppLens.Models;
 using Azure.Mcp.Tools.AppLens.Options;
 using Azure.Mcp.Tools.AppLens.Options.Resource;
@@ -14,16 +15,14 @@ namespace Azure.Mcp.Tools.AppLens.Commands.Resource;
 /// Command to diagnose Azure resources using AppLens conversational diagnostics.
 /// </summary>
 public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> logger)
-    : BaseCommand()
+    : SubscriptionCommand<ResourceDiagnoseOptions>
 {
     private const string CommandTitle = "Diagnose Azure Resource Issues";
     private readonly ILogger<ResourceDiagnoseCommand> _logger = logger;
 
-    private readonly Option<string> _questionOption = AppLensOptionDefinitions.Resource.Question;
-    private readonly Option<string> _resourceNameOption = AppLensOptionDefinitions.Resource.ResourceName;
-    private readonly Option<string?> _subscriptionOption = AppLensOptionDefinitions.Resource.Subscription;
-    private readonly Option<string?> _resourceGroupOption = AppLensOptionDefinitions.Resource.ResourceGroup;
-    private readonly Option<string?> _resourceTypeOption = AppLensOptionDefinitions.Resource.ResourceType;
+    private readonly Option<string> _questionOption = AppLensOptionDefinitions.Question;
+    private readonly Option<string> _resourceOption = AppLensOptionDefinitions.Resource;
+    private readonly Option<string?> _resourceTypeOption = AppLensOptionDefinitions.ResourceType;
 
     public override string Name => "diagnose";
 
@@ -52,7 +51,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
         This tool can be used to ask questions about application state, this tool can help when doing diagnostics and address issues about performance and failures.
 
         If you get a resourceId, you can parse it to get the 'subscription', 'resourceGroup', and 'resourceType' parameters of the resource. ResourceIds are in the format:
-        /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceType}/{resourceName}
+        /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/{resourceType}/{resource}
 
         Once proper input parameters are provided using the azure cli tool results or from asking user, this tool returns a list of insights and solutions to the user question.
         """;
@@ -64,37 +63,18 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
     {
         base.RegisterOptions(command);
         command.Options.Add(_questionOption);
-        command.Options.Add(_resourceNameOption);
-        command.Options.Add(_subscriptionOption);
-        command.Options.Add(_resourceGroupOption);
+        command.Options.Add(_resourceOption);
         command.Options.Add(_resourceTypeOption);
+        RequireResourceGroup();
     }
 
-    private ResourceDiagnoseOptions BindOptions(ParseResult parseResult)
+    protected override ResourceDiagnoseOptions BindOptions(ParseResult parseResult)
     {
-        try
-        {
-            return new ResourceDiagnoseOptions
-            {
-                Question = TryGetOptionValue(parseResult, _questionOption) ?? string.Empty,
-                ResourceName = TryGetOptionValue(parseResult, _resourceNameOption) ?? string.Empty,
-                Subscription = TryGetNullableOptionValue(parseResult, _subscriptionOption),
-                ResourceGroup = TryGetNullableOptionValue(parseResult, _resourceGroupOption),
-                ResourceType = TryGetNullableOptionValue(parseResult, _resourceTypeOption)
-            };
-        }
-        catch (InvalidOperationException)
-        {
-            // Handle required option validation error
-            return new ResourceDiagnoseOptions
-            {
-                Question = string.Empty,
-                ResourceName = string.Empty,
-                Subscription = null,
-                ResourceGroup = null,
-                ResourceType = null
-            };
-        }
+        var options = base.BindOptions(parseResult);
+        options.Question = parseResult.GetValue(_questionOption) ?? string.Empty;
+        options.Resource = parseResult.GetValue(_resourceOption) ?? string.Empty;
+        options.ResourceType = parseResult.GetValue(_resourceTypeOption) ?? string.Empty;
+        return options;
     }
 
     private static string? TryGetOptionValue(ParseResult parseResult, Option<string> option)
@@ -146,12 +126,12 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
 
             var service = context.GetService<IAppLensService>();
 
-            _logger.LogInformation("Diagnosing resource. Question: {Question}, Resource: {ResourceName}, Options: {Options}",
-                options.Question, options.ResourceName, options);
+            _logger.LogInformation("Diagnosing resource. Question: {Question}, Resource: {Resource}, Options: {Options}",
+                options.Question, options.Resource, options);
 
             var result = await service.DiagnoseResourceAsync(
                 options.Question,
-                options.ResourceName,
+                options.Resource,
                 options.Subscription,
                 options.ResourceGroup,
                 options.ResourceType);

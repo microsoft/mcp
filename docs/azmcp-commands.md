@@ -221,7 +221,7 @@ azmcp applens resource diagnose --subscription <subscription> \
                                 --resource-group <resource-group> \
                                 --question <question> \
                                 --resource-type <resource-type> \
-                                --resource-name <resource-name>
+                                --resource <resource>
 ```
 
 ### Azure CLI Operations

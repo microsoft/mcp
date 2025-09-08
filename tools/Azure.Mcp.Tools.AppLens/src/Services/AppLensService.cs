@@ -34,13 +34,13 @@ public class AppLensService : BaseAzureService, IAppLensService
     /// <inheritdoc />
     public async Task<DiagnosticResult> DiagnoseResourceAsync(
         string question,
-        string resourceName,
+        string resource,
         string? subscription = null,
         string? resourceGroup = null,
         string? resourceType = null)
     {
         // Step 1: Find the resource using Azure Resource Graph
-        var findResult = await FindResourceIdAsync(resourceName, subscription, resourceGroup, resourceType);
+        var findResult = await FindResourceIdAsync(resource, subscription, resourceGroup, resourceType);
 
         if (findResult is DidNotFindResourceResult notFound)
         {
@@ -70,7 +70,7 @@ public class AppLensService : BaseAzureService, IAppLensService
     }
 
     private Task<FindResourceIdResult> FindResourceIdAsync(
-        string resourceName,
+        string resource,
         string? subscriptionId,
         string? resourceGroup,
         string? resourceType)
@@ -79,10 +79,10 @@ public class AppLensService : BaseAzureService, IAppLensService
 
         if (string.IsNullOrEmpty(subscriptionId) || string.IsNullOrEmpty(resourceGroup))
         {
-            return Task.FromResult<FindResourceIdResult>(new DidNotFindResourceResult($"Subscription ID and Resource Group are required to locate resource '{resourceName}'. Please provide both --subscription-name-or-id and --resource-group parameters."));
+            return Task.FromResult<FindResourceIdResult>(new DidNotFindResourceResult($"Subscription ID and Resource Group are required to locate resource '{resource}'. Please provide both --subscription-name-or-id and --resource-group parameters."));
         }
 
-        var resourceId = $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resourceName}";
+        var resourceId = $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resource}";
 
         return Task.FromResult<FindResourceIdResult>(new FoundResourceResult(resourceId, resourceType ?? "Unknown", null));
     }

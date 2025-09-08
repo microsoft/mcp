@@ -14,14 +14,14 @@ public interface IAppLensService
     /// Diagnoses Azure resource issues using AppLens conversational diagnostics.
     /// </summary>
     /// <param name="question">The diagnostic question from the user.</param>
-    /// <param name="resourceName">The name of the Azure resource to diagnose.</param>
+    /// <param name="resource">The name of the Azure resource to diagnose.</param>
     /// <param name="subscription">The subscription of the Azure resource to diagnose.</param>
     /// <param name="resourceGroup">The resource group of the Azure resource to diagnose.</param>
     /// <param name="resourceType">The resource type of the Azure resource to diagnose.</param>
     /// <returns>A diagnostic result containing insights and solutions.</returns>
     Task<DiagnosticResult> DiagnoseResourceAsync(
         string question,
-        string resourceName,
+        string resource,
         string? subscription = null,
         string? resourceGroup = null,
         string? resourceType = null);

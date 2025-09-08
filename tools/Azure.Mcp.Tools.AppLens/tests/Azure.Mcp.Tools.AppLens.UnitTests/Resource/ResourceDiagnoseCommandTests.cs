@@ -58,7 +58,7 @@ public class ResourceDiagnoseCommandTests
 
         var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
-            "--resource-name", "myapp",
+            "--resource", "myapp",
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--resource-type", "Microsoft.Web/sites"
@@ -93,7 +93,7 @@ public class ResourceDiagnoseCommandTests
     {
         // Arrange && Act
         var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
-            "--resource-name", "myapp",
+            "--resource", "myapp",
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--resource-type", "Microsoft.Web/sites"
@@ -105,7 +105,7 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenResourceNameIsMissing()
+    public async Task ExecuteAsync_Returns400_WhenResourceIsMissing()
     {
         // Arrange && Act
         var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
@@ -126,7 +126,7 @@ public class ResourceDiagnoseCommandTests
         // Arrange && Act
         var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
-            "--resource-name", "myapp",
+            "--resource", "myapp",
             "--resource-group", "rg1",
             "--resource-type", "Microsoft.Web/sites"
         ]));
@@ -142,7 +142,7 @@ public class ResourceDiagnoseCommandTests
         // Arrange && Act
         var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
-            "--resource-name", "myapp",
+            "--resource", "myapp",
             "--subscription", "sub123",
             "--resource-type", "Microsoft.Web/sites"
         ]));
@@ -158,7 +158,7 @@ public class ResourceDiagnoseCommandTests
         // Arrange && Act
         var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
-            "--resource-name", "myapp",
+            "--resource", "myapp",
             "--subscription", "sub123",
             "--resource-group", "rg1"
         ]));
@@ -182,7 +182,7 @@ public class ResourceDiagnoseCommandTests
 
         var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
-            "--resource-name", "myapp",
+            "--resource", "myapp",
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--resource-type", "Microsoft.Web/sites"
@@ -210,7 +210,7 @@ public class ResourceDiagnoseCommandTests
 
         var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
-            "--resource-name", "myapp",
+            "--resource", "myapp",
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--resource-type", "Microsoft.Web/sites"
@@ -238,7 +238,7 @@ public class ResourceDiagnoseCommandTests
 
         var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
-            "--resource-name", "myapp",
+            "--resource", "myapp",
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--resource-type", "Microsoft.Web/sites"
@@ -248,7 +248,7 @@ public class ResourceDiagnoseCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(503, response.Status);
         Assert.Contains("Service Unavailable", response.Message);
     }
 
@@ -272,10 +272,10 @@ public class ResourceDiagnoseCommandTests
             .Returns(expectedResult);
 
         var args = _command.GetCommand().Parse([
-            "--question", "Why is my app slow?",
-            "--resource-name", "myapp",
             "--subscription", "sub123",
             "--resource-group", "rg1",
+            "--question", "Why is my app slow?",
+            "--resource", "myapp",
             "--resource-type", "Microsoft.Web/sites"
         ]);
 
@@ -305,14 +305,14 @@ public class ResourceDiagnoseCommandTests
     [InlineData("Why is my app slow?", "myapp", "sub123", "", "Microsoft.Web/sites")]
     [InlineData("Why is my app slow?", "myapp", "sub123", "rg1", "")]
     public async Task ExecuteAsync_Returns400_WhenRequiredParameterIsEmpty(
-        string question, string resourceName, string subscription, string resourceGroup, string resourceType)
+        string question, string resource, string subscription, string resourceGroup, string resourceType)
     {
         // Arrange
         var args = new List<string>();
         if (!string.IsNullOrEmpty(question))
         { args.AddRange(["--question", question]); }
-        if (!string.IsNullOrEmpty(resourceName))
-        { args.AddRange(["--resource-name", resourceName]); }
+        if (!string.IsNullOrEmpty(resource))
+        { args.AddRange(["--resource", resource]); }
         if (!string.IsNullOrEmpty(subscription))
         { args.AddRange(["--subscription", subscription]); }
         if (!string.IsNullOrEmpty(resourceGroup))
@@ -351,7 +351,7 @@ public class ResourceDiagnoseCommandTests
 
         var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
-            "--resource-name", "myapp",
+            "--resource", "myapp",
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--resource-type", "Microsoft.Web/sites"
@@ -383,7 +383,7 @@ public class ResourceDiagnoseCommandTests
 
         var args = _command.GetCommand().Parse([
             "--question", "Why is my app slow?",
-            "--resource-name", "myapp",
+            "--resource", "myapp",
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--resource-type", "Microsoft.Web/sites"
