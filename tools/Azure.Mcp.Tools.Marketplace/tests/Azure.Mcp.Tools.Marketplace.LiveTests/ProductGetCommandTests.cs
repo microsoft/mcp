@@ -14,8 +14,7 @@ using Xunit;
 namespace Azure.Mcp.Tools.Marketplace.LiveTests;
 
 [Trait("Area", "Marketplace")]
-public class ProductGetCommandTests : CommandTestsBase,
-    IClassFixture<LiveTestFixture>
+public class ProductGetCommandTests : CommandTestsBase
 {
     private const string ProductKey = "product";
     private const string ProductId = "test_test_pmc2pc1.vmsr_uat_beta";
@@ -23,7 +22,7 @@ public class ProductGetCommandTests : CommandTestsBase,
     private const string Market = "US";
     private readonly MarketplaceService _marketplaceService;
 
-    public ProductGetCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : base(liveTestFixture, output)
+    public ProductGetCommandTests(ITestOutputHelper output) : base(output)
     {
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new CacheService(memoryCache);

@@ -144,7 +144,3 @@ public class SearchCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         Assert.Equal(JsonValueKind.Array, docs.ValueKind);
     }
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> 8b946de5 (Merge conflicts redis and VirtualDesktop)

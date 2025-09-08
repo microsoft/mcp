@@ -256,7 +256,3 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         }
     }
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> 8b946de5 (Merge conflicts redis and VirtualDesktop)
