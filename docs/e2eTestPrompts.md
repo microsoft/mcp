@@ -145,6 +145,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_deploy_pipeline_guidance_get | How can I create a CI/CD pipeline to deploy this app to Azure? |
 | azmcp_deploy_plan_get | Create a plan to deploy this application to azure |
 
+## Azure Event Grid
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_eventgrid_topic_list | List all Event Grid topics in my subscription |
+| azmcp_eventgrid_topic_list | Show me the Event Grid topics in my subscription |
+| azmcp_eventgrid_topic_list | List all Event Grid topics in subscription <subscription> |
+| azmcp_eventgrid_topic_list | List all Event Grid topics in resource group <resource_group_name> in subscription <subscription> |
+
 ## Azure Function App
 
 | Tool Name | Test Prompt |
