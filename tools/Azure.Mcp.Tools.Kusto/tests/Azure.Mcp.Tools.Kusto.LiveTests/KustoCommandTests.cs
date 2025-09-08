@@ -109,4 +109,3 @@ public class KustoCommandTests(ITestOutputHelper output)
         Assert.NotEmpty(itemsArray.EnumerateArray());
     }
 }
-

@@ -183,4 +183,3 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
         Assert.False(missingSub.HasValue);
     }
 }
-

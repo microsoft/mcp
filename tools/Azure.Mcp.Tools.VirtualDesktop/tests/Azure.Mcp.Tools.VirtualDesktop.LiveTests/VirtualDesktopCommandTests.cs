@@ -414,4 +414,3 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
         }
     }
 }
-

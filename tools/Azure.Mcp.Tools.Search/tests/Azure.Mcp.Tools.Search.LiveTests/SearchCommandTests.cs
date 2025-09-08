@@ -144,4 +144,3 @@ public class SearchCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         Assert.Equal(JsonValueKind.Array, docs.ValueKind);
     }
 }
-

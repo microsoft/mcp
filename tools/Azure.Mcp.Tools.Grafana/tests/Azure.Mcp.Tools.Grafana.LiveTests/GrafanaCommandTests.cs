@@ -54,4 +54,3 @@ public class GrafanaCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         Assert.Equal(Settings.SubscriptionId, testWorkspace.GetProperty("subscriptionId").GetString());
     }
 }
-

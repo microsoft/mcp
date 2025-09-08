@@ -205,4 +205,3 @@ public sealed class AksCommandTests(ITestOutputHelper output)
         Assert.False(result3.HasValue);
     }
 }
-

@@ -131,4 +131,3 @@ public class QuotaCommandTests : CommandTestsBase
         // Assert.Equal(expectedRegions, actualRegions);
     }
 }
-

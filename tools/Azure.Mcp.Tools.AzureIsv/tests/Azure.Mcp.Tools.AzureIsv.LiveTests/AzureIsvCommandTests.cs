@@ -32,4 +32,3 @@ public class AzureIsvCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         Assert.Equal(JsonValueKind.Array, resources.ValueKind);
     }
 }
-

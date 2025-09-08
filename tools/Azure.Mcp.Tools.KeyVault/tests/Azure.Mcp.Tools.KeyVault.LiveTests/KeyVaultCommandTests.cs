@@ -256,4 +256,3 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         }
     }
 }
-

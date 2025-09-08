@@ -625,4 +625,3 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         }
     }
 }
-

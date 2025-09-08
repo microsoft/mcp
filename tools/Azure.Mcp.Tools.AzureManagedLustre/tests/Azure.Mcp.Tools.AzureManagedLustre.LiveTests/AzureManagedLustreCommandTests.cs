@@ -42,4 +42,3 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
         }
     }
 }
-

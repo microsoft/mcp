@@ -410,4 +410,3 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         }
     }
 }
-
