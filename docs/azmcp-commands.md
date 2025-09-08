@@ -123,6 +123,10 @@ azmcp server start \
 # List knowledge indexes in an AI Foundry project
 azmcp foundry knowledge index list --endpoint <endpoint>
 
+# Get knowledge index schema information
+azmcp foundry knowledge index schema --endpoint <endpoint> \
+                                     --index <index>
+
 # Deploy an AI Foundry model
 azmcp foundry models deploy --subscription <subscription> \
                             --resource-group <resource-group> \

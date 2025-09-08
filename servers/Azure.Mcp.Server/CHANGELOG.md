@@ -6,6 +6,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added support for retrieving knowledge index schema information in Azure AI Foundry projects via the command `azmcp_foundry_knowledge_index_schema`. This command provides detailed schema configuration including field definitions, data types, and searchable attributes for specific knowledge indexes.
+
 ### Breaking Changes
 
 - Changed the following commands to change / remove available options

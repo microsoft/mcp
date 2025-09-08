@@ -8,6 +8,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azmcp_foundry_knowledge_index_list | List all knowledge indexes in my AI Foundry project |
 | azmcp_foundry_knowledge_index_list | Show me the knowledge indexes in my AI Foundry project |
+| azmcp_foundry_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my AI Foundry project |
+| azmcp_foundry_knowledge_index_schema | Get the schema configuration for knowledge index \<index-name> |
 | azmcp_foundry_models_deploy | Deploy a GPT4o instance on my resource \<resource-name> |
 | azmcp_foundry_models_deployments_list | List all AI Foundry model deployments |
 | azmcp_foundry_models_deployments_list | Show me all AI Foundry model deployments |
