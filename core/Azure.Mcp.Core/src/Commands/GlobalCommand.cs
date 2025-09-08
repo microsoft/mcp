@@ -12,7 +12,7 @@ using Azure.Mcp.Core.Options;
 namespace Azure.Mcp.Core.Commands;
 
 public abstract class GlobalCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : BaseCommand
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : AzureBaseCommand
     where TOptions : GlobalOptions, new()
 {
     protected readonly Option<string> _tenantOption = OptionDefinitions.Common.Tenant;
