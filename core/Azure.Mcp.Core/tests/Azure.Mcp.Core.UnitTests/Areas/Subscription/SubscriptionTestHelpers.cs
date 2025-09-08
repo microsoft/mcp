@@ -37,7 +37,7 @@ public static class SubscriptionTestHelpers
             SubscriptionState.Enabled,
             policies,
             authorizationSource: "RoleBased",
-            managedByTenants: Array.Empty<ManagedByTenant>(),
+            managedByTenants: [],
             tags: new Dictionary<string, string>());
     }
 

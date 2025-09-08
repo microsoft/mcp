@@ -5,9 +5,10 @@
     <AssemblyTitle>Template MCP Server</AssemblyTitle>
     <Description>Template MCP Server - Basic Model Context Protocol implementation</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
-
     <NpmPackageName>@azure/mcp-template</NpmPackageName>
     <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>
+    <PackageId>Microsoft.Template.Mcp</PackageId>
+    <ToolCommandName>$(CliName)</ToolCommandName>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -35,15 +36,24 @@
     <NoWarn>$(NoWarn);IL3000</NoWarn>
   </PropertyGroup>
 
-  <!-- AOT native build flags -->
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
-    <IsAotCompatible>true</IsAotCompatible>
-    <PublishAot>true</PublishAot>
+    <!-- AOT native build flags -->
     <PublishTrimmed>true</PublishTrimmed>
-    <TrimMode>full</TrimMode>
     <SelfContained>true</SelfContained>
-    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
-    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+  </PropertyGroup>
+
+  <!-- Properties for the root (RID-less) .NET Tool package -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
+    <PackageDescription>Template MCP Server - Basic Model Context Protocol implementation</PackageDescription>
+    <PackageTags>template;mcp;</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
+    <None Include="../README.md" Pack="true" PackagePath="./README.md" />
+  </ItemGroup>
+  <!-- Properties for the RID-specific .NET Tool packages -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <PackageDescription>Template MCP Server - Basic Model Context Protocol implementation. Internal implementation package for $(RuntimeIdentifier).</PackageDescription>
   </PropertyGroup>
 
   <!-- Debug configuration -->
@@ -58,13 +68,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\core\Template.Mcp.Core\src\Template.Mcp.Core.csproj" />
-    <ProjectReference Include="..\..\..\..\areas\*\src\**\Template.*.csproj" />
+    <ProjectReference Include="$(RepoRoot)\core\Template.Mcp.Core\src\Template.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)\areas\*\src\**\Template.*.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
-
 </Project>

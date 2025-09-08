@@ -146,6 +146,10 @@ azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
 # List knowledge indexes in an AI Foundry project
 azmcp foundry knowledge index list --endpoint <endpoint>
 
+# Get knowledge index schema information
+azmcp foundry knowledge index schema --endpoint <endpoint> \
+                                     --index <index>
+
 # Deploy an AI Foundry model
 azmcp foundry models deploy --subscription <subscription> \
                             --resource-group <resource-group> \
@@ -655,6 +659,16 @@ azmcp grafana list --subscription <subscription>
 ### Azure Marketplace Operations
 
 ```bash
+# List marketplace products available to a subscription
+azmcp marketplace product list --subscription <subscription> \
+                               [--language <language-code>] \
+                               [--search <terms>] \
+                               [--filter <odata-filter>] \
+                               [--orderby <odata-orderby>] \
+                               [--select <odata-select>] \
+                               [--expand <odata-expand>] \
+                               [--next-cursor <pagination-cursor>]
+
 # Get details about an Azure Marketplace product
 azmcp marketplace product get --subscription <subscription> \
                               --product-id <product-id> \
@@ -794,7 +808,7 @@ azmcp monitor metrics query --subscription <subscription> \
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 azmcp azuremanagedlustre filesystem list --subscription <subscription> \
-                                      --resource-group <resource-group> 
+                                      --resource-group <resource-group>
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
 azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \
@@ -887,6 +901,14 @@ azmcp resourcehealth availability-status list --subscription <subscription> \
                                               [--resource-group <resource-group>]
 ```
 
+### Azure Event Grid Operations
+
+```bash
+# List all Event Grid topics in a subscription or resource group
+azmcp eventgrid topic list --subscription <subscription> \
+                           [--resource-group <resource-group>]
+```
+
 ### Azure Service Bus Operations
 
 ```bash
@@ -921,8 +943,22 @@ azmcp sql db show --subscription <subscription> \
                   --server <server-name> \
                   --database <database>
 
+# Create a firewall rule for a SQL server
+azmcp sql server firewall-rule create --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --server <server-name> \
+                                      --firewall-rule-name <rule-name> \
+                                      --start-ip-address <start-ip> \
+                                      --end-ip-address <end-ip>
+
+# Delete a firewall rule from a SQL server
+azmcp sql server firewall-rule delete --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --server <server-name> \
+                                      --firewall-rule-name <rule-name>
+
 # Gets a list of firewall rules for a SQL server
-azmcp sql firewall-rule list --subscription <subscription> \
+azmcp sql server firewall-rule list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
 ```
@@ -954,10 +990,7 @@ azmcp storage account create --subscription <subscription> \
                              --resource-group <resource-group> \
                              --location <location> \
                              --sku <sku> \
-                             --kind <kind> \
                              --access-tier <access-tier> \
-                             --enable-https-traffic-only true \
-                             --allow-blob-public-access false \
                              --enable-hierarchical-namespace false
 
 # Get detailed information about a specific Storage account
@@ -978,8 +1011,7 @@ azmcp storage blob batch set-tier --subscription <subscription> \
 # Create a blob container with optional public access
 azmcp storage blob container create --subscription <subscription> \
                                     --account <account> \
-                                    --container <container> \
-                                    [--blob-container-public-access <blob|container>]
+                                    --container <container>
 
 # Get detailed properties of a storage container
 azmcp storage blob container details --subscription <subscription> \
@@ -1006,8 +1038,7 @@ azmcp storage blob upload --subscription <subscription> \
                           --account <account> \
                           --container <container> \
                           --blob <blob> \
-                          --local-file-path <path-to-local-file> \
-                          [--overwrite]
+                          --local-file-path <path-to-local-file>
 
 # Create a directory in DataLake using a specific path
 azmcp storage datalake directory create --subscription <subscription> \

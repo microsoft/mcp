@@ -36,14 +36,10 @@ public class OptionDefinition<T>(string name, string description, string? value 
 
     public Option<T> ToOption()
     {
-        var option = new Option<T>($"--{Name}", Description);
-
-        if (DefaultValue != null)
+        var option = new Option<T>($"--{Name}", Description)
         {
-            option.SetDefaultValue(DefaultValue);
-        }
-        option.IsRequired = Required;
-        option.IsHidden = Hidden;
+            Required = Required
+        };
         return option;
     }
 

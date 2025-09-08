@@ -37,4 +37,10 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("readOnly")]
     public bool? ReadOnly { get; set; } = null;
+
+    /// <summary>
+    /// Gets or sets whether insecure transport mechanisms are enabled.
+    /// </summary>
+    [JsonPropertyName("enableInsecureTransports")]
+    public bool EnableInsecureTransports { get; set; } = false;
 }

@@ -11,19 +11,19 @@ public static class QuotaOptionDefinitions
         public const string ResourceTypesName = "resource-types";
 
         public static readonly Option<string> Region = new(
-            $"--{RegionName}",
-            "The valid Azure region where the resources will be deployed. E.g. 'eastus', 'westus', etc."
+            $"--{RegionName}"
         )
         {
-            IsRequired = true
+            Description = "The valid Azure region where the resources will be deployed. E.g. 'eastus', 'westus', etc.",
+            Required = true
         };
 
         public static readonly Option<string> ResourceTypes = new(
-            $"--{ResourceTypesName}",
-            "The valid Azure resource types that are going to be deployed(comma-separated). E.g. 'Microsoft.App/containerApps,Microsoft.Web/sites,Microsoft.CognitiveServices/accounts', etc."
+            $"--{ResourceTypesName}"
         )
         {
-            IsRequired = true,
+            Description = "The valid Azure resource types that are going to be deployed(comma-separated). E.g. 'Microsoft.App/containerApps,Microsoft.Web/sites,Microsoft.CognitiveServices/accounts', etc.",
+            Required = true,
             AllowMultipleArgumentsPerToken = true
         };
     }
@@ -36,36 +36,36 @@ public static class QuotaOptionDefinitions
         public const string CognitiveServiceDeploymentSkuNameName = "cognitive-service-deployment-sku-name";
 
         public static readonly Option<string> ResourceTypes = new(
-            $"--{ResourceTypesName}",
-            "Comma-separated list of Azure resource types to check available regions for. The valid Azure resource types. E.g. 'Microsoft.App/containerApps, Microsoft.Web/sites, Microsoft.CognitiveServices/accounts'."
+            $"--{ResourceTypesName}"
         )
         {
-            IsRequired = true,
+            Description = "Comma-separated list of Azure resource types to check available regions for. The valid Azure resource types. E.g. 'Microsoft.App/containerApps, Microsoft.Web/sites, Microsoft.CognitiveServices/accounts'.",
+            Required = true,
             AllowMultipleArgumentsPerToken = true
         };
 
         public static readonly Option<string> CognitiveServiceModelName = new(
-            $"--{CognitiveServiceModelNameName}",
-            "Optional model name for cognitive services. Only needed when Microsoft.CognitiveServices is included in resource types."
+            $"--{CognitiveServiceModelNameName}"
         )
         {
-            IsRequired = false
+            Description = "Optional model name for cognitive services. Only needed when Microsoft.CognitiveServices is included in resource types.",
+            Required = false
         };
 
         public static readonly Option<string> CognitiveServiceModelVersion = new(
-            $"--{CognitiveServiceModelVersionName}",
-            "Optional model version for cognitive services. Only needed when Microsoft.CognitiveServices is included in resource types."
+            $"--{CognitiveServiceModelVersionName}"
         )
         {
-            IsRequired = false
+            Description = "Optional model version for cognitive services. Only needed when Microsoft.CognitiveServices is included in resource types.",
+            Required = false
         };
 
         public static readonly Option<string> CognitiveServiceDeploymentSkuName = new(
-            $"--{CognitiveServiceDeploymentSkuNameName}",
-            "Optional deployment SKU name for cognitive services. Only needed when Microsoft.CognitiveServices is included in resource types."
+            $"--{CognitiveServiceDeploymentSkuNameName}"
         )
         {
-            IsRequired = false
+            Description = "Optional deployment SKU name for cognitive services. Only needed when Microsoft.CognitiveServices is included in resource types.",
+            Required = false
         };
     }
 }

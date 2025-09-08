@@ -1,6 +1,37 @@
 
 # Release History
 
+## 0.5.12 - 2025-09-04
+
+### Added
+- Added `azmcp sql server firewall-rule create` and `azmcp sql server firewall-rule delete` commands. [[#121](https://github.com/microsoft/mcp/pull/121)]
+- Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
+- Added instructions about consumption plan for azure functions deployment best practices [[#218](https://github.com/microsoft/mcp/pull/218)]
+
+### Fixed
+
+- Fixed a bug in MySQL query validation logic. [[#81](https://github.com/microsoft/mcp/pull/81)]
+
+## 0.5.11 - 2025-09-02
+
+### Fixed
+
+- Fixed VSIX signing [[#91](https://github.com/microsoft/mcp/pull/91)]
+- Included native packages in build artifacts and pack/release scripts. [[#51](https://github.com/microsoft/mcp/pull/51)]
+
+## 0.5.10 - 2025-08-28
+
+### Fixed
+
+- Fixed a bug with telemetry collection related to AppConfig tools. [[#44](https://github.com/microsoft/mcp/pull/44)]
+
+## 0.5.9 - 2025-08-26
+
+### Changed
+
+- Updated dependencies to improve .NET Ahead-of-Time (AOT) compilation support:
+  - `Microsoft.Azure.Cosmos` `3.51.0` → `Microsoft.Azure.Cosmos.Aot` `0.1.1-preview.1`. [[#37](https://github.com/microsoft/mcp/pull/37)]
+
 ## 0.5.8 - 2025-08-21
 
 ### Added

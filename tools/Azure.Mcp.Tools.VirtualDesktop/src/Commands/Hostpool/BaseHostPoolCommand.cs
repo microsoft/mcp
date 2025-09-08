@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.VirtualDesktop.Options;
 using Azure.Mcp.Tools.VirtualDesktop.Options.Hostpool;
 
@@ -19,15 +21,15 @@ public abstract class BaseHostPoolCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_hostPoolOption);
-        command.AddOption(_hostPoolResourceIdOption);
+        command.Options.Add(_hostPoolOption);
+        command.Options.Add(_hostPoolResourceIdOption);
     }
 
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.HostPoolName = parseResult.GetValueForOption(_hostPoolOption);
-        options.HostPoolResourceId = parseResult.GetValueForOption(_hostPoolResourceIdOption);
+        options.HostPoolName = parseResult.GetValueOrDefault(_hostPoolOption);
+        options.HostPoolResourceId = parseResult.GetValueOrDefault(_hostPoolResourceIdOption);
         return options;
     }
 
@@ -39,11 +41,15 @@ public abstract class BaseHostPoolCommand<
             return result;
         }
 
-        var hostPoolName = commandResult.GetValueForOption(_hostPoolOption);
-        var hostPoolResourceId = commandResult.GetValueForOption(_hostPoolResourceIdOption);
+        // Retrieve values once and infer presence from non-empty values
+        commandResult.TryGetValue(_hostPoolOption, out string? hostPoolName);
+        commandResult.TryGetValue(_hostPoolResourceIdOption, out string? hostPoolResourceId);
+
+        var hasHostPool = !string.IsNullOrWhiteSpace(hostPoolName);
+        var hasHostPoolResourceId = !string.IsNullOrWhiteSpace(hostPoolResourceId);
 
         // Validate that either hostpool or hostpool-resource-id is provided, but not both
-        if (string.IsNullOrEmpty(hostPoolName) && string.IsNullOrEmpty(hostPoolResourceId))
+        if (!hasHostPool && !hasHostPoolResourceId)
         {
             result.IsValid = false;
             result.ErrorMessage = "Either --hostpool or --hostpool-resource-id must be provided.";
@@ -55,7 +61,7 @@ public abstract class BaseHostPoolCommand<
             return result;
         }
 
-        if (!string.IsNullOrEmpty(hostPoolName) && !string.IsNullOrEmpty(hostPoolResourceId))
+        if (hasHostPool && hasHostPoolResourceId)
         {
             result.IsValid = false;
             result.ErrorMessage = "Cannot specify both --hostpool and --hostpool-resource-id. Use only one.";

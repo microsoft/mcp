@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
@@ -23,7 +23,7 @@ public class SessionHostUserSessionListCommandTests
     private readonly ILogger<SessionHostUserSessionListCommand> _logger;
     private readonly SessionHostUserSessionListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public SessionHostUserSessionListCommandTests()
     {
@@ -35,7 +35,7 @@ public class SessionHostUserSessionListCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -106,7 +106,7 @@ public class SessionHostUserSessionListCommandTests
                 .Returns(userSessions.AsReadOnly());
         }
 
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -160,7 +160,7 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .Returns(userSessions.AsReadOnly());
 
-        var parseResult = _parser.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -204,7 +204,7 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .Returns(userSessions.AsReadOnly());
 
-        var parseResult = _parser.Parse($"--subscription test-sub --hostpool-resource-id {resourceId} --sessionhost test-sessionhost");
+        var parseResult = _commandDefinition.Parse($"--subscription test-sub --hostpool-resource-id {resourceId} --sessionhost test-sessionhost");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -255,7 +255,7 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .Returns(userSessions.AsReadOnly());
 
-        var parseResult = _parser.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost --resource-group test-rg");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost --resource-group test-rg");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -310,7 +310,7 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .Returns(userSessions.AsReadOnly());
 
-        var parseResult = _parser.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -341,7 +341,7 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Exception("Test error"));
 
-        var parseResult = _parser.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -356,7 +356,7 @@ public class SessionHostUserSessionListCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException_NotFound()
     {
         // Arrange
-        var exception = new Azure.RequestFailedException(404, "Session host not found");
+        var exception = new RequestFailedException(404, "Session host not found");
         _virtualDesktopService.ListUserSessionsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -373,7 +373,7 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(exception);
 
-        var parseResult = _parser.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -388,7 +388,7 @@ public class SessionHostUserSessionListCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException_Forbidden()
     {
         // Arrange
-        var exception = new Azure.RequestFailedException(403, "Access denied");
+        var exception = new RequestFailedException(403, "Access denied");
         _virtualDesktopService.ListUserSessionsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -405,7 +405,7 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(exception);
 
-        var parseResult = _parser.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -449,7 +449,7 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .Returns(userSessions.AsReadOnly());
 
-        var parseResult = _parser.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost --tenant test-tenant");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost --tenant test-tenant");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

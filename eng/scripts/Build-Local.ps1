@@ -3,6 +3,7 @@
 
 [CmdletBinding(DefaultParameterSetName='none')]
 param(
+    [string] $ServerName,
     [switch] $Trimmed,
     [switch] $NoSelfContained,
     [switch] $NoUsePaths,
@@ -26,6 +27,7 @@ $versionSuffix = "-$prereleaseLabel.$prereleaseNumber"
 
 function Build($os, $arch) {
     & "$RepoRoot/eng/scripts/Build-Module.ps1" `
+        -ServerName $ServerName `
         -VersionSuffix $versionSuffix `
         -OperatingSystem $os `
         -Architecture $arch `

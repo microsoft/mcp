@@ -356,7 +356,7 @@ class Program
         {
             // Try to find the azmcp executable in the CLI folder, relative to the executable location
             var exeDir = AppContext.BaseDirectory;
-            var azMcpPath = Path.GetFullPath(Path.Combine(FindRepoRoot(exeDir), "core", "src", "AzureMcp.Cli", "bin", "Debug", "net9.0"));
+            var azMcpPath = Path.GetFullPath(Path.Combine(FindRepoRoot(exeDir), "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net9.0"));
             var executablePath = Path.Combine(azMcpPath, "azmcp.exe");
 
             // Fallback to .dll if .exe doesn't exist
@@ -649,8 +649,8 @@ class Program
         if (tools.Count > threshold)
         {
             int half = tools.Count / 2;
-            var leftTask = Task.Run(() => PopulateDatabaseAsync(db, tools.Take(half).ToList(), embeddingService));
-            await PopulateDatabaseAsync(db, tools.Skip(half).ToList(), embeddingService);
+            var leftTask = Task.Run(() => PopulateDatabaseAsync(db, [.. tools.Take(half)], embeddingService));
+            await PopulateDatabaseAsync(db, [.. tools.Skip(half)], embeddingService);
             await leftTask;
             return;
         }

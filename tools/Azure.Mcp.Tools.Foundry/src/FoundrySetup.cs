@@ -42,6 +42,7 @@ public class FoundrySetup : IAreaSetup
         knowledge.AddSubGroup(index);
 
         index.AddCommand("list", new KnowledgeIndexListCommand());
+        index.AddCommand("schema", new KnowledgeIndexSchemaCommand());
 
         var agents = new CommandGroup("agents", "Foundry agents operations - Commands for listing, querying, and evaluating agents in AI Foundry.");
         foundry.AddSubGroup(agents);

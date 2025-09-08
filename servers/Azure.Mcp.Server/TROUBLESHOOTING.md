@@ -9,14 +9,15 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
   - [Common Issues](#common-issues)
     - [Console window is empty when running Azure MCP Server](#console-window-is-empty-when-running-azure-mcp-server)
     - [Can I select what tools to load in the MCP server?](#can-i-select-what-tools-to-load-in-the-mcp-server)
-    - [Why does VS Code only show a subset of tools available?](#why-does-vs-code-only-show-a-subset-of-tools-available)
-    - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
-  - [Tool Limitations](#tool-limitations)
+  - [VS Code Limitations](#tool-limitations)
     - [128-Tool Limit Issue](#128-tool-limit-issue)
       - [Problem](#problem)
       - [Root Cause](#root-cause)
       - [Workarounds](#workarounds)
       - [How to Check Your Tool Count](#how-to-check-your-tool-count)
+    - [VS Code only shows a subset of tools available](#vs-code-only-shows-a-subset-of-tools-available)
+    - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
+    - [VS Code Cache Problems](#vs-code-cache-problems)
   - [Authentication](#authentication)
     - [401 Unauthorized: Local authorization is disabled](#401-unauthorized-local-authorization-is-disabled)
       - [Root Cause](#root-cause-1)
@@ -92,29 +93,6 @@ Yes, you can enable multiple MCP servers that only load the services you need. I
   }
 }
 ```
-
-### Why does VS Code only show a subset of tools available?
-
-The Azure MCP Server can run in multiple modes. Review your MCP configuration to ensure it matches your expectations:
-
-- `azmcp server start` - Launches an MCP server with all tools enabled
-- `azmcp server start --namespace <service-name>` - Launches an MCP server with tools for the specified service (e.g., `storage`, `keyvault`)
-- `azmcp server start --mode single` - Launches an MCP server with a single `azure` tool that performs internal dynamic proxy and tool selection
-- `azmcp server start --mode namespace` - Launches an MCP server with a tool registered for each Azure service/namespace.
-
-### VS Code Permission Dialog for Language Model Calls
-
-When using the Azure MCP Server in VS Code, you may see a permission dialog requesting authorization for the MCP server to make language model calls:
-
-![VS Code MCP Permission Dialog](https://github.com/user-attachments/assets/8fddb369-046b-46d1-84c2-b1dd4a1b4e6a)
-
-The dialog shows: "The MCP server 'Azure' has issued a request to make an language model call. Do you want to allow it to make requests during chat?"
-
-**To continue using the Azure MCP Server, you must click one of the following:**
-- **"Allow in this Session"** - Allows the server to make language model calls for the current VS Code session
-- **"Always"** - Permanently allows the server to make language model calls
-
-This permission is required because some Azure MCP tools may need to make additional language model calls to process complex requests or provide enhanced responses.
 
 ## Tool Limitations
 
@@ -201,6 +179,59 @@ Azure MCP's dynamic proxy mode exposes one tool that routes to all Azure service
 1. Open VS Code Command Palette (Ctrl+Shift+P)
 2. Run "MCP: List Servers"
 3. Check the tool count for each server in the output window
+
+### VS Code only shows a subset of tools available
+
+The Azure MCP Server can run in multiple modes. Review your MCP configuration to ensure it matches your expectations:
+
+- `azmcp server start` - Launches an MCP server with all tools enabled
+- `azmcp server start --namespace <service-name>` - Launches an MCP server with tools for the specified service (e.g., `storage`, `keyvault`)
+- `azmcp server start --mode single` - Launches an MCP server with a single `azure` tool that performs internal dynamic proxy and tool selection
+- `azmcp server start --mode namespace` - Launches an MCP server with a tool registered for each Azure service/namespace.
+
+### VS Code Permission Dialog for Language Model Calls
+
+When using the Azure MCP Server in VS Code, you may see a permission dialog requesting authorization for the MCP server to make language model calls:
+
+![VS Code MCP Permission Dialog](https://github.com/user-attachments/assets/8fddb369-046b-46d1-84c2-b1dd4a1b4e6a)
+
+The dialog shows: "The MCP server 'Azure' has issued a request to make an language model call. Do you want to allow it to make requests during chat?"
+
+**To continue using the Azure MCP Server, you must click one of the following:**
+- **"Allow in this Session"** - Allows the server to make language model calls for the current VS Code session
+- **"Always"** - Permanently allows the server to make language model calls
+
+This permission is required because some Azure MCP tools may need to make additional language model calls to process complex requests or provide enhanced responses.
+
+### VS Code Cache Problems
+If you encounter issues with stale configurations, reload the VS Code window:
+
+- Press Ctrl+Shift+P (or Cmd+Shift+P on macOS).
+- Select Developer: Reload Window.
+
+If the issue persists, you can take a more aggressive approach by clearing the following folders:
+
+**For Windows:**
+- %APPDATA%\Code\Cache
+- %APPDATA%\Code\CachedData
+- %APPDATA%\Code\User\workspaceStorage
+- %APPDATA%\Code\logs
+
+**For macOS:**
+- ~/Library/Application Support/Code/Cache
+- ~/Library/Application Support/Code/CachedData
+- ~/Library/Application Support/Code/User/workspaceStorage
+- ~/Library/Application Support/Code/logs
+
+**For Linux:**
+- ~/.config/Code/Cache
+- ~/.config/Code/CachedData
+- ~/.config/Code/User/workspaceStorage
+- ~/.config/Code/logs
+
+Clear Node Modules Cache
+
+- npm cache clean --force
 
 ## Authentication
 
