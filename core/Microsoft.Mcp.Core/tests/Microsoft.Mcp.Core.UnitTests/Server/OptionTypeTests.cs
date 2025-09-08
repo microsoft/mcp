@@ -13,10 +13,7 @@ public class OptionTypeTests
     public void Option_List_String_ValueType_Should_Be_Array()
     {
         // Arrange
-        var option = new Option<List<string>>("--test")
-        {
-            Description = "Test option"
-        };
+        var option = new Option<List<string>>("--test", "Test option");
 
         // Act
         var jsonType = option.ValueType.ToJsonType();
