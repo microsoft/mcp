@@ -77,9 +77,9 @@ public sealed class ServiceStartCommand : BaseCommand
     /// <returns>A command response indicating the result of the operation.</returns>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        string[]? namespaces = parseResult.GetValue(_namespaceOption);
-        string? mode = parseResult.GetValue(_modeOption);
-        bool? readOnly = parseResult.GetValue(_readOnlyOption);
+        string[]? namespaces = parseResult.GetValueOrDefault(_namespaceOption);
+        string? mode = parseResult.GetValueOrDefault(_modeOption);
+        bool? readOnly = parseResult.GetValueOrDefault(_readOnlyOption);
 
         var debug = parseResult.GetValueOrDefault(_debugOption);
 
@@ -101,7 +101,7 @@ public sealed class ServiceStartCommand : BaseCommand
 
         var serverOptions = new ServiceStartOptions
         {
-            Transport = parseResult.GetValue(_transportOption) ?? TransportTypes.StdIo,
+            Transport = parseResult.GetValueOrDefault(_transportOption) ?? TransportTypes.StdIo,
             Namespace = namespaces,
             Mode = mode,
             ReadOnly = readOnly,
