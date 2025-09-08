@@ -25,7 +25,7 @@ public static class AuthenticationUtils
         try
         {
             // Use source-generated serialization to avoid trimmer warnings
-            var credentials = JsonSerializer.Deserialize(credentialsJson, JsonSourceGenerationContext.Default.AzureCredentials);
+            var credentials = JsonSerializer.Deserialize(credentialsJson, ServicesJsonContext.Default.AzureCredentials);
             if (credentials == null)
             {
                 logger.LogWarning("Invalid AZURE_CREDENTIALS format. Ensure it contains clientId, clientSecret, and tenantId.");
