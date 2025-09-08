@@ -217,6 +217,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 ### 🏪 Azure Marketplace
 
+* List marketplace products available to a subscription with filtering capabilities
 * Get details about Marketplace products
 
 ### 📈 Azure Monitor
