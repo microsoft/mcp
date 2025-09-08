@@ -8,5 +8,6 @@ extends:
     # All other runs get -alpha prerelease labels
     PublishPackages: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
     RunLiveTests: true
-    ReleaseRun: ${{ and(eq(variables['Build.Reason'], 'Manual'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startswith(variables['Build.SourceBranch'], 'refs/heads/hotfix/'))) }}
+    #ReleaseRun: ${{ and(eq(variables['Build.Reason'], 'Manual'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startswith(variables['Build.SourceBranch'], 'refs/heads/hotfix/'))) }}
+    ReleaseRun: true
     ServerName: Template.Mcp.Server

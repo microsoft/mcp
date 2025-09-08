@@ -218,14 +218,6 @@ jobs:
   condition: and(succeeded(), ne(variables['Skip.SymbolsUpload'], 'true'))
   dependsOn: PublishPackage
 
-  templateContext:
-    outputs:
-      - ${{if ne(artifact.skipSymbolsUpload, 'true')}}:
-        - output: pipelineArtifact
-          displayName: 'Store converted symbols in ${{artifact.name}}-symbols artifact'
-          targetPath: $(Build.ArtifactStagingDirectory)/symbols
-          artifactName: ${{artifact.name}}-symbols
-
   variables:
     build-tools-repo-path: $(Pipeline.Workspace)/s/azure-sdk-build-tools
 
