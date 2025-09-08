@@ -24,6 +24,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Updated `Azure.Identity` and `Azure.Identity.Broker` dependencies. [[#352](https://github.com/microsoft/mcp/pull/352)]
+- Updated the following dependencies to improve .NET Ahead-of-Time (AOT) compilation support: 
+  - Azure.ResourceManager.StorageCache: `1.3.1` → `1.3.2`
 
 ## 0.5.12 (2025-09-04)
 
@@ -36,7 +38,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
+AOT- Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
 - Added instructions about consumption plan for azure functions deployment best practices [[#218](https://github.com/microsoft/mcp/pull/218)]
 
 ## 0.5.11 (2025-09-02)

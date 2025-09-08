@@ -75,12 +75,4 @@
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
-  <!-- IMPORTANT: DO NOT ADD EXCLUSIONS HERE -->
-  <!-- If the "(Native AOT) Build module" stage fails in CI, follow the AOT compatibility guide:
-       https://github.com/Azure/azure-mcp/blob/main/docs/aot-compatibility.md
-       Do not add ProjectReference removals in this ItemGroup. -->
-  <ItemGroup Condition="'$(BuildNative)' == 'true'">
-    <ProjectReference
-      Remove="$(RepoRoot)\tools\azuremanagedlustre\src\AzureMcp.AzureManagedLustre\AzureMcp.AzureManagedLustre.csproj" />
-  </ItemGroup>
 </Project>

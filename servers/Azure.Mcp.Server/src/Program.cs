@@ -66,6 +66,7 @@ internal class Program
             new Azure.Mcp.Tools.AppConfig.AppConfigSetup(),
             new Azure.Mcp.Tools.Authorization.AuthorizationSetup(),
             new Azure.Mcp.Tools.AzureIsv.AzureIsvSetup(),
+            new Azure.Mcp.Tools.AzureManagedLustre.AzureManagedLustreSetup(),
             new Azure.Mcp.Tools.AzureTerraformBestPractices.AzureTerraformBestPracticesSetup(),
             new Azure.Mcp.Tools.Deploy.DeploySetup(),
             new Azure.Mcp.Tools.EventGrid.EventGridSetup(),
@@ -98,7 +99,6 @@ internal class Program
             // follow the AOT compatibility guide instead of changing this list:
             // https://github.com/Azure/azure-mcp/blob/main/docs/aot-compatibility.md
             new Azure.Mcp.Tools.BicepSchema.BicepSchemaSetup(),
-            new Azure.Mcp.Tools.AzureManagedLustre.AzureManagedLustreSetup(),
 #endif
         ];
     }
