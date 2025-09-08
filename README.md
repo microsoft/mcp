@@ -60,6 +60,12 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `REMOTE` - `https://api.githubcopilot.com/mcp`
 
+### 📝 Markitdown
+- **REPOSITORY**: [microsoft/markitdown](https://github.com/microsoft/markitdown)
+- **DESCRIPTION**: A specialized MCP server for Markdown processing and manipulation. Enables AI models to read, write, and transform Markdown content with robust parsing and formatting capabilities.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `Local`
+  
 ### 💻 Microsoft 365 Agents Toolkit
 - **REPOSITORY**: [OfficeDev/microsoft-365-agents-toolkit](https://github.com/OfficeDev/microsoft-365-agents-toolkit/)
 - **DESCRIPTION**: The Microsoft 365 Agents Toolkit MCP Server is a Model Context Protocol (MCP) server that provides a seamless connection between AI agents and developers for building apps and agents for Microsoft 365 and Microsoft 365 Copilot.
@@ -87,12 +93,6 @@ This repository contains core libraries, test frameworks, engineering systems, p
 ### 📁 Microsoft Files
 - **REPOSITORY**: [microsoft/files-mcp-server](https://github.com/microsoft/files-mcp-server)
 - **DESCRIPTION**: Provides a declarative control plane for managing file-based resources, supporting AI workflows that involve static files and documentation synchronization.
-- **CATEGORY**: `DEVELOPER TOOLS`
-- **TYPE**: `Local`
-
-### 📝 Markitdown
-- **REPOSITORY**: [microsoft/markitdown](https://github.com/microsoft/markitdown)
-- **DESCRIPTION**: A specialized MCP server for Markdown processing and manipulation. Enables AI models to read, write, and transform Markdown content with robust parsing and formatting capabilities.
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
 
