@@ -183,3 +183,7 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
         Assert.False(missingSub.HasValue);
     }
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 8b946de5 (Merge conflicts redis and VirtualDesktop)
