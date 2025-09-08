@@ -22,6 +22,6 @@ public sealed class FileSystemImportJobCreateOptions : BaseAzureManagedLustreOpt
     [JsonPropertyName(AzureManagedLustreOptionDefinitions.adminStatus)]
     public string? AdminStatus { get; set; }
 
-    [JsonPropertyName(AzureManagedLustreOptionDefinitions.jobName)]
-    public string? JobName { get; set; }
+    [JsonPropertyName(AzureManagedLustreOptionDefinitions.name)]
+    public string? Name { get; set; }
 }

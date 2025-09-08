@@ -23,7 +23,7 @@ public interface IAzureManagedLustreService
         string subscription,
         string resourceGroup,
         string fileSystemName,
-        string? jobName = null,
+        string? name = null,
         IList<string>? importPrefixes = null,
         string conflictResolutionMode = "OverwriteAlways",
         int? maximumErrors = 0,

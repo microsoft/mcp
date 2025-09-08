@@ -91,25 +91,22 @@ public class FileSystemImportJobCreateCommandTests
         var result = JsonSerializer.Deserialize<ImportJobCreateResultJson>(json);
         Assert.NotNull(result);
         Assert.NotNull(result!.ImportJob);
-        Assert.Equal("import-job-123", result.ImportJob.JobName);
+        Assert.Equal("import-job-123", result.ImportJob.Name);
         Assert.Equal(_fileSystem, result.ImportJob.FileSystemName);
         Assert.Equal("/", result.ImportJob.ImportPrefixes![0]);
     }
-
-    // TODO: may need a delay between tests to prevent conflicts with successful jobs
-    // OR: successful job last
 
     [Fact]
     public async Task ExecuteAsync_PassesOptionalParameters()
     {
         // Arrange
         var prefixes = new[] { "/a", "/b" };
-        var jobName = "custom-job";
+        var name = "custom-job";
         _amlfsService.CreateImportJobAsync(
             Arg.Is(_subscription),
             Arg.Is(_resourceGroup),
             Arg.Is(_fileSystem),
-            Arg.Is(jobName),
+            Arg.Is(name),
             Arg.Is<IList<string>?>(p => p != null && p.Count == prefixes.Length && p[0] == prefixes[0] && p[1] == prefixes[1]),
             Arg.Is("Skip"),
             Arg.Is<int?>(5),
@@ -117,7 +114,7 @@ public class FileSystemImportJobCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
             .Returns(new ImportJobInfo(
-                jobName,
+                name,
                 _fileSystem,
                 _resourceGroup,
                 _subscription,
@@ -135,7 +132,7 @@ public class FileSystemImportJobCreateCommandTests
             "--conflict-resolution-mode", "Skip",
             "--maximum-errors", "5",
             "--admin-status", "Active",
-            "--job-name", jobName
+            "--name", name
         ]);
 
         // Act
@@ -147,7 +144,7 @@ public class FileSystemImportJobCreateCommandTests
             _subscription,
             _resourceGroup,
             _fileSystem,
-            jobName,
+            name,
             Arg.Is<IList<string>?>(p => p != null && p.Count == prefixes.Length && p[0] == prefixes[0] && p[1] == prefixes[1]),
             "Skip",
             5,
@@ -245,7 +242,7 @@ public class FileSystemImportJobCreateCommandTests
 
     private class ImportJobJson
     {
-        [JsonPropertyName("jobName")] public string JobName { get; set; } = string.Empty;
+        [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
         [JsonPropertyName("fileSystemName")] public string FileSystemName { get; set; } = string.Empty;
         [JsonPropertyName("status")] public string Status { get; set; } = string.Empty;
         [JsonPropertyName("resourceGroupName")] public string? ResourceGroupName { get; set; }
