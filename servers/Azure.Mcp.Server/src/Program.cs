@@ -85,6 +85,7 @@ internal class Program
             new Azure.Mcp.Tools.Marketplace.MarketplaceSetup(),
             new Azure.Mcp.Tools.Quota.QuotaSetup(),
             new Azure.Mcp.Tools.Monitor.MonitorSetup(),
+            new Azure.Mcp.Tools.AppInsights.AppInsightsSetup(),
             new Azure.Mcp.Tools.MySql.MySqlSetup(),
             new Azure.Mcp.Tools.Postgres.PostgresSetup(),
             new Azure.Mcp.Tools.Redis.RedisSetup(),
