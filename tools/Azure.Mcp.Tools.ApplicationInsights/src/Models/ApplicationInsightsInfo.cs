@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.AppInsights.Models;
+namespace Azure.Mcp.Tools.ApplicationInsights.Models;
 
 public class ApplicationInsightsInfo
 {

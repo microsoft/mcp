@@ -168,7 +168,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.MySql", "Azure.Mcp.Tools.MySql", "{F4CC2172-46F8-04D7-FF11-4F95DDBB59E2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{065991D2-6F8C-6F65-0E72-DC96953B87D8}"
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AppInsights", "tools\Azure.Mcp.Tools.AppInsights\src\Azure.Mcp.Tools.AppInsights.csproj", "{E2C2A3E4-1D5F-4F6E-9A7F-1C2E54F893AB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.ApplicationInsights", "tools\Azure.Mcp.Tools.ApplicationInsights\src\Azure.Mcp.Tools.ApplicationInsights.csproj", "{E2C2A3E4-1D5F-4F6E-9A7F-1C2E54F893AB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.MySql", "tools\Azure.Mcp.Tools.MySql\src\Azure.Mcp.Tools.MySql.csproj", "{916DF4C9-3EB7-4D2B-B727-6EEEBB049A80}"
 EndProject

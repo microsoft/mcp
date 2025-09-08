@@ -3,20 +3,20 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.AppInsights.Commands.Recommendation;
-using Azure.Mcp.Tools.AppInsights.Services;
+using Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
+using Azure.Mcp.Tools.ApplicationInsights.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Tools.AppInsights;
+namespace Azure.Mcp.Tools.ApplicationInsights;
 
-public class AppInsightsSetup : IAreaSetup
+public class ApplicationInsightsSetup : IAreaSetup
 {
-    public string Name => "appinsights";
+    public string Name => "applicationinsights"; // Renamed from 'appinsights'
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton<IAppInsightsService, AppInsightsService>();
+        services.AddSingleton<IApplicationInsightsService, ApplicationInsightsService>();
     }
 
     public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)

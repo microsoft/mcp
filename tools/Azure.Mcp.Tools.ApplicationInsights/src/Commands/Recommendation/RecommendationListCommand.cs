@@ -4,17 +4,17 @@
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Services.Telemetry;
-using Azure.Mcp.Tools.AppInsights.Models;
-using Azure.Mcp.Tools.AppInsights.Options;
-using Azure.Mcp.Tools.AppInsights.Services;
+using Azure.Mcp.Tools.ApplicationInsights.Models;
+using Azure.Mcp.Tools.ApplicationInsights.Options;
+using Azure.Mcp.Tools.ApplicationInsights.Services;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Models.Command;
 
-namespace Azure.Mcp.Tools.AppInsights.Commands.Recommendation;
+namespace Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
 
-public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger) : SubscriptionCommand<InsightsListOptions>()
+public sealed class RecommendationListCommand(ILogger<RecommendationListCommand> logger) : SubscriptionCommand<RecommendationListOptions>()
 {
     private const string CommandTitle = "List Application Insights Recommendations";
     private readonly ILogger<RecommendationListCommand> _logger = logger;
@@ -47,7 +47,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 return context.Response;
             }
 
-            var service = context.GetService<IAppInsightsService>();
+            var service = context.GetService<IApplicationInsightsService>();
             var insights = await service.ListApplicationInsights(
                 options.Subscription!,
                 options.ResourceGroup,
@@ -55,7 +55,7 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 options.RetryPolicy);
 
             context.Response.Results = insights?.Count > 0 ?
-                ResponseResult.Create(new RecommendationListCommandResult(insights), AppInsightsJsonContext.Default.RecommendationListCommandResult) :
+                ResponseResult.Create(new RecommendationListCommandResult(insights), ApplicationInsightsJsonContext.Default.RecommendationListCommandResult) :
                 null;
         }
         catch (Exception ex)

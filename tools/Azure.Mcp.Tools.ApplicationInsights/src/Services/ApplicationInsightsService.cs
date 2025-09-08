@@ -6,15 +6,15 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Tools.AppInsights.Models;
+using Azure.Mcp.Tools.ApplicationInsights.Models;
 using Azure.ResourceManager.ApplicationInsights;
 
-namespace Azure.Mcp.Tools.AppInsights.Services;
+namespace Azure.Mcp.Tools.ApplicationInsights.Services;
 
-public class AppInsightsService(
+public class ApplicationInsightsService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    IResourceGroupService resourceGroupService) : BaseAzureService(tenantService), IAppInsightsService
+    IResourceGroupService resourceGroupService) : BaseAzureService(tenantService), IApplicationInsightsService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService;
