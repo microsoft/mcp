@@ -636,6 +636,16 @@ azmcp grafana list --subscription <subscription>
 ### Azure Marketplace Operations
 
 ```bash
+# List marketplace products available to a subscription
+azmcp marketplace product list --subscription <subscription> \
+                               [--language <language-code>] \
+                               [--search <terms>] \
+                               [--filter <odata-filter>] \
+                               [--orderby <odata-orderby>] \
+                               [--select <odata-select>] \
+                               [--expand <odata-expand>] \
+                               [--next-cursor <pagination-cursor>]
+
 # Get details about an Azure Marketplace product
 azmcp marketplace product get --subscription <subscription> \
                               --product-id <product-id> \
@@ -949,10 +959,7 @@ azmcp storage account create --subscription <subscription> \
                              --resource-group <resource-group> \
                              --location <location> \
                              --sku <sku> \
-                             --kind <kind> \
                              --access-tier <access-tier> \
-                             --enable-https-traffic-only true \
-                             --allow-blob-public-access false \
                              --enable-hierarchical-namespace false
 
 # Get detailed information about a specific Storage account
@@ -973,8 +980,7 @@ azmcp storage blob batch set-tier --subscription <subscription> \
 # Create a blob container with optional public access
 azmcp storage blob container create --subscription <subscription> \
                                     --account <account> \
-                                    --container <container> \
-                                    [--blob-container-public-access <blob|container>]
+                                    --container <container>
 
 # Get detailed properties of a storage container
 azmcp storage blob container details --subscription <subscription> \
@@ -1001,8 +1007,7 @@ azmcp storage blob upload --subscription <subscription> \
                           --account <account> \
                           --container <container> \
                           --blob <blob> \
-                          --local-file-path <path-to-local-file> \
-                          [--overwrite]
+                          --local-file-path <path-to-local-file>
 
 # Create a directory in DataLake using a specific path
 azmcp storage datalake directory create --subscription <subscription> \

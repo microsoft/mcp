@@ -23,14 +23,9 @@ public static class StorageOptionDefinitions
     public const string TimeToLiveInSecondsName = "time-to-live-in-seconds";
     public const string VisibilityTimeoutInSecondsName = "visibility-timeout-in-seconds";
     public const string LocalFilePathName = "local-file-path";
-    public const string OverwriteName = "overwrite";
     public const string LocationName = "location";
     public const string SkuName = "sku";
-    public const string KindName = "kind";
     public const string AccessTierName = "access-tier";
-    public const string EnableHttpsTrafficOnlyName = "enable-https-traffic-only";
-    public const string AllowBlobPublicAccessName = "allow-blob-public-access";
-    public const string BlobContainerPublicAccessName = "blob-container-public-access";
     public const string EnableHierarchicalNamespaceName = "enable-hierarchical-namespace";
 
     public static readonly Option<string> Account = new(
@@ -65,14 +60,6 @@ public static class StorageOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> Kind = new(
-        $"--{KindName}"
-    )
-    {
-        Description = "The storage account kind. Valid values: Storage, StorageV2, BlobStorage, FileStorage, BlockBlobStorage.",
-        Required = false
-    };
-
     public static readonly Option<string> AccessTier = new(
         $"--{AccessTierName}"
     )
@@ -81,32 +68,10 @@ public static class StorageOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<bool> EnableHttpsTrafficOnly = new($"--{EnableHttpsTrafficOnlyName}")
-    {
-        Description = "Whether to require secure transfer (HTTPS) for the storage account.",
-        DefaultValueFactory = _ => true,
-        Required = false
-    };
-
-    public static readonly Option<bool> AllowBlobPublicAccess = new($"--{AllowBlobPublicAccessName}")
-    {
-        Description = "Whether to allow public access to blobs in the storage account.",
-        DefaultValueFactory = _ => false,
-        Required = false
-    };
-
     public static readonly Option<bool> EnableHierarchicalNamespace = new($"--{EnableHierarchicalNamespaceName}")
     {
         Description = "Whether to enable hierarchical namespace (Data Lake Storage Gen2) for the storage account.",
         DefaultValueFactory = _ => false,
-        Required = false
-    };
-
-    public static readonly Option<string> BlobContainerPublicAccess = new(
-        $"--{BlobContainerPublicAccessName}"
-    )
-    {
-        Description = "The public access level for the blob container. Valid values: blob (allows public read access to blobs), container (allows public read access to both blobs and container metadata). If not specified, the container will be private.",
         Required = false
     };
 
@@ -236,13 +201,5 @@ public static class StorageOptionDefinitions
     {
         Description = "The local file path to read content from or to write content to. This should be the full path to the file on your local system.",
         Required = true
-    };
-
-    public static readonly Option<bool> Overwrite = new(
-        $"--{OverwriteName}"
-    )
-    {
-        Description = "Whether to overwrite content if it already exists. Defaults to false.",
-        Required = false
     };
 }
