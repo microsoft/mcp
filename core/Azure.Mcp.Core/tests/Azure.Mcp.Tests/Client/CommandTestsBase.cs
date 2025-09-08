@@ -79,7 +79,12 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         }
     }
 
-    protected async Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
+    protected Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
+    {
+        return CallToolAsync(command, parameters, Client);
+    }
+
+    protected async Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters, IMcpClient mcpClient)
     {
         // Use the same debug logic as MCP server initialization
         var debugEnvVar = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_DEBUG");
@@ -95,7 +100,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         CallToolResult result;
         try
         {
-            result = await Client.CallToolAsync(command, parameters);
+            result = await mcpClient.CallToolAsync(command, parameters);
         }
         catch (ModelContextProtocol.McpException ex)
         {

@@ -19,6 +19,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Fixed telemetry bug where ToolArea was incorrectly populated in with ToolName. [[#346](https://github.com/microsoft/mcp/pull/346)]
+
 ### Other Changes
 
 - Updated `Azure.Identity` and `Azure.Identity.Broker` dependencies. [[#352](https://github.com/microsoft/mcp/pull/352)]
