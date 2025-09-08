@@ -3,7 +3,7 @@
 
 using System.CommandLine.Parsing;
 
-namespace Azure.Mcp.Core.Extensions;
+namespace Microsoft.Mcp.Core.Extensions;
 
 public static class CommandResultExtensions
 {
