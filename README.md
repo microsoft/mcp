@@ -67,9 +67,9 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **TYPE**: `Local`
 
 ### 📊 Microsoft Clarity
-- **REPOSITORY**: [OfficeDev/microsoft-365-agents-toolkit](https://github.com/OfficeDev/microsoft-365-agents-toolkit/)
-- **DESCRIPTION**: The Microsoft 365 Agents Toolkit MCP Server is a Model Context Protocol (MCP) server that provides a seamless connection between AI agents and developers for building apps and agents for Microsoft 365 and Microsoft 365 Copilot.
-- **CATEGORY**: `DEVELOPER TOOLS`
+- **REPOSITORY**: [microsoft/clarity-mcp-server](https://github.com/microsoft/clarity-mcp-server)
+- **DESCRIPTION**: This is a Model Context Protocol (MCP) server for the Microsoft Clarity data export API. It allows you to fetch analytics data from Clarity using Claude for Desktop or other MCP-compatible clients.
+- **CATEGORY**: `DATA AND ANALYTICS`
 - **TYPE**: `Local`
 
 ### 🗃️ Microsoft Dataverse
