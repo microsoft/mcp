@@ -91,13 +91,13 @@ internal class Program
             new Azure.Mcp.Tools.Storage.StorageSetup(),
             new Azure.Mcp.Tools.VirtualDesktop.VirtualDesktopSetup(),
             new Azure.Mcp.Tools.Workbooks.WorkbooksSetup(),
+            new Azure.Mcp.Tools.BicepSchema.BicepSchemaSetup(),
 #if !BUILD_NATIVE
             // IMPORTANT: DO NOT MODIFY OR ADD EXCLUSIONS IN THIS SECTION
             // This block must remain as-is.
             // If the "(Native AOT) Build module" stage fails in CI,
             // follow the AOT compatibility guide instead of changing this list:
             // https://github.com/Azure/azure-mcp/blob/main/docs/aot-compatibility.md
-            new Azure.Mcp.Tools.BicepSchema.BicepSchemaSetup(),
             new Azure.Mcp.Tools.AzureManagedLustre.AzureManagedLustreSetup(),
 #endif
         ];
