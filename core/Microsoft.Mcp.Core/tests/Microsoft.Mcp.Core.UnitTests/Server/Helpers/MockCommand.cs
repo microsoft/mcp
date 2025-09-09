@@ -32,7 +32,7 @@ public class MockCommand : IBaseCommand
 
     public void AddOption(string optionName)
     {
-        _command.AddOption(new Option<string>(optionName, $"{optionName}_description"));
+        _command.Options.Add(new Option<string>(optionName, $"{optionName}_description"));
     }
 
     public Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
