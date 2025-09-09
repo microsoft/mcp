@@ -50,7 +50,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
                     if (data?.Name == null)
                         continue;
 
-                    accounts.Add(new (
+                    accounts.Add(new(
                         data.Name,
                         data.Location.ToString(),
                         data.Kind?.ToString(),
@@ -74,7 +74,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
                     ?? throw new Exception($"Storage account '{account}' not found in subscription '{subscription}'");
 
                 var data = storageAccount.Data;
-                accounts.Add(new (
+                accounts.Add(new(
                     data.Name,
                     data.Location.ToString(),
                     data.Kind?.ToString(),
@@ -153,32 +153,6 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         {
             throw new Exception($"Error creating Storage account '{account}': {ex.Message}", ex);
         }
-    }
-
-    public async Task<List<string>> ListContainers(
-        string account,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
-    {
-        ValidateRequiredParameters(account, subscription);
-
-        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy);
-        var containers = new List<string>();
-
-        try
-        {
-            await foreach (var container in blobServiceClient.GetBlobContainersAsync())
-            {
-                containers.Add(container.Name);
-            }
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error listing containers: {ex.Message}", ex);
-        }
-
-        return containers;
     }
 
     public async Task<List<string>> ListTables(
@@ -361,27 +335,76 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         return blobInfos;
     }
 
-    public async Task<BlobContainerProperties> GetContainerDetails(
+    public async Task<List<ContainerInfo>> GetContainerDetails(
         string account,
-        string container,
+        string? container,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(account, container, subscription);
+        ValidateRequiredParameters(account, subscription);
 
         var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy);
-        var containerClient = blobServiceClient.GetBlobContainerClient(container);
+        var containers = new List<ContainerInfo>();
 
-        try
+        if (string.IsNullOrEmpty(container))
         {
-            var properties = await containerClient.GetPropertiesAsync();
-            return properties.Value;
+            try
+            {
+                await foreach (var containerItem in blobServiceClient.GetBlobContainersAsync())
+                {
+                    var properties = containerItem.Properties;
+                    containers.Add(new(
+                        containerItem.Name,
+                        properties.LastModified,
+                        properties.ETag.ToString(),
+                        properties.Metadata,
+                        properties.LeaseStatus?.ToString(),
+                        properties.LeaseState?.ToString(),
+                        properties.LeaseDuration?.ToString(),
+                        properties.PublicAccess?.ToString(),
+                        properties.HasImmutabilityPolicy,
+                        properties.HasLegalHold,
+                        properties.DeletedOn,
+                        properties.RemainingRetentionDays,
+                        properties.HasImmutableStorageWithVersioning));
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error listing containers: {ex.Message}", ex);
+            }
         }
-        catch (Exception ex)
+        else
         {
-            throw new Exception($"Error getting container details: {ex.Message}", ex);
+            var containerClient = blobServiceClient.GetBlobContainerClient(container);
+
+            try
+            {
+                var response = await containerClient.GetPropertiesAsync();
+                var properties = response.Value;
+                containers.Add(new(
+                    container,
+                    properties.LastModified,
+                    properties.ETag.ToString(),
+                    properties.Metadata,
+                    properties.LeaseStatus?.ToString(),
+                    properties.LeaseState?.ToString(),
+                    properties.LeaseDuration?.ToString(),
+                    properties.PublicAccess?.ToString(),
+                    properties.HasImmutabilityPolicy,
+                    properties.HasLegalHold,
+                    properties.DeletedOn,
+                    properties.RemainingRetentionDays,
+                    properties.HasImmutableStorageWithVersioning));
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error getting container details: {ex.Message}", ex);
+            }
         }
+
+        return containers;
     }
 
     public async Task<BlobContainerProperties> CreateContainer(

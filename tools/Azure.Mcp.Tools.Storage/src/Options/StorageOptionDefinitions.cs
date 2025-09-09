@@ -91,6 +91,14 @@ public static class StorageOptionDefinitions
         Required = true
     };
 
+    public static readonly Option<string> OptionalContainer = new(
+        $"--{ContainerName}"
+    )
+    {
+        Description = "The name of the container to access within the storage account.",
+        Required = false
+    };
+
     public static readonly Option<string> Table = new(
         $"--{TableName}"
     )

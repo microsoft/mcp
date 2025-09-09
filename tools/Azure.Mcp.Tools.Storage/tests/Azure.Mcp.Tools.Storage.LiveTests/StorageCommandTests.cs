@@ -277,7 +277,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_list_containers()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_blob_container_list",
+                "azmcp_storage_blob_container_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -348,7 +348,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_get_container_details()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_blob_container_details",
+                "azmcp_storage_blob_container_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -356,15 +356,19 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                 { "container", "bar" }
                 });
 
-            var actual = result.AssertProperty("details");
-            Assert.Equal(JsonValueKind.Object, actual.ValueKind);
+            var actual = result.AssertProperty("containers");
+            Assert.Equal(JsonValueKind.Array, actual.ValueKind);
+            Assert.Equal(1, actual.GetArrayLength());
+
+            var container = actual.EnumerateArray().First();
+            Assert.Equal(JsonValueKind.Object, container.ValueKind);
         }
 
         [Fact]
         public async Task Should_get_container_details_with_tenant_authkey()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_blob_container_details",
+                "azmcp_storage_blob_container_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -373,8 +377,12 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                 { "auth-method", "key" }
                 });
 
-            var actual = result.AssertProperty("details");
-            Assert.Equal(JsonValueKind.Object, actual.ValueKind);
+            var actual = result.AssertProperty("containers");
+            Assert.Equal(JsonValueKind.Array, actual.ValueKind);
+            Assert.Equal(1, actual.GetArrayLength());
+
+            var container = actual.EnumerateArray().First();
+            Assert.Equal(JsonValueKind.Object, container.ValueKind);
         }
 
         [Fact]
@@ -383,7 +391,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             var containerName = $"test-container-{DateTime.UtcNow.Ticks}";
 
             var result = await CallToolAsync(
-                "azmcp_storage_blob_container_create",
+                "azmcp_storage_blob_container_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -391,11 +399,16 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                 { "container", containerName }
                 });
 
-            var actual = result.AssertProperty("container");
-            Assert.Equal(JsonValueKind.Object, actual.ValueKind);
-            Assert.True(actual.TryGetProperty("lastModified", out _));
-            Assert.True(actual.TryGetProperty("eTag", out _));
-            Assert.True(actual.TryGetProperty("publicAccess", out _));
+            var actual = result.AssertProperty("containers");
+            Assert.Equal(JsonValueKind.Array, actual.ValueKind);
+            Assert.Equal(1, actual.GetArrayLength());
+
+            var container = actual.EnumerateArray().First();
+            Assert.Equal(JsonValueKind.Object, container.ValueKind);
+
+            container.AssertProperty("lastModified");
+            container.AssertProperty("eTag");
+            container.AssertProperty("publicAccess");
         }
 
         [Fact]
@@ -540,11 +553,11 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             Assert.Equal(JsonValueKind.Object, message.ValueKind);
 
             // Check message properties
-            Assert.True(message.TryGetProperty("messageId", out _));
-            Assert.True(message.TryGetProperty("insertionTime", out _));
-            Assert.True(message.TryGetProperty("expirationTime", out _));
-            Assert.True(message.TryGetProperty("popReceipt", out _));
-            Assert.True(message.TryGetProperty("nextVisibleTime", out _));
+            message.AssertProperty("messageId");
+            message.AssertProperty("insertionTime");
+            message.AssertProperty("expirationTime");
+            message.AssertProperty("popReceipt");
+            message.AssertProperty("nextVisibleTime");
             Assert.True(message.TryGetProperty("message", out var messageElement));
             Assert.Equal("Test message from integration test", messageElement.GetString());
         }

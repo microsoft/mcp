@@ -26,12 +26,6 @@ public interface IStorageService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<string>> ListContainers(
-        string account,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
-
     Task<List<string>> ListTables(
         string account,
         string subscription,
@@ -48,9 +42,9 @@ public interface IStorageService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<BlobContainerProperties> GetContainerDetails(
+    Task<List<ContainerInfo>> GetContainerDetails(
         string account,
-        string container,
+        string? container,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);

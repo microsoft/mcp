@@ -397,9 +397,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_storage_blob_container_create | Create the storage container mycontainer in storage account <account> |
 | azmcp_storage_blob_container_create | Create the container using blob public access in storage account <account> |
 | azmcp_storage_blob_container_create | Create a new blob container named documents with container public access in storage account <account> |
-| azmcp_storage_blob_container_details | Show me the properties of the storage container files in the storage account <account> |
-| azmcp_storage_blob_container_list | List all blob containers in the storage account <account> |
-| azmcp_storage_blob_container_list | Show me the blob containers in the storage account <account> |
+| azmcp_storage_blob_container_get | Show me the properties of the storage container <container> in the storage account <account> |
+| azmcp_storage_blob_container_get | List all blob containers in the storage account <account> |
+| azmcp_storage_blob_container_get | Show me the containers in the storage account <account> |
 | azmcp_storage_blob_get | Show me the properties for blob <blob> in container <container> in storage account <account> |
 | azmcp_storage_blob_get | Get the details about blob <blob> in the container <container> in storage account <account> |
 | azmcp_storage_blob_get | List all blobs in the blob container <container> in the storage account <account> |

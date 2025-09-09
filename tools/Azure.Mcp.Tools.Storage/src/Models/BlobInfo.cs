@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Storage.Blobs.Models;
 
 // Lightweight projection of BlobProperties with commonly useful metadata.
 // Keep property names stable; only add new nullable properties to extend.

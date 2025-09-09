@@ -970,7 +970,7 @@ azmcp storage account create --subscription <subscription> \
                              --access-tier <access-tier> \
                              --enable-hierarchical-namespace false
 
-# Get detailed properties of Storage account
+# Get detailed properties of Storage accounts
 azmcp storage account get --subscription <subscription> \
                               [--account <account>] \
                               [--tenant <tenant>]
@@ -987,14 +987,10 @@ azmcp storage blob container create --subscription <subscription> \
                                     --account <account> \
                                     --container <container>
 
-# Get detailed properties of a storage container
-azmcp storage blob container details --subscription <subscription> \
+# Get detailed properties of Storage containers
+azmcp storage blob container get --subscription <subscription> \
                                      --account <account> \
-                                     --container <container>
-
-# List containers in a Storage blob service
-azmcp storage blob container list --subscription <subscription> \
-                                  --account <account>
+                                     [--container <container>]
 
 # Get detailed properties of Storage blobs
 azmcp storage blob get --subscription <subscription> \
@@ -1002,7 +998,7 @@ azmcp storage blob get --subscription <subscription> \
                            --container <container> \
                            [--blob <blob>]
 
-# Upload a file to a Storage blob container
+# Upload a file to a Storage blob
 azmcp storage blob upload --subscription <subscription> \
                           --account <account> \
                           --container <container> \

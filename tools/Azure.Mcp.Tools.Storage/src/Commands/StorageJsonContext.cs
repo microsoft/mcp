@@ -15,7 +15,7 @@ using Azure.Mcp.Tools.Storage.Models;
 
 namespace Azure.Mcp.Tools.Storage.Commands;
 
-[JsonSerializable(typeof(AccountCreateCommand.AccountCreateCommandResult), TypeInfoPropertyName = "AccountCreateCommandResult")]
+[JsonSerializable(typeof(AccountCreateCommand.AccountCreateCommandResult))]
 [JsonSerializable(typeof(AccountGetCommand.AccountGetCommandResult))]
 [JsonSerializable(typeof(AccountInfo))]
 [JsonSerializable(typeof(BatchSetTierCommand.BatchSetTierCommandResult))]
@@ -23,8 +23,7 @@ namespace Azure.Mcp.Tools.Storage.Commands;
 [JsonSerializable(typeof(BlobInfo))]
 [JsonSerializable(typeof(BlobUploadResult))]
 [JsonSerializable(typeof(ContainerCreateCommand.ContainerCreateCommandResult))]
-[JsonSerializable(typeof(ContainerDetailsCommand.ContainerDetailsCommandResult))]
-[JsonSerializable(typeof(ContainerListCommand.ContainerListCommandResult))]
+[JsonSerializable(typeof(ContainerGetCommand.ContainerGetCommandResult))]
 [JsonSerializable(typeof(DataLakePathInfo))]
 [JsonSerializable(typeof(DirectoryCreateCommand.DirectoryCreateCommandResult))]
 [JsonSerializable(typeof(FileListCommand.FileListCommandResult))]

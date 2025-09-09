@@ -101,9 +101,8 @@ public class StorageSetup : IAreaSetup
 
         batch.AddCommand("set-tier", new BatchSetTierCommand(loggerFactory.CreateLogger<BatchSetTierCommand>()));
 
-        blobContainer.AddCommand("list", new ContainerListCommand(loggerFactory.CreateLogger<ContainerListCommand>()));
-        blobContainer.AddCommand("details", new ContainerDetailsCommand(loggerFactory.CreateLogger<ContainerDetailsCommand>()));
         blobContainer.AddCommand("create", new ContainerCreateCommand(loggerFactory.CreateLogger<ContainerCreateCommand>()));
+        blobContainer.AddCommand("get", new ContainerGetCommand(loggerFactory.CreateLogger<ContainerGetCommand>()));
 
         fileSystem.AddCommand("list-paths", new FileSystemListPathsCommand(loggerFactory.CreateLogger<FileSystemListPathsCommand>()));
 
