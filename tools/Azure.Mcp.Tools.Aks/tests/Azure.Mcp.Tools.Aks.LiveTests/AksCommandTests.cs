@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.LiveTests;
 
-public sealed class AksCommandTests(ITestOutputHelper output)
+public sealed class AksCommandTests( ITestOutputHelper output)
     : CommandTestsBase(output)
 {
 
