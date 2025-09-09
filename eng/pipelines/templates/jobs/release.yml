@@ -53,7 +53,7 @@ jobs:
     inputs:
     - input: pipelineArtifact
       artifactName: npm_$(PipelineArtifactName)_packed
-      targetPath: $(Pipeline.Workspace)/drop/npm
+      targetPath: $(Pipeline.Workspace)/drop
   environment: package-publish
   timeoutInMinutes: 120
   dependsOn: TagRepository
@@ -76,7 +76,7 @@ jobs:
             SignCertName: 'azure-sdk-esrp-release-certificate'
             Intent: 'PackageDistribution'
             ContentType: 'npm'
-            FolderLocation: $(Pipeline.Workspace)/drop/npm/${{ parameters.ServerName }}/platform
+            FolderLocation: $(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform
             Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
@@ -93,7 +93,7 @@ jobs:
             SignCertName: 'azure-sdk-esrp-release-certificate'
             Intent: 'PackageDistribution'
             ContentType: 'npm'
-            FolderLocation: $(Pipeline.Workspace)/drop/npm/${{ parameters.ServerName }}/wrapper
+            FolderLocation: $(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper
             Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
             ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
@@ -111,7 +111,7 @@ jobs:
               SignCertName: 'azure-sdk-esrp-release-certificate'
               Intent: 'PackageDistribution'
               ContentType: 'npm'
-              FolderLocation: $(Pipeline.Workspace)/drop/npm/${{ parameters.ServerName }}-native/platform
+              FolderLocation: $(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform
               Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
               Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
               ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
@@ -128,7 +128,7 @@ jobs:
               SignCertName: 'azure-sdk-esrp-release-certificate'
               Intent: 'PackageDistribution'
               ContentType: 'npm'
-              FolderLocation: $(Pipeline.Workspace)/drop/npm/${{ parameters.ServerName }}-native/wrapper
+              FolderLocation: $(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/wrapper
               Owners: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
               Approvers: ${{ coalesce(variables['Build.RequestedForEmail'], 'azuresdk@microsoft.com') }}
               ServiceEndpointUrl: 'https://api.esrp.microsoft.com'
@@ -136,7 +136,7 @@ jobs:
               ProductState: latest
         - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
           parameters:
-            PathToArtifacts: $(Pipeline.Workspace)/drop/npm
+            PathToArtifacts: $(Pipeline.Workspace)/drop
             Registry: https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/
             Tag: latest
 
@@ -149,7 +149,7 @@ jobs:
     inputs:
     - input: pipelineArtifact
       artifactName: 'nuget_$(PipelineArtifactName)_packed'
-      targetPath: $(Pipeline.Workspace)/drop/nuget
+      targetPath: $(Pipeline.Workspace)/drop
   environment: package-publish
   timeoutInMinutes: 120
   dependsOn: TagRepository
@@ -165,7 +165,7 @@ jobs:
             displayName: Publish platform-specific Nugets to Prod Feed
             inputs:
               packageParentPath: '$(Pipeline.Workspace)'
-              packagesToPush: '$(Pipeline.Workspace)/drop/nuget/${{ parameters.ServerName }}-native/platform/*.nupkg;!$(Pipeline.Workspace)/drop/nuget/${{ parameters.ServerName }}-native/platform/*.symbols.nupkg'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform/*.nupkg;!$(Pipeline.Workspace)/drop/nuget/${{ parameters.ServerName }}-native/platform/*.symbols.nupkg'
               nuGetFeedType: external
               publishFeedCredentials: Nuget.org
 
@@ -175,7 +175,7 @@ jobs:
               pwsh: true
               filePath: $(Build.SourcesDirectory)/eng/scripts/Confirm-NugetInFeed.ps1
               arguments: >
-                -PackagesDirectory '$(Pipeline.Workspace)/drop/nuget/${{ parameters.ServerName }}-native/platform'
+                -PackagesDirectory '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform'
                 -ServerName '${{ parameters.ServerName }}'
                 -VersionSuffix '$(VersionSuffix)'
                 -FeedUrl ${{ parameters.NupkgProdFeedUrl }}
@@ -184,7 +184,7 @@ jobs:
             displayName: Publish wrapper Nuget to Prod Feed
             inputs:
               packageParentPath: '$(Pipeline.Workspace)'
-              packagesToPush: '$(Pipeline.Workspace)/drop/nuget/${{ parameters.ServerName }}-native/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/nuget/${{ parameters.ServerName }}-native/wrapper/*.symbols.nupkg'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/wrapper/*.symbols.nupkg'
               nuGetFeedType: external
               publishFeedCredentials: Nuget.org
 
@@ -192,7 +192,7 @@ jobs:
             displayName: Publish platform-specific Nugets to Dev Feed
             inputs:
               packageParentPath: '$(Pipeline.Workspace)'
-              packagesToPush: '$(Pipeline.Workspace)/drop/nuget/${{ parameters.ServerName }}-native/platform/*.nupkg;!$(Pipeline.Workspace)/drop/nuget/${{ parameters.ServerName }}-native/platform/*.symbols.nupkg'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform/*.symbols.nupkg'
               publishVstsFeed: ${{ parameters.NupkgDevFeed }}
 
           - task: Powershell@2
@@ -201,7 +201,7 @@ jobs:
               pwsh: true
               filePath: $(Build.SourcesDirectory)/eng/scripts/Confirm-NugetInFeed.ps1
               arguments: >
-                -PackagesDirectory '$(Pipeline.Workspace)/drop/nuget/${{ parameters.ServerName }}-native/platform'
+                -PackagesDirectory '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform'
                 -ServerName '${{ parameters.ServerName }}'
                 -VersionSuffix '$(VersionSuffix)'
                 -FeedUrl ${{ parameters.NupkgDevFeedUrl }}
@@ -210,7 +210,7 @@ jobs:
             displayName: Publish wrapper Nuget
             inputs:
               packageParentPath: '$(Pipeline.Workspace)'
-              packagesToPush: '$(Pipeline.Workspace)/drop/nuget/${{ parameters.ServerName }}-native/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/nuget/${{ parameters.ServerName }}-native/wrapper/*.symbols.nupkg'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/wrapper/*.symbols.nupkg'
               publishVstsFeed: ${{ parameters.NupkgDevFeed }}
 
 - job: UploadSymbols
