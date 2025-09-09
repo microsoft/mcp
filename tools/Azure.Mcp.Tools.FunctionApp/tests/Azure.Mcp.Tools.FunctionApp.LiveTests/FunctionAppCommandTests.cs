@@ -9,8 +9,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.FunctionApp.LiveTests;
 
-public sealed class FunctionAppCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
 
     [Fact]

@@ -12,8 +12,8 @@ namespace Azure.Mcp.Tools.Acr.LiveTests;
 
 [Trait("Area", "Acr")]
 [Trait("Category", "Live")]
-public class AcrCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+public class AcrCommandTests(ITestOutputHelper output)
+    : CommandTestsBase(output)
 {
     [Theory]
     [InlineData(AuthMethod.Credential)]
@@ -65,8 +65,7 @@ public class AcrCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper 
             Assert.True(item.TryGetProperty("name", out var nameProp));
             var objName = nameProp.GetString();
             Assert.False(string.IsNullOrWhiteSpace(objName));
-            Assert.Matches("^[a-z0-9]+(-[a-z0-9]+)*$", objName!); // Basic ACR naming pattern
-
+            Assert.Matches("^[a-zA-Z0-9]{5,50}$", objName!); // Basic ACR naming pattern (alphanumeric, 5-50 chars)
             if (item.TryGetProperty("location", out var locationProp))
             {
                 Assert.False(string.IsNullOrWhiteSpace(locationProp.GetString()));
