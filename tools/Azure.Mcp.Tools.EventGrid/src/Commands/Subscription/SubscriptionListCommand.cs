@@ -24,7 +24,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         """
         List event subscriptions for topics with filtering and endpoint configuration. This tool shows all active 
         subscriptions including webhook endpoints, event filters, and delivery retry policies. Returns subscription 
-        details as JSON array. Requires topic-name or subscription-id.
+        details as JSON array. Requires topic-name or subscription.
         """;
 
     public override string Title => CommandTitle;

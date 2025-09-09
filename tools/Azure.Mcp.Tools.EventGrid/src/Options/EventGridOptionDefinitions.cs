@@ -13,7 +13,6 @@ public static class EventGridOptionDefinitions
         $"--{TopicNameParam}"
     )
     {
-        Description = "The name of the Event Grid topic.",
-        Required = false
+        Description = "The name of the Event Grid topic."
     };
 }
