@@ -28,22 +28,22 @@ export function activate(context: vscode.ExtensionContext) {
             throw new Error('Unsupported platform: ' + process.platform);
         }
 
-        // Check if user wants to use native binary
+        // Check if user wants to opt-out of trimmed binaries
         const config = vscode.workspace.getConfiguration('azureMcp');
-        const useNativeBinary = config.get<boolean>('useNativeBinary') === true;
+        const useNonTrimmedBinaries = config.get<boolean>('useNonTrimmedBinaries') === true;
 
         let binPath: string;
-        if (useNativeBinary) {
-            // Use native binary from server/native folder
+        if (useNonTrimmedBinaries) {
+            // Use non-trimmed binaries from server folder (opt-out from trimmed)
+            binPath = path.join(context.extensionPath, 'server', binary);
+        } else {
+            // Use trimmed binaries from server/native folder (default)
             binPath = path.join(context.extensionPath, 'server', 'native', binary);
             if (!fs.existsSync(binPath)) {
-                // Fallback to regular server folder if native binary doesn't exist
-                console.warn(`Native binary not found at ${binPath}, falling back to regular binary`);
+                // Fallback to regular server folder if trimmed binary doesn't exist
+                console.warn(`Trimmed binary not found at ${binPath}, falling back to non-trimmed binary`);
                 binPath = path.join(context.extensionPath, 'server', binary);
             }
-        } else {
-            // Use regular binary from server folder
-            binPath = path.join(context.extensionPath, 'server', binary);
         }
 
         if (!fs.existsSync(binPath)) {
@@ -125,7 +125,7 @@ export function activate(context: vscode.ExtensionContext) {
                 event.affectsConfiguration('azureMcp.enabledServices') ||
                 event.affectsConfiguration('azureMcp.serverMode') ||
                 event.affectsConfiguration('azureMcp.readOnly') ||
-                event.affectsConfiguration('azureMcp.useNativeBinary')
+                event.affectsConfiguration('azureMcp.useNonTrimmedBinaries')
             ) {
                 didChangeEmitter.fire();
             }

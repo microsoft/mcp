@@ -128,10 +128,10 @@
                     "default": false,
                     "markdownDescription": "Start the Azure MCP server in read-only mode (operations that modify resources will be disabled)."
                 },
-                "azureMcp.useNativeBinary": {
+                "azureMcp.useNonTrimmedBinaries": {
                     "type": "boolean",
                     "default": false,
-                    "markdownDescription": "Use native Azure MCP server binaries from the `server/native` folder instead of the default `server` folder. This provides better performance but requires platform-specific binaries."
+                    "markdownDescription": "Use non-trimmed Azure MCP server binaries from the `server` folder instead of the default trimmed `server/native` folder. Enable this to opt-out of trimmed binaries for compatibility or debugging purposes."
                 }
             }
         }
