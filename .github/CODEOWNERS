@@ -99,7 +99,7 @@
 # ServiceOwners:                       @vcolin7 @JonathanCrd
 
 # PRLabel: %tools-ISV
-/tools/Azure.Mcp.Tools.AzureIsv/       @jayanthjj @pachaturevedi
+/tools/Azure.Mcp.Tools.AzureIsv/       @jayanthjj @pachaturevedi @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ISV
 # ServiceOwners:                       @jayanthjj @pachaturevedi
