@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Models.Command;
+using System.Text.Json.Nodes;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
 
@@ -48,13 +49,13 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
             }
 
             var service = context.GetService<IApplicationInsightsService>();
-            var insights = await service.ListApplicationInsights(
+            var insights = await service.GetProfilerInsightsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = insights?.Count > 0 ?
+            context.Response.Results = insights?.Count() > 0 ?
                 ResponseResult.Create(new RecommendationListCommandResult(insights), ApplicationInsightsJsonContext.Default.RecommendationListCommandResult) :
                 null;
         }
@@ -66,5 +67,5 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
         return context.Response;
     }
 
-    internal record RecommendationListCommandResult(List<ApplicationInsightsInfo> Recommendations);
+    internal record RecommendationListCommandResult(IEnumerable<JsonNode> Recommendations);
 }
