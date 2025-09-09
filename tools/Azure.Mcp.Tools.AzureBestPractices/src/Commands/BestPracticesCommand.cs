@@ -7,6 +7,7 @@ using System.Text;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.AzureBestPractices.Options;
 using Microsoft.Extensions.Logging;
 
@@ -75,6 +76,9 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
             context.Response.Status = 200;
             context.Response.Results = ResponseResult.Create(new List<string> { bestPractices }, AzureBestPracticesJsonContext.Default.ListString);
             context.Response.Message = string.Empty;
+            
+            context.Activity?.AddTag("BestPractices_Resource", options.Resource);
+            context.Activity?.AddTag("BestPractices_Action", options.Action);
         }
         catch (Exception ex)
         {
