@@ -3,6 +3,10 @@
     "List all knowledge indexes in my AI Foundry project",
     "Show me the knowledge indexes in my AI Foundry project"
   ],
+  "azmcp_foundry_knowledge_index_schema": [
+    "Show me the schema for knowledge index <index-name> in my AI Foundry project",
+    "Get the schema configuration for knowledge index <index-name>"
+  ],
   "azmcp_foundry_models_deploy": [
     "Deploy a GPT4o instance on my resource <resource-name>"
   ],
@@ -187,6 +191,12 @@
   "azmcp_deploy_plan_get": [
     "Create a plan to deploy this application to azure"
   ],
+  "azmcp_eventgrid_topic_list": [
+    "List all Event Grid topics in my subscription",
+    "Show me the Event Grid topics in my subscription",
+    "List all Event Grid topics in subscription <subscription>",
+    "List all Event Grid topics in resource group <resource_group_name> in subscription <subscription>"
+  ],
   "azmcp_functionapp_get": [
     "Describe the function app <function_app_name> in resource group <resource_group_name>",
     "Get configuration for function app <function_app_name>",
@@ -279,6 +289,10 @@
   ],
   "azmcp_marketplace_product_get": [
     "Get details about marketplace product <product_name>"
+  ],
+  "azmcp_marketplace_product_list": [
+    "Search for Microsoft products in the marketplace",
+    "Show me marketplace products from publisher <publisher_name>"
   ],
   "azmcp_bestpractices_get": [
     "Get the latest Azure code generation best practices",
@@ -411,6 +425,16 @@
     "Show me the firewall rules for SQL server <server_name>",
     "What firewall rules are configured for my SQL server <server_name>?"
   ],
+  "azmcp_sql_server_firewall-rule_create": [
+    "Create a firewall rule for my Azure SQL server <server_name>",
+    "Add a firewall rule to allow access from IP range <start_ip> to <end_ip> for SQL server <server_name>",
+    "Create a new firewall rule named <rule_name> for SQL server <server_name>"
+  ],
+  "azmcp_sql_server_firewall-rule_delete": [
+    "Delete a firewall rule from my Azure SQL server <server_name>",
+    "Remove the firewall rule <rule_name> from SQL server <server_name>",
+    "Delete firewall rule <rule_name> for SQL server <server_name>"
+  ],
   "azmcp_storage_account_create": [
     "Create a new storage account called testaccount123 in East US region",
     "Create a storage account with premium performance and LRS replication",
@@ -450,9 +474,7 @@
     "Show me the blobs in the blob container <container> in the storage account <account>"
   ],
   "azmcp_storage_blob_upload": [
-    "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>",
-    "Upload the file <local-file-path> overwriting blob <blob> in container <container> in storage account <account>",
-    "Overwrite <blob> with <local-file-name> in container <container> in storage account <account>"
+    "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>"
   ],
   "azmcp_storage_datalake_directory_create": [
     "Create a new directory at the path <directory_path> in Data Lake in the storage account <account>"

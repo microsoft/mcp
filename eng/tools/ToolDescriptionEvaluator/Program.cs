@@ -736,10 +736,14 @@ class Program
 
         if (tools.Count > threshold)
         {
+            // Split work into two halves and process them concurrently.
             int half = tools.Count / 2;
-            var leftTask = Task.Run(() => PopulateDatabaseAsync(db, [.. tools.Take(half)], embeddingService));
-            await PopulateDatabaseAsync(db, [.. tools.Skip(half)], embeddingService);
-            await leftTask;
+            var left = tools.Take(half).ToList();
+            var right = tools.Skip(half).ToList();
+
+            await Task.WhenAll(
+                PopulateDatabaseAsync(db, left, embeddingService),
+                PopulateDatabaseAsync(db, right, embeddingService));
 
             return;
         }
