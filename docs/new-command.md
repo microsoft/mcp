@@ -416,7 +416,13 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
 
     public override ToolMetadata Metadata => new()
     {
+        Destructive = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
         Destructive = false,    // Set to true for commands that modify resources
+        OpenWorld = true,    // Set to false for commands that are safe for LLM to execute
+        Idempotent = true,    // Set to false for commands that are not idempotent
         ReadOnly = true,         // Set to false for commands that modify resources
         Secret = false,          // Set to true for commands that may return sensitive information
         LocalRequired = false   // Set to true for tools requiring local execution/resources
