@@ -75,7 +75,7 @@ try {
             -replace '\$\(PackageDescription\)', $serverProjectProperties.Description `
             -replace '\$\(PackageId\)', $serverProjectProperties.PackageId `
             -replace '\$\(PackageVersion\)', $packageVersion `
-			-replace '\$\(ServerName\)', $serverProjectProperties.CliName `
+            -replace '\$\(ServerName\)', $serverProjectProperties.CliName `
             -replace '\$\(RepositoryUrl\)', $RepoUrl |
             Set-Content -Path "$tempNugetWrapperDir/.mcp/server.json"
         
@@ -114,7 +114,7 @@ try {
 				-replace "__Authors__", $wrapperPackageJson.author `
 				-replace "__Description__", ($serverProjectProperties.PackageDescription -replace '\$\(RuntimeIdentifier\)', $platformOSArch) `
 				-replace "__RepositoryUrl__", $RepoUrl `
-                -replace "__ProjectUrl__", "$RepoUrl/tree/main/servers/$serverName" `
+				-replace "__ProjectUrl__", "$RepoUrl/tree/main/servers/$serverName" `
 				-replace "__RepositoryBranch__", $Branch `
 				-replace "__CommitSHA__", $CommitSha `
 				-replace "__TargetFramework__", $sharedProjectProperties.TargetFramework |
