@@ -3,8 +3,8 @@
 
 using System.Net.Http.Headers;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Services.Http;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 

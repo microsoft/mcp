@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Cosmos.Commands;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
 
 namespace Azure.Mcp.Tools.Cosmos;
 

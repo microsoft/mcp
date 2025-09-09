@@ -4,12 +4,12 @@
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tools.Extension.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
 

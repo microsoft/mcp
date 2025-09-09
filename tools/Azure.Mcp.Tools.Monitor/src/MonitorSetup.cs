@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
@@ -12,6 +10,7 @@ using Azure.Mcp.Tools.Monitor.Commands.Workspace;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
 
 namespace Azure.Mcp.Tools.Monitor;
 

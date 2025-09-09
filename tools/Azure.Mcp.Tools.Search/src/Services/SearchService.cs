@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.ResourceManager.Search;
@@ -12,6 +10,7 @@ using Azure.Search.Documents;
 using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.Models;
+using Microsoft.Mcp.Core.Services.Caching;
 using static Azure.Mcp.Tools.Search.Commands.Index.IndexDescribeCommand;
 
 namespace Azure.Mcp.Tools.Search.Services;

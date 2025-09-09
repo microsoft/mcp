@@ -3,12 +3,12 @@
 
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Mcp.Core.Services.Caching;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Marketplace.LiveTests;

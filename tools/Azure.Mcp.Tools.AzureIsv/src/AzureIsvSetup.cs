@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
 using Azure.Mcp.Tools.AzureIsv.Services;
 using Azure.Mcp.Tools.AzureIsv.Services.Datadog;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
 
 namespace Azure.Mcp.Tools.AzureIsv;
 

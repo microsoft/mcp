@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
 
 namespace Azure.Mcp.Tools.Foundry;
 

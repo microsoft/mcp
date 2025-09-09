@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Deploy.Commands.App;
 using Azure.Mcp.Tools.Deploy.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;

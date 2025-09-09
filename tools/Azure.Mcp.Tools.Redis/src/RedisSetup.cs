@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Redis.Commands.CacheForRedis;
 using Azure.Mcp.Tools.Redis.Commands.ManagedRedis;
 using Azure.Mcp.Tools.Redis.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
 
 namespace Azure.Mcp.Tools.Redis;
 
