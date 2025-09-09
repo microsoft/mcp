@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
@@ -22,6 +23,7 @@ public class CommandFactoryTests
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<CommandFactory> _logger;
     private readonly ITelemetryService _telemetryService;
+    private readonly CommandFactory _commandFactory;
 
     public CommandFactoryTests()
     {
@@ -30,6 +32,7 @@ public class CommandFactoryTests
         _serviceProvider = services.BuildServiceProvider();
         _logger = Substitute.For<ILogger<CommandFactory>>();
         _telemetryService = Substitute.For<ITelemetryService>();
+        _commandFactory = new CommandFactory(_serviceProvider, Enumerable.Empty<IAreaSetup>(), _telemetryService, _logger);
     }
 
     [Fact]
@@ -37,9 +40,10 @@ public class CommandFactoryTests
     {
         // This test verifies our fix for supporting dashes in command names
         // by ensuring the separator is underscore instead of dash
+        var commandFactory = new CommandFactory(_serviceProvider, Enumerable.Empty<IAreaSetup>(), _telemetryService, _logger);
 
         // Arrange & Act
-        var separator = CommandFactory.Separator;
+        var separator = commandFactory.Separator;
 
         // Assert
         Assert.Equal('_', separator);
@@ -164,7 +168,7 @@ public class CommandFactoryTests
         var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _logger);
 
         // All commands in command factory are prefixed with the root command group, "azmcp".
-        var commandNameToTry = "azmcp" + CommandFactory.Separator + commandName;
+        var commandNameToTry = "azmcp" + factory.Separator + commandName;
 
         // Act
         var actual = factory.GetServiceArea(commandNameToTry);
@@ -185,7 +189,7 @@ public class CommandFactoryTests
         var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _logger);
 
         // All commands created in command factory are prefixed with the root command group, "azmcp".
-        var commandNameToTry = "azmcp" + CommandFactory.Separator + "name0_subgroup2_directCommand4";
+        var commandNameToTry = "azmcp" + factory.Separator + "name0_subgroup2_directCommand4";
 
         // Act
         var actual = factory.GetServiceArea(commandNameToTry);
@@ -200,9 +204,10 @@ public class CommandFactoryTests
         // Arrange
         var prefix = "abc";
         var commandGroup = CreateCommandGroup();
+        var factory = new CommandFactory(_serviceProvider, Enumerable.Empty<IAreaSetup>(), _telemetryService, _logger);
 
         // Act
-        var commandDictionary = CommandFactory.CreateCommandDictionary(commandGroup, prefix);
+        var commandDictionary = factory.CreateCommandDictionary(commandGroup, prefix);
 
         // Assert
         Assert.NotNull(commandDictionary);
@@ -222,9 +227,10 @@ public class CommandFactoryTests
     {
         // Arrange
         var commandGroup = CreateCommandGroup();
+        var factory = new CommandFactory(_serviceProvider, Enumerable.Empty<IAreaSetup>(), _telemetryService, _logger);
 
         // Act
-        var commandDictionary = CommandFactory.CreateCommandDictionary(commandGroup, string.Empty);
+        var commandDictionary = factory.CreateCommandDictionary(commandGroup, string.Empty);
 
         // Assert
         Assert.NotNull(commandDictionary);
@@ -242,9 +248,9 @@ public class CommandFactoryTests
     /// <summary>
     /// Helper method to access the private GetPrefix method via reflection
     /// </summary>
-    private static string CallGetPrefix(string currentPrefix, string additional)
+    private string CallGetPrefix(string currentPrefix, string additional)
     {
-        return CommandFactory.GetPrefix(currentPrefix, additional);
+        return _commandFactory.GetPrefix(currentPrefix, additional);
     }
 
     private static IAreaSetup CreateIAreaSetup(string areaName)

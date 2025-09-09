@@ -1,4 +1,4 @@
-v// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 global using System.CommandLine;

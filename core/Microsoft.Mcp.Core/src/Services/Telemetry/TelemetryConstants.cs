@@ -16,6 +16,7 @@ internal static class TelemetryConstants
         public const string ErrorDetails = "ErrorDetails";
         public const string EventId = "EventId";
         public const string ToolName = "ToolName";
+        public const string ToolArea = "ToolArea";
     }
 
     internal class ActivityName

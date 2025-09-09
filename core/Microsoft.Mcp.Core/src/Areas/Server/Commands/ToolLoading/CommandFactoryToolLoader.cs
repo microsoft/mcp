@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
-using System.Reflection;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Models;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
@@ -135,7 +135,7 @@ public sealed class CommandFactoryToolLoader : IToolLoader
 
         if (commandContext.Activity != null)
         {
-            var serviceArea = commandFactory.GetServiceArea(toolName);
+            var serviceArea = _commandFactory.GetServiceArea(toolName);
             commandContext.Activity.AddTag(TelemetryConstants.TagName.ToolArea, serviceArea);
         }
 
