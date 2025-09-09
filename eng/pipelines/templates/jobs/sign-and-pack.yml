@@ -36,6 +36,8 @@ jobs:
       BinaryPattern: |
         **/win-*/**/azmcp.dll
         **/win-*/**/azmcp.exe
+        **/win-*/**/mcptmp.dll
+        **/win-*/**/mcptmp.exe
         **/win-*/**/*.Mcp.*.dll
 
   - template: pipelines/steps/binary-signing.yml@azure-sdk-build-tools
