@@ -70,6 +70,10 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "Show me the Event Grid topics in my subscription"
 * "List all Event Grid topics in resource group 'my-resourcegroup' in my subscription"
 
+### 🔑 Azure Key Vault
+
+* "Get the administration settings for my key vault 'my-vault'"
+
 ### ⚡ Azure Managed Lustre
 
 * "List the Azure Managed Lustre clusters in resource group 'my-resourcegroup'"
