@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
+using System.CommandLine;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.ToolLoading;
@@ -476,5 +477,77 @@ public class CommandFactoryToolLoaderTests
             Assert.True(tool.Meta.TryGetPropertyValue("SecretHint", out var secretHintNode));
             Assert.True(secretHintNode?.GetValue<bool>());
         }
+    }
+
+    [Fact]
+    public void GetTool_CommandWithSecretMetadata_AddsSecretHintToMeta()
+    {
+        // Arrange
+        var command = Substitute.For<IBaseCommand>();
+        var underlyingCommand = new Command("test-command") { Description = "Test command description" };
+        var metadata = new ToolMetadata { Secret = true, ReadOnly = true, Destructive = false };
+
+        command.GetCommand().Returns(underlyingCommand);
+        command.Metadata.Returns(metadata);
+        command.Title.Returns("Test Command");
+
+        // Use reflection to access the private GetTool method
+        var method = typeof(CommandFactoryToolLoader).GetMethod("GetTool",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        Assert.NotNull(method);
+
+        // Act
+        var tool = (Tool)method.Invoke(null, new object[] { "test-command", command })!;
+
+        // Assert
+        Assert.NotNull(tool);
+        Assert.Equal("test-command", tool.Name);
+        Assert.Equal("Test command description", tool.Description);
+
+        // Verify SecretHint is in Meta
+        Assert.NotNull(tool.Meta);
+        Assert.True(tool.Meta.TryGetPropertyValue("SecretHint", out var secretHintNode));
+        Assert.True(secretHintNode?.GetValue<bool>());
+
+        // Verify other annotations are set correctly
+        Assert.NotNull(tool.Annotations);
+        Assert.True(tool.Annotations.ReadOnlyHint);
+        Assert.False(tool.Annotations.DestructiveHint);
+        Assert.Equal("Test Command", tool.Annotations.Title);
+    }
+
+    [Fact]
+    public void GetTool_CommandWithoutSecretMetadata_DoesNotAddSecretHintToMeta()
+    {
+        // Arrange
+        var command = Substitute.For<IBaseCommand>();
+        var underlyingCommand = new Command("test-command") { Description = "Test command description" };
+        var metadata = new ToolMetadata { Secret = false, ReadOnly = true, Destructive = false };
+
+        command.GetCommand().Returns(underlyingCommand);
+        command.Metadata.Returns(metadata);
+        command.Title.Returns("Test Command");
+
+        // Use reflection to access the private GetTool method
+        var method = typeof(CommandFactoryToolLoader).GetMethod("GetTool",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        Assert.NotNull(method);
+
+        // Act
+        var tool = (Tool)method.Invoke(null, new object[] { "test-command", command })!;
+
+        // Assert
+        Assert.NotNull(tool);
+        Assert.Equal("test-command", tool.Name);
+        Assert.Equal("Test command description", tool.Description);
+
+        // Verify Meta is null since Secret = false
+        Assert.Null(tool.Meta);
+
+        // Verify other annotations are set correctly
+        Assert.NotNull(tool.Annotations);
+        Assert.True(tool.Annotations.ReadOnlyHint);
+        Assert.False(tool.Annotations.DestructiveHint);
+        Assert.Equal("Test Command", tool.Annotations.Title);
     }
 }
