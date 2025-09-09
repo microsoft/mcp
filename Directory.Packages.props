@@ -71,7 +71,6 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.6" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
     <PackageVersion Include="MySqlConnector" Version="2.4.0" />
-    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="Npgsql" Version="9.0.3" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta7.25380.108" />
