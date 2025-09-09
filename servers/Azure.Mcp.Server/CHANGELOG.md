@@ -5,7 +5,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ## 0.5.13 (Unreleased)
 
 ### Features Added
-- Added support for retrieving administration settings (currently purge protection state and soft delete retention days) of an Azure Key Vault via the command `azmcp-keyvault-admin-settings-get`.
+- Added support for retrieving account settings of an Azure Key Vault via the command `azmcp-keyvault-admin-settings-get`.
 
 - Added support for Azure Event Grid operations: [[#43](https://github.com/microsoft/mcp/pull/43)]
   - `azmcp_eventgrid_topic_list` - List all Event Grid topics in a subscription.

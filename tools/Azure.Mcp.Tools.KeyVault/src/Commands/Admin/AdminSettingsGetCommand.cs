@@ -11,7 +11,7 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Admin;
 
 public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> logger) : SubscriptionCommand<BaseKeyVaultOptions>
 {
-    private const string CommandTitle = "Get Key Vault Administration Settings";
+    private const string CommandTitle = "Get Key Vault Account Settings";
     private readonly ILogger<AdminSettingsGetCommand> _logger = logger;
     private readonly Option<string> _vaultOption = KeyVaultOptionDefinitions.VaultName;
 

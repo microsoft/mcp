@@ -72,7 +72,13 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 ### 🔑 Azure Key Vault
 
-* "Get the administration settings for my key vault 'my-vault'"
+* "List all secrets in my key vault 'my-vault'"
+* "Create a new secret called 'apiKey' with value 'xyz' in key vault 'my-vault'"
+* "List all keys in key vault 'my-vault'"
+* "Create a new RSA key called 'encryption-key' in key vault 'my-vault'"
+* "List all certificates in key vault 'my-vault'"
+* "Import a certificate file into key vault 'my-vault' using the name 'tls-cert'"
+* "Get the account settings for my key vault 'my-vault'"
 
 ### ⚡ Azure Managed Lustre
 
@@ -210,6 +216,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * List, create, and import certificates
 * List and create keys
 * List and create secrets
+* Get account settings.
 
 ### ☸️ Azure Kubernetes Service (AKS)
 

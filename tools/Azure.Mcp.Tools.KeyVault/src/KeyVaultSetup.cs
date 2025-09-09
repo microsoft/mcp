@@ -35,7 +35,7 @@ public class KeyVaultSetup : IAreaSetup
 
         var certificate = new CommandGroup("certificate", "Key Vault certificate operations - Commands for managing and accessing certificates in Azure Key Vault.");
         keyVault.AddSubGroup(certificate);
-        var admin = new CommandGroup("admin", "Key Vault administrative operations - Management plane settings.");
+        var admin = new CommandGroup("admin", "Key Vault administration operations");
         keyVault.AddSubGroup(admin);
 
         keys.AddCommand("list", new KeyListCommand(loggerFactory.CreateLogger<KeyListCommand>()));
@@ -51,7 +51,7 @@ public class KeyVaultSetup : IAreaSetup
         certificate.AddCommand("create", new CertificateCreateCommand(loggerFactory.CreateLogger<CertificateCreateCommand>()));
         certificate.AddCommand("import", new CertificateImportCommand(loggerFactory.CreateLogger<CertificateImportCommand>()));
 
-        var settings = new CommandGroup("settings", "Key Vault settings operations.");
+        var settings = new CommandGroup("settings", "Key Vault account settings operations.");
         admin.AddSubGroup(settings);
         settings.AddCommand("get", new AdminSettingsGetCommand(loggerFactory.CreateLogger<AdminSettingsGetCommand>()));
     }

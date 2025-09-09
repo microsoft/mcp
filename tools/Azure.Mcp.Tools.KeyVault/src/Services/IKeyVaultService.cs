@@ -174,8 +174,7 @@ public interface IKeyVaultService
         RetryPolicyOptions? retryPolicy = null);
 
     /// <summary>
-    /// Retrieves administration settings for a Key Vault using the Key Vault Administration SDK
-    /// (data plane). Currently limited to purge protection state and soft delete retention days.
+    /// Retrieves account settings for a Key Vault.
     /// </summary>
     /// <param name="vaultName">The name of the Key Vault.</param>
     /// <param name="subscription">The subscription ID or name.</param>
