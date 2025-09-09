@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.UnitTests.Server.Helpers;
 using ModelContextProtocol.Protocol;
@@ -103,121 +104,34 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
-    public async Task ListToolsHandler_WithServiceFilter_ReturnsOnlyFilteredTools()
-    {
-        // Try to filter by a specific service/group - using a common Azure service name
-        var filteredOptions = new ToolLoaderOptions
-        {
-            Namespace = new[] { "storage" }  // Assuming there's a storage service group
-        };
-        var toolLoader = new CommandFactoryToolLoader(_serviceProvider, _commandFactory, Options.Create(filteredOptions), _logger);
-        var request = CreateRequest();
-
-        try
-        {
-            var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
-
-            // Verify basic structure
-            Assert.NotNull(result);
-            Assert.NotNull(result.Tools);
-
-            // All returned tools should be from the filtered service group
-            // Tool names should start with or contain the service filter
-            foreach (var tool in result.Tools)
-            {
-                Assert.NotNull(tool.Name);
-                Assert.NotEmpty(tool.Name);
-                // The tool name should reflect that it's from the filtered group
-                Assert.True(tool.Name.Contains("storage", StringComparison.OrdinalIgnoreCase) ||
-                           tool.Name.StartsWith("storage", StringComparison.OrdinalIgnoreCase),
-                           $"Tool '{tool.Name}' should be from the 'storage' service group");
-            }
-        }
-        catch (KeyNotFoundException)
-        {
-            // If 'storage' group doesn't exist, that's also a valid test result
-            // It means the filtering is working as expected
-            Assert.True(true, "Service filtering correctly rejected non-existent service group");
-        }
-    }
-
-    [Fact]
     public async Task ListToolsHandler_WithMultipleServiceFilters_ReturnsToolsFromAllSpecifiedServices()
     {
-        // Try to filter by multiple real service/group names from the codebase
+        const string Group1 = "storage";
+        const string Group2 = "appconfig";
+
+        var commandFactory = Substitute.For<ICommandFactory>();
+        commandFactory.GroupCommands(Arg.Any<string[]>()).Returns(_commandFactory.MockGroupedCommands);
+
         var multiServiceOptions = new ToolLoaderOptions
         {
-            Namespace = new[] { "storage", "appconfig", "search" }  // Real Azure service groups from the codebase
+            Namespace = new[] { Group1, Group2, }
         };
-        var toolLoader = new CommandFactoryToolLoader(_serviceProvider, _commandFactory, Options.Create(multiServiceOptions), _logger);
+        var toolLoader = new CommandFactoryToolLoader(_serviceProvider, commandFactory, Options.Create(multiServiceOptions), _logger);
         var request = CreateRequest();
 
-        try
-        {
-            var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
 
-            // Verify basic structure
-            Assert.NotNull(result);
-            Assert.NotNull(result.Tools);
+        // Verify basic structure
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
 
-            // Get all commands from the specified groups for comparison
-            var expectedCommands = new List<string>();
-            var existingServices = new List<string>();
+        // Group3 has a Hidden command. We expect a command from Group1 and Group2.
+        Assert.Equal(2, result.Tools.Count);
 
-            var serviceCommands = _commandFactory.GroupCommands(multiServiceOptions.Namespace);
-            expectedCommands.AddRange(serviceCommands.Keys);
-            existingServices.AddRange(multiServiceOptions.Namespace);
-
-            if (expectedCommands.Count > 0)
-            {
-                // Verify that returned tools match expected commands from the filtered groups
-                var toolNames = result.Tools.Select(t => t.Name).ToHashSet();
-                var expectedCommandNames = expectedCommands.ToHashSet();
-
-                Assert.Equal(expectedCommandNames, toolNames);
-
-                // All returned tools should be from one of the filtered service groups
-                foreach (var tool in result.Tools)
-                {
-                    Assert.NotNull(tool.Name);
-                    Assert.NotEmpty(tool.Name);
-
-                    var isFromFilteredGroup = existingServices.Any(service =>
-                        tool.Name.Contains(service, StringComparison.OrdinalIgnoreCase) ||
-                        tool.Name.StartsWith(service, StringComparison.OrdinalIgnoreCase));
-
-                    Assert.True(isFromFilteredGroup,
-                        $"Tool '{tool.Name}' should be from one of the filtered service groups: {string.Join(", ", existingServices)}");
-                }
-
-                // Verify that tools from non-specified services are not included
-                var allToolsOptions = new ToolLoaderOptions(); // No filter = all tools
-                var allToolsLoader = new CommandFactoryToolLoader(_serviceProvider, _commandFactory, Options.Create(allToolsOptions), _logger);
-                var allToolsResult = await allToolsLoader.ListToolsHandler(request, CancellationToken.None);
-
-                var excludedTools = allToolsResult.Tools.Where(t =>
-                    !existingServices.Any(service =>
-                        t.Name.Contains(service, StringComparison.OrdinalIgnoreCase) ||
-                        t.Name.StartsWith(service, StringComparison.OrdinalIgnoreCase)));
-
-                foreach (var excludedTool in excludedTools)
-                {
-                    Assert.False(toolNames.Contains(excludedTool.Name),
-                        $"Tool '{excludedTool.Name}' should not be included when filtering by services: {string.Join(", ", existingServices)}");
-                }
-            }
-            else
-            {
-                // If no groups exist, we should get no tools or an exception was thrown
-                Assert.Empty(result.Tools);
-            }
-        }
-        catch (KeyNotFoundException)
-        {
-            // If none of the service groups exist, that's also a valid test result
-            // It means the filtering is working as expected
-            Assert.True(true, "Service filtering correctly rejected non-existent service groups");
-        }
+        // Make sure the group commands used the names we specified.
+        // (even thought the return value is a dummy.)
+        commandFactory.Received().GroupCommands(
+            Arg.Is<string[]>(groups => groups.Contains(Group1) && groups.Contains(Group2)));
     }
 
     [Fact]
