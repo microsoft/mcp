@@ -73,34 +73,10 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
     protected override ResourceDiagnoseOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Question = parseResult.GetValue(_questionOption) ?? string.Empty;
-        options.Resource = parseResult.GetValue(_resourceOption) ?? string.Empty;
-        options.ResourceType = parseResult.GetValue(_resourceTypeOption) ?? string.Empty;
+        options.Question = parseResult.GetValueOrDefault(_questionOption) ?? string.Empty;
+        options.Resource = parseResult.GetValueOrDefault(_resourceOption) ?? string.Empty;
+        options.ResourceType = parseResult.GetValueOrDefault(_resourceTypeOption) ?? string.Empty;
         return options;
-    }
-
-    private static string? TryGetOptionValue(ParseResult parseResult, Option<string> option)
-    {
-        try
-        {
-            return parseResult.GetValueOrDefault(option);
-        }
-        catch (InvalidOperationException)
-        {
-            return null;
-        }
-    }
-
-    private static string? TryGetNullableOptionValue(ParseResult parseResult, Option<string?> option)
-    {
-        try
-        {
-            return parseResult.GetValueOrDefault(option);
-        }
-        catch (InvalidOperationException)
-        {
-            return null;
-        }
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
