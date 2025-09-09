@@ -41,22 +41,10 @@ public static class ServiceOptionDefinitions
     };
 
     public static readonly Option<bool?> ReadOnly = new(
-        $"--{ReadOnlyName}",
-        () => null,
-        "Whether the MCP server should be read-only. If true, no write operations will be allowed.");
-
-    public static readonly Option<bool> Debug = new(
-        $"--{DebugName}",
-        () => false,
-        "Enable debug mode with verbose logging to stderr.");
-        
-    public static readonly Option<bool> EnableInsecureTransports = new(
-        $"--{EnableInsecureTransportsName}",
-        () => false,
-        "Enable insecure transport")
+        $"--{ReadOnlyName}")
     {
         Description = "Whether the MCP server should be read-only. If true, no write operations will be allowed.",
-        DefaultValueFactory = _ => false
+        DefaultValueFactory = _ => null
     };
 
     public static readonly Option<bool> Debug = new(
