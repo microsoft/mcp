@@ -16,6 +16,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - Storage account create removed the ability to configure `enable-https-traffic-only` (always true now), `allow-blob-public-access` (always false now), and `kind` (always StorageV2 now).
   - Storage blob container create removed the ability to configure `blob-container-public-access` (always false now).
   - Storage blob upload removed the ability to configure `overwrite` (always false now).
+- Merged Search index describe and Search index list into Search index get, which can perform both operations based on whether
+  an index name is passed. [[#378](https://github.com/microsoft/mcp/pull/378)]
 
 ### Bugs Fixed
 
