@@ -32,7 +32,7 @@ public class MockCommandFactory : ICommandFactory
             {
                 { Group1, new MockCommand(Group1) },
                 { Group2, new MockCommand(Group2) },
-                { Group3, new MockCommand(Group3) },
+                { Group3, new MockHiddenCommand(Group3) },
             };
     }
 
