@@ -18,10 +18,7 @@ namespace Fabric.Mcp.Tools.PublicApi.Services
         {
             _logger.LogInformation("Loading embedded resource: {ResourceName}", resourceName);
 
-            // Normalize path to use underscores (embedded resources use underscores instead of slashes)
-            string normalizedName = resourceName.Replace('/', '.').Replace('\\', '.').Replace('-', '_');
-
-            return Task.FromResult(GetEmbeddedResource(normalizedName));
+            return Task.FromResult(GetEmbeddedResource(resourceName));
         }
 
         public Task<string[]> ListResourcesInPath(string path, ResourceType? filterResources = null)
@@ -31,25 +28,19 @@ namespace Fabric.Mcp.Tools.PublicApi.Services
             var assembly = typeof(EmbeddedResourceProviderService).Assembly;
             string[] allResourceNames = assembly.GetManifestResourceNames();
 
-            // Normalize path to use underscores (embedded resources use underscores instead of slashes)
-            string normalizedPath = path.Replace('/', '.').Replace('\\', '.').Replace('-', '_');
-
-            // Build the expected resource name prefix
-            string resourcePrefix = string.IsNullOrEmpty(normalizedPath)
-                ? $"{assembly.GetName().Name}.Resources."
-                : $"{assembly.GetName().Name}.Resources.{normalizedPath}";
+            var resourcePath = $"Resources/{path}";
 
             // Filter resources that start with the prefix
             var matchingResources = allResourceNames
-                .Where(name => name.StartsWith(resourcePrefix, StringComparison.OrdinalIgnoreCase));
+                .Where(name => name.StartsWith(resourcePath, StringComparison.OrdinalIgnoreCase));
 
             // Apply resource type filtering
             var filteredResources = filterResources switch
             {
-                ResourceType.File => FilterTopLevelResourceFiles(matchingResources, resourcePrefix),
-                ResourceType.Directory => FilterTopLevelResourceDirectories(matchingResources, resourcePrefix),
-                _ => FilterTopLevelResourceFiles(matchingResources, resourcePrefix)
-                        .Concat(FilterTopLevelResourceDirectories(matchingResources, resourcePrefix))
+                ResourceType.File => FilterTopLevelResourceFiles(matchingResources, resourcePath),
+                ResourceType.Directory => FilterTopLevelResourceDirectories(matchingResources, resourcePath),
+                _ => FilterTopLevelResourceFiles(matchingResources, resourcePath)
+                        .Concat(FilterTopLevelResourceDirectories(matchingResources, resourcePath))
                         .Distinct(),
             };
 
@@ -57,19 +48,19 @@ namespace Fabric.Mcp.Tools.PublicApi.Services
             return Task.FromResult(filteredResources.ToArray());
         }
 
-        private static IEnumerable<string> FilterTopLevelResourceFiles(IEnumerable<string> resources, string resourcePrefix)
+        private static IEnumerable<string> FilterTopLevelResourceFiles(IEnumerable<string> resources, string path)
         {
             return resources
-                .Where(name => name.Substring(resourcePrefix.Length).Count(c => c == '.') == 1)
-                .Select(name => name.Substring(resourcePrefix.Length))
+                .Where(name => name.Substring(path.Length).Count(c => c == '/') == 0)
+                .Select(name => name.Substring(path.Length))
                 .Distinct();
         }
 
-        private static IEnumerable<string> FilterTopLevelResourceDirectories(IEnumerable<string> resources, string resourcePrefix)
+        private static IEnumerable<string> FilterTopLevelResourceDirectories(IEnumerable<string> resources, string path)
         {
             return resources
-                .Where(name => name.Substring(resourcePrefix.Length).Count(c => c == '.') > 1)
-                .Select(name => name.Substring(resourcePrefix.Length, name.Substring(resourcePrefix.Length).IndexOf('.')))
+                .Where(name => name.Substring(path.Length).Count(c => c == '/') > 0)
+                .Select(name => name.Substring(path.Length, name.Substring(path.Length).IndexOf('/')))
                 .Distinct();
         }
     }
