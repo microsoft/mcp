@@ -3,7 +3,7 @@
 
 using System.Text.Json.Nodes;
 using Azure.Core;
-using Azure.Mcp.Core.Services.Http;
+using Microsoft.Mcp.Core.Services.Http;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
 

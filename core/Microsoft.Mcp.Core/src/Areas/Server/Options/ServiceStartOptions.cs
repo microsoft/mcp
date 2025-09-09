@@ -50,7 +50,7 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("enableInsecureTransports")]
     public bool EnableInsecureTransports { get; set; } = false;
-    
+
     /// Gets or sets optional server instructions to send to clients.
     /// </summary>
     [JsonPropertyName("serverInstructions")]

@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 using Azure.Mcp.Tools.KeyVault.Commands.Key;
 using Azure.Mcp.Tools.KeyVault.Commands.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
 
 namespace Azure.Mcp.Tools.KeyVault;
 

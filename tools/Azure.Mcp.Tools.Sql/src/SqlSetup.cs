@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Sql.Commands.Database;
 using Azure.Mcp.Tools.Sql.Commands.ElasticPool;
 using Azure.Mcp.Tools.Sql.Commands.EntraAdmin;
@@ -10,6 +8,7 @@ using Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
 
 namespace Azure.Mcp.Tools.Sql;
 

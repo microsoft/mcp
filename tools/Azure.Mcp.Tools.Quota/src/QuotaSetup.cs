@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Quota.Commands.Region;
 using Azure.Mcp.Tools.Quota.Commands.Usage;
 using Azure.Mcp.Tools.Quota.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Services.Http;
 
 namespace Azure.Mcp.Tools.Quota;
 

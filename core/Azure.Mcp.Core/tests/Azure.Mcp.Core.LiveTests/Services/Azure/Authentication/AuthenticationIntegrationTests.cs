@@ -9,10 +9,10 @@ using Azure.Identity.Broker;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tests;
 using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Services.Caching;
 using NSubstitute;
 using Xunit;
 

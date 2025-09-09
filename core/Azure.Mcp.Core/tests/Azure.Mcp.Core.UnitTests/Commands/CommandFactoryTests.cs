@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using NSubstitute;
 using Xunit;
 

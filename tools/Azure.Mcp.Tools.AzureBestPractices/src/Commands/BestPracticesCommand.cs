@@ -5,14 +5,14 @@ using System.CommandLine.Parsing;
 using System.Reflection;
 using System.Text;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Tools.AzureBestPractices.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
 
-public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : BaseCommand
+public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : AzureBaseCommand
 {
     private const string CommandTitle = "Get Azure Best Practices";
     private readonly ILogger<BestPracticesCommand> _logger = logger;

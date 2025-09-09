@@ -44,7 +44,7 @@ public sealed class CommandFactoryToolLoader : IToolLoader
 
         return false;
     }
-    
+
     public CommandFactoryToolLoader(
         IServiceProvider serviceProvider,
         ICommandFactory commandFactory,

@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 using Azure.Mcp.Tools.ServiceBus.Models;
@@ -11,6 +10,7 @@ using Azure.Mcp.Tools.ServiceBus.Services;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
