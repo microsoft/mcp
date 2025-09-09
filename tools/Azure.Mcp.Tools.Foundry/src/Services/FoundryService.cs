@@ -895,7 +895,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
             JsonElement? schema = json.TryGetProperty("jsonSchema", out JsonElement schemaElement) ? schemaElement.Clone() : null;
             return new ToolDefinitionAIFunction(name, description, schema);
         }
-        
+
         public string SerializeToolDefinition()
         {
             MemoryStream bytes = new();

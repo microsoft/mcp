@@ -39,23 +39,23 @@ public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_queryOption);
-        command.AddOption(_evaluatorNameOption);
-        command.AddOption(_responseOption);
-        command.AddOption(_toolDefinitionsOption);
-        command.AddOption(_azureOpenAIEndpointOption);
-        command.AddOption(_azureOpenAIDeploymentOption);
+        command.Options.Add(_queryOption);
+        command.Options.Add(_evaluatorNameOption);
+        command.Options.Add(_responseOption);
+        command.Options.Add(_toolDefinitionsOption);
+        command.Options.Add(_azureOpenAIEndpointOption);
+        command.Options.Add(_azureOpenAIDeploymentOption);
     }
 
     protected override AgentsEvaluateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValueForOption(_queryOption);
-        options.EvaluatorName = parseResult.GetValueForOption(_evaluatorNameOption);
-        options.Response = parseResult.GetValueForOption(_responseOption);
-        options.ToolDefinitions = parseResult.GetValueForOption(_toolDefinitionsOption);
-        options.AzureOpenAIEndpoint = parseResult.GetValueForOption(_azureOpenAIEndpointOption);
-        options.AzureOpenAIDeployment = parseResult.GetValueForOption(_azureOpenAIDeploymentOption);
+        options.Query = parseResult.GetValue(_queryOption);
+        options.EvaluatorName = parseResult.GetValue(_evaluatorNameOption);
+        options.Response = parseResult.GetValue(_responseOption);
+        options.ToolDefinitions = parseResult.GetValue(_toolDefinitionsOption);
+        options.AzureOpenAIEndpoint = parseResult.GetValue(_azureOpenAIEndpointOption);
+        options.AzureOpenAIDeployment = parseResult.GetValue(_azureOpenAIDeploymentOption);
 
         return options;
     }

@@ -27,13 +27,13 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_endpointOption);
+        command.Options.Add(_endpointOption);
     }
 
     protected override AgentsListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValueForOption(_endpointOption);
+        options.Endpoint = parseResult.GetValue(_endpointOption);
 
         return options;
     }

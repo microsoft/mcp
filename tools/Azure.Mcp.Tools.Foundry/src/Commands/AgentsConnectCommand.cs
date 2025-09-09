@@ -31,17 +31,17 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_agentIdOption);
-        command.AddOption(_queryOption);
-        command.AddOption(_endpointOption);
+        command.Options.Add(_agentIdOption);
+        command.Options.Add(_queryOption);
+        command.Options.Add(_endpointOption);
     }
 
     protected override AgentsConnectOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.AgentId = parseResult.GetValueForOption(_agentIdOption);
-        options.Query = parseResult.GetValueForOption(_queryOption);
-        options.Endpoint = parseResult.GetValueForOption(_endpointOption);
+        options.AgentId = parseResult.GetValue(_agentIdOption);
+        options.Query = parseResult.GetValue(_queryOption);
+        options.Endpoint = parseResult.GetValue(_endpointOption);
 
         return options;
     }
