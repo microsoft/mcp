@@ -78,6 +78,7 @@ public class DirectoryCreateCommandTests
         var result = JsonSerializer.Deserialize<DirectoryCreateCommand.DirectoryCreateCommandResult>(json);
 
         Assert.NotNull(result);
+        Assert.NotNull(result.Directory);
         Assert.Equal(expectedDirectory.Name, result.Directory.Name);
         Assert.Equal(expectedDirectory.Type, result.Directory.Type);
         Assert.Equal("directory", result.Directory.Type);

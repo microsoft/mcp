@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 // Lightweight projection of ContainerProperties with commonly useful metadata.
 // Keep property names stable; only add new nullable properties to extend.
 public sealed record ContainerInfo(
-    [property: JsonPropertyName("containerName")] string ContainerName,
+    [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("lastModified")] DateTimeOffset LastModified,
     [property: JsonPropertyName("eTag")] string? ETag,
     [property: JsonPropertyName("metadata")] IDictionary<string, string> Metadata,

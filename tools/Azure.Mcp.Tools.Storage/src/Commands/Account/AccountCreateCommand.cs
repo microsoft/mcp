@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
@@ -120,5 +121,5 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     };
 
     // Strongly-typed result record
-    internal record AccountCreateCommandResult(AccountInfo Account);
+    internal record AccountCreateCommandResult([property: JsonPropertyName("account")] AccountInfo Account);
 }

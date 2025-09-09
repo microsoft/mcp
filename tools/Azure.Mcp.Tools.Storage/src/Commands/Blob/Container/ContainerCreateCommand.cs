@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
@@ -56,5 +57,5 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
         return context.Response;
     }
 
-    internal record ContainerCreateCommandResult(ContainerInfo Container);
+    internal record ContainerCreateCommandResult([property: JsonPropertyName("container")] ContainerInfo Container);
 }

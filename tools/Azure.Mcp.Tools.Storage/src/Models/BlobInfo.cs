@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 // Lightweight projection of BlobProperties with commonly useful metadata.
 // Keep property names stable; only add new nullable properties to extend.
 public sealed record BlobInfo(
-    [property: JsonPropertyName("blobName")] string BlobName,
+    [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("lastModified")] DateTimeOffset? LastModified,
     [property: JsonPropertyName("eTag")] string? ETag,
     [property: JsonPropertyName("contentLength")] long? ContentLength,

@@ -51,8 +51,13 @@ public class ContainerGetCommandTests
                 "Leased", "Locked", "Infinite", "Blob", true, false, DateTimeOffset.UtcNow.AddDays(-1), 5, true)
         };
 
-        _storageService.GetContainerDetails(Arg.Is(_knownAccount), null, Arg.Is(_knownSubscription), Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>()).Returns(expectedContainers);
+        _storageService.GetContainerDetails(
+            Arg.Is(_knownAccount),
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is(_knownSubscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(expectedContainers);
 
         var args = _commandDefinition.Parse([
             "--account", _knownAccount,
@@ -72,16 +77,21 @@ public class ContainerGetCommandTests
         Assert.NotNull(result);
         Assert.NotNull(result.Containers);
         Assert.Equal(2, result.Containers.Count);
-        Assert.Equal(expectedContainers[0].ContainerName, result.Containers[0].ContainerName);
-        Assert.Equal(expectedContainers[1].ContainerName, result.Containers[1].ContainerName);
+        Assert.Equal(expectedContainers[0].Name, result.Containers[0].Name);
+        Assert.Equal(expectedContainers[1].Name, result.Containers[1].Name);
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsNull_WhenNoContainers()
     {
         // Arrange
-        _storageService.GetContainerDetails(Arg.Is(_knownAccount), null, Arg.Is(_knownSubscription), Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>()).Returns([]);
+        _storageService.GetContainerDetails(
+            Arg.Is(_knownAccount),
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is(_knownSubscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns([]);
 
         var args = _commandDefinition.Parse([
             "--account", _knownAccount,
@@ -102,8 +112,13 @@ public class ContainerGetCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _storageService.GetContainerDetails(Arg.Is(_knownAccount), null, Arg.Is(_knownSubscription), Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception(expectedError));
+        _storageService.GetContainerDetails(
+            Arg.Is(_knownAccount),
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is(_knownSubscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
             "--account", _knownAccount,

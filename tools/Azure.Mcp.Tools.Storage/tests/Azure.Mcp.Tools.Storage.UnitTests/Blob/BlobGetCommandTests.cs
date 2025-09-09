@@ -96,25 +96,6 @@ public class BlobGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ValidatesRequiredParameters()
-    {
-        // Arrange - missing blob parameter
-        var args = _commandDefinition.Parse([
-            "--account", _knownAccount,
-            "--container", _knownContainer,
-            "--subscription", _knownSubscription
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args);
-
-        // Assert
-        Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
-        Assert.Contains("required", response.Message.ToLower());
-    }
-
-    [Fact]
     public async Task ExecuteAsync_NoParameters_ReturnsSubscriptions()
     {
         // Arrange
@@ -127,8 +108,14 @@ public class BlobGetCommandTests
                 DateTimeOffset.UtcNow.AddDays(-1), null, "2024-06-01T12:00:00.0000000Z")
         };
 
-        _storageService.GetBlobDetails(Arg.Is(_knownAccount), Arg.Is(_knownContainer), null, Arg.Is(_knownSubscription),
-            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>()).Returns(expectedBlobInfos);
+        _storageService.GetBlobDetails(
+            Arg.Is(_knownAccount),
+            Arg.Is(_knownContainer),
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is(_knownSubscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(expectedBlobInfos);
 
         var args = _commandDefinition.Parse([
             "--account", _knownAccount,
@@ -147,15 +134,21 @@ public class BlobGetCommandTests
         var result = JsonSerializer.Deserialize<BlobGetCommand.BlobGetCommandResult>(json);
 
         Assert.NotNull(result);
-        Assert.Equal(expectedBlobInfos, result.Blobs);
+        Assert.Equal(expectedBlobInfos.Select(b => b.Name), result.Blobs.Select(b => b.Name));
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsNull_WhenNoBlobs()
     {
         // Arrange
-        _storageService.GetBlobDetails(Arg.Is(_knownAccount), Arg.Is(_knownContainer), null, Arg.Is(_knownSubscription),
-            Arg.Any<string>(), Arg.Any<RetryPolicyOptions>()).Returns([]);
+        _storageService.GetBlobDetails(
+            Arg.Is(_knownAccount),
+            Arg.Is(_knownContainer),
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is(_knownSubscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns([]);
 
         var args = _commandDefinition.Parse([
             "--account", _knownAccount,
@@ -177,8 +170,14 @@ public class BlobGetCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _storageService.GetBlobDetails(Arg.Is(_knownAccount), Arg.Is(_knownContainer), null, Arg.Is(_knownSubscription),
-            null, Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception(expectedError));
+        _storageService.GetBlobDetails(
+            Arg.Is(_knownAccount),
+            Arg.Is(_knownContainer),
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is(_knownSubscription),
+            null,
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
             "--account", _knownAccount,

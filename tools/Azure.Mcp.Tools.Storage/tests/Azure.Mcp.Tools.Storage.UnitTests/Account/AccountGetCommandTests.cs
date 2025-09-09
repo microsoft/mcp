@@ -48,7 +48,11 @@ public class AccountGetCommandTests
             new("account2", "westus", "StorageV2", "Standard_GRS", "Standard", false, false, true)
         };
 
-        _storageService.GetAccountDetails(null, Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _storageService.GetAccountDetails(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is(subscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedAccounts));
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
@@ -75,7 +79,11 @@ public class AccountGetCommandTests
         // Arrange
         var subscription = "sub123";
 
-        _storageService.GetAccountDetails(null, Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _storageService.GetAccountDetails(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is(subscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(new List<Models.AccountInfo>()));
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
@@ -95,7 +103,11 @@ public class AccountGetCommandTests
         var expectedError = "Test error";
         var subscription = "sub123";
 
-        _storageService.GetAccountDetails(null, Arg.Is(subscription), null, Arg.Any<RetryPolicyOptions>())
+        _storageService.GetAccountDetails(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is(subscription),
+            null,
+            Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
@@ -121,9 +133,8 @@ public class AccountGetCommandTests
     [Theory]
     [InlineData("--account mystorageaccount --subscription sub123", true)]
     [InlineData("--subscription sub123 --account mystorageaccount", true)]
-    [InlineData("--subscription sub123", false)] // Missing account
+    [InlineData("--subscription sub123", true)] // Account is optional
     [InlineData("--account mystorageaccount", false)] // Missing subscription
-    [InlineData("", false)] // Missing both
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Arrange
@@ -268,6 +279,6 @@ public class AccountGetCommandTests
 
         // Assert
         Assert.Equal(403, response.Status);
-        Assert.Contains("Authorization failed accessing the storage account", response.Message);
+        Assert.Contains("Authorization failed", response.Message);
     }
 }

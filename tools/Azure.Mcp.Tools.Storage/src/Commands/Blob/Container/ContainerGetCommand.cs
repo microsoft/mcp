@@ -84,5 +84,5 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : B
         }
     }
 
-    internal record ContainerGetCommandResult(List<ContainerInfo> Containers);
+    internal record ContainerGetCommandResult([property: JsonPropertyName("containers")] List<ContainerInfo> Containers);
 }

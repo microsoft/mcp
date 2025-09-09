@@ -147,7 +147,7 @@ public class QueueMessageSendCommandTests
 
         // Assert
         Assert.Equal(404, response.Status);
-        Assert.Contains("Queue not found", response.Message);
+        Assert.Contains("Not found", response.Message);
     }
 
     [Fact]
@@ -174,6 +174,6 @@ public class QueueMessageSendCommandTests
 
         // Assert
         Assert.Equal(403, response.Status);
-        Assert.Contains("Authorization failed", response.Message);
+        Assert.Contains("Access denied", response.Message);
     }
 }

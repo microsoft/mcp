@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
@@ -102,5 +103,5 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
     }
 
     // Strongly-typed result record
-    internal record QueueMessageSendCommandResult(QueueMessageSendResult Message);
+    internal record QueueMessageSendCommandResult([property: JsonPropertyName("message")] QueueMessageSendResult Message);
 }
