@@ -38,7 +38,7 @@ public class AppServiceService(
         try
         {
             // Validate inputs
-            ValidateParameters(appName, resourceGroup, databaseType, databaseServer, databaseName, subscription);
+            ValidateRequiredParameters(appName, resourceGroup, databaseType, databaseServer, databaseName, subscription);
 
             // Get Azure resources
             var webApp = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy);
@@ -64,19 +64,6 @@ public class AppServiceService(
                 appName, resourceGroup);
             throw;
         }
-    }
-
-    private static void ValidateParameters(string appName, string resourceGroup, string databaseType,
-        string databaseServer, string databaseName, string subscription)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(appName);
-        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup);
-        ArgumentException.ThrowIfNullOrWhiteSpace(databaseType);
-        ArgumentException.ThrowIfNullOrWhiteSpace(databaseServer);
-        ArgumentException.ThrowIfNullOrWhiteSpace(databaseName);
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
-
-        ValidateDatabaseType(databaseType);
     }
 
     private async Task<WebSiteResource> GetWebAppResourceAsync(string subscription, string resourceGroup,
