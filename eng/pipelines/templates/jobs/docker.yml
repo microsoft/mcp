@@ -15,41 +15,51 @@ jobs:
     os: linux
 
   steps:
-  - task: DownloadPipelineArtifact@2
-    displayName: 'Download signed packages'
-    inputs:
-      buildType: 'current'
-      artifactName: $(PipelineArtifactName)_signed
-      targetPath: $(Build.ArtifactStagingDirectory)
+  - pwsh: |
+      $props = & eng/scripts/Get-ProjectProperties.ps1 -ProjectName '${{ parameters.ServerName }}.csproj'
+      if ($props.DockerImageName) {
+        Write-Host "##vso[task.setvariable variable=HasDockerImageName]true"
+      } else {
+        Write-Host "##vso[task.setvariable variable=HasDockerImageName]false"
+      }
+    displayName: 'Check for DockerImageName property'
 
-  - task: CopyFiles@2
-    displayName: 'Copy Dockerfile'
-    inputs:
-      Contents: 'Dockerfile'
-      TargetFolder: $(Build.ArtifactStagingDirectory)
+  - ${{ if eq(variables['HasDockerImageName'], 'true') }}:
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download signed packages'
+      inputs:
+        buildType: 'current'
+        artifactName: $(PipelineArtifactName)_signed
+        targetPath: $(Build.ArtifactStagingDirectory)
 
-  - task: Powershell@2
-    displayName: 'Set Docker Variables'
-    name: SetVariables
-    inputs:
-      targetType: 'inline'
-      script: |
-        $properties = ./eng/scripts/Get-ProjectProperties.ps1 -ProjectName '${{parameters.ServerName}}.csproj'
-        $imageName = $properties.DockerImageName
-        $version = $properties.Version
-        Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$imageName"
-        Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version$VersionSuffix"
-    env:
-      VERSION_SUFFIX: '$(VersionSuffix)'
+    - task: CopyFiles@2
+      displayName: 'Copy Dockerfile'
+      inputs:
+        Contents: 'Dockerfile'
+        TargetFolder: $(Build.ArtifactStagingDirectory)
 
-  - task: 1ES.PublishPipelineArtifact@1
-    inputs:
-      path: $(Build.ArtifactStagingDirectory)
-      artifact: docker_drops
+    - task: Powershell@2
+      displayName: 'Set Docker Variables'
+      name: SetVariables
+      inputs:
+        targetType: 'inline'
+        script: |
+          $properties = ./eng/scripts/Get-ProjectProperties.ps1 -ProjectName '${{parameters.ServerName}}.csproj'
+          $imageName = $properties.DockerImageName
+          $version = $properties.Version
+          Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$imageName"
+          Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version$VersionSuffix"
+      env:
+        VERSION_SUFFIX: '$(VersionSuffix)'
+
+    - task: 1ES.PublishPipelineArtifact@1
+      inputs:
+        path: $(Build.ArtifactStagingDirectory)
+        artifact: docker_drops
 
 - job: PublishACR
   displayName: "Publish to ACR"
-  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  condition: and(succeeded(), eq(variables['HasDockerImageName'], 'true'), ne(variables['Skip.PublishPackage'], 'true'))
   dependsOn: CreateDockerArtifact
   variables:
     DockerImageName:  $[ dependencies.CreateDockerArtifact.outputs['SetVariables.DockerImageName'] ]
