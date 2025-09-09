@@ -4,6 +4,7 @@
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Option;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Microsoft.Mcp.Core.Areas.Tools.Commands;
 
@@ -29,9 +30,9 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
     {
         try
         {
-            var factory = context.GetService<CommandFactory>();
-            var tools = await Task.Run(() => CommandFactory.GetVisibleCommands(factory.AllCommands)
-                .Select(kvp => CreateCommand(kvp.Key, kvp.Value))
+            var factory = context.GetService<ICommandFactory>();
+            var tools = await Task.Run(() => CommandHelper.GetVisibleCommands(factory.AllCommands)
+                .Select(kvp => CreateCommand(factory.Separator, kvp.Key, kvp.Value))
                 .ToList());
 
             context.Response.Results = ResponseResult.Create(tools, ModelsJsonContext.Default.ListCommandInfo);
@@ -46,7 +47,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         }
     }
 
-    private static CommandInfo CreateCommand(string tokenizedName, IBaseCommand command)
+    private static CommandInfo CreateCommand(char separator, string tokenizedName, IBaseCommand command)
     {
         var commandDetails = command.GetCommand();
 
@@ -61,7 +62,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         {
             Name = commandDetails.Name,
             Description = commandDetails.Description ?? string.Empty,
-            Command = tokenizedName.Replace(CommandFactory.Separator, ' '),
+            Command = tokenizedName.Replace(separator, ' '),
             Options = optionInfos,
         };
     }

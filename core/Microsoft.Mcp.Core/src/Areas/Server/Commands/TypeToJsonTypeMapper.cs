@@ -3,7 +3,7 @@
 
 using System.Collections;
 using Microsoft.Mcp.Core.Areas.Server.Models;
-using Azure.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Microsoft.Mcp.Core.Areas.Server.Commands;
 
