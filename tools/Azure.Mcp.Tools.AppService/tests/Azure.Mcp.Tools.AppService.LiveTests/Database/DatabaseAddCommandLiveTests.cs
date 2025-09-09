@@ -34,10 +34,10 @@ public class DatabaseAddCommandLiveTests(LiveTestFixture liveTestFixture, ITestO
 
         // In live environment, this will likely fail due to non-existent resources,
         // but we should get a proper error response rather than a system exception
-        if (result.IsError())
+        if (result.IsError)
         {
             // Validate we get expected Azure resource errors, not system/interface errors
-            var errorContent = result.Content()?.ToString() ?? "";
+            var errorContent = result.Content?.ToString() ?? result.Error?.Message ?? "";
             Assert.True(
                 errorContent.Contains("not found") ||
                 errorContent.Contains("does not exist") ||
@@ -49,8 +49,8 @@ public class DatabaseAddCommandLiveTests(LiveTestFixture liveTestFixture, ITestO
         else
         {
             // If successful, validate the response structure
-            Assert.True(result.IsSuccess());
-            Assert.NotNull(result.Content());
+            Assert.False(result.IsError);
+            Assert.NotNull(result.Content);
         }
     }
 
@@ -76,29 +76,29 @@ public class DatabaseAddCommandLiveTests(LiveTestFixture liveTestFixture, ITestO
         Assert.NotNull(result);
 
         // Test that database type validation works correctly
-        if (result.IsError())
-        {
-            var errorContent = result.Content()?.ToString() ?? "";
+            if (result.IsError)
+            {
+                var errorContent = result.Content?.ToString() ?? "";
 
-            // Should not fail due to invalid database type since we're testing valid types
-            Assert.False(
-                errorContent.Contains("Unsupported database type") ||
-                errorContent.Contains("invalid database type"),
-                $"Database type '{databaseType}' should be supported but got error: {errorContent}");
+                // Should not fail due to invalid database type since we're testing valid types
+                Assert.False(
+                    errorContent.Contains("Unsupported database type") ||
+                    errorContent.Contains("invalid database type"),
+                    $"Database type '{databaseType}' should be supported but got error: {errorContent}");
 
-            // Should fail due to Azure resource issues (expected in live environment)
-            Assert.True(
-                errorContent.Contains("not found") ||
-                errorContent.Contains("does not exist") ||
-                errorContent.Contains("ResourceGroupNotFound") ||
-                errorContent.Contains("WebSiteNotFound") ||
-                errorContent.Contains("subscription"),
-                $"Expected Azure resource error for {databaseType} but got: {errorContent}");
-        }
-        else
-        {
-            Assert.True(result.IsSuccess(), $"Command should handle {databaseType} database type correctly");
-        }
+                // Should fail due to Azure resource issues (expected in live environment)
+                Assert.True(
+                    errorContent.Contains("not found") ||
+                    errorContent.Contains("does not exist") ||
+                    errorContent.Contains("ResourceGroupNotFound") ||
+                    errorContent.Contains("WebSiteNotFound") ||
+                    errorContent.Contains("subscription"),
+                    $"Expected Azure resource error for {databaseType} but got: {errorContent}");
+            }
+            else
+            {
+                Assert.False(result.IsError, $"Command should handle {databaseType} database type correctly");
+            }
     }
 
     [Theory]
@@ -120,9 +120,9 @@ public class DatabaseAddCommandLiveTests(LiveTestFixture liveTestFixture, ITestO
             });
 
         Assert.NotNull(result);
-        Assert.True(result.IsError(), $"Invalid database type '{invalidDatabaseType}' should cause validation error");
+        Assert.True(result.IsError, $"Invalid database type '{invalidDatabaseType}' should cause validation error");
 
-        var errorContent = result.Content()?.ToString() ?? "";
+        var errorContent = result.Content?.ToString() ?? result.Error?.Message ?? "";
         Assert.True(
             errorContent.Contains("Unsupported database type") ||
             errorContent.Contains("invalid database type") ||
