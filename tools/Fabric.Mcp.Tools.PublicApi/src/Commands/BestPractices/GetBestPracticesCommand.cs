@@ -9,18 +9,21 @@ using Microsoft.Extensions.Logging;
 
 namespace Fabric.Mcp.Tools.PublicApi.Commands.BestPractices;
 
-public sealed class GetBestPracticeCommand(ILogger<GetBestPracticeCommand> logger) : GlobalCommand<GetBestPracticesOptions>()
+public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> logger) : GlobalCommand<GetBestPracticesOptions>()
 {
     private const string CommandTitle = "Get API Examples";
 
-    private readonly ILogger<GetBestPracticeCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<GetBestPracticesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly Option<string> _topicOption = FabricOptionDefinitions.Topic;
 
     public override string Name => "get";
 
     public override string Description =>
         """
-        Retrieves all best practice resources on a specific topic.
+        Retrieves embedded best practice documentation and guidance for a specific Microsoft Fabric topic.
+        Use this command when you need detailed recommendations, guidelines, or best practices for 
+        implementing or working with specific Fabric features, APIs, or development patterns.
+        The topic parameter should match available embedded resource names for Fabric best practices.
         """;
 
     public override string Title => CommandTitle;
@@ -42,15 +45,15 @@ public sealed class GetBestPracticeCommand(ILogger<GetBestPracticeCommand> logge
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return Task.FromResult(context.Response);
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return Task.FromResult(context.Response);
-            }
-
             if (string.IsNullOrEmpty(options.Topic))
             {
                 context.Response.Status = 400;

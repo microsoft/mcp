@@ -41,16 +41,16 @@ public class FabricPublicApiSetup : IAreaSetup
         rootGroup.AddSubGroup(fabricPublicApis);
 
         // Create Fabric subgroups
-        var bestPractices = new CommandGroup("best-practices", "API Examples and Best Practices - Commands for retrieving example API request/response files and implementation guidance from Microsoft Fabric's documentation repository.");
+        var bestPractices = new CommandGroup("bestpractices", "API Examples and Best Practices - Commands for retrieving example API request/response files and implementation guidance from Microsoft Fabric's documentation repository.");
         fabricPublicApis.AddSubGroup(bestPractices);
 
-        fabricPublicApis.AddCommand("discover-workloads", new DiscoverPublicWorkloadsCommand(loggerFactory.CreateLogger<DiscoverPublicWorkloadsCommand>()));
+        fabricPublicApis.AddCommand("workloads-discover", new DiscoverPublicWorkloadsCommand(loggerFactory.CreateLogger<DiscoverPublicWorkloadsCommand>()));
         fabricPublicApis.AddCommand("get", new GetWorkloadApisCommand(loggerFactory.CreateLogger<GetWorkloadApisCommand>()));
-        fabricPublicApis.AddCommand("get-platform", new GetPlatformApisCommand(loggerFactory.CreateLogger<GetPlatformApisCommand>()));
+        fabricPublicApis.AddCommand("platform-get", new GetPlatformApisCommand(loggerFactory.CreateLogger<GetPlatformApisCommand>()));
 
         // Add best practices commands
-        bestPractices.AddCommand("get-example", new GetExamplesCommand(loggerFactory.CreateLogger<GetExamplesCommand>()));
-        bestPractices.AddCommand("item-definition", new GetWorkloadDefinitionCommand(loggerFactory.CreateLogger<GetWorkloadDefinitionCommand>()));
-        bestPractices.AddCommand("get", new GetBestPracticeCommand(loggerFactory.CreateLogger<GetBestPracticeCommand>()));
+        bestPractices.AddCommand("examples-get", new GetExamplesCommand(loggerFactory.CreateLogger<GetExamplesCommand>()));
+        bestPractices.AddCommand("item-definition-get", new GetWorkloadDefinitionCommand(loggerFactory.CreateLogger<GetWorkloadDefinitionCommand>()));
+        bestPractices.AddCommand("get", new GetBestPracticesCommand(loggerFactory.CreateLogger<GetBestPracticesCommand>()));
     }
 }

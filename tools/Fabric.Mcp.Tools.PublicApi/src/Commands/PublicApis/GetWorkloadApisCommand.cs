@@ -44,15 +44,15 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             if (string.IsNullOrEmpty(options.WorkloadType))
             {
                 context.Response.Status = 400;

@@ -1,5 +1,4 @@
-﻿using System.IO;
-using Azure.Mcp.Core.Helpers;
+﻿using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.Logging;
 
 namespace Fabric.Mcp.Tools.PublicApi.Services
