@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Reflection;
+using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client.Helpers;
+using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Xunit;
@@ -16,18 +19,49 @@ public class ServerCommandTests(ITestOutputHelper output)
 {
     protected ITestOutputHelper Output { get; } = output;
 
+    private async Task<IMcpClient> CreateClientAsync(params string[] arguments)
+    {
+        var settingsFixture = new LiveTestSettingsFixture();
+        await settingsFixture.InitializeAsync();
+        var settings = settingsFixture.Settings;
+
+        string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
+
+        StdioClientTransportOptions transportOptions = new()
+        {
+            Name = "Test Server",
+            Command = executablePath,
+            Arguments = arguments,
+            StandardErrorLines = line =>
+            {
+                // Safely capture stderr lines without accessing test context from background thread
+                try
+                { Output.WriteLine($"[MCP Server] {line}"); }
+                catch { /* Ignore if test context unavailable */ }
+            }
+        };
+
+        if (!string.IsNullOrEmpty(settings.TestPackage))
+        {
+            Environment.CurrentDirectory = settings.SettingsDirectory;
+            transportOptions.Command = "npx";
+            transportOptions.Arguments = ["-y", settings.TestPackage, .. arguments];
+        }
+
+        var clientTransport = new StdioClientTransport(transportOptions);
+        return await McpClientFactory.CreateAsync(clientTransport);
+    }
+
     #region Default Mode Tests
 
     [Fact]
     public async Task DefaultMode_LoadsNamespaceTools()
     {
         // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start");
-        await fixture.InitializeAsync();
+        await using var client = await CreateClientAsync("server", "start");
 
         // Act
-        var listResult = await fixture.Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -57,12 +91,10 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task AllMode_LoadsAllIndividualTools()
     {
         // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start", "--mode", "all");
-        await fixture.InitializeAsync();
+        await using var client = await CreateClientAsync("server", "start", "--mode", "all");
 
         // Act
-        var listResult = await fixture.Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -92,12 +124,10 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task SingleProxyMode_LoadsSingleAzureTool()
     {
         // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start", "--mode", "single");
-        await fixture.InitializeAsync();
+        await using var client = await CreateClientAsync("server", "start", "--mode", "single");
 
         // Act
-        var listResult = await fixture.Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Single(listResult);
@@ -114,12 +144,10 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task SingleProxyMode_WithNamespaceFilter_StillLoadsSingleAzureTool()
     {
         // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start", "--mode", "single", "--namespace", "storage");
-        await fixture.InitializeAsync();
+        await using var client = await CreateClientAsync("server", "start", "--mode", "single", "--namespace", "storage");
 
         // Act
-        var listResult = await fixture.Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         // Single proxy mode should still expose single azure tool regardless of namespace filter
@@ -133,12 +161,10 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task SingleProxyMode_WithReadOnlyFlag_LoadsSingleAzureTool()
     {
         // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start", "--mode", "single", "--read-only");
-        await fixture.InitializeAsync();
+        await using var client = await CreateClientAsync("server", "start", "--mode", "single", "--read-only");
 
         // Act
-        var listResult = await fixture.Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Single(listResult);
@@ -167,12 +193,10 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task NamespaceProxyMode_LoadsNamespaceTools()
     {
         // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start", "--mode", "namespace");
-        await fixture.InitializeAsync();
+        await using var client = await CreateClientAsync("server", "start", "--mode", "namespace");
 
         // Act
-        var listResult = await fixture.Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -196,12 +220,10 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task NamespaceProxyMode_WithSpecificNamespaces_LoadsNamespaceSpecificTools()
     {
         // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start", "--mode", "namespace", "--namespace", "storage", "--namespace", "keyvault");
-        await fixture.InitializeAsync();
+        await using var client = await CreateClientAsync("server", "start", "--mode", "namespace", "--namespace", "storage", "--namespace", "keyvault");
 
         // Act
-        var listResult = await fixture.Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -236,12 +258,10 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task NamespaceProxyMode_WithDocumentationNamespace_LoadsOnlyDocumentationTool()
     {
         // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start", "--mode", "namespace", "--namespace", "documentation");
-        await fixture.InitializeAsync();
+        await using var client = await CreateClientAsync("server", "start", "--mode", "namespace", "--namespace", "documentation");
 
         // Act
-        var listResult = await fixture.Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -263,12 +283,10 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task NamespaceProxyMode_IncludesExtensionTools()
     {
         // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start", "--mode", "namespace");
-        await fixture.InitializeAsync();
+        await using var client = await CreateClientAsync("server", "start", "--mode", "namespace");
 
         // Act
-        var listResult = await fixture.Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -297,9 +315,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task NamespaceProxyMode_StorageToolLearnMode_ReturnsStorageCommands()
     {
         // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start", "--mode", "namespace");
-        await fixture.InitializeAsync();
+        await using var client = await CreateClientAsync("server", "start", "--mode", "namespace");
 
         // Act - Call storage tool in learn mode
         var learnParameters = new Dictionary<string, object?>
@@ -307,7 +323,7 @@ public class ServerCommandTests(ITestOutputHelper output)
             ["learn"] = true
         };
 
-        var result = await fixture.Client.CallToolAsync("storage", learnParameters, cancellationToken: TestContext.Current.CancellationToken);
+        var result = await client.CallToolAsync("storage", learnParameters, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -342,12 +358,10 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task DefaultMode_WithNamespaceFilter_LoadsFilteredTools()
     {
         // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start", "--namespace", "storage", "--namespace", "keyvault");
-        await fixture.InitializeAsync();
+        await using var client = await CreateClientAsync("server", "start", "--namespace", "storage", "--namespace", "keyvault");
 
         // Act
-        var listResult = await fixture.Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -373,12 +387,10 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task AllMode_WithNamespaceFilter_LoadsFilteredIndividualTools()
     {
         // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start", "--mode", "all", "--namespace", "storage", "--namespace", "keyvault");
-        await fixture.InitializeAsync();
+        await using var client = await CreateClientAsync("server", "start", "--mode", "all", "--namespace", "storage", "--namespace", "keyvault");
 
         // Act
-        var listResult = await fixture.Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -402,12 +414,10 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task AllMode_WithReadOnlyFlag_LoadsOnlyReadOnlyTools()
     {
         // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start", "--mode", "all", "--read-only");
-        await fixture.InitializeAsync();
+        await using var client = await CreateClientAsync("server", "start", "--mode", "all", "--read-only");
 
         // Act
-        var listResult = await fixture.Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(listResult);
@@ -458,14 +468,10 @@ public class ServerCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task InvalidMode_FailsToStartServer()
     {
-        // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start", "--mode", "invalid-mode");
-
         // Act & Assert
         await Assert.ThrowsAsync<IOException>(async () =>
         {
-            await fixture.InitializeAsync();
+            await using var client = await CreateClientAsync("server", "start", "--mode", "invalid-mode");
         });
     }
 
@@ -473,12 +479,10 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task InvalidNamespace_LoadsGracefully()
     {
         // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start", "--namespace", "invalid-namespace", "--namespace", "another-invalid");
-        await fixture.InitializeAsync();
+        await using var client = await CreateClientAsync("server", "start", "--namespace", "invalid-namespace", "--namespace", "another-invalid");
 
         // Act
-        var listResult = await fixture.Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         // Should not crash, but may have fewer or no tools
@@ -498,12 +502,10 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task VerifyUniqueToolNames_InAllMode()
     {
         // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start", "--mode", "all");
-        await fixture.InitializeAsync();
+        await using var client = await CreateClientAsync("server", "start", "--mode", "all");
 
         // Act
-        var listResult = await fixture.Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         var toolNames = listResult.Select(t => t.Name).ToList();
@@ -518,12 +520,10 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task VerifyUniqueToolNames_InDefaultMode()
     {
         // Arrange
-        await using var fixture = new LiveTestFixture();
-        fixture.SetArguments("server", "start");
-        await fixture.InitializeAsync();
+        await using var client = await CreateClientAsync("server", "start");
 
         // Act
-        var listResult = await fixture.Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         var toolNames = listResult.Select(t => t.Name).ToList();

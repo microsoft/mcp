@@ -192,3 +192,5 @@ extends:
             value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
           jobs:
           - template: /eng/pipelines/templates/jobs/integration.yml
+            parameters:
+              ServerName: ${{ parameters.ServerName }}

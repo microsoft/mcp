@@ -4,25 +4,13 @@
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
 
 public class CommandGroupDiscoveryStrategyTests
 {
-    private static string GetAzmcpExecutablePath()
-    {
-        // Get the directory where the test binary is located
-        var testAssemblyPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-        var testDirectory = Path.GetDirectoryName(testAssemblyPath);
-
-        // On Windows, use .exe extension; on other OS, no extension
-        var executableName = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
-            System.Runtime.InteropServices.OSPlatform.Windows) ? "azmcp.exe" : "azmcp";
-
-        return Path.Combine(testDirectory!, executableName);
-    }
-
     private static CommandGroupDiscoveryStrategy CreateStrategy(
         CommandFactory? commandFactory = null,
         ServiceStartOptions? options = null,
@@ -96,7 +84,7 @@ public class CommandGroupDiscoveryStrategyTests
     {
         // Arrange
         var strategy = CreateStrategy();
-        var azmcpPath = GetAzmcpExecutablePath();
+        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
 
         // Act
         strategy.EntryPoint = azmcpPath;
@@ -202,7 +190,7 @@ public class CommandGroupDiscoveryStrategyTests
     public async Task DiscoverServersAsync_WithCustomEntryPoint_SetsEntryPointOnAllProviders()
     {
         // Arrange
-        var customEntryPoint = GetAzmcpExecutablePath();
+        var customEntryPoint = McpTestUtilities.GetAzMcpExecutablePath();
         var strategy = CreateStrategy(entryPoint: customEntryPoint);
 
         // Act
@@ -404,7 +392,7 @@ public class CommandGroupDiscoveryStrategyTests
         {
             ReadOnly = true,
         };
-        var azmcpEntryPoint = GetAzmcpExecutablePath();
+        var azmcpEntryPoint = McpTestUtilities.GetAzMcpExecutablePath();
         var strategy = CreateStrategy(options: options, entryPoint: azmcpEntryPoint);
 
         // Act
@@ -472,7 +460,7 @@ public class CommandGroupDiscoveryStrategyTests
     {
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory();
         var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions { ReadOnly = true });
-        var azmcpEntryPoint = GetAzmcpExecutablePath();
+        var azmcpEntryPoint = McpTestUtilities.GetAzMcpExecutablePath();
         var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
         var strategy = new CommandGroupDiscoveryStrategy(commandFactory, options, logger)
         {
@@ -497,7 +485,7 @@ public class CommandGroupDiscoveryStrategyTests
     public void GetAzmcpExecutablePath_ReturnsCorrectPathForCurrentOS()
     {
         // Arrange & Act
-        var azmcpPath = GetAzmcpExecutablePath();
+        var azmcpPath = McpTestUtilities.GetAzMcpExecutablePath();
 
         // Assert
         Assert.NotNull(azmcpPath);
