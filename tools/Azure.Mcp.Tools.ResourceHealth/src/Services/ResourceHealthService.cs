@@ -39,10 +39,10 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
             var url = $"{resourceId}/providers/Microsoft.ResourceHealth/availabilityStatuses/current?api-version={ResourceHealthApiVersion}";
-            
+
             using var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
-            
+
             var content = await response.Content.ReadAsStringAsync();
             var apiResponse = JsonSerializer.Deserialize<AvailabilityStatusResponse>(content, ResourceHealthJsonContext.Default.AvailabilityStatusResponse);
 
@@ -90,7 +90,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 
             using var response = await client.GetAsync(url);
             response.EnsureSuccessStatusCode();
-            
+
             var content = await response.Content.ReadAsStringAsync();
             var apiResponse = JsonSerializer.Deserialize<AvailabilityStatusListResponse>(content, ResourceHealthJsonContext.Default.AvailabilityStatusListResponse);
 

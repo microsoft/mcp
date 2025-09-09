@@ -337,6 +337,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_resourcehealth_availability-status_list | List availability status for all resources in my subscription |
 | azmcp_resourcehealth_availability-status_list | Show me the health status of all my Azure resources |
 | azmcp_resourcehealth_availability-status_list | What resources in resource group <resource_group_name> have health issues? |
+| azmcp_resourcehealth_service-health-events_list | List all service health events in my subscription |
+| azmcp_resourcehealth_service-health-events_list | Show me Azure service health events for subscription <subscription_id> |
+| azmcp_resourcehealth_service-health-events_list | What service issues have occurred in the last 30 days? |
+| azmcp_resourcehealth_service-health-events_list | List active service health events in my subscription |
+| azmcp_resourcehealth_service-health-events_list | Show me planned maintenance events for my Azure services |
 
 ## Azure Service Bus
 
