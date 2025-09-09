@@ -37,7 +37,9 @@ internal class Program
             var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
-            return await parseResult.InvokeAsync();
+            var status = await parseResult.InvokeAsync();
+
+            return (status >= 200 && status < 300) ? 0 : 1;
         }
         catch (Exception ex)
         {
