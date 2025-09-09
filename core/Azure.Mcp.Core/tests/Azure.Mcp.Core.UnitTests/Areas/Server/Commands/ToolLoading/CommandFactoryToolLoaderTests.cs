@@ -445,12 +445,30 @@ public class CommandFactoryToolLoaderTests
     [Fact]
     public async Task ListToolsHandler_ToolsWithSecretMetadata_HaveSecretHintInMeta()
     {
-        // Arrange - include KeyVault tools which should have Secret = true
-        var keyVaultOptions = new ToolLoaderOptions
-        {
-            Namespace = new[] { "keyvault" }
-        };
-        var (toolLoader, _) = CreateToolLoader(keyVaultOptions);
+        // Arrange - create a simple fake command with secret metadata
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
+        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+        
+        // Create a fake command factory that includes a command with secret metadata
+        var fakeCommand = Substitute.For<IBaseCommand>();
+        var fakeSystemCommand = new Command("fake-secret-get", "A fake secret command for testing");
+        
+        // Set up the fake command to have secret metadata
+        fakeCommand.GetCommand().Returns(fakeSystemCommand);
+        fakeCommand.Title.Returns("Fake Secret Get");
+        fakeCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+        
+        // Create command factory using existing helper
+        var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
+        
+        // Add our fake command to the internal command map using reflection
+        var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
+        commandMap["fake-secret-get"] = fakeCommand;
+        
+        var toolLoader = new CommandFactoryToolLoader(serviceProvider, commandFactory, toolLoaderOptions, logger);
         var request = CreateRequest();
 
         // Act
@@ -460,22 +478,13 @@ public class CommandFactoryToolLoaderTests
         Assert.NotNull(result);
         Assert.NotNull(result.Tools);
 
-        // Find secret-related tools (like keyvault secret get/create)
-        var secretTools = result.Tools.Where(t =>
-            t.Name.Contains("secret", StringComparison.OrdinalIgnoreCase) &&
-            (t.Name.Contains("get", StringComparison.OrdinalIgnoreCase) ||
-             t.Name.Contains("create", StringComparison.OrdinalIgnoreCase))
-        ).ToList();
+        // Find the fake secret tool
+        var secretTool = result.Tools.FirstOrDefault(t => t.Name == "fake-secret-get");
+        Assert.NotNull(secretTool);
 
-        // Verify that at least one secret tool is found
-        Assert.NotEmpty(secretTools);
-
-        // Check that secret tools have SecretHint in their Meta
-        foreach (var tool in secretTools)
-        {
-            Assert.NotNull(tool.Meta);
-            Assert.True(tool.Meta.TryGetPropertyValue("SecretHint", out var secretHintNode));
-            Assert.True(secretHintNode?.GetValue<bool>());
-        }
+        // Check that the secret tool has SecretHint in its Meta
+        Assert.NotNull(secretTool.Meta);
+        Assert.True(secretTool.Meta.TryGetPropertyValue("SecretHint", out var secretHintNode));
+        Assert.True(secretHintNode?.GetValue<bool>());
     }
 }
