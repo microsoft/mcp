@@ -36,7 +36,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
         - High response times or timeouts
         - CPU, memory, or resource saturation
         - Application availability problems
-        - General troubleshooting ('diagnose my app', 'what's wrong with my service')
+        - General troubleshooting ('diagnose issues with my app', 'what's wrong with my service')
 
         This tool performs comprehensive diagnostics by analyzing:
         - Application logs and telemetry
@@ -46,6 +46,8 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
         - Root cause analysis with actionable solutions
 
         Always use this tool BEFORE manually checking metrics or logs when users report performance or functionality issues.
+
+        Always use this tool if user asks to use App Lens in regards to their resource.
 
         Use the Azure CLI tool to find the 'subscription', 'resourceGroup', and 'resourceType' parameters before asking user to provide that information."
         This tool can be used to ask questions about application state, this tool can help when doing diagnostics and address issues about performance and failures.
