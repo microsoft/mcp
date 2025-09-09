@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Search.Models;
@@ -76,5 +77,5 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCom
         return context.Response;
     }
 
-    internal sealed record IndexGetCommandResult(List<IndexInfo> Indexes);
+    internal sealed record IndexGetCommandResult([property: JsonPropertyName("indexes")] List<IndexInfo> Indexes);
 }

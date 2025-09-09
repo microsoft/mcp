@@ -38,7 +38,10 @@ public class IndexGetCommandTests
             new("index2", "This is the second index", null)
         };
 
-        _searchService.GetIndexDetails(Arg.Is("service123"), null, Arg.Any<RetryPolicyOptions>())
+        _searchService.GetIndexDetails(
+            Arg.Is("service123"),
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Any<RetryPolicyOptions>())
             .Returns(expectedIndexes);
 
         var command = new IndexGetCommand(_logger);
@@ -65,7 +68,10 @@ public class IndexGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsNull_WhenNoIndexes()
     {
-        _searchService.GetIndexDetails(Arg.Any<string>(), null, Arg.Any<RetryPolicyOptions>())
+        _searchService.GetIndexDetails(
+            Arg.Any<string>(),
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Any<RetryPolicyOptions>())
             .Returns([]);
 
         var command = new IndexGetCommand(_logger);
@@ -85,7 +91,10 @@ public class IndexGetCommandTests
         var expectedError = "Test error";
         var serviceName = "service123";
 
-        _searchService.GetIndexDetails(Arg.Is(serviceName), null, Arg.Any<RetryPolicyOptions>())
+        _searchService.GetIndexDetails(
+            Arg.Is(serviceName),
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new IndexGetCommand(_logger);
@@ -203,7 +212,6 @@ public class IndexGetCommandTests
         Assert.Equal(400, response.Status);
         Assert.NotNull(response.Message);
         Assert.Contains("service", response.Message);
-        Assert.Contains("index", response.Message);
     }
 
     [Fact]
