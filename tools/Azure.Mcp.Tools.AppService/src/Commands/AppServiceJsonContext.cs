@@ -11,7 +11,4 @@ namespace Azure.Mcp.Tools.AppService.Commands;
 
 [JsonSerializable(typeof(DatabaseAddCommand.Result))]
 [JsonSerializable(typeof(DatabaseConnectionInfo))]
-public partial class AppServiceJsonContext : JsonSerializerContext
-{
-    public static JsonTypeInfo<DatabaseAddCommand.Result> DatabaseAddCommandResult => Default.Result;
-}
+public partial class AppServiceJsonContext : JsonSerializerContext;
