@@ -16,8 +16,8 @@ using Azure.Mcp.Tools.Storage.Models;
 namespace Azure.Mcp.Tools.Storage.Commands;
 
 [JsonSerializable(typeof(AccountCreateCommand.AccountCreateCommandResult), TypeInfoPropertyName = "AccountCreateCommandResult")]
-[JsonSerializable(typeof(AccountDetailsCommand.AccountDetailsCommandResult), TypeInfoPropertyName = "AccountDetailsCommandResult")]
-[JsonSerializable(typeof(AccountListCommand.AccountListCommandResult), TypeInfoPropertyName = "AccountListCommandResult")]
+[JsonSerializable(typeof(AccountGetCommand.AccountGetCommandResult))]
+[JsonSerializable(typeof(AccountInfo))]
 [JsonSerializable(typeof(BatchSetTierCommand.BatchSetTierCommandResult))]
 [JsonSerializable(typeof(BlobGetCommand.BlobGetCommandResult))]
 [JsonSerializable(typeof(BlobInfo))]
@@ -32,7 +32,6 @@ namespace Azure.Mcp.Tools.Storage.Commands;
 [JsonSerializable(typeof(FileSystemListPathsCommand.FileSystemListPathsCommandResult))]
 [JsonSerializable(typeof(QueueMessageSendCommand.QueueMessageSendCommandResult))]
 [JsonSerializable(typeof(QueueMessageSendResult))]
-[JsonSerializable(typeof(StorageAccountInfo))]
 [JsonSerializable(typeof(TableListCommand.TableListCommandResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class StorageJsonContext : JsonSerializerContext

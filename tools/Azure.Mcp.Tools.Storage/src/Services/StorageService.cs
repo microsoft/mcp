@@ -29,7 +29,8 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
     private const string StorageAccountsCacheKey = "accounts";
     private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
 
-    public async Task<List<StorageAccountInfo>> GetStorageAccounts(
+    public async Task<List<Models.AccountInfo>> GetAccountDetails(
+        string? account,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
@@ -38,85 +39,61 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
 
-        // Create cache key using the resolved subscription ID for consistency
-        var cacheKey = string.IsNullOrEmpty(tenant)
-            ? $"{StorageAccountsCacheKey}_{subscriptionResource.Data.SubscriptionId}"
-            : $"{StorageAccountsCacheKey}_{subscriptionResource.Data.SubscriptionId}_{tenant}";
-
-        // Try to get from cache first
-        var cachedAccounts = await _cacheService.GetAsync<List<StorageAccountInfo>>(CacheGroup, cacheKey, s_cacheDuration);
-        if (cachedAccounts != null)
+        var accounts = new List<Models.AccountInfo>();
+        if (string.IsNullOrEmpty(account))
         {
-            return cachedAccounts;
-        }
-
-        var accounts = new List<StorageAccountInfo>();
-        try
-        {
-            await foreach (var account in subscriptionResource.GetStorageAccountsAsync())
+            try
             {
-                var data = account?.Data;
-                if (data?.Name == null)
-                    continue;
+                await foreach (var accountResource in subscriptionResource.GetStorageAccountsAsync())
+                {
+                    var data = accountResource?.Data;
+                    if (data?.Name == null)
+                        continue;
 
-                accounts.Add(new StorageAccountInfo(
+                    accounts.Add(new (
+                        data.Name,
+                        data.Location.ToString(),
+                        data.Kind?.ToString(),
+                        data.Sku?.Name.ToString(),
+                        data.Sku?.Tier?.ToString(),
+                        data.IsHnsEnabled,
+                        data.AllowBlobPublicAccess,
+                        data.EnableHttpsTrafficOnly));
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error listing Storage accounts: {ex.Message}", ex);
+            }
+        }
+        else
+        {
+            try
+            {
+                var storageAccount = await GetStorageAccount(subscriptionResource, account)
+                    ?? throw new Exception($"Storage account '{account}' not found in subscription '{subscription}'");
+
+                var data = storageAccount.Data;
+                accounts.Add(new (
                     data.Name,
                     data.Location.ToString(),
                     data.Kind?.ToString(),
-                    data.Sku?.Name.ToString(),
-                    data.Sku?.Tier.ToString(),
+                    data.Sku.Name.ToString(),
+                    data.Sku.Tier?.ToString(),
                     data.IsHnsEnabled,
                     data.AllowBlobPublicAccess,
                     data.EnableHttpsTrafficOnly));
             }
-
-            // Cache the results
-            await _cacheService.SetAsync(CacheGroup, cacheKey, accounts, s_cacheDuration);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error retrieving Storage accounts: {ex.Message}", ex);
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving Storage account details for '{account}': {ex.Message}", ex);
+            }
         }
 
         return accounts;
     }
 
-    public async Task<StorageAccountInfo> GetStorageAccountDetails(
-        string account,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
-    {
-        ValidateRequiredParameters(account, subscription);
-
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-
-        try
-        {
-            var storageAccount = await GetStorageAccount(subscriptionResource, account);
-            if (storageAccount == null)
-            {
-                throw new Exception($"Storage account '{account}' not found in subscription '{subscription}'");
-            }
-
-            var data = storageAccount.Data;
-            return new StorageAccountInfo(
-                data.Name,
-                data.Location.ToString(),
-                data.Kind?.ToString(),
-                data.Sku?.Name.ToString(),
-                data.Sku?.Tier.ToString(),
-                data.IsHnsEnabled,
-                data.AllowBlobPublicAccess,
-                data.EnableHttpsTrafficOnly);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error retrieving Storage account details for '{account}': {ex.Message}", ex);
-        }
-    }
-
-    public async Task<StorageAccountInfo> CreateStorageAccount(
+    public async Task<Models.AccountInfo> CreateStorageAccount(
         string account,
         string resourceGroup,
         string location,
@@ -162,7 +139,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
             var result = operation.Value;
             var data = result.Data;
 
-            return new StorageAccountInfo(
+            return new Models.AccountInfo(
                 data.Name,
                 data.Location.ToString(),
                 data.Kind?.ToString(),

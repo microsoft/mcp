@@ -970,13 +970,10 @@ azmcp storage account create --subscription <subscription> \
                              --access-tier <access-tier> \
                              --enable-hierarchical-namespace false
 
-# Get detailed information about a specific Storage account
-azmcp storage account details --subscription <subscription> \
-                              --account <account> \
+# Get detailed properties of Storage account
+azmcp storage account get --subscription <subscription> \
+                              [--account <account>] \
                               [--tenant <tenant>]
-
-# List Storage accounts in a subscription
-azmcp storage account list --subscription <subscription>
 
 # Set access tier for multiple blobs in a batch operation
 azmcp storage blob batch set-tier --subscription <subscription> \

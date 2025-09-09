@@ -387,11 +387,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_storage_account_create | Create a new storage account called testaccount123 in East US region |
 | azmcp_storage_account_create | Create a storage account with premium performance and LRS replication |
 | azmcp_storage_account_create | Create a new storage account with Data Lake Storage Gen2 enabled |
-| azmcp_storage_account_details | Show me the details for my storage account <account> |
-| azmcp_storage_account_details | Get details about the storage account <account> |
-| azmcp_storage_account_list | List all storage accounts in my subscription including their location and SKU |
-| azmcp_storage_account_list | Show me my storage accounts with whether hierarchical namespace (HNS) is enabled |
-| azmcp_storage_account_list | Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings |
+| azmcp_storage_account_get | Show me the details for my storage account <account> |
+| azmcp_storage_account_get | Get details about the storage account <account> |
+| azmcp_storage_account_get | List all storage accounts in my subscription including their location and SKU |
+| azmcp_storage_account_get | Show me my storage accounts with whether hierarchical namespace (HNS) is enabled |
+| azmcp_storage_account_get | Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings |
 | azmcp_storage_blob_batch_set-tier | Set access tier to Cool for multiple blobs in the container <container> in the storage account <account> |
 | azmcp_storage_blob_batch_set-tier | Change the access tier to Archive for blobs file1.txt and file2.txt in the container <container> in the storage account <account> |
 | azmcp_storage_blob_container_create | Create the storage container mycontainer in storage account <account> |

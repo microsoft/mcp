@@ -36,6 +36,14 @@ public static class StorageOptionDefinitions
         Required = true
     };
 
+    public static readonly Option<string> OptionalAccount = new(
+        $"--{AccountName}"
+    )
+    {
+        Description = "The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').",
+        Required = false
+    };
+
     public static readonly Option<string> AccountCreate = new(
         $"--{AccountCreateName}"
     )

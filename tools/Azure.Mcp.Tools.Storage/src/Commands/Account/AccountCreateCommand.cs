@@ -120,5 +120,5 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     };
 
     // Strongly-typed result record
-    internal record AccountCreateCommandResult(StorageAccountInfo Account);
+    internal record AccountCreateCommandResult(AccountInfo Account);
 }
