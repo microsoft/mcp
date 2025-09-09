@@ -154,14 +154,9 @@ azmcp foundry models list [--search-for-free-playground <search-for-free-playgro
 ### Azure AI Search Operations
 
 ```bash
-# Get AI Search index
-azmcp search index describe --subscription <subscription> \
-                            --service <service> \
-                            --index <index>
-
-# List AI Search indexes in account
-azmcp search index list --subscription <subscription> \
-                        --service <service>
+# Get detailed properties of AI Search indexes
+azmcp search index get --service <service> \
+                       [--index <index>]
 
 # Query AI Search index
 azmcp search index query --subscription <subscription> \

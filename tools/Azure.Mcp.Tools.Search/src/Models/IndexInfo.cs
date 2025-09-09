@@ -3,4 +3,7 @@
 
 namespace Azure.Mcp.Tools.Search.Models;
 
-public sealed record IndexInfo(string Name, string? Description);
+public sealed record IndexInfo(
+    string Name,
+    string? Description,
+    List<FieldInfo>? Fields);
