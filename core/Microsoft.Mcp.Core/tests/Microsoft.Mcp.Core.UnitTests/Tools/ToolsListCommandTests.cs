@@ -257,36 +257,17 @@ public class ToolsListCommandTests
         var result = DeserializeResults(response.Results);
 
         Assert.NotNull(result);
-        Assert.NotEmpty(result);
 
-        Assert.True(result.Count >= MinimumExpectedCommands, $"Expected at least {MinimumExpectedCommands} commands, got {result.Count}");
+        // Commmand "D" is a hidden command.
+        Assert.Equal(3, result.Count);
 
-        var allCommands = result.Select(cmd => cmd.Command).ToList();
-
-        // Should have subscription commands (commands include 'azmcp' prefix)
-        var subscriptionCommands = result.Where(cmd => cmd.Command.Contains("subscription")).ToList();
-        Assert.True(subscriptionCommands.Count > 0, $"Expected subscription commands. All commands: {string.Join(", ", allCommands)}");
-
-        // Should have keyvault commands
-        var keyVaultCommands = result.Where(cmd => cmd.Command.Contains("keyvault")).ToList();
-        Assert.True(keyVaultCommands.Count > 0, $"Expected keyvault commands. All commands: {string.Join(", ", allCommands)}");
-
-        // Should have storage commands
-        var storageCommands = result.Where(cmd => cmd.Command.Contains("storage")).ToList();
-        Assert.True(storageCommands.Count > 0, $"Expected storage commands. All commands: {string.Join(", ", allCommands)}");
-
-        // Should have appconfig commands
-        var appConfigCommands = result.Where(cmd => cmd.Command.Contains("appconfig")).ToList();
-        Assert.True(appConfigCommands.Count > 0, $"Expected appconfig commands. All commands: {string.Join(", ", allCommands)}");
-
-        // Verify specific known commands exist
-        Assert.Contains(result, cmd => cmd.Command == "azmcp subscription list");
-        Assert.Contains(result, cmd => cmd.Command == "azmcp keyvault key list");
-        Assert.Contains(result, cmd => cmd.Command == "azmcp storage account list");
-        Assert.Contains(result, cmd => cmd.Command == "azmcp appconfig account list");
+        var names = result.Select(x => x.Name).ToArray();
+        Assert.Contains("A", names);
+        Assert.Contains("B", names);
+        Assert.Contains("C", names);
 
         // Verify that each command has proper structure
-        foreach (var cmd in result.Take(4))
+        foreach (var cmd in result)
         {
             Assert.NotEmpty(cmd.Name);
             Assert.NotEmpty(cmd.Description);
