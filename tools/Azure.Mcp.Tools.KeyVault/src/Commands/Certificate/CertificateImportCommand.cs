@@ -27,7 +27,7 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
     {
         Destructive = true,
         Idempotent = false,
-        OpenWorld = false,
+        OpenWorld = true,
         ReadOnly = false,
         LocalRequired = true,
         Secret = false

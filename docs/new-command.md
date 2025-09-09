@@ -417,7 +417,7 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,    // Set to true for commands that modify resources
-        OpenWorld = true,       // Set to false for commands that are safe for LLM to execute
+        OpenWorld = true,       // Set to false for commands with closed/predictable domains (e.g., schema, best practices)
         Idempotent = true,      // Set to false for commands that are not idempotent
         ReadOnly = true,        // Set to false for commands that modify resources
         Secret = false,         // Set to true for commands that may return sensitive information
@@ -500,6 +500,33 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     // Strongly-typed result records
     internal record {Resource}{Operation}CommandResult(List<ResultType> Results);
 }
+
+### ToolMetadata Properties
+
+The `ToolMetadata` class provides behavioral characteristics that help MCP clients understand how commands operate. Set these properties carefully based on your command's actual behavior:
+
+#### OpenWorld Property
+- **`true`**: Command may interact with an "open world" of external entities where the domain is unpredictable or dynamic
+- **`false`**: Command's domain of interaction is closed and well-defined
+
+**Examples:**
+- **Open World (`true`)**: Commands that query Azure resources, list storage accounts, search databases - the set of possible results is unpredictable and changes over time
+- **Closed World (`false`)**: Commands that return schema definitions, best practices guides, static documentation, or predefined samples - the domain is well-defined and predictable
+
+```csharp
+// Open world - Azure resource queries
+OpenWorld = true,    // Storage account list, database queries, resource discovery
+
+// Closed world - Static/predictable content  
+OpenWorld = false,   // Bicep schemas, best practices, design patterns, predefined samples
+```
+
+#### Other Metadata Properties
+- **`Destructive`**: Set to `true` for commands that may delete or destructively modify resources
+- **`Idempotent`**: Set to `true` for commands that can be safely run multiple times with the same result
+- **`ReadOnly`**: Set to `true` for commands that only read data without making modifications
+- **`Secret`**: Set to `true` for commands that may return sensitive information (credentials, keys, etc.)
+- **`LocalRequired`**: Set to `true` for commands that require local execution or resources
 
 ### 4. Service Interface and Implementation
 
