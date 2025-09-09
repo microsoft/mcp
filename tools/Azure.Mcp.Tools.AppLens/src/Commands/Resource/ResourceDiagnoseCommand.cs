@@ -89,18 +89,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
             }
 
             ResourceDiagnoseOptions options;
-            try
-            {
-                options = BindOptions(parseResult);
-            }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("is required"))
-            {
-                // Handle the case where System.CommandLine throws for required options
-                // This should have been caught by Validate, but as a fallback we handle it here
-                context.Response.Status = 400;
-                context.Response.Message = ex.Message;
-                return context.Response;
-            }
+            options = BindOptions(parseResult);
 
             var service = context.GetService<IAppLensService>();
 
