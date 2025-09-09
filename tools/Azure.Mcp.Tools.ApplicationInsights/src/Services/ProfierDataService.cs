@@ -4,7 +4,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
-using System.Threading.Tasks;
 using System.Web;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
@@ -19,11 +18,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Services;
 
+
+
 /// <summary>
 /// A simple client to call Profiler dataplane. This is not a full fledged client.
 /// Expect to be replaced by Azure SDK in future.
 /// </summary>
-public class ProfilerDataClient : BaseAzureService
+public class ProfilerDataService : BaseAzureService, IProfilerDataService
 {
 
     private const string Endpoint = "https://dataplane.diagnosticservices.azure.com/";
@@ -33,9 +34,9 @@ public class ProfilerDataClient : BaseAzureService
 
     private readonly ILogger _logger;
 
-    public ProfilerDataClient(
+    public ProfilerDataService(
         IHttpClientService httpClientService,
-        ILogger<ProfilerDataClient> logger,
+        ILogger<ProfilerDataService> logger,
         ITenantService? tenantService = null, ILoggerFactory? loggerFactory = null) : base(tenantService, loggerFactory)
     {
         _httpClient = httpClientService.CreateClient(new Uri(Endpoint));
@@ -117,7 +118,7 @@ public class ProfilerDataClient : BaseAzureService
         };
 
         NameValueCollection query = HttpUtility.ParseQueryString(uriBuilder.Query);
-        if (queries != null)
+        if (queries is not null)
         {
             foreach (var kvp in queries)
             {
@@ -142,7 +143,7 @@ public class ProfilerDataClient : BaseAzureService
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
         request.Headers.Add("x-ms-client-request-id", clientRequestIdLocal);
 
-        if (additionalHeaders != null)
+        if (additionalHeaders is not null)
         {
             foreach (var header in additionalHeaders)
             {
@@ -150,13 +151,14 @@ public class ProfilerDataClient : BaseAzureService
             }
         }
 
-        if (httpContent != null)
+        if (httpContent is not null)
         {
-            request.Content = httpContent;
-            if (httpContent.Headers.ContentType != null)
+            if (method == HttpMethod.Get || method == HttpMethod.Delete)
             {
-                request.Headers.Add("Content-Type", httpContent.Headers.ContentType.ToString());
+                throw new ArgumentException($"HTTP method '{method}' does not support content.", nameof(method));
             }
+
+            request.Content = httpContent;
         }
 
         return request;

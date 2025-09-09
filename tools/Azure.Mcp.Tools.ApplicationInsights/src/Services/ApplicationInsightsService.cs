@@ -19,12 +19,12 @@ public class ApplicationInsightsService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
     IResourceGroupService resourceGroupService,
-    ProfilerDataClient profilerDataClient,
+    IProfilerDataService profilerDataClient,
     ILogger<ApplicationInsightsService> logger) : BaseAzureService(tenantService), IApplicationInsightsService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService;
-    private readonly ProfilerDataClient _profilerDataClient = profilerDataClient ?? throw new ArgumentNullException(nameof(profilerDataClient));
+    private readonly IProfilerDataService _profilerDataClient = profilerDataClient ?? throw new ArgumentNullException(nameof(profilerDataClient));
     private readonly ILogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<IEnumerable<JsonNode>> GetProfilerInsightsAsync(string subscription, string? resourceGroup = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
