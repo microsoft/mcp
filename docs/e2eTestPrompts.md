@@ -188,6 +188,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_keyvault_secret_create | Create a new secret called <secret_name> with value <secret_value> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_list | List all secrets in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_list | Show me the secrets in the key vault <key_vault_account_name> |
+| azmcp_keyvault_admin_settings_get | Get the administration settings for my key vault <key_vault_account_name> |
+| azmcp_keyvault_admin_settings_get | Show me the administration settings for key vault <key_vault_account_name> |
+| azmcp_keyvault_admin_settings_get | What are the admin settings for key vault <key_vault_account_name>? |
 
 ## Azure Kubernetes Service (AKS)
 
