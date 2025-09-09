@@ -172,7 +172,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_list_blobs_in_container()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_blob_list",
+                "azmcp_storage_blob_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -181,7 +181,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                 { "container", "bar" },
                 });
 
-            var actual = result.AssertProperty("blobs");
+            var actual = result.AssertProperty("details");
             Assert.Equal(JsonValueKind.Array, actual.ValueKind);
             Assert.NotEmpty(actual.EnumerateArray());
         }
@@ -190,7 +190,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_get_blob_details()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_blob_details",
+                "azmcp_storage_blob_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -201,10 +201,14 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                 });
 
             var details = result.AssertProperty("details");
-            Assert.Equal(JsonValueKind.Object, details.ValueKind);
+            Assert.Equal(JsonValueKind.Array, details.ValueKind);
+            Assert.Equal(1, details.GetArrayLength());
+
+            var blobInfo = details.EnumerateArray().First();
+            Assert.Equal(JsonValueKind.Object, blobInfo.ValueKind);
 
             // Verify the blob has basic properties
-            var contentLength = details.GetProperty("contentLength");
+            var contentLength = blobInfo.GetProperty("contentLength");
             Assert.True(contentLength.GetInt64() > 0);
 
             var contentType = details.GetProperty("contentType");

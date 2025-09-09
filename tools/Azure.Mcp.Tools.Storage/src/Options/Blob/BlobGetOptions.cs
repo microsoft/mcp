@@ -3,4 +3,4 @@
 
 namespace Azure.Mcp.Tools.Storage.Options.Blob;
 
-public class BlobListOptions : BaseContainerOptions;
+public class BlobGetOptions : BaseBlobOptions;

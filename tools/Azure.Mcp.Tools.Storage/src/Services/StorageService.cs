@@ -297,9 +297,10 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         }
     }
 
-    public async Task<List<string>> ListBlobs(
+    public async Task<List<BlobInfo>> GetBlobDetails(
         string account,
         string container,
+        string? blob,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
@@ -308,46 +309,79 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
 
         var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy);
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
-        var blobs = new List<string>();
 
-        try
+        var blobInfos = new List<BlobInfo>();
+        if (string.IsNullOrEmpty(blob))
         {
-            await foreach (var blob in containerClient.GetBlobsAsync())
+            try
             {
-                blobs.Add(blob.Name);
+                await foreach (var blobItem in containerClient.GetBlobsAsync())
+                {
+                    blobInfos.Add(new BlobInfo(
+                        blobItem.Name,
+                        blobItem.Properties.LastModified,
+                        blobItem.Properties.ETag?.ToString(),
+                        blobItem.Properties.ContentLength,
+                        blobItem.Properties.ContentType,
+                        blobItem.Properties.ContentHash,
+                        blobItem.Properties.BlobType?.ToString(),
+                        blobItem.Metadata,
+                        blobItem.Properties.LeaseStatus?.ToString(),
+                        blobItem.Properties.LeaseState?.ToString(),
+                        blobItem.Properties.LeaseDuration?.ToString(),
+                        blobItem.Properties.CopyStatus?.ToString(),
+                        blobItem.Properties.CopySource,
+                        blobItem.Properties.CopyCompletedOn,
+                        blobItem.Properties.AccessTier?.ToString(),
+                        blobItem.Properties.AccessTierChangedOn,
+                        blobItem.Properties.HasLegalHold,
+                        blobItem.Properties.CreatedOn,
+                        blobItem.Properties.ArchiveStatus?.ToString(),
+                        blobItem.VersionId));
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error listing blobs: {ex.Message}", ex);
             }
         }
-        catch (Exception ex)
+        else
         {
-            throw new Exception($"Error listing blobs: {ex.Message}", ex);
+            var blobClient = containerClient.GetBlobClient(blob);
+
+            try
+            {
+                var response = await blobClient.GetPropertiesAsync();
+                var properties = response.Value;
+                blobInfos.Add(new BlobInfo(
+                    blob,
+                    properties.LastModified,
+                    properties.ETag.ToString(),
+                    properties.ContentLength,
+                    properties.ContentType,
+                    properties.ContentHash,
+                    properties.BlobType.ToString(),
+                    properties.Metadata,
+                    properties.LeaseStatus.ToString(),
+                    properties.LeaseState.ToString(),
+                    properties.LeaseDuration.ToString(),
+                    properties.CopyStatus.ToString(),
+                    properties.CopySource,
+                    properties.CopyCompletedOn,
+                    properties.AccessTier.ToString(),
+                    properties.AccessTierChangedOn,
+                    properties.HasLegalHold,
+                    properties.CreatedOn,
+                    properties.ArchiveStatus,
+                    properties.VersionId));
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error getting blob details: {ex.Message}", ex);
+            }
         }
 
-        return blobs;
-    }
-
-    public async Task<BlobProperties> GetBlobDetails(
-        string account,
-        string container,
-        string blob,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
-    {
-        ValidateRequiredParameters(account, container, blob, subscription);
-
-        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy);
-        var containerClient = blobServiceClient.GetBlobContainerClient(container);
-        var blobClient = containerClient.GetBlobClient(blob);
-
-        try
-        {
-            var properties = await blobClient.GetPropertiesAsync();
-            return properties.Value;
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error getting blob details: {ex.Message}", ex);
-        }
+        return blobInfos;
     }
 
     public async Task<BlobContainerProperties> GetContainerDetails(

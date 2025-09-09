@@ -400,10 +400,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_storage_blob_container_details | Show me the properties of the storage container files in the storage account <account> |
 | azmcp_storage_blob_container_list | List all blob containers in the storage account <account> |
 | azmcp_storage_blob_container_list | Show me the blob containers in the storage account <account> |
-| azmcp_storage_blob_details | Show me the properties for blob <blob> in container <container> in storage account <account> |
-| azmcp_storage_blob_details | Get the details about blob <blob> in the container <container> in storage account <account> |
-| azmcp_storage_blob_list | List all blobs in the blob container <container> in the storage account <account> |
-| azmcp_storage_blob_list | Show me the blobs in the blob container <container> in the storage account <account> |
+| azmcp_storage_blob_get | Show me the properties for blob <blob> in container <container> in storage account <account> |
+| azmcp_storage_blob_get | Get the details about blob <blob> in the container <container> in storage account <account> |
+| azmcp_storage_blob_get | List all blobs in the blob container <container> in the storage account <account> |
+| azmcp_storage_blob_get | Show me the blobs in the blob container <container> in the storage account <account> |
 | azmcp_storage_blob_upload | Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account> |
 | azmcp_storage_datalake_directory_create | Create a new directory at the path <directory_path> in Data Lake in the storage account <account> |
 | azmcp_storage_datalake_file-system_list-paths | List all paths in the Data Lake file system <file_system> in the storage account <account> |

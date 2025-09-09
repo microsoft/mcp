@@ -999,16 +999,11 @@ azmcp storage blob container details --subscription <subscription> \
 azmcp storage blob container list --subscription <subscription> \
                                   --account <account>
 
-# Get detailed properties of a blob
-azmcp storage blob details --subscription <subscription> \
+# Get detailed properties of Storage blobs
+azmcp storage blob get --subscription <subscription> \
                            --account <account> \
                            --container <container> \
-                           --blob <blob>
-
-# List blobs in a Storage container
-azmcp storage blob list --subscription <subscription> \
-                        --account <account> \
-                        --container <container>
+                           [--blob <blob>]
 
 # Upload a file to a Storage blob container
 azmcp storage blob upload --subscription <subscription> \

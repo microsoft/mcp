@@ -45,16 +45,10 @@ public interface IStorageService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<string>> ListBlobs(string accountName,
-        string container,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
-
-    Task<BlobProperties> GetBlobDetails(
+    Task<List<BlobInfo>> GetBlobDetails(
         string account,
         string container,
-        string blob,
+        string? blob,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);

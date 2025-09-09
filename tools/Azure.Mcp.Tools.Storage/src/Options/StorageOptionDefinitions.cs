@@ -132,6 +132,14 @@ public static class StorageOptionDefinitions
         Required = true
     };
 
+    public static readonly Option<string> OptionalBlob = new(
+        $"--{BlobName}"
+    )
+    {
+        Description = "The name of the blob to access within the container. This should be the full path within the container (e.g., 'file.txt' or 'folder/file.txt').",
+        Required = false
+    };
+
     public static readonly Option<string> FilterPath = new(
         $"--{FilterPathName}"
     )

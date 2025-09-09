@@ -98,7 +98,7 @@ public class StorageSetup : IAreaSetup
         tables.AddCommand("list", new TableListCommand(loggerFactory.CreateLogger<TableListCommand>()));
 
         blobs.AddCommand("list", new BlobListCommand(loggerFactory.CreateLogger<BlobListCommand>()));
-        blobs.AddCommand("details", new BlobDetailsCommand(loggerFactory.CreateLogger<BlobDetailsCommand>()));
+        blobs.AddCommand("details", new BlobGetCommand(loggerFactory.CreateLogger<BlobGetCommand>()));
         blobs.AddCommand("upload", new BlobUploadCommand(loggerFactory.CreateLogger<BlobUploadCommand>()));
 
         batch.AddCommand("set-tier", new BatchSetTierCommand(loggerFactory.CreateLogger<BatchSetTierCommand>()));
