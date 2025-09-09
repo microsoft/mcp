@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureManagedLustre.Options;
 using Azure.Mcp.Tools.AzureManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.AzureManagedLustre.Services;
@@ -57,56 +58,54 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
     {
         base.RegisterOptions(command);
         RequireResourceGroup();
-        command.AddOption(_nameOption);
-        command.AddOption(_locationOption);
-        command.AddOption(_skuOption);
-        command.AddOption(_sizeOption);
-        command.AddOption(_subnetIdOption);
-        command.AddOption(_zoneOption);
-        command.AddOption(_maintenanceDayOption);
-        command.AddOption(_maintenanceTimeOption);
-        command.AddOption(_hsmContainerOption);
-        command.AddOption(_hsmLogContainerOption);
-        command.AddOption(_importPrefixOption);
-        command.AddOption(_rootSquashModeOption);
-        command.AddOption(_noSquashNidListsOption);
-        command.AddOption(_squashUidOption);
-        command.AddOption(_squashGidOption);
-        command.AddOption(_customEncryptionOption);
-        command.AddOption(_keyUrlOption);
-        command.AddOption(_sourceVaultOption);
-        command.AddOption(_userAssignedIdentityIdOption);
+        command.Options.Add(_nameOption);
+        command.Options.Add(_locationOption);
+        command.Options.Add(_skuOption);
+        command.Options.Add(_sizeOption);
+        command.Options.Add(_subnetIdOption);
+        command.Options.Add(_zoneOption);
+        command.Options.Add(_maintenanceDayOption);
+        command.Options.Add(_maintenanceTimeOption);
+        command.Options.Add(_hsmContainerOption);
+        command.Options.Add(_hsmLogContainerOption);
+        command.Options.Add(_importPrefixOption);
+        command.Options.Add(_rootSquashModeOption);
+        command.Options.Add(_noSquashNidListsOption);
+        command.Options.Add(_squashUidOption);
+        command.Options.Add(_squashGidOption);
+        command.Options.Add(_customEncryptionOption);
+        command.Options.Add(_keyUrlOption);
+        command.Options.Add(_sourceVaultOption);
+        command.Options.Add(_userAssignedIdentityIdOption);
     }
 
     protected override FileSystemCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Name = parseResult.GetValueForOption(_nameOption);
-        options.Location = parseResult.GetValueForOption(_locationOption);
-        options.Sku = parseResult.GetValueForOption(_skuOption);
-        options.SizeTiB = parseResult.GetValueForOption(_sizeOption);
-        options.SubnetId = parseResult.GetValueForOption(_subnetIdOption);
-        options.Zone = parseResult.GetValueForOption(_zoneOption);
-        options.HsmContainer = parseResult.GetValueForOption(_hsmContainerOption);
-        options.HsmLogContainer = parseResult.GetValueForOption(_hsmLogContainerOption);
-        options.ImportPrefix = parseResult.GetValueForOption(_importPrefixOption);
-        options.MaintenanceDay = parseResult.GetValueForOption(_maintenanceDayOption);
-        options.MaintenanceTime = parseResult.GetValueForOption(_maintenanceTimeOption);
-        options.RootSquashMode = parseResult.GetValueForOption(_rootSquashModeOption);
-        options.NoSquashNidLists = parseResult.GetValueForOption(_noSquashNidListsOption);
-        options.SquashUid = parseResult.GetValueForOption(_squashUidOption);
-        options.SquashGid = parseResult.GetValueForOption(_squashGidOption);
-        options.EnableCustomEncryption = parseResult.GetValueForOption(_customEncryptionOption);
-        options.KeyUrl = parseResult.GetValueForOption(_keyUrlOption);
-        options.SourceVaultId = parseResult.GetValueForOption(_sourceVaultOption);
-        options.UserAssignedIdentityId = parseResult.GetValueForOption(_userAssignedIdentityIdOption);
+        options.Name = parseResult.GetValueOrDefault(_nameOption);
+        options.Location = parseResult.GetValueOrDefault(_locationOption);
+        options.Sku = parseResult.GetValueOrDefault(_skuOption);
+        options.SizeTiB = parseResult.GetValueOrDefault(_sizeOption);
+        options.SubnetId = parseResult.GetValueOrDefault(_subnetIdOption);
+        options.Zone = parseResult.GetValueOrDefault(_zoneOption);
+        options.HsmContainer = parseResult.GetValueOrDefault(_hsmContainerOption);
+        options.HsmLogContainer = parseResult.GetValueOrDefault(_hsmLogContainerOption);
+        options.ImportPrefix = parseResult.GetValueOrDefault(_importPrefixOption);
+        options.MaintenanceDay = parseResult.GetValueOrDefault(_maintenanceDayOption);
+        options.MaintenanceTime = parseResult.GetValueOrDefault(_maintenanceTimeOption);
+        options.RootSquashMode = parseResult.GetValueOrDefault(_rootSquashModeOption);
+        options.NoSquashNidLists = parseResult.GetValueOrDefault(_noSquashNidListsOption);
+        options.SquashUid = parseResult.GetValueOrDefault(_squashUidOption);
+        options.SquashGid = parseResult.GetValueOrDefault(_squashGidOption);
+        options.EnableCustomEncryption = parseResult.GetValueOrDefault(_customEncryptionOption);
+        options.KeyUrl = parseResult.GetValueOrDefault(_keyUrlOption);
+        options.SourceVaultId = parseResult.GetValueOrDefault(_sourceVaultOption);
+        options.UserAssignedIdentityId = parseResult.GetValueOrDefault(_userAssignedIdentityIdOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        var options = BindOptions(parseResult);
-
         try
         {
             if (!Validate(parseResult.CommandResult, context.Response).IsValid ||
@@ -117,6 +116,8 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
             {
                 return context.Response;
             }
+
+            var options = BindOptions(parseResult);
 
             var svc = context.GetService<IAzureManagedLustreService>();
             var fs = await svc.CreateFileSystemAsync(
@@ -148,7 +149,7 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating AMLFS. Options: {@Options}", options);
+            _logger.LogError(ex, "Error creating AMLFS.");
             HandleException(context, ex);
         }
 

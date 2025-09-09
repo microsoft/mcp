@@ -2,10 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
+using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.AzureManagedLustre.Options;
 using Microsoft.Extensions.Logging;
+using Azure.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.Commands;
 
@@ -18,10 +20,10 @@ public abstract class BaseAzureManagedLustreCommand<
 
     public virtual ValidationResult ValidateRootSquashOptions(CommandResult commandResult, CommandResponse? commandResponse = null)
     {
-        var rootSquashMode = commandResult.GetValueForOption(AzureManagedLustreOptionDefinitions.RootSquashModeOption);
-        var noSquashNidLists = commandResult.GetValueForOption(AzureManagedLustreOptionDefinitions.NoSquashNidListsOption);
-        var squashUid = commandResult.GetValueForOption(AzureManagedLustreOptionDefinitions.SquashUidOption);
-        var squashGid = commandResult.GetValueForOption(AzureManagedLustreOptionDefinitions.SquashGidOption);
+        var rootSquashMode = commandResult.GetValueOrDefault(AzureManagedLustreOptionDefinitions.RootSquashModeOption);
+        var noSquashNidLists = commandResult.GetValueOrDefault(AzureManagedLustreOptionDefinitions.NoSquashNidListsOption);
+        var squashUid = commandResult.GetValueOrDefault(AzureManagedLustreOptionDefinitions.SquashUidOption);
+        var squashGid = commandResult.GetValueOrDefault(AzureManagedLustreOptionDefinitions.SquashGidOption);
 
 
         // If root squash mode is provided and not 'none', require UID, GID and no squash NID list
@@ -45,8 +47,8 @@ public abstract class BaseAzureManagedLustreCommand<
     public virtual ValidationResult ValidateMaintenanceOptions(CommandResult commandResult, CommandResponse? commandResponse = null, bool update = false)
     {
         // Read values from the same option instances used during registration
-        var maintenanceDay = update ? commandResult.GetValueForOption(AzureManagedLustreOptionDefinitions.OptionalMaintenanceDayOption) : commandResult.GetValueForOption(AzureManagedLustreOptionDefinitions.MaintenanceDayOption);
-        var maintenanceTime = update ? commandResult.GetValueForOption(AzureManagedLustreOptionDefinitions.OptionalMaintenanceTimeOption) : commandResult.GetValueForOption(AzureManagedLustreOptionDefinitions.MaintenanceTimeOption);
+        var maintenanceDay = update ? commandResult.GetValueOrDefault(AzureManagedLustreOptionDefinitions.OptionalMaintenanceDayOption) : commandResult.GetValueOrDefault(AzureManagedLustreOptionDefinitions.MaintenanceDayOption);
+        var maintenanceTime = update ? commandResult.GetValueOrDefault(AzureManagedLustreOptionDefinitions.OptionalMaintenanceTimeOption) : commandResult.GetValueOrDefault(AzureManagedLustreOptionDefinitions.MaintenanceTimeOption);
         var updateWithoutMaintenance = string.IsNullOrWhiteSpace(maintenanceDay) && string.IsNullOrWhiteSpace(maintenanceTime) && update;
 
         if ((string.IsNullOrWhiteSpace(maintenanceDay) || string.IsNullOrWhiteSpace(maintenanceTime)) && !updateWithoutMaintenance)
@@ -66,8 +68,8 @@ public abstract class BaseAzureManagedLustreCommand<
     public virtual ValidationResult ValidateHSMOptions(CommandResult commandResult, CommandResponse? commandResponse = null)
     {
         // Read values from the same option instances used during registration
-        var hsmContainer = commandResult.GetValueForOption(AzureManagedLustreOptionDefinitions.HsmContainerOption);
-        var hsmLogContainer = commandResult.GetValueForOption(AzureManagedLustreOptionDefinitions.HsmLogContainerOption);
+        var hsmContainer = commandResult.GetValueOrDefault(AzureManagedLustreOptionDefinitions.HsmContainerOption);
+        var hsmLogContainer = commandResult.GetValueOrDefault(AzureManagedLustreOptionDefinitions.HsmLogContainerOption);
         var hsmEnabled = !string.IsNullOrWhiteSpace(hsmContainer) || !string.IsNullOrWhiteSpace(hsmLogContainer);
 
 
@@ -89,10 +91,10 @@ public abstract class BaseAzureManagedLustreCommand<
     public virtual ValidationResult ValidateEncryptionOptions(CommandResult commandResult, CommandResponse? commandResponse = null)
     {
         // Read values from the same option instances used during registration
-        var encryptionEnabled = commandResult.GetValueForOption(AzureManagedLustreOptionDefinitions.CustomEncryptionOption);
-        var keyUrl = commandResult.GetValueForOption(AzureManagedLustreOptionDefinitions.KeyUrlOption);
-        var sourceVault = commandResult.GetValueForOption(AzureManagedLustreOptionDefinitions.SourceVaultOption);
-        var userAssignedIdentityId = commandResult.GetValueForOption(AzureManagedLustreOptionDefinitions.UserAssignedIdentityIdOption);
+        var encryptionEnabled = commandResult.GetValueOrDefault(AzureManagedLustreOptionDefinitions.CustomEncryptionOption);
+        var keyUrl = commandResult.GetValueOrDefault(AzureManagedLustreOptionDefinitions.KeyUrlOption);
+        var sourceVault = commandResult.GetValueOrDefault(AzureManagedLustreOptionDefinitions.SourceVaultOption);
+        var userAssignedIdentityId = commandResult.GetValueOrDefault(AzureManagedLustreOptionDefinitions.UserAssignedIdentityIdOption);
 
         if (encryptionEnabled == true)
         {

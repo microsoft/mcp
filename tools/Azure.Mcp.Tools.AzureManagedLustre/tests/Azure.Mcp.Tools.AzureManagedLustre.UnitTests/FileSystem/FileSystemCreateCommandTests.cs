@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -24,7 +24,7 @@ public class FileSystemCreateCommandTests
     private readonly ILogger<FileSystemCreateCommand> _logger;
     private readonly FileSystemCreateCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     private const string Sub = "sub123";
     private const string Rg = "rg1";
@@ -43,7 +43,7 @@ public class FileSystemCreateCommandTests
         _serviceProvider = services.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public class FileSystemCreateCommandTests
                 Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).Returns(expected);
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -106,7 +106,7 @@ public class FileSystemCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_RootSquashNotNone_MissingOtherParams_Returns400()
     {
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -137,7 +137,7 @@ public class FileSystemCreateCommandTests
             false, null, null, null,
             null, Arg.Any<RetryPolicyOptions?>()).Returns(expected);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -168,7 +168,7 @@ public class FileSystemCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_RootSquashNotNone_MissingNoSquashNidList_Returns400()
     {
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -193,7 +193,7 @@ public class FileSystemCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_EncryptionEnabledWithoutKey_Returns400()
     {
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -226,7 +226,7 @@ public class FileSystemCreateCommandTests
             "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1",
             null, Arg.Any<RetryPolicyOptions?>()).Returns(expected);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -264,7 +264,7 @@ public class FileSystemCreateCommandTests
             Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).ThrowsAsync(new Exception("boom"));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -292,7 +292,7 @@ public class FileSystemCreateCommandTests
             Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).ThrowsAsync(new Azure.RequestFailedException(409, "conflict"));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -320,7 +320,7 @@ public class FileSystemCreateCommandTests
             Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).ThrowsAsync(new Exception("Both hsm-container and hsm-log-container must be provided"));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,

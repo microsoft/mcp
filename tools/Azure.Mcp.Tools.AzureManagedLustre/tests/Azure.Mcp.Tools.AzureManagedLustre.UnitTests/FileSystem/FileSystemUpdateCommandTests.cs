@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -24,7 +24,7 @@ public class FileSystemUpdateCommandTests
     private readonly ILogger<FileSystemUpdateCommand> _logger;
     private readonly FileSystemUpdateCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     private const string Sub = "sub123";
     private const string Rg = "rg1";
@@ -38,7 +38,7 @@ public class FileSystemUpdateCommandTests
         _serviceProvider = services.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public class FileSystemUpdateCommandTests
                 .Returns(CreateLustre());
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -99,7 +99,7 @@ public class FileSystemUpdateCommandTests
         _svc.UpdateFileSystemAsync(Sub, Rg, Name, "Monday", "01:00", null, null, null, null, null, Arg.Any<RetryPolicyOptions?>())
             .Returns(expected);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -124,7 +124,7 @@ public class FileSystemUpdateCommandTests
         _svc.UpdateFileSystemAsync(Sub, Rg, Name, null, null, "All", "nid1,nid2", 1000, 1000, null, Arg.Any<RetryPolicyOptions?>())
             .Returns(expected);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -147,7 +147,7 @@ public class FileSystemUpdateCommandTests
             Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Azure.RequestFailedException(404, "not found"));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -175,7 +175,7 @@ public class FileSystemUpdateCommandTests
                 .Returns(CreateLustre());
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
@@ -192,7 +192,7 @@ public class FileSystemUpdateCommandTests
         _svc.UpdateFileSystemAsync(Sub, Rg, Name, null, null, "All", "nid1,nid2", 2000, 3000, null, Arg.Any<RetryPolicyOptions?>())
             .Returns(expected);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,
@@ -210,7 +210,7 @@ public class FileSystemUpdateCommandTests
     [Fact]
     public async Task ExecuteAsync_RootSquashNotNone_MissingNoSquashNidList_Returns400()
     {
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", Sub,
             "--resource-group", Rg,
             "--name", Name,

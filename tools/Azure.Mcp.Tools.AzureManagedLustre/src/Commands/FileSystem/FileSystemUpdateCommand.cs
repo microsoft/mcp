@@ -2,12 +2,11 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureManagedLustre.Options;
 using Azure.Mcp.Tools.AzureManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.AzureManagedLustre.Services;
-using Azure.ResourceManager.StorageCache.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Identity.Client;
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.Commands.FileSystem;
 
@@ -40,33 +39,31 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_nameOption);
+        command.Options.Add(_nameOption);
         RequireResourceGroup();
         // All update fields are optional, we only patch those provided
-        command.AddOption(_maintenanceDayOption);
-        command.AddOption(_maintenanceTimeOption);
-        command.AddOption(_noSquashNidListsOption);
-        command.AddOption(_squashUidOption);
-        command.AddOption(_squashGidOption);
-        command.AddOption(_rootSquashModeOption);
+        command.Options.Add(_maintenanceDayOption);
+        command.Options.Add(_maintenanceTimeOption);
+        command.Options.Add(_noSquashNidListsOption);
+        command.Options.Add(_squashUidOption);
+        command.Options.Add(_squashGidOption);
+        command.Options.Add(_rootSquashModeOption);
     }
 
     protected override FileSystemUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Name = parseResult.GetValueForOption(_nameOption);
-        options.MaintenanceDay = parseResult.GetValueForOption(_maintenanceDayOption);
-        options.MaintenanceTime = parseResult.GetValueForOption(_maintenanceTimeOption);
-        options.RootSquashMode = parseResult.GetValueForOption(_rootSquashModeOption);
-        options.NoSquashNidLists = parseResult.GetValueForOption(_noSquashNidListsOption);
-        options.SquashUid = parseResult.GetValueForOption(_squashUidOption);
-        options.SquashGid = parseResult.GetValueForOption(_squashGidOption);
+        options.Name = parseResult.GetValueOrDefault(_nameOption);
+        options.MaintenanceDay = parseResult.GetValueOrDefault(_maintenanceDayOption);
+        options.MaintenanceTime = parseResult.GetValueOrDefault(_maintenanceTimeOption);
+        options.RootSquashMode = parseResult.GetValueOrDefault(_rootSquashModeOption);
+        options.NoSquashNidLists = parseResult.GetValueOrDefault(_noSquashNidListsOption);
+        options.SquashUid = parseResult.GetValueOrDefault(_squashUidOption);
+        options.SquashGid = parseResult.GetValueOrDefault(_squashGidOption);
         return options;
     }
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        var options = BindOptions(parseResult);
-
         try
         {
             if (!Validate(parseResult.CommandResult, context.Response).IsValid ||
@@ -75,6 +72,7 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
             {
                 return context.Response;
             }
+            var options = BindOptions(parseResult);
 
             if (string.IsNullOrWhiteSpace(options.MaintenanceDay) &&
                 string.IsNullOrWhiteSpace(options.MaintenanceTime) &&
@@ -103,7 +101,7 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating AMLFS. Options: {@Options}", options);
+            _logger.LogError(ex, "Error updating AMLFS.");
             HandleException(context, ex);
         }
 
