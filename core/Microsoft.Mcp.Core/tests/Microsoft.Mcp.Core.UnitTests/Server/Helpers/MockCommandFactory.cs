@@ -61,4 +61,9 @@ public class MockCommandFactory : ICommandFactory
     {
         return MockGroupedCommands;
     }
+
+    public string? GetServiceArea(string commandName)
+    {
+        return "";
+    }
 }

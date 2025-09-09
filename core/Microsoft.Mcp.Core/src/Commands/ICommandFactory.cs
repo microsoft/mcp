@@ -13,4 +13,5 @@ public interface ICommandFactory
 
     public IReadOnlyDictionary<string, IBaseCommand> GroupCommands(string[] groupNames);
 
+    public string? GetServiceArea(string commandName);
 }
