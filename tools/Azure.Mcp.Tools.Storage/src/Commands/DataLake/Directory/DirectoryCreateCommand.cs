@@ -33,7 +33,7 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = true,
+        Destructive = false,
         Idempotent = false,
         OpenWorld = true,
         ReadOnly = false,

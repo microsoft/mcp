@@ -32,7 +32,7 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
         OpenWorld = true,
         ReadOnly = false,

@@ -24,7 +24,7 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
         OpenWorld = true,
         ReadOnly = false,

@@ -34,7 +34,7 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = true,
+        Destructive = false,
         Idempotent = false,
         OpenWorld = true,
         ReadOnly = false,

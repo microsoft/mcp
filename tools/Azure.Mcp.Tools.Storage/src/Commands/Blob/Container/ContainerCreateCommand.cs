@@ -27,7 +27,7 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = true,
+        Destructive = false,
         Idempotent = false,
         OpenWorld = true,
         ReadOnly = false,

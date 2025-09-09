@@ -37,7 +37,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = true,
+        Destructive = false,
         Idempotent = false,
         OpenWorld = true,
         ReadOnly = false,
