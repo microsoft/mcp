@@ -22,7 +22,15 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger) : S
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = true,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override string Description =>
         """
