@@ -125,7 +125,7 @@
 # ServiceOwners:                       @smritiy @srnagar @jongio
 
 # PRLabel: %tools-AzureManagedLustre
-/tools/Azure.Mcp.Tools.AzureManagedLustre/                        @wolfgang-desalvador
+/tools/Azure.Mcp.Tools.AzureManagedLustre/                        @wolfgang-desalvador @microsoft/azure-mcp
 # ServiceLabel: %tools-AzureManagedLustre
 # ServiceOwners:                       @wolfgang-desalvador
 
