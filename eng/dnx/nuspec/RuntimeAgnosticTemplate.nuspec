@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>__Id__</id>
+    <version>__Version__</version>
+    <authors>__Authors__</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <readme>README.md</readme>
+    <description>__Description__</description>
+    <tags>__Tags__</tags>
+    <packageTypes>
+      <packageType name="DotnetTool" />
+      <packageType name="McpServer" />
+    </packageTypes>
+    <repository type="git" url="__RepositoryUrl__" branch="__RepositoryBranch__" commit="__CommitSHA__" />
+    <frameworkReferences>
+      <group targetFramework="__TargetFramework__">
+        <frameworkReference name="Microsoft.AspNetCore.App" />
+      </group>
+    </frameworkReferences>
+  </metadata>
+</package>

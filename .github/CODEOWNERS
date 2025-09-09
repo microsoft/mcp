@@ -104,7 +104,7 @@
 # ServiceOwners:                       @vcolin7 @JonathanCrd
 
 # PRLabel: %tools-ISV
-/tools/Azure.Mcp.Tools.AzureIsv/       @jayanthjj @pachaturevedi
+/tools/Azure.Mcp.Tools.AzureIsv/       @jayanthjj @pachaturevedi @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ISV
 # ServiceOwners:                       @jayanthjj @pachaturevedi
@@ -130,7 +130,7 @@
 # ServiceOwners:                       @smritiy @srnagar @jongio
 
 # PRLabel: %tools-AzureManagedLustre
-/tools/Azure.Mcp.Tools.AzureManagedLustre/                        @wolfgang-desalvador
+/tools/Azure.Mcp.Tools.AzureManagedLustre/                        @wolfgang-desalvador @microsoft/azure-mcp
 # ServiceLabel: %tools-AzureManagedLustre
 # ServiceOwners:                       @wolfgang-desalvador
 
@@ -197,3 +197,9 @@
 
 # ServiceLabel: %tools-VirtualDesktop
 # ServiceOwners:                       @vladimisms
+
+# PRLabel: %tools-EventGrid
+/tools/Azure.Mcp.Tools.EventGrid/     @microsoft/azure-mcp
+ 
+# ServiceLabel: %tools-EventGrid
+# ServiceOwners:                      @microsoft/azure-mcp

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Commands;
@@ -439,5 +440,51 @@ public class CommandFactoryToolLoaderTests
         // Verify items has string type
         Assert.True(itemsProperty.TryGetProperty("type", out var itemTypeProperty));
         Assert.Equal("string", itemTypeProperty.GetString());
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_ToolsWithSecretMetadata_HaveSecretHintInMeta()
+    {
+        // Arrange - create a simple fake command with secret metadata
+        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
+        var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());
+
+        // Create a fake command factory that includes a command with secret metadata
+        var fakeCommand = Substitute.For<IBaseCommand>();
+        var fakeSystemCommand = new Command("fake-secret-get", "A fake secret command for testing");
+
+        // Set up the fake command to have secret metadata
+        fakeCommand.GetCommand().Returns(fakeSystemCommand);
+        fakeCommand.Title.Returns("Fake Secret Get");
+        fakeCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+
+        // Create command factory using existing helper
+        var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
+
+        // Add our fake command to the internal command map using reflection
+        var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
+        commandMap["fake-secret-get"] = fakeCommand;
+
+        var toolLoader = new CommandFactoryToolLoader(serviceProvider, commandFactory, toolLoaderOptions, logger);
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+
+        // Find the fake secret tool
+        var secretTool = result.Tools.FirstOrDefault(t => t.Name == "fake-secret-get");
+        Assert.NotNull(secretTool);
+
+        // Check that the secret tool has SecretHint in its Meta
+        Assert.NotNull(secretTool.Meta);
+        Assert.True(secretTool.Meta.TryGetPropertyValue("SecretHint", out var secretHintNode));
+        Assert.True(secretHintNode?.GetValue<bool>());
     }
 }

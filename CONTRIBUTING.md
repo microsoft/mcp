@@ -353,7 +353,7 @@ Examples:
 ./eng/scripts/Deploy-TestResources.ps1 -Paths KeyVault -SubscriptionId <subId> -DeleteAfterHours 168 -Unique
 ```
 
-After deploying test resources, you should have a `.testsettings.json` file with your deployment information in the deployed areas' `/tests` directory.
+After deploying test resources, you should have a `.testsettings.json` file with your deployment information in the deployed paths' `/tests` directory.
 
 Run live tests with:
 
@@ -361,7 +361,7 @@ Run live tests with:
 ./eng/scripts/Test-Code.ps1 -TestType Live
 ```
 
-You can scope tests to specific areas:
+You can scope tests to specific paths:
 
 ```pwsh
 ./eng/scripts/Test-Code.ps1 -TestType Live -Paths Storage, KeyVault
@@ -491,7 +491,7 @@ The Azure MCP Server supports connecting to external MCP servers through an embe
 
 #### Registry Configuration
 
-External MCP servers are defined in the embedded resource file `core/src/Azure.Mcp.Core/Areas/Server/Resources/registry.json`. This file contains server configurations that support both SSE (Server-Sent Events) and stdio transport mechanisms, following the standard MCP configuration format.
+External MCP servers are defined in the embedded resource file `core/Azure.Mcp.Core/src/Areas/Server/Resources/registry.json`. This file contains server configurations that support both SSE (Server-Sent Events) and stdio transport mechanisms, following the standard MCP configuration format.
 
 The registry structure follows this format:
 
@@ -547,7 +547,7 @@ azmcp server start --mode namespace
 
 To add a new external MCP server to the registry:
 
-1. Edit `core/src/Azure.Mcp.Core/Areas/Server/Resources/registry.json`
+1. Edit `core/Azure.Mcp.Core/src/Areas/Server/Resources/registry.json`
 2. Add your server configuration under the `servers` object using VS Code's MCP configuration schema
 3. Use a unique identifier as the key
 4. Provide either a `url` for SSE transport or `type: "stdio"` with `command` for stdio transport

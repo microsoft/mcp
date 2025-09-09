@@ -8,6 +8,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azmcp_foundry_knowledge_index_list | List all knowledge indexes in my AI Foundry project |
 | azmcp_foundry_knowledge_index_list | Show me the knowledge indexes in my AI Foundry project |
+| azmcp_foundry_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my AI Foundry project |
+| azmcp_foundry_knowledge_index_schema | Get the schema configuration for knowledge index \<index-name> |
 | azmcp_foundry_models_deploy | Deploy a GPT4o instance on my resource \<resource-name> |
 | azmcp_foundry_models_deployments_list | List all AI Foundry model deployments |
 | azmcp_foundry_models_deployments_list | Show me all AI Foundry model deployments |
@@ -151,6 +153,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_deploy_pipeline_guidance_get | How can I create a CI/CD pipeline to deploy this app to Azure? |
 | azmcp_deploy_plan_get | Create a plan to deploy this application to azure |
 
+## Azure Event Grid
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_eventgrid_topic_list | List all Event Grid topics in my subscription |
+| azmcp_eventgrid_topic_list | Show me the Event Grid topics in my subscription |
+| azmcp_eventgrid_topic_list | List all Event Grid topics in subscription <subscription> |
+| azmcp_eventgrid_topic_list | List all Event Grid topics in resource group <resource_group_name> in subscription <subscription> |
+
 ## Azure Function App
 
 | Tool Name | Test Prompt |
@@ -230,6 +241,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | azmcp_marketplace_product_get | Get details about marketplace product <product_name> |
+| azmcp_marketplace_product_list | Search for Microsoft products in the marketplace |
+| azmcp_marketplace_product_list | Show me marketplace products from publisher <publisher_name> |
 
 ## Azure MCP Best Practices
 

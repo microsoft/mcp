@@ -417,7 +417,9 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,    // Set to true for commands that modify resources
-        ReadOnly = true         // Set to false for commands that modify resources
+        ReadOnly = true,         // Set to false for commands that modify resources
+        Secret = false,          // Set to true for commands that may return sensitive information
+        LocalRequired = false   // Set to true for tools requiring local execution/resources
     };
 
     protected override void RegisterOptions(Command command)
@@ -686,8 +688,8 @@ public class {Resource}{Operation}CommandTests
 Integration tests inherit from `CommandTestsBase` and use test fixtures:
 
 ```csharp
-public class {Toolset}CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+public class {Toolset}CommandTests(ITestOutputHelper output)
+    : CommandTestsBase( output)
 {
     [Theory]
     [InlineData(AuthMethod.Credential)]
@@ -1110,8 +1112,8 @@ Integration tests should use the deployed infrastructure:
 ```csharp
 [Trait("Toolset", "{Toolset}")]
 [Trait("Category", "Live")]
-public class {Toolset}CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+public class {Toolset}CommandTests( ITestOutputHelper output)
+    : CommandTestsBase(output)
 {
     [Fact]
     public async Task Should_Get{Resource}_Successfully()
@@ -1202,9 +1204,8 @@ public async Task Should_Return400_ForInvalidInput(string args)
 
 If your live test class needs to implement `IAsyncLifetime` or override `Dispose`, you must call `Dispose` on your base class:
 ```cs
-public class MyCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output),
-    IClassFixture<LiveTestFixture>, IAsyncLifetime
+public class MyCommandTests(ITestOutputHelper output)
+    : CommandTestsBase(output), IAsyncLifetime
 {
     public ValueTask DisposeAsync()
     {

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>__Id__</id>
+    <version>__Version__</version>
+    <authors>__Authors__</authors>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <description>__Description__</description>
+    <packageTypes>
+      <packageType name="DotnetToolRidPackage" />
+    </packageTypes>
+    <repository type="git" url="__RepositoryUrl__" branch="__RepositoryBranch__" commit="__CommitSHA__" />
+    <frameworkReferences>
+      <group targetFramework="__TargetFramework__">
+        <frameworkReference name="Microsoft.AspNetCore.App" />
+      </group>
+    </frameworkReferences>
+  </metadata>
+</package>

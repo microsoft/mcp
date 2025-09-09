@@ -76,6 +76,12 @@ public class ProductSummary
     public bool? IsTestProduct { get; set; }
 }
 
+public class ProductsListResponse
+{
+    public List<ProductSummary>? Items { get; set; }
+    public string? NextPageLink { get; set; }
+}
+
 // ===============================
 // PLAN CLASSES (HIERARCHY ORDER)
 // ===============================
