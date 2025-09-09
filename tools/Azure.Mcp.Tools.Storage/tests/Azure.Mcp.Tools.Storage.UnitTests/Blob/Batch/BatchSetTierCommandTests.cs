@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Batch;
@@ -87,7 +86,7 @@ public class BatchSetTierCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<BatchSetTierResult>(json);
+        var result = JsonSerializer.Deserialize<BatchSetTierCommand.BatchSetTierCommandResult>(json);
 
         Assert.NotNull(result);
         Assert.Equal(3, result.SuccessfulBlobs.Count);
@@ -132,7 +131,7 @@ public class BatchSetTierCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<BatchSetTierResult>(json);
+        var result = JsonSerializer.Deserialize<BatchSetTierCommand.BatchSetTierCommandResult>(json);
 
         Assert.NotNull(result);
         Assert.Equal(2, result.SuccessfulBlobs.Count);
@@ -286,14 +285,5 @@ public class BatchSetTierCommandTests
         Assert.Equal(403, response.Status);
         Assert.Contains("forbidden", response.Message.ToLower());
         Assert.Contains("troubleshooting", response.Message);
-    }
-
-    private class BatchSetTierResult
-    {
-        [JsonPropertyName("successfulBlobs")]
-        public List<string> SuccessfulBlobs { get; set; } = [];
-
-        [JsonPropertyName("failedBlobs")]
-        public List<string> FailedBlobs { get; set; } = [];
     }
 }

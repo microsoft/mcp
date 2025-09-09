@@ -407,7 +407,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         return containers;
     }
 
-    public async Task<BlobContainerProperties> CreateContainer(
+    public async Task<ContainerInfo> CreateContainer(
         string account,
         string container,
         string subscription,
@@ -422,8 +422,22 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         try
         {
             await containerClient.CreateAsync(PublicAccessType.None);
-            var properties = await containerClient.GetPropertiesAsync();
-            return properties.Value;
+            var response = await containerClient.GetPropertiesAsync();
+            var properties = response.Value;
+            return new(
+                container,
+                properties.LastModified,
+                properties.ETag.ToString(),
+                properties.Metadata,
+                properties.LeaseStatus?.ToString(),
+                properties.LeaseState?.ToString(),
+                properties.LeaseDuration?.ToString(),
+                properties.PublicAccess?.ToString(),
+                properties.HasImmutabilityPolicy,
+                properties.HasLegalHold,
+                properties.DeletedOn,
+                properties.RemainingRetentionDays,
+                properties.HasImmutableStorageWithVersioning);
         }
         catch (Exception ex)
         {

@@ -144,10 +144,10 @@ public class BlobGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<List<BlobInfo>>(json);
+        var result = JsonSerializer.Deserialize<BlobGetCommand.BlobGetCommandResult>(json);
 
         Assert.NotNull(result);
-        Assert.Equal(expectedBlobInfos, result);
+        Assert.Equal(expectedBlobInfos, result.Blobs);
     }
 
     [Fact]

@@ -3,12 +3,10 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
-using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -26,7 +24,7 @@ public class ContainerCreateCommandTests
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
     private readonly string _knownAccount = "account123";
-    private readonly string _knownContainer = "container123";
+    private static readonly string _knownContainer = "container123";
     private readonly string _knownSubscription = "sub123";
 
     public ContainerCreateCommandTests()
@@ -95,7 +93,7 @@ public class ContainerCreateCommandTests
             "--account", _knownAccount,
             "--container", _knownContainer,
             "--subscription", _knownSubscription
-            ]);
+        ]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -105,12 +103,12 @@ public class ContainerCreateCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ContainerCreateResult>(json);
+        var result = JsonSerializer.Deserialize<ContainerCreateCommand.ContainerCreateCommandResult>(json);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Container);
         Assert.Equal(expectedProperties.LastModified, result.Container.LastModified);
-        Assert.Equal(expectedProperties.ETag.ToString(), result.Container.ETag);
+        Assert.Equal(expectedProperties.ETag, result.Container.ETag);
         Assert.Equal(expectedProperties.PublicAccess, result.Container.PublicAccess);
     }
 
@@ -124,10 +122,10 @@ public class ContainerCreateCommandTests
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
-                "--account", _knownAccount,
+            "--account", _knownAccount,
             "--container", _knownContainer,
             "--subscription", _knownSubscription
-            ]);
+        ]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -148,10 +146,10 @@ public class ContainerCreateCommandTests
             .ThrowsAsync(conflictException);
 
         var args = _commandDefinition.Parse([
-                "--account", _knownAccount,
+            "--account", _knownAccount,
             "--container", _knownContainer,
             "--subscription", _knownSubscription
-            ]);
+        ]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -162,41 +160,7 @@ public class ContainerCreateCommandTests
         Assert.Contains("Container already exists", response.Message);
     }
 
-    private static BlobContainerProperties CreateMockBlobContainerProperties()
-    {
-        // Use reflection to create an instance of BlobContainerProperties since it has no public constructor
-        var properties = (BlobContainerProperties)Activator.CreateInstance(
-            typeof(BlobContainerProperties),
-            nonPublic: true
-        )!;
-
-        // Set properties using reflection
-        typeof(BlobContainerProperties).GetProperty("LastModified", System.Reflection.BindingFlags.Instance
-            | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)
-            ?.SetValue(properties, DateTimeOffset.UtcNow);
-        typeof(BlobContainerProperties).GetProperty("ETag", System.Reflection.BindingFlags.Instance
-            | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)
-            ?.SetValue(properties, new ETag("\"0x8D12345678901234\""));
-        typeof(BlobContainerProperties).GetProperty("PublicAccess", System.Reflection.BindingFlags.Instance
-            | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)
-            ?.SetValue(properties, PublicAccessType.None);
-
-        return properties;
-    }
-
-    private class ContainerCreateResult
-    {
-        [JsonPropertyName("container")]
-        public JsonContainerCreateResult Container { get; set; } = null!;
-    }
-
-    private class JsonContainerCreateResult
-    {
-        [JsonPropertyName("lastModified")]
-        public DateTimeOffset LastModified { get; set; }
-        [JsonPropertyName("eTag")]
-        public string ETag { get; set; } = null!;
-        [JsonPropertyName("publicAccess")]
-        public PublicAccessType? PublicAccess { get; set; }
-    }
+    private static ContainerInfo CreateMockBlobContainerProperties()
+        => new(_knownContainer, DateTimeOffset.UtcNow, "etag123", new Dictionary<string, string> { { "k", "v" } },
+            "Leased", "Locked", "Infinite", "Blob", true, false, DateTimeOffset.UtcNow.AddDays(-1), 5, true);
 }

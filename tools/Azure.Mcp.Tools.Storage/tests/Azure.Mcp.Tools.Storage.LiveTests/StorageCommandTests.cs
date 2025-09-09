@@ -187,7 +187,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                 { "container", "bar" },
                 });
 
-            var actual = result.AssertProperty("details");
+            var actual = result.AssertProperty("blobs");
             Assert.Equal(JsonValueKind.Array, actual.ValueKind);
             Assert.NotEmpty(actual.EnumerateArray());
         }
@@ -206,21 +206,21 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                 { "blob", "README.md" },
                 });
 
-            var details = result.AssertProperty("details");
-            Assert.Equal(JsonValueKind.Array, details.ValueKind);
-            Assert.Equal(1, details.GetArrayLength());
+            var blobs = result.AssertProperty("blobs");
+            Assert.Equal(JsonValueKind.Array, blobs.ValueKind);
+            Assert.Equal(1, blobs.GetArrayLength());
 
-            var blobInfo = details.EnumerateArray().First();
+            var blobInfo = blobs.EnumerateArray().First();
             Assert.Equal(JsonValueKind.Object, blobInfo.ValueKind);
 
             // Verify the blob has basic properties
             var contentLength = blobInfo.GetProperty("contentLength");
             Assert.True(contentLength.GetInt64() > 0);
 
-            var contentType = details.GetProperty("contentType");
+            var contentType = blobs.GetProperty("contentType");
             Assert.NotNull(contentType.GetString());
 
-            var lastModified = details.GetProperty("lastModified");
+            var lastModified = blobs.GetProperty("lastModified");
             Assert.NotEqual(default, lastModified.GetDateTimeOffset());
         }
 
@@ -390,7 +390,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             var containerName = $"test-container-{DateTime.UtcNow.Ticks}";
 
             var result = await CallToolAsync(
-                "azmcp_storage_blob_container_get",
+                "azmcp_storage_blob_container_create",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -398,16 +398,11 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                 { "container", containerName }
                 });
 
-            var actual = result.AssertProperty("containers");
-            Assert.Equal(JsonValueKind.Array, actual.ValueKind);
-            Assert.Equal(1, actual.GetArrayLength());
-
-            var container = actual.EnumerateArray().First();
-            Assert.Equal(JsonValueKind.Object, container.ValueKind);
-
-            container.AssertProperty("lastModified");
-            container.AssertProperty("eTag");
-            container.AssertProperty("publicAccess");
+            var actual = result.AssertProperty("container");
+            Assert.Equal(JsonValueKind.Object, actual.ValueKind);
+            actual.AssertProperty("lastModified");
+            actual.AssertProperty("eTag");
+            actual.AssertProperty("publicAccess");
         }
 
         [Fact]

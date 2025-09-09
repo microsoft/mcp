@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Commands.Account;
@@ -97,7 +96,7 @@ public class AccountCreateCommandTests
             Assert.Equal("Success", response.Message);
 
             var json = JsonSerializer.Serialize(response.Results);
-            var result = JsonSerializer.Deserialize<AccountCreateResult>(json);
+            var result = JsonSerializer.Deserialize<AccountCreateCommand.AccountCreateCommandResult>(json);
             Assert.NotNull(result);
             Assert.NotNull(result!.Account);
             Assert.Equal("testaccount", result.Account.Name);
@@ -270,11 +269,5 @@ public class AccountCreateCommandTests
             true,
             null,
             Arg.Any<RetryPolicyOptions>());
-    }
-
-    private class AccountCreateResult
-    {
-        [JsonPropertyName("account")]
-        public AccountInfo Account { get; set; } = null!;
     }
 }

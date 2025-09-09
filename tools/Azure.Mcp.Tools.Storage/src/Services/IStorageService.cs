@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Models;
-using Azure.Storage.Blobs.Models;
 
 namespace Azure.Mcp.Tools.Storage.Services;
 
@@ -49,7 +48,7 @@ public interface IStorageService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<BlobContainerProperties> CreateContainer(
+    Task<ContainerInfo> CreateContainer(
         string account,
         string container,
         string subscription,

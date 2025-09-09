@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Commands.DataLake.Directory;
@@ -76,7 +75,7 @@ public class DirectoryCreateCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DirectoryCreateResult>(json);
+        var result = JsonSerializer.Deserialize<DirectoryCreateCommand.DirectoryCreateCommandResult>(json);
 
         Assert.NotNull(result);
         Assert.Equal(expectedDirectory.Name, result.Directory.Name);
@@ -152,11 +151,5 @@ public class DirectoryCreateCommandTests
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
         Assert.Contains("Create a directory", command.Description);
-    }
-
-    private class DirectoryCreateResult
-    {
-        [JsonPropertyName("directory")]
-        public DataLakePathInfo Directory { get; set; } = null!;
     }
 }

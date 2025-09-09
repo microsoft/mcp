@@ -61,11 +61,12 @@ public class AccountGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<List<Models.AccountInfo>>(json);
+        var result = JsonSerializer.Deserialize<AccountGetCommand.AccountGetCommandResult>(json);
 
         Assert.NotNull(result);
-        Assert.Equal(expectedAccounts.Count, result!.Count);
-        Assert.Equal(expectedAccounts.Select(a => a.Name), result.Select(a => a.Name));
+        Assert.NotNull(result.Accounts);
+        Assert.Equal(expectedAccounts.Count, result.Accounts.Count);
+        Assert.Equal(expectedAccounts.Select(a => a.Name), result.Accounts.Select(a => a.Name));
     }
 
     [Fact]
@@ -196,14 +197,14 @@ public class AccountGetCommandTests
         Assert.Equal(200, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<List<Models.AccountInfo>>(json);
+        var result = JsonSerializer.Deserialize<AccountGetCommand.AccountGetCommandResult>(json);
 
         Assert.NotNull(result);
-        Assert.Single(result);
+        Assert.Single(result.Accounts);
 
-        Assert.Equal(expectedAccount[0].Name, result[0].Name);
-        Assert.Equal(expectedAccount[0].Location, result[0].Location);
-        Assert.Equal(expectedAccount[0].Kind, result[0].Kind);
+        Assert.Equal(expectedAccount[0].Name, result.Accounts[0].Name);
+        Assert.Equal(expectedAccount[0].Location, result.Accounts[0].Location);
+        Assert.Equal(expectedAccount[0].Kind, result.Accounts[0].Kind);
     }
 
     [Fact]

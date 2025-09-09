@@ -67,12 +67,13 @@ public class ContainerGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<List<ContainerInfo>>(json);
+        var result = JsonSerializer.Deserialize<ContainerGetCommand.ContainerGetCommandResult>(json);
 
         Assert.NotNull(result);
-        Assert.Equal(2, result.Count);
-        Assert.Equal(expectedContainers[0].ContainerName, result[0].ContainerName);
-        Assert.Equal(expectedContainers[1].ContainerName, result[1].ContainerName);
+        Assert.NotNull(result.Containers);
+        Assert.Equal(2, result.Containers.Count);
+        Assert.Equal(expectedContainers[0].ContainerName, result.Containers[0].ContainerName);
+        Assert.Equal(expectedContainers[1].ContainerName, result.Containers[1].ContainerName);
     }
 
     [Fact]
@@ -146,21 +147,21 @@ public class ContainerGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<List<ContainerInfo>>(json);
+        var result = JsonSerializer.Deserialize<ContainerGetCommand.ContainerGetCommandResult>(json);
 
         Assert.NotNull(result);
-        Assert.Single(result);
-        Assert.Equal(expectedContainers[0].LastModified, result[0].LastModified);
-        Assert.Equal(expectedContainers[0].LeaseStatus, result[0].LeaseStatus);
-        Assert.Equal(expectedContainers[0].LeaseState, result[0].LeaseState);
-        Assert.Equal(expectedContainers[0].LeaseDuration, result[0].LeaseDuration);
-        Assert.Equal(expectedContainers[0].PublicAccess, result[0].PublicAccess);
-        Assert.Equal(expectedContainers[0].HasImmutabilityPolicy, result[0].HasImmutabilityPolicy);
-        Assert.Equal(expectedContainers[0].HasLegalHold, result[0].HasLegalHold);
-        Assert.Equal(expectedContainers[0].DeletedOn, result[0].DeletedOn);
-        Assert.Equal(expectedContainers[0].RemainingRetentionDays, result[0].RemainingRetentionDays);
-        Assert.Equal(expectedContainers[0].Metadata, result[0].Metadata);
-        Assert.Equal(expectedContainers[0].HasImmutableStorageWithVersioning, result[0].HasImmutableStorageWithVersioning);
+        Assert.Single(result.Containers);
+        Assert.Equal(expectedContainers[0].LastModified, result.Containers[0].LastModified);
+        Assert.Equal(expectedContainers[0].LeaseStatus, result.Containers[0].LeaseStatus);
+        Assert.Equal(expectedContainers[0].LeaseState, result.Containers[0].LeaseState);
+        Assert.Equal(expectedContainers[0].LeaseDuration, result.Containers[0].LeaseDuration);
+        Assert.Equal(expectedContainers[0].PublicAccess, result.Containers[0].PublicAccess);
+        Assert.Equal(expectedContainers[0].HasImmutabilityPolicy, result.Containers[0].HasImmutabilityPolicy);
+        Assert.Equal(expectedContainers[0].HasLegalHold, result.Containers[0].HasLegalHold);
+        Assert.Equal(expectedContainers[0].DeletedOn, result.Containers[0].DeletedOn);
+        Assert.Equal(expectedContainers[0].RemainingRetentionDays, result.Containers[0].RemainingRetentionDays);
+        Assert.Equal(expectedContainers[0].Metadata, result.Containers[0].Metadata);
+        Assert.Equal(expectedContainers[0].HasImmutableStorageWithVersioning, result.Containers[0].HasImmutableStorageWithVersioning);
     }
 
     [Fact]

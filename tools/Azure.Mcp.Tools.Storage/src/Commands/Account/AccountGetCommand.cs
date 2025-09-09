@@ -25,7 +25,7 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
         """
         Gets detailed information about Azure Storage accounts, including account name, location, SKU, access settings,
         and configuration details. If a specific account name is not provided, the command will return details for all
-        accounts in a subcription.
+        accounts in a subscription.
         """;
 
     public override string Title => CommandTitle;

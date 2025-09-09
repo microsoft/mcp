@@ -85,5 +85,5 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger) : BaseContain
         }
     }
 
-    internal record BlobGetCommandResult(List<BlobInfo> Details);
+    internal record BlobGetCommandResult(List<BlobInfo> Blobs);
 }

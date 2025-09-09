@@ -2,11 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
-using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
@@ -20,7 +17,7 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
 
     public override string Description =>
         """
-        Creates an Azure Storage container, returning the last modified time and the ETag of the created container.
+        Creates an Azure Storage container, returning the last modified time, the ETag of the created container, and more.
         """;
 
     public override string Title => CommandTitle;
@@ -39,37 +36,25 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
         try
         {
             var storageService = context.GetService<IStorageService>();
-            var containerProperties = await storageService.CreateContainer(
+            var containerInfo = await storageService.CreateContainer(
                 options.Account!,
                 options.Container!,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy);
 
-            var result = new ContainerCreateResult(
-                containerProperties.LastModified,
-                containerProperties.ETag.ToString(),
-                containerProperties.PublicAccess?.ToString());
-
-            context.Response.Results = ResponseResult.Create(
-                new ContainerCreateCommandResult(result),
+            context.Response.Results = ResponseResult.Create(new(containerInfo),
                 StorageJsonContext.Default.ContainerCreateCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,
-                "Error creating container. Account: {Account}, Container: {Container}, Options: {@Options}",
-                options.Account, options.Container, options);
+            _logger.LogError(ex, "Error creating container. Account: {Account}, Container: {Container}",
+                options.Account, options.Container);
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record ContainerCreateResult(
-        DateTimeOffset LastModified,
-        string ETag,
-        string? PublicAccess);
-
-    internal record ContainerCreateCommandResult(ContainerCreateResult Container);
+    internal record ContainerCreateCommandResult(ContainerInfo Container);
 }
