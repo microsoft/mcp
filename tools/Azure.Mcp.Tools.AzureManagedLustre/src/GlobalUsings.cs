@@ -2,4 +2,8 @@
 // Licensed under the MIT License.
 
 global using System.CommandLine;
-global using Azure.Mcp.Core.Models.Command;
+global using System.CommandLine.Parsing;
+global using Azure.Mcp.Core.Options;
+global using Microsoft.Mcp.Core.Commands;
+global using Microsoft.Mcp.Core.Extensions;
+global using Microsoft.Mcp.Core.Models.Command;

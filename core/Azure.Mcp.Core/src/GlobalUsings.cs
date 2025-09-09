@@ -7,6 +7,6 @@ global using Azure.Mcp.Core.Extensions;
 global using Azure.Mcp.Core.Models;
 global using Microsoft.Mcp.Core.Commands;
 global using Microsoft.Mcp.Core.Extensions;
-global using Microsoft.Mcp.Core.Models.Command;
 global using Microsoft.Mcp.Core.Models;
+global using Microsoft.Mcp.Core.Models.Command;
 global using ModelContextProtocol.Server;
