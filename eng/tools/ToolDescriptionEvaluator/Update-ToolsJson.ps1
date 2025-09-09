@@ -57,8 +57,7 @@ if ($BuildAzureMcp)
 }
 
 # Locate azmcp CLI artifact (platform & build-type agnostic) like Run-ToolDescriptionEvaluator.ps1
-$platformIsWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)
-$candidateNames = if ($platformIsWindows) { @('azmcp.exe','azmcp','azmcp.dll') } else { @('azmcp','azmcp.dll') }
+$candidateNames = if ($IsWindows) { @('azmcp.exe','azmcp','azmcp.dll') } else { @('azmcp','azmcp.dll') }
 $searchRoots = @(
     "$repoRoot\servers\Azure.Mcp.Server\src\bin\Debug",
     "$repoRoot\servers\Azure.Mcp.Server\src\bin\Release"

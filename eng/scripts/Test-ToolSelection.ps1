@@ -13,11 +13,11 @@
 .PARAMETER SkipIfMissingCredentials
     Skip the test if Azure OpenAI credentials are not configured (default: true in CI)
 
-.PARAMETER ToolsFile$ToolsFile
-    Use static JSON file for tools instead of dynamic loading
+.PARAMETER ToolsFile
+    Use a JSON file containing tool data instead of dynamically loading it from the Azure MCP Server
 
 .PARAMETER PromptsFile
-    Use custom prompts file (.md or .json format)
+    Use a JSON or markdown file containing prompts to test instead of the default ../../../docs/e2eTestPrompts.md
 
 .PARAMETER OutputMarkdown
     Generate output in markdown format instead of plain text
