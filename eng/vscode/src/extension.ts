@@ -47,7 +47,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         if (!fs.existsSync(binPath)) {
-            console.warn("Azure MCP Server binary not found.");
+            throw new Error("Azure MCP Server binary not found at: " + binPath);
         }
 
         // Ensure executable permission on macOS and Linux
