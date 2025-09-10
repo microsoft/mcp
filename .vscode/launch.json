@@ -413,7 +413,7 @@
                 "server",
                 "start"
             ],
-            "cwd": "${workspaceFolder}/mcp/servers/Azure.Mcp.Server/src",
+            "cwd": "${workspaceFolder}/src",
             "console": "internalConsole"
         },
         {
