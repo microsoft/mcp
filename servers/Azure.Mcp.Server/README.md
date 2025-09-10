@@ -25,7 +25,6 @@ The Azure MCP Server implements the [MCP specification](https://modelcontextprot
 - [Contributing](#contributing)
 - [Code of Conduct](#code-of-conduct)
 
-<a id="vs-code-install-guide-recommended"></a>
 ### ✅ VS Code Install Guide (Recommended)
 
 1. Install either the stable or Insiders release of VS Code:
@@ -503,6 +502,7 @@ To opt out, set the environment variable `AZURE_MCP_COLLECT_TELEMETRY` to `false
 
 See [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md) for help with common issues and logging.
 
+<a id="authentication"></a>
 ### 🔑 Authentication
 
 <details>
