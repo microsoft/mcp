@@ -69,7 +69,7 @@ public class ResourceDiagnoseCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        Assert.Equal("Successfully diagnosed resource using AppLens.", response.Message);
+        Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
