@@ -131,7 +131,7 @@
                 "azureMcp.useNonTrimmedBinaries": {
                     "type": "boolean",
                     "default": false,
-                    "markdownDescription": "Use non-trimmed Azure MCP server binaries from the `server` folder instead of the default trimmed `server/native` folder. Enable this to opt-out of trimmed binaries for compatibility or debugging purposes."
+                    "markdownDescription": "Use non-trimmed Azure MCP server binaries instead of the default trimmed binaries. Enable this to opt-out of trimmed binaries for compatibility or debugging purposes."
                 }
             }
         }
