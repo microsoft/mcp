@@ -78,7 +78,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `azmcp_storage_blob_container_create`: Removed the ability to configure `blob-container-public-access` (always `false` now).
   - `azmcp_storage_blob_upload`: Removed the ability to configure `overwrite` (always `false` now).
 
-
 ### Bugs Fixed
 
 - Fixed telemetry bug where "ToolArea" was incorrectly populated in with "ToolName". [[#346](https://github.com/microsoft/mcp/pull/346)]
