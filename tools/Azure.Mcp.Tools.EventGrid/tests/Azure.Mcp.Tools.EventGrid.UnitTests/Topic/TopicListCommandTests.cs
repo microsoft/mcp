@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -89,7 +88,7 @@ public class TopicListCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        
+
         var json = JsonSerializer.Serialize(response.Results);
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         var result = JsonSerializer.Deserialize<TopicListResult>(json, options);

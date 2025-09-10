@@ -1,14 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Mcp.Tools.EventGrid.Options;
 using Azure.Mcp.Tools.EventGrid.Options.Subscription;
 using Azure.Mcp.Tools.EventGrid.Services;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 
@@ -68,7 +65,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create<SubscriptionListCommandResult>(
-                new SubscriptionListCommandResult(subscriptions ?? []), 
+                new SubscriptionListCommandResult(subscriptions ?? []),
                 EventGridJsonContext.Default.SubscriptionListCommandResult);
         }
         catch (Exception ex)

@@ -6,8 +6,16 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+<<<<<<< HEAD
 - Added support for listing all Event Grid topics in a subscription via the command `azmcp_eventgrid_topic_list`. [[#43](https://github.com/microsoft/mcp/pull/43)]
 - Added support for retrieving knowledge index schema information in Azure AI Foundry projects via the command `azmcp_foundry_knowledge_index_schema`. [[#41](https://github.com/microsoft/mcp/pull/41)]
+=======
+- Added support for Azure Event Grid operations: [[#43](https://github.com/microsoft/mcp/pull/43)]
+  - `azmcp_eventgrid_topic_list` - List all Event Grid topics in a subscription.
+- Added support for Azure Event Grid subscription operations: [[#364](https://github.com/microsoft/mcp/pull/364)]
+  - `azmcp_eventgrid_subscription_list` - List all Event Grid subscriptions with filtering by topic name, resource group, and location.
+- Added support for retrieving knowledge index schema information in Azure AI Foundry projects via the command `azmcp_foundry_knowledge_index_schema`. This command provides detailed schema configuration including field definitions, data types, and searchable attributes for specific knowledge indexes.
+>>>>>>> 34e7f2d7 (dotnet format, readme, changelog anf e2e)
 
 ### Breaking Changes
 
