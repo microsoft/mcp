@@ -18,7 +18,7 @@ public sealed class RuntimeShowCommand(ILogger<RuntimeShowCommand> logger)
     private const string CommandTitle = "Show Service Details";
     private readonly ILogger<RuntimeShowCommand> _logger = logger;
 
-    private static readonly Option<string> _signalRNameOption = SignalROptionDefinitions.SignalRName;
+    private static readonly Option<string> _signalRNameOption = SignalROptionDefinitions.SignalR;
 
     public override string Name => "show";
 
@@ -36,32 +36,32 @@ public sealed class RuntimeShowCommand(ILogger<RuntimeShowCommand> logger)
     {
         base.RegisterOptions(command);
         RequireResourceGroup();
-        command.AddOption(_signalRNameOption);
+        command.Options.Add(_signalRNameOption);
     }
 
     protected override SignalRShowOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SignalRName = parseResult.GetValueForOption(_signalRNameOption);
+        options.SignalR = parseResult.GetValue(_signalRNameOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var signalRService = context.GetService<ISignalRService>();
             var runtime = await signalRService.GetRuntimeAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
-                options.SignalRName!,
+                options.SignalR!,
                 options.Tenant,
                 options.AuthMethod,
                 options.RetryPolicy);

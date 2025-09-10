@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -22,7 +22,7 @@ public class KeyListCommandTests
     private readonly ILogger<KeyListCommand> _logger;
     private readonly KeyListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public KeyListCommandTests()
     {
@@ -33,7 +33,7 @@ public class KeyListCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -47,10 +47,10 @@ public class KeyListCommandTests
     }
 
     [Theory]
-    [InlineData("--subscription sub1 --resource-group rg1 --signalr-name signalr1", true)]
-    [InlineData("--subscription sub1 --signalr-name signalr1", false)] // Missing resource-group
-    [InlineData("--subscription sub1 --resource-group rg1", false)] // Missing signalr-name
-    [InlineData("--resource-group rg1 --signalr-name signalr1", false)] // Missing subscription
+    [InlineData("--subscription sub1 --resource-group rg1 --signalr signalr1", true)]
+    [InlineData("--subscription sub1 --signalr signalr1", false)] // Missing resource-group
+    [InlineData("--subscription sub1 --resource-group rg1", false)] // Missing signalr
+    [InlineData("--resource-group rg1 --signalr signalr1", false)] // Missing subscription
     [InlineData("", false)] // Missing all required options
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
@@ -75,7 +75,7 @@ public class KeyListCommandTests
                 .Returns(testKeys);
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -116,8 +116,8 @@ public class KeyListCommandTests
                 Arg.Any<RetryPolicyOptions>())
             .Returns(expectedKeys);
 
-        var parseResult = _parser.Parse([
-            "--subscription", "test-subscription", "--resource-group", "test-rg", "--signalr-name", "test-signalr"
+        var parseResult = _commandDefinition.Parse([
+            "--subscription", "test-subscription", "--resource-group", "test-rg", "--signalr", "test-signalr"
         ]);
 
         // Act
@@ -137,8 +137,8 @@ public class KeyListCommandTests
                 Arg.Any<RetryPolicyOptions>())
             .Returns((Models.Key?)null);
 
-        var parseResult = _parser.Parse([
-            "--subscription", "test-subscription", "--resource-group", "test-rg", "--signalr-name",
+        var parseResult = _commandDefinition.Parse([
+            "--subscription", "test-subscription", "--resource-group", "test-rg", "--signalr",
             "nonexistent-signalr"
         ]);
 
@@ -165,8 +165,8 @@ public class KeyListCommandTests
                 Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<Models.Key?>(exception));
 
-        var parseResult = _parser.Parse([
-            "--subscription", "test-subscription", "--resource-group", "test-rg", "--signalr-name", "test-signalr"
+        var parseResult = _commandDefinition.Parse([
+            "--subscription", "test-subscription", "--resource-group", "test-rg", "--signalr", "test-signalr"
         ]);
 
         // Act
@@ -190,8 +190,8 @@ public class KeyListCommandTests
                 Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<Models.Key?>(new Exception("Service unavailable")));
 
-        var parseResult = _parser.Parse([
-            "--subscription", "test-subscription", "--resource-group", "test-rg", "--signalr-name", "test-signalr"
+        var parseResult = _commandDefinition.Parse([
+            "--subscription", "test-subscription", "--resource-group", "test-rg", "--signalr", "test-signalr"
         ]);
 
         // Act
@@ -217,8 +217,8 @@ public class KeyListCommandTests
                 Arg.Any<RetryPolicyOptions>())
             .Returns(expectedKeys);
 
-        var parseResult = _parser.Parse([
-            "--subscription", "test-subscription", "--resource-group", "test-rg", "--signalr-name", "test-signalr"
+        var parseResult = _commandDefinition.Parse([
+            "--subscription", "test-subscription", "--resource-group", "test-rg", "--signalr", "test-signalr"
         ]);
 
         // Act
@@ -238,9 +238,9 @@ public class KeyListCommandTests
     public async Task ExecuteAsync_ReturnsError_WhenLocalAuthDisabled()
     {
         // Arrange
-        var args = "--subscription sub1 --resource-group rg1 --signalr-name signalr1".Split(' ',
+        var args = "--subscription sub1 --resource-group rg1 --signalr signalr1".Split(' ',
             StringSplitOptions.RemoveEmptyEntries);
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
         _signalRService.ListKeysAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.SignalR.Options.Runtime;
 using Azure.Mcp.Tools.SignalR.Services;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,7 @@ namespace Azure.Mcp.Tools.SignalR.Commands.Runtime;
 /// Lists Azure SignalR Service resources in the specified subscription.
 /// </summary>
 public sealed class RuntimeListCommand(ILogger<RuntimeListCommand> logger)
-    : BaseSignalRCommand<SignalRListOptions>
+    : SubscriptionCommand<SignalRListOptions>
 {
     private const string CommandTitle = "List all Runtimes";
     private readonly ILogger<RuntimeListCommand> _logger = logger;
@@ -31,15 +32,15 @@ public sealed class RuntimeListCommand(ILogger<RuntimeListCommand> logger)
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var signalRService = context.GetService<ISignalRService>() ??
                                  throw new InvalidOperationException("SignalR service is not available.");
             var runtimes = await signalRService.ListRuntimesAsync(

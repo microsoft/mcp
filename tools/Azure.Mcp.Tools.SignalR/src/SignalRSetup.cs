@@ -32,8 +32,7 @@ public class SignalRSetup : IAreaSetup
             "SignalR service operations - Commands for managing Azure SignalR Service resources.");
         signalr.AddSubGroup(service);
 
-        service.AddCommand("list",
-            new RuntimeListCommand(loggerFactory.CreateLogger<RuntimeListCommand>()));
+        service.AddCommand("list", new RuntimeListCommand(loggerFactory.CreateLogger<RuntimeListCommand>()));
         service.AddCommand("show", new RuntimeShowCommand(loggerFactory.CreateLogger<RuntimeShowCommand>()));
 
         var key = new CommandGroup("key",
@@ -46,7 +45,7 @@ public class SignalRSetup : IAreaSetup
             "SignalR identity operations - Commands for managing managed identity configuration in Azure SignalR Service resources.");
         signalr.AddSubGroup(identity);
 
-        identity.AddCommand("show", new IdentityShowCommand(loggerFactory.CreateLogger<IdentityShowCommand>()));
+        identity.AddCommand("list", new IdentityListCommand(loggerFactory.CreateLogger<IdentityListCommand>()));
 
         // Network rule commands
         var networkRule = new CommandGroup(
@@ -54,7 +53,6 @@ public class SignalRSetup : IAreaSetup
             "SignalR network rule operations");
         signalr.AddSubGroup(networkRule);
 
-        networkRule.AddCommand("list", new NetworkRuleListCommand(
-            loggerFactory.CreateLogger<NetworkRuleListCommand>()));
+        networkRule.AddCommand("list", new NetworkRuleListCommand(loggerFactory.CreateLogger<NetworkRuleListCommand>()));
     }
 }
