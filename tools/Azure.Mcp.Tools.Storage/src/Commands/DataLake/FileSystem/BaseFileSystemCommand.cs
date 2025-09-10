@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.DataLake;
 
@@ -17,13 +18,13 @@ public abstract class BaseFileSystemCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_fileSystemOption);
+        command.Options.Add(_fileSystemOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.FileSystem = parseResult.GetValueForOption(_fileSystemOption);
+        options.FileSystem = parseResult.GetValueOrDefault(_fileSystemOption);
         return options;
     }
 }

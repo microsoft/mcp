@@ -37,7 +37,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             else
             {
                 var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
-                foreach (var fs in sub.GetAmlFileSystems())
+                await foreach (var fs in sub.GetAmlFileSystemsAsync())
                 {
                     results.Add(Map(fs));
                 }
@@ -64,7 +64,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             data.Health?.ToString(),
             data.ClientInfo?.MgsAddress,
             data.SkuName,
-            data.StorageCapacityTiB.HasValue ? (long?)Convert.ToInt64(Math.Round(data.StorageCapacityTiB.Value)) : null,
+            data.StorageCapacityTiB.HasValue ? Convert.ToInt64(Math.Round(data.StorageCapacityTiB.Value)) : null,
             data.Hsm?.Settings?.Container,
             data.MaintenanceWindow?.DayOfWeek?.ToString(),
             data.MaintenanceWindow?.TimeOfDayUTC?.ToString()
@@ -86,7 +86,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
 
         try
         {
-            var sdkResult = sub.GetRequiredAmlFSSubnetsSize(fileSystemSizeContent);
+            var sdkResult = await sub.GetRequiredAmlFSSubnetsSizeAsync(fileSystemSizeContent);
             var numberOfRequiredIPs = sdkResult.Value.FilesystemSubnetSize ?? throw new Exception($"Failed to retrieve the number of IPs");
             return numberOfRequiredIPs;
         }

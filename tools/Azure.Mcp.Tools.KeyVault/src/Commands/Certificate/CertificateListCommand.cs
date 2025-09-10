@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -21,7 +20,15 @@ public sealed class CertificateListCommand(ILogger<CertificateListCommand> logge
 
     public override string Title => _commandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override string Description =>
         """
@@ -32,26 +39,28 @@ public sealed class CertificateListCommand(ILogger<CertificateListCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_vaultOption);
+        command.Options.Add(_vaultOption);
     }
 
     protected override CertificateListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValueForOption(_vaultOption);
+        options.VaultName = parseResult.GetValue(_vaultOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
+
 
             var keyVaultService = context.GetService<IKeyVaultService>();
             var certificates = await keyVaultService.ListCertificates(

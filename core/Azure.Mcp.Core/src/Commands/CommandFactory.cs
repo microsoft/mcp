@@ -22,13 +22,14 @@ public class CommandFactory
     private readonly CommandGroup _rootGroup;
     private readonly ModelsJsonContext _srcGenWithOptions;
 
+    private const string RootCommandGroupName = "azmcp";
     public const char Separator = '_';
 
     /// <summary>
     /// Mapping of tokenized command names to their <see cref="IBaseCommand" />
     /// </summary>
     private readonly Dictionary<string, IBaseCommand> _commandMap;
-    private readonly HashSet<string> _serviceAreaNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, IAreaSetup> _commandNamesToArea = new(StringComparer.OrdinalIgnoreCase);
     private readonly ITelemetryService _telemetryService;
 
     // Add this new class inside CommandFactory
@@ -51,9 +52,9 @@ public class CommandFactory
         _serviceAreas = serviceAreas?.ToArray() ?? throw new ArgumentNullException(nameof(serviceAreas));
         _serviceProvider = serviceProvider;
         _logger = logger;
-        _rootGroup = new CommandGroup("azmcp", "Azure MCP Server");
+        _rootGroup = new CommandGroup(RootCommandGroupName, "Azure MCP Server");
         _rootCommand = CreateRootCommand();
-        _commandMap = CreateCommmandDictionary(_rootGroup, string.Empty);
+        _commandMap = CreateCommandDictionary(_rootGroup, string.Empty);
         _telemetryService = telemetryService;
         _srcGenWithOptions = new ModelsJsonContext(new JsonSerializerOptions
         {
@@ -83,7 +84,7 @@ public class CommandFactory
             {
                 if (string.Equals(group.Name, groupName, StringComparison.OrdinalIgnoreCase))
                 {
-                    Dictionary<string, IBaseCommand> commandsInGroup = CreateCommmandDictionary(group, string.Empty);
+                    var commandsInGroup = CreateCommandDictionary(group, string.Empty);
                     foreach (var (key, value) in commandsInGroup)
                     {
                         commandsFromGroups[key] = value;
@@ -98,8 +99,11 @@ public class CommandFactory
 
     private void RegisterCommandGroup()
     {
-        // Register area command groups
         var loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
+
+        // Register area command groups
+        var existingGroups = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var area in _serviceAreas)
         {
             if (string.IsNullOrEmpty(area.Name))
@@ -111,7 +115,7 @@ public class CommandFactory
                 throw error;
             }
 
-            if (!_serviceAreaNames.Add(area.Name))
+            if (!existingGroups.Add(area.Name))
             {
                 var matchingAreaTypes = _serviceAreas
                     .Where(x => x.Name == area.Name)
@@ -126,7 +130,23 @@ public class CommandFactory
                 throw error;
             }
 
-            area.RegisterCommands(_rootGroup, loggerFactory);
+            // Create a temporary root node to register all the area's subgroups to.
+            // Use the root to map commands back to their area.
+            var tempRoot = new CommandGroup(RootCommandGroupName, string.Empty);
+
+            area.RegisterCommands(tempRoot, loggerFactory);
+
+            var commandDictionary = CreateCommandDictionary(tempRoot, string.Empty);
+            foreach (var item in commandDictionary)
+            {
+                _commandNamesToArea.Add(item.Key, area);
+            }
+
+            foreach (var group in tempRoot.SubGroup)
+            {
+                _rootGroup.SubGroup.Add(group);
+            }
+
         }
     }
 
@@ -137,12 +157,9 @@ public class CommandFactory
         {
             var cmd = command.GetCommand();
 
-            if (cmd.Handler == null)
-            {
-                ConfigureCommandHandler(cmd, command);
-            }
+            ConfigureCommandHandler(cmd, command);
 
-            group.Command.Add(cmd);
+            group.Command.Subcommands.Add(cmd);
         }
 
         // Recursively configure subgroup commands
@@ -152,27 +169,9 @@ public class CommandFactory
         }
     }
 
-    private RootCommand CreateRootCommand()
-    {
-        var rootCommand = new RootCommand("Azure MCP Server - A Model Context Protocol (MCP) server that enables AI agents to interact with Azure services through standardized communication patterns.");
-
-        RegisterCommandGroup();
-
-        // Copy the root group's subcommands to the RootCommand
-        foreach (var subGroup in _rootGroup.SubGroup)
-        {
-            rootCommand.Add(subGroup.Command);
-        }
-
-        // Configure all commands in the hierarchy
-        ConfigureCommands(_rootGroup);
-
-        return rootCommand;
-    }
-
     private void ConfigureCommandHandler(Command command, IBaseCommand implementation)
     {
-        command.SetHandler(async context =>
+        command.SetAction(async (ParseResult parseResult, CancellationToken ct) =>
         {
             _logger.LogTrace("Executing '{Command}'.", command.Name);
 
@@ -182,7 +181,15 @@ public class CommandFactory
             var startTime = DateTime.UtcNow;
             try
             {
-                var response = await implementation.ExecuteAsync(cmdContext, context.ParseResult);
+                // Centralized preflight validation before executing the command
+                var validation = implementation.Validate(parseResult.CommandResult, cmdContext.Response);
+                if (!validation.IsValid)
+                {
+                    Console.WriteLine(JsonSerializer.Serialize(cmdContext.Response, _srcGenWithOptions.CommandResponse));
+                    return cmdContext.Response.Status;
+                }
+
+                var response = await implementation.ExecuteAsync(cmdContext, parseResult);
 
                 // Calculate execution time
                 var endTime = DateTime.UtcNow;
@@ -193,23 +200,50 @@ public class CommandFactory
                     response.Results = ResponseResult.Create(new List<string>(), JsonSourceGenerationContext.Default.ListString);
                 }
 
-                var isServiceStartCommand = implementation is Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
+                var isServiceStartCommand = implementation is Areas.Server.Commands.ServiceStartCommand;
                 if (!isServiceStartCommand)
                 {
                     Console.WriteLine(JsonSerializer.Serialize(response, _srcGenWithOptions.CommandResponse));
                 }
+
+                var status = response.Status;
+                if (status < 200 || status >= 300)
+                {
+                    activity?.SetStatus(ActivityStatusCode.Error).AddTag(TagName.ErrorDetails, response.Message);
+                }
+
+                return status;
             }
             catch (Exception ex)
             {
                 _logger.LogError("An exception occurred while executing '{Command}'. Exception: {Exception}",
                     command.Name, ex);
                 activity?.SetStatus(ActivityStatusCode.Error)?.AddTag(TagName.ErrorDetails, ex.Message);
+                return 1;
             }
             finally
             {
                 _logger.LogTrace("Finished running '{Command}'.", command.Name);
             }
         });
+    }
+
+    private RootCommand CreateRootCommand()
+    {
+        // RootCommand title/description comes from the root group
+        var root = new RootCommand(_rootGroup.Description);
+
+        // Register area groups and their commands
+        RegisterCommandGroup();
+
+        // Attach subgroups to the root and configure their commands/actions
+        foreach (var subGroup in _rootGroup.SubGroup)
+        {
+            ConfigureCommands(subGroup);
+            root.Subcommands.Add(subGroup.Command);
+        }
+
+        return root;
     }
 
     private static IBaseCommand? FindCommandInGroup(CommandGroup group, Queue<string> nameParts)
@@ -231,11 +265,11 @@ public class CommandFactory
     /// <summary>
     /// Finds the BaseCommand given its full command name (i.e. storage_account_list).
     /// </summary>
-    /// <param name="tokenizedName">Name of the command with prefixes.</param>
+    /// <param name="fullCommandName">Name of the command with prefixes.</param>
     /// <returns></returns>
-    public IBaseCommand? FindCommandByName(string tokenizedName)
+    public IBaseCommand? FindCommandByName(string fullCommandName)
     {
-        return _commandMap.GetValueOrDefault(tokenizedName);
+        return _commandMap.GetValueOrDefault(fullCommandName);
     }
 
     /// <summary>
@@ -249,12 +283,12 @@ public class CommandFactory
             return null;
         }
 
-        var split = tokenizedName.Split(Separator, 2);
-
-        return _serviceAreaNames.Contains(split[0]) ? split[0] : null;
+        return _commandNamesToArea.TryGetValue(tokenizedName, out var area)
+            ? area.Name
+            : null;
     }
 
-    private static Dictionary<string, IBaseCommand> CreateCommmandDictionary(CommandGroup node, string prefix)
+    internal static Dictionary<string, IBaseCommand> CreateCommandDictionary(CommandGroup node, string prefix)
     {
         var aggregated = new Dictionary<string, IBaseCommand>();
         var updatedPrefix = GetPrefix(prefix, node.Name);
@@ -275,7 +309,7 @@ public class CommandFactory
 
         foreach (var command in node.SubGroup)
         {
-            var subcommandsDictionary = CreateCommmandDictionary(command, updatedPrefix);
+            var subcommandsDictionary = CreateCommandDictionary(command, updatedPrefix);
             foreach (var item in subcommandsDictionary)
             {
                 aggregated.Add(item.Key, item.Value);
@@ -285,7 +319,7 @@ public class CommandFactory
         return aggregated;
     }
 
-    private static string GetPrefix(string currentPrefix, string additional) => string.IsNullOrEmpty(currentPrefix)
+    internal static string GetPrefix(string currentPrefix, string additional) => string.IsNullOrEmpty(currentPrefix)
         ? additional
         : currentPrefix + Separator + additional;
 

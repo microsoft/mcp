@@ -1,8 +1,8 @@
-name: Onboarding Request
+name: Azure MCP Onboarding Request
 description: Use this template to file an onboarding request for a new service / tool for the Azure MCP server.
 title: "[ONBOARD]"
-labels: ["onboarding","needs-triage"]
-projects: ["Azure/812"]
+labels: ["onboarding","needs-triage","Azure.Mcp.Server"]
+projects: ["Microsoft/1976"]
 
 body:
   - type: markdown
@@ -37,7 +37,7 @@ body:
     id: timeline
     attributes:
       label: Timeline
-      description: May 2025, November 2025, TBD, etc.
+      description: November 2025, February 2026, TBD, etc.
         Please provide your desired timeline
       placeholder: TBD
     validations:

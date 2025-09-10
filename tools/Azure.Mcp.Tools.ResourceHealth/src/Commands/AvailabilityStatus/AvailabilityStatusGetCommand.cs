@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.ResourceHealth.Models;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.ResourceHealth.Options.AvailabilityStatus;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Extensions.Logging;
@@ -22,39 +22,47 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
 
     public override string Description =>
         $"""
-        Get the current availability status of an Azure resource to diagnose health issues. 
+        Get the current availability status of an Azure resource to diagnose health issues.
         Provides detailed information about resource availability state, potential issues, and timestamps.
         Equivalent to Azure Resource Health availability status API.
         """;
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(ResourceHealthOptionDefinitions.ResourceId);
+        command.Options.Add(ResourceHealthOptionDefinitions.ResourceId);
     }
 
     protected override AvailabilityStatusGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceId = parseResult.GetValueForOption(ResourceHealthOptionDefinitions.ResourceId);
+        options.ResourceId = parseResult.GetValueOrDefault(ResourceHealthOptionDefinitions.ResourceId);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var resourceHealthService = context.GetService<IResourceHealthService>() ??
                 throw new InvalidOperationException("Resource Health service is not available.");
 

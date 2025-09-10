@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Builder;
-using System.CommandLine.Parsing;
-using System.Diagnostics;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
@@ -38,8 +35,12 @@ internal class Program
 
             var serviceProvider = services.BuildServiceProvider();
 
-            var parser = BuildCommandLineParser(serviceProvider);
-            return await parser.InvokeAsync(args);
+            var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
+            var rootCommand = commandFactory.RootCommand;
+            var parseResult = rootCommand.Parse(args);
+            var status = await parseResult.InvokeAsync();
+
+            return (status >= 200 && status < 300) ? 0 : 1;
         }
         catch (Exception ex)
         {
@@ -59,33 +60,6 @@ internal class Program
             // Register core areas
             // Register template areas
         ];
-    }
-
-    private static Parser BuildCommandLineParser(IServiceProvider serviceProvider)
-    {
-        var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
-        var rootCommand = commandFactory.RootCommand;
-        var builder = new CommandLineBuilder(rootCommand);
-
-        builder.AddMiddleware(async (context, next) =>
-        {
-            var commandContext = new CommandContext(serviceProvider, Activity.Current);
-            var command = context.ParseResult.CommandResult.Command;
-            if (command.Handler is IBaseCommand baseCommand)
-            {
-                var validationResult = baseCommand.Validate(context.ParseResult.CommandResult, commandContext.Response);
-                if (!validationResult.IsValid)
-                {
-                    WriteResponse(commandContext.Response);
-                    context.ExitCode = commandContext.Response.Status;
-                    return;
-                }
-            }
-            await next(context);
-        });
-
-        builder.UseDefaults();
-        return builder.Build();
     }
 
     private static void WriteResponse(CommandResponse response)

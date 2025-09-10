@@ -24,7 +24,7 @@ The Azure MCP Server implements the [MCP specification](https://modelcontextprot
     - You should see the Azure MCP Server in the list of tools
 1. Try a prompt that tells the agent to use the Azure MCP Server, such as `List my Azure Storage containers`
     - The agent should be able to use the Azure MCP Server tools to complete your query
-1. Check out the [documentation](https://learn.microsoft.com/azure/developer/azure-mcp-server/) and review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/TROUBLESHOOTING.md) for commonly asked questions
+1. Check out the [documentation](https://learn.microsoft.com/azure/developer/azure-mcp-server/) and review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md) for commonly asked questions
 1. We're building this in the open. Your feedback is much appreciated, and will help us shape the future of the Azure MCP server
     - 👉 [Open an issue in the public repository](https://github.com/microsoft/mcp/issues/new/choose)
 
@@ -63,6 +63,12 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * "Get Azure Data Explorer databases in cluster 'mycluster'"
 * "Sample 10 rows from table 'StormEvents' in Azure Data Explorer database 'db1'"
+
+### 📣 Azure Event Grid
+
+* "List all Event Grid topics in subscription 'my-subscription'"
+* "Show me the Event Grid topics in my subscription"
+* "List all Event Grid topics in resource group 'my-resourcegroup' in my subscription"
 
 ### ⚡ Azure Managed Lustre
 
@@ -177,6 +183,12 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * Get the bicep or terraform file generation rules for an application
 * Get the GitHub pipeline creation guideline for an application
 
+### 📣 Azure Event Grid
+
+* List Event Grid topics in subscription or resource group
+* View topic configuration and status information
+* Access endpoint and key details for event publishing
+
 ### 🧮 Azure Foundry
 
 * List Azure Foundry models
@@ -217,6 +229,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 ### 🏪 Azure Marketplace
 
+* List marketplace products available to a subscription with filtering capabilities
 * Get details about Marketplace products
 
 ### 📈 Azure Monitor
@@ -235,11 +248,6 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * Query Azure Monitor metrics for resources with time series data
 * List available metric definitions for resources
-
-### 🏥 Azure Service Health
-
-* Get the availability status for a specific resource
-* List availability statuses for all resources in a subscription or resource group
 
 ### ⚙️ Azure Native ISV Services
 
@@ -264,6 +272,12 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 ### 🏗️ Azure Resource Groups
 
 * List resource groups
+
+### 🏥 Azure Resource Health
+
+* Get the availability status for a specific resource
+* List availability statuses for all resources in a subscription or resource group
+* List service health events in a subscription
 
 ### 🎭 Azure Role-Based Access Control (RBAC)
 
@@ -294,7 +308,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * List and create Storage accounts
 * Get detailed information about specific Storage accounts
 * Manage blob containers and blobs
-* Upload files to blob containers
+* Upload files to blobs
 * List and query Storage tables
 * List paths in Data Lake file systems
 * Get container properties and metadata
@@ -466,7 +480,7 @@ To opt out, set the environment variable `AZURE_MCP_COLLECT_TELEMETRY` to `false
 
 ## 📝 Troubleshooting
 
-See [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/TROUBLESHOOTING.md#128-tool-limit-issue) for help with common issues and logging.
+See [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md) for help with common issues and logging.
 
 ### 🔑 Authentication
 
@@ -475,7 +489,7 @@ See [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/TROUBLESH
 
 The Azure MCP Server uses the Azure Identity library for .NET to authenticate to Microsoft Entra ID. For detailed information, see [Authentication Fundamentals](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md#authentication-fundamentals).
 
-If you're running into any issues with authentication, visit our [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/TROUBLESHOOTING.md#authentication).
+If you're running into any issues with authentication, visit our [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#authentication).
 
 For enterprise authentication scenarios, including network restrictions, security policies, and protected resources, see [Authentication Scenarios in Enterprise Environments](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md#authentication-scenarios-in-enterprise-environments).
 </details>

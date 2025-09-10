@@ -9,8 +9,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Grafana.LiveTests;
 
-public class GrafanaCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+public class GrafanaCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     [Fact]
     public async Task Should_list_grafana_workspaces_by_subscription_id()

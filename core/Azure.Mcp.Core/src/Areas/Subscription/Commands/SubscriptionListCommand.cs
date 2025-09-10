@@ -29,15 +29,15 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var subscriptionService = context.GetService<ISubscriptionService>();
             var subscriptions = await subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy);
 

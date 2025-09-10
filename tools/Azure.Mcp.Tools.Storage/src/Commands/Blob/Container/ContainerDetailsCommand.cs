@@ -3,7 +3,6 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
 using Azure.Storage.Blobs.Models;
@@ -25,19 +24,27 @@ public sealed class ContainerDetailsCommand(ILogger<ContainerDetailsCommand> log
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var storageService = context.GetService<IStorageService>();
             var details = await storageService.GetContainerDetails(
                 options.Account!,
@@ -87,7 +94,7 @@ public sealed class ContainerDetailsCommand(ILogger<ContainerDetailsCommand> log
     }
 
     [JsonConverter(typeof(ETagConverter))]
-    internal struct JsonETag(Azure.ETag tag)
+    internal struct JsonETag(ETag tag)
     {
         public void Write(Utf8JsonWriter writer)
         {
@@ -108,7 +115,7 @@ public sealed class ContainerDetailsCommand(ILogger<ContainerDetailsCommand> log
         public override JsonETag Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             string? s = reader.GetString();
-            return new(s == null ? default : new Azure.ETag(s));
+            return new(s == null ? default : new ETag(s));
         }
 
         public override void Write(Utf8JsonWriter writer, JsonETag value, JsonSerializerOptions options)

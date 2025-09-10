@@ -28,7 +28,7 @@ namespace Azure.Mcp.Tools.Sql.Services.Models
         // Read the JSON response content and create a model instance from it.
         public static SqlServerAadAdministratorData? FromJson(JsonElement source)
         {
-            return JsonSerializer.Deserialize<SqlServerAadAdministratorData>(source, SqlJsonContext.Default.SqlServerAadAdministratorData);
+            return JsonSerializer.Deserialize(source, SqlJsonContext.Default.SqlServerAadAdministratorData);
         }
     }
 }

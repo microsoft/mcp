@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
-using Azure.Mcp.Tools.CloudArchitect.Commands.Design;
 using Azure.Mcp.Tools.CloudArchitect.Models;
 using Azure.Mcp.Tools.CloudArchitect.Options;
 

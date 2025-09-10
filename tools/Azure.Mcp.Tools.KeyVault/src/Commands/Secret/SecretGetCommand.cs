@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -22,7 +21,15 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
 
     public override string Title => _commandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = true
+    };
 
     public override string Description =>
         """
@@ -33,29 +40,29 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_vaultOption);
-        command.AddOption(_secretOption);
+        command.Options.Add(_vaultOption);
+        command.Options.Add(_secretOption);
     }
 
     protected override SecretGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValueForOption(_vaultOption);
-        options.SecretName = parseResult.GetValueForOption(_secretOption);
+        options.VaultName = parseResult.GetValue(_vaultOption);
+        options.SecretName = parseResult.GetValue(_secretOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var keyVaultService = context.GetService<IKeyVaultService>();
             var secret = await keyVaultService.GetSecret(
                 options.VaultName!,

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Areas.Tools.Commands;
@@ -26,7 +26,7 @@ public class ToolsListCommandTests
     private readonly ILogger<ToolsListCommand> _logger;
     private readonly CommandContext _context;
     private readonly ToolsListCommand _command;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public ToolsListCommandTests()
     {
@@ -40,7 +40,7 @@ public class ToolsListCommandTests
         _context = new(_serviceProvider);
         _logger = Substitute.For<ILogger<ToolsListCommand>>();
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     /// <summary>
@@ -61,7 +61,7 @@ public class ToolsListCommandTests
     public async Task ExecuteAsync_WithValidContext_ReturnsCommandInfoList()
     {
         // Arrange
-        var args = _parser.Parse([]);
+        var args = _commandDefinition.Parse([]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -102,7 +102,7 @@ public class ToolsListCommandTests
     public async Task ExecuteAsync_JsonSerializationStressTest_HandlesLargeResults()
     {
         // Arrange
-        var args = _parser.Parse([]);
+        var args = _commandDefinition.Parse([]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -129,7 +129,7 @@ public class ToolsListCommandTests
     public async Task ExecuteAsync_WithValidContext_FiltersHiddenCommands()
     {
         // Arrange
-        var args = _parser.Parse([]);
+        var args = _commandDefinition.Parse([]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -156,7 +156,7 @@ public class ToolsListCommandTests
     public async Task ExecuteAsync_WithValidContext_IncludesOptionsForCommands()
     {
         // Arrange
-        var args = _parser.Parse([]);
+        var args = _commandDefinition.Parse([]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -188,7 +188,7 @@ public class ToolsListCommandTests
     {
         // Arrange
         var faultyContext = new CommandContext(null!);
-        var args = _parser.Parse([]);
+        var args = _commandDefinition.Parse([]);
 
         // Act
         var response = await _command.ExecuteAsync(faultyContext, args);
@@ -212,7 +212,7 @@ public class ToolsListCommandTests
             .Returns(x => throw new InvalidOperationException("Corrupted command factory"));
 
         var faultyContext = new CommandContext(faultyServiceProvider);
-        var args = _parser.Parse([]);
+        var args = _commandDefinition.Parse([]);
 
         // Act
         var response = await _command.ExecuteAsync(faultyContext, args);
@@ -231,7 +231,7 @@ public class ToolsListCommandTests
     public async Task ExecuteAsync_ReturnsSpecificKnownCommands()
     {
         // Arrange
-        var args = _parser.Parse([]);
+        var args = _commandDefinition.Parse([]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -253,7 +253,7 @@ public class ToolsListCommandTests
         var subscriptionCommands = result.Where(cmd => cmd.Command.Contains("subscription")).ToList();
         Assert.True(subscriptionCommands.Count > 0, $"Expected subscription commands. All commands: {string.Join(", ", allCommands)}");
 
-        // Should have keyvault commands  
+        // Should have keyvault commands
         var keyVaultCommands = result.Where(cmd => cmd.Command.Contains("keyvault")).ToList();
         Assert.True(keyVaultCommands.Count > 0, $"Expected keyvault commands. All commands: {string.Join(", ", allCommands)}");
 
@@ -261,7 +261,7 @@ public class ToolsListCommandTests
         var storageCommands = result.Where(cmd => cmd.Command.Contains("storage")).ToList();
         Assert.True(storageCommands.Count > 0, $"Expected storage commands. All commands: {string.Join(", ", allCommands)}");
 
-        // Should have appconfig commands  
+        // Should have appconfig commands
         var appConfigCommands = result.Where(cmd => cmd.Command.Contains("appconfig")).ToList();
         Assert.True(appConfigCommands.Count > 0, $"Expected appconfig commands. All commands: {string.Join(", ", allCommands)}");
 
@@ -288,7 +288,7 @@ public class ToolsListCommandTests
     public async Task ExecuteAsync_CommandPathFormattingIsCorrect()
     {
         // Arrange
-        var args = _parser.Parse([]);
+        var args = _commandDefinition.Parse([]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -338,7 +338,7 @@ public class ToolsListCommandTests
 
         var emptyServiceProvider = finalCollection.BuildServiceProvider();
         var emptyContext = new CommandContext(emptyServiceProvider);
-        var args = _parser.Parse([]);
+        var args = _commandDefinition.Parse([]);
 
         // Act
         var response = await _command.ExecuteAsync(emptyContext, args);

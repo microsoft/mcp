@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
@@ -15,8 +16,6 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
     private const string CommandTitle = "Create Storage Blob Container";
     private readonly ILogger<ContainerCreateCommand> _logger = logger;
 
-    private readonly Option<string> _blobContainerPublicAccessOption = StorageOptionDefinitions.BlobContainerPublicAccess;
-
     public override string Name => "create";
 
     public override string Description =>
@@ -26,38 +25,32 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = false };
-
-    protected override void RegisterOptions(Command command)
+    public override ToolMetadata Metadata => new()
     {
-        base.RegisterOptions(command);
-        command.AddOption(_blobContainerPublicAccessOption);
-    }
-
-    protected override ContainerCreateOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.BlobContainerPublicAccess = parseResult.GetValueForOption(_blobContainerPublicAccessOption);
-        return options;
-    }
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var storageService = context.GetService<IStorageService>();
             var containerProperties = await storageService.CreateContainer(
                 options.Account!,
                 options.Container!,
                 options.Subscription!,
-                options.BlobContainerPublicAccess,
                 options.Tenant,
                 options.RetryPolicy);
 
@@ -73,8 +66,8 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error creating container. Account: {Account}, Container: {Container}, PublicAccess: {PublicAccess}, Options: {@Options}",
-                options.Account, options.Container, options.BlobContainerPublicAccess, options);
+                "Error creating container. Account: {Account}, Container: {Container}, Options: {@Options}",
+                options.Account, options.Container, options);
             HandleException(context, ex);
         }
 

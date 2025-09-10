@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models;
@@ -25,7 +24,7 @@ public class TableListCommandTests
     private readonly ILogger<TableListCommand> _logger;
     private readonly TableListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
     private readonly string _knownAccount = "account123";
     private readonly string _knownSubscription = "sub123";
 
@@ -39,7 +38,7 @@ public class TableListCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -52,7 +51,7 @@ public class TableListCommandTests
             Arg.Is(AuthMethod.Credential), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(expectedTables);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--subscription", _knownSubscription,
             "--auth-method", AuthMethod.Credential.ToString().ToLowerInvariant()
@@ -80,7 +79,7 @@ public class TableListCommandTests
             Arg.Is(AuthMethod.Credential), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns([]);
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--account", _knownAccount,
             "--subscription", _knownSubscription,
             "--auth-method", AuthMethod.Credential.ToString().ToLowerInvariant()
