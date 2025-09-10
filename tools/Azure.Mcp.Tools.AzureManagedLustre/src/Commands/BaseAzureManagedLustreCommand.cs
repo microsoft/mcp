@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics.CodeAnalysis;
 using System.CommandLine.Parsing;
+using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureManagedLustre.Options;
 using Microsoft.Extensions.Logging;
-using Azure.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.Commands;
 
