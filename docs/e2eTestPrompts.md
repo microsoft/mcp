@@ -43,6 +43,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_appconfig_kv_show | Show the content for the key <key_name> in App Configuration store <app_config_store_name> |
 | azmcp_appconfig_kv_unlock | Unlock the key <key_name> in App Configuration store <app_config_store_name> |
 
+## Azure Application Insights
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_applicationinsights_recommendation_list | List code optimization (profiler) recommendations across my Application Insights components |
+| azmcp_applicationinsights_recommendation_list | Show me code optimization recommendations for all Application Insights resources in my subscription |
+| azmcp_applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> |
+| azmcp_applicationinsights_recommendation_list | Show me performance improvement recommendations from Application Insights |
+
 ## Azure CLI
 
 | Tool Name | Test Prompt |
