@@ -25,6 +25,7 @@ The Azure MCP Server implements the [MCP specification](https://modelcontextprot
 - [Contributing](#contributing)
 - [Code of Conduct](#code-of-conduct)
 
+<a id="vs-code-install-guide-recommended"></a>
 ### ✅ VS Code Install Guide (Recommended)
 
 1. Install either the stable or Insiders release of VS Code:
@@ -34,12 +35,14 @@ The Azure MCP Server implements the [MCP specification](https://modelcontextprot
 1. Install the [Azure MCP Server](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server) extension
 
 
+<a id="intellij-install-guide"></a>
 ### ✅ IntelliJ Install Guide
 
 1. Install either the [IntelliJ IDEA Ultimate](https://www.jetbrains.com/idea/download) or [IntelliJ IDEA Community](https://www.jetbrains.com/idea/download) edition.
 1. Install the [GitHub Copilot](https://plugins.jetbrains.com/plugin/17718-github-copilot) plugin.
 1. Install the [Azure Toolkit for Intellij](https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij) plugin.
 
+<a id="quick-start"></a>
 ### 🚀 Quick Start
 
 1. Open GitHub Copilot in [VS Code](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode) or [IntelliJ](https://github.blog/changelog/2025-05-19-agent-mode-and-mcp-support-for-copilot-in-jetbrains-eclipse-and-xcode-now-in-public-preview/#agent-mode) and switch to Agent mode.
@@ -51,7 +54,7 @@ The Azure MCP Server implements the [MCP specification](https://modelcontextprot
 1. We're building this in the open. Your feedback is much appreciated, and will help us shape the future of the Azure MCP server
     - 👉 [Open an issue in the public repository](https://github.com/microsoft/mcp/issues/new/choose)
 
-
+<a id="what-can-you-do-with-the-azure-mcp-server"></a>
 ## ✨ What can you do with the Azure MCP Server?
 
 The Azure MCP Server supercharges your agents with Azure context. Here are some cool prompts you can try:
@@ -124,6 +127,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "List files and directories in my File Share"
 * "Send a message to my storage queue"
 
+<a id="currently-supported-tools"></a>
 ## 🛠️ Currently Supported Tools
 
 <details>
@@ -359,6 +363,7 @@ Agents and models can discover and learn best practices and usage guidelines for
 
 For detailed command documentation and examples, see [Azure MCP Commands](https://github.com/microsoft/mcp/blob/main/docs/azmcp-commands.md).
 
+<a id="upgrading-existing-installs-to-the-latest-version"></a>
 ## 🔄️ Upgrading Existing Installs to the Latest Version
 
 <details>
@@ -386,6 +391,7 @@ If the Azure MCP server is configured by Azure Toolkit for IntelliJ plugin, the 
 
 </details>
 
+<a id="advanced-install-scenarios-optional"></a>
 ## ⚙️ Advanced Install Scenarios (Optional)
 
 <details>
@@ -482,6 +488,7 @@ For a step-by-step installation, follow these instructions:
 More end-to-end MCP client/agent guides are coming soon!
 </details>
 
+<a id="data-collection"></a>
 ## Data Collection
 
 The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft's [privacy statement](https://www.microsoft.com/privacy/privacystatement). You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
@@ -508,12 +515,15 @@ If you're running into any issues with authentication, visit our [troubleshootin
 For enterprise authentication scenarios, including network restrictions, security policies, and protected resources, see [Authentication Scenarios in Enterprise Environments](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md#authentication-scenarios-in-enterprise-environments).
 </details>
 
+<a id="security-note"></a>
 ## 🛡️ Security Note
 
 Your credentials are always handled securely through the official [Azure Identity SDK](https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/identity/Azure.Identity/README.md) - **we never store or manage tokens directly**.
 
 MCP as a phenomenon is very novel and cutting-edge. As with all new technology standards, consider doing a security review to ensure any systems that integrate with MCP servers follow all regulations and standards your system is expected to adhere to. This includes not only the Azure MCP Server, but any MCP client/agent that you choose to implement down to the model provider.
 
+
+<a id="contributing"></a>
 ## 👥 Contributing
 
 We welcome contributions to the Azure MCP Server! Whether you're fixing bugs, adding new features, or improving documentation, your contributions are welcome.
@@ -525,6 +535,7 @@ Please read our [Contributing Guide](https://github.com/microsoft/mcp/blob/main/
 * 📝 Code style and testing requirements
 * 🔄 Making pull requests
 
+<a id="code-of-conduct"></a>
 ## 🤝 Code of Conduct
 
 This project has adopted the
