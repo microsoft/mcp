@@ -884,6 +884,13 @@ azmcp resourcehealth availability-status get --resourceId <resource-id>
 # List availability statuses for all resources in a subscription
 azmcp resourcehealth availability-status list --subscription <subscription> \
                                               [--resource-group <resource-group>]
+
+# List service health events in a subscription
+azmcp resourcehealth service-health-events list --subscription <subscription> \
+                                                [--event-type <event-type>] \
+                                                [--status <status>] \
+                                                [--query-start-time <start-time>] \
+                                                [--query-end-time <end-time>]
 ```
 
 ### Azure Service Bus Operations
