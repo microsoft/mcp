@@ -6,6 +6,18 @@ parameters:
   type: string
 - name: IncludeNative
   type: boolean
+- name: ArtifactSourceAlias
+  type: string
+  default: current
+- name: Project
+  type: string
+  default: ''
+- name: PipelineId
+  type: string
+  default: ''
+- name: RunId
+  type: string
+  default: ''
 
 jobs:
 - job: TagRepository
@@ -14,9 +26,21 @@ jobs:
   steps:
   - checkout: self
 
-  - download: current
-    displayName: Download $(PipelineArtifactName)_packed
-    artifact: $(PipelineArtifactName)_packed
+  - ${{ if and(ne(parameters.PipelineId, ''), ne(parameters.RunId, '')) }}:
+    - task: DownloadPipelineArtifact@2
+      displayName: "Download npm_$(PipelineArtifactName)_packed (specific run)"
+      inputs:
+        buildType: specific
+        project: ${{ parameters.Project }}
+        pipeline: ${{ parameters.PipelineId }}
+        runVersion: specific
+        runId: ${{ parameters.RunId }}
+        artifact: npm_$(PipelineArtifactName)_packed
+        targetPath: '$(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed'
+  - ${{ if or(eq(parameters.PipelineId, ''), eq(parameters.RunId, '')) }}:
+    - download: ${{ parameters.ArtifactSourceAlias }}
+      artifact: npm_$(PipelineArtifactName)_packed
+      displayName: Download npm_$(PipelineArtifactName)_packed
 
   - template: /eng/common/pipelines/templates/steps/retain-run.yml
 
@@ -27,7 +51,7 @@ jobs:
       $tag = "$serverName-$version$versionSuffix"
 
       gh release create $tag --title "$serverName $version$versionSuffix"
-      gh release upload $tag $(Pipeline.Workspace)/$(PipelineArtifactName)_packed/*/*/*.tgz
+      gh release upload $tag $(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed/*/*/*.tgz
     displayName: Create GitHub Release and upload artifacts
     env:
       GH_TOKEN: $(azuresdk-github-pat)
@@ -40,7 +64,7 @@ jobs:
     isProduction: true
     inputs:
     - input: pipelineArtifact
-      artifactName: $(PipelineArtifactName)_packed
+      artifactName: npm_$(PipelineArtifactName)_packed
       targetPath: $(Pipeline.Workspace)/drop
   environment: package-publish
   timeoutInMinutes: 120

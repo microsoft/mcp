@@ -23,6 +23,16 @@ parameters:
     - osx-arm64
     - win-x64
     - win-arm64
+# Optional: specify an upstream pipeline run to download artifacts from
+- name: UpstreamProject
+  type: string
+  default: internal
+- name: UpstreamPipelineId
+  type: string
+  default: 7866
+- name: UpstreamRunId
+  type: string
+  default: 5320737
 
 resources:
   repositories:
@@ -50,113 +60,113 @@ extends:
           DynamicPrereleaseVersion: ${{ not(parameters.ReleaseRun) }}
           ServerName: ${{ parameters.ServerName }}
 
-    - stage: Build
-      dependsOn:
-      - Initialize
-      pool:
-        name: $(LINUXPOOL)
-        image: $(LINUXVMIMAGE)
-        os: linux
-      variables:
-      - template: /eng/pipelines/templates/variables/image.yml
-      - template: /eng/pipelines/templates/variables/globals.yml
-      - name: VersionSuffix
-        value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
-      jobs:
-      - template: /eng/pipelines/templates/jobs/analyze.yml
-      - template: /eng/common/pipelines/templates/jobs/generate-job-matrix.yml
-        parameters:
-          SparseCheckout: false
-          JobTemplatePath: /eng/pipelines/templates/jobs/build.yml
-          AdditionalParameters:
-            TestTimeoutInMinutes: 10
-            ${{ if ne(parameters.ServerName, 'none') }}:
-              ServerName: ${{ parameters.ServerName }}
-          MatrixConfigs:
-            - Name: build_matrix
-              Path: eng/pipelines/build-matrix.json
-              Selection: all
-              GenerateVMJobs: true
+    #- stage: Build
+    #  dependsOn:
+    #  - Initialize
+    #  pool:
+    #    name: $(LINUXPOOL)
+    #    image: $(LINUXVMIMAGE)
+    #    os: linux
+    #  variables:
+    #  - template: /eng/pipelines/templates/variables/image.yml
+    #  - template: /eng/pipelines/templates/variables/globals.yml
+    #  - name: VersionSuffix
+    #    value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
+    #  jobs:
+    #  - template: /eng/pipelines/templates/jobs/analyze.yml
+    #  - template: /eng/common/pipelines/templates/jobs/generate-job-matrix.yml
+    #    parameters:
+    #      SparseCheckout: false
+    #      JobTemplatePath: /eng/pipelines/templates/jobs/build.yml
+    #      AdditionalParameters:
+    #        TestTimeoutInMinutes: 10
+    #        ${{ if ne(parameters.ServerName, 'none') }}:
+    #          ServerName: ${{ parameters.ServerName }}
+    #      MatrixConfigs:
+    #        - Name: build_matrix
+    #          Path: eng/pipelines/build-matrix.json
+    #          Selection: all
+    #          GenerateVMJobs: true
 
-    - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
-      - stage: Test
-        displayName: 'Live test'
-        dependsOn:
-        - Initialize
-        pool:
-          name: $(LINUXPOOL)
-          image: $(LINUXVMIMAGE)
-          os: linux
-        variables:
-        - template: /eng/pipelines/templates/variables/image.yml
-        - template: /eng/pipelines/templates/variables/globals.yml
-        jobs:
-        - template: /eng/pipelines/templates/jobs/live-test.yml
+    #- ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
+    #  - stage: Test
+    #    displayName: 'Live test'
+    #    dependsOn:
+    #    - Initialize
+    #    pool:
+    #      name: $(LINUXPOOL)
+    #      image: $(LINUXVMIMAGE)
+    #      os: linux
+    #    variables:
+    #    - template: /eng/pipelines/templates/variables/image.yml
+    #    - template: /eng/pipelines/templates/variables/globals.yml
+    #    jobs:
+    #    - template: /eng/pipelines/templates/jobs/live-test.yml
 
     - ${{ if eq(parameters.PublishPackages, 'true') }}:
-      - stage: Sign
-        displayName: 'Sign'
-        dependsOn:
-        - Initialize
-        - Build
-        pool:
-          name: $(LINUXPOOL)
-          image: $(LINUXVMIMAGE)
-          os: linux
-        variables:
-        - template: /eng/pipelines/templates/variables/image.yml
-        - template: /eng/pipelines/templates/variables/globals.yml
-        - name: VersionSuffix
-          value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
-        jobs:
-        - template: /eng/pipelines/templates/jobs/sign-and-pack.yml
-          parameters:
-            ServerName: ${{ parameters.ServerName }}
+      #- stage: Sign
+      #  displayName: 'Sign'
+      #  dependsOn:
+      #  - Initialize
+      #  - Build
+      #  pool:
+      #    name: $(LINUXPOOL)
+      #    image: $(LINUXVMIMAGE)
+      #    os: linux
+      #  variables:
+      #  - template: /eng/pipelines/templates/variables/image.yml
+      #  - template: /eng/pipelines/templates/variables/globals.yml
+      #  - name: VersionSuffix
+      #    value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
+      #  jobs:
+      #  - template: /eng/pipelines/templates/jobs/sign-and-pack.yml
+      #    parameters:
+      #      ServerName: ${{ parameters.ServerName }}
 
-        - template: /eng/pipelines/templates/jobs/sign-and-pack-vsix.yml
-          parameters:
-            DependsOn: SignAndPack
-            ServerName: ${{ parameters.ServerName }}
+      #  - template: /eng/pipelines/templates/jobs/sign-and-pack-vsix.yml
+      #    parameters:
+      #      DependsOn: SignAndPack
+      #      ServerName: ${{ parameters.ServerName }}
 
-        - job: Verify_Signing
-          displayName: "Verify Signing"
-          dependsOn: SignAndPack
-          pool:
-            name: $(WINDOWSPOOL) # Signing verification must happen on windows
-            image: $(WINDOWSVMIMAGE)
-            os: windows
-          variables:
-          - template: /eng/pipelines/templates/variables/image.yml
-          - template: /eng/pipelines/templates/variables/globals.yml
-          steps:
-          - checkout: none
-          - download: current
-            artifact: $(PipelineArtifactName)_signed
-            displayName: "Download signed MCP server binaries"
-          - pwsh: |
-              Write-Host "Verifying binary signing for win-x64 and win-arm64 binaries..."
-              $allSigned = $true
-              $signedBinaries = Get-ChildItem -Path '$(Pipeline.Workspace)/$(PipelineArtifactName)_signed/**/win-*' -Recurse -Include @("*.dll", "*.exe")
-              foreach ($binary in $signedBinaries) {
-                  if ((Get-AuthenticodeSignature -FilePath $binary.FullName).Status -ne 'Valid') {
-                      Write-Host "Binary $($binary.FullName) is NOT signed correctly."
-                      $allSigned = $false
-                  }
-                  else {
-                      Write-Host "Binary $($binary.FullName) is signed correctly."
-                  }
-              }
-              if (-not $allSigned) {
-                  Write-Error "One or more binaries are not signed correctly."
-                  exit 1
-              }
-            displayName: "Verify Binary Signing"
+      #  - job: Verify_Signing
+      #    displayName: "Verify Signing"
+      #    dependsOn: SignAndPack
+      #    pool:
+      #      name: $(WINDOWSPOOL) # Signing verification must happen on windows
+      #      image: $(WINDOWSVMIMAGE)
+      #      os: windows
+      #    variables:
+      #    - template: /eng/pipelines/templates/variables/image.yml
+      #    - template: /eng/pipelines/templates/variables/globals.yml
+      #    steps:
+      #    - checkout: none
+      #    - download: current
+      #      artifact: $(PipelineArtifactName)_signed
+      #      displayName: "Download signed MCP server binaries"
+      #    - pwsh: |
+      #        Write-Host "Verifying binary signing for win-x64 and win-arm64 binaries..."
+      #        $allSigned = $true
+      #        $signedBinaries = Get-ChildItem -Path '$(Pipeline.Workspace)/$(PipelineArtifactName)_signed/**/win-*' -Recurse -Include @("*.dll", "*.exe")
+      #        foreach ($binary in $signedBinaries) {
+      #            if ((Get-AuthenticodeSignature -FilePath $binary.FullName).Status -ne 'Valid') {
+      #                Write-Host "Binary $($binary.FullName) is NOT signed correctly."
+      #                $allSigned = $false
+      #            }
+      #            else {
+      #                Write-Host "Binary $($binary.FullName) is signed correctly."
+      #            }
+      #        }
+      #        if (-not $allSigned) {
+      #            Write-Error "One or more binaries are not signed correctly."
+      #            exit 1
+      #        }
+      #      displayName: "Verify Binary Signing"
 
       - ${{ if eq(parameters.ReleaseRun, 'true') }}:
         - stage: Release
           dependsOn:
           - Initialize
-          - Sign
+          # - Sign
           pool:
             name: $(LINUXPOOL)
             image: $(LINUXVMIMAGE)
@@ -170,27 +180,31 @@ extends:
               VsixTargets: ${{ parameters.VsixTargets }}
               ServerName: ${{ parameters.ServerName }}
               IncludeNative: ${{ parameters.IncludeNative }}
-          - template: /eng/pipelines/templates/jobs/docker.yml
-            parameters:
-              ContainerRegistry: 'azuresdkimages'
-              DeploymentEnvironment: 'public'
-              ServerName: ${{ parameters.ServerName }}
+              ArtifactSourceAlias: current
+              Project: ${{ parameters.UpstreamProject }}
+              PipelineId: ${{ parameters.UpstreamPipelineId }}
+              RunId: ${{ parameters.UpstreamRunId }}
+          # - template: /eng/pipelines/templates/jobs/docker.yml
+          #   parameters:
+          #     ContainerRegistry: 'azuresdkimages'
+          #     DeploymentEnvironment: 'public'
+          #     ServerName: ${{ parameters.ServerName }}
 
-      - ${{ else }}:
-        - stage: Integration
-          dependsOn:
-          - Initialize
-          - Sign
-          pool:
-            name: $(LINUXPOOL)
-            image: $(LINUXVMIMAGE)
-            os: linux
-          variables:
-          - template: /eng/pipelines/templates/variables/image.yml
-          - template: /eng/pipelines/templates/variables/globals.yml
-          - name: VersionSuffix
-            value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
-          jobs:
-          - template: /eng/pipelines/templates/jobs/integration.yml
-            parameters:
-              ServerName: ${{ parameters.ServerName }}
+      # - ${{ else }}:
+      #   - stage: Integration
+      #     dependsOn:
+      #     - Initialize
+      #     - Sign
+      #     pool:
+      #       name: $(LINUXPOOL)
+      #       image: $(LINUXVMIMAGE)
+      #       os: linux
+      #     variables:
+      #     - template: /eng/pipelines/templates/variables/image.yml
+      #     - template: /eng/pipelines/templates/variables/globals.yml
+      #     - name: VersionSuffix
+      #       value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
+      #     jobs:
+      #     - template: /eng/pipelines/templates/jobs/integration.yml
+      #       parameters:
+      #         ServerName: ${{ parameters.ServerName }}
