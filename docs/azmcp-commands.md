@@ -569,6 +569,9 @@ azmcp aks cluster get --subscription <subscription> \
 
 # List AKS clusters in a subscription
 azmcp aks cluster list --subscription <subscription>
+
+# List AKS cluster's nodepools
+azmcp aks nodepool list --subscription <subscription> --resource-group <resource-group> --cluster <cluster>
 ```
 
 ### Azure Load Testing Operations
@@ -1200,4 +1203,3 @@ The CLI returns structured JSON responses for errors, including:
 
 - Service availability issues
 - Authentication errors
-
