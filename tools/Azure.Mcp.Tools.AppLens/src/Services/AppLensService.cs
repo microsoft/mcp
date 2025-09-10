@@ -9,6 +9,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.AppLens.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
@@ -20,14 +21,14 @@ namespace Azure.Mcp.Tools.AppLens.Services;
 /// </summary>
 public class AppLensService : BaseAzureService, IAppLensService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientService _httpClientService;
     private readonly AppLensOptions _options;
     private const string ConversationalDiagnosticsSignalREndpoint = "https://diagnosticschat.azure.com/chatHub";
 
-    public AppLensService(HttpClient httpClient, ITenantService? tenantService = null, ILoggerFactory? loggerFactory = null)
+    public AppLensService(IHttpClientService httpClientService, ITenantService? tenantService = null, ILoggerFactory? loggerFactory = null)
         : base(tenantService, loggerFactory)
     {
-        _httpClient = httpClient;
+        _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
         _options = new AppLensOptions();
     }
 
@@ -39,7 +40,7 @@ public class AppLensService : BaseAzureService, IAppLensService
         string? resourceGroup = null,
         string? resourceType = null)
     {
-        // Step 1: Find the resource using Azure Resource Graph
+        // Step 1: Get the resource ID
         var findResult = await FindResourceIdAsync(resource, subscription, resourceGroup, resourceType);
 
         if (findResult is DidNotFindResourceResult notFound)
@@ -49,7 +50,7 @@ public class AppLensService : BaseAzureService, IAppLensService
 
         var foundResource = (FoundResourceResult)findResult;
 
-        // Step 2: Get AppLens session (simplified - in real implementation this would call the actual AppLens API)
+        // Step 2: Get AppLens session
         var session = await GetAppLensSessionAsync(foundResource.ResourceId);
 
         if (session is FailedAppLensSessionResult failed)
@@ -59,7 +60,7 @@ public class AppLensService : BaseAzureService, IAppLensService
 
         var successfulSession = (SuccessfulAppLensSessionResult)session;
 
-        // Step 3: Ask AppLens the diagnostic question (simplified implementation)
+        // Step 3: Ask AppLens the diagnostic question
         var insights = await CollectInsightsAsync(successfulSession.Session, question);
 
         return new DiagnosticResult(
@@ -105,7 +106,7 @@ public class AppLensService : BaseAzureService, IAppLensService
 
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
-            var response = await _httpClient.SendAsync(request);
+            var response = await _httpClientService.DefaultClient.SendAsync(request);
 
 
             if (!response.IsSuccessStatusCode)
