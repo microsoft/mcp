@@ -77,7 +77,7 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
 
             context.Response.Results = ResponseResult.Create(
                 new Result(connectionInfo),
-                AppServiceJsonContext.DatabaseAddCommandResult);
+                AppServiceJsonContext.Default.Result);
         }
         catch (Exception ex)
         {
