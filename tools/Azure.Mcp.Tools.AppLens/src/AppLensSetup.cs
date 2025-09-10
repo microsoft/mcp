@@ -16,17 +16,7 @@ public sealed class AppLensSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton<IAppLensService>(provider =>
-        {
-            var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
-            var httpClient = httpClientFactory.CreateClient(nameof(AppLensService));
-            var tenantService = provider.GetService<Azure.Mcp.Core.Services.Azure.Tenant.ITenantService>();
-            var loggerFactory = provider.GetService<ILoggerFactory>();
-
-            return new AppLensService(httpClient, tenantService, loggerFactory);
-        });
-
-        services.AddHttpClient<AppLensService>();
+        services.AddSingleton<IAppLensService, AppLensService>();
     }
 
     public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)

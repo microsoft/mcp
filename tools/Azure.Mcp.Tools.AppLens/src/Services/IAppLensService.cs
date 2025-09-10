@@ -22,7 +22,8 @@ public interface IAppLensService
     Task<DiagnosticResult> DiagnoseResourceAsync(
         string question,
         string resource,
-        string? subscription = null,
+        string subscription,
         string? resourceGroup = null,
-        string? resourceType = null);
+        string? resourceType = null,
+        string? tenantId = null);
 }

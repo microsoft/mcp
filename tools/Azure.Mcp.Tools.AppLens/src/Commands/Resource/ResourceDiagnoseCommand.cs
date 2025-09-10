@@ -99,9 +99,10 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
             var result = await service.DiagnoseResourceAsync(
                 options.Question,
                 options.Resource,
-                options.Subscription,
+                options.Subscription!,
                 options.ResourceGroup,
-                options.ResourceType);
+                options.ResourceType,
+                options.Tenant);
 
             var commandResult = new ResourceDiagnoseCommandResult(result);
             context.Response.Results = ResponseResult.Create(commandResult, AppLensJsonContext.Default.ResourceDiagnoseCommandResult);

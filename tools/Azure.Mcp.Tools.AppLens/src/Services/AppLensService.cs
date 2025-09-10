@@ -8,9 +8,11 @@ using System.Threading.Channels;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.AppLens.Models;
+using Microsoft.AspNetCore.Mvc.TagHelpers;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 
@@ -19,29 +21,25 @@ namespace Azure.Mcp.Tools.AppLens.Services;
 /// <summary>
 /// Service implementation for AppLens diagnostic operations.
 /// </summary>
-public class AppLensService : BaseAzureService, IAppLensService
+public class AppLensService(IHttpClientService httpClientService, ISubscriptionService subscriptionService, ITenantService? tenantService = null) : BaseAzureService(tenantService), IAppLensService
 {
-    private readonly IHttpClientService _httpClientService;
-    private readonly AppLensOptions _options;
+    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
+    private readonly AppLensOptions _options = new AppLensOptions();
     private const string ConversationalDiagnosticsSignalREndpoint = "https://diagnosticschat.azure.com/chatHub";
-
-    public AppLensService(IHttpClientService httpClientService, ITenantService? tenantService = null, ILoggerFactory? loggerFactory = null)
-        : base(tenantService, loggerFactory)
-    {
-        _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
-        _options = new AppLensOptions();
-    }
 
     /// <inheritdoc />
     public async Task<DiagnosticResult> DiagnoseResourceAsync(
         string question,
         string resource,
-        string? subscription = null,
+        string subscription,
         string? resourceGroup = null,
-        string? resourceType = null)
+        string? resourceType = null,
+        string? tenantId = null)
     {
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenantId);
         // Step 1: Get the resource ID
-        var findResult = await FindResourceIdAsync(resource, subscription, resourceGroup, resourceType);
+        var findResult = await FindResourceIdAsync(resource, subscriptionResource.Data.SubscriptionId, resourceGroup, resourceType);
 
         if (findResult is DidNotFindResourceResult notFound)
         {
@@ -51,7 +49,7 @@ public class AppLensService : BaseAzureService, IAppLensService
         var foundResource = (FoundResourceResult)findResult;
 
         // Step 2: Get AppLens session
-        var session = await GetAppLensSessionAsync(foundResource.ResourceId);
+        var session = await GetAppLensSessionAsync(foundResource.ResourceId, tenantId);
 
         if (session is FailedAppLensSessionResult failed)
         {
@@ -72,28 +70,28 @@ public class AppLensService : BaseAzureService, IAppLensService
 
     private Task<FindResourceIdResult> FindResourceIdAsync(
         string resource,
-        string? subscriptionId,
+        string? subscription,
         string? resourceGroup,
         string? resourceType)
     {
         // Construct a resource ID from the provided information
 
-        if (string.IsNullOrEmpty(subscriptionId) || string.IsNullOrEmpty(resourceGroup))
+        if (string.IsNullOrEmpty(subscription) || string.IsNullOrEmpty(resourceGroup))
         {
             return Task.FromResult<FindResourceIdResult>(new DidNotFindResourceResult($"Subscription ID and Resource Group are required to locate resource '{resource}'. Please provide both --subscription-name-or-id and --resource-group parameters."));
         }
 
-        var resourceId = $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resource}";
+        var resourceId = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resource}";
 
         return Task.FromResult<FindResourceIdResult>(new FoundResourceResult(resourceId, resourceType ?? "Unknown", null));
     }
 
-    private async Task<GetAppLensSessionResult> GetAppLensSessionAsync(string resourceId)
+    private async Task<GetAppLensSessionResult> GetAppLensSessionAsync(string resourceId, string? tenantId = null)
     {
         try
         {
             // Get Azure credential using BaseAzureService
-            var credential = await GetCredential();
+            var credential = await GetCredential(tenantId);
 
             // Get ARM token
             var token = await credential.GetTokenAsync(
