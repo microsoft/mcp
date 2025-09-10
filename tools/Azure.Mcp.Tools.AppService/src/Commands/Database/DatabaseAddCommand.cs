@@ -52,15 +52,16 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        // Validate first, then bind
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             context.Activity?.AddTag("subscription", options.Subscription);
 
             var appServiceService = context.GetService<IAppServiceService>();
