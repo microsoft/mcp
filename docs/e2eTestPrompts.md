@@ -457,7 +457,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:--------------------------------|:----------|
 | azmcp_signalr_runtime_show | Show me the details of signalr <signalr_name> |
 | azmcp_signalr_runtime_list | List all signalr runtime in my subscription |
-| azmcp_signalr_identity_show | Show me the assigned identity details of signalr <signalr_name> |
+| azmcp_signalr_identity_list | List me the assigned identity details of signalr <signalr_name> |
 | azmcp_signalr_key_list | List keys of signalr <signalr_name> |
 | azmcp_signalr_network-rule_list | List the network rule details of signalr <signalr_name> |
 

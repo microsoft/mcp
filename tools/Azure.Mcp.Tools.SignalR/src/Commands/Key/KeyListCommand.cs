@@ -18,7 +18,7 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger)
     private const string CommandTitle = "List Access Keys";
     private readonly ILogger<KeyListCommand> _logger = logger;
 
-    private static readonly Option<string> _signalRNameOption = SignalROptionDefinitions.SignalRName;
+    private static readonly Option<string> _signalRNameOption = SignalROptionDefinitions.SignalR;
 
     public override string Name => "list";
 
@@ -30,38 +30,38 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger)
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true, Secret = true };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
         RequireResourceGroup();
-        command.AddOption(_signalRNameOption);
+        command.Options.Add(_signalRNameOption);
     }
 
     protected override KeyListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SignalRName = parseResult.GetValueForOption(_signalRNameOption);
+        options.SignalR = parseResult.GetValue(_signalRNameOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var signalRService = context.GetService<ISignalRService>();
             var keys = await signalRService.ListKeysAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
-                options.SignalRName!,
+                options.SignalR!,
                 options.Tenant,
                 options.AuthMethod,
                 options.RetryPolicy);

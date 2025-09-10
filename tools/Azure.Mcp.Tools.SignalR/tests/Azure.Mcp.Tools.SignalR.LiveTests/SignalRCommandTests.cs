@@ -4,14 +4,16 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.SignalR.LiveTests
 {
-    public class SignalRCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-        : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+    public class SignalRCommandTests : CommandTestsBase
     {
+        public SignalRCommandTests(ITestOutputHelper output) : base(output)
+        {
+        }
+
         [Fact]
         public async Task Should_list_signalr_runtimes_by_subscription_id()
         {
@@ -72,7 +74,7 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "signalr-name", Settings.ResourceBaseName }
+                    { "signalr", Settings.ResourceBaseName }
                 });
 
             var runtime = getResult.AssertProperty("runtime");
@@ -95,7 +97,7 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "signalr-name", Settings.ResourceBaseName }
+                    { "signalr", Settings.ResourceBaseName }
                 });
 
             var keys = result.AssertProperty("keys");
@@ -117,7 +119,7 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "signalr-name", Settings.ResourceBaseName },
+                    { "signalr", Settings.ResourceBaseName },
                     { "tenant", Settings.TenantId }
                 });
 
@@ -138,7 +140,7 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "signalr-name", Settings.ResourceBaseName }
+                    { "signalr", Settings.ResourceBaseName }
                 });
 
             var networkRules = result.AssertProperty("networkRules");
@@ -165,7 +167,7 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
                 {
                     { "subscription", Settings.SubscriptionName },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "signalr-name", Settings.ResourceBaseName }
+                    { "signalr", Settings.ResourceBaseName }
                 });
 
             var networkRules = result.AssertProperty("networkRules");
@@ -173,15 +175,15 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
         }
 
         [Fact]
-        public async Task Should_show_signalr_identity_configuration()
+        public async Task Should_list_signalr_identity_configuration()
         {
             var result = await CallToolAsync(
-                "azmcp_signalr_identity_show",
+                "azmcp_signalr_identity_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "signalr-name", Settings.ResourceBaseName }
+                    { "signalr", Settings.ResourceBaseName }
                 });
 
             var identity = result.AssertProperty("identity");
@@ -191,35 +193,24 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
             identity.AssertProperty("type");
 
             // Optional properties that may exist based on identity configuration
-            if (identity.TryGetProperty("principalId", out var principalId))
+            if (identity.TryGetProperty("managedIdentityInfo", out var principalId))
             {
-                Assert.Equal(JsonValueKind.String, principalId.ValueKind);
-            }
-
-            if (identity.TryGetProperty("tenantId", out var tenantId))
-            {
-                Assert.Equal(JsonValueKind.String, tenantId.ValueKind);
-            }
-
-            if (identity.TryGetProperty("userAssignedIdentities", out var userAssignedIdentities))
-            {
-                // This should be null when system-assigned identity is used
-                Assert.Equal(JsonValueKind.Null, userAssignedIdentities.ValueKind);
+                Assert.Equal(JsonValueKind.Object, principalId.ValueKind);
             }
         }
 
         [Fact]
-        public async Task Should_show_signalr_identity_with_tenant_name()
+        public async Task Should_list_signalr_identity_with_tenant_name()
         {
             Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
             var result = await CallToolAsync(
-                "azmcp_signalr_identity_show",
+                "azmcp_signalr_identity_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionName },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "signalr-name", Settings.ResourceBaseName },
+                    { "signalr", Settings.ResourceBaseName },
                     { "tenant", Settings.TenantName }
                 });
 
@@ -237,7 +228,7 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "signalr-name", "non-existent-signalr-service" }
+                    { "signalr", "non-existent-signalr-service" }
                 });
 
             // Should return runtime error response with error details
@@ -256,7 +247,7 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
                 new()
                 {
                     { "subscription", Settings.SubscriptionId }
-                    // Missing resource-group and signalr-name
+                    // Missing resource-group and signalr
                 });
 
             // Should return validation error (no results)
@@ -271,7 +262,7 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
                 new()
                 {
                     { "subscription", Settings.SubscriptionId }, { "resource-group", Settings.ResourceGroupName }
-                    // Missing signalr-name
+                    // Missing signalr
                 });
 
             // Should return validation error (no results)

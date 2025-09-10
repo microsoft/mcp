@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Core;
 using Azure.Core.Pipeline;
+using Azure.Mcp.Core.Models.Identity;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -12,7 +13,6 @@ using Azure.Mcp.Tools.SignalR.Commands;
 using Azure.Mcp.Tools.SignalR.Models;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
-using SignalRIdentity = Azure.Mcp.Tools.SignalR.Models.Identity;
 
 namespace Azure.Mcp.Tools.SignalR.Services;
 
@@ -46,16 +46,9 @@ public class SignalRService(
         {
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy)
                                        ?? throw new Exception($"Subscription '{subscription}' not found");
-            var clientOptions = AddDefaultPolicies(new ArmClientOptions());
 
-            if (retryPolicy != null)
-            {
-                clientOptions.Retry.MaxRetries = retryPolicy.MaxRetries;
-                clientOptions.Retry.Mode = retryPolicy.Mode;
-                clientOptions.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
-                clientOptions.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
-                clientOptions.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
-            }
+            var clientOptions = AddDefaultPolicies(new ArmClientOptions());
+            clientOptions = ConfigureRetryPolicy(clientOptions, retryPolicy);
 
             var pipeline = HttpPipelineBuilder.Build(clientOptions);
             var token = await GetAccessTokenAsync(tenant);
@@ -138,7 +131,7 @@ public class SignalRService(
         catch (Exception ex)
         {
             _logger?.LogError(ex,
-                "Failed to get SignalR service {SignalRName} in resource group {ResourceGroup} for subscription {Subscription}",
+                "Failed to get SignalR service {SignalR} in resource group {ResourceGroup} for subscription {Subscription}",
                 signalRName, resourceGroup, subscription);
             throw new Exception($"Failed to get SignalR service '{signalRName}': {ex.Message}", ex);
         }
@@ -179,6 +172,7 @@ public class SignalRService(
             }
 
             var clientOptions = AddDefaultPolicies(new ArmClientOptions());
+            clientOptions = ConfigureRetryPolicy(clientOptions, retryPolicy);
 
             if (retryPolicy != null)
             {
@@ -211,13 +205,13 @@ public class SignalRService(
         catch (Exception ex)
         {
             _logger?.LogError(ex,
-                "Failed to list keys for SignalR service {SignalRName} in resource group {ResourceGroup} for subscription {Subscription}",
+                "Failed to list keys for SignalR service {SignalR} in resource group {ResourceGroup} for subscription {Subscription}",
                 signalRName, resourceGroup, subscription);
             throw new Exception($"Failed to list keys for SignalR service '{signalRName}': {ex.Message}", ex);
         }
     }
 
-    public async Task<SignalRIdentity?> GetSignalRIdentityAsync(
+    public async Task<Models.Identity?> GetSignalRIdentityAsync(
         string subscription,
         string resourceGroup,
         string signalRName,
@@ -242,7 +236,7 @@ public class SignalRService(
         catch (Exception ex)
         {
             _logger?.LogError(ex,
-                "Failed to get identity for SignalR service {SignalRName} in resource group {ResourceGroup} for subscription {Subscription}",
+                "Failed to get identity for SignalR service {SignalR} in resource group {ResourceGroup} for subscription {Subscription}",
                 signalRName, resourceGroup, subscription);
             throw new Exception($"Failed to get SignalR service identity: {ex.Message}", ex);
         }
@@ -273,7 +267,7 @@ public class SignalRService(
         catch (Exception ex)
         {
             _logger?.LogError(ex,
-                "Failed to get network rules for SignalR service {SignalRName} in resource group {ResourceGroup} for subscription {Subscription}",
+                "Failed to get network rules for SignalR service {SignalR} in resource group {ResourceGroup} for subscription {Subscription}",
                 signalRName, resourceGroup, subscription);
             throw new Exception($"Failed to get SignalR service network rules: {ex.Message}", ex);
         }
@@ -318,9 +312,9 @@ public class SignalRService(
         };
     }
 
-    private static SignalRIdentity ConvertToIdentityModel(JsonElement resource)
+    private static Models.Identity ConvertToIdentityModel(JsonElement resource)
     {
-        var identity = new SignalRIdentity();
+        var identity = new Models.Identity { ManagedIdentityInfo = new ManagedIdentityInfo() };
 
         if (resource.TryGetProperty("identity", out var identityElement))
         {
@@ -331,22 +325,25 @@ public class SignalRService(
 
             if (identityElement.TryGetProperty("principalId", out var principalId))
             {
-                identity.PrincipalId = principalId.GetString();
-            }
-
-            if (identityElement.TryGetProperty("tenantId", out var tenantId))
-            {
-                identity.TenantId = tenantId.GetString();
+                identity.ManagedIdentityInfo.SystemAssignedIdentity = new SystemAssignedIdentityInfo
+                {
+                    Enabled = true,
+                    PrincipalId = principalId.GetString()
+                };
+                if (identityElement.TryGetProperty("tenantId", out var tenantId))
+                {
+                    identity.ManagedIdentityInfo.SystemAssignedIdentity.TenantId = tenantId.GetString();
+                }
             }
 
             if (identityElement.TryGetProperty("userAssignedIdentities", out var userAssignedIdentities) &&
                 userAssignedIdentities.ValueKind == JsonValueKind.Object)
             {
-                identity.UserAssignedIdentities = new Dictionary<string, UserAssignedIdentity>();
+                var userAssignedIdentityList = new List<UserAssignedIdentityInfo>();
 
                 foreach (var property in userAssignedIdentities.EnumerateObject())
                 {
-                    var userIdentity = new UserAssignedIdentity();
+                    var userIdentity = new UserAssignedIdentityInfo();
 
                     if (property.Value.TryGetProperty("principalId", out var userPrincipalId))
                     {
@@ -357,9 +354,10 @@ public class SignalRService(
                     {
                         userIdentity.ClientId = clientId.GetString();
                     }
-
-                    identity.UserAssignedIdentities[property.Name] = userIdentity;
+                    userAssignedIdentityList.Add(userIdentity);
                 }
+
+                identity.ManagedIdentityInfo.UserAssignedIdentities = userAssignedIdentityList.ToArray();
             }
         }
 

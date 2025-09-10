@@ -8,13 +8,15 @@ namespace Azure.Mcp.Tools.SignalR.Options;
 /// </summary>
 public static class SignalROptionDefinitions
 {
+    public const string SignalRName = "signalr";
+
     /// <summary>
     /// SignalR service name option.
     /// </summary>
-    public static readonly Option<string> SignalRName = new(
-        aliases: ["--signalr-name", "-n"],
-        description: "The name of the SignalR service")
+    public static readonly Option<string> SignalR = new(
+        $"--{SignalRName}")
     {
-        IsRequired = true
+        Description = "The name of the SignalR runtime",
+        Required = true
     };
 }

@@ -18,7 +18,7 @@ public sealed class NetworkRuleListCommand(ILogger<NetworkRuleListCommand> logge
     private const string CommandTitle = "List SignalR Network Rules";
     private readonly ILogger<NetworkRuleListCommand> _logger = logger;
 
-    private readonly Option<string> _signalRNameOption = SignalROptionDefinitions.SignalRName;
+    private readonly Option<string> _signalRNameOption = SignalROptionDefinitions.SignalR;
 
     public override string Name => "list";
 
@@ -36,34 +36,33 @@ public sealed class NetworkRuleListCommand(ILogger<NetworkRuleListCommand> logge
     {
         base.RegisterOptions(command);
         RequireResourceGroup();
-        command.AddOption(_signalRNameOption);
+        command.Options.Add(_signalRNameOption);
     }
 
     protected override NetworkRuleListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SignalRName = parseResult.GetValueForOption(_signalRNameOption);
+        options.SignalR = parseResult.GetValue(_signalRNameOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var service = context.GetService<ISignalRService>();
 
             var networkRules = await service.GetNetworkRulesAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
-                options.SignalRName!,
+                options.SignalR!,
                 options.Tenant,
                 options.AuthMethod,
                 options.RetryPolicy);
@@ -77,8 +76,8 @@ public sealed class NetworkRuleListCommand(ILogger<NetworkRuleListCommand> logge
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing network rules for SignalR service. SignalR: {SignalRName}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
-                options.SignalRName, options.ResourceGroup, options);
+                "Error listing network rules for SignalR service. SignalR: {SignalR}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
+                options.SignalR, options.ResourceGroup, options);
             HandleException(context, ex);
         }
 
