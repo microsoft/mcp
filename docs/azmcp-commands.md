@@ -494,6 +494,14 @@ azmcp deploy plan get --workspace-folder <workspace-folder> \
                       [--azd-iac-options <azd-iac-options>]
 ```
 
+### Azure Event Grid Operations
+
+```bash
+# List all Event Grid topics in a subscription or resource group
+azmcp eventgrid topic list --subscription <subscription> \
+                           [--resource-group <resource-group>]
+```
+
 ### Azure Function App Operations
 
 ```bash
@@ -876,14 +884,6 @@ azmcp resourcehealth availability-status get --resourceId <resource-id>
 # List availability statuses for all resources in a subscription
 azmcp resourcehealth availability-status list --subscription <subscription> \
                                               [--resource-group <resource-group>]
-```
-
-### Azure Event Grid Operations
-
-```bash
-# List all Event Grid topics in a subscription or resource group
-azmcp eventgrid topic list --subscription <subscription> \
-                           [--resource-group <resource-group>]
 ```
 
 ### Azure Service Bus Operations

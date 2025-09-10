@@ -46,10 +46,10 @@ try {
 	$wrapperJsonFiles = Get-ChildItem -Path $ArtifactsPath -Filter "wrapper.json" -Recurse
 	foreach($wrapperJsonFile in $wrapperJsonFiles) {
 		$serverDirectory = $wrapperJsonFile.Directory
-		$serverName = $serverDirectory.Name
-		$serverProjectProperties = & "$projectPropertiesScript" -ProjectName "$($serverName -replace '-native', '').csproj"
-		$platformOutputPath = "$OutputPath/nuget/$serverName/platform"
-		$wrapperOutputPath = "$OutputPath/nuget/$serverName/wrapper"
+		$serverName = $serverDirectory.Name -replace '-native', ''
+		$serverProjectProperties = & "$projectPropertiesScript" -ProjectName "$serverName.csproj"
+		$platformOutputPath = "$OutputPath/nuget/$($serverDirectory.Name)/platform"
+		$wrapperOutputPath = "$OutputPath/nuget/$($serverDirectory.Name)/wrapper"
 
 		New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
 		New-Item -ItemType Directory -Force -Path $wrapperOutputPath | Out-Null
@@ -75,6 +75,7 @@ try {
             -replace '\$\(PackageDescription\)', $serverProjectProperties.Description `
             -replace '\$\(PackageId\)', $serverProjectProperties.PackageId `
             -replace '\$\(PackageVersion\)', $packageVersion `
+            -replace '\$\(ServerName\)', $serverProjectProperties.CliName `
             -replace '\$\(RepositoryUrl\)', $RepoUrl |
             Set-Content -Path "$tempNugetWrapperDir/.mcp/server.json"
         
@@ -84,6 +85,7 @@ try {
             -replace "__Authors__", $wrapperPackageJson.author `
             -replace "__Description__", $wrapperPackageJson.description `
             -replace "__Tags__", $serverProjectProperties.PackageTags `
+            -replace "__ProjectUrl__", "$RepoUrl/tree/main/servers/$serverName" `
             -replace "__RepositoryUrl__", $RepoUrl `
             -replace "__RepositoryBranch__", $Branch `
             -replace "__CommitSHA__", $CommitSha `
@@ -112,6 +114,7 @@ try {
 				-replace "__Authors__", $wrapperPackageJson.author `
 				-replace "__Description__", ($serverProjectProperties.PackageDescription -replace '\$\(RuntimeIdentifier\)', $platformOSArch) `
 				-replace "__RepositoryUrl__", $RepoUrl `
+				-replace "__ProjectUrl__", "$RepoUrl/tree/main/servers/$serverName" `
 				-replace "__RepositoryBranch__", $Branch `
 				-replace "__CommitSHA__", $CommitSha `
 				-replace "__TargetFramework__", $sharedProjectProperties.TargetFramework |
