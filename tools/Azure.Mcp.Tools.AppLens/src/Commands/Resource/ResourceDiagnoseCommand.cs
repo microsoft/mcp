@@ -89,8 +89,6 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
 
             var commandResult = new ResourceDiagnoseCommandResult(result);
             context.Response.Results = ResponseResult.Create(commandResult, AppLensJsonContext.Default.ResourceDiagnoseCommandResult);
-            context.Response.Status = 200;
-            context.Response.Message = "Successfully diagnosed resource using AppLens.";
         }
         catch (Exception ex)
         {
