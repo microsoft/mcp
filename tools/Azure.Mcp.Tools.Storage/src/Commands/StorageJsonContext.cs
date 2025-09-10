@@ -24,6 +24,7 @@ namespace Azure.Mcp.Tools.Storage.Commands;
 [JsonSerializable(typeof(BlobUploadResult))]
 [JsonSerializable(typeof(ContainerCreateCommand.ContainerCreateCommandResult))]
 [JsonSerializable(typeof(ContainerGetCommand.ContainerGetCommandResult))]
+[JsonSerializable(typeof(ContainerInfo))]
 [JsonSerializable(typeof(DataLakePathInfo))]
 [JsonSerializable(typeof(DirectoryCreateCommand.DirectoryCreateCommandResult))]
 [JsonSerializable(typeof(FileListCommand.FileListCommandResult))]

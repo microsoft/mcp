@@ -217,10 +217,10 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             var contentLength = blobInfo.GetProperty("contentLength");
             Assert.True(contentLength.GetInt64() > 0);
 
-            var contentType = blobs.GetProperty("contentType");
+            var contentType = blobInfo.GetProperty("contentType");
             Assert.NotNull(contentType.GetString());
 
-            var lastModified = blobs.GetProperty("lastModified");
+            var lastModified = blobInfo.GetProperty("lastModified");
             Assert.NotEqual(default, lastModified.GetDateTimeOffset());
         }
 
