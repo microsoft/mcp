@@ -1,12 +1,32 @@
 
 # Release History
 
+## 0.5.13 - 2025-09-09
+
+### Added
+
+- Added support for listing all Event Grid topics in a subscription via the command `azmcp_eventgrid_topic_list`. [[#43](https://github.com/microsoft/mcp/pull/43)]
+- Added support for retrieving knowledge index schema information in Azure AI Foundry projects via the command `azmcp_foundry_knowledge_index_schema`. [[#41](https://github.com/microsoft/mcp/pull/41)]
+
+### Changed
+
+- **Breaking:** Updated/removed options for the following commands: [[#108](https://github.com/microsoft/mcp/pull/108)]
+  - `azmcp_storage_account_create`: Removed the ability to configure `enable-https-traffic-only` (always `true` now), `allow-blob-public-access` (always `false` now), and `kind` (always `StorageV2` now).
+  - `azmcp_storage_blob_container_create`: Removed the ability to configure `blob-container-public-access` (always `false` now).
+  - `azmcp_storage_blob_upload`: Removed the ability to configure `overwrite` (always `false` now).
+- Added telemetry to log parameter values for the `azmcp_bestpractices_get` tool. [[#375](https://github.com/microsoft/mcp/pull/375)]
+
+### Fixed
+
+- Fixed telemetry bug where "ToolArea" was incorrectly populated with "ToolName". [[#346](https://github.com/microsoft/mcp/pull/346)]
+
 ## 0.5.12 - 2025-09-04
 
 ### Added
-- Added `azmcp sql server firewall-rule create` and `azmcp sql server firewall-rule delete` commands. [[#121](https://github.com/microsoft/mcp/pull/121)]
-- Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
-- Added instructions about consumption plan for azure functions deployment best practices [[#218](https://github.com/microsoft/mcp/pull/218)]
+
+- Added `azmcp_sql_server_firewall-rule_create` and `azmcp_sql_server_firewall-rule_delete` commands. [[#121](https://github.com/microsoft/mcp/pull/121)]
+- Added a verb to the namespace name for bestpractices. [[#109](https://github.com/microsoft/mcp/pull/109)]
+- Added instructions about consumption plan for azure functions deployment best practices. [[#218](https://github.com/microsoft/mcp/pull/218)]
 
 ### Fixed
 
