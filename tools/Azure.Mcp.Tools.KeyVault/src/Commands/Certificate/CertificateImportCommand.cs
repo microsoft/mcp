@@ -23,7 +23,15 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = true,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = true,
+        Secret = false
+    };
 
     public override string Description =>
         """

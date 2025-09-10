@@ -30,8 +30,12 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = true,
-        ReadOnly = false
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = true,
+        Secret = false
     };
 
     protected override void RegisterOptions(Command command)

@@ -27,7 +27,15 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     private readonly ILogger<EntityGetHealthCommand> _logger = logger;
 

@@ -31,7 +31,15 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
