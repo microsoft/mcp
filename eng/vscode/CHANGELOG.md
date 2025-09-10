@@ -1,6 +1,14 @@
 
 # Release History
 
+## 0.6.0 - Unreleased
+
+### Added
+
+### Changed
+- Made trimmed binaries the default for better performance
+- Added opt-out mechanism via `azureMcp.useNonTrimmedBinaries: true` to use non-trimmed binaries.
+
 ## 0.5.13 - 2025-09-10
 
 ### Added
