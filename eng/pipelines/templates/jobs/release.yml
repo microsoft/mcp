@@ -165,7 +165,7 @@ jobs:
             displayName: Publish platform-specific Nugets to Prod Feed
             inputs:
               packageParentPath: '$(Pipeline.Workspace)'
-              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform/*.nupkg;!$(Pipeline.Workspace)/drop/nuget/${{ parameters.ServerName }}-native/platform/*.symbols.nupkg'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform/*.symbols.nupkg'
               nuGetFeedType: external
               publishFeedCredentials: Nuget.org
 
@@ -207,7 +207,7 @@ jobs:
                 -FeedUrl ${{ parameters.NupkgDevFeedUrl }}
 
           - task: 1ES.PublishNuget@1
-            displayName: Publish wrapper Nuget
+            displayName: Publish wrapper Nuget to Dev Feed
             inputs:
               packageParentPath: '$(Pipeline.Workspace)'
               packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/wrapper/*.symbols.nupkg'
