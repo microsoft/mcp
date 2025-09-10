@@ -24,8 +24,8 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
 
     public override string Description =>
         """
-        List Application Insights components (as recommendation targets) in a subscription. Optionally filter by resource group when --resource-group is provided.
-        Returns component name, id, location, appId and instrumentation key to support telemetry optimization workflows.
+        List Application Insights Code Optimization Recommendations in a subscription. Optionally filter by resource group when --resource-group is provided.
+        Returns the code optimization recommendations based on the profiler data.
         """;
 
     public override string Title => CommandTitle;
