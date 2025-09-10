@@ -29,10 +29,10 @@
 # Services
 ##################
 # PRLabel: %tools-AKS
-/tools/Azure.Mcp.Tools.Aks/            @jongio @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Aks/            @feiskyer @gossion @microsoft/azure-mcp
 
 # ServiceLabel: %tools-AKS
-# ServiceOwners:                       @jongio
+# ServiceOwners:                       @feiskyer @gossion
 
 
 # PRLabel: %tools-AppConfig
