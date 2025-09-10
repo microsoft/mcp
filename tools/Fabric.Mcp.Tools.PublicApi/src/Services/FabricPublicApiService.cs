@@ -26,7 +26,7 @@ public class FabricPublicApiService(
 
     #region IFabricPublicApiService
 
-    public async Task<FabricWorkloadPublicApi> GetFabricWorkloadPublicApis(string workload)
+    public async Task<FabricWorkloadPublicApi> GetWorkloadPublicApis(string workload)
     {
         var workloadApiSpecPath = string.Format(FormattedSpecPath, workload);
 
@@ -37,7 +37,7 @@ public class FabricPublicApiService(
         return new(workloadSpec ?? string.Empty, await GetWorkloadSpecDefinitionsAsync(workload));
     }
 
-    public async Task<IEnumerable<string>> ListFabricWorkloadsAsync()
+    public async Task<IEnumerable<string>> ListWorkloadsAsync()
     {
         var contentDirPath = BaseResourcePath;
 
@@ -46,7 +46,7 @@ public class FabricPublicApiService(
         return await _resourceProviderService.ListResourcesInPath(contentDirPath, ResourceType.Directory);
     }
 
-    public async Task<IDictionary<string, string>> GetExamplesAsync(string workloadType)
+    public async Task<IDictionary<string, string>> GetWorkloadExamplesAsync(string workloadType)
     {
         // Construct the full path: workloadType/examples
         var workloadExamplesDirPath = BaseResourcePath + workloadType + "/" + APISpecExamplesDirName;
@@ -58,7 +58,7 @@ public class FabricPublicApiService(
         return await GetExamplesFromDirectoryAsync(workloadExamplesDirPath);
     }
 
-    public string GetFabricWorkloadItemDefinition(string workloadType)
+    public string GetWorkloadItemDefinition(string workloadType)
     {
         var workloadItemDefinitionPath = string.Format(FormattedItemDefinitionPath, workloadType);
 

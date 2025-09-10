@@ -13,7 +13,7 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
     private const string CommandTitle = "Get Platform API Specification";
     private readonly ILogger<GetPlatformApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public override string Name => "get-platform";
+    public override string Name => "platform-apis-get";
 
     public override string Description =>
         """
@@ -39,7 +39,7 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
         try
         {
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var apis = await fabricService.GetFabricWorkloadPublicApis("platform");
+            var apis = await fabricService.GetWorkloadPublicApis("platform");
 
             context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricWorkloadPublicApi);
         }

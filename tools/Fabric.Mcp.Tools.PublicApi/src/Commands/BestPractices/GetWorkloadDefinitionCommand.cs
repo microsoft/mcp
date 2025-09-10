@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Fabric.Mcp.Tools.PublicApi.Options;
 using Fabric.Mcp.Tools.PublicApi.Options.PublicApis;
 using Fabric.Mcp.Tools.PublicApi.Services;
@@ -16,7 +17,7 @@ public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCo
     private readonly ILogger<GetWorkloadDefinitionCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly Option<string> _workloadTypeOption = FabricOptionDefinitions.WorkloadType;
 
-    public override string Name => "item-definition";
+    public override string Name => "item-definition-get";
 
     public override string Description =>
         """
@@ -36,7 +37,7 @@ public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCo
     protected override WorkloadCommandOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkloadType = parseResult.GetValue(_workloadTypeOption);
+        options.WorkloadType = parseResult.GetValueOrDefault(_workloadTypeOption);
         return options;
     }
 
@@ -51,15 +52,8 @@ public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCo
 
         try
         {
-            if (string.IsNullOrEmpty(options.WorkloadType))
-            {
-                context.Response.Status = 400;
-                context.Response.Message = "Workload type is required";
-                return Task.FromResult(context.Response);
-            }
-
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var workloadItemDefinition = fabricService.GetFabricWorkloadItemDefinition(options.WorkloadType);
+            var workloadItemDefinition = fabricService.GetWorkloadItemDefinition(options.WorkloadType!);
 
             context.Response.Results = ResponseResult.Create(workloadItemDefinition, FabricJsonContext.Default.String);
         }

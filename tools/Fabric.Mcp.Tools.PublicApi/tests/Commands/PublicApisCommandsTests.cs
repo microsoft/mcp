@@ -28,7 +28,7 @@ public class PublicApisCommandsTests
         var command = new DiscoverPublicWorkloadsCommand(logger);
 
         // Assert
-        Assert.Equal("list", command.Name);
+        Assert.Equal("workloads-list", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("List Available Fabric Workloads", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -47,7 +47,7 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("list", systemCommand.Name);
+        Assert.Equal("workloads-list", systemCommand.Name);
     }
 
     [Fact]
@@ -59,7 +59,7 @@ public class PublicApisCommandsTests
         var fabricService = Substitute.For<IFabricPublicApiService>();
         var expectedWorkloads = new[] { "notebook", "report", "platform" };
 
-        fabricService.ListFabricWorkloadsAsync().Returns(expectedWorkloads);
+        fabricService.ListWorkloadsAsync().Returns(expectedWorkloads);
 
         var services = new ServiceCollection();
         services.AddSingleton(fabricService);
@@ -74,7 +74,7 @@ public class PublicApisCommandsTests
         // Assert
         Assert.Equal(200, result.Status);
         Assert.NotNull(result.Results);
-        await fabricService.Received(1).ListFabricWorkloadsAsync();
+        await fabricService.Received(1).ListWorkloadsAsync();
     }
 
     [Fact]
@@ -85,7 +85,7 @@ public class PublicApisCommandsTests
         var command = new DiscoverPublicWorkloadsCommand(logger);
         var fabricService = Substitute.For<IFabricPublicApiService>();
 
-        fabricService.ListFabricWorkloadsAsync().ThrowsAsync(new InvalidOperationException("Service error"));
+        fabricService.ListWorkloadsAsync().ThrowsAsync(new InvalidOperationException("Service error"));
 
         var services = new ServiceCollection();
         services.AddSingleton(fabricService);
@@ -112,7 +112,7 @@ public class PublicApisCommandsTests
         var command = new GetPlatformApisCommand(logger);
 
         // Assert
-        Assert.Equal("get-platform", command.Name);
+        Assert.Equal("platform-apis-get", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Get Platform API Specification", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -131,7 +131,7 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get-platform", systemCommand.Name);
+        Assert.Equal("platform-apis-get", systemCommand.Name);
     }
 
     [Fact]
@@ -143,7 +143,7 @@ public class PublicApisCommandsTests
         var fabricService = Substitute.For<IFabricPublicApiService>();
         var expectedApi = new FabricWorkloadPublicApi("api-spec", new Dictionary<string, string> { { "model1", "definition1" } });
 
-        fabricService.GetFabricWorkloadPublicApis("platform").Returns(expectedApi);
+        fabricService.GetWorkloadPublicApis("platform").Returns(expectedApi);
 
         var services = new ServiceCollection();
         services.AddSingleton(fabricService);
@@ -158,7 +158,7 @@ public class PublicApisCommandsTests
         // Assert
         Assert.Equal(200, result.Status);
         Assert.NotNull(result.Results);
-        await fabricService.Received(1).GetFabricWorkloadPublicApis("platform");
+        await fabricService.Received(1).GetWorkloadPublicApis("platform");
     }
 
     [Fact]
@@ -169,7 +169,7 @@ public class PublicApisCommandsTests
         var command = new GetPlatformApisCommand(logger);
         var fabricService = Substitute.For<IFabricPublicApiService>();
 
-        fabricService.GetFabricWorkloadPublicApis("platform").ThrowsAsync(new InvalidOperationException("Service error"));
+        fabricService.GetWorkloadPublicApis("platform").ThrowsAsync(new InvalidOperationException("Service error"));
 
         var services = new ServiceCollection();
         services.AddSingleton(fabricService);
@@ -196,7 +196,7 @@ public class PublicApisCommandsTests
         var command = new GetWorkloadApisCommand(logger);
 
         // Assert
-        Assert.Equal("get", command.Name);
+        Assert.Equal("workload-get", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Get Workload API Specification", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -215,7 +215,7 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get", systemCommand.Name);
+        Assert.Equal("workload-get", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 
@@ -228,7 +228,7 @@ public class PublicApisCommandsTests
         var fabricService = Substitute.For<IFabricPublicApiService>();
         var expectedApi = new FabricWorkloadPublicApi("api-spec", new Dictionary<string, string> { { "model1", "definition1" } });
 
-        fabricService.GetFabricWorkloadPublicApis("notebook").Returns(expectedApi);
+        fabricService.GetWorkloadPublicApis("notebook").Returns(expectedApi);
 
         var services = new ServiceCollection();
         services.AddSingleton(fabricService);
@@ -243,7 +243,7 @@ public class PublicApisCommandsTests
         // Assert
         Assert.Equal(200, result.Status);
         Assert.NotNull(result.Results);
-        await fabricService.Received(1).GetFabricWorkloadPublicApis("notebook");
+        await fabricService.Received(1).GetWorkloadPublicApis("notebook");
     }
 
     [Fact]
@@ -267,7 +267,7 @@ public class PublicApisCommandsTests
         // Assert
         Assert.Equal(400, result.Status);
         Assert.Equal("Missing Required options: --workload-type", result.Message);
-        await fabricService.DidNotReceive().GetFabricWorkloadPublicApis(Arg.Any<string>());
+        await fabricService.DidNotReceive().GetWorkloadPublicApis(Arg.Any<string>());
     }
 
     [Fact]
@@ -292,7 +292,7 @@ public class PublicApisCommandsTests
         Assert.Equal(404, result.Status);
         Assert.Contains("No workload of type 'common' exists", result.Message);
         Assert.Contains("Did you mean 'platform'?", result.Message);
-        await fabricService.DidNotReceive().GetFabricWorkloadPublicApis(Arg.Any<string>());
+        await fabricService.DidNotReceive().GetWorkloadPublicApis(Arg.Any<string>());
     }
 
     [Fact]
@@ -304,7 +304,7 @@ public class PublicApisCommandsTests
         var fabricService = Substitute.For<IFabricPublicApiService>();
 
         var httpException = new HttpRequestException("Not found", null, HttpStatusCode.NotFound);
-        fabricService.GetFabricWorkloadPublicApis("invalid-workload").ThrowsAsync(httpException);
+        fabricService.GetWorkloadPublicApis("invalid-workload").ThrowsAsync(httpException);
 
         var services = new ServiceCollection();
         services.AddSingleton(fabricService);
@@ -331,7 +331,7 @@ public class PublicApisCommandsTests
         var fabricService = Substitute.For<IFabricPublicApiService>();
 
         var httpException = new HttpRequestException("Service unavailable", null, HttpStatusCode.ServiceUnavailable);
-        fabricService.GetFabricWorkloadPublicApis("notebook").ThrowsAsync(httpException);
+        fabricService.GetWorkloadPublicApis("notebook").ThrowsAsync(httpException);
 
         var services = new ServiceCollection();
         services.AddSingleton(fabricService);
@@ -356,7 +356,7 @@ public class PublicApisCommandsTests
         var command = new GetWorkloadApisCommand(logger);
         var fabricService = Substitute.For<IFabricPublicApiService>();
 
-        fabricService.GetFabricWorkloadPublicApis("notebook").ThrowsAsync(new InvalidOperationException("Service error"));
+        fabricService.GetWorkloadPublicApis("notebook").ThrowsAsync(new InvalidOperationException("Service error"));
 
         var services = new ServiceCollection();
         services.AddSingleton(fabricService);

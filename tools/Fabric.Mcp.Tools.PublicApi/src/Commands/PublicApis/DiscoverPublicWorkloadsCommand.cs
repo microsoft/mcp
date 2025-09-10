@@ -14,7 +14,7 @@ public sealed class DiscoverPublicWorkloadsCommand(ILogger<DiscoverPublicWorkloa
 
     private readonly ILogger<DiscoverPublicWorkloadsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public override string Name => "list";
+    public override string Name => "workloads-list";
 
     public override string Description =>
         """
@@ -37,7 +37,7 @@ public sealed class DiscoverPublicWorkloadsCommand(ILogger<DiscoverPublicWorkloa
             }
 
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var workloads = await fabricService.ListFabricWorkloadsAsync();
+            var workloads = await fabricService.ListWorkloadsAsync();
 
             context.Response.Results = ResponseResult.Create(new ItemListCommandResult(workloads), FabricJsonContext.Default.ItemListCommandResult);
         }

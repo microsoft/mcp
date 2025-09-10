@@ -15,7 +15,7 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
     private readonly ILogger<GetWorkloadApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly Option<string> _workloadTypeOption = FabricOptionDefinitions.WorkloadType;
 
-    public override string Name => "get";
+    public override string Name => "workload-get";
 
     public override string Description =>
         """
@@ -53,14 +53,7 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
 
         try
         {
-            if (string.IsNullOrEmpty(options.WorkloadType))
-            {
-                context.Response.Status = 400;
-                context.Response.Message = "Workload type is required";
-                return context.Response;
-            }
-
-            if (options.WorkloadType.Equals("common", StringComparison.OrdinalIgnoreCase))
+            if (options.WorkloadType!.Equals("common", StringComparison.OrdinalIgnoreCase))
             {
                 context.Response.Status = 404;
                 context.Response.Message = "No workload of type 'common' exists. Did you mean 'platform'?. A full list of supported workloads can be found using the discover-workloads command";
@@ -68,7 +61,7 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
             }
 
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var apis = await fabricService.GetFabricWorkloadPublicApis(options.WorkloadType);
+            var apis = await fabricService.GetWorkloadPublicApis(options.WorkloadType);
 
             context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricWorkloadPublicApi);
         }

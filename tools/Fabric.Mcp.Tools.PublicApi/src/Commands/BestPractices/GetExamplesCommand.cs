@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Fabric.Mcp.Tools.PublicApi.Options;
 using Fabric.Mcp.Tools.PublicApi.Options.PublicApis;
 using Fabric.Mcp.Tools.PublicApi.Services;
@@ -16,7 +17,7 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
     private readonly ILogger<GetExamplesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly Option<string> _workloadTypeOption = FabricOptionDefinitions.WorkloadType;
 
-    public override string Name => "get";
+    public override string Name => "examples-get";
 
     public override string Description =>
         """
@@ -39,7 +40,7 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
     protected override WorkloadCommandOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkloadType = parseResult.GetValue(_workloadTypeOption);
+        options.WorkloadType = parseResult.GetValueOrDefault(_workloadTypeOption);
         return options;
     }
 
@@ -54,15 +55,8 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
 
         try
         {
-            if (string.IsNullOrEmpty(options.WorkloadType))
-            {
-                context.Response.Status = 400;
-                context.Response.Message = "Workload type is required";
-                return context.Response;
-            }
-
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var availableExamples = await fabricService.GetExamplesAsync(options.WorkloadType);
+            var availableExamples = await fabricService.GetWorkloadExamplesAsync(options.WorkloadType!);
 
             context.Response.Results = ResponseResult.Create(new ExampleFileResult(availableExamples), FabricJsonContext.Default.ExampleFileResult);
         }

@@ -28,7 +28,7 @@ public class BestPracticesCommandsTests
         var command = new GetBestPracticesCommand(logger);
 
         // Assert
-        Assert.Equal("get", command.Name);
+        Assert.Equal("best-practice-get", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Get API Examples", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -47,7 +47,7 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get", systemCommand.Name);
+        Assert.Equal("best-practice-get", systemCommand.Name);
         // Options are registered dynamically, not statically in the Options collection
     }
 
@@ -166,7 +166,7 @@ public class BestPracticesCommandsTests
         var command = new GetExamplesCommand(logger);
 
         // Assert
-        Assert.Equal("get", command.Name);
+        Assert.Equal("examples-get", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Get API Examples", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -185,7 +185,7 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("get", systemCommand.Name);
+        Assert.Equal("examples-get", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 
@@ -202,7 +202,7 @@ public class BestPracticesCommandsTests
             { "example2.json", "content2" }
         };
 
-        fabricService.GetExamplesAsync("notebook").Returns(expectedExamples);
+        fabricService.GetWorkloadExamplesAsync("notebook").Returns(expectedExamples);
 
         var services = new ServiceCollection();
         services.AddSingleton(fabricService);
@@ -217,7 +217,7 @@ public class BestPracticesCommandsTests
         // Assert
         Assert.Equal(200, result.Status);
         Assert.NotNull(result.Results);
-        await fabricService.Received(1).GetExamplesAsync("notebook");
+        await fabricService.Received(1).GetWorkloadExamplesAsync("notebook");
     }
 
     [Fact]
@@ -241,7 +241,7 @@ public class BestPracticesCommandsTests
         // Assert
         Assert.Equal(400, result.Status);
         Assert.Equal("Missing Required options: --workload-type", result.Message);
-        await fabricService.DidNotReceive().GetExamplesAsync(Arg.Any<string>());
+        await fabricService.DidNotReceive().GetWorkloadExamplesAsync(Arg.Any<string>());
     }
 
     [Fact]
@@ -252,7 +252,7 @@ public class BestPracticesCommandsTests
         var command = new GetExamplesCommand(logger);
         var fabricService = Substitute.For<IFabricPublicApiService>();
 
-        fabricService.GetExamplesAsync("notebook").ThrowsAsync(new InvalidOperationException("Service error"));
+        fabricService.GetWorkloadExamplesAsync("notebook").ThrowsAsync(new InvalidOperationException("Service error"));
 
         var services = new ServiceCollection();
         services.AddSingleton(fabricService);
@@ -283,7 +283,7 @@ public class BestPracticesCommandsTests
         var command = new GetWorkloadDefinitionCommand(logger);
 
         // Assert
-        Assert.Equal("item-definition", command.Name);
+        Assert.Equal("item-definition-get", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Get Workload Item Definition", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -302,7 +302,7 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("item-definition", systemCommand.Name);
+        Assert.Equal("item-definition-get", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 
@@ -315,7 +315,7 @@ public class BestPracticesCommandsTests
         var fabricService = Substitute.For<IFabricPublicApiService>();
         var expectedDefinition = "{ \"schema\": \"definition\" }";
 
-        fabricService.GetFabricWorkloadItemDefinition("notebook").Returns(expectedDefinition);
+        fabricService.GetWorkloadItemDefinition("notebook").Returns(expectedDefinition);
 
         var services = new ServiceCollection();
         services.AddSingleton(fabricService);
@@ -330,7 +330,7 @@ public class BestPracticesCommandsTests
         // Assert
         Assert.Equal(200, result.Status);
         Assert.NotNull(result.Results);
-        fabricService.Received(1).GetFabricWorkloadItemDefinition("notebook");
+        fabricService.Received(1).GetWorkloadItemDefinition("notebook");
     }
 
     [Fact]
@@ -354,7 +354,7 @@ public class BestPracticesCommandsTests
         // Assert
         Assert.Equal(400, result.Status);
         Assert.Equal("Missing Required options: --workload-type", result.Message);
-        fabricService.DidNotReceive().GetFabricWorkloadItemDefinition(Arg.Any<string>());
+        fabricService.DidNotReceive().GetWorkloadItemDefinition(Arg.Any<string>());
     }
 
     [Fact]
@@ -365,7 +365,7 @@ public class BestPracticesCommandsTests
         var command = new GetWorkloadDefinitionCommand(logger);
         var fabricService = Substitute.For<IFabricPublicApiService>();
 
-        fabricService.GetFabricWorkloadItemDefinition("invalid-workload").Throws(new ArgumentException("Workload not found"));
+        fabricService.GetWorkloadItemDefinition("invalid-workload").Throws(new ArgumentException("Workload not found"));
 
         var services = new ServiceCollection();
         services.AddSingleton(fabricService);
@@ -390,7 +390,7 @@ public class BestPracticesCommandsTests
         var command = new GetWorkloadDefinitionCommand(logger);
         var fabricService = Substitute.For<IFabricPublicApiService>();
 
-        fabricService.GetFabricWorkloadItemDefinition("notebook").Throws(new InvalidOperationException("Service error"));
+        fabricService.GetWorkloadItemDefinition("notebook").Throws(new InvalidOperationException("Service error"));
 
         var services = new ServiceCollection();
         services.AddSingleton(fabricService);

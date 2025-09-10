@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Fabric.Mcp.Tools.PublicApi.Options;
 using Fabric.Mcp.Tools.PublicApi.Options.BestPractices;
 using Fabric.Mcp.Tools.PublicApi.Services;
@@ -16,7 +17,7 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
     private readonly ILogger<GetBestPracticesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly Option<string> _topicOption = FabricOptionDefinitions.Topic;
 
-    public override string Name => "get";
+    public override string Name => "best-practice-get";
 
     public override string Description =>
         """
@@ -39,7 +40,7 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
     protected override GetBestPracticesOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Topic = parseResult.GetValue(_topicOption);
+        options.Topic = parseResult.GetValueOrDefault(_topicOption);
         return options;
     }
 

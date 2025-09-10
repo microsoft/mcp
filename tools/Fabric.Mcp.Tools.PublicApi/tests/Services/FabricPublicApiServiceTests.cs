@@ -58,7 +58,7 @@ public class FabricPublicApiServiceTests
             .Returns(Task.FromResult(expectedDefinitions["definitions.json"]));
 
         // Act
-        var result = await _service.GetFabricWorkloadPublicApis(workload);
+        var result = await _service.GetWorkloadPublicApis(workload);
 
         // Assert
         Assert.NotNull(result);
@@ -84,7 +84,7 @@ public class FabricPublicApiServiceTests
         _resourceProvider.GetResource("definitions/model2.json").Returns(Task.FromResult("{ \"model2\": {} }"));
 
         // Act
-        var result = await _service.GetFabricWorkloadPublicApis(workload);
+        var result = await _service.GetWorkloadPublicApis(workload);
 
         // Assert
         Assert.NotNull(result);
@@ -106,7 +106,7 @@ public class FabricPublicApiServiceTests
             .Returns(Task.FromResult(Array.Empty<string>()));
 
         // Act
-        var result = await _service.GetFabricWorkloadPublicApis(workload);
+        var result = await _service.GetWorkloadPublicApis(workload);
 
         // Assert
         Assert.NotNull(result);
@@ -123,7 +123,7 @@ public class FabricPublicApiServiceTests
             .ThrowsAsync(new InvalidOperationException("Resource not found"));
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.GetFabricWorkloadPublicApis(workload));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.GetWorkloadPublicApis(workload));
     }
 
     #endregion
@@ -139,7 +139,7 @@ public class FabricPublicApiServiceTests
             .Returns(Task.FromResult(expectedWorkloads));
 
         // Act
-        var result = await _service.ListFabricWorkloadsAsync();
+        var result = await _service.ListWorkloadsAsync();
 
         // Assert
         Assert.Equal(expectedWorkloads, result);
@@ -154,7 +154,7 @@ public class FabricPublicApiServiceTests
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.ListFabricWorkloadsAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.ListWorkloadsAsync());
     }
 
     #endregion
@@ -178,7 +178,7 @@ public class FabricPublicApiServiceTests
             .Returns(Task.FromResult("{ \"example2\": \"content\" }"));
 
         // Act
-        var result = await _service.GetExamplesAsync(workloadType);
+        var result = await _service.GetWorkloadExamplesAsync(workloadType);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -209,7 +209,7 @@ public class FabricPublicApiServiceTests
             .Returns(Task.FromResult("{ \"sub1\": \"content\" }"));
 
         // Act
-        var result = await _service.GetExamplesAsync(workloadType);
+        var result = await _service.GetWorkloadExamplesAsync(workloadType);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -229,7 +229,7 @@ public class FabricPublicApiServiceTests
             .Returns(Task.FromResult(Array.Empty<string>()));
 
         // Act
-        var result = await _service.GetExamplesAsync(workloadType);
+        var result = await _service.GetWorkloadExamplesAsync(workloadType);
 
         // Assert
         Assert.Empty(result);
@@ -246,7 +246,7 @@ public class FabricPublicApiServiceTests
         var workloadType = "notebook";
 
         // Act
-        var result = _service.GetFabricWorkloadItemDefinition(workloadType);
+        var result = _service.GetWorkloadItemDefinition(workloadType);
 
         // Assert
         // Since this calls a static method, we can only test that it doesn't throw
