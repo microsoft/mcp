@@ -249,11 +249,6 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * Query Azure Monitor metrics for resources with time series data
 * List available metric definitions for resources
 
-### 🏥 Azure Service Health
-
-* Get the availability status for a specific resource
-* List availability statuses for all resources in a subscription or resource group
-
 ### ⚙️ Azure Native ISV Services
 
 * List Monitored Resources in a Datadog Monitor
@@ -277,6 +272,12 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 ### 🏗️ Azure Resource Groups
 
 * List resource groups
+
+### 🏥 Azure Resource Health
+
+* Get the availability status for a specific resource
+* List availability statuses for all resources in a subscription or resource group
+* List service health events in a subscription
 
 ### 🎭 Azure Role-Based Access Control (RBAC)
 
