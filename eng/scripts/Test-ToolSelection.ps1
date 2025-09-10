@@ -33,23 +33,23 @@
 
 .EXAMPLE
     # Standard CI run (graceful skip if no credentials)
-    .\Test-ToolSelection.ps1
+    ./Test-ToolSelection.ps1
     
 .EXAMPLE
     # Use custom tools file
-    .\Test-ToolSelection.ps1 -ToolsFile "my-tools.json"
+    ./Test-ToolSelection.ps1 -ToolsFile "my-tools.json"
     
 .EXAMPLE
     # Generate markdown output
-    .\Test-ToolSelection.ps1 -OutputMarkdown
+    ./Test-ToolSelection.ps1 -OutputMarkdown
     
 .EXAMPLE
     # Validation mode - test specific tool description
-    .\Test-ToolSelection.ps1 -ValidateMode -ToolDescription "Lists storage accounts" -TestPrompts @("show storage accounts", "list my storage")
+    ./Test-ToolSelection.ps1 -ValidateMode -ToolDescription "Lists storage accounts" -TestPrompts @("show storage accounts", "list my storage")
     
 .EXAMPLE
     # Full custom analysis
-    .\Test-ToolSelection.ps1 -ToolsFile "custom-tools.json" -PromptsFile "custom-prompts.md" -OutputMarkdown
+    ./Test-ToolSelection.ps1 -ToolsFile "custom-tools.json" -PromptsFile "custom-prompts.md" -OutputMarkdown
 #>
 
 param(
@@ -64,10 +64,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 3.0
-. "$PSScriptRoot\..\common\scripts\common.ps1"
+. "$PSScriptRoot/../common/scripts/common.ps1"
 
-$toolSelectionPath = "$RepoRoot\eng\tools\ToolDescriptionEvaluator"
-$defaultMarkdownPrompts = "$RepoRoot\docs\e2eTestPrompts.md"
+$toolSelectionPath = "$RepoRoot/eng/tools/ToolDescriptionEvaluator"
+$defaultMarkdownPrompts = "$RepoRoot/docs/e2eTestPrompts.md"
 
 if (-not (Test-Path $toolSelectionPath)) {
     Write-Host "⏭️  Tool Description Evaluator utility not found at $toolSelectionPath - skipping"
@@ -79,12 +79,12 @@ Push-Location $toolSelectionPath
 
 try {
     # Check if we have the required sources for dynamic loading
-    $hasSourceCode = Test-Path "$RepoRoot\servers\Azure.Mcp.Server\src"
+    $hasSourceCode = Test-Path "$RepoRoot/servers/Azure.Mcp.Server/src"
     $hasMarkdownPrompts = Test-Path $defaultMarkdownPrompts
     
     # Check if we have fallback test data files
-    $hasToolsData = Test-Path "$toolSelectionPath\tools.json"
-    $hasPromptsData = Test-Path "$toolSelectionPath\prompts.json"
+    $hasToolsData = Test-Path "$toolSelectionPath/tools.json"
+    $hasPromptsData = Test-Path "$toolSelectionPath/prompts.json"
     $hasApiKey = -not [string]::IsNullOrEmpty($env:TEXT_EMBEDDING_API_KEY)
     $hasEndpoint = -not [string]::IsNullOrEmpty($env:AOAI_ENDPOINT)
     

@@ -40,7 +40,7 @@ $ErrorActionPreference = 'Stop'
 # Resolve important paths
 $repoRoot = Resolve-Path "$PSScriptRoot/../../../" | Select-Object -ExpandProperty Path
 $toolDir  = Resolve-Path "$PSScriptRoot" | Select-Object -ExpandProperty Path
-$jsonFile = "$toolDir\tools.json"
+$jsonFile = "$toolDir/tools.json"
 
 # Build the whole Azure MCP Server project if needed
 if ($BuildAzureMcp)
@@ -59,8 +59,8 @@ if ($BuildAzureMcp)
 # Locate azmcp CLI artifact (platform & build-type agnostic) like Run-ToolDescriptionEvaluator.ps1
 $candidateNames = if ($IsWindows) { @('azmcp.exe','azmcp','azmcp.dll') } else { @('azmcp','azmcp.dll') }
 $searchRoots = @(
-    "$repoRoot\servers\Azure.Mcp.Server\src\bin\Debug",
-    "$repoRoot\servers\Azure.Mcp.Server\src\bin\Release"
+    "$repoRoot/servers/Azure.Mcp.Server/src/bin/Debug",
+    "$repoRoot/servers/Azure.Mcp.Server/src/bin/Release"
 ) | Where-Object { Test-Path $_ }
 
 $cliArtifact = $null

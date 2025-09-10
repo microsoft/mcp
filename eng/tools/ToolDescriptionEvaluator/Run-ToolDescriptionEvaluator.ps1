@@ -16,11 +16,11 @@
     Optionally build the root project in Debug mode to ensure tools can be loaded dynamically
 
 .EXAMPLE
-    .\Run-ToolDescriptionEvaluator.ps1
+    ./Run-ToolDescriptionEvaluator.ps1
     Builds and runs the Tool Description Evaluator application with default settings
 
 .EXAMPLE
-    .\Run-ToolDescriptionEvaluator.ps1 -BuildAzureMcp
+    ./Run-ToolDescriptionEvaluator.ps1 -BuildAzureMcp
     Builds the Azure MCP Server project in Debug mode, then builds and runs the Tool Description Evaluator application
     with default settings
 #>
@@ -56,8 +56,8 @@ try {
     $platformIsWindows = [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)
     $candidateNames = if ($platformIsWindows) { @('azmcp.exe','azmcp','azmcp.dll') } else { @('azmcp','azmcp.dll') }
     $searchRoots = @(
-        "$repoRoot\servers\Azure.Mcp.Server\src\bin\Debug",
-        "$repoRoot\servers\Azure.Mcp.Server\src\bin\Release"
+        "$repoRoot/servers/Azure.Mcp.Server/src/bin/Debug",
+        "$repoRoot/servers/Azure.Mcp.Server/src/bin/Release"
     ) | Where-Object { Test-Path $_ }
 
     $cliArtifact = $null
