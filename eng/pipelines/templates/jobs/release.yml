@@ -6,9 +6,6 @@ parameters:
   type: string
 - name: IncludeNative
   type: boolean
-- name: NupkgProdFeed
-  type: string
-  default: Nuget.org
 - name: NupkgDevFeed
   type: string
   default: 'public/azure-sdk-for-net'
@@ -156,6 +153,7 @@ jobs:
     runOnce:
       deploy:
         steps:
+          # Publish platform-specific packages first to ensure they are available before publishing wrapper package
           - task: 1ES.PublishNuget@1
             displayName: Publish platform-specific Nugets to Prod Feed
             inputs:
@@ -172,6 +170,7 @@ jobs:
               nuGetFeedType: external
               publishFeedCredentials: Nuget.org
 
+          # Publish platform-specific packages first to ensure they are available before publishing wrapper package
           - task: 1ES.PublishNuget@1
             displayName: Publish platform-specific Nugets to Dev Feed
             inputs:
