@@ -106,7 +106,6 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
 
             var response = await _httpClientService.DefaultClient.SendAsync(request);
 
-
             if (!response.IsSuccessStatusCode)
             {
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)

@@ -116,7 +116,6 @@ public enum MessageStatus
     Cancelled
 }
 
-
 /// <summary>
 /// Model from https://dev.azure.com/msazure/One/_git/AAPT-Antares-AppServiceDiagnostics?path=%2Fsrc%2FDiagnostics.SemanticService%2FModels%2FDataModels%2FChatContextModels.cs
 /// </summary>
