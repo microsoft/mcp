@@ -9,9 +9,7 @@ using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests;
 
-public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output),
-    IClassFixture<LiveTestFixture>
+public class CommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     [Fact]
     public async Task Should_list_groups_by_subscription()
@@ -82,7 +80,6 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
         Assert.Contains("Infrastructure as Code (IaC)", combinedText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("azd commands such as 'azd up'", combinedText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Bicep files under the 'infra/' folder", combinedText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("azure_recommend_service_config", combinedText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

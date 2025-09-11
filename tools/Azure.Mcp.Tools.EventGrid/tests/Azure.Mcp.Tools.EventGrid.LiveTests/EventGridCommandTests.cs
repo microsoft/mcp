@@ -11,8 +11,8 @@ namespace Azure.Mcp.Tools.EventGrid.LiveTests;
 
 [Trait("Area", "EventGrid")]
 [Trait("Category", "Live")]
-public class EventGridCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+public class EventGridCommandTests(ITestOutputHelper output)
+    : CommandTestsBase(output)
 {
     [Fact]
     public async Task Should_list_eventgrid_topics_by_subscription()

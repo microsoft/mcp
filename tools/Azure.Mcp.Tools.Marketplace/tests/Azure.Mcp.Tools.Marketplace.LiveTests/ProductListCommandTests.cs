@@ -14,21 +14,18 @@ using Xunit;
 namespace Azure.Mcp.Tools.Marketplace.LiveTests;
 
 [Trait("Area", "Marketplace")]
-public class ProductListCommandTests : CommandTestsBase,
-    IClassFixture<LiveTestFixture>
+public class ProductListCommandTests : CommandTestsBase
 {
     private const string ProductsKey = "products";
     private const string Language = "en";
     private readonly MarketplaceService _marketplaceService;
-    private readonly string _subscriptionId;
 
-    public ProductListCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : base(liveTestFixture, output)
+    public ProductListCommandTests(ITestOutputHelper output) : base(output)
     {
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new CacheService(memoryCache);
         var tenantService = new TenantService(cacheService);
         _marketplaceService = new MarketplaceService(tenantService);
-        _subscriptionId = Settings.SubscriptionId;
     }
 
     [Fact]
@@ -39,7 +36,7 @@ public class ProductListCommandTests : CommandTestsBase,
             "azmcp_marketplace_product_list",
             new()
             {
-                { "subscription", _subscriptionId }
+                { "subscription", Settings.SubscriptionId }
             });
 
         var products = result.AssertProperty(ProductsKey);
@@ -61,7 +58,7 @@ public class ProductListCommandTests : CommandTestsBase,
             "azmcp_marketplace_product_list",
             new()
             {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "language", Language }
             });
 
@@ -81,7 +78,7 @@ public class ProductListCommandTests : CommandTestsBase,
             "azmcp_marketplace_product_list",
             new()
             {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "language", "fr" }
             });
 
@@ -101,7 +98,7 @@ public class ProductListCommandTests : CommandTestsBase,
             "azmcp_marketplace_product_list",
             new()
             {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "language", Language },
                 { "search", "test" }
             });
@@ -123,7 +120,7 @@ public class ProductListCommandTests : CommandTestsBase,
             "azmcp_marketplace_product_list",
             new()
             {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "search", "test" }
             });
 
@@ -144,7 +141,7 @@ public class ProductListCommandTests : CommandTestsBase,
             "azmcp_marketplace_product_list",
             new()
             {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "language", Language },
                 { "search", "microsoft" }
             });
@@ -165,7 +162,7 @@ public class ProductListCommandTests : CommandTestsBase,
             "azmcp_marketplace_product_list",
             new()
             {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "filter", "publisherDisplayName eq 'Microsoft'" }
             });
 
@@ -185,7 +182,7 @@ public class ProductListCommandTests : CommandTestsBase,
             "azmcp_marketplace_product_list",
             new()
             {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "orderby", "displayName asc" }
             });
 
@@ -205,7 +202,7 @@ public class ProductListCommandTests : CommandTestsBase,
             "azmcp_marketplace_product_list",
             new()
             {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "select", "displayName,uniqueProductId,publisherDisplayName" }
             });
 
@@ -230,7 +227,7 @@ public class ProductListCommandTests : CommandTestsBase,
             "azmcp_marketplace_product_list",
             new()
             {
-                { "subscription", _subscriptionId },
+                { "subscription", Settings.SubscriptionId },
                 { "filter", "publisherDisplayName eq 'Microsoft'" },
                 { "orderby", "displayName desc" },
                 { "select", "displayName,uniqueProductId" }

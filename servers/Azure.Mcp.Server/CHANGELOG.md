@@ -2,31 +2,63 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.5.13 (Unreleased)
+## 0.5.14 (Unreleased)
 
 ### Features Added
 
-- Added support for Azure Event Grid operations: [[#43](https://github.com/microsoft/mcp/pull/43)]
-  - `azmcp_eventgrid_topic_list` - List all Event Grid topics in a subscription.
-- Added support for retrieving knowledge index schema information in Azure AI Foundry projects via the command `azmcp_foundry_knowledge_index_schema`. This command provides detailed schema configuration including field definitions, data types, and searchable attributes for specific knowledge indexes.
-
 ### Breaking Changes
 
-- Changed the following commands to change / remove available options
-  - Storage account create removed the ability to configure `enable-https-traffic-only` (always true now), `allow-blob-public-access` (always false now), and `kind` (always StorageV2 now).
-  - Storage blob container create removed the ability to configure `blob-container-public-access` (always false now).
-  - Storage blob upload removed the ability to configure `overwrite` (always false now).
+- Merged `azmcp_search_index_describe` and `azmcp_search_index_list` into `azmcp_search_index_get`, which can perform both operations based on whether
+  an index name is passed. [[#378](https://github.com/microsoft/mcp/pull/378)]
+- Changed descriptions of Storage commands. [[#376](https://github.com/microsoft/mcp/pull/376)]
+- Merged the following Storage tools [[#376](https://github.com/microsoft/mcp/pull/376)]
+  - `azmcp_storage_account_details` and `azmcp_storage_account_list` into `azmcp_storage_account_get`, it supports the behaviors of both tools based on whether `--account` is passed.
+  - `azmcp_storage_blob_details` and `azmcp_storage_blob_list` into `azmcp_storage_blob+get`, it supports the behaviors of both tools based on whether `--blob` is passed.
+  - `azmcp_storage_blob_container_details` and `azmcp_storage_blob_container_list` into `azmcp_storage_blob_container_get`, it supports the behaviors of both tools based on whether `--container` is passed.
 
 ### Bugs Fixed
 
 ### Other Changes
 
-- Updated `Azure.Identity` and `Azure.Identity.Broker` dependencies. [[#352](https://github.com/microsoft/mcp/pull/352)]
+## 0.5.13 (2025-09-10)
+
+### Features Added
+
+- Added support for listing all Event Grid topics in a subscription via the command `azmcp_eventgrid_topic_list`. [[#43](https://github.com/microsoft/mcp/pull/43)]
+- Added support for retrieving knowledge index schema information in Azure AI Foundry projects via the command `azmcp_foundry_knowledge_index_schema`. [[#41](https://github.com/microsoft/mcp/pull/41)]
+- Added support for listing service health events in a subscription via the command `azmcp_resourcehealth_service-health-events_list`. [[#367](https://github.com/microsoft/mcp/pull/367)]
+- Added nodepool list tool for AKS managed cluster: [[#360](https://github.com/microsoft/mcp/pull/360)]
+
+### Breaking Changes
+
+- Updated/removed options for the following commands: [[#108](https://github.com/microsoft/mcp/pull/108)]
+  - `azmcp_storage_account_create`: Removed the ability to configure `enable-https-traffic-only` (always `true` now), `allow-blob-public-access` (always `false` now), and `kind` (always `StorageV2` now).
+  - `azmcp_storage_blob_container_create`: Removed the ability to configure `blob-container-public-access` (always `false` now).
+  - `azmcp_storage_blob_upload`: Removed the ability to configure `overwrite` (always `false` now).
+
+### Bugs Fixed
+
+- Fixed telemetry bug where "ToolArea" was incorrectly populated in with "ToolName". [[#346](https://github.com/microsoft/mcp/pull/346)]
+
+### Other Changes
+
+- Aded telemetry to log parameter values for bestpractices tool. Note that only valid values will be logged. [[#375](https://github.com/microsoft/mcp/pull/375)]
+- Updated tool annotations. [[#377](https://github.com/microsoft/mcp/pull/377)]
+
+#### Dependency updates
+
+- Updated the following dependencies to improve .NET Ahead-of-Time (AOT) compilation support: 
+  - Azure.Identity: `1.14.0` → `1.15.0` [[#352](https://github.com/microsoft/mcp/pull/352)]
+  - Azure.Identity.Broker: `1.2.0` → `1.3.0` [[#352](https://github.com/microsoft/mcp/pull/352)]
+  - Azure.ResourceManager.StorageCache: `1.3.1` → `1.3.2` [[#363](https://github.com/microsoft/mcp/pull/363)]
+  - Microsoft.Azure.Cosmos.Aot: `0.1.1-preview.1` → `0.1.2-preview.1` [[#383](https://github.com/microsoft/mcp/pull/383)]
+- Updated Azure.Core dependency version from `1.47.1` to `1.48.0` [[#380](https://github.com/microsoft/mcp/pull/380/)]
 
 ## 0.5.12 (2025-09-04)
 
 ### Features Added
-- Added `azmcp sql server firewall-rule create` and `azmcp sql server firewall-rule delete` commands. [#121](https://github.com/microsoft/mcp/pull/121)
+
+- Added `azmcp_sql_server_firewall-rule_create` and `azmcp_sql_server_firewall-rule_delete` commands. [[#121](https://github.com/microsoft/mcp/pull/121)]
 
 ### Bugs Fixed
 
@@ -34,7 +66,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
+AOT- Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
 - Added instructions about consumption plan for azure functions deployment best practices [[#218](https://github.com/microsoft/mcp/pull/218)]
 
 ## 0.5.11 (2025-09-02)
@@ -56,7 +88,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 #### Dependency Updates
 
-- Updated the following dependencies to improve .NET Ahead-of-Time (AOT) compilation support: 
+- Updated the following dependencies to improve .NET Ahead-of-Time (AOT) compilation support:
   - Microsoft.Azure.Cosmos `3.51.0` → Microsoft.Azure.Cosmos.Aot `0.1.1-preview.1`. [[#37](https://github.com/microsoft/mcp/pull/37)]
 
 ## 0.5.8 (2025-08-21)
