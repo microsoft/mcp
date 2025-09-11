@@ -56,22 +56,29 @@ jobs:
 #     env:
 #       GH_TOKEN: $(azuresdk-github-pat)
 
-- job: Download artifacts
+- job: DownloadArtifacts
   displayName: "Download npm_$(PipelineArtifactName)_packed for downstream jobs"
   steps:
   - checkout: self
 
-  - task: DownloadPipelineArtifact@2
-    displayName: "Download npm_$(PipelineArtifactName)_packed (specific run)"
-    inputs:
-      buildType: specific
-      project: ${{ parameters.Project }}
-      pipeline: ${{ parameters.PipelineId }}
-      runVersion: specific
-      runId: ${{ parameters.RunId }}
+  # Conditional download: either a specific pipeline run (PipelineId & RunId provided) or the current run's artifact alias
+  - ${{ if and(ne(parameters.PipelineId, ''), ne(parameters.RunId, '')) }}:
+    - task: DownloadPipelineArtifact@2
+      displayName: "Download npm_$(PipelineArtifactName)_packed (specific run)"
+      inputs:
+        buildType: specific
+        project: ${{ parameters.Project }}
+        pipeline: ${{ parameters.PipelineId }}
+        runVersion: specific
+        runId: ${{ parameters.RunId }}
+        artifact: npm_$(PipelineArtifactName)_packed
+        targetPath: '$(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed'
+  - ${{ if or(eq(parameters.PipelineId, ''), eq(parameters.RunId, '')) }}:
+    - download: ${{ parameters.ArtifactSourceAlias }}
       artifact: npm_$(PipelineArtifactName)_packed
-      targetPath: '$(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed'
+      displayName: Download npm_$(PipelineArtifactName)_packed
 
+  # Republish so downstream jobs (deployment/publish) can resolve it as a pipelineArtifact input in this run.
   - publish: $(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed
     artifact: npm_$(PipelineArtifactName)_packed
     displayName: Publish npm_$(PipelineArtifactName)_packed for downstream jobs
@@ -80,6 +87,7 @@ jobs:
 
 - deployment: Publish
   displayName: "Publish to npmjs.com"
+  dependsOn: DownloadArtifacts
   # condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
   templateContext:
     type: releaseJob
