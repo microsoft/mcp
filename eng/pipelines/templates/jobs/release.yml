@@ -192,30 +192,6 @@ jobs:
               packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/wrapper/*.symbols.nupkg'
               publishVstsFeed: ${{ parameters.NupkgDevFeed }}
 
-- job: UploadSymbols
-  displayName: Upload Symbols to Symbols Server
-  condition: and(succeeded(), ne(variables['Skip.SymbolsUpload'], 'true'))
-  dependsOn: PublishNugetPackage
-  pool:
-    name: azsdk-pool
-    image: windows-2022
-    os: windows
-
-  variables:
-    build-tools-repo-path: $(Pipeline.Workspace)/s/azure-sdk-build-tools
-
-  steps:
-    - checkout: azure-sdk-build-tools
-      path: s/azure-sdk-build-tools
-    - download: current
-      displayName: Download nuget_$(PipelineArtifactName)_packed
-      artifact: nuget_$(PipelineArtifactName)_packed
-    - template: /pipelines/steps/publish-symbols.yml@azure-sdk-build-tools
-      parameters:
-        BuildToolsRepositoryPath: $(build-tools-repo-path)
-        PackagesPath: $(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native
-        StagingDirectory: $(Build.ArtifactStagingDirectory)/symbols
-
 # Deployment Jobs: Publish VSIX artifacts to Marketplace for each vsix target
 - ${{ each VsixTarget in parameters.VsixTargets }}:
   - deployment: PublishVSIX_${{ replace(VsixTarget, '-', '_') }}
