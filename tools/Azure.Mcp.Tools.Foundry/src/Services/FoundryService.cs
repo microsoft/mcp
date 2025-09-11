@@ -406,15 +406,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
 
             if (run.Value.Status == RunStatus.Failed)
             {
-                string errorMsg = $"Agent run failed: {run.Value.LastError}";
-                return new Dictionary<string, object>
-                {
-                    { "success", false },
-                    { "error", errorMsg },
-                    { "thread_id", threadId },
-                    { "run_id", runId },
-                    { "result", $"Error: {errorMsg}" }
-                };
+                throw new Exception($"Agent run failed: {run.Value.LastError}");
             }
 
             var (textResponse, citations) = buildResponseAndCitations(agentsClient, threadId);
@@ -547,11 +539,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
         {
             if (!AgentEvaluatorDictionary.ContainsKey(evaluatorName.ToLowerInvariant()))
             {
-                return new Dictionary<string, object>
-                {
-                    { "success", false },
-                    { "error", $"Unknown evaluator: {evaluatorName}" }
-                };
+                throw new Exception($"Unknown evaluator {evaluatorName}. Supported evaluators are: {string.Join(", ", AgentEvaluatorDictionary.Keys)}");
             }
 
             var loadedQuery = JsonSerializer.Deserialize(query, (JsonTypeInfo<List<ChatMessage>>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(List<ChatMessage>)));
