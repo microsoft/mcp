@@ -140,7 +140,7 @@ jobs:
             Registry: https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/
             Tag: latest
 
-- deployment: PublishPackage
+- deployment: PublishNugetPackage
   displayName: Publish package to Nuget Feeds
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
   templateContext:
@@ -195,7 +195,7 @@ jobs:
 - job: UploadSymbols
   displayName: Upload Symbols to Symbols Server
   condition: and(succeeded(), ne(variables['Skip.SymbolsUpload'], 'true'))
-  dependsOn: PublishPackage
+  dependsOn: PublishNugetPackage
   pool:
     name: $(WINDOWSPOOL)
     image: $(WINDOWSVMIMAGE)
