@@ -18,7 +18,7 @@ The Azure MCP Server implements the [MCP specification](https://modelcontextprot
 - Usage
     - [Quick Start](#quick-start)
     - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
-    - [Currently Supported Tools](#currently-supported-tools) 
+    - [Currently Supported Tools](#currently-supported-tools)
 - Support & Reference
     - [Data Collection](#data-collection)
     - [Troubleshooting](#troubleshooting)
