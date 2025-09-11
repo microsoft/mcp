@@ -14,9 +14,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
-### Bugs Fixed
-
 ### Other Changes
+
+#### Dependency updates
 
 ## 0.6.0 (2025-09-11)
 
