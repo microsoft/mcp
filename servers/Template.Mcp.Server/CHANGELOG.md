@@ -1,5 +1,15 @@
 # CHANGELOG 📝
 
+## 0.0.9 (Unreleased)
+
+### Features Added
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
 ## 0.0.8 (2025-09-10)
 
 ### Features Added
