@@ -131,7 +131,7 @@
                 "azureMcp.useNonTrimmedBinaries": {
                     "type": "boolean",
                     "default": false,
-                    "markdownDescription": "Use non-trimmed Azure MCP server binaries instead of the default trimmed binaries. Enable this to opt-out of trimmed binaries for compatibility or debugging purposes."
+                    "markdownDescription": "Opt out of the trimmed single-file Azure MCP Server and use the standard self-contained version (with the .NET runtime, entry point executable, and all DLLs)."
                 }
             }
         }
