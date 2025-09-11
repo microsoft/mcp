@@ -5,6 +5,7 @@
 
 ### Added
 
+- **The Azure MCP Server is now also available in NuGet.org** [[#368](https://github.com/microsoft/mcp/pull/368)]
 - Added support for listing node pools in an AKS managed cluster. [[#360](https://github.com/microsoft/mcp/pull/360)]
 
 ### Changed
