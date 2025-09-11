@@ -1,5 +1,10 @@
 # CHANGELOG 📝
 
+## 0.0.11 (2025-09-11)
+
+### Other Changes
+- Bump package version for testing
+
 ## 0.0.10 (2025-09-11)
 
 ### Other Changes
