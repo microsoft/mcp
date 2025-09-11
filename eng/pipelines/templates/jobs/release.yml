@@ -158,7 +158,7 @@ jobs:
             displayName: Publish platform-specific Nugets to Prod Feed
             inputs:
               packageParentPath: '$(Pipeline.Workspace)'
-              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform/*.symbols.nupkg'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.symbols.nupkg'
               nuGetFeedType: external
               publishFeedCredentials: Nuget.org
 
@@ -166,7 +166,7 @@ jobs:
             displayName: Publish wrapper Nuget to Prod Feed
             inputs:
               packageParentPath: '$(Pipeline.Workspace)'
-              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/wrapper/*.symbols.nupkg'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.symbols.nupkg'
               nuGetFeedType: external
               publishFeedCredentials: Nuget.org
 
@@ -175,14 +175,14 @@ jobs:
             displayName: Publish platform-specific Nugets to Dev Feed
             inputs:
               packageParentPath: '$(Pipeline.Workspace)'
-              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform/*.symbols.nupkg'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.symbols.nupkg'
               publishVstsFeed: ${{ parameters.NupkgDevFeed }}
 
           - task: 1ES.PublishNuget@1
             displayName: Publish wrapper Nuget to Dev Feed
             inputs:
               packageParentPath: '$(Pipeline.Workspace)'
-              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/wrapper/*.symbols.nupkg'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.symbols.nupkg'
               publishVstsFeed: ${{ parameters.NupkgDevFeed }}
 
 # Deployment Jobs: Publish VSIX artifacts to Marketplace for each vsix target
