@@ -2,11 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Core.Models;
 
 [JsonSerializable(typeof(List<CommandInfo>))]
 [JsonSerializable(typeof(CommandResponse))]
+[JsonSerializable(typeof(BaseCommand.ExceptionResult))]
 [JsonSerializable(typeof(ETag), TypeInfoPropertyName = "McpETag")]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 public sealed partial class ModelsJsonContext : JsonSerializerContext
