@@ -34,17 +34,17 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Added telemetry to log parameter values for the `azmcp_bestpractices_get` tool. [[#375](https://github.com/microsoft/mcp/pull/375)]
+- Aded telemetry to log parameter values for bestpractices tool. Note that only valid values will be logged. [[#375](https://github.com/microsoft/mcp/pull/375)]
 - Updated tool annotations. [[#377](https://github.com/microsoft/mcp/pull/377)]
 
 #### Dependency updates
 
-- Updated the following dependencies:
+- Updated the following dependencies to improve .NET Ahead-of-Time (AOT) compilation support: 
   - Azure.Identity: `1.14.0` → `1.15.0` [[#352](https://github.com/microsoft/mcp/pull/352)]
   - Azure.Identity.Broker: `1.2.0` → `1.3.0` [[#352](https://github.com/microsoft/mcp/pull/352)]
+  - Azure.ResourceManager.StorageCache: `1.3.1` → `1.3.2` [[#363](https://github.com/microsoft/mcp/pull/363)]
   - Microsoft.Azure.Cosmos.Aot: `0.1.1-preview.1` → `0.1.2-preview.1` [[#383](https://github.com/microsoft/mcp/pull/383)]
-- Updated the following dependency to improve .NET Ahead-of-Time (AOT) compilation support: [[#363](https://github.com/microsoft/mcp/pull/363)]
-  - Azure.ResourceManager.StorageCache: `1.3.1` → `1.3.2`
+- Updated Azure.Core dependency version from `1.47.1` to `1.48.0` [[#380](https://github.com/microsoft/mcp/pull/380/)]
 
 ## 0.5.12 (2025-09-04)
 
