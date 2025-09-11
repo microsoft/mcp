@@ -103,7 +103,7 @@ extends:
     #    jobs:
     #    - template: /eng/pipelines/templates/jobs/live-test.yml
 
-    - ${{ if eq(parameters.PublishPackages, 'true') }}:
+    # - ${{ if eq(parameters.PublishPackages, 'true') }}:
       #- stage: Sign
       #  displayName: 'Sign'
       #  dependsOn:
@@ -162,33 +162,33 @@ extends:
       #        }
       #      displayName: "Verify Binary Signing"
 
-      - ${{ if eq(parameters.ReleaseRun, 'true') }}:
-        - stage: Release
-          dependsOn:
-          - Initialize
-          # - Sign
-          pool:
-            name: $(LINUXPOOL)
-            image: $(LINUXVMIMAGE)
-            os: linux
-          variables:
-          - template: /eng/pipelines/templates/variables/image.yml
-          - template: /eng/pipelines/templates/variables/globals.yml
-          jobs:
-          - template: /eng/pipelines/templates/jobs/release.yml
-            parameters:
-              VsixTargets: ${{ parameters.VsixTargets }}
-              ServerName: ${{ parameters.ServerName }}
-              IncludeNative: ${{ parameters.IncludeNative }}
-              ArtifactSourceAlias: current
-              Project: ${{ parameters.UpstreamProject }}
-              PipelineId: ${{ parameters.UpstreamPipelineId }}
-              RunId: ${{ parameters.UpstreamRunId }}
-          # - template: /eng/pipelines/templates/jobs/docker.yml
-          #   parameters:
-          #     ContainerRegistry: 'azuresdkimages'
-          #     DeploymentEnvironment: 'public'
-          #     ServerName: ${{ parameters.ServerName }}
+    - ${{ if eq(parameters.ReleaseRun, 'true') }}:
+      - stage: Release
+        dependsOn:
+        - Initialize
+        # - Sign
+        pool:
+          name: $(LINUXPOOL)
+          image: $(LINUXVMIMAGE)
+          os: linux
+        variables:
+        - template: /eng/pipelines/templates/variables/image.yml
+        - template: /eng/pipelines/templates/variables/globals.yml
+        jobs:
+        - template: /eng/pipelines/templates/jobs/release.yml
+          parameters:
+            VsixTargets: ${{ parameters.VsixTargets }}
+            ServerName: ${{ parameters.ServerName }}
+            IncludeNative: ${{ parameters.IncludeNative }}
+            ArtifactSourceAlias: current
+            Project: ${{ parameters.UpstreamProject }}
+            PipelineId: ${{ parameters.UpstreamPipelineId }}
+            RunId: ${{ parameters.UpstreamRunId }}
+        # - template: /eng/pipelines/templates/jobs/docker.yml
+        #   parameters:
+        #     ContainerRegistry: 'azuresdkimages'
+        #     DeploymentEnvironment: 'public'
+        #     ServerName: ${{ parameters.ServerName }}
 
       # - ${{ else }}:
       #   - stage: Integration
