@@ -3,4 +3,4 @@
 
 namespace Azure.Mcp.Tools.Storage.Options.Account;
 
-public class AccountDetailsOptions : BaseStorageOptions;
+public class AccountGetOptions : BaseStorageOptions;

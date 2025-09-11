@@ -342,8 +342,8 @@ public class ServerCommandTests(ITestOutputHelper output)
         Assert.Contains("storage", responseText, StringComparison.OrdinalIgnoreCase);
 
         // Verify it contains specific storage commands we expect
-        Assert.Contains("storage_account_list", responseText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("storage_blob_container_details", responseText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("storage_account_get", responseText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("storage_blob_container_get", responseText, StringComparison.OrdinalIgnoreCase);
 
         Output.WriteLine("Storage tool learn mode response:");
         Output.WriteLine(responseText);

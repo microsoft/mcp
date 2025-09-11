@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Commands.Account;
@@ -16,19 +15,19 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.UnitTests.Account;
 
-public class AccountDetailsCommandTests
+public class AccountGetCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IStorageService _storageService;
-    private readonly ILogger<AccountDetailsCommand> _logger;
-    private readonly AccountDetailsCommand _command;
+    private readonly ILogger<AccountGetCommand> _logger;
+    private readonly AccountGetCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
 
-    public AccountDetailsCommandTests()
+    public AccountGetCommandTests()
     {
         _storageService = Substitute.For<IStorageService>();
-        _logger = Substitute.For<ILogger<AccountDetailsCommand>>();
+        _logger = Substitute.For<ILogger<AccountGetCommand>>();
 
         var collection = new ServiceCollection().AddSingleton(_storageService);
 
@@ -39,10 +38,94 @@ public class AccountDetailsCommandTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_NoParameters_ReturnsSubscriptions()
+    {
+        // Arrange
+        var subscription = "sub123";
+        var expectedAccounts = new List<Models.AccountInfo>
+        {
+            new("account1", "eastus", "StorageV2", "Standard_LRS", "Standard", true, true, true),
+            new("account2", "westus", "StorageV2", "Standard_GRS", "Standard", false, false, true)
+        };
+
+        _storageService.GetAccountDetails(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is(subscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(Task.FromResult(expectedAccounts));
+
+        var args = _commandDefinition.Parse(["--subscription", subscription]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<AccountGetCommand.AccountGetCommandResult>(json);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Accounts);
+        Assert.Equal(expectedAccounts.Count, result.Accounts.Count);
+        Assert.Equal(expectedAccounts.Select(a => a.Name), result.Accounts.Select(a => a.Name));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsNull_WhenNoAccounts()
+    {
+        // Arrange
+        var subscription = "sub123";
+
+        _storageService.GetAccountDetails(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is(subscription),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(Task.FromResult(new List<Models.AccountInfo>()));
+
+        var args = _commandDefinition.Parse(["--subscription", subscription]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Null(response.Results);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesException()
+    {
+        // Arrange
+        var expectedError = "Test error";
+        var subscription = "sub123";
+
+        _storageService.GetAccountDetails(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is(subscription),
+            null,
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Exception(expectedError));
+
+        var args = _commandDefinition.Parse(["--subscription", subscription]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(500, response.Status);
+        Assert.StartsWith(expectedError, response.Message);
+    }
+
+    [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
         var command = _command.GetCommand();
-        Assert.Equal("details", command.Name);
+        Assert.Equal("get", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
     }
@@ -50,9 +133,8 @@ public class AccountDetailsCommandTests
     [Theory]
     [InlineData("--account mystorageaccount --subscription sub123", true)]
     [InlineData("--subscription sub123 --account mystorageaccount", true)]
-    [InlineData("--subscription sub123", false)] // Missing account
+    [InlineData("--subscription sub123", true)] // Account is optional
     [InlineData("--account mystorageaccount", false)] // Missing subscription
-    [InlineData("", false)] // Missing both
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Arrange
@@ -68,10 +150,11 @@ public class AccountDetailsCommandTests
 
             if (shouldSucceed)
             {
-                var expectedAccount = new Models.StorageAccountInfo(
-                    "mystorageaccount", "eastus", "StorageV2", "Standard_LRS", "Standard", true, true, true);
+                var expectedAccount = new List<Models.AccountInfo> {
+                    new ("mystorageaccount", "eastus", "StorageV2", "Standard_LRS", "Standard", true, true, true)
+                };
 
-                _storageService.GetStorageAccountDetails(
+                _storageService.GetAccountDetails(
                     Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
                     .Returns(Task.FromResult(expectedAccount));
             }
@@ -106,10 +189,11 @@ public class AccountDetailsCommandTests
         // Arrange
         var account = "mystorageaccount";
         var subscription = "sub123";
-        var expectedAccount = new Models.StorageAccountInfo(
-            account, "eastus", "StorageV2", "Standard_LRS", "Standard", true, true, true);
+        var expectedAccount = new List<Models.AccountInfo> {
+            new (account, "eastus", "StorageV2", "Standard_LRS", "Standard", true, true, true)
+        };
 
-        _storageService.GetStorageAccountDetails(
+        _storageService.GetAccountDetails(
             Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedAccount));
 
@@ -124,13 +208,14 @@ public class AccountDetailsCommandTests
         Assert.Equal(200, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccountDetailsResult>(json);
+        var result = JsonSerializer.Deserialize<AccountGetCommand.AccountGetCommandResult>(json);
 
         Assert.NotNull(result);
-        Assert.NotNull(result!.Account);
-        Assert.Equal(expectedAccount.Name, result.Account.Name);
-        Assert.Equal(expectedAccount.Location, result.Account.Location);
-        Assert.Equal(expectedAccount.Kind, result.Account.Kind);
+        Assert.Single(result.Accounts);
+
+        Assert.Equal(expectedAccount[0].Name, result.Accounts[0].Name);
+        Assert.Equal(expectedAccount[0].Location, result.Accounts[0].Location);
+        Assert.Equal(expectedAccount[0].Kind, result.Accounts[0].Kind);
     }
 
     [Fact]
@@ -140,7 +225,7 @@ public class AccountDetailsCommandTests
         var account = "mystorageaccount";
         var subscription = "sub123";
 
-        _storageService.GetStorageAccountDetails(
+        _storageService.GetAccountDetails(
             Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception("Test error"));
 
@@ -162,7 +247,7 @@ public class AccountDetailsCommandTests
         var account = "nonexistentaccount";
         var subscription = "sub123";
 
-        _storageService.GetStorageAccountDetails(
+        _storageService.GetAccountDetails(
             Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new RequestFailedException(404, "Storage account not found"));
 
@@ -183,7 +268,7 @@ public class AccountDetailsCommandTests
         var account = "mystorageaccount";
         var subscription = "sub123";
 
-        _storageService.GetStorageAccountDetails(
+        _storageService.GetAccountDetails(
             Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new RequestFailedException(403, "Authorization failed"));
 
@@ -194,12 +279,6 @@ public class AccountDetailsCommandTests
 
         // Assert
         Assert.Equal(403, response.Status);
-        Assert.Contains("Authorization failed accessing the storage account", response.Message);
-    }
-
-    private class AccountDetailsResult
-    {
-        [JsonPropertyName("account")]
-        public Models.StorageAccountInfo Account { get; set; } = null!;
+        Assert.Contains("Authorization failed", response.Message);
     }
 }

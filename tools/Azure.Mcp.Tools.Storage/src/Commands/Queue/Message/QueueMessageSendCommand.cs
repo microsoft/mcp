@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
@@ -105,23 +106,6 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
         return context.Response;
     }
 
-    // Implementation-specific error handling
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx when reqEx.Status == 404 =>
-            "Queue not found. Verify the queue name exists and you have access.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
-            $"Authorization failed accessing the storage queue. Details: {reqEx.Message}",
-        RequestFailedException reqEx => reqEx.Message,
-        _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
     // Strongly-typed result record
-    internal record QueueMessageSendCommandResult(QueueMessageSendResult Message);
+    internal record QueueMessageSendCommandResult([property: JsonPropertyName("message")] QueueMessageSendResult Message);
 }

@@ -22,8 +22,8 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
 
     public override string Description =>
         """
-        Uploads a local file to a blob in Azure Storage only if the blob does not exist.
-        Returns details about the uploaded blob including last modified time, ETag, and content hash.
+        Uploads a local file to an Azure Storage blob, only if the blob does not exist, returning the last modified time,
+        ETag, and content hash of the uploaded blob.
         """;
 
     public override string Title => CommandTitle;

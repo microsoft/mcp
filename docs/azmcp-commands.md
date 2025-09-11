@@ -975,13 +975,10 @@ azmcp storage account create --subscription <subscription> \
                              --access-tier <access-tier> \
                              --enable-hierarchical-namespace false
 
-# Get detailed information about a specific Storage account
-azmcp storage account details --subscription <subscription> \
-                              --account <account> \
+# Get detailed properties of Storage accounts
+azmcp storage account get --subscription <subscription> \
+                              [--account <account>] \
                               [--tenant <tenant>]
-
-# List Storage accounts in a subscription
-azmcp storage account list --subscription <subscription>
 
 # Set access tier for multiple blobs in a batch operation
 azmcp storage blob batch set-tier --subscription <subscription> \
@@ -995,27 +992,18 @@ azmcp storage blob container create --subscription <subscription> \
                                     --account <account> \
                                     --container <container>
 
-# Get detailed properties of a storage container
-azmcp storage blob container details --subscription <subscription> \
+# Get detailed properties of Storage containers
+azmcp storage blob container get --subscription <subscription> \
                                      --account <account> \
-                                     --container <container>
+                                     [--container <container>]
 
-# List containers in a Storage blob service
-azmcp storage blob container list --subscription <subscription> \
-                                  --account <account>
-
-# Get detailed properties of a blob
-azmcp storage blob details --subscription <subscription> \
+# Get detailed properties of Storage blobs
+azmcp storage blob get --subscription <subscription> \
                            --account <account> \
                            --container <container> \
-                           --blob <blob>
+                           [--blob <blob>]
 
-# List blobs in a Storage container
-azmcp storage blob list --subscription <subscription> \
-                        --account <account> \
-                        --container <container>
-
-# Upload a file to a Storage blob container
+# Upload a file to a Storage blob
 azmcp storage blob upload --subscription <subscription> \
                           --account <account> \
                           --container <container> \

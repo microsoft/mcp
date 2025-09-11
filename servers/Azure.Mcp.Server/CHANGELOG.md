@@ -10,6 +10,11 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Merged `azmcp_search_index_describe` and `azmcp_search_index_list` into `azmcp_search_index_get`, which can perform both operations based on whether
   an index name is passed. [[#378](https://github.com/microsoft/mcp/pull/378)]
+- Changed descriptions of Storage commands. [[#376](https://github.com/microsoft/mcp/pull/376)]
+- Merged the following Storage tools [[#376](https://github.com/microsoft/mcp/pull/376)]
+  - `azmcp_storage_account_details` and `azmcp_storage_account_list` into `azmcp_storage_account_get`, it supports the behaviors of both tools based on whether `--account` is passed.
+  - `azmcp_storage_blob_details` and `azmcp_storage_blob_list` into `azmcp_storage_blob+get`, it supports the behaviors of both tools based on whether `--blob` is passed.
+  - `azmcp_storage_blob_container_details` and `azmcp_storage_blob_container_list` into `azmcp_storage_blob_container_get`, it supports the behaviors of both tools based on whether `--container` is passed.
 
 ### Bugs Fixed
 

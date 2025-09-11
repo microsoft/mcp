@@ -80,7 +80,6 @@ public class CommandTests(ITestOutputHelper output) : CommandTestsBase(output)
         Assert.Contains("Infrastructure as Code (IaC)", combinedText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("azd commands such as 'azd up'", combinedText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Bicep files under the 'infra/' folder", combinedText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("azure_recommend_service_config", combinedText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

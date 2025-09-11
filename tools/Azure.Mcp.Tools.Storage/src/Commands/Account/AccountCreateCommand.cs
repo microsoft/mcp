@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
@@ -28,9 +29,8 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
 
     public override string Description =>
         """
-        Create a new Azure Storage account in the specified resource group and location.
-        Creates a storage account with the specified configuration options. Returns the
-        created storage account information including name, location, SKU, and other properties.
+        Creates an Azure Storage account in the specified resource group and location and returns the created storage account
+        information including name, location, SKU, access settings, and configuration details.
         """;
 
     public override string Title => CommandTitle;
@@ -124,12 +124,6 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
     // Strongly-typed result record
-    internal record AccountCreateCommandResult(StorageAccountInfo Account);
+    internal record AccountCreateCommandResult([property: JsonPropertyName("account")] AccountInfo Account);
 }

@@ -395,23 +395,23 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_storage_account_create | Create a new storage account called testaccount123 in East US region |
 | azmcp_storage_account_create | Create a storage account with premium performance and LRS replication |
 | azmcp_storage_account_create | Create a new storage account with Data Lake Storage Gen2 enabled |
-| azmcp_storage_account_details | Show me the details for my storage account <account> |
-| azmcp_storage_account_details | Get details about the storage account <account> |
-| azmcp_storage_account_list | List all storage accounts in my subscription including their location and SKU |
-| azmcp_storage_account_list | Show me my storage accounts with whether hierarchical namespace (HNS) is enabled |
-| azmcp_storage_account_list | Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings |
+| azmcp_storage_account_get | Show me the details for my storage account <account> |
+| azmcp_storage_account_get | Get details about the storage account <account> |
+| azmcp_storage_account_get | List all storage accounts in my subscription including their location and SKU |
+| azmcp_storage_account_get | Show me my storage accounts with whether hierarchical namespace (HNS) is enabled |
+| azmcp_storage_account_get | Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings |
 | azmcp_storage_blob_batch_set-tier | Set access tier to Cool for multiple blobs in the container <container> in the storage account <account> |
 | azmcp_storage_blob_batch_set-tier | Change the access tier to Archive for blobs file1.txt and file2.txt in the container <container> in the storage account <account> |
 | azmcp_storage_blob_container_create | Create the storage container mycontainer in storage account <account> |
 | azmcp_storage_blob_container_create | Create the container using blob public access in storage account <account> |
 | azmcp_storage_blob_container_create | Create a new blob container named documents with container public access in storage account <account> |
-| azmcp_storage_blob_container_details | Show me the properties of the storage container files in the storage account <account> |
-| azmcp_storage_blob_container_list | List all blob containers in the storage account <account> |
-| azmcp_storage_blob_container_list | Show me the blob containers in the storage account <account> |
-| azmcp_storage_blob_details | Show me the properties for blob <blob> in container <container> in storage account <account> |
-| azmcp_storage_blob_details | Get the details about blob <blob> in the container <container> in storage account <account> |
-| azmcp_storage_blob_list | List all blobs in the blob container <container> in the storage account <account> |
-| azmcp_storage_blob_list | Show me the blobs in the blob container <container> in the storage account <account> |
+| azmcp_storage_blob_container_get | Show me the properties of the storage container <container> in the storage account <account> |
+| azmcp_storage_blob_container_get | List all blob containers in the storage account <account> |
+| azmcp_storage_blob_container_get | Show me the containers in the storage account <account> |
+| azmcp_storage_blob_get | Show me the properties for blob <blob> in container <container> in storage account <account> |
+| azmcp_storage_blob_get | Get the details about blob <blob> in the container <container> in storage account <account> |
+| azmcp_storage_blob_get | List all blobs in the blob container <container> in the storage account <account> |
+| azmcp_storage_blob_get | Show me the blobs in the blob container <container> in the storage account <account> |
 | azmcp_storage_blob_upload | Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account> |
 | azmcp_storage_datalake_directory_create | Create a new directory at the path <directory_path> in Data Lake in the storage account <account> |
 | azmcp_storage_datalake_file-system_list-paths | List all paths in the Data Lake file system <file_system> in the storage account <account> |
