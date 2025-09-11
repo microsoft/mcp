@@ -27,7 +27,7 @@ public sealed class ElicitationResponse
 /// <summary>
 /// The action taken by the user in response to an elicitation request.
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<ElicitationAction>))]
 public enum ElicitationAction
 {
     /// <summary>
