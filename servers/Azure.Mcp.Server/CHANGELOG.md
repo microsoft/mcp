@@ -2,6 +2,16 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
+## 0.5.14 (Unreleased)
+
+### Features Added
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
 ## 0.5.13 (2025-09-10)
 
 ### Features Added
@@ -29,18 +39,11 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 #### Dependency updates
 
-<<<<<<< HEAD
 - Updated the following dependencies:
   - Azure.Identity: `1.14.0` → `1.15.0` [[#352](https://github.com/microsoft/mcp/pull/352)]
   - Azure.Identity.Broker: `1.2.0` → `1.3.0` [[#352](https://github.com/microsoft/mcp/pull/352)]
   - Microsoft.Azure.Cosmos.Aot: `0.1.1-preview.1` → `0.1.2-preview.1` [[#383](https://github.com/microsoft/mcp/pull/383)]
-- Updated the following dependencies to improve .NET Ahead-of-Time (AOT) compilation support: [[#363](https://github.com/microsoft/mcp/pull/363)]
-=======
-- Updated the following dependencies: [[#352](https://github.com/microsoft/mcp/pull/352)]
-  - Azure.Identity: `1.14.0` → `1.15.0`
-  - Azure.Identity.Broker: `1.2.0` → `1.3.0`
-- Updated the following dependencies to improve .NET Ahead-of-Time (AOT) compilation support:
->>>>>>> 94163e4f (Update CHANGELOG for rebase)
+- Updated the following dependency to improve .NET Ahead-of-Time (AOT) compilation support: [[#363](https://github.com/microsoft/mcp/pull/363)]
   - Azure.ResourceManager.StorageCache: `1.3.1` → `1.3.2`
 
 ## 0.5.12 (2025-09-04)
