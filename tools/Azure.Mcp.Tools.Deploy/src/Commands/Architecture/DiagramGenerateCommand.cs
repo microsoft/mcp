@@ -73,6 +73,11 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
                 throw new ArgumentException($"Invalid JSON format: {ex.Message}", nameof(rawMcpToolInput), ex);
             }
 
+            context.Activity?
+                .AddTag(DeployTelemetryTags.ServiceCount, appTopology.Services.Length)
+                .AddTag(DeployTelemetryTags.ComputeHostResources, string.Join(", ", appTopology.Services.Select(s => s.AzureComputeHost)))
+                .AddTag(DeployTelemetryTags.BackingServiceResources, string.Join(", ", appTopology.Services.SelectMany(s => s.Dependencies).Select(d => d.ServiceType)));
+
             _logger.LogInformation("Successfully parsed app topology with {ServiceCount} services", appTopology.Services.Length);
 
             if (appTopology.Services.Length == 0)
