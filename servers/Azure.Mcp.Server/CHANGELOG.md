@@ -9,6 +9,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - **The Azure MCP Server is now also available on NuGet.org** [[#368](https://github.com/microsoft/mcp/pull/368)]
 - Added support for listing node pools in an AKS managed cluster. [[#360](https://github.com/microsoft/mcp/pull/360)]
 
+### Features Removed
+
+- Removed Azure CLI (`az`) and Azure Developer CLI (`azd`) extension tools from the MCP server to reduce complexity and focus on native Azure service operations.
+
 ### Breaking Changes
 
 - To improve performance, packages now ship with trimmed binaries that have unused code and dependencies removed, resulting in significantly smaller file sizes, faster startup times, and reduced memory footprint. [Learn more](https://learn.microsoft.com/dotnet/core/deploying/trimming/trim-self-contained). [[#405](https://github.com/microsoft/mcp/pull/405)]
