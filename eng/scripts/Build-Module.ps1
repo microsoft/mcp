@@ -160,7 +160,7 @@ function BuildServer($serverName) {
                 name = "$packageName-$node_os-$arch"
                 version = $version
                 description = "$description, for $node_os on $arch"
-                author = 'Microsoft Corporation'
+                author = 'Microsoft'
                 homepage = $readmeUrl
                 license = 'MIT'
                 keywords = $properties.NpmPackageKeywords -split ','
