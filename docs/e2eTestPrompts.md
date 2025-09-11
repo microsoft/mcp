@@ -200,6 +200,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_aks_cluster_list | List all AKS clusters in my subscription |
 | azmcp_aks_cluster_list | Show me my Azure Kubernetes Service clusters |
 | azmcp_aks_cluster_list | What AKS clusters do I have? |
+| azmcp_aks_nodepool_list | List nodepools for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_list | Show me the nodepool list for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_list | What nodepools do I have for AKS cluster \<cluster-name> in \<resource-group> |
 
 ## Azure Load Testing
 
@@ -337,6 +340,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_resourcehealth_availability-status_list | List availability status for all resources in my subscription |
 | azmcp_resourcehealth_availability-status_list | Show me the health status of all my Azure resources |
 | azmcp_resourcehealth_availability-status_list | What resources in resource group <resource_group_name> have health issues? |
+| azmcp_resourcehealth_service-health-events_list | List all service health events in my subscription |
+| azmcp_resourcehealth_service-health-events_list | Show me Azure service health events for subscription <subscription_id> |
+| azmcp_resourcehealth_service-health-events_list | What service issues have occurred in the last 30 days? |
+| azmcp_resourcehealth_service-health-events_list | List active service health events in my subscription |
+| azmcp_resourcehealth_service-health-events_list | Show me planned maintenance events for my Azure services |
 
 ## Azure Service Bus
 

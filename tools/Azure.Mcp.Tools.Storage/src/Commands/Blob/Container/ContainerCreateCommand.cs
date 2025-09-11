@@ -25,7 +25,15 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {

@@ -24,7 +24,15 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger)
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = true,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {

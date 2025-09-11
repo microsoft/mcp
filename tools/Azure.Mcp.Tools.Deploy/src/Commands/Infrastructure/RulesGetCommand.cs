@@ -21,7 +21,15 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
 
     public override string Name => "get";
     public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override string Description =>
         """

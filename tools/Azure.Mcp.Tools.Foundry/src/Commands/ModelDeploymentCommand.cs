@@ -35,7 +35,15 @@ public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeployment
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {

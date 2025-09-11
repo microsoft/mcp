@@ -28,7 +28,15 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
 
     public override string Title => _commandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
