@@ -30,7 +30,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 
 ## 📚 Which MCP Servers are available from Microsoft?
 
-### 🔷 Azure
+### <img height="18" width="18" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> Azure
 - **REPOSITORY**: [microsoft/mcp](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server#readme)
 - **DESCRIPTION**: All Azure MCP tools in a single server.  The Azure MCP Server implements the MCP specification to create a seamless connection between AI agents and Azure services.  Azure MCP Server can be used alone or with the GitHub Copilot for Azure extension in VS Code.
 - **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
@@ -42,7 +42,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
 - **TYPE**: `Local`
   
-### 📅 Azure DevOps
+### <img height="18" width="18" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/1062064-Products-1.2-24x24" alt="Microsoft Azure DevOps Logo" /> Azure DevOps
 - **REPOSITORY**: [Azure DevOps MCP Server - Public Preview](https://github.com/microsoft/azure-devops-mcp)
 - **DESCRIPTION**: This TypeScript project provides a local MCP server for Azure DevOps, enabling you to perform a wide range of Azure DevOps tasks directly from your code editor.
 - **CATEGORY**: `DEVELOPER TOOLS`
@@ -54,7 +54,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
 - **TYPE**: `Local`
 
-### 🐙 GitHub
+### <img height="18" width="18" src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" alt="GitHub Logo" /> GitHub
 - **REPOSITORY**: [github/github-mcp-server](https://github.com/github/github-mcp-server)
 - **DESCRIPTION**: Access GitHub repositories, issues, and pull requests through secure API integration.
 - **CATEGORY**: `DEVELOPER TOOLS`

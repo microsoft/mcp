@@ -6,6 +6,9 @@ parameters:
   type: string
 - name: IncludeNative
   type: boolean
+- name: NupkgDevFeed
+  type: string
+  default: 'public/azure-sdk-for-net'
 
 jobs:
 - job: TagRepository
@@ -15,8 +18,8 @@ jobs:
   - checkout: self
 
   - download: current
-    displayName: Download $(PipelineArtifactName)_packed
-    artifact: $(PipelineArtifactName)_packed
+    displayName: Download npm_$(PipelineArtifactName)_packed
+    artifact: npm_$(PipelineArtifactName)_packed
 
   - template: /eng/common/pipelines/templates/steps/retain-run.yml
 
@@ -27,7 +30,7 @@ jobs:
       $tag = "$serverName-$version$versionSuffix"
 
       gh release create $tag --title "$serverName $version$versionSuffix"
-      gh release upload $tag $(Pipeline.Workspace)/$(PipelineArtifactName)_packed/*/*/*.tgz
+      gh release upload $tag $(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed/*/*/*.tgz
     displayName: Create GitHub Release and upload artifacts
     env:
       GH_TOKEN: $(azuresdk-github-pat)
@@ -40,7 +43,7 @@ jobs:
     isProduction: true
     inputs:
     - input: pipelineArtifact
-      artifactName: $(PipelineArtifactName)_packed
+      artifactName: npm_$(PipelineArtifactName)_packed
       targetPath: $(Pipeline.Workspace)/drop
   environment: package-publish
   timeoutInMinutes: 120
@@ -127,6 +130,60 @@ jobs:
             PathToArtifacts: $(Pipeline.Workspace)/drop
             Registry: https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/
             Tag: latest
+
+- deployment: PublishNugetPackage
+  displayName: Publish package to Nuget Feeds
+  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  templateContext:
+    type: releaseJob
+    isProduction: true
+    inputs:
+    - input: pipelineArtifact
+      artifactName: 'nuget_$(PipelineArtifactName)_packed'
+      targetPath: $(Pipeline.Workspace)/drop
+  environment: package-publish
+  timeoutInMinutes: 120
+  dependsOn: TagRepository
+  pool:
+    name: azsdk-pool
+    image: windows-2022
+    os: windows
+    
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+          # Publish platform-specific packages first to ensure they are available before publishing wrapper package
+          - task: 1ES.PublishNuget@1
+            displayName: Publish platform-specific Nugets to Prod Feed
+            inputs:
+              packageParentPath: '$(Pipeline.Workspace)'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.symbols.nupkg'
+              nuGetFeedType: external
+              publishFeedCredentials: Nuget.org
+
+          - task: 1ES.PublishNuget@1
+            displayName: Publish wrapper Nuget to Prod Feed
+            inputs:
+              packageParentPath: '$(Pipeline.Workspace)'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.symbols.nupkg'
+              nuGetFeedType: external
+              publishFeedCredentials: Nuget.org
+
+          # Publish platform-specific packages first to ensure they are available before publishing wrapper package
+          - task: 1ES.PublishNuget@1
+            displayName: Publish platform-specific Nugets to Dev Feed
+            inputs:
+              packageParentPath: '$(Pipeline.Workspace)'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.symbols.nupkg'
+              publishVstsFeed: ${{ parameters.NupkgDevFeed }}
+
+          - task: 1ES.PublishNuget@1
+            displayName: Publish wrapper Nuget to Dev Feed
+            inputs:
+              packageParentPath: '$(Pipeline.Workspace)'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.symbols.nupkg'
+              publishVstsFeed: ${{ parameters.NupkgDevFeed }}
 
 # Deployment Jobs: Publish VSIX artifacts to Marketplace for each vsix target
 - ${{ each VsixTarget in parameters.VsixTargets }}:

@@ -14,6 +14,9 @@ parameters:
 - name: ServerName
   type: string
   default: none
+- name: SkipDockerRelease
+  type: string
+  default: false
 - name: VsixTargets
   type: object
   default:
@@ -170,11 +173,12 @@ extends:
               VsixTargets: ${{ parameters.VsixTargets }}
               ServerName: ${{ parameters.ServerName }}
               IncludeNative: ${{ parameters.IncludeNative }}
-          - template: /eng/pipelines/templates/jobs/docker.yml
-            parameters:
-              ContainerRegistry: 'azuresdkimages'
-              DeploymentEnvironment: 'public'
-              ServerName: ${{ parameters.ServerName }}
+          - ${{ if ne(parameters.SkipDockerRelease, 'true') }}:
+            - template: /eng/pipelines/templates/jobs/docker.yml
+              parameters:
+                ContainerRegistry: 'azuresdkimages'
+                DeploymentEnvironment: 'public'
+                ServerName: ${{ parameters.ServerName }}
 
       - ${{ else }}:
         - stage: Integration

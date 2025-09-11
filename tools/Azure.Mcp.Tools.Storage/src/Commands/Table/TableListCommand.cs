@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Storage.Options.Table;
 using Azure.Mcp.Tools.Storage.Services;
@@ -87,5 +88,5 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseSto
         return context.Response;
     }
 
-    internal record TableListCommandResult(List<string> Tables);
+    internal record TableListCommandResult([property: JsonPropertyName("tables")] List<string> Tables);
 }
