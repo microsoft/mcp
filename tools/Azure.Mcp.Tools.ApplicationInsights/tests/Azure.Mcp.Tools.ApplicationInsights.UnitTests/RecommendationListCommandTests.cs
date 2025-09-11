@@ -19,7 +19,6 @@ public class RecommendationListCommandTests
     private readonly IApplicationInsightsService _serviceMock;
     private readonly RecommendationListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
 
     public RecommendationListCommandTests()
     {
@@ -30,7 +29,6 @@ public class RecommendationListCommandTests
         _serviceProvider = sc.BuildServiceProvider();
         _command = new RecommendationListCommand(logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
     }
 
     [Fact]
@@ -43,7 +41,7 @@ public class RecommendationListCommandTests
         };
         _serviceMock.GetProfilerInsightsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromResult<IEnumerable<JsonNode>>(insights!));
-        var args = _parser.Parse(["--subscription", "sub1"]);
+        var args = _command.GetCommand().Parse(["--subscription", "sub1"]);
         await _command.ExecuteAsync(_context, args);
         Assert.NotNull(_context.Response.Results);
         var json = JsonSerializer.Serialize(_context.Response.Results);
@@ -58,7 +56,7 @@ public class RecommendationListCommandTests
     {
         _serviceMock.GetProfilerInsightsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromResult<IEnumerable<JsonNode>>(Array.Empty<JsonNode>()));
-        var args = _parser.Parse(["--subscription", "sub1"]);
+        var args = _command.GetCommand().Parse(["--subscription", "sub1"]);
         await _command.ExecuteAsync(_context, args);
         Assert.Null(_context.Response.Results);
     }

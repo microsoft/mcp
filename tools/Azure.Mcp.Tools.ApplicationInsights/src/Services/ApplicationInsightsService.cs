@@ -21,6 +21,7 @@ public class ApplicationInsightsService(
     IProfilerDataService profilerDataClient,
     ILogger<ApplicationInsightsService> logger) : BaseAzureService(tenantService), IApplicationInsightsService
 {
+    private const int MaxRecommendations = 20;
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService;
     private readonly IProfilerDataService _profilerDataClient = profilerDataClient ?? throw new ArgumentNullException(nameof(profilerDataClient));
@@ -46,12 +47,12 @@ public class ApplicationInsightsService(
         foreach (string rgName in resourceGroupNames)
         {
             results.AddRange(await GetProfilerInsightsImpAsync(subscription, rgName, tenant, retryPolicy));
-            if (results.Count >= 20)
+            if (results.Count >= MaxRecommendations)
             {
-                break;
+                break; // Early exit once we have enough
             }
         }
-        return results.Take(20);
+        return results.Take(MaxRecommendations);
     }
 
     private async Task<IEnumerable<JsonNode>> GetProfilerInsightsImpAsync(string subscription, string resourceGroup, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
@@ -71,8 +72,8 @@ public class ApplicationInsightsService(
             IEnumerable<JsonNode> insights = await _profilerDataClient.GetInsightsAsync(resourceIds: components.Select(c => c.Id)).ConfigureAwait(false);
             results.AddRange(insights);
 
-            // Limit to first 20 results to avoid overwhelming output
-            return results.Take(20);
+            // Return all results for this resource group (outer method enforces global max)
+            return results;
         }
         catch (Exception ex) when (ex is not ArgumentNullException)
         {
