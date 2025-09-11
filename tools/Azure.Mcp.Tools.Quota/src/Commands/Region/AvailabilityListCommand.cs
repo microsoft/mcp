@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Options;
 using Azure.Mcp.Tools.Quota.Options.Region;
 using Azure.Mcp.Tools.Quota.Services;
@@ -68,6 +69,7 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
 
         try
         {
+            context.Activity?.AddTag(QuotaTelemetryTags.ResourceTypes, options.ResourceTypes);
 
             var resourceTypes = options.ResourceTypes.Split(',')
                 .Select(rt => rt.Trim())
