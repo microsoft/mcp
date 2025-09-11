@@ -154,9 +154,10 @@ jobs:
   timeoutInMinutes: 120
   dependsOn: TagRepository
   pool:
-    name: azsdk-pool
-    image: windows-2022 # Nuget publish requires .NET framework on windows to handle the auth
+    name: $(WINDOWSPOOL)
+    image: $(WINDOWSVMIMAGE)
     os: windows
+    
   strategy:
     runOnce:
       deploy:
@@ -195,6 +196,10 @@ jobs:
   displayName: Upload Symbols to Symbols Server
   condition: and(succeeded(), ne(variables['Skip.SymbolsUpload'], 'true'))
   dependsOn: PublishPackage
+  pool:
+    name: $(WINDOWSPOOL)
+    image: $(WINDOWSVMIMAGE)
+    os: windows
 
   variables:
     build-tools-repo-path: $(Pipeline.Workspace)/s/azure-sdk-build-tools
@@ -203,7 +208,7 @@ jobs:
     - checkout: azure-sdk-build-tools
       path: s/azure-sdk-build-tools
     - download: current
-      displayName: Download npm_$(PipelineArtifactName)_packed
+      displayName: Download nuget_$(PipelineArtifactName)_packed
       artifact: nuget_$(PipelineArtifactName)_packed
     - template: /pipelines/steps/publish-symbols.yml@azure-sdk-build-tools
       parameters:
