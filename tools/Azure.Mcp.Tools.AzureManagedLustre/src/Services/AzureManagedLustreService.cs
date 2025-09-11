@@ -124,7 +124,6 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
 
         try
         {
-            // Refactored: flattened logic, early-continue guards, extracted capability mapping
             var results = new List<AzureManagedLustreSkuInfo>();
 
             await foreach (var sku in sub.GetStorageCacheSkusAsync())
@@ -146,7 +145,6 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
                         continue;
                     var supportsZones = (locationInfo?.Zones?.Count ?? 0) > 1;
 
-                    // Preserve original behavior: copy capabilities list per result instance
                     results.Add(new AzureManagedLustreSkuInfo(name, foundLocation, supportsZones, [.. capabilities]));
                 }
             }
