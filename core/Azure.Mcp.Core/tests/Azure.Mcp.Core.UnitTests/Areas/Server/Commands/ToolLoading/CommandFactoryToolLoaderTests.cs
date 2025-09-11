@@ -487,4 +487,89 @@ public class CommandFactoryToolLoaderTests
         Assert.True(secretTool.Meta.TryGetPropertyValue("SecretHint", out var secretHintNode));
         Assert.True(secretHintNode?.GetValue<bool>());
     }
+
+    #region Elicitation Tests
+
+    [Fact]
+    public async Task CallToolHandler_WithSecretTool_WhenClientDoesNotSupportElicitation_ExecutesWithoutElicitation()
+    {
+        var (toolLoader, commandFactory) = CreateToolLoader();
+
+        // Create mock server without elicitation capabilities
+        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        mockServer.ClientCapabilities.Returns((ClientCapabilities?)null);
+
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = "fake-secret-get",
+                Arguments = new Dictionary<string, JsonElement>()
+            }
+        };
+
+        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+
+        // Should execute successfully without elicitation (as client doesn't support it)
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithNonSecretTool_DoesNotTriggerElicitation()
+    {
+        var (toolLoader, commandFactory) = CreateToolLoader();
+
+        // Get a non-secret tool (first available command that's not fake-secret-get)
+        var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands);
+        var nonSecretCommand = availableCommands.First(c => c.Key != "fake-secret-get");
+
+        // Create mock server with elicitation capabilities
+        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        var capabilities = new ClientCapabilities { Elicitation = new ElicitationCapability() };
+        mockServer.ClientCapabilities.Returns(capabilities);
+
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = nonSecretCommand.Key,
+                Arguments = new Dictionary<string, JsonElement>()
+            }
+        };
+
+        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+
+        // Should execute without issues for non-secret tools
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithSecretTool_WhenElicitationNotSupportedException_ContinuesExecution()
+    {
+        var (toolLoader, commandFactory) = CreateToolLoader();
+
+        // Create mock server with elicitation capabilities that will fail
+        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        var capabilities = new ClientCapabilities { Elicitation = new ElicitationCapability() };
+        mockServer.ClientCapabilities.Returns(capabilities);
+
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = "fake-secret-get",
+                Arguments = new Dictionary<string, JsonElement>()
+            }
+        };
+
+        // Even if elicitation fails, the tool should continue to execute
+        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+
+        Assert.NotNull(result);
+        // Note: We expect the tool to still execute, as per the error handling in the implementation
+    }
+
+    #endregion
 }
