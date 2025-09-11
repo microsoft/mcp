@@ -7,9 +7,9 @@
     <PackageVersion Include="Azure.AI.Projects" Version="1.0.0-beta.9" />
     <PackageVersion Include="Azure.Bicep.Types" Version="0.6.1" />
     <PackageVersion Include="Azure.Bicep.Types.Az" Version="0.2.792" />
-    <PackageVersion Include="Azure.Core" Version="1.47.1" />
+    <PackageVersion Include="Azure.Core" Version="1.48.0" />
     <PackageVersion Include="Azure.Data.AppConfiguration" Version="1.6.1" />
-    <PackageVersion Include="Azure.Identity" Version="1.15.0" />
+    <PackageVersion Include="Azure.Identity" Version="1.16.0" />
     <PackageVersion Include="Azure.Data.Tables" Version="12.11.0" />
     <PackageVersion Include="Azure.Developer.LoadTesting" Version="1.0.2" />
     <PackageVersion Include="Azure.Identity.Broker" Version="1.3.0" />

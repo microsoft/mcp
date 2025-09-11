@@ -32,8 +32,6 @@
     <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
     <TrimmerSingleWarn>false</TrimmerSingleWarn>
     <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
-    <!-- Suppress IL3000 warning in Microsoft.Identity.Client.NativeInterop -->
-    <NoWarn>$(NoWarn);IL3000</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
