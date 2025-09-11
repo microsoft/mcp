@@ -3,4 +3,4 @@
 
 namespace Azure.Mcp.Tools.Search.Options.Index;
 
-public class IndexListOptions : BaseSearchOptions;
+public class IndexGetOptions : BaseIndexOptions;

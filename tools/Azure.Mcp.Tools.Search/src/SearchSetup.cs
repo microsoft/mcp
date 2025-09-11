@@ -45,8 +45,7 @@ public class SearchSetup : IAreaSetup
         var index = new CommandGroup("index", "Azure AI Search (formerly known as \"Azure Cognitive Search\") index operations - Commands for listing, managing, and querying search indexes in a specific search service.");
         search.AddSubGroup(index);
 
-        index.AddCommand("list", new IndexListCommand(loggerFactory.CreateLogger<IndexListCommand>()));
-        index.AddCommand("describe", new IndexDescribeCommand(loggerFactory.CreateLogger<IndexDescribeCommand>()));
+        index.AddCommand("get", new IndexGetCommand(loggerFactory.CreateLogger<IndexGetCommand>()));
         index.AddCommand("query", new IndexQueryCommand(loggerFactory.CreateLogger<IndexQueryCommand>()));
     }
 }

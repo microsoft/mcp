@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Search.Models;
@@ -11,19 +12,19 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Search.Commands.Index;
 
-public sealed class IndexListCommand(ILogger<IndexListCommand> logger) : GlobalCommand<IndexListOptions>()
+public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCommand<IndexGetOptions>()
 {
-    private const string CommandTitle = "List Azure AI Search (formerly known as \"Azure Cognitive Search\") Indexes";
-    private readonly ILogger<IndexListCommand> _logger = logger;
+    private const string CommandTitle = "Get Azure AI Search (formerly known as \"Azure Cognitive Search\") Index Details";
+    private readonly ILogger<IndexGetCommand> _logger = logger;
     private readonly Option<string> _serviceOption = SearchOptionDefinitions.Service;
-    public override string Name => "list";
+    private readonly Option<string> _optionalIndexOption = SearchOptionDefinitions.OptionalIndex;
+
+    public override string Name => "describe";
 
     public override string Description =>
         """
-        List all indexes in an Azure AI Search service.
-
-        Required arguments:
-        - service
+        Gets the details of Azure AI Search indexes, including fields, description, and more. If a specific index name
+        is not provided, the command will return details for all indexes within the specified service.
         """;
 
     public override string Title => CommandTitle;
@@ -42,12 +43,14 @@ public sealed class IndexListCommand(ILogger<IndexListCommand> logger) : GlobalC
     {
         base.RegisterOptions(command);
         command.Options.Add(_serviceOption);
+        command.Options.Add(_optionalIndexOption);
     }
 
-    protected override IndexListOptions BindOptions(ParseResult parseResult)
+    protected override IndexGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Service = parseResult.GetValueOrDefault(_serviceOption);
+        options.Index = parseResult.GetValueOrDefault(_optionalIndexOption);
         return options;
     }
 
@@ -64,24 +67,23 @@ public sealed class IndexListCommand(ILogger<IndexListCommand> logger) : GlobalC
         {
             var searchService = context.GetService<ISearchService>();
 
-            var indexes = await searchService.ListIndexes(
+            var indexes = await searchService.GetIndexDetails(
                 options.Service!,
+                options.Index,
                 options.RetryPolicy);
 
-            context.Response.Results = indexes?.Count > 0
-                ? ResponseResult.Create(
-                    new IndexListCommandResult(indexes),
-                    SearchJsonContext.Default.IndexListCommandResult)
+            context.Response.Results = indexes is { Count: > 0 }
+                ? ResponseResult.Create(new(indexes), SearchJsonContext.Default.IndexGetCommandResult)
                 : null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing search indexes");
+            _logger.LogError(ex, "Error retrieving search index definition");
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record IndexListCommandResult(List<IndexInfo> Indexes);
+    internal sealed record IndexGetCommandResult([property: JsonPropertyName("indexes")] List<IndexInfo> Indexes);
 }

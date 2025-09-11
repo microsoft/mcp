@@ -8,7 +8,7 @@
     <NpmPackageName>@azure/mcp</NpmPackageName>
     <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>
     <DockerImageName>azure-sdk/azure-mcp</DockerImageName>
-    <PackageId>Azure.Mcp</PackageId>
+    <PackageId>Microsoft.Azure.Mcp</PackageId>
     <ToolCommandName>$(CliName)</ToolCommandName>
   </PropertyGroup>
   
@@ -32,8 +32,6 @@
     <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
     <TrimmerSingleWarn>false</TrimmerSingleWarn>
     <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
-    <!-- Suppress IL3000 warning in Microsoft.Identity.Client.NativeInterop -->
-    <NoWarn>$(NoWarn);IL3000</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">

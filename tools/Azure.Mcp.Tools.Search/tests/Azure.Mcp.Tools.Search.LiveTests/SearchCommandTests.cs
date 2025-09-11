@@ -4,14 +4,13 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Search.LiveTests;
 
 public class SearchCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
-    const string IndexName = "products";
+    private const string IndexName = "products";
 
     [Fact]
     public async Task Should_list_search_services_by_subscription_id()
@@ -47,7 +46,7 @@ public class SearchCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     public async Task Should_list_search_indexes_with_service_name()
     {
         var result = await CallToolAsync(
-            "azmcp_search_index_list",
+            "azmcp_search_index_get",
             new()
             {
                 { "service", Settings.ResourceBaseName }
@@ -61,14 +60,18 @@ public class SearchCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     public async Task Should_get_index_details()
     {
         var result = await CallToolAsync(
-            "azmcp_search_index_describe",
+            "azmcp_search_index_get",
             new()
             {
                 { "service", Settings.ResourceBaseName },
                 { "index", IndexName }
             });
 
-        var index = result.AssertProperty("index");
+        var indexes = result.AssertProperty("indexes");
+        Assert.Equal(JsonValueKind.Array, indexes.ValueKind);
+        Assert.Single(indexes.EnumerateArray());
+
+        var index = indexes.EnumerateArray().First();
         Assert.Equal(JsonValueKind.Object, index.ValueKind);
 
         var name = index.AssertProperty("name");
@@ -96,7 +99,7 @@ public class SearchCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     public async Task Should_list_search_indexes()
     {
         var result = await CallToolAsync(
-            "azmcp_search_index_list",
+            "azmcp_search_index_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -112,7 +115,7 @@ public class SearchCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     public async Task Should_describe_search_index()
     {
         var result = await CallToolAsync(
-            "azmcp_search_index_describe",
+            "azmcp_search_index_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -121,8 +124,15 @@ public class SearchCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                 { "index", "products" }
             });
 
-        var index = result.AssertProperty("index");
+        var indexes = result.AssertProperty("indexes");
+        Assert.Equal(JsonValueKind.Array, indexes.ValueKind);
+        Assert.Single(indexes.EnumerateArray());
+
+        var index = indexes.EnumerateArray().First();
         Assert.Equal(JsonValueKind.Object, index.ValueKind);
+
+        var name = index.AssertProperty("name");
+        Assert.Equal("products", name.GetString());
     }
 
     [Fact(Skip = "Invalid test assertion")]

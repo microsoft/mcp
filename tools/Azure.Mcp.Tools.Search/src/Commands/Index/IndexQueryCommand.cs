@@ -22,12 +22,7 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : Globa
 
     public override string Description =>
         """
-        Query an Azure AI Search index. Returns search results matching the specified query.
-
-        Required arguments:
-        - service: The name of the Azure AI Search service
-        - index: The name of the search index to query
-        - query: The search text to query with
+        Queries an Azure AI Search index, returning the results of the query.
         """;
 
     public override string Title => CommandTitle;

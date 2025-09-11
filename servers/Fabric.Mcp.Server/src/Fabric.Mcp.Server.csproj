@@ -4,7 +4,7 @@
     <CliName>fabmcp</CliName>
     <AssemblyTitle>Fabric MCP Server</AssemblyTitle>
     <Description>Microsoft Fabric MCP Server - Model Context Protocol implementation for Fabric</Description>
-    <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
+    <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Fabric.Mcp.Server#readme</ReadmeUrl>
     <NpmPackageName>@microsoft/fabric-mcp</NpmPackageName>
     <NpmPackageKeywords>fabric,mcp,model-context-protocol</NpmPackageKeywords>
     <PackageId>Microsoft.Fabric.Mcp</PackageId>
