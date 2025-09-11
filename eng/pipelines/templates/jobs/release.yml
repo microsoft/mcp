@@ -172,8 +172,9 @@ jobs:
           - task: Powershell@2
             displayName: "Confirm that Nugets are in Prod feed"
             inputs:
+              targetType: 'filePath'
               pwsh: true
-              filePath: $(Build.SourcesDirectory)/eng/scripts/Confirm-NugetInFeed.ps1
+              filePath: '$(Build.SourcesDirectory)/eng/scripts/Confirm-NugetInFeed.ps1'
               arguments: >
                 -PackagesDirectory '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform'
                 -ServerName '${{ parameters.ServerName }}'
@@ -198,8 +199,9 @@ jobs:
           - task: Powershell@2
             displayName: "Confirm that Nugets are in Dev feed"
             inputs:
+              targetType: 'filePath'
               pwsh: true
-              filePath: $(Build.SourcesDirectory)/eng/scripts/Confirm-NugetInFeed.ps1
+              filePath: '$(Build.SourcesDirectory)/eng/scripts/Confirm-NugetInFeed.ps1'
               arguments: >
                 -PackagesDirectory '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform'
                 -ServerName '${{ parameters.ServerName }}'
