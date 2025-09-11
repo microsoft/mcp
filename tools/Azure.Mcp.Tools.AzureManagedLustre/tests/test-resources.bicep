@@ -1,7 +1,8 @@
 targetScope = 'resourceGroup'
 
 @minLength(3)
-@maxLength(24)
+// Can be up to 24, but needs to be 22 for the storage account name addition of 'sa'
+@maxLength(22)
 @description('The base resource name.')
 param baseName string = resourceGroup().name
 
@@ -16,6 +17,9 @@ param amlfsSubnetPrefix string = '10.20.1.0/24'
 
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string = deployer().objectId
+
+@description('Object ID of the HPC Cache Resource Provider (service principal) that needs Storage roles on the storage account.')
+param hpcCacheRpObjectId string
 
 
 @description('AMLFS SKU name')
@@ -46,6 +50,12 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
           natGateway: {
             id: natGateway.id
           }
+          // Allow this subnet to reach Storage via service endpoint (used by storage account network rules below)
+          serviceEndpoints: [
+            {
+              service: 'Microsoft.Storage'
+            }
+          ]
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Disabled'
         }
@@ -81,6 +91,82 @@ resource natPublicIp 'Microsoft.Network/publicIPAddresses@2024-07-01' = {
   }
 }
 
+// Storage account used for HSM hydration and logging containers
+@minLength(3)
+@maxLength(24)
+@description('Storage account name for HSM hydration and logging containers')
+param storageAccountName string = toLower('${baseName}sa')
+
+resource storageAccount 'Microsoft.Storage/storageAccounts@2022-09-01' = {
+  name: storageAccountName
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  kind: 'StorageV2'
+  properties: {
+    accessTier: 'Hot'
+    // Restrict network access to the specified subnet (default Deny others)
+    networkAcls: {
+      bypass: 'AzureServices'
+      virtualNetworkRules: [
+        {
+          id: filesystemSubnetId
+          action: 'Allow'
+        }
+      ]
+      ipRules: []
+      defaultAction: 'Deny'
+    }
+    publicNetworkAccess: 'Enabled'
+  }
+}
+
+// Role assignments granting the HPC Cache RP required access to the storage account for HSM (imports/exports)
+// Storage Account Contributor
+resource storageAccountContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, '17d1049b-9a84-46fb-8f53-869881c3d3ab', hpcCacheRpObjectId)
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '17d1049b-9a84-46fb-8f53-869881c3d3ab')
+    principalId: hpcCacheRpObjectId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Storage Blob Data Contributor
+resource storageBlobDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, 'ba92f5b4-2d11-453d-a403-e96b0029c9fe', hpcCacheRpObjectId)
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+    principalId: hpcCacheRpObjectId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2021-09-01' = {
+  parent: storageAccount
+  name: 'default'
+  properties: {}
+}
+
+resource dataContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' = {
+  parent: blobService
+  name: 'data'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
+resource loggingContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2021-09-01' = {
+  parent: blobService
+  name: 'logging'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
 var filesystemSubnetId = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, 'amlfs')
 
 resource amlfs 'Microsoft.StorageCache/amlFilesystems@2024-07-01' = {
@@ -92,6 +178,18 @@ resource amlfs 'Microsoft.StorageCache/amlFilesystems@2024-07-01' = {
   properties: {
     storageCapacityTiB: amlfsCapacityTiB
     filesystemSubnet: filesystemSubnetId
+    hsm: {
+      settings: {
+        // Resource IDs for the blob containers used by HSM
+        // Use symbolic resource IDs so deployment engine creates dependency on containers
+        container: dataContainer.id
+        loggingContainer: loggingContainer.id
+        // Only blobs prefixed with one of these paths will be imported during initial creation
+        importPrefixesInitial: [
+          '/'
+        ]
+      }
+    }
     maintenanceWindow: {
       dayOfWeek: 'Sunday'
       timeOfDayUTC: '02:00'

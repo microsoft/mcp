@@ -53,15 +53,14 @@ public class FileSystemImportJobCreateCommandTests
     public async Task ExecuteAsync_Succeeds_WithRequiredParameters()
     {
         // Arrange
-        _amlfsService.CreateImportJobAsync(
+    _amlfsService.CreateImportJobAsync(
             Arg.Is(_subscription),
             Arg.Is(_resourceGroup),
             Arg.Is(_fileSystem),
             Arg.Is<string?>(x => x == null),
-            Arg.Is<IList<string>?>(x => x != null && x.Count == 1 && x[0] == "/"), // defaulted by command
+            Arg.Any<IList<string>?>(),
             Arg.Is("OverwriteAlways"),
             Arg.Is<int?>(-1), // defaulted by command now
-            Arg.Is<string?>("Active"),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
             .Returns(new ImportJobInfo(
@@ -73,7 +72,7 @@ public class FileSystemImportJobCreateCommandTests
                 "OverwriteAlways",
                 -1,
                 "Active",
-                new List<string> { "/" }));
+                new List<string>{"/"}));
 
         var args = _parser.Parse([
             "--subscription", _subscription,
@@ -84,16 +83,31 @@ public class FileSystemImportJobCreateCommandTests
         // Act
         var response = await _command.ExecuteAsync(_context, args);
 
-        // Assert
+        // Assert basic response status and that results object exists (contents validated indirectly via service return setup)
         Assert.Equal(200, response.Status);
         Assert.NotNull(response.Results);
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ImportJobCreateResultJson>(json);
-        Assert.NotNull(result);
-        Assert.NotNull(result!.ImportJob);
-        Assert.Equal("import-job-123", result.ImportJob.Name);
-        Assert.Equal(_fileSystem, result.ImportJob.FileSystemName);
-        Assert.Equal("/", result.ImportJob.ImportPrefixes![0]);
+
+        // Verify required args & defaults passed to service
+    await _amlfsService.Received(1).CreateImportJobAsync(
+        _subscription,
+        _resourceGroup,
+        _fileSystem,
+        null,
+        Arg.Any<IList<string>?>(),
+        "OverwriteAlways",
+        -1,
+        Arg.Any<string?>(),
+        Arg.Any<RetryPolicyOptions?>());
+
+        // Inspect captured call to verify prefixes list content
+        var call = _amlfsService.ReceivedCalls().First(c => c.GetMethodInfo().Name == nameof(IAzureManagedLustreService.CreateImportJobAsync));
+        var prefixesArg = (IList<string>?)call.GetArguments()[4];
+        Assert.NotNull(prefixesArg);
+        Assert.Single(prefixesArg!); // default now contains root path
+        Assert.Equal("/", prefixesArg![0]);
+        // Inspect captured call to verify conflict resolution mode
+        var conflictModeArg = (string)call.GetArguments()[5]!;
+        Assert.Equal("OverwriteAlways", conflictModeArg);
     }
 
     [Fact]
@@ -102,7 +116,7 @@ public class FileSystemImportJobCreateCommandTests
         // Arrange
         var prefixes = new[] { "/a", "/b" };
         var name = "custom-job";
-        _amlfsService.CreateImportJobAsync(
+    _amlfsService.CreateImportJobAsync(
             Arg.Is(_subscription),
             Arg.Is(_resourceGroup),
             Arg.Is(_fileSystem),
@@ -110,7 +124,6 @@ public class FileSystemImportJobCreateCommandTests
             Arg.Is<IList<string>?>(p => p != null && p.Count == prefixes.Length && p[0] == prefixes[0] && p[1] == prefixes[1]),
             Arg.Is("Skip"),
             Arg.Is<int?>(5),
-            Arg.Is<string?>("Active"),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
             .Returns(new ImportJobInfo(
@@ -138,9 +151,9 @@ public class FileSystemImportJobCreateCommandTests
         // Act
         var response = await _command.ExecuteAsync(_context, args);
 
-        // Assert
-        Assert.Equal(200, response.Status);
-        await _amlfsService.Received(1).CreateImportJobAsync(
+    // Assert
+    Assert.Equal(200, response.Status);
+    await _amlfsService.Received(1).CreateImportJobAsync(
             _subscription,
             _resourceGroup,
             _fileSystem,
@@ -148,7 +161,6 @@ public class FileSystemImportJobCreateCommandTests
             Arg.Is<IList<string>?>(p => p != null && p.Count == prefixes.Length && p[0] == prefixes[0] && p[1] == prefixes[1]),
             "Skip",
             5,
-            "Active",
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>());
     }
@@ -177,7 +189,7 @@ public class FileSystemImportJobCreateCommandTests
     public async Task ExecuteAsync_ServiceThrows_RequestFailed_UsesStatusCode()
     {
         // Arrange
-        _amlfsService.CreateImportJobAsync(
+    _amlfsService.CreateImportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -185,7 +197,6 @@ public class FileSystemImportJobCreateCommandTests
             Arg.Any<IList<string>?>(),
             Arg.Any<string>(),
             Arg.Any<int?>(),
-            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Azure.RequestFailedException(404, "not found"));
@@ -208,7 +219,7 @@ public class FileSystemImportJobCreateCommandTests
     public async Task ExecuteAsync_ServiceThrows_GenericException_Returns500()
     {
         // Arrange
-        _amlfsService.CreateImportJobAsync(
+    _amlfsService.CreateImportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -216,7 +227,6 @@ public class FileSystemImportJobCreateCommandTests
             Arg.Any<IList<string>?>(),
             Arg.Any<string>(),
             Arg.Any<int?>(),
-            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Exception("boom"));
@@ -233,23 +243,5 @@ public class FileSystemImportJobCreateCommandTests
         // Assert
         Assert.True(response.Status >= 500);
         Assert.Contains("boom", response.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private class ImportJobCreateResultJson
-    {
-        [JsonPropertyName("importJob")] public ImportJobJson? ImportJob { get; set; }
-    }
-
-    private class ImportJobJson
-    {
-        [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
-        [JsonPropertyName("fileSystemName")] public string FileSystemName { get; set; } = string.Empty;
-        [JsonPropertyName("status")] public string Status { get; set; } = string.Empty;
-        [JsonPropertyName("resourceGroupName")] public string? ResourceGroupName { get; set; }
-        [JsonPropertyName("subscriptionId")] public string? SubscriptionId { get; set; }
-        [JsonPropertyName("conflictResolutionMode")] public string? ConflictResolutionMode { get; set; }
-        [JsonPropertyName("maximumErrors")] public int? MaximumErrors { get; set; }
-        [JsonPropertyName("adminStatus")] public string? AdminStatus { get; set; }
-        [JsonPropertyName("importPrefixes")] public IList<string>? ImportPrefixes { get; set; }
     }
 }

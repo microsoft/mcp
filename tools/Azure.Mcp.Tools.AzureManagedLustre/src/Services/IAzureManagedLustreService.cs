@@ -25,9 +25,8 @@ public interface IAzureManagedLustreService
         string fileSystemName,
         string? name = null,
         IList<string>? importPrefixes = null,
-        string conflictResolutionMode = "OverwriteAlways",
+        string conflictResolutionMode = "Skip",
         int? maximumErrors = 0,
-        string? adminStatus = "Active",
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 }
