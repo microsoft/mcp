@@ -136,67 +136,77 @@ public static class FoundryOptionDefinitions
     };
 
     public static readonly Option<int> ScaleCapacityOption = new(
-        $"--{ScaleCapacity}",
-        "The scale capacity for the deployment."
-    );
-
-    public static readonly Option<string> AgentIdOption = new(
-        $"--{AgentId}",
-        "The agent id in Agents."
+        $"--{ScaleCapacity}"
     )
     {
+        Description = "The scale capacity for the deployment."
+    };
+
+    public static readonly Option<string> AgentIdOption = new(
+        $"--{AgentId}"
+    )
+    {
+        Description = "The ID of the agent to interact with.",
         Required = true
     };
 
     public static readonly Option<string> QueryOption = new(
-        $"--{Query}",
-        "The query sent to agent."
+        $"--{Query}"
     )
     {
+        Description = "The query sent to the agent.",
         Required = true
     };
 
     public static readonly Option<string> EvaluatorsOption = new(
-        $"--{Evaluators}",
-        "The list of evaluators to use for evaluation, separated by commas."
-    );
-
-    public static readonly Option<string> EvaluatorNameOption = new(
-        $"--{EvaluatorName}",
-        "The name of the evaluator to use."
+        $"--{Evaluators}"
     )
     {
+        Description = "The list of evaluators to use for evaluation, separated by commas. If not specified, all evaluators will be used."
+    };
+
+    public static readonly Option<string> EvaluatorNameOption = new(
+        $"--{EvaluatorName}"
+    )
+    {
+        Description = "The name of the evaluator to use (intent_resolution, tool_call_accuracy, task_adherence).",
         Required = true
     };
 
     public static readonly Option<string> ResponseOption = new(
-        $"--{Response}",
-        "The response from the agent."
-    );
-
-    public static readonly Option<string> ToolCallsOption = new(
-        $"--{ToolCalls}",
-        "The tool calls made by the agent."
-    );
-
-    public static readonly Option<string> ToolDefinitionsOption = new(
-        $"--{ToolDefinitions}",
-        "The tool definitions used by the agent."
-    );
-
-    public static readonly Option<string> AzureOpenAIEndpointOption = new(
-        $"--{AzureOpenAIEndpoint}",
-        "The endpoint URL for the Azure OpenAI service to be used in evaluation."
+        $"--{Response}"
     )
     {
+        Description = "The response from the agent.",
+    };
+
+    public static readonly Option<string> ToolCallsOption = new(
+        $"--{ToolCalls}"
+    )
+    {
+        Description = "The tool calls made by the agent."
+    };
+
+    public static readonly Option<string> ToolDefinitionsOption = new(
+        $"--{ToolDefinitions}"
+    )
+    {
+        Description = "Optional tool definitions made by the agent in JSON format."
+    };
+
+    public static readonly Option<string> AzureOpenAIEndpointOption = new(
+        $"--{AzureOpenAIEndpoint}"
+    )
+    {
+        Description = "The endpoint URL for the Azure OpenAI service to be used in evaluation.",
         Required = true
     };
 
     public static readonly Option<string> AzureOpenAIDeploymentOption = new(
-        $"--{AzureOpenAIDeployment}",
-        "The deployment name for the Azure OpenAI model to be used in evaluation."
+        $"--{AzureOpenAIDeployment}"
     )
     {
+        Description = "The deployment name for the Azure OpenAI model to be used in evaluation.",
         Required = true
     };
 
