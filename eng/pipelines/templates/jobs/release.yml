@@ -78,12 +78,14 @@ jobs:
       artifact: npm_$(PipelineArtifactName)_packed
       displayName: Download npm_$(PipelineArtifactName)_packed
 
-  # Republish so downstream jobs (deployment/publish) can resolve it as a pipelineArtifact input in this run.
-  - publish: $(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed
-    artifact: npm_$(PipelineArtifactName)_packed
-    displayName: Publish npm_$(PipelineArtifactName)_packed for downstream jobs
-
   - template: /eng/common/pipelines/templates/steps/retain-run.yml
+
+  templateContext:
+    outputs:
+    - output: pipelineArtifact
+      displayName: Publish npm_$(PipelineArtifactName)_packed for downstream jobs
+      path: $(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed
+      artifact: npm_$(PipelineArtifactName)_packed
 
 - deployment: Publish
   displayName: "Publish to npmjs.com"
