@@ -23,6 +23,17 @@ if(!(Test-Path $ArtifactsPath)) {
     exit 1
 }
 
+$serverJsonFilePairs = Get-ChildItem -Path $ArtifactsPath -Filter "wrapper.json" -Recurse
+| ForEach-Object {
+    @{
+        FullName = $_.FullName
+        Directory = $_.Directory
+        BaseName = $_.Directory.Name -replace "-(native|trimmed)$", ""
+        IsNative = $_.Directory.Name -match ".*-(native|trimmed)"
+    }
+}
+| Group-Object -Property BaseName
+
 $serverJsonFiles = Get-ChildItem -Path $ArtifactsPath -Filter "wrapper.json" -Recurse
 
 if ($ServerName) {
@@ -52,11 +63,20 @@ try {
     Write-Host "Installing npm packages"
     Invoke-LoggedCommand 'npm ci --omit=optional'
 
-    foreach ($serverJsonFile in $serverJsonFiles) {
-        $serverJson = Get-Content $serverJsonFile -Raw | ConvertFrom-Json
+    foreach ($serverJsonFilePair in $serverJsonFilePairs) {
+        # Use the non-native as the "Server Directory", then copy the native bits into
+        # the appropriate platform /native directories
+
+        $baseName = $serverJsonFilePair.Name
+        $nativeFile = $serverJsonFilePair.Group | Where-Object { $_.IsNative } | Select-Object -First 1
+        $nonNativeFile = $serverJsonFilePair.Group | Where-Object { -not $_.IsNative } | Select-Object -First 1
+
+        $serverJson = Get-Content -LiteralPath $nonNativeFile.FullName -Raw | ConvertFrom-Json
+
         $version = $serverJson.version
-        $serverDirectory = $serverJsonFile.Directory
-        $serverName = $serverDirectory.Name
+        $serverDirectory = $nonNativeFile.Directory
+        $projectProperties = & "$RepoRoot/eng/scripts/Get-ProjectProperties.ps1" -ProjectName "$baseName.csproj"
+        $vsixBaseName = $projectProperties.VsixBaseName
 
         $platformDirectories = Get-ChildItem $serverDirectory -Directory
         foreach ($platformDirectory in $platformDirectories) {
@@ -94,9 +114,14 @@ Processing VSIX packaging: $vsixBaseName
             Write-Host "Copying $platformDirectory/dist to $tempPath/server"
             Copy-Item -Path "$platformDirectory/dist" -Destination "$tempPath/server" -Recurse -Force -ProgressAction SilentlyContinue
 
-            # Remove symbols files before packing
-            Get-ChildItem -Path "$tempPath/server" -Recurse -Include "*.pdb", "*.dSYM", "*.dbg" | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
+            if($nativeFile) {
+                $nativePlatformDirectory = "$($nativeFile.Directory)/$($platformDirectory.Name)"
+                Write-Host "Copying $nativePlatformDirectory/dist to $tempPath/server/native"
+                Copy-Item -Path "$nativePlatformDirectory/dist" -Destination "$tempPath/server/native" -Recurse -Force -ProgressAction SilentlyContinue
+            }
 
+            Write-Host "Removing debug files (.pdb, .dSYM, .dbg) from $tempPath/server" -ForegroundColor Yellow
+            Get-ChildItem -Path "$tempPath/server" -Recurse -Include "*.pdb", "*.dSYM", "*.dbg" | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
             New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
 
             ## Update the version number
