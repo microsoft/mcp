@@ -18,7 +18,6 @@ public sealed class FileSystemImportJobCreateCommand(ILogger<FileSystemImportJob
     private readonly Option<string[]> _importPrefixesOption = AzureManagedLustreOptionDefinitions.ImportPrefixesOption;
     private readonly Option<string> _conflictResolutionModeOption = AzureManagedLustreOptionDefinitions.ConflictResolutionModeOption;
     private readonly Option<int?> _maximumErrorsOption = AzureManagedLustreOptionDefinitions.MaximumErrorsOption;
-    private readonly Option<string> _adminStatusOption = AzureManagedLustreOptionDefinitions.AdminStatusOption;
     private readonly Option<string> _nameOption = AzureManagedLustreOptionDefinitions.NameOption;
 
     public override string Name => "create";
@@ -40,7 +39,7 @@ public sealed class FileSystemImportJobCreateCommand(ILogger<FileSystemImportJob
         command.AddOption(_importPrefixesOption);
         command.AddOption(_conflictResolutionModeOption);
         command.AddOption(_maximumErrorsOption);
-        command.AddOption(_adminStatusOption);
+    // Admin status removed from service; keep option for backward compat? (omitted here)
         command.AddOption(_nameOption);
     }
 
@@ -49,10 +48,17 @@ public sealed class FileSystemImportJobCreateCommand(ILogger<FileSystemImportJob
         var options = base.BindOptions(parseResult);
         options.FileSystem = parseResult.GetValueForOption(_fileSystemOption);
         var prefixes = parseResult.GetValueForOption(_importPrefixesOption);
-        options.ImportPrefixes = prefixes == null ? new List<string> { "/" } : prefixes.ToList();
+        if (prefixes == null || prefixes.Length == 0)
+        {
+            options.ImportPrefixes = new List<string> { "/" };
+        }
+        else
+        {
+            options.ImportPrefixes = prefixes.ToList();
+        }
         options.ConflictResolutionMode = parseResult.GetValueForOption(_conflictResolutionModeOption) ?? "OverwriteAlways";
         options.MaximumErrors = parseResult.GetValueForOption(_maximumErrorsOption) ?? -1;
-        options.AdminStatus = parseResult.GetValueForOption(_adminStatusOption) ?? "Active";
+    options.AdminStatus = "Active"; // Hard-coded since service no longer accepts parameter
         options.Name = parseResult.GetValueForOption(_nameOption);
         return options;
     }
@@ -76,7 +82,6 @@ public sealed class FileSystemImportJobCreateCommand(ILogger<FileSystemImportJob
                 options.ImportPrefixes,
                 options.ConflictResolutionMode ?? "OverwriteAlways",
                 options.MaximumErrors ?? -1,
-                options.AdminStatus,
                 options.Tenant,
                 options.RetryPolicy);
 

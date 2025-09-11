@@ -25,7 +25,10 @@ public class AzureManagedLustreSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var azureManagedLustre = new CommandGroup(Name,
-            "Azure Managed Lustre operations - Commands for non-destructive interaction with Azure Managed Lustre file systems (AMLFS) used for high-performance computing workloads.");
+            """
+            Azure Managed Lustre operations - Azure Managed Lustre file systems (AMLFS) interaction for high-performance computing workloads.
+            Use this tool to list and manage Azure Managed Lustre file systems, including creating import jobs to hydrate the file system namespace.
+            """);
         rootGroup.AddSubGroup(azureManagedLustre);
 
         var fileSystem = new CommandGroup("filesystem", "Azure Managed Lustre file system operations - Commands for listing managed Lustre file systems.");
