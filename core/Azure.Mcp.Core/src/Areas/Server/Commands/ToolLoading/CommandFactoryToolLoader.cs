@@ -140,10 +140,10 @@ public sealed class CommandFactoryToolLoader(
 
                 // Use our extension method to handle the elicitation
                 var elicitationResponse = await request.Server.RequestElicitationAsync(elicitationRequest, cancellationToken);
-                
+
                 if (elicitationResponse.Action != ElicitationAction.Accept)
                 {
-                    _logger.LogInformation("User {Action} the elicitation for tool '{Tool}'. Operation not executed.", 
+                    _logger.LogInformation("User {Action} the elicitation for tool '{Tool}'. Operation not executed.",
                         elicitationResponse.Action.ToString().ToLower(), toolName);
                     return new CallToolResult
                     {
