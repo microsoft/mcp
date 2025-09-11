@@ -172,7 +172,7 @@ extends:
             parameters:
               VsixTargets: ${{ parameters.VsixTargets }}
               ServerName: ${{ parameters.ServerName }}
-              IncludeNative: ${{ parameters.IncludeNative }}
+              IncludeNative: false
           - ${{ if ne(parameters.SkipDockerRelease, 'true') }}:
             - template: /eng/pipelines/templates/jobs/docker.yml
               parameters:

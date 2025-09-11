@@ -7,6 +7,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 ### Breaking Changes
+- To improve performance, packages now ships with trimmed binaries that have unused code and dependencies removed, resulting in significantly smaller file sizes, faster startup times, and reduced memory footprint. [#405]
+[Learn more](https://learn.microsoft.com/dotnet/core/deploying/trimming/trim-self-contained)
 
 - Merged `azmcp_search_index_describe` and `azmcp_search_index_list` into `azmcp_search_index_get`, which can perform both operations based on whether
   an index name is passed. [[#378](https://github.com/microsoft/mcp/pull/378)]
