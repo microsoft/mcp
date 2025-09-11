@@ -154,8 +154,8 @@ jobs:
   timeoutInMinutes: 120
   dependsOn: TagRepository
   pool:
-    name: $(WINDOWSPOOL)
-    image: $(WINDOWSVMIMAGE)
+    name: azsdk-pool
+    image: windows-2022
     os: windows
     
   strategy:
@@ -197,8 +197,8 @@ jobs:
   condition: and(succeeded(), ne(variables['Skip.SymbolsUpload'], 'true'))
   dependsOn: PublishNugetPackage
   pool:
-    name: $(WINDOWSPOOL)
-    image: $(WINDOWSVMIMAGE)
+    name: azsdk-pool
+    image: windows-2022
     os: windows
 
   variables:
