@@ -6,6 +6,7 @@
 ### Added
 
 ### Changed
+- Made trimmed binaries the default for better performance. [[#405](https://github.com/microsoft/mcp/pull/405)]
 
 ### Fixed
 
