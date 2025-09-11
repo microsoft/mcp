@@ -37,7 +37,11 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        ReadOnly = false
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
     };
 
     protected override void RegisterOptions(Command command)

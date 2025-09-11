@@ -417,8 +417,10 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,    // Set to true for commands that modify resources
-        ReadOnly = true,         // Set to false for commands that modify resources
-        Secret = false,          // Set to true for commands that may return sensitive information
+        OpenWorld = true,       // Set to false for commands with closed/predictable domains (e.g., schema, best practices)
+        Idempotent = true,      // Set to false for commands that are not idempotent
+        ReadOnly = true,        // Set to false for commands that modify resources
+        Secret = false,         // Set to true for commands that may return sensitive information
         LocalRequired = false   // Set to true for tools requiring local execution/resources
     };
 
@@ -498,6 +500,106 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     // Strongly-typed result records
     internal record {Resource}{Operation}CommandResult(List<ResultType> Results);
 }
+
+### ToolMetadata Properties
+
+The `ToolMetadata` class provides behavioral characteristics that help MCP clients understand how commands operate. Set these properties carefully based on your command's actual behavior:
+
+#### OpenWorld Property
+- **`true`**: Command may interact with an "open world" of external entities where the domain is unpredictable or dynamic
+- **`false`**: Command's domain of interaction is closed and well-defined
+
+**Examples:**
+- **Open World (`true`)**: Commands that query Azure resources, list storage accounts, search databases - the set of possible results is unpredictable and changes over time
+- **Closed World (`false`)**: Commands that return schema definitions, best practices guides, static documentation, or predefined samples - the domain is well-defined and predictable
+
+```csharp
+// Open world - Azure resource queries
+OpenWorld = true,    // Storage account list, database queries, resource discovery
+
+// Closed world - Static/predictable content  
+OpenWorld = false,   // Bicep schemas, best practices, design patterns, predefined samples
+```
+
+#### Destructive Property
+- **`true`**: Command may delete, modify, or destructively alter resources in a way that could cause data loss or irreversible changes
+- **`false`**: Command is safe and will not cause destructive changes to resources
+
+**Examples:**
+- **Destructive (`true`)**: Commands that delete resources, modify configurations, reset passwords, purge data, or perform destructive operations
+- **Non-Destructive (`false`)**: Commands that only read data, list resources, show configurations, or perform safe operations
+
+```csharp
+// Destructive operations
+Destructive = true,     // Delete database, reset keys, purge storage, modify critical settings
+
+// Safe operations
+Destructive = false,    // List resources, show configuration, query data, get status
+```
+
+#### Idempotent Property
+- **`true`**: Command can be safely executed multiple times with the same parameters and will produce the same result without unintended side effects
+- **`false`**: Command may produce different results or side effects when executed multiple times
+
+**Examples:**
+- **Idempotent (`true`)**: Commands that set configurations to specific values, create resources with fixed names (when "already exists" is handled gracefully), or perform operations that converge to a desired state
+- **Non-Idempotent (`false`)**: Commands that create resources with generated names, append data, increment counters, or perform operations that accumulate effects
+
+```csharp
+// Idempotent operations
+Idempotent = true,      // Set configuration value, create named resource (with proper handling), list resources
+
+// Non-idempotent operations  
+Idempotent = false,     // Generate new keys, create resources with auto-generated names, append logs
+```
+
+#### ReadOnly Property
+- **`true`**: Command only reads or queries data without making any modifications to resources or state
+- **`false`**: Command may modify, create, update, or delete resources or change system state
+
+**Examples:**
+- **Read-Only (`true`)**: Commands that list resources, show configurations, query databases, get status information, or retrieve data
+- **Not Read-Only (`false`)**: Commands that create, update, delete resources, modify settings, or change any system state
+
+```csharp
+// Read-only operations
+ReadOnly = true,        // List accounts, show database schema, query data, get resource properties
+
+// Write operations
+ReadOnly = false,       // Create resources, update configurations, delete items, modify settings
+```
+
+#### Secret Property
+- **`true`**: Command may return sensitive information such as credentials, keys, connection strings, or other confidential data that should be handled with care
+- **`false`**: Command returns non-sensitive information that is safe to log or display
+
+**Examples:**
+- **Secret (`true`)**: Commands that retrieve access keys, connection strings, passwords, certificates, or other credentials
+- **Non-Secret (`false`)**: Commands that return public information, resource lists, configurations without sensitive data, or status information
+
+```csharp
+// Commands returning sensitive data
+Secret = true,          // Get storage account keys, show connection strings, retrieve certificates
+
+// Commands returning public data
+Secret = false,         // List public resources, show non-sensitive configuration, get resource status
+```
+
+#### LocalRequired Property
+- **`true`**: Command requires local execution environment, local resources, or tools that must be installed on the client machine
+- **`false`**: Command can execute remotely and only requires network access to Azure services
+
+**Examples:**
+- **Local Required (`true`)**: Commands that use local tools (Azure CLI, Docker, npm), access local files, or require specific local environment setup
+- **Remote Capable (`false`)**: Commands that only make API calls to Azure services and can run in any environment with network access
+
+```csharp
+// Commands requiring local resources
+LocalRequired = true,   // Azure CLI wrappers, local file operations, tools requiring local installation
+
+// Pure cloud API commands
+LocalRequired = false,  // Azure Resource Manager API calls, cloud service queries, remote operations
+```
 
 ### 4. Service Interface and Implementation
 

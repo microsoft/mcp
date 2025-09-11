@@ -67,7 +67,7 @@
       Version="9.0.6" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="9.0.6" />
     <PackageVersion Include="Microsoft.HybridRow" Version="1.1.0-preview3" />
-    <PackageVersion Include="Microsoft.Azure.Cosmos.Aot" Version="0.1.1-preview.1" />
+    <PackageVersion Include="Microsoft.Azure.Cosmos.Aot" Version="0.1.2-preview.2" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.6" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
     <PackageVersion Include="MySqlConnector" Version="2.4.0" />

@@ -200,6 +200,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_aks_cluster_list | List all AKS clusters in my subscription |
 | azmcp_aks_cluster_list | Show me my Azure Kubernetes Service clusters |
 | azmcp_aks_cluster_list | What AKS clusters do I have? |
+| azmcp_aks_nodepool_list | List nodepools for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_list | Show me the nodepool list for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_list | What nodepools do I have for AKS cluster \<cluster-name> in \<resource-group> |
 
 ## Azure Load Testing
 
@@ -337,6 +340,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_resourcehealth_availability-status_list | List availability status for all resources in my subscription |
 | azmcp_resourcehealth_availability-status_list | Show me the health status of all my Azure resources |
 | azmcp_resourcehealth_availability-status_list | What resources in resource group <resource_group_name> have health issues? |
+| azmcp_resourcehealth_service-health-events_list | List all service health events in my subscription |
+| azmcp_resourcehealth_service-health-events_list | Show me Azure service health events for subscription <subscription_id> |
+| azmcp_resourcehealth_service-health-events_list | What service issues have occurred in the last 30 days? |
+| azmcp_resourcehealth_service-health-events_list | List active service health events in my subscription |
+| azmcp_resourcehealth_service-health-events_list | Show me planned maintenance events for my Azure services |
 
 ## Azure Service Bus
 
@@ -370,15 +378,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_server_entra-admin_list | List Microsoft Entra ID administrators for SQL server <server_name> |
 | azmcp_sql_server_entra-admin_list | Show me the Entra ID administrators configured for SQL server <server_name> |
 | azmcp_sql_server_entra-admin_list | What Microsoft Entra ID administrators are set up for my SQL server <server_name>? |
-| azmcp_sql_server_firewall-rule_list | List all firewall rules for SQL server <server_name> |
-| azmcp_sql_server_firewall-rule_list | Show me the firewall rules for SQL server <server_name> |
-| azmcp_sql_server_firewall-rule_list | What firewall rules are configured for my SQL server <server_name>? |
 | azmcp_sql_server_firewall-rule_create | Create a firewall rule for my Azure SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_create | Add a firewall rule to allow access from IP range <start_ip> to <end_ip> for SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_create | Create a new firewall rule named <rule_name> for SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_delete | Delete a firewall rule from my Azure SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_delete | Remove the firewall rule <rule_name> from SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_delete | Delete firewall rule <rule_name> for SQL server <server_name> |
+| azmcp_sql_server_firewall-rule_list | List all firewall rules for SQL server <server_name> |
+| azmcp_sql_server_firewall-rule_list | Show me the firewall rules for SQL server <server_name> |
+| azmcp_sql_server_firewall-rule_list | What firewall rules are configured for my SQL server <server_name>? |
 
 ## Azure Storage
 
