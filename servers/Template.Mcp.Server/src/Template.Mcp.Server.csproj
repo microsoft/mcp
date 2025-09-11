@@ -7,7 +7,7 @@
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Template.Mcp.Server#readme</ReadmeUrl>
     <NpmPackageName>@azure/mcp-template</NpmPackageName>
     <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>
-    <PackageId>Microsoft.Template.Mcp.Server</PackageId>
+    <PackageId>Microsoft.Template.Mcp</PackageId>
     <ToolCommandName>$(CliName)</ToolCommandName>
   </PropertyGroup>
 

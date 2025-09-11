@@ -11,3 +11,4 @@ extends:
     #ReleaseRun: ${{ and(eq(variables['Build.Reason'], 'Manual'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startswith(variables['Build.SourceBranch'], 'refs/heads/hotfix/'))) }}
     ReleaseRun: true
     ServerName: Template.Mcp.Server
+    SkipDockerRelease : true
