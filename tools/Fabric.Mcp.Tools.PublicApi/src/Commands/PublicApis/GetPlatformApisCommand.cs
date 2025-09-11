@@ -13,7 +13,7 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
     private const string CommandTitle = "Get Platform API Specification";
     private readonly ILogger<GetPlatformApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public override string Name => "platform-apis-get";
+    public override string Name => "get";
 
     public override string Description =>
         """

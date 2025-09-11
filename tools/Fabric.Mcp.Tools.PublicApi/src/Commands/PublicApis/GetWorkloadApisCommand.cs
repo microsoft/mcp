@@ -15,7 +15,7 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
     private readonly ILogger<GetWorkloadApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly Option<string> _workloadTypeOption = FabricOptionDefinitions.WorkloadType;
 
-    public override string Name => "workload-get";
+    public override string Name => "get";
 
     public override string Description =>
         """

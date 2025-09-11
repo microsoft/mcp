@@ -17,7 +17,7 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
     private readonly ILogger<GetExamplesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly Option<string> _workloadTypeOption = FabricOptionDefinitions.WorkloadType;
 
-    public override string Name => "examples-get";
+    public override string Name => "get";
 
     public override string Description =>
         """

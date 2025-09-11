@@ -22,13 +22,13 @@ public class PublicApisCommandsTests
     public void DiscoverPublicWorkloadsCommand_HasCorrectProperties()
     {
         // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<DiscoverPublicWorkloadsCommand>();
+        var logger = LoggerFactory.Create(builder => { }).CreateLogger<ListWorkloadsCommand>();
 
         // Act
-        var command = new DiscoverPublicWorkloadsCommand(logger);
+        var command = new ListWorkloadsCommand(logger);
 
         // Assert
-        Assert.Equal("workloads-list", command.Name);
+        Assert.Equal("list", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("List Available Fabric Workloads", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -39,23 +39,23 @@ public class PublicApisCommandsTests
     public void DiscoverPublicWorkloadsCommand_GetCommand_ReturnsValidCommand()
     {
         // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<DiscoverPublicWorkloadsCommand>();
-        var command = new DiscoverPublicWorkloadsCommand(logger);
+        var logger = LoggerFactory.Create(builder => { }).CreateLogger<ListWorkloadsCommand>();
+        var command = new ListWorkloadsCommand(logger);
 
         // Act
         var systemCommand = command.GetCommand();
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("workloads-list", systemCommand.Name);
+        Assert.Equal("list", systemCommand.Name);
     }
 
     [Fact]
     public async Task DiscoverPublicWorkloadsCommand_ExecuteAsync_ReturnsWorkloads()
     {
         // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<DiscoverPublicWorkloadsCommand>();
-        var command = new DiscoverPublicWorkloadsCommand(logger);
+        var logger = LoggerFactory.Create(builder => { }).CreateLogger<ListWorkloadsCommand>();
+        var command = new ListWorkloadsCommand(logger);
         var fabricService = Substitute.For<IFabricPublicApiService>();
         var expectedWorkloads = new[] { "notebook", "report", "platform" };
 
@@ -81,8 +81,8 @@ public class PublicApisCommandsTests
     public async Task DiscoverPublicWorkloadsCommand_ExecuteAsync_HandlesException()
     {
         // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<DiscoverPublicWorkloadsCommand>();
-        var command = new DiscoverPublicWorkloadsCommand(logger);
+        var logger = LoggerFactory.Create(builder => { }).CreateLogger<ListWorkloadsCommand>();
+        var command = new ListWorkloadsCommand(logger);
         var fabricService = Substitute.For<IFabricPublicApiService>();
 
         fabricService.ListWorkloadsAsync().ThrowsAsync(new InvalidOperationException("Service error"));
@@ -112,7 +112,7 @@ public class PublicApisCommandsTests
         var command = new GetPlatformApisCommand(logger);
 
         // Assert
-        Assert.Equal("platform-apis-get", command.Name);
+        Assert.Equal("get", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Get Platform API Specification", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -131,7 +131,7 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("platform-apis-get", systemCommand.Name);
+        Assert.Equal("get", systemCommand.Name);
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public class PublicApisCommandsTests
         var command = new GetWorkloadApisCommand(logger);
 
         // Assert
-        Assert.Equal("workload-get", command.Name);
+        Assert.Equal("get", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Get Workload API Specification", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -215,7 +215,7 @@ public class PublicApisCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("workload-get", systemCommand.Name);
+        Assert.Equal("get", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 

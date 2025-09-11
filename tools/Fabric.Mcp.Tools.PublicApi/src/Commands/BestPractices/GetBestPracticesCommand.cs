@@ -17,7 +17,7 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
     private readonly ILogger<GetBestPracticesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly Option<string> _topicOption = FabricOptionDefinitions.Topic;
 
-    public override string Name => "best-practice-get";
+    public override string Name => "get";
 
     public override string Description =>
         """
@@ -55,15 +55,8 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
 
         try
         {
-            if (string.IsNullOrEmpty(options.Topic))
-            {
-                context.Response.Status = 400;
-                context.Response.Message = "Topic is required";
-                return Task.FromResult(context.Response);
-            }
-
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var bestPractices = fabricService.GetTopicBestPractices(options.Topic);
+            var bestPractices = fabricService.GetTopicBestPractices(options.Topic!);
 
             context.Response.Results = ResponseResult.Create(bestPractices, FabricJsonContext.Default.IEnumerableString);
         }

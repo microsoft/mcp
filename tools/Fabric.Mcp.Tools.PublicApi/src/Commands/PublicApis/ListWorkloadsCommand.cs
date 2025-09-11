@@ -8,13 +8,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Fabric.Mcp.Tools.PublicApi.Commands.PublicApis;
 
-public sealed class DiscoverPublicWorkloadsCommand(ILogger<DiscoverPublicWorkloadsCommand> logger) : GlobalCommand<BaseFabricOptions>()
+public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) : GlobalCommand<BaseFabricOptions>()
 {
     private const string CommandTitle = "List Available Fabric Workloads";
 
-    private readonly ILogger<DiscoverPublicWorkloadsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<ListWorkloadsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public override string Name => "workloads-list";
+    public override string Name => "list";
 
     public override string Description =>
         """

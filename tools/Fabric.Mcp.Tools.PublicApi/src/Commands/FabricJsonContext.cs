@@ -10,7 +10,7 @@ namespace Fabric.Mcp.Tools.PublicApi.Commands;
 
 
 [JsonSerializable(typeof(FabricWorkloadPublicApi))]
-[JsonSerializable(typeof(DiscoverPublicWorkloadsCommand.ItemListCommandResult))]
+[JsonSerializable(typeof(ListWorkloadsCommand.ItemListCommandResult))]
 [JsonSerializable(typeof(GetExamplesCommand.ExampleFileResult))]
 [JsonSerializable(typeof(string))]
 [JsonSerializable(typeof(IEnumerable<string>))]

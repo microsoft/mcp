@@ -28,7 +28,7 @@ public class BestPracticesCommandsTests
         var command = new GetBestPracticesCommand(logger);
 
         // Assert
-        Assert.Equal("best-practice-get", command.Name);
+        Assert.Equal("get", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Get API Examples", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -47,7 +47,7 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("best-practice-get", systemCommand.Name);
+        Assert.Equal("get", systemCommand.Name);
         // Options are registered dynamically, not statically in the Options collection
     }
 
@@ -166,7 +166,7 @@ public class BestPracticesCommandsTests
         var command = new GetExamplesCommand(logger);
 
         // Assert
-        Assert.Equal("examples-get", command.Name);
+        Assert.Equal("get", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Get API Examples", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -185,7 +185,7 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("examples-get", systemCommand.Name);
+        Assert.Equal("get", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 
@@ -283,7 +283,7 @@ public class BestPracticesCommandsTests
         var command = new GetWorkloadDefinitionCommand(logger);
 
         // Assert
-        Assert.Equal("item-definition-get", command.Name);
+        Assert.Equal("get", command.Name);
         Assert.NotEmpty(command.Description);
         Assert.Equal("Get Workload Item Definition", command.Title);
         Assert.False(command.Metadata.Destructive);
@@ -302,7 +302,7 @@ public class BestPracticesCommandsTests
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("item-definition-get", systemCommand.Name);
+        Assert.Equal("get", systemCommand.Name);
         // Options are registered dynamically during command parsing
     }
 

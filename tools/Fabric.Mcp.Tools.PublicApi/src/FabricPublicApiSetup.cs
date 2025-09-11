@@ -39,17 +39,29 @@ public class FabricPublicApiSetup : IAreaSetup
             """);
         rootGroup.AddSubGroup(fabricPublicApis);
 
-        // Create Fabric subgroups
+        // Create public apis subgroups
+        var platform = new CommandGroup("platform", "Platform API Operations - Commands for accessing Microsoft Fabric platform-level APIs, including authentication, user management, and tenant configuration.");
+        fabricPublicApis.AddSubGroup(platform);
+
         var bestPractices = new CommandGroup("bestpractices", "API Examples and Best Practices - Commands for retrieving example API request/response files and implementation guidance from Microsoft Fabric's documentation repository.");
         fabricPublicApis.AddSubGroup(bestPractices);
 
-        fabricPublicApis.AddCommand("workloads list", new DiscoverPublicWorkloadsCommand(loggerFactory.CreateLogger<DiscoverPublicWorkloadsCommand>()));
-        fabricPublicApis.AddCommand("workload get", new GetWorkloadApisCommand(loggerFactory.CreateLogger<GetWorkloadApisCommand>()));
-        fabricPublicApis.AddCommand("platform apis get", new GetPlatformApisCommand(loggerFactory.CreateLogger<GetPlatformApisCommand>()));
+        // Create Best Practices subgroups
+        var examples = new CommandGroup("examples", "Example API Files - Commands for retrieving example API request/response files for specific Microsoft Fabric workloads from the official documentation repository.");
+        bestPractices.AddSubGroup(examples);
 
-        // Add best practices commands
-        bestPractices.AddCommand("examples get", new GetExamplesCommand(loggerFactory.CreateLogger<GetExamplesCommand>()));
-        bestPractices.AddCommand("item-definition get", new GetWorkloadDefinitionCommand(loggerFactory.CreateLogger<GetWorkloadDefinitionCommand>()));
-        bestPractices.AddCommand("best-practice get", new GetBestPracticesCommand(loggerFactory.CreateLogger<GetBestPracticesCommand>()));
+        var itemDefinition = new CommandGroup("itemdefinition", "Workload API Definitions - Commands for retrieving OpenAPI definitions and schema details for specific Microsoft Fabric workloads from the official documentation repository.");
+        bestPractices.AddSubGroup(itemDefinition);
+
+        fabricPublicApis.AddCommand("list", new ListWorkloadsCommand(loggerFactory.CreateLogger<ListWorkloadsCommand>()));
+        fabricPublicApis.AddCommand("get", new GetWorkloadApisCommand(loggerFactory.CreateLogger<GetWorkloadApisCommand>()));
+
+        platform.AddCommand("get", new GetPlatformApisCommand(loggerFactory.CreateLogger<GetPlatformApisCommand>()));
+
+        bestPractices.AddCommand("get", new GetBestPracticesCommand(loggerFactory.CreateLogger<GetBestPracticesCommand>()));
+
+        examples.AddCommand("get", new GetExamplesCommand(loggerFactory.CreateLogger<GetExamplesCommand>()));
+
+        itemDefinition.AddCommand("get", new GetWorkloadDefinitionCommand(loggerFactory.CreateLogger<GetWorkloadDefinitionCommand>()));
     }
 }
