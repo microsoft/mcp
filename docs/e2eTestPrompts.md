@@ -200,6 +200,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_aks_cluster_list | List all AKS clusters in my subscription |
 | azmcp_aks_cluster_list | Show me my Azure Kubernetes Service clusters |
 | azmcp_aks_cluster_list | What AKS clusters do I have? |
+| azmcp_aks_nodepool_list | List nodepools for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_list | Show me the nodepool list for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_list | What nodepools do I have for AKS cluster \<cluster-name> in \<resource-group> |
 
 ## Azure Load Testing
 
