@@ -8,6 +8,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
+- Merged `azmcp_search_index_describe` and `azmcp_search_index_list` into `azmcp_search_index_get`, which can perform both operations based on whether
+  an index name is passed. [[#378](https://github.com/microsoft/mcp/pull/378)]
+
 ### Bugs Fixed
 
 ### Other Changes
