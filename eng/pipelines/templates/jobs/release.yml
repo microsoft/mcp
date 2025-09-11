@@ -20,45 +20,67 @@ parameters:
   default: ''
 
 jobs:
-- job: TagRepository
-  displayName: "Create release tag"
-  condition: and(succeeded(), ne(variables['Skip.TagRepository'], 'true'))
+# - job: TagRepository
+#   displayName: "Create release tag"
+#   condition: and(succeeded(), ne(variables['Skip.TagRepository'], 'true'))
+#   steps:
+#   - checkout: self
+# 
+#   - ${{ if and(ne(parameters.PipelineId, ''), ne(parameters.RunId, '')) }}:
+#     - task: DownloadPipelineArtifact@2
+#       displayName: "Download npm_$(PipelineArtifactName)_packed (specific run)"
+#       inputs:
+#         buildType: specific
+#         project: ${{ parameters.Project }}
+#         pipeline: ${{ parameters.PipelineId }}
+#         runVersion: specific
+#         runId: ${{ parameters.RunId }}
+#         artifact: npm_$(PipelineArtifactName)_packed
+#         targetPath: '$(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed'
+#   - ${{ if or(eq(parameters.PipelineId, ''), eq(parameters.RunId, '')) }}:
+#     - download: ${{ parameters.ArtifactSourceAlias }}
+#       artifact: npm_$(PipelineArtifactName)_packed
+#       displayName: Download npm_$(PipelineArtifactName)_packed
+# 
+#   - template: /eng/common/pipelines/templates/steps/retain-run.yml
+# 
+#   - pwsh: |
+#       $serverName = '${{ parameters.ServerName }}'
+#       $versionSuffix = $env:VERSIONSUFFIX
+#       $version = ./eng/scripts/Get-Version.ps1 -ServerName $serverName
+#       $tag = "$serverName-$version$versionSuffix"
+# 
+#       gh release create $tag --title "$serverName $version$versionSuffix"
+#       gh release upload $tag $(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed/*/*/*.tgz
+#     displayName: Create GitHub Release and upload artifacts
+#     env:
+#       GH_TOKEN: $(azuresdk-github-pat)
+
+- job: Download artifacts
+  displayName: "Download npm_$(PipelineArtifactName)_packed for downstream jobs"
   steps:
   - checkout: self
 
-  - ${{ if and(ne(parameters.PipelineId, ''), ne(parameters.RunId, '')) }}:
-    - task: DownloadPipelineArtifact@2
-      displayName: "Download npm_$(PipelineArtifactName)_packed (specific run)"
-      inputs:
-        buildType: specific
-        project: ${{ parameters.Project }}
-        pipeline: ${{ parameters.PipelineId }}
-        runVersion: specific
-        runId: ${{ parameters.RunId }}
-        artifact: npm_$(PipelineArtifactName)_packed
-        targetPath: '$(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed'
-  - ${{ if or(eq(parameters.PipelineId, ''), eq(parameters.RunId, '')) }}:
-    - download: ${{ parameters.ArtifactSourceAlias }}
+  - task: DownloadPipelineArtifact@2
+    displayName: "Download npm_$(PipelineArtifactName)_packed (specific run)"
+    inputs:
+      buildType: specific
+      project: ${{ parameters.Project }}
+      pipeline: ${{ parameters.PipelineId }}
+      runVersion: specific
+      runId: ${{ parameters.RunId }}
       artifact: npm_$(PipelineArtifactName)_packed
-      displayName: Download npm_$(PipelineArtifactName)_packed
+      targetPath: '$(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed'
+
+  - publish: $(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed
+    artifact: npm_$(PipelineArtifactName)_packed
+    displayName: Publish npm_$(PipelineArtifactName)_packed for downstream jobs
 
   - template: /eng/common/pipelines/templates/steps/retain-run.yml
 
-  - pwsh: |
-      $serverName = '${{ parameters.ServerName }}'
-      $versionSuffix = $env:VERSIONSUFFIX
-      $version = ./eng/scripts/Get-Version.ps1 -ServerName $serverName
-      $tag = "$serverName-$version$versionSuffix"
-
-      gh release create $tag --title "$serverName $version$versionSuffix"
-      gh release upload $tag $(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed/*/*/*.tgz
-    displayName: Create GitHub Release and upload artifacts
-    env:
-      GH_TOKEN: $(azuresdk-github-pat)
-
 - deployment: Publish
   displayName: "Publish to npmjs.com"
-  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  # condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
   templateContext:
     type: releaseJob
     isProduction: true
@@ -68,7 +90,7 @@ jobs:
       targetPath: $(Pipeline.Workspace)/drop
   environment: package-publish
   timeoutInMinutes: 120
-  dependsOn: TagRepository
+  # dependsOn: TagRepository
   pool:
     name: azsdk-pool
     image: ubuntu-24.04
