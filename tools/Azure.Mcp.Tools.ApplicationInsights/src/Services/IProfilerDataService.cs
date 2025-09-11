@@ -3,10 +3,13 @@ using Azure.Core;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Services;
 
- /// <summary>
- /// Interface for Profiler data service.
- /// </summary>
+/// <summary>
+/// Interface for Profiler data service.
+/// </summary>
 public interface IProfilerDataService
 {
-    Task<IEnumerable<JsonNode>> GetRawInsightsAsync(ResourceIdentifier resourceId, DateTime? startDateTimeUtc = null, DateTime? endDateTimeUtc = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Get code optimization recommendations from multiple application insights resources.
+    /// </summary>
+    Task<IEnumerable<JsonNode>> GetInsightsAsync(IEnumerable<ResourceIdentifier> resourceIds, DateTime? startDateTimeUtc = null, DateTime? endDateTimeUtc = null, CancellationToken cancellationToken = default);
 }

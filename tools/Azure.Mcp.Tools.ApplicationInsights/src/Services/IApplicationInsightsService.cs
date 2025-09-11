@@ -9,12 +9,6 @@ namespace Azure.Mcp.Tools.ApplicationInsights.Services;
 
 public interface IApplicationInsightsService
 {
-    Task<List<ApplicationInsightsInfo>> ListApplicationInsights(
-        string subscription,
-        string? resourceGroup = null,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
-
     Task<IEnumerable<JsonNode>> GetProfilerInsightsAsync(
         string subscription,
         string? resourceGroup = null,

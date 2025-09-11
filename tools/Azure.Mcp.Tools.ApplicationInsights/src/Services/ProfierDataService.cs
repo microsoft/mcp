@@ -43,27 +43,23 @@ public class ProfilerDataService : BaseAzureService, IProfilerDataService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<IEnumerable<JsonNode>> GetRawInsightsAsync(
-        ResourceIdentifier resourceId,
-        DateTime? startDateTimeUtc = null,
-        DateTime? endDateTimeUtc = null,
-        CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<JsonNode>> GetInsightsAsync(IEnumerable<ResourceIdentifier> resourceIds, DateTime? startDateTimeUtc = null, DateTime? endDateTimeUtc = null, CancellationToken cancellationToken = default)
     {
-        if (resourceId is null)
+        if (resourceIds is null || !resourceIds.Any())
         {
-            throw new ArgumentNullException(nameof(resourceId));
+            throw new ArgumentNullException(nameof(resourceIds));
         }
 
-        Guid appId = await ResolveAppIdAsync(resourceId, cancellationToken).ConfigureAwait(false);
+        List<Guid> appIds = [];
+        foreach (ResourceIdentifier resourceId in resourceIds)
+        {
+            appIds.Add(await ResolveAppIdAsync(resourceId, cancellationToken).ConfigureAwait(false));
+        }
 
-        return await GetRawInsightsAsync(
-            [appId],
-            startDateTimeUtc,
-            endDateTimeUtc,
-            cancellationToken).ConfigureAwait(false);
+        return await GetInsightsAsync(appIds, startDateTimeUtc, endDateTimeUtc, cancellationToken).ConfigureAwait(false);
     }
 
-    public Task<IEnumerable<JsonNode>> GetRawInsightsAsync(
+    private Task<IEnumerable<JsonNode>> GetInsightsAsync(
         IEnumerable<Guid> appIds,
         DateTime? startDateTimeUtc = null,
         DateTime? endDateTimeUtc = null,
