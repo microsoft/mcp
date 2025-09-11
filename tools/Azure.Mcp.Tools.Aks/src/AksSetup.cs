@@ -36,5 +36,6 @@ public class AksSetup : IAreaSetup
         cluster.AddCommand("list", new ClusterListCommand(loggerFactory.CreateLogger<ClusterListCommand>()));
         cluster.AddCommand("get", new ClusterGetCommand(loggerFactory.CreateLogger<ClusterGetCommand>()));
         nodepool.AddCommand("list", new NodepoolListCommand(loggerFactory.CreateLogger<NodepoolListCommand>()));
+        nodepool.AddCommand("get", new NodepoolGetCommand(loggerFactory.CreateLogger<NodepoolGetCommand>()));
     }
 }
