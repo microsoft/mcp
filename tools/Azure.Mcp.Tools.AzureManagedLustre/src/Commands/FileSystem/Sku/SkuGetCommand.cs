@@ -23,7 +23,14 @@ public sealed class SkuGetCommand(ILogger<SkuGetCommand> logger)
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        OpenWorld = true,
+        Idempotent = true,
+        ReadOnly = true,
+        Secret = false
+    };
 
     private static readonly Option<string> _optionalLocationOption = AzureManagedLustreOptionDefinitions.OptionalLocationOption;
 

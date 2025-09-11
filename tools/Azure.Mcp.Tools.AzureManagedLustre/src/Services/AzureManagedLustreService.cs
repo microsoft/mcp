@@ -114,11 +114,11 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
     public async Task<List<AzureManagedLustreSkuInfo>> SkuGetInfoAsync(
         string subscription,
         string? tenant = null,
-        string? region = null,
+        string? location = null,
         RetryPolicyOptions? retryPolicy = null
         )
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
+        ValidateRequiredParameters(subscription);
 
         var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
 
@@ -141,13 +141,13 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
 
                 foreach (var locationInfo in sku.LocationInfo)
                 {
-                    var location = locationInfo?.Location;
-                    if (string.IsNullOrWhiteSpace(location) || (!string.IsNullOrWhiteSpace(region) && !string.Equals(location, region, StringComparison.OrdinalIgnoreCase)))
+                    var foundLocation = locationInfo?.Location;
+                    if (string.IsNullOrWhiteSpace(foundLocation) || (!string.IsNullOrWhiteSpace(location) && !string.Equals(foundLocation, location, StringComparison.OrdinalIgnoreCase)))
                         continue;
                     var supportsZones = (locationInfo?.Zones?.Count ?? 0) > 1;
 
                     // Preserve original behavior: copy capabilities list per result instance
-                    results.Add(new AzureManagedLustreSkuInfo(name, location, supportsZones, [.. capabilities]));
+                    results.Add(new AzureManagedLustreSkuInfo(name, foundLocation, supportsZones, [.. capabilities]));
                 }
             }
 

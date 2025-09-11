@@ -22,6 +22,6 @@ public interface IAzureManagedLustreService
     Task<List<Models.AzureManagedLustreSkuInfo>> SkuGetInfoAsync(
         string subscription,
         string? tenant = null,
-        string? region = null,
+        string? location = null,
         RetryPolicyOptions? retryPolicy = null);
 }
