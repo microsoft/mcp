@@ -9,6 +9,7 @@ parameters:
 jobs:
 - job: CreateDockerArtifact
   displayName: 'Creating Docker artifact'
+  dependsOn: TagRepository
   pool:
     name: $(LINUXPOOL)
     image: $(LINUXVMIMAGE)
