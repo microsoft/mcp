@@ -1,4 +1,17 @@
 # CHANGELOG 📝
+
+## 0.0.7 (2025-09-10)
+
+### Features Added
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
+- Bump package version for testing
+
 ## 0.0.6 (2025-09-10)
 
 ### Features Added

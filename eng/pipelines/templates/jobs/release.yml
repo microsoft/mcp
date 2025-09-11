@@ -169,18 +169,6 @@ jobs:
               nuGetFeedType: external
               publishFeedCredentials: Nuget.org
 
-          - task: Powershell@2
-            displayName: "Confirm that Nugets are in Prod feed"
-            inputs:
-              targetType: 'filePath'
-              pwsh: true
-              filePath: '$(Build.SourcesDirectory)/eng/scripts/Confirm-NugetInFeed.ps1'
-              arguments: >
-                -PackagesDirectory '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform'
-                -ServerName '${{ parameters.ServerName }}'
-                -VersionSuffix '$(VersionSuffix)'
-                -FeedUrl ${{ parameters.NupkgProdFeedUrl }}
-
           - task: 1ES.PublishNuget@1
             displayName: Publish wrapper Nuget to Prod Feed
             inputs:
@@ -195,18 +183,6 @@ jobs:
               packageParentPath: '$(Pipeline.Workspace)'
               packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform/*.symbols.nupkg'
               publishVstsFeed: ${{ parameters.NupkgDevFeed }}
-
-          - task: Powershell@2
-            displayName: "Confirm that Nugets are in Dev feed"
-            inputs:
-              targetType: 'filePath'
-              pwsh: true
-              filePath: '$(Build.SourcesDirectory)/eng/scripts/Confirm-NugetInFeed.ps1'
-              arguments: >
-                -PackagesDirectory '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}-native/platform'
-                -ServerName '${{ parameters.ServerName }}'
-                -VersionSuffix '$(VersionSuffix)'
-                -FeedUrl ${{ parameters.NupkgDevFeedUrl }}
 
           - task: 1ES.PublishNuget@1
             displayName: Publish wrapper Nuget to Dev Feed
