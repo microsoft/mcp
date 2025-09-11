@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Options;
 using Azure.Mcp.Tools.Deploy.Options.Infrastructure;
 using Azure.Mcp.Tools.Deploy.Services.Util;
@@ -21,7 +22,15 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
 
     public override string Name => "get";
     public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override string Description =>
         """
@@ -57,6 +66,11 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
 
         try
         {
+            context.Activity?
+                .AddTag(DeployTelemetryTags.DeploymentTool, options.DeploymentTool)
+                .AddTag(DeployTelemetryTags.IacType, options.IacType)
+                .AddTag(DeployTelemetryTags.ComputeHostResources, options.ResourceTypes);
+
             var resourceTypes = options.ResourceTypes.Split(',')
                 .Select(rt => rt.Trim())
                 .Where(rt => !string.IsNullOrWhiteSpace(rt))

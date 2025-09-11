@@ -21,7 +21,15 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
 
     public override string Name => "get";
     public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override string Description =>
         """

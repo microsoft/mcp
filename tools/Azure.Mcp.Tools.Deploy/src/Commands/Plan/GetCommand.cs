@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security.Cryptography;
+using System.Text;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Options;
 using Azure.Mcp.Tools.Deploy.Options.Plan;
 using Azure.Mcp.Tools.Deploy.Services.Util;
@@ -29,7 +32,15 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
         """;
 
     public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -64,6 +75,16 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
 
         try
         {
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(options.ProjectName));
+                context.Activity?.AddTag(DeployTelemetryTags.ProjectName, BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant());
+            }
+            context.Activity?
+                    .AddTag(DeployTelemetryTags.ComputeHostResources, options.TargetAppService)
+                    .AddTag(DeployTelemetryTags.DeploymentTool, options.ProvisioningTool)
+                    .AddTag(DeployTelemetryTags.IacType, options.AzdIacOptions ?? string.Empty);
+
             var planTemplate = DeploymentPlanTemplateUtil.GetPlanTemplate(options.ProjectName, options.TargetAppService, options.ProvisioningTool, options.AzdIacOptions);
 
             context.Response.Message = planTemplate;
