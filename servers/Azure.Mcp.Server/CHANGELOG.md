@@ -6,23 +6,25 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-- Added nodepool list tool for AKS managed cluster: [[#360](https://github.com/microsoft/mcp/pull/360)]
+- Added support for listing node pools in an AKS managed cluster. [[#360](https://github.com/microsoft/mcp/pull/360)]
 
 ### Breaking Changes
-- To improve performance, packages now ships with trimmed binaries that have unused code and dependencies removed, resulting in significantly smaller file sizes, faster startup times, and reduced memory footprint. [#405]
-[Learn more](https://learn.microsoft.com/dotnet/core/deploying/trimming/trim-self-contained)
 
-- Merged `azmcp_search_index_describe` and `azmcp_search_index_list` into `azmcp_search_index_get`, which can perform both operations based on whether
-  an index name is passed. [[#378](https://github.com/microsoft/mcp/pull/378)]
-- Changed descriptions of Storage commands. [[#376](https://github.com/microsoft/mcp/pull/376)]
-- Merged the following Storage tools [[#376](https://github.com/microsoft/mcp/pull/376)]
-  - `azmcp_storage_account_details` and `azmcp_storage_account_list` into `azmcp_storage_account_get`, it supports the behaviors of both tools based on whether `--account` is passed.
-  - `azmcp_storage_blob_details` and `azmcp_storage_blob_list` into `azmcp_storage_blob+get`, it supports the behaviors of both tools based on whether `--blob` is passed.
-  - `azmcp_storage_blob_container_details` and `azmcp_storage_blob_container_list` into `azmcp_storage_blob_container_get`, it supports the behaviors of both tools based on whether `--container` is passed.
-
-### Bugs Fixed
+- To improve performance, packages now ship with trimmed binaries that have unused code and dependencies removed, resulting in significantly smaller file sizes, faster startup times, and reduced memory footprint. [Learn more](https://learn.microsoft.com/dotnet/core/deploying/trimming/trim-self-contained). [[#405](https://github.com/microsoft/mcp/pull/405)]
+- Merged `azmcp_search_index_describe` and `azmcp_search_index_list` into `azmcp_search_index_get`, which can perform both operations based on whether `--index` is passed. [[#378](https://github.com/microsoft/mcp/pull/378)]
+- Merged the following Storage tools: [[#376](https://github.com/microsoft/mcp/pull/376)]
+  - `azmcp_storage_account_details` and `azmcp_storage_account_list` into `azmcp_storage_account_get`, which supports the behaviors of both tools based on whether `--account` is passed.
+  - `azmcp_storage_blob_details` and `azmcp_storage_blob_list` into `azmcp_storage_blob_get`, which supports the behaviors of both tools based on whether `--blob` is passed.
+  - `azmcp_storage_blob_container_details` and `azmcp_storage_blob_container_list` into `azmcp_storage_blob_container_get`, which supports the behaviors of both tools based on whether `--container` is passed.
+- Updated the descriptions of all Storage tools. [[#376](https://github.com/microsoft/mcp/pull/376)]
 
 ### Other Changes
+
+#### Dependency updates
+
+- Updated the following dependencies: [[#380](https://github.com/microsoft/mcp/pull/380)]
+  - Azure.Core: `1.47.1` → `1.48.0`
+  - Azure.Identity: `1.15.0` → `1.16.0`
 
 ## 0.5.13 (2025-09-10)
 
@@ -45,17 +47,17 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Aded telemetry to log parameter values for bestpractices tool. Note that only valid values will be logged. [[#375](https://github.com/microsoft/mcp/pull/375)]
+- Added telemetry to log parameter values for the `azmcp_bestpractices_get` tool. [[#375](https://github.com/microsoft/mcp/pull/375)]
 - Updated tool annotations. [[#377](https://github.com/microsoft/mcp/pull/377)]
 
 #### Dependency updates
 
-- Updated the following dependencies to improve .NET Ahead-of-Time (AOT) compilation support: 
+- Updated the following dependencies:
   - Azure.Identity: `1.14.0` → `1.15.0` [[#352](https://github.com/microsoft/mcp/pull/352)]
   - Azure.Identity.Broker: `1.2.0` → `1.3.0` [[#352](https://github.com/microsoft/mcp/pull/352)]
-  - Azure.ResourceManager.StorageCache: `1.3.1` → `1.3.2` [[#363](https://github.com/microsoft/mcp/pull/363)]
   - Microsoft.Azure.Cosmos.Aot: `0.1.1-preview.1` → `0.1.2-preview.1` [[#383](https://github.com/microsoft/mcp/pull/383)]
-- Updated Azure.Core dependency version from `1.47.1` to `1.48.0` [[#380](https://github.com/microsoft/mcp/pull/380/)]
+- Updated the following dependency to improve .NET Ahead-of-Time (AOT) compilation support: [[#363](https://github.com/microsoft/mcp/pull/363)]
+  - Azure.ResourceManager.StorageCache: `1.3.1` → `1.3.2`
 
 ## 0.5.12 (2025-09-04)
 

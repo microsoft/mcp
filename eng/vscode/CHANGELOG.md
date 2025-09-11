@@ -5,13 +5,17 @@
 
 ### Added
 
-- Added nodepool list tool for AKS managed cluster: [[#360](https://github.com/microsoft/mcp/pull/360)]
+- Added support for listing node pools in an AKS managed cluster. [[#360](https://github.com/microsoft/mcp/pull/360)]
 
 ### Changed
-- To improve performance, packages now ships with trimmed binaries. The extension now uses trimmed Azure MCP server binaries that have unused code and dependencies removed, resulting in significantly smaller file sizes, faster startup times, and reduced memory footprint. [#405]
-[Learn more](https://learn.microsoft.com/dotnet/core/deploying/trimming/trim-self-contained)
 
-### Fixed
+- To improve performance, packages now ship with trimmed binaries that have unused code and dependencies removed, resulting in significantly smaller file sizes, faster startup times, and reduced memory footprint. [Learn more](https://learn.microsoft.com/dotnet/core/deploying/trimming/trim-self-contained). [[#405](https://github.com/microsoft/mcp/pull/405)]
+- Merged `azmcp_search_index_describe` and `azmcp_search_index_list` into `azmcp_search_index_get`, which can perform both operations based on whether `--index` is passed. [[#378](https://github.com/microsoft/mcp/pull/378)]
+- Merged the following Storage tools: [[#376](https://github.com/microsoft/mcp/pull/376)]
+  - `azmcp_storage_account_details` and `azmcp_storage_account_list` into `azmcp_storage_account_get`, which supports the behaviors of both tools based on whether `--account` is passed.
+  - `azmcp_storage_blob_details` and `azmcp_storage_blob_list` into `azmcp_storage_blob_get`, which supports the behaviors of both tools based on whether `--blob` is passed.
+  - `azmcp_storage_blob_container_details` and `azmcp_storage_blob_container_list` into `azmcp_storage_blob_container_get`, which supports the behaviors of both tools based on whether `--container` is passed.
+- Updated the descriptions of all Storage tools. [[#376](https://github.com/microsoft/mcp/pull/376)]
 
 ## 0.5.13 - 2025-09-10
 
