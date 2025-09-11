@@ -2,9 +2,11 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.5.14 (Unreleased)
+## 0.6.0 (Unreleased)
 
 ### Features Added
+
+- Added elicitation support. An elicitation request is sent if the tool annotation secret hint is true. [[#404](https://github.com/microsoft/mcp/pull/404)]
 
 ### Breaking Changes
 
