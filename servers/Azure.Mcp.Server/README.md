@@ -10,19 +10,21 @@ The Azure MCP Server implements the [MCP specification](https://modelcontextprot
 
 
 ## Table of Contents
-
-- [VS Code Install Guide (Recommended)](#vs-code-install-guide-recommended)
-- [IntelliJ Install Guide](#intellij-install-guide)
-- [Quick Start](#quick-start)
-- [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
-- [Currently Supported Tools](#currently-supported-tools)
-- [Upgrading Existing Installs to the Latest Version](#upgrading-existing-installs-to-the-latest-version)
-- [Advanced Install Scenarios (Optional)](#advanced-install-scenarios-optional)
-- [Data Collection](#data-collection)
-- [Troubleshooting](#troubleshooting)
-- [Security Note](#security-note)
-- [Contributing](#contributing)
-- [Code of Conduct](#code-of-conduct)
+- Install
+    - [VS Code Install Guide (Recommended)](#vs-code-install-guide-recommended)
+    - [IntelliJ Install Guide](#intellij-install-guide)
+    - [Advanced Install Scenarios (Optional)](#advanced-install-scenarios-optional)
+    - [Upgrading](#upgrading)
+- Usage
+    - [Quick Start](#quick-start)
+    - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
+    - [Currently Supported Tools](#currently-supported-tools)
+- Support & Reference
+    - [Data Collection](#data-collection)
+    - [Troubleshooting](#troubleshooting)
+    - [Security Note](#security-note)
+    - [Contributing](#contributing)
+    - [Code of Conduct](#code-of-conduct)
 
 ## <a id="vs-code-install-guide-recommended"></a>✅ VS Code Install Guide (Recommended)
 
@@ -374,7 +376,7 @@ Agents and models can discover and learn best practices and usage guidelines for
 
 For detailed command documentation and examples, see [Azure MCP Commands](https://github.com/microsoft/mcp/blob/main/docs/azmcp-commands.md).
 
-## <a id="upgrading-existing-installs-to-the-latest-version"></a> 🔄️ Upgrading Existing Installs to the Latest Version
+## <a id="upgrading"></a> 🔄️ Upgrading
 
 <details>
 <summary>How to stay current with releases of Azure MCP Server</summary>
