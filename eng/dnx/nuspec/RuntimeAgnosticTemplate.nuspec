@@ -10,6 +10,8 @@
     <readme>README.md</readme>
     <description>__Description__</description>
     <tags>__Tags__</tags>
+    <copyright>&#169; Microsoft Corporation. All rights reserved.</copyright>
+    <projectUrl>__ProjectUrl__</projectUrl>
     <packageTypes>
       <packageType name="DotnetTool" />
       <packageType name="McpServer" />

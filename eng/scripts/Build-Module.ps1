@@ -90,7 +90,7 @@ function BuildServer($serverName) {
         name = $packageName
         version = $version
         description = $description
-        author = 'Microsoft Corporation'
+        author = 'Microsoft'
         homepage = $readmeUrl
         license = 'MIT'
         keywords = $keywords

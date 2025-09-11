@@ -44,6 +44,7 @@ jobs:
       BinaryPath: $(Build.ArtifactStagingDirectory)/signed
       BinaryPattern: |
         **/win-*/**/ModelContextProtocol*.dll
+        **/win-*/**/Newtonsoft.Json.dll
         **/win-*/**/Npgsql.dll
         **/win-*/**/OpenAI.dll
         **/win-*/**/OpenTelemetry*.dll

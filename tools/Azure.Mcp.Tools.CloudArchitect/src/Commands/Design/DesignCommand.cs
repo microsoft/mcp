@@ -51,7 +51,11 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        ReadOnly = true
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
     };
 
     private static string LoadArchitectureDesignText()
