@@ -7,6 +7,8 @@
 
 ### Changed
 - Made trimmed binaries the default for better performance. [[#405](https://github.com/microsoft/mcp/pull/405)]
+- To improve performance, packages now ships with trimmed binaries. The extension now uses trimmed Azure MCP server binaries that have unused code and dependencies removed, resulting in significantly smaller file sizes, faster startup times, and reduced memory footprint. [#405]
+[Learn more](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trim-self-contained)
 
 ### Fixed
 
