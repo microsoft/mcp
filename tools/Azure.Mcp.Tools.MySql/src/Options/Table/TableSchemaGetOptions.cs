@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Tools.MySql.Options;
 
 namespace Azure.Mcp.Tools.MySql.Options.Table;
 

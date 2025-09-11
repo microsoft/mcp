@@ -1,4 +1,4 @@
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.AzureTerraformBestPractices.Commands;
@@ -15,7 +15,7 @@ public class AzureTerraformBestPracticesGetCommandTests
     private readonly ILogger<AzureTerraformBestPracticesGetCommand> _logger;
     private readonly CommandContext _context;
     private readonly AzureTerraformBestPracticesGetCommand _command;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public AzureTerraformBestPracticesGetCommandTests()
     {
@@ -25,13 +25,13 @@ public class AzureTerraformBestPracticesGetCommandTests
         _context = new(_serviceProvider);
         _logger = Substitute.For<ILogger<AzureTerraformBestPracticesGetCommand>>();
         _command = new(_logger);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
     public async Task ExecuteAsync_ReturnsAzureTerraformBestPractices()
     {
-        var args = _parser.Parse([]);
+        var args = _commandDefinition.Parse([]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert

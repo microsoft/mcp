@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.Mcp.Tools.FunctionApp.Options;
@@ -29,31 +28,39 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
         RequireResourceGroup();
-        command.AddOption(_functionAppNameOption);
+        command.Options.Add(_functionAppNameOption);
     }
 
     protected override FunctionAppGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.FunctionAppName = parseResult.GetValueForOption(_functionAppNameOption);
+        options.FunctionAppName = parseResult.GetValue(_functionAppNameOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            return context.Response;
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-                return context.Response;
-
             var service = context.GetService<IFunctionAppService>();
             var functionApp = await service.GetFunctionApp(
                 options.Subscription!,

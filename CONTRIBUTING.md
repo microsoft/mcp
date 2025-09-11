@@ -157,6 +157,12 @@ Unit tests live under the `/tests` folder. To run tests:
 ./eng/scripts/Test-Code.ps1
 ```
 
+To scope the test run to path substring matches, use:
+
+```pwsh
+./eng/scripts/Test-Code.ps1 -Paths KeyVault, core/Azure
+```
+
 Requirements:
 
 - Each command should have unit tests
@@ -322,31 +328,32 @@ Before running live tests:
 - Deploy test resources:
 
 ```pwsh
-./eng/scripts/Deploy-TestResources.ps1 -Area Storage
+./eng/scripts/Deploy-TestResources.ps1 -Paths KeyVault
+./eng/scripts/Deploy-TestResources.ps1 -Paths Storage, core/Azure
 ```
 
 **Deploy-TestResources.ps1 Parameters:**
 
-| Parameter           | Type   | Description                                                                                                  |
-|---------------------|--------|--------------------------------------------------------------------------------------------------------------|
-| `Area`              | string | REQUIRED. The service area to deploy test resources for (e.g., `Storage`, `KeyVault`). One area per run.    |
-| `SubscriptionId`    | string | Target subscription ID. If omitted, the current Azure context subscription (from `Get-AzContext`) is used. |
-| `ResourceGroupName` | string | Resource group name. Defaults to `{username}-mcp{hash(username)}`.                                          |
-| `BaseName`          | string | Base name prefix for resources. Defaults to `mcp{hash}`.                                                    |
-| `Unique`            | switch | Use a unique GUID-based hash for this invocation instead of the stable username+subscription hash.          |
-| `DeleteAfterHours`  | int    | Hours after which resources are tagged for deletion. Defaults to `12`.                                      |
+| Parameter           | Type   | Description                                                                                                                                |
+|---------------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| `Paths`             | string[] | REQUIRED. Path filters to apply (e.g., `Storage`, `core/`). All filters are applied as substring matches. (e.g., `*Storage*`, `*core/*`) |
+| `SubscriptionId`    | string | Target subscription ID. If omitted, the current Azure context subscription (from `Get-AzContext`) is used.                                 |
+| `ResourceGroupName` | string | Resource group name. Defaults to `{username}-mcp{hash(username)}`.                                                                         |
+| `BaseName`          | string | Base name prefix for resources. Defaults to `mcp{hash}`.                                                                                   |
+| `Unique`            | switch | Use a unique GUID-based hash for this invocation instead of the stable username+subscription hash.                                         |
+| `DeleteAfterHours`  | int    | Hours after which resources are tagged for deletion. Defaults to `12`.                                                                     |
 
 Examples:
 
 ```pwsh
 # Deploy Storage test resources using current Azure context subscription
-./eng/scripts/Deploy-TestResources.ps1 -Area Storage
+./eng/scripts/Deploy-TestResources.ps1 -Paths Storage
 
 # Deploy Key Vault test resources to a specific subscription and keep for one week
-./eng/scripts/Deploy-TestResources.ps1 -Area KeyVault -SubscriptionId <subId> -DeleteAfterHours 168 -Unique
+./eng/scripts/Deploy-TestResources.ps1 -Paths KeyVault -SubscriptionId <subId> -DeleteAfterHours 168 -Unique
 ```
 
-After deploying test resources, you should have a `.testsettings.json` file with your deployment information in the deployed areas' `/tests` directory.
+After deploying test resources, you should have a `.testsettings.json` file with your deployment information in the deployed paths' `/tests` directory.
 
 Run live tests with:
 
@@ -354,10 +361,10 @@ Run live tests with:
 ./eng/scripts/Test-Code.ps1 -TestType Live
 ```
 
-You can scope tests to specific areas:
+You can scope tests to specific paths:
 
 ```pwsh
-./eng/scripts/Test-Code.ps1 -TestType Live -Areas Storage, KeyVault
+./eng/scripts/Test-Code.ps1 -TestType Live -Paths Storage, KeyVault
 ```
 
 ### NPX Live Tests
@@ -484,7 +491,7 @@ The Azure MCP Server supports connecting to external MCP servers through an embe
 
 #### Registry Configuration
 
-External MCP servers are defined in the embedded resource file `core/src/AzureMcp.Core/Areas/Server/Resources/registry.json`. This file contains server configurations that support both SSE (Server-Sent Events) and stdio transport mechanisms, following the standard MCP configuration format.
+External MCP servers are defined in the embedded resource file `core/Azure.Mcp.Core/src/Areas/Server/Resources/registry.json`. This file contains server configurations that support both SSE (Server-Sent Events) and stdio transport mechanisms, following the standard MCP configuration format.
 
 The registry structure follows this format:
 
@@ -540,7 +547,7 @@ azmcp server start --mode namespace
 
 To add a new external MCP server to the registry:
 
-1. Edit `core/src/AzureMcp.Core/Areas/Server/Resources/registry.json`
+1. Edit `core/Azure.Mcp.Core/src/Areas/Server/Resources/registry.json`
 2. Add your server configuration under the `servers` object using VS Code's MCP configuration schema
 3. Use a unique identifier as the key
 4. Provide either a `url` for SSE transport or `type: "stdio"` with `command` for stdio transport

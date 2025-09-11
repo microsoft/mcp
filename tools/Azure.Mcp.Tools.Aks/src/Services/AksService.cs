@@ -21,6 +21,7 @@ public sealed class AksService(
 
     private const string CacheGroup = "aks";
     private const string AksClustersCacheKey = "clusters";
+    private const string AksNodePoolsCacheKey = "nodepools";
     private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
 
     public async Task<List<Cluster>> ListClusters(
@@ -121,6 +122,68 @@ public sealed class AksService(
         }
     }
 
+    public async Task<List<NodePool>> ListNodePools(
+        string subscription,
+        string resourceGroup,
+        string clusterName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(subscription, resourceGroup, clusterName);
+
+        // Create cache key
+        var cacheKey = string.IsNullOrEmpty(tenant)
+            ? $"{AksNodePoolsCacheKey}_{subscription}_{resourceGroup}_{clusterName}"
+            : $"{AksNodePoolsCacheKey}_{subscription}_{resourceGroup}_{clusterName}_{tenant}";
+
+        // Try to get from cache first
+        var cachedNodePools = await _cacheService.GetAsync<List<NodePool>>(CacheGroup, cacheKey, s_cacheDuration);
+        if (cachedNodePools != null)
+        {
+            return cachedNodePools;
+        }
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var nodePools = new List<NodePool>();
+
+        try
+        {
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            if (resourceGroupResource?.Value == null)
+            {
+                return nodePools;
+            }
+
+            var clusterResource = await resourceGroupResource.Value
+                .GetContainerServiceManagedClusters()
+                .GetAsync(clusterName);
+
+            if (clusterResource?.Value == null)
+            {
+                return nodePools;
+            }
+
+            await foreach (var agentPool in clusterResource.Value
+                               .GetContainerServiceAgentPools()
+                               .GetAllAsync())
+            {
+                if (agentPool?.Data != null)
+                {
+                    nodePools.Add(ConvertToNodePoolModel(agentPool));
+                }
+            }
+
+            // Cache the results
+            await _cacheService.SetAsync(CacheGroup, cacheKey, nodePools, s_cacheDuration);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving AKS node pools for cluster '{clusterName}': {ex.Message}", ex);
+        }
+
+        return nodePools;
+    }
+
     private static Cluster ConvertToClusterModel(ContainerServiceManagedClusterResource clusterResource)
     {
         var data = clusterResource.Data;
@@ -147,6 +210,25 @@ public sealed class AksService(
             DnsServiceIP = data.NetworkProfile?.DnsServiceIP?.ToString(),
             SkuTier = data.Sku?.Tier?.ToString(),
             Tags = data.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+        };
+    }
+
+    private static NodePool ConvertToNodePoolModel(ContainerServiceAgentPoolResource agentPoolResource)
+    {
+        var data = agentPoolResource.Data;
+
+        return new NodePool
+        {
+            Name = data.Name,
+            NodeCount = data.Count,
+            NodeVmSize = data.VmSize?.ToString(),
+            OsType = data.OSType?.ToString(),
+            Mode = data.Mode?.ToString(),
+            OrchestratorVersion = data.OrchestratorVersion,
+            EnableAutoScaling = data.EnableAutoScaling,
+            MinCount = data.MinCount,
+            MaxCount = data.MaxCount,
+            ProvisioningState = data.ProvisioningState?.ToString()
         };
     }
 }

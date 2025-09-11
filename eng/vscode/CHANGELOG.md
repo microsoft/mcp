@@ -1,6 +1,49 @@
 
 # Release History
 
+## 0.5.14 (Unreleased)
+
+### Added
+
+### Changed
+- To improve performance, packages now ships with trimmed binaries. The extension now uses trimmed Azure MCP server binaries that have unused code and dependencies removed, resulting in significantly smaller file sizes, faster startup times, and reduced memory footprint. [#405]
+[Learn more](https://learn.microsoft.com/dotnet/core/deploying/trimming/trim-self-contained)
+
+### Fixed
+
+## 0.5.13 - 2025-09-10
+
+### Added
+
+- Added support for listing all Event Grid topics in a subscription via the command `azmcp_eventgrid_topic_list`. [[#43](https://github.com/microsoft/mcp/pull/43)]
+- Added support for retrieving knowledge index schema information in Azure AI Foundry projects via the command `azmcp_foundry_knowledge_index_schema`. [[#41](https://github.com/microsoft/mcp/pull/41)]
+- Added support for listing service health events in a subscription via the command `azmcp_resourcehealth_service-health-events_list`. [[#367](https://github.com/microsoft/mcp/pull/367)]
+
+### Changed
+
+- **Breaking:** Updated/removed options for the following commands: [[#108](https://github.com/microsoft/mcp/pull/108)]
+  - `azmcp_storage_account_create`: Removed the ability to configure `enable-https-traffic-only` (always `true` now), `allow-blob-public-access` (always `false` now), and `kind` (always `StorageV2` now).
+  - `azmcp_storage_blob_container_create`: Removed the ability to configure `blob-container-public-access` (always `false` now).
+  - `azmcp_storage_blob_upload`: Removed the ability to configure `overwrite` (always `false` now).
+- Added telemetry to log parameter values for the `azmcp_bestpractices_get` tool. [[#375](https://github.com/microsoft/mcp/pull/375)]
+- Updated tool annotations. [[#377](https://github.com/microsoft/mcp/pull/377)]
+
+### Fixed
+
+- Fixed telemetry bug where "ToolArea" was incorrectly populated with "ToolName". [[#346](https://github.com/microsoft/mcp/pull/346)]
+
+## 0.5.12 - 2025-09-04
+
+### Added
+
+- Added `azmcp_sql_server_firewall-rule_create` and `azmcp_sql_server_firewall-rule_delete` commands. [[#121](https://github.com/microsoft/mcp/pull/121)]
+- Added a verb to the namespace name for bestpractices. [[#109](https://github.com/microsoft/mcp/pull/109)]
+- Added instructions about consumption plan for azure functions deployment best practices. [[#218](https://github.com/microsoft/mcp/pull/218)]
+
+### Fixed
+
+- Fixed a bug in MySQL query validation logic. [[#81](https://github.com/microsoft/mcp/pull/81)]
+
 ## 0.5.11 - 2025-09-02
 
 ### Fixed

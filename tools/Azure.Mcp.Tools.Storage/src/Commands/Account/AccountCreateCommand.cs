@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Account;
@@ -20,19 +22,15 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     private readonly Option<string> _accountCreateOption = StorageOptionDefinitions.AccountCreate;
     private readonly Option<string> _locationOption = StorageOptionDefinitions.Location;
     private readonly Option<string> _skuOption = StorageOptionDefinitions.Sku;
-    private readonly Option<string> _kindOption = StorageOptionDefinitions.Kind;
     private readonly Option<string> _accessTierOption = StorageOptionDefinitions.AccessTier;
-    private readonly Option<bool> _enableHttpsTrafficOnlyOption = StorageOptionDefinitions.EnableHttpsTrafficOnly;
-    private readonly Option<bool> _allowBlobPublicAccessOption = StorageOptionDefinitions.AllowBlobPublicAccess;
     private readonly Option<bool> _enableHierarchicalNamespaceOption = StorageOptionDefinitions.EnableHierarchicalNamespace;
 
     public override string Name => "create";
 
     public override string Description =>
         """
-        Create a new Azure Storage account in the specified resource group and location.
-        Creates a storage account with the specified configuration options. Returns the
-        created storage account information including name, location, SKU, and other properties.
+        Creates an Azure Storage account in the specified resource group and location and returns the created storage account
+        information including name, location, SKU, access settings, and configuration details.
         """;
 
     public override string Title => CommandTitle;
@@ -40,49 +38,47 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        ReadOnly = false
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
     };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_accountCreateOption);
+        command.Options.Add(_accountCreateOption);
         RequireResourceGroup();
-        command.AddOption(_locationOption);
-        command.AddOption(_skuOption);
-        command.AddOption(_kindOption);
-        command.AddOption(_accessTierOption);
-        command.AddOption(_enableHttpsTrafficOnlyOption);
-        command.AddOption(_allowBlobPublicAccessOption);
-        command.AddOption(_enableHierarchicalNamespaceOption);
+        command.Options.Add(_locationOption);
+        command.Options.Add(_skuOption);
+        command.Options.Add(_accessTierOption);
+        command.Options.Add(_enableHierarchicalNamespaceOption);
     }
 
     protected override AccountCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueForOption(_accountCreateOption);
-        options.Location = parseResult.GetValueForOption(_locationOption);
-        options.Sku = parseResult.GetValueForOption(_skuOption);
-        options.Kind = parseResult.GetValueForOption(_kindOption);
-        options.AccessTier = parseResult.GetValueForOption(_accessTierOption);
-        options.EnableHttpsTrafficOnly = parseResult.GetValueForOption(_enableHttpsTrafficOnlyOption);
-        options.AllowBlobPublicAccess = parseResult.GetValueForOption(_allowBlobPublicAccessOption);
-        options.EnableHierarchicalNamespace = parseResult.GetValueForOption(_enableHierarchicalNamespaceOption);
+        options.Account = parseResult.GetValueOrDefault(_accountCreateOption);
+        options.Location = parseResult.GetValueOrDefault(_locationOption);
+        options.Sku = parseResult.GetValueOrDefault(_skuOption);
+        options.AccessTier = parseResult.GetValueOrDefault(_accessTierOption);
+        options.EnableHierarchicalNamespace = parseResult.GetValueOrDefault(_enableHierarchicalNamespaceOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             // Get the storage service from DI
             var storageService = context.GetService<IStorageService>();
 
@@ -93,10 +89,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
                 options.Location!,
                 options.Subscription!,
                 options.Sku,
-                options.Kind,
                 options.AccessTier,
-                options.EnableHttpsTrafficOnly,
-                options.AllowBlobPublicAccess,
                 options.EnableHierarchicalNamespace,
                 options.Tenant,
                 options.RetryPolicy);
@@ -121,22 +114,16 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     // Implementation-specific error handling
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 409 =>
+        RequestFailedException reqEx when reqEx.Status == 409 =>
             "Storage account name already exists. Choose a different name.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed creating the storage account. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == 404 =>
             "Resource group not found. Verify the resource group exists and you have access.",
-        Azure.RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        Azure.RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
     // Strongly-typed result record
-    internal record AccountCreateCommandResult(StorageAccountInfo Account);
+    internal record AccountCreateCommandResult([property: JsonPropertyName("account")] AccountInfo Account);
 }

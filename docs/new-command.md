@@ -3,7 +3,7 @@
 
 # Implementing a New Command in Azure MCP
 
-This document provides a comprehensive guide for implementing commands in Azure MCP following established patterns.
+This document is the authoritative guide for adding new commands ("toolset commands") to Azure MCP. Follow it exactly to ensure consistency, testability, AOT safety, and predictable user experience.
 
 ## Toolset Pattern: Organizing code by toolset
 
@@ -13,10 +13,8 @@ All new Azure services and their commands should use the Toolset pattern:
 - **Tests** go in `tools/Azure.Mcp.Tools.{Toolset}/tests`, divided into UnitTests and LiveTests:
   -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests`
   -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests`
-  -  `tools/Azure.Mcp.Tools.Monitor/tests/Azure.Mcp.Tools.Monitor.UnitTests`
-  -  `tools/Azure.Mcp.Tools.Monitor/tests/Azure.Mcp.Tools.Monitor.LiveTests`
 
-This keeps all code, options, models, and tests for an toolset together. See `tools/Azure.Mcp.Tools.Storage` for a reference implementation.
+This keeps all code, options, models, JSON serialization contexts, and tests for a toolset together. See `tools/Azure.Mcp.Tools.Storage` for a reference implementation.
 
 ## ⚠️ Test Infrastructure Requirements
 
@@ -54,7 +52,7 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
      - `Validate()`: Validates command inputs
 
 2. **Command Hierarchy**
-   All commands must implement the hierarchy pattern:
+    All commands implement the layered hierarchy:
      ```
      IBaseCommand
      └── BaseCommand
@@ -72,7 +70,7 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
    - Commands return `ToolMetadata` property to define their behavioral characteristics
 
 3. **Command Pattern**
-   Commands follow the Model-Context-Protocol (MCP) pattern with this naming convention:
+    Commands follow the Model-Context-Protocol (MCP) pattern with this execution naming convention:
    ```
    azmcp <azure service> <resource> <operation>
    ```
@@ -107,15 +105,14 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
 
 ### Required Files
 
-A complete command requires:
+Every new command (whether purely computational or Azure-resource backed) requires the following elements:
 
 1. OptionDefinitions static class: `tools/Azure.Mcp.Tools.{Toolset}/src/Options/{Toolset}OptionDefinitions.cs`
 2. Options class: `tools/Azure.Mcp.Tools.{Toolset}/src/Options/{Resource}/{Operation}Options.cs`
 3. Command class: `tools/Azure.Mcp.Tools.{Toolset}/src/Commands/{Resource}/{Resource}{Operation}Command.cs`
 4. Service interface: `tools/Azure.Mcp.Tools.{Toolset}/src/Services/I{ServiceName}Service.cs`
 5. Service implementation: `tools/Azure.Mcp.Tools.{Toolset}/src/Services/{ServiceName}Service.cs`
-   - It's common for an toolset to have a single service class named after the
-     toolset but some toolsets will have multiple service classes
+    - Most toolsets have one primary service; some may have multiple where domain boundaries justify separation
 6. Unit test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests/{Resource}/{Resource}{Operation}CommandTests.cs`
 7. Integration test: `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests/{Toolset}CommandTests.cs`
 8. Command registration in RegisterCommands(): `tools/Azure.Mcp.Tools.{Toolset}/src/{Toolset}Setup.cs`
@@ -126,34 +123,39 @@ A complete command requires:
 
 ### File and Class Naming Convention
 
-**IMPORTANT**: All command files and classes must follow the **ObjectVerb** naming pattern for consistency and discoverability:
+Primary pattern: **{Resource}{SubResource?}{Operation}Command**
 
-**Pattern**: `{Resource}{SubResource}{Operation}Command`
+Where:
+- Resource = top-level domain entity (e.g., `Server`, `Database`, `FileSystem`)
+- SubResource (optional) = nested concept (e.g., `Config`, `Param`, `SubnetSize`)
+- Operation = action or computed intent (e.g., `List`, `Get`, `Set`, `Recommend`, `Calculate`, `SubnetSize`)
 
-**Examples**:
-- ✅ `ServerListCommand` (Resource: Server, Operation: List)
-- ✅ `ServerConfigGetCommand` (Resource: Server, SubResource: Config, Operation: Get)
-- ✅ `ServerParamSetCommand` (Resource: Server, SubResource: Param, Operation: Set)
-- ✅ `TableSchemaGetCommand` (Resource: Table, SubResource: Schema, Operation: Get)
-- ✅ `DatabaseListCommand` (Resource: Database, Operation: List)
+Acceptable Operation Forms:
+- Standard verbs (`List`, `Get`, `Set`, `Show`, `Delete`)
+- Domain-calculation nouns treated as operations when producing computed output (e.g., `SubnetSize` in `FileSystemSubnetSizeCommand` producing required size calculation)
 
-**Anti-patterns to avoid**:
-- ❌ `GetConfigCommand` (missing resource prefix)
-- ❌ `GetParamCommand` (missing resource prefix)
-- ❌ `GetSchemaCommand` (missing resource prefix)
+Examples:
+- ✅ `ServerListCommand`
+- ✅ `ServerConfigGetCommand`
+- ✅ `ServerParamSetCommand`
+- ✅ `TableSchemaGetCommand`
+- ✅ `DatabaseListCommand`
+- ✅ `FileSystemSubnetSizeCommand` (computational operation on a resource)
 
-**Apply this pattern to**:
-- Command class names: `ServerConfigGetCommand`, `ServerParamSetCommand`
-- Options class names: `ServerConfigGetOptions`, `ServerParamSetOptions`
-- Test class names: `ServerConfigGetCommandTests`, `ServerParamSetCommandTests`
-- File names: `ServerConfigGetCommand.cs`, `ServerParamSetOptions.cs`
+Avoid:
+- ❌ `GetConfigCommand` (missing resource)
+- ❌ `ListServerCommand` (verb precedes resource)
+- ❌ `FileSystemRequiredSubnetSizeCommand` (overly verbose – prefer concise subresource `SubnetSize`)
 
-This convention ensures:
-- Clear identification of the resource being operated on
-- Logical grouping of related operations
-- Consistent file organization and naming
-- Better IDE intellisense and code navigation
-- Easier maintenance and discovery
+Apply pattern consistently to:
+- Command classes & filenames: `FileSystemListCommand.cs`
+- Options classes: `FileSystemListOptions.cs`
+- Unit test classes: `FileSystemListCommandTests.cs`
+
+Rationale:
+- Predictable discovery in IDE
+- Natural grouping by resource
+- Supports both CRUD and compute-style operations
 
 **IMPORTANT**: If implementing a new toolset, you must also ensure:
 - The Azure Resource Manager package is added to `Directory.Packages.props` first
@@ -164,7 +166,7 @@ This convention ensures:
 - **Test resource deployment**: Ensure resources are properly configured with RBAC for test application
 - **Resource naming**: Follow consistent naming patterns - many services use just `baseName`, while others may need suffixes for disambiguation (e.g., `{baseName}-suffix`)
 - **Solution file integration**: Add new projects to `AzureMcp.sln` with proper GUID generation to avoid conflicts
-- **Program.cs registration**: Register the new toolset in `Program.cs` `RegisterAreas()` method in alphabetical order
+- **Program.cs registration**: Register the new toolset in `Program.cs` `RegisterAreas()` method in alphabetical order (see `Program.cs` `IAreaSetup[] RegisterAreas()`)
 
 ## Implementation Guidelines
 
@@ -353,7 +355,7 @@ protected override void RegisterOptions(Command command)
 {
     base.RegisterOptions(command);
     RequireResourceGroup();   // Command cannot run without a resource group
-    command.AddOption(_clusterNameOption);
+    command.Options.Add(_clusterNameOption);
 }
 
 protected override void RegisterOptions(Command command)
@@ -369,7 +371,7 @@ Binding example (no manual resource group assignment):
 protected override ListServersOptions BindOptions(ParseResult parseResult)
 {
     var options = base.BindOptions(parseResult);
-    options.Server = parseResult.GetValueForOption(_serverOption);
+    options.Server = parseResult.GetValueOrDefault(_serverOption);
     return options; // options.ResourceGroup already populated (or null)
 }
 ```
@@ -415,34 +417,38 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,    // Set to true for commands that modify resources
-        ReadOnly = true         // Set to false for commands that modify resources
+        OpenWorld = true,       // Set to false for commands with closed/predictable domains (e.g., schema, best practices)
+        Idempotent = true,      // Set to false for commands that are not idempotent
+        ReadOnly = true,        // Set to false for commands that modify resources
+        Secret = false,         // Set to true for commands that may return sensitive information
+        LocalRequired = false   // Set to true for tools requiring local execution/resources
     };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_newOption);
+    command.Options.Add(_newOption);
     }
 
     protected override {Resource}{Operation}Options BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.NewOption = parseResult.GetValueForOption(_newOption);
+        options.NewOption = parseResult.GetValueOrDefault(_newOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        // Required validation step
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             context.Activity?.WithSubscriptionTag(options);
 
             // Get the appropriate service from DI
@@ -494,6 +500,106 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     // Strongly-typed result records
     internal record {Resource}{Operation}CommandResult(List<ResultType> Results);
 }
+
+### ToolMetadata Properties
+
+The `ToolMetadata` class provides behavioral characteristics that help MCP clients understand how commands operate. Set these properties carefully based on your command's actual behavior:
+
+#### OpenWorld Property
+- **`true`**: Command may interact with an "open world" of external entities where the domain is unpredictable or dynamic
+- **`false`**: Command's domain of interaction is closed and well-defined
+
+**Examples:**
+- **Open World (`true`)**: Commands that query Azure resources, list storage accounts, search databases - the set of possible results is unpredictable and changes over time
+- **Closed World (`false`)**: Commands that return schema definitions, best practices guides, static documentation, or predefined samples - the domain is well-defined and predictable
+
+```csharp
+// Open world - Azure resource queries
+OpenWorld = true,    // Storage account list, database queries, resource discovery
+
+// Closed world - Static/predictable content  
+OpenWorld = false,   // Bicep schemas, best practices, design patterns, predefined samples
+```
+
+#### Destructive Property
+- **`true`**: Command may delete, modify, or destructively alter resources in a way that could cause data loss or irreversible changes
+- **`false`**: Command is safe and will not cause destructive changes to resources
+
+**Examples:**
+- **Destructive (`true`)**: Commands that delete resources, modify configurations, reset passwords, purge data, or perform destructive operations
+- **Non-Destructive (`false`)**: Commands that only read data, list resources, show configurations, or perform safe operations
+
+```csharp
+// Destructive operations
+Destructive = true,     // Delete database, reset keys, purge storage, modify critical settings
+
+// Safe operations
+Destructive = false,    // List resources, show configuration, query data, get status
+```
+
+#### Idempotent Property
+- **`true`**: Command can be safely executed multiple times with the same parameters and will produce the same result without unintended side effects
+- **`false`**: Command may produce different results or side effects when executed multiple times
+
+**Examples:**
+- **Idempotent (`true`)**: Commands that set configurations to specific values, create resources with fixed names (when "already exists" is handled gracefully), or perform operations that converge to a desired state
+- **Non-Idempotent (`false`)**: Commands that create resources with generated names, append data, increment counters, or perform operations that accumulate effects
+
+```csharp
+// Idempotent operations
+Idempotent = true,      // Set configuration value, create named resource (with proper handling), list resources
+
+// Non-idempotent operations  
+Idempotent = false,     // Generate new keys, create resources with auto-generated names, append logs
+```
+
+#### ReadOnly Property
+- **`true`**: Command only reads or queries data without making any modifications to resources or state
+- **`false`**: Command may modify, create, update, or delete resources or change system state
+
+**Examples:**
+- **Read-Only (`true`)**: Commands that list resources, show configurations, query databases, get status information, or retrieve data
+- **Not Read-Only (`false`)**: Commands that create, update, delete resources, modify settings, or change any system state
+
+```csharp
+// Read-only operations
+ReadOnly = true,        // List accounts, show database schema, query data, get resource properties
+
+// Write operations
+ReadOnly = false,       // Create resources, update configurations, delete items, modify settings
+```
+
+#### Secret Property
+- **`true`**: Command may return sensitive information such as credentials, keys, connection strings, or other confidential data that should be handled with care
+- **`false`**: Command returns non-sensitive information that is safe to log or display
+
+**Examples:**
+- **Secret (`true`)**: Commands that retrieve access keys, connection strings, passwords, certificates, or other credentials
+- **Non-Secret (`false`)**: Commands that return public information, resource lists, configurations without sensitive data, or status information
+
+```csharp
+// Commands returning sensitive data
+Secret = true,          // Get storage account keys, show connection strings, retrieve certificates
+
+// Commands returning public data
+Secret = false,         // List public resources, show non-sensitive configuration, get resource status
+```
+
+#### LocalRequired Property
+- **`true`**: Command requires local execution environment, local resources, or tools that must be installed on the client machine
+- **`false`**: Command can execute remotely and only requires network access to Azure services
+
+**Examples:**
+- **Local Required (`true`)**: Commands that use local tools (Azure CLI, Docker, npm), access local files, or require specific local environment setup
+- **Remote Capable (`false`)**: Commands that only make API calls to Azure services and can run in any environment with network access
+
+```csharp
+// Commands requiring local resources
+LocalRequired = true,   // Azure CLI wrappers, local file operations, tools requiring local installation
+
+// Pure cloud API commands
+LocalRequired = false,  // Azure Resource Manager API calls, cloud service queries, remote operations
+```
 
 ### 4. Service Interface and Implementation
 
@@ -559,31 +665,17 @@ public abstract class Base{Toolset}Command<
     : SubscriptionCommand<TOptions> where TOptions : Base{Toolset}Options, new()
 {
     protected readonly Option<string> _commonOption = {Toolset}OptionDefinitions.CommonOption;
-    protected readonly Option<string> _resourceGroupOption = OptionDefinitions.Common.ResourceGroup;
-    protected virtual bool RequiresResourceGroup => true;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_commonOption);
-
-        // Add resource group option if required
-        if (RequiresResourceGroup)
-        {
-            command.AddOption(_resourceGroupOption);
-        }
+        command.Options.Add(_commonOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.CommonOption = parseResult.GetValueForOption(_commonOption);
-
-        if (RequiresResourceGroup)
-        {
-            options.ResourceGroup = parseResult.GetValueForOption(_resourceGroupOption);
-        }
-
+        options.CommonOption = parseResult.GetValue(_commonOption);
         return options;
     }
 }
@@ -654,7 +746,8 @@ public class {Resource}{Operation}CommandTests
                 .Returns(new List<ResultType>());
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    // Build args from a single string in tests using the test-only splitter
+    var parseResult = _parser.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -697,8 +790,8 @@ public class {Resource}{Operation}CommandTests
 Integration tests inherit from `CommandTestsBase` and use test fixtures:
 
 ```csharp
-public class {Toolset}CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+public class {Toolset}CommandTests(ITestOutputHelper output)
+    : CommandTestsBase( output)
 {
     [Theory]
     [InlineData(AuthMethod.Credential)]
@@ -762,7 +855,7 @@ private void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFacto
 }
 ```
 
-**IMPORTANT**: Command group names cannot contain underscores. Use camelCase or concatenated names or dash separator instead:
+**IMPORTANT**: Command group names cannot contain underscores. Use lowercase concatenated or dash-separated names.
 - ✅ Good: `"entraadmin"`, `"resourcegroup"`, `"storageaccount"`, `"entra-admin"`
 - ❌ Bad: `"entra_admin"`, `"resource_group"`, `"storage_account"`
 
@@ -782,7 +875,38 @@ private void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFacto
     }
 ```
 
-The toolset list in `RegisterAreas()` should stay sorted alphabetically.
+The area/toolset list in `RegisterAreas()` must remain alphabetically sorted (excluding the fixed conditional AOT exclusion block guarded by `#if !BUILD_NATIVE`).
+
+### 10. JSON Serialization Context
+
+All models and command result record types returned in `Response.Results` must be registered in a source-generated JSON context for AOT safety and performance.
+
+Create (or update) a `{Toolset}JsonContext` file (common location: `src/Commands/{Toolset}JsonContext.cs` or within `Commands` folder) containing:
+
+```csharp
+using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.{Toolset}.Commands.{Resource};
+using Azure.Mcp.Tools.{Toolset}.Models;
+
+[JsonSerializable(typeof({Resource}{Operation}Command.{Resource}{Operation}CommandResult))]
+[JsonSerializable(typeof(YourModelType))]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+internal partial class {Toolset}JsonContext : JsonSerializerContext;
+```
+
+Usage inside a command when assigning results:
+
+```csharp
+context.Response.Results = ResponseResult.Create(
+    new {Resource}{Operation}CommandResult(results),
+    {Toolset}JsonContext.Default.{Resource}{Operation}CommandResult);
+```
+
+Guidelines:
+- Only include types actually serialized as top-level result payloads
+- Keep attribute list minimal but complete
+- Use one context per toolset (preferred) unless size forces logical grouping
+- Ensure filename matches class for navigation (`{Toolset}JsonContext.cs`)
 
 ## Error Handling
 
@@ -1090,8 +1214,8 @@ Integration tests should use the deployed infrastructure:
 ```csharp
 [Trait("Toolset", "{Toolset}")]
 [Trait("Category", "Live")]
-public class {Toolset}CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+public class {Toolset}CommandTests( ITestOutputHelper output)
+    : CommandTestsBase(output)
 {
     [Fact]
     public async Task Should_Get{Resource}_Successfully()
@@ -1182,9 +1306,8 @@ public async Task Should_Return400_ForInvalidInput(string args)
 
 If your live test class needs to implement `IAsyncLifetime` or override `Dispose`, you must call `Dispose` on your base class:
 ```cs
-public class MyCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output),
-    IClassFixture<LiveTestFixture>, IAsyncLifetime
+public class MyCommandTests(ITestOutputHelper output)
+    : CommandTestsBase(output), IAsyncLifetime
 {
     public ValueTask DisposeAsync()
     {
@@ -1387,13 +1510,13 @@ protected override void RegisterOptions(Command command)
 {
     base.RegisterOptions(command);
     UseResourceGroup(); // or RequireResourceGroup();
-    command.AddOption(_otherOption);
+    command.Options.Add(_otherOption);
 }
 
 protected override MyOptions BindOptions(ParseResult parseResult)
 {
     var options = base.BindOptions(parseResult); // ResourceGroup already set if declared
-    options.Other = parseResult.GetValueForOption(_otherOption);
+    options.Other = parseResult.GetValueOrDefault(_otherOption);
     return options;
 }
 ```
@@ -1729,16 +1852,6 @@ var subscriptionResource = await _subscriptionService.GetSubscription(subscripti
 - **Solution**: Add toolset registration to the array in alphabetical order
 - **Fix**: Add `new Azure.Mcp.Tools.{Toolset}.{Toolset}Setup(),` to the `RegisterAreas()` return array
 - **Prevention**: Follow the complete toolset setup checklist including Program.cs registration
-
-**Issue: Using required ResourceGroup option for optional filtering**
-- **Cause**: Using `OptionDefinitions.Common.ResourceGroup` which has `IsRequired = true` for commands that should support optional resource group filtering
-- **Solution**: Create custom optional resource group option in toolset's OptionDefinitions
-- **Fix**:
-  1. Add `OptionalResourceGroup` option with `IsRequired = false` to `{Toolset}OptionDefinitions.cs`
-  2. Override base `_resourceGroupOption` field with `new` keyword in command class
-  3. Use the pattern: `private readonly new Option<string> _resourceGroupOption = {Toolset}OptionDefinitions.OptionalResourceGroup;`
-- **Prevention**: Check if resource group should be optional (e.g., for list commands) and use the optional pattern
-- **Examples**: Extension (AZQR), Monitor (Metrics), and ACR toolsets all implement this pattern correctly
 
 **Issue: HandleException parameter mismatch**
 - **Cause**: Confusion about the correct HandleException signature

@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Batch;
@@ -22,42 +24,49 @@ public sealed class BatchSetTierCommand(ILogger<BatchSetTierCommand> logger) : B
 
     public override string Description =>
         $"""
-        Set access tier for multiple blobs in a single batch operation. This tool efficiently changes the 
-        storage tier for multiple blobs simultaneously in a single request. Different tiers offer different 
-        trade-offs between storage costs, access costs, and retrieval latency.
+        Sets access tier for multiple blobs in a single batch operation, returning the names of blobs that had their access
+        tier set and blobs that failed to have their access tier set.
         """;
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = true,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_tierOption);
-        command.AddOption(_blobsOption);
+        command.Options.Add(_tierOption);
+        command.Options.Add(_blobsOption);
     }
 
     protected override BatchSetTierOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Tier = parseResult.GetValueForOption(_tierOption);
-        options.BlobNames = parseResult.GetValueForOption(_blobsOption);
+        options.Tier = parseResult.GetValueOrDefault(_tierOption);
+        options.BlobNames = parseResult.GetValueOrDefault(_blobsOption);
         return options;
     }
 
     [McpServerTool(Destructive = false, ReadOnly = false, Title = CommandTitle)]
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var storageService = context.GetService<IStorageService>();
             var result = await storageService.SetBlobTierBatch(
                 options.Account!,
@@ -83,5 +92,7 @@ public sealed class BatchSetTierCommand(ILogger<BatchSetTierCommand> logger) : B
         return context.Response;
     }
 
-    internal record BatchSetTierCommandResult(List<string> SuccessfulBlobs, List<string> FailedBlobs);
+    internal record BatchSetTierCommandResult(
+        [property: JsonPropertyName("successfulBlobs")] List<string> SuccessfulBlobs,
+        [property: JsonPropertyName("failedBlobs")] List<string> FailedBlobs);
 }

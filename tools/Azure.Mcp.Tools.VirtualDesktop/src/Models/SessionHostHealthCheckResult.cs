@@ -21,7 +21,7 @@ public class SessionHostHealthCheckResult
     public string? HealthCheckResult { get; set; }
     public SessionHostHealthCheckFailureDetails? AdditionalFailureDetails { get; set; }
 
-    private static SessionHostHealthCheckFailureDetails? ConvertFailureDetails(Azure.ResourceManager.DesktopVirtualization.Models.SessionHostHealthCheckFailureDetails? details)
+    private static SessionHostHealthCheckFailureDetails? ConvertFailureDetails(ResourceManager.DesktopVirtualization.Models.SessionHostHealthCheckFailureDetails? details)
     {
         if (details == null)
         {

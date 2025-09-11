@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.Database;
@@ -22,7 +22,7 @@ public class DatabaseListCommandTests
     private readonly ILogger<DatabaseListCommand> _logger;
     private readonly DatabaseListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public DatabaseListCommandTests()
     {
@@ -35,7 +35,7 @@ public class DatabaseListCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Theory]
@@ -46,7 +46,7 @@ public class DatabaseListCommandTests
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
     {
         // Arrange
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         if (shouldSucceed)
         {
@@ -89,7 +89,7 @@ public class DatabaseListCommandTests
     public async Task ExecuteAsync_HandlesServiceError()
     {
         // Arrange
-        var parseResult = _parser.Parse("--subscription test-sub --resource-group test-rg --server test-server");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server test-server");
 
         _sqlService.ListDatabasesAsync(
             Arg.Any<string>(),
@@ -111,7 +111,7 @@ public class DatabaseListCommandTests
     public async Task ExecuteAsync_ReturnsExpectedDatabases()
     {
         // Arrange
-        var parseResult = _parser.Parse("--subscription test-sub --resource-group test-rg --server test-server");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server test-server");
 
         var expectedDatabases = new List<SqlDatabase>
         {

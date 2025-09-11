@@ -1,136 +1,134 @@
-# Microsoft Model Context Protocol (MCP) Servers
+# 🌟 Microsoft MCP Servers
 
-This repository catalogs various Microsoft implementations of the Model Context Protocol (MCP), an open standard that facilitates seamless integration between AI applications and external data sources and tools. MCP enables AI models to access the context they need to perform tasks effectively.
-
----
 
 ## 📘 What is MCP?
 
-**Model Context Protocol (MCP)** is an open protocol that standardizes how applications provide context to large language models (LLMs). It allows AI applications to connect with various data sources and tools in a consistent manner, enhancing their capabilities and flexibility. MCP follows a client-server architecture where:
+**Model Context Protocol (MCP)** is an open protocol that standardizes how applications provide context to large language models (LLMs). It allows AI applications to connect with various data sources and tools in a consistent manner, enhancing their capabilities and flexibility. MCP follows a client-server architecture:
 
-- **MCP Hosts**: Applications like AI assistants or integrated development environments (IDEs) that initiate connections.
+- **MCP Hosts**: Applications like AI assistants or IDEs that initiate connections.
 - **MCP Clients**: Connectors within the host application that maintain 1:1 connections with servers.
 - **MCP Servers**: Services that provide context and capabilities through the standardized MCP.
 
 For more details, visit the [official MCP website](https://modelcontextprotocol.io).
 
----
+## 📁 Which MCP Servers are built from this repository?
 
-## 📂 Microsoft MCP Servers
+This repository contains core libraries, test frameworks, engineering systems, pipelines, and tooling for Microsoft MCP Server contributors to unify engineering investments; and reduce duplication and divergence:
 
-Below are Microsoft's official MCP server implementations:
+| MCP Server           |  README              | Source Code             |    CHANGELOG          | Releases             | Documentation             | Troubleshooting             | Support             |
+|:---------------------|:--------------------:|:-----------------------:|:---------------------:|:--------------------:|:-------------------------:|:---------------------------:|:-------------------:|
+| Azure MCP            | [Azure MCP README]   | [Azure MCP Source Code] | [Azure MCP CHANGELOG] | [Azure MCP Releases] | [Azure MCP Documentation] | [Azure MCP Troubleshooting] | [Azure MCP Support] |
 
-### 📅 Azure DevOps MCP Server
+[Azure MCP README]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md
+[Azure MCP CHANGELOG]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/CHANGELOG.md
+[Azure MCP Source Code]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server
+[Azure MCP Releases]: https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-0
+[Azure MCP Documentation]: https://learn.microsoft.com/azure/developer/azure-mcp-server/
+[Azure MCP Troubleshooting]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md
+[Azure MCP Support]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/SUPPORT.md
 
-- **Repository**: [Azure DevOps MCP Server - Public Preview](https://github.com/microsoft/azure-devops-mcp)
-- **Description**: The MCP Server for Azure DevOps enables you to bring context into AI workflows and interact with Azure DevOps artifacts such as work items, test plans, builds, releases, and pull requests.
 
----
+## 📚 Which MCP Servers are available from Microsoft?
 
-### 🔷 Azure MCP Server
+### <img height="18" width="18" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> Azure
+- **REPOSITORY**: [microsoft/mcp](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server#readme)
+- **DESCRIPTION**: All Azure MCP tools in a single server.  The Azure MCP Server implements the MCP specification to create a seamless connection between AI agents and Azure services.  Azure MCP Server can be used alone or with the GitHub Copilot for Azure extension in VS Code.
+- **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
+- **TYPE**: `Local`
 
-- **Repository**: [microsoft/mcp](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server#readme)
-- **Description**: Implements the MCP standard to manage Azure resources, enabling declarative provisioning and integration with AI workflows.
+### ✨ Azure AI Foundry
+- **REPOSITORY**: [azure-ai-foundry/mcp-foundry](https://github.com/azure-ai-foundry/mcp-foundry)
+- **DESCRIPTION**: A Model Context Protocol server for Azure AI Foundry, providing a unified set of tools for models, knowledge, evaluation, and more.
+- **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
+- **TYPE**: `Local`
+  
+### <img height="18" width="18" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/1062064-Products-1.2-24x24" alt="Microsoft Azure DevOps Logo" /> Azure DevOps
+- **REPOSITORY**: [Azure DevOps MCP Server - Public Preview](https://github.com/microsoft/azure-devops-mcp)
+- **DESCRIPTION**: This TypeScript project provides a local MCP server for Azure DevOps, enabling you to perform a wide range of Azure DevOps tasks directly from your code editor.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `Local`
 
----
+### ☸️ Azure Kubernetes Service (AKS)
+- **REPOSITORY**: [Azure/aks-mcp](https://github.com/Azure/aks-mcp)
+- **DESCRIPTION**: An MCP server that enables AI assistants to interact with Azure Kubernetes Service (AKS) clusters. It serves as a bridge between AI tools and AKS, translating natural language requests into AKS operations and returning the results in a format the AI tools can understand.
+- **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
+- **TYPE**: `Local`
 
-### ✨ Azure AI Foundry MCP Server
+### <img height="18" width="18" src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" alt="GitHub Logo" /> GitHub
+- **REPOSITORY**: [github/github-mcp-server](https://github.com/github/github-mcp-server)
+- **DESCRIPTION**: Access GitHub repositories, issues, and pull requests through secure API integration.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `REMOTE` - `https://api.githubcopilot.com/mcp`
 
-- **Repository**: [azure-ai-foundry/mcp-foundry](https://github.com/azure-ai-foundry/mcp-foundry)
-- **Description**: An experimental MCP server implementation for Azure AI Foundry that exposes unified tools for models, knowledge, evaluation and deployment.
+### 📝 Markitdown
+- **REPOSITORY**: [microsoft/markitdown](https://github.com/microsoft/markitdown)
+- **DESCRIPTION**: A specialized MCP server for Markdown processing and manipulation. Enables AI models to read, write, and transform Markdown content with robust parsing and formatting capabilities.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `Local`
+  
+### 💻 Microsoft 365 Agents Toolkit
+- **REPOSITORY**: [OfficeDev/microsoft-365-agents-toolkit](https://github.com/OfficeDev/microsoft-365-agents-toolkit/)
+- **DESCRIPTION**: The Microsoft 365 Agents Toolkit MCP Server is a Model Context Protocol (MCP) server that provides a seamless connection between AI agents and developers for building apps and agents for Microsoft 365 and Microsoft 365 Copilot.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `Local`
 
----
+### 📊 Microsoft Clarity
+- **REPOSITORY**: [microsoft/clarity-mcp-server](https://github.com/microsoft/clarity-mcp-server)
+- **DESCRIPTION**: This is a Model Context Protocol (MCP) server for the Microsoft Clarity data export API. It allows you to fetch analytics data from Clarity using Claude for Desktop or other MCP-compatible clients.
+- **CATEGORY**: `DATA AND ANALYTICS`
+- **TYPE**: `Local`
 
-### 📊 Clarity MCP Server
+### 🗃️ Microsoft Dataverse
+- **REPOSITORY**: [Microsoft Dataverse](https://go.microsoft.com/fwlink/?linkid=2320176)
+- **DESCRIPTION**: Chat over your business data using NL - Discover tables, run queries, retrieve data, insert or update records, and execute custom prompts grounded in business knowledge and context.
+- **CATEGORY**: `DATA AND ANALYTICS`
+- **TYPE**: `Local`
 
-- **Repository**: [@microsoft/clarity-mcp-server](https://www.npmjs.com/package/@microsoft/clarity-mcp-server)
-- **Description**: An MCP server for Microsoft Clarity analytics integration. Enables AI models to access web analytics data, heatmaps, and session recordings to understand user behavior and site performance.
+### 💻 Microsoft Dev Box
+- **REPOSITORY**: [@microsoft/devbox-mcp](https://www.npmjs.com/package/@microsoft/devbox-mcp?activeTab=readme)
+- **DESCRIPTION**: An MCP server for Microsoft Dev Box. Enables natural language interactions for developer-focused operations like managing Dev Boxes, configuring environments, and handling pools.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `Local`
 
----
+### 📁 Microsoft Files
+- **REPOSITORY**: [microsoft/files-mcp-server](https://github.com/microsoft/files-mcp-server)
+- **DESCRIPTION**: Provides a declarative control plane for managing file-based resources, supporting AI workflows that involve static files and documentation synchronization.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `Local`
 
-### 🗃️ Dataverse MCP Server
+### 🛢️ Microsoft Fabric Real-Time Intelligence
+- **REPOSITORY**: [RTI MCP Server](https://aka.ms/rti.mcp.repo)
+- **DESCRIPTION**: This server enables AI agents to interact with Fabric RTI services by providing tools through the MCP interface, allowing for seamless data querying and analysis capabilities.
+- **CATEGORY**: `DATA AND ANALYTICS`
+- **TYPE**: `Local`
 
-- **Documentation**: [Microsoft Dataverse](https://go.microsoft.com/fwlink/?linkid=2320176)
-- **Description**: Chat over your business data using NL - Discover tables, run queries, retrieve data, insert or update records, and execute custom prompts grounded in business knowledge and context.
----
+### 📚 Microsoft Learn
+- **REPOSITORY**: [microsoftdocs/mcp](https://github.com/microsoftdocs/mcp)
+- **DESCRIPTION**: AI assistant with real-time access to official Microsoft documentation.
+- **CATEGORY**: `PRODUCTIVITY`
+- **TYPE**: `REMOTE` - `https://learn.microsoft.com/api/mcp`
 
-### 📁 Files MCP Server
+### 🛢️ Microsoft SQL
+- **REPOSITORY**: [MSSQL MCP Server](https://aka.ms/MssqlMcp)
+- **DESCRIPTION**: Chat with your business data the new agentic way using natural language and AI. Connect to any SQL database—from ground (on-premises) to Azure cloud to Microsoft Fabric via a simple connection string. Discover and define table schemas, manage tables, and perform CRUD operations through conversational prompts.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `Local`
 
-- **Repository**: [microsoft/files-mcp-server](https://github.com/microsoft/files-mcp-server)
-- **Description**: Provides a declarative control plane for managing file-based resources, supporting AI workflows that involve static files and documentation synchronization.
+### 🎭 Playwright
+- **REPOSITORY**: [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp)
+- **DESCRIPTION**: This server enables LLMs to interact with web pages through structured accessibility snapshots, bypassing the need for screenshots or visually-tuned models.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `Local`
 
----
 
-### 📝 Markitdown MCP Server
-
-- **Repository**: [microsoft/markitdown](https://github.com/microsoft/markitdown)
-- **Description**: A specialized MCP server for Markdown processing and manipulation. Enables AI models to read, write, and transform Markdown content with robust parsing and formatting capabilities.
-
----
-
-### 💻 Microsoft Dev Box MCP
-
-- **Package**: [@microsoft/devbox-mcp](https://www.npmjs.com/package/@microsoft/devbox-mcp)
-- **Description**: An MCP server for [Microsoft Dev Box](https://azure.microsoft.com/products/dev-box). Enables natural language interactions for developer-focused operations like managing Dev Boxes, configuring environments, and handling pools. Check out the [README](https://www.npmjs.com/package/@microsoft/devbox-mcp?activeTab=readme) for more details. Use this [one-click link](https://insiders.vscode.dev/redirect/mcp/install?name=Dev%20Box&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40microsoft%2Fdevbox-mcp%40latest%22%5D%7D) to install Dev Box MCP in your VS Code.
-
----
-
-### 🛢️Microsoft Fabric Real-Time Intelligence MCP Server
-
-- **Repository**: [RTI MCP Server](https://aka.ms/rti.mcp.repo)
-- **Description**: Chat with your real-time data the new agentic way using natural language and AI. MCP server for [Fabric Real-Time Intelligence](https://aka.ms/fabricrti) supporting tools for [Eventhouse](https://aka.ms/eventhouse), [Azure Data Explorer](https://aka.ms/adx), and other RTI services (coming soon)
-
----
-
-### 📚 Microsoft Learn Docs MCP Server
-
-- **Repository**: [microsoftdocs/mcp](https://github.com/microsoftdocs/mcp)
-- **Description**: A remote MCP server that provides structured access to official Microsoft Learn documentation. Enables AI models to retrieve accurate, authoritative, and context-aware technical content for code generation, question answering, and workflow grounding.
-
----
-
-### 🛢️Microsoft SQL MCP Server
-
-- **Repository**: [MSSQL MCP Server](https://aka.ms/MssqlMcp)
-- **Description**: Chat with your business data the new agentic way using natural language and AI. Connect to any SQL database—from ground (on-premises) to Azure cloud to Microsoft Fabric via a simple connection string. Discover and define table schemas, manage tables, and perform CRUD operations through conversational prompts.
-
----
-
-### 🎭 Playwright MCP
-
-- **Repository**: [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp)
-- **Description**: An MCP server for browsing the internet. Enables LLMs to interact with web pages through structured accessibility snapshots. Useful for web navigation and form-filling, data extraction from structured content, automated testing driven by LLMs, and general-purpose browser interaction for agents.
-
----
-
-### ☸️ Azure Kubernetes Service (AKS) MCP Server
-
-- **Repository**: [Azure/aks-mcp](https://github.com/Azure/aks-mcp)
-- **Description**: An MCP server that enables AI assistants to interact with Azure Kubernetes Service (AKS) clusters. It serves as a bridge between AI tools and AKS, translating natural language requests into AKS operations and returning the results in a format the AI tools can understand.
-
----
-
-### 📚 Microsoft 365 Agents Toolkit MCP
-
-- **Repository**: [M365 Agents Toolkit MCP](https://aka.ms/m365agentstoolkit-mcp)
-- **Description**: An MCP server that provides a seamless connection between AI agents and developers for building apps and agents for Microsoft 365 and Microsoft 365 Copilot.
-
----
+## 🏗️ Looking for starter templates that use MCP? 
+Check out the [Azure Developer CLI (azd) templates](https://azure.github.io/awesome-azd/?tags=mcp) tagged with MCP.
 
 ## 📎 Related Resources
-
 - [Microsoft MCP Resources](https://github.com/microsoft/mcp/tree/main/Resources)
 - [MCP Pattern Overview](https://modelcontextprotocol.io/introduction)
 - [MCP SDKs and Building Blocks](https://modelcontextprotocol.io/sdk)
-- [MCP Specification](https://spec.modelcontextprotocol.io/specification/2025-03-26/)
-
----
-
-## 🏗️ Templates
-
-Looking for starter templates that use MCP? Check out the [Azure Developer CLI (azd) templates](https://azure.github.io/awesome-azd/?tags=mcp) tagged with MCP.
-
----
+- [MCP Specification](https://spec.modelcontextprotocol.io/specification/)
 
 ## Contributing
 

@@ -3277,7 +3277,7 @@
     },
     {
       "name": "create",
-      "description": "Create a new Azure Storage account in the specified resource group and location.\r\nCreates a storage account with the specified configuration options. Returns the\r\ncreated storage account information including name, location, SKU, and other properties.\r\n  Required options:\r\n- account-name: The globally unique name for the storage account\r\n- resource-group: The resource group where the account will be created\r\n- location: The Azure region for the storage account\r\n  Optional options:\r\n- sku: Storage account SKU (default: Standard_LRS)\r\n- kind: Storage account kind (default: StorageV2)\r\n- access-tier: Default access tier for blobs (default: Hot)\r\n- enable-https-traffic-only: Require HTTPS (default: true)\r\n- allow-blob-public-access: Allow public blob access (default: false)\r\n- enable-hierarchical-namespace: Enable Data Lake Storage Gen2 (default: false)",
+      "description": "Create a new Azure Storage account in the specified resource group and location.\r\nCreates a storage account with the specified configuration options. Returns the\r\ncreated storage account information including name, location, SKU, and other properties.\r\n  Required options:\r\n- account-name: The globally unique name for the storage account\r\n- resource-group: The resource group where the account will be created\r\n- location: The Azure region for the storage account\r\n  Optional options:\r\n- sku: Storage account SKU (default: Standard_LRS)\r\n- kind: Storage account kind (default: StorageV2)\r\n- access-tier: Default access tier for blobs (default: Hot)\r\n- enable-hierarchical-namespace: Enable Data Lake Storage Gen2 (default: false)",
       "command": "azmcp storage account create",
       "option": [
         {
@@ -3317,26 +3317,8 @@
           "required": null
         },
         {
-          "name": "kind",
-          "description": "The storage account kind. Valid values: Storage, StorageV2, BlobStorage, FileStorage, BlockBlobStorage.",
-          "type": "string",
-          "required": null
-        },
-        {
           "name": "access-tier",
           "description": "The default access tier for blob storage. Valid values: Hot, Cool.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "enable-https-traffic-only",
-          "description": "Whether to require secure transfer (HTTPS) for the storage account.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "allow-blob-public-access",
-          "description": "Whether to allow public access to blobs in the storage account.",
           "type": "string",
           "required": null
         },
@@ -3463,12 +3445,6 @@
           "description": "The name of the container to access within the storage account.",
           "type": "string",
           "required": true
-        },
-        {
-          "name": "blob-container-public-access",
-          "description": "The public access level for the blob container. Valid values: blob (allows public read access to blobs), container (allows public read access to both blobs and container metadata). If not specified, the container will be private.",
-          "type": "string",
-          "required": null
         }
       ]
     },

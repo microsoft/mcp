@@ -4,7 +4,6 @@
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Options;
 using Azure.Mcp.Tools.Authorization.Services;
@@ -27,34 +26,42 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
 
     public override string Title => _commandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     private readonly Option<string> _scopeOption = OptionDefinitions.Authorization.Scope;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_scopeOption);
+        command.Options.Add(_scopeOption);
     }
 
     protected override RoleAssignmentListOptions BindOptions(ParseResult parseResult)
     {
         var args = base.BindOptions(parseResult);
-        args.Scope = parseResult.GetValueForOption(_scopeOption);
+        args.Scope = parseResult.GetValue(_scopeOption);
         return args;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var authService = context.GetService<IAuthorizationService>();
             var assignments = await authService.ListRoleAssignments(
                 options.Scope,

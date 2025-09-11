@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -42,8 +41,8 @@ public sealed class AzCommandTests
         {
             // Arrange
             var command = new AzCommand(_logger);
-            var parser = new Parser(command.GetCommand());
-            var args = parser.Parse("--command \"group list\"");
+
+            var args = command.GetCommand().Parse("--command \"group list\"");
             var context = new CommandContext(_serviceProvider);
 
             var expectedOutput = """{"value":[{"id":"/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg","name":"test-rg","type":"Microsoft.Resources/resourceGroups","location":"eastus","properties":{"provisioningState":"Succeeded"}}]}""";
@@ -87,8 +86,8 @@ public sealed class AzCommandTests
     {
         // Arrange
         var command = new AzCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--command \"group invalid-command\"");
+
+        var args = command.GetCommand().Parse("--command \"group invalid-command\"");
         var context = new CommandContext(_serviceProvider);
 
         var errorMessage = "Error: az group: 'invalid-command' is not an az command.";
@@ -114,8 +113,8 @@ public sealed class AzCommandTests
     {
         // Arrange
         var command = new AzCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--command \"group list\"");
+
+        var args = command.GetCommand().Parse("--command \"group list\"");
         var context = new CommandContext(_serviceProvider);
 
         var exceptionMessage = "Azure CLI executable not found";
@@ -142,8 +141,8 @@ public sealed class AzCommandTests
     {
         // Arrange
         var command = new AzCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(""); // No command specified
+
+        var args = command.GetCommand().Parse(""); // No command specified
         var context = new CommandContext(_serviceProvider);
 
         // Act
@@ -159,8 +158,8 @@ public sealed class AzCommandTests
     {
         // Arrange
         var command = new AzCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("--command \"group list --query name\"");
+
+        var args = command.GetCommand().Parse("--command \"group list --query name\"");
         var context = new CommandContext(_serviceProvider);
 
         var nonJsonOutput = "test-rg1\ntest-rg2";

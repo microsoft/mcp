@@ -9,9 +9,7 @@ using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests;
 
-public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output),
-    IClassFixture<LiveTestFixture>
+public class CommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     [Fact]
     public async Task Should_list_groups_by_subscription()
@@ -32,7 +30,7 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
     public async Task Should_get_general_code_generation_best_practices()
     {
         // Act
-        JsonElement? result = await CallToolAsync("azmcp_bestpractices_get", new Dictionary<string, object?>
+        JsonElement? result = await CallToolAsync("azmcp_get_bestpractices_get", new Dictionary<string, object?>
         {
             { "resource", "general" },
             { "action", "code-generation" }
@@ -60,7 +58,7 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
     public async Task Should_get_general_deployment_best_practices()
     {
         // Act
-        JsonElement? result = await CallToolAsync("azmcp_bestpractices_get", new Dictionary<string, object?>
+        JsonElement? result = await CallToolAsync("azmcp_get_bestpractices_get", new Dictionary<string, object?>
         {
             { "resource", "general" },
             { "action", "deployment" }
@@ -82,14 +80,13 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
         Assert.Contains("Infrastructure as Code (IaC)", combinedText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("azd commands such as 'azd up'", combinedText, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Bicep files under the 'infra/' folder", combinedText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("azure_recommend_service_config", combinedText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public async Task Should_get_azure_functions_code_generation_best_practices()
     {
         // Act
-        JsonElement? result = await CallToolAsync("azmcp_bestpractices_get", new Dictionary<string, object?>
+        JsonElement? result = await CallToolAsync("azmcp_get_bestpractices_get", new Dictionary<string, object?>
         {
             { "resource", "azurefunctions" },
             { "action", "code-generation" }
@@ -118,7 +115,7 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
     public async Task Should_get_azure_functions_deployment_best_practices()
     {
         // Act
-        JsonElement? result = await CallToolAsync("azmcp_bestpractices_get", new Dictionary<string, object?>
+        JsonElement? result = await CallToolAsync("azmcp_get_bestpractices_get", new Dictionary<string, object?>
         {
             { "resource", "azurefunctions" },
             { "action", "deployment" }
@@ -147,7 +144,7 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
     public async Task Should_get_static_web_app_best_practices()
     {
         // Act
-        JsonElement? result = await CallToolAsync("azmcp_bestpractices_get", new Dictionary<string, object?>
+        JsonElement? result = await CallToolAsync("azmcp_get_bestpractices_get", new Dictionary<string, object?>
         {
             { "resource", "static-web-app" },
             { "action", "all" }
@@ -176,7 +173,7 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
     public async Task Should_get_general_all_best_practices()
     {
         // Act
-        JsonElement? result = await CallToolAsync("azmcp_bestpractices_get", new Dictionary<string, object?>
+        JsonElement? result = await CallToolAsync("azmcp_get_bestpractices_get", new Dictionary<string, object?>
         {
             { "resource", "general" },
             { "action", "all" }
@@ -207,7 +204,7 @@ public class CommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper out
     public async Task Should_get_azure_functions_all_best_practices()
     {
         // Act
-        JsonElement? result = await CallToolAsync("azmcp_bestpractices_get", new Dictionary<string, object?>
+        JsonElement? result = await CallToolAsync("azmcp_get_bestpractices_get", new Dictionary<string, object?>
         {
             { "resource", "azurefunctions" },
             { "action", "all" }

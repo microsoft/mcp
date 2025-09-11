@@ -14,20 +14,21 @@ using MsOptions = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Tools.Kusto.LiveTests;
 
-public class KustoCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output),
-    IClassFixture<LiveTestFixture>, IAsyncLifetime
+public class KustoCommandTests(ITestOutputHelper output)
+    : CommandTestsBase(output)
 {
     private const string TestDatabaseName = "ToDoLists";
 
-    public ValueTask DisposeAsync()
+    public override ValueTask DisposeAsync()
     {
         base.Dispose();
         return ValueTask.CompletedTask;
     }
 
-    public async ValueTask InitializeAsync()
+    public override async ValueTask InitializeAsync()
     {
+        await base.InitializeAsync(); // Initialize the base class first
+
         try
         {
             var credentials = new DefaultAzureCredential();

@@ -8,6 +8,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azmcp_foundry_knowledge_index_list | List all knowledge indexes in my AI Foundry project |
 | azmcp_foundry_knowledge_index_list | Show me the knowledge indexes in my AI Foundry project |
+| azmcp_foundry_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my AI Foundry project |
+| azmcp_foundry_knowledge_index_schema | Get the schema configuration for knowledge index \<index-name> |
 | azmcp_foundry_models_deploy | Deploy a GPT4o instance on my resource \<resource-name> |
 | azmcp_foundry_models_deployments_list | List all AI Foundry model deployments |
 | azmcp_foundry_models_deployments_list | Show me all AI Foundry model deployments |
@@ -18,9 +20,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_search_index_describe | Show me the details of the index \<index-name> in Cognitive Search service \<service-name> |
-| azmcp_search_index_list | List all indexes in the Cognitive Search service \<service-name> |
-| azmcp_search_index_list | Show me the indexes in the Cognitive Search service \<service-name> |
+| azmcp_search_index_get | Show me the details of the index \<index-name> in Cognitive Search service \<service-name> |
+| azmcp_search_index_get | List all indexes in the Cognitive Search service \<service-name> |
+| azmcp_search_index_get | Show me the indexes in the Cognitive Search service \<service-name> |
 | azmcp_search_index_query | Search for instances of \<search_term> in the index \<index-name> in Cognitive Search service \<service-name> |
 | azmcp_search_service_list | List all Cognitive Search services in my subscription |
 | azmcp_search_service_list | Show me the Cognitive Search services in my subscription |
@@ -143,6 +145,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_deploy_pipeline_guidance_get | How can I create a CI/CD pipeline to deploy this app to Azure? |
 | azmcp_deploy_plan_get | Create a plan to deploy this application to azure |
 
+## Azure Event Grid
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_eventgrid_topic_list | List all Event Grid topics in my subscription |
+| azmcp_eventgrid_topic_list | Show me the Event Grid topics in my subscription |
+| azmcp_eventgrid_topic_list | List all Event Grid topics in subscription <subscription> |
+| azmcp_eventgrid_topic_list | List all Event Grid topics in resource group <resource_group_name> in subscription <subscription> |
+
 ## Azure Function App
 
 | Tool Name | Test Prompt |
@@ -189,6 +200,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_aks_cluster_list | List all AKS clusters in my subscription |
 | azmcp_aks_cluster_list | Show me my Azure Kubernetes Service clusters |
 | azmcp_aks_cluster_list | What AKS clusters do I have? |
+| azmcp_aks_nodepool_list | List nodepools for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_list | Show me the nodepool list for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_list | What nodepools do I have for AKS cluster \<cluster-name> in \<resource-group> |
 
 ## Azure Load Testing
 
@@ -222,6 +236,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | azmcp_marketplace_product_get | Get details about marketplace product <product_name> |
+| azmcp_marketplace_product_list | Search for Microsoft products in the marketplace |
+| azmcp_marketplace_product_list | Show me marketplace products from publisher <publisher_name> |
 
 ## Azure MCP Best Practices
 
@@ -324,6 +340,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_resourcehealth_availability-status_list | List availability status for all resources in my subscription |
 | azmcp_resourcehealth_availability-status_list | Show me the health status of all my Azure resources |
 | azmcp_resourcehealth_availability-status_list | What resources in resource group <resource_group_name> have health issues? |
+| azmcp_resourcehealth_service-health-events_list | List all service health events in my subscription |
+| azmcp_resourcehealth_service-health-events_list | Show me Azure service health events for subscription <subscription_id> |
+| azmcp_resourcehealth_service-health-events_list | What service issues have occurred in the last 30 days? |
+| azmcp_resourcehealth_service-health-events_list | List active service health events in my subscription |
+| azmcp_resourcehealth_service-health-events_list | Show me planned maintenance events for my Azure services |
 
 ## Azure Service Bus
 
@@ -383,26 +404,24 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_storage_account_create | Create a new storage account called testaccount123 in East US region |
 | azmcp_storage_account_create | Create a storage account with premium performance and LRS replication |
 | azmcp_storage_account_create | Create a new storage account with Data Lake Storage Gen2 enabled |
-| azmcp_storage_account_details | Show me the details for my storage account <account> |
-| azmcp_storage_account_details | Get details about the storage account <account> |
-| azmcp_storage_account_list | List all storage accounts in my subscription including their location and SKU |
-| azmcp_storage_account_list | Show me my storage accounts with whether hierarchical namespace (HNS) is enabled |
-| azmcp_storage_account_list | Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings |
+| azmcp_storage_account_get | Show me the details for my storage account <account> |
+| azmcp_storage_account_get | Get details about the storage account <account> |
+| azmcp_storage_account_get | List all storage accounts in my subscription including their location and SKU |
+| azmcp_storage_account_get | Show me my storage accounts with whether hierarchical namespace (HNS) is enabled |
+| azmcp_storage_account_get | Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings |
 | azmcp_storage_blob_batch_set-tier | Set access tier to Cool for multiple blobs in the container <container> in the storage account <account> |
 | azmcp_storage_blob_batch_set-tier | Change the access tier to Archive for blobs file1.txt and file2.txt in the container <container> in the storage account <account> |
 | azmcp_storage_blob_container_create | Create the storage container mycontainer in storage account <account> |
 | azmcp_storage_blob_container_create | Create the container using blob public access in storage account <account> |
 | azmcp_storage_blob_container_create | Create a new blob container named documents with container public access in storage account <account> |
-| azmcp_storage_blob_container_details | Show me the properties of the storage container files in the storage account <account> |
-| azmcp_storage_blob_container_list | List all blob containers in the storage account <account> |
-| azmcp_storage_blob_container_list | Show me the blob containers in the storage account <account> |
-| azmcp_storage_blob_details | Show me the properties for blob <blob> in container <container> in storage account <account> |
-| azmcp_storage_blob_details | Get the details about blob <blob> in the container <container> in storage account <account> |
-| azmcp_storage_blob_list | List all blobs in the blob container <container> in the storage account <account> |
-| azmcp_storage_blob_list | Show me the blobs in the blob container <container> in the storage account <account> |
+| azmcp_storage_blob_container_get | Show me the properties of the storage container <container> in the storage account <account> |
+| azmcp_storage_blob_container_get | List all blob containers in the storage account <account> |
+| azmcp_storage_blob_container_get | Show me the containers in the storage account <account> |
+| azmcp_storage_blob_get | Show me the properties for blob <blob> in container <container> in storage account <account> |
+| azmcp_storage_blob_get | Get the details about blob <blob> in the container <container> in storage account <account> |
+| azmcp_storage_blob_get | List all blobs in the blob container <container> in the storage account <account> |
+| azmcp_storage_blob_get | Show me the blobs in the blob container <container> in the storage account <account> |
 | azmcp_storage_blob_upload | Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account> |
-| azmcp_storage_blob_upload | Upload the file <local-file-path> overwriting blob <blob> in container <container> in storage account <account> |
-| azmcp_storage_blob_upload | Overwrite <blob> with <local-file-name> in container <container> in storage account <account> |
 | azmcp_storage_datalake_directory_create | Create a new directory at the path <directory_path> in Data Lake in the storage account <account> |
 | azmcp_storage_datalake_file-system_list-paths | List all paths in the Data Lake file system <file_system> in the storage account <account> |
 | azmcp_storage_datalake_file-system_list-paths | Show me the paths in the Data Lake file system <file_system> in the storage account <account> |

@@ -90,7 +90,7 @@ function BuildServer($serverName) {
         name = $packageName
         version = $version
         description = $description
-        author = 'Microsoft Corporation'
+        author = 'Microsoft'
         homepage = $readmeUrl
         license = 'MIT'
         keywords = $keywords
@@ -155,11 +155,6 @@ function BuildServer($serverName) {
             }
 
             Invoke-LoggedCommand $command -GroupOutput
-
-            if (-not $DebugBuild) {
-                Write-Host "Removing debug files (.pdb, .dSYM, .dbg) from Release build" -ForegroundColor Yellow
-                Get-ChildItem -Path "$outputDir/dist" -Recurse -Include "*.pdb", "*.dSYM", "*.dbg" | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
-            }
 
             $package = [ordered]@{
                 name = "$packageName-$node_os-$arch"

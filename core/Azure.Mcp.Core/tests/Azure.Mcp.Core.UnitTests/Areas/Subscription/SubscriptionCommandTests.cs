@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Commands.Account;
@@ -18,22 +18,22 @@ public class SubscriptionCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IStorageService _storageService;
-    private readonly ILogger<AccountListCommand> _logger;
-    private readonly AccountListCommand _command;
+    private readonly ILogger<AccountGetCommand> _logger;
+    private readonly AccountGetCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public SubscriptionCommandTests()
     {
         _storageService = Substitute.For<IStorageService>();
-        _logger = Substitute.For<ILogger<AccountListCommand>>();
+        _logger = Substitute.For<ILogger<AccountGetCommand>>();
 
         var collection = new ServiceCollection().AddSingleton(_storageService);
 
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public class SubscriptionCommandTests
 
         try
         {
-            var parseResult = _parser.Parse([]);
+            var parseResult = _commandDefinition.Parse([]);
 
             // Act & Assert
             Assert.Empty(parseResult.Errors);
@@ -66,16 +66,20 @@ public class SubscriptionCommandTests
 
         try
         {
-            var expectedAccounts = new List<Azure.Mcp.Tools.Storage.Models.StorageAccountInfo>
+            var expectedAccounts = new List<Mcp.Tools.Storage.Models.AccountInfo>
             {
                 new("account1", null, null, null, null, null, null, null),
                 new("account2", null, null, null, null, null, null, null)
             };
 
-            _storageService.GetStorageAccounts(Arg.Is("env-subs"), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            _storageService.GetAccountDetails(
+                Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+                Arg.Is("env-subs"),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>())
                 .Returns(Task.FromResult(expectedAccounts));
 
-            var parseResult = _parser.Parse([]);
+            var parseResult = _commandDefinition.Parse([]);
 
             // Act
             var response = await _command.ExecuteAsync(_context, parseResult);
@@ -84,7 +88,11 @@ public class SubscriptionCommandTests
             Assert.NotNull(response);
 
             // Verify the service was called with the environment variable subscription
-            _ = _storageService.Received(1).GetStorageAccounts("env-subs", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
+            _ = _storageService.Received(1).GetAccountDetails(
+                Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+                "env-subs",
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>());
         }
         finally
         {
@@ -102,16 +110,20 @@ public class SubscriptionCommandTests
 
         try
         {
-            var expectedAccounts = new List<Azure.Mcp.Tools.Storage.Models.StorageAccountInfo>
+            var expectedAccounts = new List<Mcp.Tools.Storage.Models.AccountInfo>
             {
                 new("account1", null, null, null, null, null, null, null),
                 new("account2", null, null, null, null, null, null, null)
             };
 
-            _storageService.GetStorageAccounts(Arg.Is("option-subs"), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            _storageService.GetAccountDetails(
+                Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+                Arg.Is("option-subs"),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>())
                 .Returns(Task.FromResult(expectedAccounts));
 
-            var parseResult = _parser.Parse(["--subscription", "option-subs"]);
+            var parseResult = _commandDefinition.Parse(["--subscription", "option-subs"]);
 
             // Act
             var response = await _command.ExecuteAsync(_context, parseResult);
@@ -120,8 +132,16 @@ public class SubscriptionCommandTests
             Assert.NotNull(response);
 
             // Verify the service was called with the option subscription, not the environment variable
-            _ = _storageService.Received(1).GetStorageAccounts("option-subs", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
-            _ = _storageService.DidNotReceive().GetStorageAccounts("env-subs", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
+            _ = _storageService.Received(1).GetAccountDetails(
+                Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+                "option-subs",
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>());
+            _ = _storageService.DidNotReceive().GetAccountDetails(
+                Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+                "env-subs",
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>());
         }
         finally
         {
