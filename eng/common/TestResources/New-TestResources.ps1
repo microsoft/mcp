@@ -179,7 +179,7 @@ try {
         }
         Write-Verbose "Overriding test resources search directory to '$root'"
     }
-    
+
     $templateFiles = @()
 
     "$ResourceType-resources.json", "$ResourceType-resources.bicep" | ForEach-Object {
@@ -203,7 +203,7 @@ try {
 
     # returns empty string if $ServiceDirectory is not set
     $serviceName = GetServiceLeafDirectoryName $ServiceDirectory
-    
+
     # in ci, random names are used
     # in non-ci, without BaseName, ResourceGroupName or ServiceDirectory, all invocations will
     # generate the same resource group name and base name for a given user
@@ -310,7 +310,7 @@ try {
         }
     }
 
-    # This needs to happen after we set the TenantId but before we use the ResourceGroupName	
+    # This needs to happen after we set the TenantId but before we use the ResourceGroupName
     if ($wellKnownTMETenants.Contains($TenantId)) {
         # Add a prefix to the resource group name to avoid flagging the usages of local auth
         # See details at https://eng.ms/docs/products/onecert-certificates-key-vault-and-dsms/key-vault-dsms/certandsecretmngmt/credfreefaqs#how-can-i-disable-s360-reporting-when-testing-customer-facing-3p-features-that-depend-on-use-of-unsafe-local-auth
@@ -605,6 +605,21 @@ try {
         Write-Verbose "Removing unnecessary parameters from template '$($templateFile.jsonFilePath)'"
         $templateJson = Get-Content -LiteralPath $templateFile.jsonFilePath | ConvertFrom-Json
         $templateParameterNames = $templateJson.parameters.PSObject.Properties.Name
+
+        # Auto-resolve hpcCacheRpObjectId for AMLFS test resources if template expects it and it's not already supplied
+        if ($templateParameterNames -contains 'hpcCacheRpObjectId' -and -not $templateParameters.ContainsKey('hpcCacheRpObjectId')) {
+            try {
+                $sp = Get-AzADServicePrincipal -DisplayName 'HPC Cache Resource Provider' -ErrorAction Stop
+                if ($sp -and $sp.Id) {
+                    $templateParameters['hpcCacheRpObjectId'] = $sp.Id
+                    Write-Verbose "Resolved hpcCacheRpObjectId to '$($sp.Id)'"
+                } else {
+                    Write-Warning "HPC Cache Resource Provider service principal not found; 'hpcCacheRpObjectId' will be missing and deployment may fail."
+                }
+            } catch {
+                Write-Warning "Failed to resolve HPC Cache Resource Provider service principal: $_"
+            }
+        }
 
         $templateFileParameters = $templateParameters.Clone()
         foreach ($key in $templateParameters.Keys) {

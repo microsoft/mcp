@@ -163,9 +163,8 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         string fileSystemName,
         string? name = null,
         IList<string>? importPrefixes = null,
-        string conflictResolutionMode = "OverwriteAlways",
+        string conflictResolutionMode = "Skip",
         int? maximumErrors = 0,
-        string? adminStatus = "Active", // TODO: discuss the necessity of this
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
@@ -176,7 +175,11 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         // NOTE: The StorageCache SDK (as of current version) does not expose an import job create API.
         // Placeholder implementation constructs a job object. Wire up REST call when SDK/REST details available.
         name ??= $"import-job-{DateTime.UtcNow:yyyyMMddHHmmss}";
-        importPrefixes ??= new List<string> { "/" };
+        // Ensure default import prefix list is a single root path when none provided OR provided empty
+        if (importPrefixes == null || importPrefixes.Count == 0)
+        {
+            importPrefixes = new List<string> { "/" };
+        }
 
         try
         {
@@ -220,7 +223,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             "Submitted (placeholder)",
             conflictResolutionMode,
             maximumErrors,
-            adminStatus,
+            "Active",
             importPrefixes);
     }
 }
