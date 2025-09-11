@@ -71,7 +71,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
                 return context.Response;
             }
 
-            ResourceDiagnoseOptions options  = BindOptions(parseResult);
+            ResourceDiagnoseOptions options = BindOptions(parseResult);
 
             var service = context.GetService<IAppLensService>();
 
