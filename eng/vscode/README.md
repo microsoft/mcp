@@ -216,6 +216,12 @@ Here are some cool prompts you can try across our supported Azure services:
 * Get the bicep or terraform file generation rules for an application
 * Get the GitHub pipeline creation guideline for an application
 
+### 📣 Azure Event Grid
+
+* "List all Event Grid topics in subscription 'my-subscription'"
+* "Show me the Event Grid topics in my subscription"
+* "List all Event Grid topics in resource group 'my-resourcegroup' in my subscription"
+
 ### 🧮 Azure Foundry
 
 * List Azure Foundry models
@@ -386,6 +392,7 @@ The Azure MCP Server provides tools for interacting with **28 Azure service area
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🛠️ **Azure Developer CLI (azd)** - Template and deployment management
+- 📊 **Azure Event Grid** - Event routing and management
 - ⚡ **Azure Functions** - Function App management
 - 🧮 **Azure Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🚀 **Azure Managed Grafana** - Monitoring dashboards
@@ -398,6 +405,7 @@ The Azure MCP Server provides tools for interacting with **28 Azure service area
 - 🏥 **Azure Service Health** - Resource health status and availability
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning
+- 📊 **Azure Quota** - Resource quota and usage management
 - 🔴 **Azure Redis Cache** - In-memory data store
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🎭 **Azure RBAC** - Access control management
