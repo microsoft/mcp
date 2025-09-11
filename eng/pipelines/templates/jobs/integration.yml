@@ -39,14 +39,14 @@ jobs:
     displayName: Publish platform-specific Nugets
     inputs:
       packageParentPath: '$(Pipeline.Workspace)'
-      packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/platform/*.nupkg;!$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/platform/*.symbols.nupkg'
+      packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}/platform/*.nupkg;!$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}/platform/*.symbols.nupkg'
       publishVstsFeed: ${{ parameters.NugetDevFeed }}
 
   - task: 1ES.PublishNuget@1
     displayName: Publish wrapper Nuget
     inputs:
       packageParentPath: '$(Pipeline.Workspace)'
-      packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/wrapper/*.nupkg;!$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/wrapper/*.symbols.nupkg'
+      packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}/wrapper/*.nupkg;!$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}/wrapper/*.symbols.nupkg'
       publishVstsFeed: ${{ parameters.NugetDevFeed }}
 
 # - job: PublishDocsToNightly
