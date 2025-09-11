@@ -566,7 +566,9 @@ azmcp aks cluster get --subscription <subscription> \
 azmcp aks cluster list --subscription <subscription>
 
 # List AKS cluster's nodepools
-azmcp aks nodepool list --subscription <subscription> --resource-group <resource-group> --cluster <cluster>
+azmcp aks nodepool list --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --cluster <cluster>
 ```
 
 ### Azure Load Testing Operations

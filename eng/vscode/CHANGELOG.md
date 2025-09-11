@@ -1,9 +1,11 @@
 
 # Release History
 
-## 0.5.14 (Unreleased)
+## 0.6.0 (2025-09-11)
 
 ### Added
+
+- Added nodepool list tool for AKS managed cluster: [[#360](https://github.com/microsoft/mcp/pull/360)]
 
 ### Changed
 - To improve performance, packages now ships with trimmed binaries. The extension now uses trimmed Azure MCP server binaries that have unused code and dependencies removed, resulting in significantly smaller file sizes, faster startup times, and reduced memory footprint. [#405]
