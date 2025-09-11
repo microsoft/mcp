@@ -21,6 +21,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Changed the following Azure Managed Lustre commands:
+  - `azmcp_azuremanagedlustre_filesystem_required-subnet-size` becomes `azmcp_azuremanagedlustre_filesystem_subnetsize_ask`
+
 ## 0.6.0 (2025-09-11)
 
 ### Features Added
@@ -81,9 +84,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Updated the following dependency to improve .NET Ahead-of-Time (AOT) compilation support: [[#363](https://github.com/microsoft/mcp/pull/363)]
   - Azure.ResourceManager.StorageCache: `1.3.1` → `1.3.2`
 
-- Changed the following Azure Managed Lustre commands:
-  - `azmcp_azuremanagedlustre_filesystem_required-subnet-size` becomes `azmcp_azuremanagedlustre_filesystem_subnetsize_ask`
-
 ## 0.5.12 (2025-09-04)
 
 ### Features Added
@@ -129,7 +129,7 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 - Added support for getting details of an Azure Function App via the command `azmcp_functionapp_get`. [[#970](https://github.com/Azure/azure-mcp/pull/970)]
 - Added the following Azure Managed Lustre commands: [[#1003](https://github.com/Azure/azure-mcp/issues/1003)]
   - `azmcp_azuremanagedlustre_filesystem_list`: List available Azure Managed Lustre filesystems.
-  - `azmcp_azuremanagedlustre_filesystem_subnet-size-required`: Returns the number of IP addresses required for a specific SKU and size of Azure Managed Lustre filesystem.
+  - `azmcp_azuremanagedlustre_filesystem_required-subnet-size`: Returns the number of IP addresses required for a specific SKU and size of Azure Managed Lustre filesystem.
 - Added support for designing Azure Cloud Architecture through guided questions via the command `azmcp_cloudarchitect_design`. [[#890](https://github.com/Azure/azure-mcp/pull/890)]
 - Added support for the following Azure MySQL operations: [[#855](https://github.com/Azure/azure-mcp/issues/855)]
   - `azmcp_mysql_database_list` - List all databases in a MySQL server.
