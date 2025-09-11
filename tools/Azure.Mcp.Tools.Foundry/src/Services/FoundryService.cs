@@ -536,11 +536,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
         }
         catch (Exception ex)
         {
-            return new Dictionary<string, object>
-                {
-                    { "success", false },
-                    { "error", $"Error in query and evaluate: {ex.Message}" }
-                };
+            throw new Exception($"Failed to connect to agent and evaluate its response: {ex.Message}", ex);
         }
     }
 
@@ -584,11 +580,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
         }
         catch (Exception ex)
         {
-            return new Dictionary<string, object>
-            {
-                { "success", false },
-                { "error", $"Error in text evaluation: {ex.Message}" }
-            };
+            throw new Exception($"Failed to evaluate agent response: {ex.Message}", ex);
         }
     }
 
