@@ -62,15 +62,15 @@ public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var service = context.GetService<IFoundryService>();
             var result = await service.EvaluateAgent(
                 options.EvaluatorName!,
