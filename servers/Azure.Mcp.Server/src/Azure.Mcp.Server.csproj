@@ -8,7 +8,7 @@
     <NpmPackageName>@azure/mcp</NpmPackageName>
     <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>
     <DockerImageName>azure-sdk/azure-mcp</DockerImageName>
-    <PackageId>Azure.Mcp</PackageId>
+    <PackageId>Microsoft.Azure.Mcp</PackageId>
     <ToolCommandName>$(CliName)</ToolCommandName>
   </PropertyGroup>
   

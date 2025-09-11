@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.0.1</Version>
+    <Version>0.0.10</Version>
     <CliName>mcptmp</CliName>
     <AssemblyTitle>Template MCP Server</AssemblyTitle>
     <Description>Template MCP Server - Basic Model Context Protocol implementation</Description>
-    <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
+    <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Template.Mcp.Server#readme</ReadmeUrl>
     <NpmPackageName>@azure/mcp-template</NpmPackageName>
     <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>
     <PackageId>Microsoft.Template.Mcp</PackageId>
