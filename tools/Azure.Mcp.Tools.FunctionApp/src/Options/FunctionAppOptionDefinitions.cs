@@ -7,11 +7,11 @@ public static class FunctionAppOptionDefinitions
 {
     public const string FunctionAppName = "function-app";
 
-    public static readonly Option<string> FunctionApp = new(
+    public static readonly Option<string> OptionalFunctionApp = new(
         $"--{FunctionAppName}"
     )
     {
         Description = "The name of the Function App.",
-        Required = true
+        Required = false
     };
 }
