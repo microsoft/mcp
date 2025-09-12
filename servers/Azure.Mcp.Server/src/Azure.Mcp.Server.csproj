@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.6.0</Version>
+    <Version>0.6.1</Version>
     <CliName>azmcp</CliName>
     <AssemblyTitle>Azure MCP Server</AssemblyTitle>
     <Description>Azure MCP Server - Model Context Protocol implementation for Azure</Description>
