@@ -45,7 +45,9 @@ public class PostgresService : BaseAzureService, IPostgresService
         // Transaction control in unsafe contexts
         "BEGIN", "COMMIT", "ROLLBACK", "SAVEPOINT",
         // Extensions and languages
-        "CREATE EXTENSION", "DROP EXTENSION", "CREATE LANGUAGE", "DROP LANGUAGE"
+        "CREATE EXTENSION", "DROP EXTENSION", "CREATE LANGUAGE", "DROP LANGUAGE",
+        // Union operations that could be used for data exfiltration
+        "UNION", "UNION ALL"
     ];
 
     public PostgresService(IResourceGroupService resourceGroupService)

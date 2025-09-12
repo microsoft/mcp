@@ -10,6 +10,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Added validation logic in Postgres query. [[#426](https://github.com/microsoft/mcp/pull/426)]
+
 ### Other Changes
 
 ## 0.6.0 (2025-09-11)
