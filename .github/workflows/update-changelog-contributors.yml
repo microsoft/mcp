@@ -1,0 +1,156 @@
+name: Update CHANGELOG with Contributors
+
+on:
+  release:
+    types: [published]
+  repository_dispatch:
+    types: [update-changelog]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name for the release'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Need full history for contributor analysis
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get release information
+        id: release
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            echo "tag_name=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+            echo "release_name=${{ github.event.release.name }}" >> $GITHUB_OUTPUT
+            echo "release_body<<EOF" >> $GITHUB_OUTPUT
+            echo "${{ github.event.release.body }}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "tag_name=${{ github.event.client_payload.tag_name }}" >> $GITHUB_OUTPUT
+            echo "release_name=${{ github.event.client_payload.release_name }}" >> $GITHUB_OUTPUT
+            echo "release_body=${{ github.event.client_payload.release_body }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag_name=${{ github.event.inputs.tag_name }}" >> $GITHUB_OUTPUT
+            echo "release_name=${{ github.event.inputs.tag_name }}" >> $GITHUB_OUTPUT
+            echo "release_body=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get previous release tag
+        id: previous_release
+        run: |
+          # Get the previous release tag for comparison
+          previous_tag=$(git tag --sort=-version:refname | grep -v "${{ steps.release.outputs.tag_name }}" | head -n 1)
+          if [ -z "$previous_tag" ]; then
+            # If no previous tag, use first commit
+            previous_tag=$(git rev-list --max-parents=0 HEAD)
+          fi
+          echo "previous_tag=$previous_tag" >> $GITHUB_OUTPUT
+
+      - name: Get contributors since last release
+        id: contributors
+        run: |
+          tag_name="${{ steps.release.outputs.tag_name }}"
+          previous_tag="${{ steps.previous_release.outputs.previous_tag }}"
+          
+          echo "Getting contributors between $previous_tag and $tag_name"
+          
+          # Get all contributors (commit authors and co-authors) since last release
+          contributors=$(git log --format='%aN <%aE>' $previous_tag..$tag_name 2>/dev/null || git log --format='%aN <%aE>' $previous_tag..HEAD)
+          
+          # Also get co-authors from commit messages
+          co_authors=$(git log --format='%b' $previous_tag..$tag_name 2>/dev/null || git log --format='%b' $previous_tag..HEAD | grep -i "co-authored-by:" | sed 's/^[[:space:]]*[Cc]o-[Aa]uthored-[Bb]y:[[:space:]]*//')
+          
+          # Combine and deduplicate contributors
+          all_contributors=$(echo -e "$contributors\n$co_authors" | sort -u | grep -v "^$" | grep -v "azure-sdk" | grep -v "noreply@github.com")
+          
+          # Format contributors for markdown
+          formatted_contributors=""
+          while IFS= read -r contributor; do
+            if [ ! -z "$contributor" ]; then
+              # Extract name and email
+              name=$(echo "$contributor" | sed 's/ <.*>//')
+              email=$(echo "$contributor" | sed 's/.*<\(.*\)>.*/\1/')
+              
+              # Get GitHub username if possible
+              username=$(curl -s "https://api.github.com/search/users?q=$email" | jq -r '.items[0].login // empty' 2>/dev/null || echo "")
+              
+              if [ ! -z "$username" ] && [ "$username" != "null" ]; then
+                formatted_contributors="${formatted_contributors}- [@$username](https://github.com/$username) ($name)\n"
+              else
+                formatted_contributors="${formatted_contributors}- $name\n"
+              fi
+            fi
+          done <<< "$all_contributors"
+          
+          echo "contributors<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$formatted_contributors" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Update CHANGELOG
+        run: |
+          tag_name="${{ steps.release.outputs.tag_name }}"
+          release_name="${{ steps.release.outputs.release_name }}"
+          contributors="${{ steps.contributors.outputs.contributors }}"
+          
+          # Get current date
+          release_date=$(date +%Y-%m-%d)
+          
+          # Prepare the new release section
+          release_section="## [$tag_name] - $release_date\n\n"
+          
+          # Add release body if available
+          if [ ! -z "${{ steps.release.outputs.release_body }}" ]; then
+            release_section="${release_section}${{ steps.release.outputs.release_body }}\n\n"
+          fi
+          
+          # Add contributors section
+          if [ ! -z "$contributors" ]; then
+            release_section="${release_section}### Contributors\n\n"
+            release_section="${release_section}Thanks to all the contributors who made this release possible:\n\n"
+            release_section="${release_section}$contributors\n"
+          fi
+          
+          # Create a temporary file
+          temp_file=$(mktemp)
+          
+          # Insert the new release section after the ## [Unreleased] section
+          awk -v release="$release_section" '
+          /^## \[Unreleased\]/ {
+            print
+            # Print everything until the next ## heading or ---
+            while ((getline) > 0 && !/^##/ && !/^---/) {
+              print
+            }
+            # Print the new release section
+            printf "%s\n", release
+            # Print the line that ended the loop (if it was a heading)
+            if (/^##/ || /^---/) print
+          }
+          !/^## \[Unreleased\]/ { print }
+          ' CHANGELOG.md > "$temp_file"
+          
+          # Replace the original file
+          mv "$temp_file" CHANGELOG.md
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          if git diff --quiet CHANGELOG.md; then
+            echo "No changes to CHANGELOG.md"
+          else
+            git add CHANGELOG.md
+            git commit -m "Update CHANGELOG.md for release ${{ steps.release.outputs.tag_name }}"
+            git push
+          fi
