@@ -34,13 +34,13 @@ try {
     $sqlDatabaseName = $DeploymentOutputs['SQLDATABASENAME']
     $sqlConnectionString = $DeploymentOutputs['SQLCONNECTIONSTRING']
 
-    $mysqlServerName = $DeploymentOutputs['MYSQLSERVERNAME']
-    $mysqlDatabaseName = $DeploymentOutputs['MYSQLDATABASENAME']
-    $mysqlConnectionString = $DeploymentOutputs['MYSQLCONNECTIONSTRING']
+    # $mysqlServerName = $DeploymentOutputs['MYSQLSERVERNAME']
+    # $mysqlDatabaseName = $DeploymentOutputs['MYSQLDATABASENAME']
+    # $mysqlConnectionString = $DeploymentOutputs['MYSQLCONNECTIONSTRING']
 
-    $postgresServerName = $DeploymentOutputs['POSTGRESSERVERNAME']
-    $postgresDatabaseName = $DeploymentOutputs['POSTGRESDATABASENAME']
-    $postgresConnectionString = $DeploymentOutputs['POSTGRESCONNECTIONSTRING']
+    # $postgresServerName = $DeploymentOutputs['POSTGRESSERVERNAME']
+    # $postgresDatabaseName = $DeploymentOutputs['POSTGRESDATABASENAME']
+    # $postgresConnectionString = $DeploymentOutputs['POSTGRESCONNECTIONSTRING']
 
     $cosmosAccountName = $DeploymentOutputs['COSMOSACCOUNTNAME']
     $cosmosDatabaseName = $DeploymentOutputs['COSMOSDATABASENAME']
@@ -53,15 +53,15 @@ try {
         Write-Host "SQL Connection String: $sqlConnectionString" -ForegroundColor Green
     }
 
-    if ($mysqlServerName) {
-        Write-Host "MySQL Server: $mysqlServerName, Database: $mysqlDatabaseName" -ForegroundColor Green
-        Write-Host "MySQL Connection String: $mysqlConnectionString" -ForegroundColor Green
-    }
+    # if ($mysqlServerName) {
+    #     Write-Host "MySQL Server: $mysqlServerName, Database: $mysqlDatabaseName" -ForegroundColor Green
+    #     Write-Host "MySQL Connection String: $mysqlConnectionString" -ForegroundColor Green
+    # }
 
-    if ($postgresServerName) {
-        Write-Host "Postgres Server: $postgresServerName, Database: $postgresDatabaseName" -ForegroundColor Green
-        Write-Host "Postgres Connection String: $postgresConnectionString" -ForegroundColor Green
-    }
+    # if ($postgresServerName) {
+    #     Write-Host "Postgres Server: $postgresServerName, Database: $postgresDatabaseName" -ForegroundColor Green
+    #     Write-Host "Postgres Connection String: $postgresConnectionString" -ForegroundColor Green
+    # }
 
     if ($cosmosAccountName) {
         Write-Host "Cosmos Account: $cosmosAccountName, Database: $cosmosDatabaseName" -ForegroundColor Green

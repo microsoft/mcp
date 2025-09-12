@@ -162,94 +162,6 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   }
 }
 
-// MySQL Flexible Server
-resource mysqlServer 'Microsoft.DBforMySQL/flexibleServers@2023-06-30' = {
-  name: mysqlServerName
-  location: 'centralus'
-  sku: {
-    name: 'Standard_B1ms'
-    tier: 'Burstable'
-  }
-  properties: {
-    administratorLogin: mysqlAdminLogin
-    administratorLoginPassword: mysqlAdminPassword
-    version: '8.0.21'
-    storage: {
-      storageSizeGB: 20
-      iops: 360
-      autoGrow: 'Enabled'
-    }
-    backup: {
-      backupRetentionDays: 7
-      geoRedundantBackup: 'Disabled'
-    }
-    highAvailability: {
-      mode: 'Disabled'
-    }
-  }
-
-  // Firewall rule to allow Azure services
-  resource allowAzureServices 'firewallRules@2023-06-30' = {
-    name: 'AllowAllWindowsAzureIps'
-    properties: {
-      startIpAddress: '0.0.0.0'
-      endIpAddress: '0.0.0.0'
-    }
-  }
-
-  // Test MySQL Database
-  resource testDatabase 'databases@2023-06-30' = {
-    name: mysqlDatabaseName
-    properties: {
-      charset: 'utf8'
-      collation: 'utf8_general_ci'
-    }
-  }
-}
-
-// PostgreSQL Flexible Server
-resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-06-01-preview' = {
-  name: postgresServerName
-  location: 'centralus'
-  sku: {
-    name: 'Standard_B1ms'
-    tier: 'Burstable'
-  }
-  properties: {
-    administratorLogin: postgresAdminLogin
-    administratorLoginPassword: postgresAdminPassword
-    version: '15'
-    storage: {
-      storageSizeGB: 32
-    }
-    backup: {
-      backupRetentionDays: 7
-      geoRedundantBackup: 'Disabled'
-    }
-    highAvailability: {
-      mode: 'Disabled'
-    }
-  }
-
-  // Firewall rule to allow Azure services
-  resource allowAzureServices 'firewallRules@2023-06-01-preview' = {
-    name: 'AllowAllWindowsAzureIps'
-    properties: {
-      startIpAddress: '0.0.0.0'
-      endIpAddress: '0.0.0.0'
-    }
-  }
-
-  // Test PostgreSQL Database
-  resource testDatabase 'databases@2023-06-01-preview' = {
-    name: postgresDatabaseName
-    properties: {
-      charset: 'utf8'
-      collation: 'en_US.utf8'
-    }
-  }
-}
-
 // Cosmos DB Account
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
   name: cosmosAccountName
@@ -364,12 +276,6 @@ output webAppResourceGroup string = resourceGroup().name
 output sqlServerName string = sqlServer.name
 output sqlDatabaseName string = sqlDatabaseName
 output sqlConnectionString string = 'Server=${sqlServer.properties.fullyQualifiedDomainName};Database=${sqlDatabaseName};Authentication=Active Directory Default;TrustServerCertificate=True;'
-output mysqlServerName string = mysqlServer.name
-output mysqlDatabaseName string = mysqlDatabaseName
-output mysqlConnectionString string = 'Server=${mysqlServer.properties.fullyQualifiedDomainName};Database=${mysqlDatabaseName};Uid=${mysqlAdminLogin};Pwd=${mysqlAdminPassword};'
-output postgresServerName string = postgresServer.name
-output postgresDatabaseName string = postgresDatabaseName
-output postgresConnectionString string = 'Host=${postgresServer.properties.fullyQualifiedDomainName};Database=${postgresDatabaseName};Username=${postgresAdminLogin};Password=${postgresAdminPassword};'
 output cosmosAccountName string = cosmosAccount.name
 output cosmosDatabaseName string = cosmosDatabaseName
 output cosmosConnectionString string = 'AccountEndpoint=${cosmosAccount.properties.documentEndpoint};AccountKey=${cosmosAccount.listKeys().primaryMasterKey};Database=${cosmosDatabaseName};'

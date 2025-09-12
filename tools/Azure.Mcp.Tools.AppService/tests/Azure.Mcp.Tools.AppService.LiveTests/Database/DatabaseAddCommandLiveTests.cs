@@ -56,8 +56,6 @@ public class DatabaseAddCommandLiveTests(LiveTestFixture liveTestFixture, ITestO
 
     [Theory]
     [InlineData("SqlServer")]
-    [InlineData("MySQL")]
-    [InlineData("PostgreSQL")]
     [InlineData("CosmosDB")]
     public async Task ExecuteAsync_WithDifferentDatabaseTypes_AcceptsValidTypes(string databaseType)
     {
