@@ -50,7 +50,7 @@ var cosmosDatabaseName = '${baseName}cosmosdb'
 // App Service Plan
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   name: appServicePlanName
-  location: 'eastus'
+  location: 'centralus'
   sku: {
     name: appServicePlanSku
     tier: 'Basic'
@@ -75,7 +75,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
 // Web App
 resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   name: webAppName
-  location: 'eastus'
+  location: 'centralus'
   kind: 'app'
   properties: {
     enabled: true
@@ -123,7 +123,7 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
 // SQL Server
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   name: sqlServerName
-  location: 'eastus'
+  location: 'centralus'
   properties: {
     administratorLogin: sqlAdminLogin
     administratorLoginPassword: sqlAdminPassword
@@ -144,7 +144,7 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   // Test SQL Database
   resource testDatabase 'databases@2023-05-01-preview' = {
     name: sqlDatabaseName
-    location: 'eastus'
+    location: 'centralus'
     sku: {
       name: 'Basic'
       tier: 'Basic'
@@ -165,7 +165,7 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
 // MySQL Flexible Server
 resource mysqlServer 'Microsoft.DBforMySQL/flexibleServers@2023-06-30' = {
   name: mysqlServerName
-  location: 'eastus'
+  location: 'centralus'
   sku: {
     name: 'Standard_B1ms'
     tier: 'Burstable'
@@ -210,7 +210,7 @@ resource mysqlServer 'Microsoft.DBforMySQL/flexibleServers@2023-06-30' = {
 // PostgreSQL Flexible Server
 resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-06-01-preview' = {
   name: postgresServerName
-  location: 'eastus'
+  location: 'centralus'
   sku: {
     name: 'Standard_B1ms'
     tier: 'Burstable'
@@ -253,7 +253,7 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-06-01-pr
 // Cosmos DB Account
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
   name: cosmosAccountName
-  location: 'eastus'
+  location: 'centralus'
   kind: 'GlobalDocumentDB'
   properties: {
     publicNetworkAccess: 'Enabled'
@@ -374,4 +374,4 @@ output cosmosAccountName string = cosmosAccount.name
 output cosmosDatabaseName string = cosmosDatabaseName
 output cosmosConnectionString string = 'AccountEndpoint=${cosmosAccount.properties.documentEndpoint};AccountKey=${cosmosAccount.listKeys().primaryMasterKey};Database=${cosmosDatabaseName};'
 output baseName string = baseName
-output location string = 'eastus'
+output location string = 'centralus'
