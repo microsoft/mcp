@@ -1,23 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
+using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Aks.Models;
-using Azure.ResourceManager.ContainerService;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Aks.Services;
 
 public sealed class AksService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ICacheService cacheService) : BaseAzureService(tenantService), IAksService
+    ICacheService cacheService,
+    ILogger<AksService> logger) : BaseAzureResourceService(subscriptionService, tenantService), IAksService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+    private readonly ILogger<AksService> _logger = logger;
 
     private const string CacheGroup = "aks";
     private const string AksClustersCacheKey = "clusters";
@@ -42,28 +46,25 @@ public sealed class AksService(
             return cachedClusters;
         }
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-        var clusters = new List<Cluster>();
-
         try
         {
-            await foreach (var cluster in subscriptionResource.GetContainerServiceManagedClustersAsync())
-            {
-                if (cluster?.Data != null)
-                {
-                    clusters.Add(ConvertToClusterModel(cluster));
-                }
-            }
+            // Use Resource Graph to query AKS clusters
+            var clusters = await ExecuteResourceQueryAsync(
+                "Microsoft.ContainerService/managedClusters",
+                resourceGroup: null, // all resource groups
+                subscription,
+                retryPolicy,
+                ConvertToClusterModel,
+                cancellationToken: default);
 
             // Cache the results
             await _cacheService.SetAsync(CacheGroup, cacheKey, clusters, s_cacheDuration);
+            return clusters;
         }
         catch (Exception ex)
         {
             throw new Exception($"Error retrieving AKS clusters: {ex.Message}", ex);
         }
-
-        return clusters;
     }
 
     public async Task<Cluster?> GetCluster(
@@ -87,28 +88,21 @@ public sealed class AksService(
             return cachedCluster;
         }
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-
         try
         {
-            var resourceGroupResource = await subscriptionResource
-                .GetResourceGroupAsync(resourceGroup);
+            // Use Resource Graph to find the single cluster by name within the specified resource group
+            var cluster = await ExecuteSingleResourceQueryAsync(
+                "Microsoft.ContainerService/managedClusters",
+                resourceGroup,
+                subscription,
+                retryPolicy,
+                ConvertToClusterModel,
+                $"name =~ '{EscapeKqlString(clusterName)}'");
 
-            if (resourceGroupResource?.Value == null)
+            if (cluster == null)
             {
-                return null;
+                throw new KeyNotFoundException($"AKS cluster '{clusterName}' not found in resource group '{resourceGroup}' for subscription '{subscription}'.");
             }
-
-            var clusterResource = await resourceGroupResource.Value
-                .GetContainerServiceManagedClusters()
-                .GetAsync(clusterName);
-
-            if (clusterResource?.Value?.Data == null)
-            {
-                return null;
-            }
-
-            var cluster = ConvertToClusterModel(clusterResource.Value);
 
             // Cache the result
             await _cacheService.SetAsync(CacheGroup, cacheKey, cluster, s_cacheDuration);
@@ -117,36 +111,47 @@ public sealed class AksService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving AKS cluster '{clusterName}': {ex.Message}", ex);
+            _logger.LogError(ex,
+                "Error retrieving AKS cluster '{ClusterName}' in resource group '{ResourceGroup}' for subscription '{Subscription}'",
+                clusterName, resourceGroup, subscription);
+            throw;
         }
     }
 
-    private static Cluster ConvertToClusterModel(ContainerServiceManagedClusterResource clusterResource)
+    // Overload for Resource Graph result
+    private static Cluster ConvertToClusterModel(System.Text.Json.JsonElement item)
     {
-        var data = clusterResource.Data;
-        var agentPool = data.AgentPoolProfiles?.FirstOrDefault();
+        var data = Azure.Mcp.Tools.Aks.Services.Models.AksClusterData.FromJson(item);
+        if (data == null)
+            throw new InvalidOperationException("Failed to parse AKS cluster data");
 
+        // Resource identity
+        if (string.IsNullOrEmpty(data.ResourceId))
+            throw new InvalidOperationException("Resource ID is missing");
+        var id = new ResourceIdentifier(data.ResourceId);
+
+        var agentPool = data.Properties?.AgentPoolProfiles?.FirstOrDefault();
         return new Cluster
         {
-            Name = data.Name,
-            SubscriptionId = clusterResource.Id.SubscriptionId,
-            ResourceGroupName = clusterResource.Id.ResourceGroupName,
-            Location = data.Location.ToString(),
-            KubernetesVersion = data.KubernetesVersion,
-            ProvisioningState = data.ProvisioningState?.ToString(),
-            PowerState = data.PowerStateCode?.ToString(),
-            DnsPrefix = data.DnsPrefix,
-            Fqdn = data.Fqdn,
+            Name = data.ResourceName ?? "Unknown",
+            SubscriptionId = id.SubscriptionId ?? "Unknown",
+            ResourceGroupName = id.ResourceGroupName ?? "Unknown",
+            Location = data.Location ?? "Unknown",
+            KubernetesVersion = data.Properties?.KubernetesVersion,
+            ProvisioningState = data.Properties?.ProvisioningState,
+            PowerState = data.Properties?.PowerState?.Code,
+            DnsPrefix = data.Properties?.DnsPrefix,
+            Fqdn = data.Properties?.Fqdn,
             NodeCount = agentPool?.Count,
             NodeVmSize = agentPool?.VmSize,
-            IdentityType = data.Identity?.ManagedServiceIdentityType.ToString(),
-            EnableRbac = data.EnableRbac,
-            NetworkPlugin = data.NetworkProfile?.NetworkPlugin?.ToString(),
-            NetworkPolicy = data.NetworkProfile?.NetworkPolicy?.ToString(),
-            ServiceCidr = data.NetworkProfile?.ServiceCidr,
-            DnsServiceIP = data.NetworkProfile?.DnsServiceIP?.ToString(),
-            SkuTier = data.Sku?.Tier?.ToString(),
-            Tags = data.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+            IdentityType = data.IdentityType,
+            EnableRbac = data.Properties?.EnableRbac,
+            NetworkPlugin = data.Properties?.NetworkProfile?.NetworkPlugin,
+            NetworkPolicy = data.Properties?.NetworkProfile?.NetworkPolicy,
+            ServiceCidr = data.Properties?.NetworkProfile?.ServiceCidr,
+            DnsServiceIP = data.Properties?.NetworkProfile?.DnsServiceIP,
+            SkuTier = data.Sku?.Tier,
+            Tags = data.Tags != null ? new Dictionary<string, string>(data.Tags) : null
         };
     }
 }

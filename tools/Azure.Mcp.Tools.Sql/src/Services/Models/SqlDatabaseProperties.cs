@@ -23,8 +23,6 @@ namespace Azure.Mcp.Tools.Sql.Services.Models
         public DateTimeOffset? CreatedOn { get; set; }
         /// <summary> The current service level objective name of the database. </summary>
         public string? CurrentServiceObjectiveName { get; set; }
-        /// <summary> The license type to apply for this database. `LicenseIncluded` if you need a license, or `BasePrice` if you have a license and are eligible for the Azure Hybrid Benefit. </summary>
-        public string? LicenseType { get; set; }
         /// <summary> This records the earliest start date and time that restore is available for this database (ISO8601 format). </summary>
         [JsonPropertyName("earliestRestoreDate")]
         public DateTimeOffset? EarliestRestoreOn { get; set; }
