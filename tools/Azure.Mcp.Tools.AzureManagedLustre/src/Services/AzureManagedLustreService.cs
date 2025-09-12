@@ -28,7 +28,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             if (!string.IsNullOrWhiteSpace(resourceGroup))
             {
                 var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy) ?? throw new Exception($"Resource group '{resourceGroup}' not found");
-                foreach (var fs in rg.GetAmlFileSystems())
+                await foreach (var fs in sub.GetAmlFileSystemsAsync())
                 {
                     results.Add(Map(fs));
                 }
