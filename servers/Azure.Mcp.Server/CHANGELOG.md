@@ -18,7 +18,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
-- Marked the secret hint of 'secret_create' tool to true.
+- Marked the secret hint of 'secret_create' tool to true. [[#430](https://github.com/microsoft/mcp/pull/430)]
 
 ### Other Changes
 
