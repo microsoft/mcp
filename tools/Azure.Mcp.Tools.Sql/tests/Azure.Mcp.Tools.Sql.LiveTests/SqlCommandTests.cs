@@ -409,4 +409,231 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
             Assert.NotEmpty(ex.Message);
         }
     }
+
+    [Fact]
+    public async Task Should_CreateSqlServer_Successfully()
+    {
+        // Generate unique server name for testing
+        var serverName = $"test-server-{DateTime.UtcNow:yyyyMMddHHmmss}";
+        var location = "East US";
+        var adminUser = "testadmin";
+        var adminPassword = "TestPassword123!";
+
+        var result = await CallToolAsync(
+            "azmcp_sql_server_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "server", serverName },
+                { "location", location },
+                { "admin-user", adminUser },
+                { "admin-password", adminPassword }
+            });
+
+        // Should successfully create the SQL server
+        var server = result.AssertProperty("server");
+        Assert.Equal(JsonValueKind.Object, server.ValueKind);
+
+        // Verify server properties
+        var name = server.GetProperty("name").GetString();
+        Assert.Equal(serverName, name);
+
+        var serverType = server.GetProperty("type").GetString();
+        Assert.Equal("Microsoft.Sql/servers", serverType, ignoreCase: true);
+
+        var serverLocation = server.GetProperty("location").GetString();
+        Assert.Equal(location, serverLocation, ignoreCase: true);
+
+        var id = server.GetProperty("id").GetString();
+        Assert.NotNull(id);
+        Assert.Contains(serverName, id);
+        Assert.Contains(Settings.ResourceGroupName, id);
+
+        // Verify admin login
+        var administratorLogin = server.GetProperty("administratorLogin").GetString();
+        Assert.Equal(adminUser, administratorLogin);
+
+        // State should be Ready
+        var state = server.GetProperty("state").GetString();
+        Assert.Equal("Ready", state);
+    }
+
+    [Fact]
+    public async Task Should_ShowSqlServer_Successfully()
+    {
+        // Use the deployed test SQL server
+        var serverName = Settings.ResourceBaseName;
+
+        var result = await CallToolAsync(
+            "azmcp_sql_server_show",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "server", serverName }
+            });
+
+        // Should successfully retrieve the server
+        var server = result.AssertProperty("server");
+        Assert.Equal(JsonValueKind.Object, server.ValueKind);
+
+        // Verify server properties
+        var name = server.GetProperty("name").GetString();
+        Assert.Equal(serverName, name);
+
+        var id = server.GetProperty("id").GetString();
+        Assert.NotNull(id);
+        Assert.Contains(serverName, id);
+        Assert.Contains(Settings.ResourceGroupName, id);
+
+        // Verify required properties exist
+        Assert.True(server.TryGetProperty("location", out _));
+        Assert.True(server.TryGetProperty("administratorLogin", out _));
+        Assert.True(server.TryGetProperty("state", out _));
+        Assert.True(server.TryGetProperty("version", out _));
+    }
+
+    [Fact]
+    public async Task Should_DeleteSqlServer_Successfully()
+    {
+        // First create a SQL server to delete
+        var serverName = $"test-delete-server-{DateTime.UtcNow:yyyyMMddHHmmss}";
+        var location = "East US";
+        var adminUser = "testadmin";
+        var adminPassword = "TestPassword123!";
+
+        // Create the server
+        await CallToolAsync(
+            "azmcp_sql_server_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "server", serverName },
+                { "location", location },
+                { "admin-user", adminUser },
+                { "admin-password", adminPassword }
+            });
+
+        // Now delete the SQL server with force flag
+        var result = await CallToolAsync(
+            "azmcp_sql_server_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "server", serverName },
+                { "force", true }
+            });
+
+        // Should successfully delete the SQL server
+        var deleted = result.AssertProperty("deleted").GetBoolean();
+        Assert.True(deleted);
+
+        var deletedServerName = result.AssertProperty("serverName").GetString();
+        Assert.Equal(serverName, deletedServerName);
+    }
+
+    [Fact]
+    public async Task Should_DeleteNonExistentSqlServer_ReturnsFalse()
+    {
+        // Try to delete a non-existent server
+        var nonExistentServerName = $"non-existent-server-{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+        var result = await CallToolAsync(
+            "azmcp_sql_server_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "server", nonExistentServerName },
+                { "force", true }
+            });
+
+        // The command might return a warning about confirmation needed, or it might return the deletion result
+        // For non-existent servers, the command should handle this gracefully
+        // if (result.HasValue)
+        // {
+        // If there are results, verify the structure indicates no deletion occurred
+        var deleted = result.Value.AssertProperty("deleted").GetBoolean();
+        Assert.False(deleted);
+
+        var deletedServerName = result.Value.AssertProperty("serverName").GetString();
+        Assert.Equal(nonExistentServerName, deletedServerName);
+        // }
+        // else
+        // {
+        //     // If no result is returned, that's also acceptable for non-existent resources
+        //     // The command should have executed without throwing an exception
+        //     Assert.True(true, "Command executed successfully without throwing an exception");
+        // }
+    }
+
+    [Theory]
+    [InlineData("--invalid-param")]
+    [InlineData("--subscription invalidSub")]
+    [InlineData("--subscription sub --resource-group rg")] // Missing server, location, admin credentials
+    [InlineData("--subscription sub --resource-group rg --server server1")] // Missing location and admin credentials
+    public async Task Should_Return400_WithInvalidSqlServerCreateInput(string args)
+    {
+        try
+        {
+            var result = await CallToolAsync("azmcp_sql_server_create",
+                new Dictionary<string, object?> { { "args", args } });
+
+            // If we get here, the command didn't fail as expected
+            Assert.Fail("Expected command to fail with invalid input, but it succeeded");
+        }
+        catch (Exception ex)
+        {
+            // Expected behavior - the command should fail with invalid input
+            Assert.NotNull(ex.Message);
+            Assert.NotEmpty(ex.Message);
+        }
+    }
+
+    [Theory]
+    [InlineData("--invalid-param")]
+    [InlineData("--subscription invalidSub")]
+    [InlineData("--subscription sub --resource-group rg")] // Missing server
+    public async Task Should_Return400_WithInvalidSqlServerShowInput(string args)
+    {
+        try
+        {
+            var result = await CallToolAsync("azmcp_sql_server_show",
+                new Dictionary<string, object?> { { "args", args } });
+
+            // If we get here, the command didn't fail as expected
+            Assert.Fail("Expected command to fail with invalid input, but it succeeded");
+        }
+        catch (Exception ex)
+        {
+            // Expected behavior - the command should fail with invalid input
+            Assert.NotNull(ex.Message);
+            Assert.NotEmpty(ex.Message);
+        }
+    }
+
+    [Theory]
+    [InlineData("--invalid-param")]
+    [InlineData("--subscription invalidSub")]
+    [InlineData("--subscription sub --resource-group rg")] // Missing server
+    public async Task Should_Return400_WithInvalidSqlServerDeleteInput(string args)
+    {
+        try
+        {
+            var result = await CallToolAsync("azmcp_sql_server_delete",
+                new Dictionary<string, object?> { { "args", args } });
+
+            // If we get here, the command didn't fail as expected
+            Assert.Fail("Expected command to fail with invalid input, but it succeeded");
+        }
+        catch (Exception ex)
+        {
+            // Expected behavior - the command should fail with invalid input
+            Assert.NotNull(ex.Message);
+            Assert.NotEmpty(ex.Message);
+        }
+    }
 }
