@@ -5,6 +5,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ## 0.7.0 (Unreleased)
 
 ### Features Added
+- Added support for retrieving account settings of an Azure Key Vault via the command `azmcp-keyvault-admin-settings-get`.
 
 - Added elicitation support. An elicitation request is sent if the tool annotation secret hint is true. [[#404](https://github.com/microsoft/mcp/pull/404)]
 - Added the following Azure Managed Lustre commands: [[#100](https://github.com/microsoft/mcp/issues/100)]
