@@ -9,6 +9,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - **The Azure MCP Server is now also available on NuGet.org** [[#368](https://github.com/microsoft/mcp/pull/368)]
 - Added support for listing node pools in an AKS managed cluster. [[#360](https://github.com/microsoft/mcp/pull/360)]
+- Added support for getting node pool in an AKS managed cluster. [[#394](https://github.com/microsoft/mcp/pull/394)]
 
 ### Breaking Changes
 

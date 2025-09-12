@@ -580,6 +580,12 @@ azmcp aks cluster list --subscription <subscription>
 azmcp aks nodepool list --subscription <subscription> \
                         --resource-group <resource-group> \
                         --cluster <cluster>
+
+# Get details of a specific AKS nodepool
+azmcp aks nodepool get --subscription <subscription> \
+                       --resource-group <resource-group> \
+                       --cluster <cluster> \
+                       --nodepool <nodepool>
 ```
 
 ### Azure Load Testing Operations
