@@ -53,7 +53,7 @@ public abstract class BaseAzureResourceService(
     /// </summary>
     /// <typeparam name="T">The type to convert each resource to</typeparam>
     /// <param name="resourceType">The Azure resource type to query for (e.g., "Microsoft.Sql/servers/databases")</param>
-    /// <param name="resourceGroup">The resource group name to filter by</param>
+    /// <param name="resourceGroup">The resource group name to filter by (null to query all resource groups)</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="converter">Function to convert JsonElement to the target type</param>
@@ -63,7 +63,7 @@ public abstract class BaseAzureResourceService(
     /// <returns>List of resources converted to the specified type</returns>
     protected async Task<List<T>> ExecuteResourceQueryAsync<T>(
         string resourceType,
-        string resourceGroup,
+        string? resourceGroup,
         string subscription,
         RetryPolicyOptions? retryPolicy,
         Func<JsonElement, T> converter,
@@ -71,7 +71,7 @@ public abstract class BaseAzureResourceService(
         int limit = 50,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(resourceType, resourceGroup, subscription);
+        ValidateRequiredParameters(resourceType, subscription);
         ArgumentNullException.ThrowIfNull(converter);
 
         var results = new List<T>();
@@ -79,7 +79,11 @@ public abstract class BaseAzureResourceService(
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
         var tenantResource = await GetTenantResourceAsync(subscriptionResource.Data.TenantId, cancellationToken);
 
-        var queryFilter = $"Resources | where type =~ '{EscapeKqlString(resourceType)}' and resourceGroup =~ '{EscapeKqlString(resourceGroup)}'";
+        var queryFilter = $"Resources | where type =~ '{EscapeKqlString(resourceType)}'";
+        if (!string.IsNullOrEmpty(resourceGroup))
+        {
+            queryFilter += $" and resourceGroup =~ '{EscapeKqlString(resourceGroup)}'";
+        }
         if (!string.IsNullOrEmpty(additionalFilter))
         {
             queryFilter += $" and {additionalFilter}";
@@ -113,7 +117,7 @@ public abstract class BaseAzureResourceService(
     /// </summary>
     /// <typeparam name="T">The type to convert the resource to</typeparam>
     /// <param name="resourceType">The Azure resource type to query for (e.g., "Microsoft.Sql/servers/databases")</param>
-    /// <param name="resourceGroup">The resource group name to filter by</param>
+    /// <param name="resourceGroup">The resource group name to filter by (null to query all resource groups)</param>
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="converter">Function to convert JsonElement to the target type</param>
@@ -122,20 +126,24 @@ public abstract class BaseAzureResourceService(
     /// <returns>Single resource converted to the specified type, or null if not found</returns>
     protected async Task<T?> ExecuteSingleResourceQueryAsync<T>(
         string resourceType,
-        string resourceGroup,
+        string? resourceGroup,
         string subscription,
         RetryPolicyOptions? retryPolicy,
         Func<JsonElement, T> converter,
         string? additionalFilter = null,
         CancellationToken cancellationToken = default) where T : class
     {
-        ValidateRequiredParameters(resourceType, resourceGroup, subscription);
+        ValidateRequiredParameters(resourceType, subscription);
         ArgumentNullException.ThrowIfNull(converter);
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
         var tenantResource = await GetTenantResourceAsync(subscriptionResource.Data.TenantId, cancellationToken);
 
-        var queryFilter = $"Resources | where type =~ '{EscapeKqlString(resourceType)}' and resourceGroup =~ '{EscapeKqlString(resourceGroup)}'";
+        var queryFilter = $"Resources | where type =~ '{EscapeKqlString(resourceType)}'";
+        if (!string.IsNullOrEmpty(resourceGroup))
+        {
+            queryFilter += $" and resourceGroup =~ '{EscapeKqlString(resourceGroup)}'";
+        }
         if (!string.IsNullOrEmpty(additionalFilter))
         {
             queryFilter += $" and {additionalFilter}";

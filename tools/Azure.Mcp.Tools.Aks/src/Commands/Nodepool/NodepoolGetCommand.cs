@@ -57,7 +57,7 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
         try
         {
             var aksService = context.GetService<IAksService>();
-            var nodePool = await aksService.GetNodePool(
+            var nodePool = await aksService.GetNodePoolAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.ClusterName!,
@@ -83,6 +83,7 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        KeyNotFoundException => $"AKS node pool not found. Verify the cluster name, resource group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == 404 =>
             "AKS node pool not found. Verify the node pool name, cluster, resource group, and subscription, and ensure you have access.",
         RequestFailedException reqEx when reqEx.Status == 403 =>
@@ -93,6 +94,7 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
+        KeyNotFoundException => 404,
         RequestFailedException reqEx => reqEx.Status,
         _ => base.GetStatusCode(ex)
     };

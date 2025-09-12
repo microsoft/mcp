@@ -63,7 +63,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
         try
         {
             var aksService = context.GetService<IAksService>();
-            var cluster = await aksService.GetCluster(
+            var cluster = await aksService.GetClusterAsync(
                 options.Subscription!,
                 options.ClusterName!,
                 options.ResourceGroup!,
@@ -88,6 +88,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        KeyNotFoundException => $"AKS cluster not found. Verify the cluster name, resource group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == 404 =>
             "AKS cluster not found. Verify the cluster name, resource group, and subscription, and ensure you have access.",
         RequestFailedException reqEx when reqEx.Status == 403 =>
@@ -98,6 +99,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
+        KeyNotFoundException => 404,
         RequestFailedException reqEx => reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
