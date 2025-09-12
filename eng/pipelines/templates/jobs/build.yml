@@ -51,7 +51,7 @@ jobs:
     condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
     inputs:
       pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Code.ps1
       arguments: >
         -ServerName '${{ parameters.ServerName }}'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
@@ -101,7 +101,7 @@ jobs:
     condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
     inputs:
       pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Code.ps1
       arguments: >
         -ServerName '${{ parameters.ServerName }}'
         -OutputPath '$(Build.ArtifactStagingDirectory)'

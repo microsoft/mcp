@@ -1,0 +1,63 @@
+parameters:
+- name: ServerName
+  type: string
+- name: DependsOn
+  type: object
+- name: NupkgDevFeed
+  type: string
+  default: 'public/azure-sdk-for-net'
+
+jobs:
+- deployment: PublishNugetPackage
+  displayName: Publish package to Nuget Feeds
+  dependsOn: ${{ parameters.DependsOn }}
+  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  templateContext:
+    type: releaseJob
+    isProduction: true
+    inputs:
+    - input: pipelineArtifact
+      artifactName: 'nuget_$(PipelineArtifactName)_packed'
+      targetPath: $(Pipeline.Workspace)/drop
+  environment: package-publish
+  timeoutInMinutes: 120
+  pool:
+    name: azsdk-pool
+    image: windows-2022
+    os: windows
+
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+          # Publish platform-specific packages first to ensure they are available before publishing wrapper package
+          - task: 1ES.PublishNuget@1
+            displayName: Publish platform-specific Nugets to Prod Feed
+            inputs:
+              packageParentPath: '$(Pipeline.Workspace)'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.symbols.nupkg'
+              nuGetFeedType: external
+              publishFeedCredentials: Nuget.org
+
+          - task: 1ES.PublishNuget@1
+            displayName: Publish wrapper Nuget to Prod Feed
+            inputs:
+              packageParentPath: '$(Pipeline.Workspace)'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.symbols.nupkg'
+              nuGetFeedType: external
+              publishFeedCredentials: Nuget.org
+
+          # Publish platform-specific packages first to ensure they are available before publishing wrapper package
+          - task: 1ES.PublishNuget@1
+            displayName: Publish platform-specific Nugets to Dev Feed
+            inputs:
+              packageParentPath: '$(Pipeline.Workspace)'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform/*.symbols.nupkg'
+              publishVstsFeed: ${{ parameters.NupkgDevFeed }}
+
+          - task: 1ES.PublishNuget@1
+            displayName: Publish wrapper Nuget to Dev Feed
+            inputs:
+              packageParentPath: '$(Pipeline.Workspace)'
+              packagesToPush: '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.nupkg;!$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper/*.symbols.nupkg'
+              publishVstsFeed: ${{ parameters.NupkgDevFeed }}

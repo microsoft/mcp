@@ -5,11 +5,13 @@ parameters:
   type: string
 - name: ServerName
   type: string
+- name: DependsOn
+  type: object
 
 jobs:
 - job: CreateDockerArtifact
   displayName: 'Creating Docker artifact'
-  dependsOn: TagRepository
+  dependsOn: ${{ parameters.DependsOn }}
   pool:
     name: $(LINUXPOOL)
     image: $(LINUXVMIMAGE)
