@@ -18,20 +18,6 @@ param sqlAdminLogin string = 'mcptestadmin'
 @secure()
 param sqlAdminPassword string = newGuid()
 
-@description('MySQL administrator login name.')
-param mysqlAdminLogin string = 'mcptestadmin'
-
-@description('MySQL administrator password.')
-@secure()
-param mysqlAdminPassword string = newGuid()
-
-@description('PostgreSQL administrator login name.')
-param postgresAdminLogin string = 'mcptestadmin'
-
-@description('PostgreSQL administrator password.')
-@secure()
-param postgresAdminPassword string = newGuid()
-
 @description('The SKU for the App Service Plan.')
 param appServicePlanSku string = 'B1'
 
@@ -40,12 +26,6 @@ var webAppName = '${baseName}-webapp'
 var appServicePlanName = '${baseName}-plan'
 var sqlServerName = '${baseName}-sql'
 var sqlDatabaseName = '${baseName}db'
-var mysqlServerName = '${baseName}-mysql'
-var mysqlDatabaseName = '${baseName}mysqldb'
-var postgresServerName = '${baseName}-postgres'
-var postgresDatabaseName = '${baseName}postgresdb'
-var cosmosAccountName = '${baseName}-cosmos'
-var cosmosDatabaseName = '${baseName}cosmosdb'
 
 // App Service Plan
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
@@ -158,84 +138,6 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
       readScale: 'Disabled'
       requestedBackupStorageRedundancy: 'Local'
       isLedgerOn: false
-    }
-  }
-}
-
-// Cosmos DB Account
-resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {
-  name: cosmosAccountName
-  location: 'centralus'
-  kind: 'GlobalDocumentDB'
-  properties: {
-    publicNetworkAccess: 'Enabled'
-    enableAutomaticFailover: false
-    enableMultipleWriteLocations: false
-    isVirtualNetworkFilterEnabled: false
-    virtualNetworkRules: []
-    disableKeyBasedMetadataWriteAccess: false
-    enableFreeTier: false
-    enableAnalyticalStorage: false
-    analyticalStorageConfiguration: {
-      schemaType: 'WellDefined'
-    }
-    databaseAccountOfferType: 'Standard'
-    defaultIdentity: 'FirstPartyIdentity'
-    networkAclBypass: 'None'
-    disableLocalAuth: false
-    enablePartitionMerge: false
-    minimalTlsVersion: 'Tls12'
-    consistencyPolicy: {
-      defaultConsistencyLevel: 'Session'
-      maxIntervalInSeconds: 5
-      maxStalenessPrefix: 100
-    }
-    locations: [
-      {
-        locationName: location
-        failoverPriority: 0
-        isZoneRedundant: false
-      }
-    ]
-    capabilities: []
-    ipRules: []
-    backupPolicy: {
-      type: 'Periodic'
-      periodicModeProperties: {
-        backupIntervalInMinutes: 240
-        backupRetentionIntervalInHours: 8
-        backupStorageRedundancy: 'Local'
-      }
-    }
-    networkAclBypassResourceIds: []
-  }
-
-  // Test Cosmos Database
-  resource testDatabase 'sqlDatabases@2023-04-15' = {
-    name: cosmosDatabaseName
-    properties: {
-      resource: {
-        id: cosmosDatabaseName
-      }
-      options: {
-        throughput: 400
-      }
-    }
-
-    // Test container
-    resource testContainer 'containers@2023-04-15' = {
-      name: 'testcontainer'
-      properties: {
-        resource: {
-          id: 'testcontainer'
-          partitionKey: {
-            paths: [
-              '/id'
-            ]
-            kind: 'Hash'
-          }
-        }
-      }
     }
   }
 }

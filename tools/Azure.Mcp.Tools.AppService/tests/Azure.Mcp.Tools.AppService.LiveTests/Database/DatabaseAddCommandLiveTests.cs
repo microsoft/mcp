@@ -56,7 +56,6 @@ public class DatabaseAddCommandLiveTests(LiveTestFixture liveTestFixture, ITestO
 
     [Theory]
     [InlineData("SqlServer")]
-    [InlineData("CosmosDB")]
     public async Task ExecuteAsync_WithDifferentDatabaseTypes_AcceptsValidTypes(string databaseType)
     {
         var result = await CallToolAsync(
