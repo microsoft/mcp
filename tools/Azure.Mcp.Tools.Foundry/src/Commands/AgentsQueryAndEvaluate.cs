@@ -49,7 +49,6 @@ public sealed class AgentsQueryAndEvaluateCommand : GlobalCommand<AgentsQueryAnd
         options.Evaluators = parseResult.GetValue(_evaluators);
         options.AzureOpenAIEndpoint = parseResult.GetValue(_azureOpenAIEndpointOption);
         options.AzureOpenAIDeployment = parseResult.GetValue(_azureOpenAIDeploymentOption);
-
         return options;
     }
 

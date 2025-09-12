@@ -34,7 +34,6 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
     {
         var options = base.BindOptions(parseResult);
         options.Endpoint = parseResult.GetValue(_endpointOption);
-
         return options;
     }
 
