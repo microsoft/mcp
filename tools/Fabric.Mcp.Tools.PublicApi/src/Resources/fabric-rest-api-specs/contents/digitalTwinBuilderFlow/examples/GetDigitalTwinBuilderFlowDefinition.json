@@ -1,0 +1,33 @@
+{
+    "parameters": {
+        "workspaceId": "6e335e92-a2a2-4b5a-970a-bd6a89fbb765",
+        "digitalTwinBuilderFlowId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "definition": {
+                    "parts": [
+                        {
+                            "path": "definition.json",
+                            "payload": "ew0KICAiZXhlY3V0YW..OWRmNDhhY2ZmZTgifQ",
+                            "payloadType": "InlineBase64"
+                        },
+                        {
+                            "path": ".platform",
+                            "payload": "ZG90UGxhdGZvcm1CYXNlNjRTdHJpbmc=",
+                            "payloadType": "InlineBase64"
+                        }
+                    ]
+                }
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "x-ms-operation-id": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "Retry-After": 30
+            }
+        }
+    }
+}

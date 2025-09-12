@@ -1,0 +1,165 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Managed private endpoint data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "CreateManagedPrivateEndpointRequest": {
+            "description": "Create managed private endpoint request payload.",
+            "required": [
+                "name", 
+                "targetPrivateLinkResourceId", 
+                "targetSubresourceType"
+            ],
+            "properties": {
+                "name": {
+                    "description": "The private endpoint name. Should not be more than 64 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "targetPrivateLinkResourceId": {
+                    "description": "Resource Id of data source for which private endpoint needs to be created.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "targetSubresourceType": {
+                    "description": "Sub-resource pointing to [Private-link resoure](/azure/private-link/private-endpoint-overview#private-link-resource).",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "requestMessage": {
+                    "description": "Message to approve private endpoint request. Should not be more than 140 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "ManagedPrivateEndpoints": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of managed private endpoints.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ManagedPrivateEndpoint"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "ManagedPrivateEndpoint": {
+            "description": "Managed private endpoint.",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "format": "uuid",
+                    "description": "Managed private endpoint Id.",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The private endpoint name.",
+                    "type": "string"
+                },
+                "targetPrivateLinkResourceId": {
+                    "description": "Resource Id of data source for which private endpoint is created",
+                    "type": "string"
+                },
+                "targetSubresourceType": {
+                    "description": "Sub-resource pointing to [Private-link resoure](/azure/private-link/private-endpoint-overview#private-link-resource).",
+                    "type": "string"
+                },
+                "provisioningState": {
+                    "description": "Provisioning state of endpoint.",
+                    "$ref": "#/definitions/ProvisioningState"
+                },
+                "connectionState": {
+                    "description": "Endpoint connection state of provisioned endpoints.",
+                    "$ref": "#/definitions/PrivateEndpointConnectionState"
+                }
+            }
+        },
+        "PrivateEndpointConnectionState": {
+            "description": "Private endpoint connection state",
+            "type": "object",
+            "properties": {
+                "status": {
+                    "description": "Connection status",
+                    "$ref": "#/definitions/ConnectionStatus"
+                },
+                "description": {
+                    "description": "Description message (if any) provided on approving or rejecting the end point.",
+                    "type": "string"
+                },
+                "actionsRequired": {
+                    "description": "Actions required to establish connection.",
+                    "type": "string"
+                }
+            }
+        },
+        "ConnectionStatus": {
+            "description": "Private endpoint connection status. Additional connection status may be added over time.",
+            "type": "string",
+            "enum": ["Pending", "Approved", "Rejected", "Disconnected"],
+            "x-ms-enum": {
+                "name": "ConnectionStatus",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Pending",
+                        "description": "Pending approval"
+                    },
+                    {
+                        "value": "Approved",
+                        "description": "Endpoint approved"
+                    },
+                    {
+                        "value": "Rejected",
+                        "description": "Endpoint rejected"
+                    },
+                    {
+                        "value": "Disconnected",
+                        "description": "Endpoint disconnected"
+                    }
+                ]
+            }
+        },
+        "ProvisioningState": {
+            "type": "string",
+            "description": "PrivateEndpointProvisioningState type. Additional Provisioning state may be added over time.",
+            "enum": ["Provisioning", "Succeeded", "Updating", "Deleting", "Failed"],
+            "x-ms-enum": {
+                "name": "PrivateEndpointProvisioningState",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Provisioning",
+                        "description": "Private endpoint in provisioning is in-progress"
+                    },
+                    {
+                        "value": "Succeeded",
+                        "description": "Private endpoint provisioning Succeeded"
+                    },
+                    {
+                        "value": "Updating",
+                        "description": "Private endpoint updating"
+                    },
+                    {
+                        "value": "Deleting",
+                        "description": "Private endpoint deleting"
+                    },
+                    {
+                        "value": "Failed",
+                        "description": "Private endpoint provisioning failed"
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,8 @@
+{
+    "parameters": {
+        "gatewayId": "411a04d3-7c15-4b69-9dd8-de6e80df1009"
+    },
+    "responses": {
+        "200": {}
+    }
+}

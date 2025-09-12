@@ -212,21 +212,15 @@ azmcp appconfig kv unlock --subscription <subscription> \
                           [--label <label>]
 ```
 
-### Azure CLI Operations
+### Azure App Lens Operations
 
 ```bash
-# Execute any Azure CLI command
-azmcp extension az --command "<command>"
-
-# Examples:
-# List resource groups
-azmcp extension az --command "group list"
-
-# Get storage account details
-azmcp extension az --command "storage account show --name <account> --resource-group <resource-group>"
-
-# List virtual machines
-azmcp extension az --command "vm list --resource-group <resource-group>"
+# Diagnose resource using Azure App Lens
+azmcp applens resource diagnose --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --question <question> \
+                                --resource-type <resource-type> \
+                                --resource <resource>
 ```
 
 ### Azure Container Registry (ACR) Operations
@@ -448,17 +442,6 @@ azmcp postgres server param set --subscription <subscription> \
                                 --value <value>
 ```
 
-### Azure Developer CLI Operations
-
-```bash
-# Execute any Azure CLI command
-azmcp extension azd --command "<command>"
-
-# Examples:
-# Create a sample todo list app with NodeJS and MongoDB
-azmcp extension azd --command "init --template todo-nodejs-mongo"
-```
-
 ### Azure Deploy Operations
 
 ```bash
@@ -566,7 +549,15 @@ azmcp aks cluster get --subscription <subscription> \
 azmcp aks cluster list --subscription <subscription>
 
 # List AKS cluster's nodepools
-azmcp aks nodepool list --subscription <subscription> --resource-group <resource-group> --cluster <cluster>
+azmcp aks nodepool list --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --cluster <cluster>
+
+# Get details of a specific AKS nodepool
+azmcp aks nodepool get --subscription <subscription> \
+                       --resource-group <resource-group> \
+                       --cluster <cluster> \
+                       --nodepool <nodepool>
 ```
 
 ### Azure Load Testing Operations

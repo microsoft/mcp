@@ -19,12 +19,6 @@ public class KustoCommandTests(ITestOutputHelper output)
 {
     private const string TestDatabaseName = "ToDoLists";
 
-    public override ValueTask DisposeAsync()
-    {
-        base.Dispose();
-        return ValueTask.CompletedTask;
-    }
-
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync(); // Initialize the base class first

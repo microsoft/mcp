@@ -1,0 +1,9 @@
+{
+    "parameters": {
+        "deploymentPipelineId": "a5ded933-57b7-41f4-b072-ed4c1f9d5824",
+        "stageId": "db1577e0-0132-4d6d-92b9-952c359988f2"
+    },
+    "responses": {
+        "200": {}
+    }
+}

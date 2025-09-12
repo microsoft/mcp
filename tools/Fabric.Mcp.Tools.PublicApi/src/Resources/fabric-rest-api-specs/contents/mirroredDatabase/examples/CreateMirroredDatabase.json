@@ -1,0 +1,29 @@
+{
+    "parameters": {
+        "workspaceId": "a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1",
+        "createMirroredDatabaseRequest": {
+            "displayName": "Mirrored database 1",
+            "description": "A mirrored database description",
+            "definition": {
+                "parts": [
+                    {
+                        "path": "mirroring.json",
+                        "payload": "eyAicHJvcGVydGllcy..WJsZSIgfSB9IH0gXSB9IH0",
+                        "payloadType": "InlineBase64"
+                    }
+                ]
+            }
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "displayName": "Mirrored database 1",
+                "description": "A mirrored database description",
+                "type": "MirroredDatabase",
+                "workspaceId": "a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1",
+                "id": "b1b1b1b1-cccc-dddd-eeee-f2f2f2f2f2f2"
+            }
+        }
+    }
+}

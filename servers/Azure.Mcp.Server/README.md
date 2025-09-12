@@ -67,6 +67,10 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "List my App Configuration stores"
 * "Show my key-value pairs in App Config"
 
+### ⚙️ Azure App Lens
+
+* "Help me diagnose issues with my app"
+
 ### 📦 Azure Container Registry (ACR)
 
 * "List all my Azure Container Registries"
@@ -77,7 +81,8 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * "List my AKS clusters in my subscription"
 * "Show me all my Azure Kubernetes Service clusters"
-* "List the node pools for my AKS cluster 'my-aks-cluster' in the 'my-resource-group' resource group"
+* "List the node pools for my AKS cluster"
+* "Get details for the node pool 'np1' of my AKS cluster 'my-aks-cluster' in 'my-resource-group' resource group"
 
 ### 📊 Azure Cosmos DB
 
@@ -158,11 +163,6 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * Get secure, production-grade Azure SDK best practices for effective code generation.
 
-### 🖥️ Azure CLI Extension
-
-* Execute Azure CLI commands directly
-* Support for all Azure CLI functionality
-
 ### 📦 Azure Container Registry (ACR)
 
 * List Azure Container Registries and repositories in a subscription
@@ -197,12 +197,6 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * List and query databases.
 * List and get schema for tables.
 * List, get configuration and get/set parameters for servers.
-
-### 🛠️ Azure Developer CLI (azd) Extension
-
-* Execute Azure Developer CLI commands directly
-* Support for template discovery, template initialization, provisioning and deployment
-* Cross-platform compatibility
 
 ### 🚀 Azure Deploy
 
@@ -255,6 +249,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * List Azure Managed Lustre filesystems
 * Get the number of IP addresses required for a specific SKU and size of Azure Managed Lustre filesystem
+* Get information of Azure Managed Lustre SKUs available in a specific Azure region
 
 ### 🏪 Azure Marketplace
 

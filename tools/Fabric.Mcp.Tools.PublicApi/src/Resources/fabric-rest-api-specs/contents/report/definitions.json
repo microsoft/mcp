@@ -1,0 +1,141 @@
+{
+  "swagger": "2.0",
+  "info": {
+      "version": "v1",
+      "title": "Report data types"
+  },
+  "paths": {},
+  "definitions": {
+      "Reports": {
+          "description": "A list of reports.",
+          "required": ["value"],
+          "type": "object",
+          "properties": {
+              "value": {
+                  "description": "A list of reports.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Report"
+                  }
+              }
+          },
+          "allOf": [
+              {
+                  "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+              }
+          ]
+      },
+      "Report": {
+          "description": "A report object.",
+          "type": "object",
+          "required": ["type"],
+          "allOf": [
+            {
+                "$ref": "../common/definitions.json#/definitions/Item"
+            }
+          ]
+      },
+      "CreateReportRequest": {
+          "description": "Create report request payload.",
+          "required": ["displayName", "definition"],
+          "properties": {
+              "displayName": {
+                  "description": "The report display name. The display name must follow naming rules according to item type.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "description": {
+                  "description": "The report description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "folderId": {
+                  "description": "The folder ID. If not specified or null, the report is created with the workspace as its folder.",
+                  "type": "string",
+                  "format": "uuid",
+                  "readOnly": false
+              },
+              "definition": {
+                  "description": "The report public definition.",
+                  "$ref": "#/definitions/ReportDefinition",
+                  "readOnly": false
+              }
+          }
+      },
+      "UpdateReportRequest": {
+          "description": "Update report request.",
+          "properties": {
+              "displayName": {
+                  "description": "The report display name. The display name must follow naming rules according to item type.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "description": {
+                  "description": "The report description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              }
+          }
+      },
+      "UpdateReportDefinitionRequest": {
+          "description": "Update report public definition request payload.",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/ReportDefinition"
+              }
+          }
+      },
+      "ReportDefinitionResponse": {
+          "description": "Report public definition response.",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/ReportDefinition",
+                  "readOnly": true
+              }
+          }
+      },
+      "ReportDefinition" : {
+          "description": "Report public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/report-definition) for more details on how to craft a report public definition.",
+          "type": "object",
+          "required": ["parts"],
+          "properties": {
+              "format": {
+                  "description": "The format of the item definition.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "parts": {
+                  "description": "A list of definition parts.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/ReportDefinitionPart"
+                  },
+                  "readOnly": false
+              }
+          }
+      },
+      "ReportDefinitionPart": {
+          "description": "Report definition part object.",
+          "type": "object",
+          "properties": {
+              "path": {
+                  "description": "The report part path.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payload": {
+                  "description": "The report part payload.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payloadType":{
+                  "description": "The payload type.",
+                  "$ref": "../common/definitions.json#/definitions/PayloadType",
+                  "readOnly": false
+              }
+          }
+      }
+  }
+}

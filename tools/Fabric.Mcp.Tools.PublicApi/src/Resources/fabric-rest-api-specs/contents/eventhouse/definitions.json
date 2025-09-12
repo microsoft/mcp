@@ -1,0 +1,196 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Eventhouse data types"
+    },
+    "paths": {},
+    "definitions": {
+        "Eventhouses": {
+            "description": "A list of eventhouses.",
+            "type": "object",
+            "required": ["value"],
+            "properties": {
+                "value": {
+                    "description": "A list of eventhouses.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Eventhouse"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "Eventhouse": {
+            "description": "An eventhouse object.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The eventhouse properties.",
+                    "$ref": "#/definitions/EventhouseProperties"
+                }
+            }
+        },
+        "EventhouseProperties": {
+            "description": "The eventhouse properties.",
+            "type": "object",
+            "required": ["queryServiceUri", "ingestionServiceUri"],
+            "properties": {
+                "queryServiceUri": {
+                    "description": "Query service URI.",
+                    "type": "string"
+                },
+                "ingestionServiceUri": {
+                    "description": "Ingestion service URI.",
+                    "type": "string"
+                },
+                "databasesItemIds": {
+                    "description": "List of all KQL database children",
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "uuid",
+                        "readOnly": true
+                    }
+                },
+                "minimumConsumptionUnits": {
+                    "description": "Use Minimum consumption for highly time-sensitive systems to keep the service always available at a selected minimum level. You pay for the minimum consumption level or actual consumption if above the minimum. Supported values include [0, 2.25, 4.25, 8.5, 13, 18, 26, 34, 50] or any number between 51 and 322. For more information, see [minimum consumption](/fabric/real-time-intelligence/eventhouse#minimum-consumption).",
+                    "type": "number",
+                    "format": "double",
+                    "default": 0
+                }
+            }
+        },
+        "CreateEventhouseRequest": {
+            "description": "Create eventhouse request.",
+            "type": "object",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The eventhouse display name. The eventhouse name can contain alphanumeric characters, underscores, periods, and hyphens. Special characters aren't supported.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The eventhouse description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the eventhouse is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "creationPayload": {
+                    "description": "The eventhouse creation payload. Use `definition` or `creationPayload`. You can't use both at the same time.",
+                    "$ref": "#/definitions/EventhouseCreationPayload",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The eventhouse public definition. Use `definition` or `creationPayload`. You can't use both at the same time.",
+                    "$ref": "#/definitions/EventhouseDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateEventhouseRequest": {
+            "description": "Update eventhouse request.",
+            "properties": {
+                "displayName": {
+                    "description": "The eventhouse display name. The eventhouse name can contain alphanumeric characters, underscores, periods, and hyphens. Special characters aren't supported.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The eventhouse description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "EventhouseCreationPayload": {
+            "description": "Eventhouse item payload",
+            "type": "object",
+            "properties": {
+                "minimumConsumptionUnits": {
+                    "description": "Use Minimum consumption for highly time-sensitive systems to keep the service always available at a selected minimum level. You pay for the minimum consumption level or actual consumption if above the minimum. Supported values include [0, 2.25, 4.25, 8.5, 13, 18, 26, 34, 50] or any number between 51 and 322. For more information, see [minimum consumption](/fabric/real-time-intelligence/eventhouse#minimum-consumption).",
+                    "type": "number",
+                    "format": "double",
+                    "default": 0
+                }
+            }
+        },
+        "EventhouseDefinition" : {
+            "description": "Eventhouse public definition object.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "format": {
+                    "description": "The format of the item definition.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/EventhouseDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "EventhouseDefinitionPart": {
+            "description": "Eventhouse definition part object.",
+            "type": "object",
+            "required": ["path", "payload", "payloadType"],
+            "properties": {
+                "path": {
+                    "description": "The eventhouse part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The eventhouse part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateEventhouseDefinitionRequest": {
+            "description": "Update eventhouse public definition request payload.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/EventhouseDefinition"
+                }
+            }
+        },
+        "EventhouseDefinitionResponse": {
+          "description": "Eventhouse public definition response.",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/EventhouseDefinition",
+                  "readOnly": true
+              }
+          }
+      }
+    }
+}

@@ -1,0 +1,141 @@
+{
+  "swagger": "2.0",
+  "info": {
+      "version": "v1",
+      "title": "DataPipeline data types"
+  },
+  "paths": {},
+  "definitions": {
+      "DataPipelines": {
+          "description": "A list of data pipelines.",
+          "required": ["value"],
+          "type": "object",
+          "properties": {
+              "value": {
+                  "description": "A list of data pipelines.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/DataPipeline"
+                  }
+              }
+          },
+          "allOf": [
+              {
+                  "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+              }
+          ]
+      },
+      "DataPipeline": {
+          "description": "A data pipeline object.",
+          "type": "object",
+          "required": ["type"],
+          "allOf": [
+            {
+                "$ref": "../common/definitions.json#/definitions/Item"
+            }
+          ]
+      },
+      "CreateDataPipelineRequest": {
+        "description": "Create data pipeline request payload.",
+        "required": ["displayName"],
+        "properties": {
+            "displayName": {
+                "description": "The data pipeline display name.",
+                "type": "string",
+                "readOnly": false
+            },
+            "description": {
+                "description": "The data pipeline description. Maximum length is 256 characters.",
+                "type": "string",
+                "readOnly": false
+            },
+            "folderId": {
+                "description": "The folder ID. If not specified or null, the data pipeline is created with the workspace as its folder.",
+                "type": "string",
+                "format": "uuid",
+                "readOnly": false
+            },
+			"definition": {
+			  "description": "The data pipeline public definition.",
+			  "$ref": "#/definitions/DataPipelineDefinition",
+			  "readOnly": false
+			}
+        }
+      },
+      "UpdateDataPipelineDefinitionRequest": {
+          "description": "Update data pipeline public definition request payload.",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/DataPipelineDefinition"
+              }
+          }
+      },
+      "DataPipelineDefinitionResponse": {
+          "description": "Data pipeline public definition response.",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/DataPipelineDefinition",
+                  "readOnly": true
+              }
+          }
+      },
+      "DataPipelineDefinition" : {
+          "description": "Data pipeline public definition object.",
+          "type": "object",
+          "required": ["parts"],
+          "properties": {
+              "format": {
+                  "description": "The format of the item definition.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "parts": {
+                  "description": "A list of definition parts.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/DataPipelineDefinitionPart"
+                  },
+                  "readOnly": false
+              }
+          }
+      },
+      "DataPipelineDefinitionPart": {
+          "description": "Data pipeline definition part object.",
+          "type": "object",
+          "properties": {
+              "path": {
+                  "description": "The data pipeline part path.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payload": {
+                  "description": "The data pipeline part payload.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payloadType":{
+                  "description": "The payload type.",
+                  "$ref": "../common/definitions.json#/definitions/PayloadType",
+                  "readOnly": false
+              }
+          }
+      },
+      "UpdateDataPipelineRequest": {
+          "description": "Update data pipeline request.",
+          "properties": {
+              "displayName": {
+                  "description": "The data pipeline display name. The display name must follow naming rules according to item type.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "description": {
+                  "description": "The data pipeline description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              }
+          }
+      }
+  }
+}

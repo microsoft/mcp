@@ -1,0 +1,21 @@
+{
+    "parameters": {
+        "connectionId": "fe8e181d-dbb8-471a-99f0-fdbf0a2ad4fd",
+        "connectionRoleAssignmentId": "43970761-afc9-4428-ae6e-3b08bef098ff",
+        "updateConnectionRoleAssignmentRequest": {
+            "role": "UserWithReshare"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "role": "UserWithReshare",
+                "principal": {
+                    "id": "43970761-afc9-4428-ae6e-3b08bef098ff",
+                    "type": "User"
+                },
+                "id": "43970761-afc9-4428-ae6e-3b08bef098ff"
+            }
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "parameters": {
+        "domainId": "97dd1d38-a4c6-41ed-bc4f-1e383f8ddd0f",
+        "domainRoleAssignmentRequest": {
+            "type": "Admins",
+            "principals": [
+                {
+                    "id": "796ce6ad-9163-4c16-9559-c68192a251de",
+                    "type": "User"
+                }
+            ]
+        }
+    },
+    "responses": {
+        "200": {}
+    }
+}

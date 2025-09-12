@@ -1,0 +1,22 @@
+{
+    "parameters": {
+        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+        "recursive": false
+    },
+    "responses": {
+        "200": {
+            "body":
+            {
+                "value": [
+                    {
+                        "id": "cccccccc-2222-3333-4444-dddddddddddd",
+                        "displayName": "Lakehouse",
+                        "description": "A lakehouse shared by the all teams.",
+                        "type": "Lakehouse",
+                        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb"
+                    }
+                ]
+            }
+        }
+    }
+}

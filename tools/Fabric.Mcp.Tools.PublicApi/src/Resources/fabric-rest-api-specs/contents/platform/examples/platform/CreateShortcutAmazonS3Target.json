@@ -1,0 +1,36 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff222", 
+        "itemId": "25bac802-080d-4f73-8a42-1b406eb1fceb",
+        "createShortcutRequest": {
+            "path": "Files/landingZone",
+            "name": "PartnerEmployees",
+            "target": {
+                "amazonS3": {
+                    "location": "https://my-s3-bucket.s3.us-west-2.amazonaws.com", 
+                    "subpath": "/data/ContosoEmployees",  
+                    "connectionId": "cf480513-2c1c-46b2-958a-42556ee584c3"
+                }               
+            }
+        }
+    },
+    "responses": {
+        "201": {
+          "headers": {
+            "Location": "https://api.fabric.microsoft.com/v1/workspaces/cfafbeb1-8037-4d0c-896e-a46fb27ff222/items/25bac802-080d-4f73-8a42-1b406eb1fceb/shortcuts/Files/landingZone/PartnerEmployees"
+          },
+          "body": {
+            "path": "Files/landingZone",
+            "name": "PartnerEmployees",
+            "target": {
+              "type": "AmazonS3",
+              "amazonS3": {
+                "location": "https://my-s3-bucket.s3.us-west-2.amazonaws.com",
+                "subpath": "/data/ContosoEmployees",
+                "connectionId": "cf480513-2c1c-46b2-958a-42556ee584c3"
+              }
+            }
+          }        
+        }
+    }
+}
