@@ -12,7 +12,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Refactored AKS service implementation to use Azure Resource Graph queries instead of direct ARM API calls.
+- Refactored AKS service implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[#424](https://github.com/microsoft/mcp/pull/424)]
   - Removed dependency on `Azure.ResourceManager.ContainerService` package by migrating to Azure Resource Graph queries, reducing package size and improving startup performance.
 
 ## 0.6.0 (2025-09-11)
