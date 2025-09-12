@@ -38,12 +38,12 @@ jobs:
           # changelog header
           header = """
           # Changelog
-          
+
           All notable changes to this project will be documented in this file.
-          
+
           The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
           and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-          
+
           """
           # template for the changelog body
           body = """
@@ -60,12 +60,12 @@ jobs:
                       {% if commit.links %} ({% for link in commit.links %}[{{link.text}}]({{link.href}}){% if not loop.last %}, {% endif %}{% endfor %}){% endif %}
               {% endfor %}
           {% endfor %}\
-          
+
           {% if github.contributors | filter(attribute="is_first_time", value=true) | length != 0 %}
               ### Contributors
-              
+
               Thanks to all the contributors who made this release possible:
-              
+
               {% for contributor in github.contributors | filter(attribute="is_first_time", value=true) %}
                   - [@{{ contributor.username }}](https://github.com/{{ contributor.username }}) - *first-time contributor* 🎉
               {% endfor %}
@@ -73,21 +73,21 @@ jobs:
                   - [@{{ contributor.username }}](https://github.com/{{ contributor.username }})
               {% endfor %}
           {% endif %}\
-          
+
           """
           # remove the leading and trailing whitespace from the template
           trim = true
           # changelog footer
           footer = """
           ---
-          
+
           ## Previous Releases
-          
+
           For release history, please refer to the individual server changelogs:
           - [Azure MCP Server CHANGELOG](./servers/Azure.Mcp.Server/CHANGELOG.md)
           - [Template MCP Server CHANGELOG](./servers/Template.Mcp.Server/CHANGELOG.md)
           """
-          
+
           [git]
           # parse the commits based on https://www.conventionalcommits.org
           conventional_commits = true
@@ -133,7 +133,7 @@ jobs:
           sort_commits = "oldest"
           # limit the number of commits included in the changelog.
           # limit_commits = 42
-          
+
           [remote.github]
           owner = "microsoft"
           repo = "mcp"
@@ -148,13 +148,13 @@ jobs:
           else
             since_arg=""
           fi
-          
+
           if [ "${{ github.event.inputs.unreleased }}" = "true" ]; then
             unreleased_arg="--unreleased"
           else
             unreleased_arg=""
           fi
-          
+
           git-cliff --config cliff.toml $since_arg $unreleased_arg --output CHANGELOG.md
 
       - name: Create Pull Request
@@ -165,9 +165,9 @@ jobs:
           title: "📝 Update CHANGELOG.md with generated entries"
           body: |
             This PR updates the CHANGELOG.md file with automatically generated entries based on commit messages.
-            
+
             The changelog is generated using git-cliff and follows conventional commit patterns.
-            
+
             Generated with inputs:
             - Since: ${{ github.event.inputs.since || 'beginning' }}
             - Include unreleased: ${{ github.event.inputs.unreleased }}
