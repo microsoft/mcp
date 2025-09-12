@@ -67,6 +67,10 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "List my App Configuration stores"
 * "Show my key-value pairs in App Config"
 
+### ⚙️ Azure App Lens
+
+* "Help me diagnose issues with my app"
+
 ### 📦 Azure Container Registry (ACR)
 
 * "List all my Azure Container Registries"
