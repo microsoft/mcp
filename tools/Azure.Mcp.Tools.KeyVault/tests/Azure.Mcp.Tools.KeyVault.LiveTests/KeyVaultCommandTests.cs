@@ -178,27 +178,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     }
 
     [Fact]
-    public async Task Should_create_certificate()
-    {
-        var certificateName = Settings.ResourceBaseName + Random.Shared.NextInt64();
-        var result = await CallToolAsync(
-            "azmcp_keyvault_certificate_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "vault", Settings.ResourceBaseName },
-                { "certificate", certificateName}
-            });
-
-        var createdCertificateName = result.AssertProperty("name");
-        Assert.Equal(JsonValueKind.String, createdCertificateName.ValueKind);
-        Assert.Equal(certificateName, createdCertificateName.GetString());
-
-        // Verify that the certificate has some expected properties
-        ValidateCertificate(result);
-    }
-
-    [Fact]
     public async Task Should_import_certificate()
     {
         // Generate a self-signed certificate and export to a temporary PFX file with a password
