@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Areas.Server;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
@@ -144,7 +143,7 @@ public sealed class MockMcpClientBuilder
         var tools = _tools.Values.Select(mockTool => mockTool.Tool).ToList();
 
         var result = new ListToolsResult { Tools = tools };
-        var json = JsonSerializer.SerializeToNode(result, ServerJsonContext.Default.ListToolsResult);
+        var json = JsonSerializer.SerializeToNode(result, McpJsonContext.Default.ListToolsResult);
 
         return Task.FromResult(new JsonRpcResponse
         {

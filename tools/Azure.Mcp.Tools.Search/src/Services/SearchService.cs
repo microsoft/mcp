@@ -11,7 +11,6 @@ using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.Models;
 using Microsoft.Mcp.Core.Services.Caching;
-using static Azure.Mcp.Tools.Search.Commands.Index.IndexDescribeCommand;
 
 namespace Azure.Mcp.Tools.Search.Services;
 
