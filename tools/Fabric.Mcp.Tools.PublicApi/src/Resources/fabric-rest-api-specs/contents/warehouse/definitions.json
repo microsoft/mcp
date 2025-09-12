@@ -1,0 +1,204 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "v1",
+    "title": "Warehouse data types"
+  },
+  "paths": {},
+  "definitions": {
+    "Warehouses": {
+      "description": "A list of warehouses.",
+      "required": ["value"],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of warehouses.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Warehouse"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "Warehouse": {
+      "description": "A warehouse object.",
+      "type": "object",
+      "required": ["type"],
+      "allOf": [
+        {
+            "$ref": "../common/definitions.json#/definitions/Item"
+        }
+      ],
+      "properties": {
+          "properties": {
+              "description": "The warehouse properties.",
+              "$ref": "#/definitions/WarehouseProperties"
+          }
+      }
+    },
+    "WarehouseProperties": {
+      "description": "The warehouse item properties.",
+      "type": "object",
+      "required": ["connectionString", "createdDate", "lastUpdatedTime"],
+      "properties": {
+        "connectionString": {
+          "description": "The SQL connection string connected to the workspace containing this warehouse.",
+          "type": "string"
+        },
+        "createdDate": {
+          "description": "The date and time the warehouse was created.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastUpdatedTime": {
+          "description": "The date and time the warehouse was last updated",
+          "type": "string",
+          "format": "date-time"
+        },
+        "collationType": {
+          "description": "The collation type of the warehouse.",
+          "$ref": "#/definitions/CollationType"
+        }
+      }
+    },
+    "CollationType": {
+      "type": "string",
+        "description": "Warehouse collation. Additional `collations` may be added over time.",
+        "enum": ["Latin1_General_100_BIN2_UTF8", "Latin1_General_100_CI_AS_KS_WS_SC_UTF8"],
+        "x-ms-enum": {
+          "name": "CollationType",
+          "modelAsString": true,
+          "values": [
+            {
+                "value": "Latin1_General_100_BIN2_UTF8",
+                "description": "The default - case-sensitive (CS) collation"
+            },
+            {
+                "value": "Latin1_General_100_CI_AS_KS_WS_SC_UTF8",
+                "description": "case-insensitive (CI) collation"
+            }
+          ]
+        }
+    },
+    "CreateWarehouseRequest": {
+      "description": "Create warehouse request payload.",
+      "required": ["displayName"],
+      "properties": {
+        "displayName": {
+          "description": "The warehouse display name. The display name must follow naming rules according to item type.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The warehouse description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        },
+        "folderId": {
+          "description": "The folder ID. If not specified or null, the warehouse is created with the workspace as its folder.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": false
+        },
+        "creationPayload": {
+            "description": "The warehouse creation payload. Use `creationPayload`. You can't use `definition` or `creationPayload` at the same time.",
+            "$ref": "#/definitions/WarehouseCreationPayload",
+            "readOnly": false
+        }
+      }
+    },
+    "WarehouseCreationPayload": {
+      "description": "Warehouse item payload",
+      "type": "object",
+      "required": [
+        "collationType"
+      ],
+      "properties": {
+        "collationType": {
+          "description": "The default collation type of the warehouse.",
+          "$ref": "#/definitions/CollationType"
+        }
+      }
+    },
+    "UpdateWarehouseDefinitionRequest": {
+      "description": "Update warehouse public definition request payload.",
+      "required": ["definition"],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/WarehouseDefinition"
+        }
+      }
+    },
+    "WarehouseDefinitionResponse": {
+      "description": "Warehouse public definition response.",
+      "required": ["definition"],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/WarehouseDefinition",
+          "readOnly": true
+        }
+      }
+    },
+    "WarehouseDefinition": {
+      "description": "Warehouse public definition object.",
+      "type": "object",
+      "required": ["parts"],
+      "properties": {
+        "format": {
+          "description": "The format of the item definition.",
+          "type": "string",
+          "readOnly": false
+        },
+        "parts": {
+          "description": "A list of definition parts.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WarehouseDefinitionPart"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "WarehouseDefinitionPart": {
+      "description": "Warehouse definition part object.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "The warehouse part path.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payload": {
+          "description": "The warehouse part payload.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payloadType": {
+          "description": "The payload type.",
+          "$ref": "../common/definitions.json#/definitions/PayloadType",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateWarehouseRequest": {
+      "description": "Update warehouse request.",
+      "properties": {
+        "displayName": {
+          "description": "The warehouse display name. The display name must follow naming rules according to item type.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The warehouse description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        }
+      }
+    }
+  }
+}

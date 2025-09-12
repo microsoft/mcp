@@ -1,0 +1,15 @@
+{
+    "parameters": {
+        "workspaceId": "97dd1d38-a4c6-41ed-bc4f-1e383f8ddd0f",
+        "restoreWorkspaceRequest": {
+            "newWorkspaceName": "Contoso Workspace",
+            "newWorkspaceAdminPrincipal": {
+                "id": "17dd1e38-a4c6-41ed-bc4f-1e383f8ddd01",
+                "type": "User"
+            }
+        }
+    },
+    "responses": {
+        "200": { }
+    }
+}

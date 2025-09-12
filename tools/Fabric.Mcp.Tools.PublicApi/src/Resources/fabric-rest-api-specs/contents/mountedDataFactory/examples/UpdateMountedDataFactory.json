@@ -1,0 +1,21 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "mountedDataFactoryId": "5b218778-e7a5-4d73-8187-f10824047715",
+        "updateMountedDataFactoryRequest": {
+            "displayName": "MountedDataFactory's New name",
+            "description": "MountedDataFactory's New description"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "displayName": "MountedDataFactory's New name",
+                "description": "MountedDataFactory's New description",
+                "type": "MountedDataFactory",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "5b218778-e7a5-4d73-8187-f10824047715"
+            }
+        }
+    }
+}

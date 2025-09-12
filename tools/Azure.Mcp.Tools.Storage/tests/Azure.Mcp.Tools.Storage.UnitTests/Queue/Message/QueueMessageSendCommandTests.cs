@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Commands.Queue.Message;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
@@ -74,7 +75,7 @@ public class QueueMessageSendCommandTests
                 Arg.Any<int?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<Core.Options.RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>())
                 .Returns(mockResult);
         }
 
@@ -108,7 +109,7 @@ public class QueueMessageSendCommandTests
             Arg.Any<int?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromException<QueueMessageSendResult>(new Exception("Test error")));
 
         var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--queue", "testqueue", "--message", "test message", "--subscription", "sub123"]);
@@ -136,7 +137,7 @@ public class QueueMessageSendCommandTests
             Arg.Any<int?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(requestFailedException);
 
         var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--queue", "testqueue", "--message", "test message", "--subscription", "sub123"]);
@@ -146,7 +147,7 @@ public class QueueMessageSendCommandTests
 
         // Assert
         Assert.Equal(404, response.Status);
-        Assert.Contains("Queue not found", response.Message);
+        Assert.Contains("Not found", response.Message);
     }
 
     [Fact]
@@ -163,7 +164,7 @@ public class QueueMessageSendCommandTests
             Arg.Any<int?>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(requestFailedException);
 
         var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--queue", "testqueue", "--message", "test message", "--subscription", "sub123"]);
@@ -173,6 +174,6 @@ public class QueueMessageSendCommandTests
 
         // Assert
         Assert.Equal(403, response.Status);
-        Assert.Contains("Authorization failed", response.Message);
+        Assert.Contains("Access denied", response.Message);
     }
 }

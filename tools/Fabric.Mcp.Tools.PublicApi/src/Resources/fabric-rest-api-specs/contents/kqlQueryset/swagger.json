@@ -1,0 +1,456 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "KQLQueryset REST APIs",
+    "version": "v1"
+  },
+  "schemes": [
+    "https"
+  ],
+  "host": "api.fabric.microsoft.com",
+  "basePath": "/v1",
+  "paths": {
+    "/workspaces/{workspaceId}/kqlQuerysets": {
+      "get": {
+        "summary": "Returns a list of KQL querysets from the specified workspace.",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_ListKQLQuerysets",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/KQLQuerysets"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidItemType - Invalid item type",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List KQL querysets in workspace example": {
+            "$ref": "./examples/ListKQLQuerysetsInWorkspace.json"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a KQL queryset in the specified workspace.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create a KQL queryset with definition, refer to the [KQL queryset definition article](/rest/api/fabric/articles/item-management/definitions/kql-queryset-definition).\n\n## Permissions\n\n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes \n\nKQLQueryset.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_CreateKQLQueryset",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "createKQLQuerysetRequest",
+            "description": "Create item request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CreateKQLQuerysetRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully created",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/KQLQueryset"
+            }
+          },
+          "202": {
+            "description": "Request accepted, the KQL queryset creation is in progress",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidItemType - Item type is invalid\n\n* ItemDisplayNameAlreadyInUse - Item display name is already used. \n\n* CorruptedPayload - The provided payload is corrupted. \n\n* WorkspaceItemsLimitExceeded - Workspace item limit exceeded.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create a KQL queryset with definition example": {
+            "$ref": "./examples/CreateKQLQuerysetWithDefinition.json"
+          },
+          "Create a KQL queryset example": {
+            "$ref": "./examples/CreateKQLQueryset.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/kqlQuerysets/{kqlQuerysetId}": {
+      "get": {
+        "summary": "Returns properties of the specified KQL queryset.",
+        "description": "## Permissions\n\n The caller must have *read* permissions for the KQL qeryset. \n\n## Required Delegated Scopes \n\n KQLQueryset.Read.All or KQLQueryset.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_GetKQLQueryset",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "kqlQuerysetId",
+            "description": "The KQL queryset ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/KQLQueryset"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get a KQL queryset example": {
+            "$ref": "./examples/GetKQLQueryset.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates the properties of the specified KQL queryset.",
+        "description": "## Permissions\n\n The caller must have *read and write* permissions for the KQL queryset. \n\n## Required Delegated Scopes \n\n KQLQueryset.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_UpdateKQLQueryset",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "kqlQuerysetId",
+            "description": "The KQL queryset ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateKQLQuerysetRequest",
+            "description": "Update KQL queryset request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateKQLQuerysetRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/KQLQueryset"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found. \n\n* InvalidRequest - Invalid update request",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a KQL queryset example": {
+            "$ref": "./examples/UpdateKQLQueryset.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes the specified KQL queryset.",
+        "description": "## Permissions\n\n The caller must have *write* permissions for the KQL queryset. \n\n## Required Delegated Scopes \n\n KQLQueryset.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_DeleteKQLQueryset",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "kqlQuerysetId",
+            "description": "The KQL queryset ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete a KQL queryset example": {
+            "$ref": "./examples/DeleteKQLQueryset.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/kqlQuerysets/{kqlQuerysetId}/getDefinition": {
+      "post": {
+        "summary": "Returns the specified KQL queryset public definition.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n ## Permissions\n\n The caller must have *read and write* permissions for the KQL queryset. \n\n## Required Delegated Scopes \n\n KQLQueryset.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_GetKQLQuerysetDefinition",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "kqlQuerysetId",
+            "description": "The KQL queryset ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "description": "The format of the KQL queryset public definition.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/KQLQuerysetDefinitionResponse"
+            }
+          },
+          "202": {
+            "description": "Request accepted. Retrieving the definition is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get a KQL queryset definition example": {
+            "$ref": "./examples/GetKQLQuerysetDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/kqlQuerysets/{kqlQuerysetId}/updateDefinition": {
+      "post": {
+        "summary": "Overrides the definition for the specified KQL queryset.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have *read and write* permissions for the KQL queryset. \n\n## Required Delegated Scopes \n\n KQLQueryset.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_UpdateKQLQuerysetDefinition",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "kqlQuerysetId",
+            "description": "The KQL queryset ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "updateMetadata",
+            "description": "When set to true and the .platform file is provided as part of the definition, the item's metadata is updated using the metadata in the .platform file",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "in": "body",
+            "name": "updateKQLQuerysetDefinitionRequest",
+            "description": "Update KQL queryset definition request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateKQLQuerysetDefinitionRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "202": {
+            "description": "Request accepted. Update definition is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item. \n\n* CorruptedPayload - The provided payload is corrupted.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a KQL queryset definition example": {
+            "$ref": "./examples/UpdateKQLQuerysetDefinition.json"
+          }
+        }
+      }
+    }
+  },
+  "responses": {},
+  "security": [],
+  "tags": []
+}

@@ -2,27 +2,81 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.5.13 (Unreleased)
+## 0.6.1 (Unreleased)
 
 ### Features Added
 
 ### Breaking Changes
 
-- Changed the following commands to change / remove available options
-  - Storage account create removed the ability to configure `enable-https-traffic-only` (always true now), `allow-blob-public-access` (always false now), and `kind` (always StorageV2 now).
-  - Storage blob container create removed the ability to configure `blob-container-public-access` (always false now).
-  - Storage blob upload removed the ability to configure `overwrite` (always false now).
-
 ### Bugs Fixed
 
 ### Other Changes
 
-- Updated `Azure.Identity` and `Azure.Identity.Broker` dependencies. [[#352](https://github.com/microsoft/mcp/pull/352)]
+## 0.6.0 (2025-09-11)
+
+### Features Added
+- Added support for diagnosing Azure Resources using the App Lens API via the command `azmcp_applens_resource_diagnose`. [[#356](https://github.com/microsoft/mcp/pull/356)]
+
+- **The Azure MCP Server is now also available on NuGet.org** [[#368](https://github.com/microsoft/mcp/pull/368)]
+- Added support for listing node pools in an AKS managed cluster. [[#360](https://github.com/microsoft/mcp/pull/360)]
+- Added support for getting node pool in an AKS managed cluster. [[#394](https://github.com/microsoft/mcp/pull/394)]
+
+### Breaking Changes
+
+- To improve performance, packages now ship with trimmed binaries that have unused code and dependencies removed, resulting in significantly smaller file sizes, faster startup times, and reduced memory footprint. [Learn more](https://learn.microsoft.com/dotnet/core/deploying/trimming/trim-self-contained). [[#405](https://github.com/microsoft/mcp/pull/405)]
+- Merged `azmcp_search_index_describe` and `azmcp_search_index_list` into `azmcp_search_index_get`, which can perform both operations based on whether `--index` is passed. [[#378](https://github.com/microsoft/mcp/pull/378)]
+- Merged the following Storage tools: [[#376](https://github.com/microsoft/mcp/pull/376)]
+  - `azmcp_storage_account_details` and `azmcp_storage_account_list` into `azmcp_storage_account_get`, which supports the behaviors of both tools based on whether `--account` is passed.
+  - `azmcp_storage_blob_details` and `azmcp_storage_blob_list` into `azmcp_storage_blob_get`, which supports the behaviors of both tools based on whether `--blob` is passed.
+  - `azmcp_storage_blob_container_details` and `azmcp_storage_blob_container_list` into `azmcp_storage_blob_container_get`, which supports the behaviors of both tools based on whether `--container` is passed.
+- Updated the descriptions of all Storage tools. [[#376](https://github.com/microsoft/mcp/pull/376)]
+
+### Other Changes
+
+#### Dependency updates
+
+- Updated the following dependencies: [[#380](https://github.com/microsoft/mcp/pull/380)]
+  - Azure.Core: `1.47.1` → `1.48.0`
+  - Azure.Identity: `1.15.0` → `1.16.0`
+
+## 0.5.13 (2025-09-10)
+
+### Features Added
+
+- Added support for listing all Event Grid topics in a subscription via the command `azmcp_eventgrid_topic_list`. [[#43](https://github.com/microsoft/mcp/pull/43)]
+- Added support for retrieving knowledge index schema information in Azure AI Foundry projects via the command `azmcp_foundry_knowledge_index_schema`. [[#41](https://github.com/microsoft/mcp/pull/41)]
+- Added support for listing service health events in a subscription via the command `azmcp_resourcehealth_service-health-events_list`. [[#367](https://github.com/microsoft/mcp/pull/367)]
+
+### Breaking Changes
+
+- Updated/removed options for the following commands: [[#108](https://github.com/microsoft/mcp/pull/108)]
+  - `azmcp_storage_account_create`: Removed the ability to configure `enable-https-traffic-only` (always `true` now), `allow-blob-public-access` (always `false` now), and `kind` (always `StorageV2` now).
+  - `azmcp_storage_blob_container_create`: Removed the ability to configure `blob-container-public-access` (always `false` now).
+  - `azmcp_storage_blob_upload`: Removed the ability to configure `overwrite` (always `false` now).
+
+### Bugs Fixed
+
+- Fixed telemetry bug where "ToolArea" was incorrectly populated in with "ToolName". [[#346](https://github.com/microsoft/mcp/pull/346)]
+
+### Other Changes
+
+- Added telemetry to log parameter values for the `azmcp_bestpractices_get` tool. [[#375](https://github.com/microsoft/mcp/pull/375)]
+- Updated tool annotations. [[#377](https://github.com/microsoft/mcp/pull/377)]
+
+#### Dependency updates
+
+- Updated the following dependencies:
+  - Azure.Identity: `1.14.0` → `1.15.0` [[#352](https://github.com/microsoft/mcp/pull/352)]
+  - Azure.Identity.Broker: `1.2.0` → `1.3.0` [[#352](https://github.com/microsoft/mcp/pull/352)]
+  - Microsoft.Azure.Cosmos.Aot: `0.1.1-preview.1` → `0.1.2-preview.1` [[#383](https://github.com/microsoft/mcp/pull/383)]
+- Updated the following dependency to improve .NET Ahead-of-Time (AOT) compilation support: [[#363](https://github.com/microsoft/mcp/pull/363)]
+  - Azure.ResourceManager.StorageCache: `1.3.1` → `1.3.2`
 
 ## 0.5.12 (2025-09-04)
 
 ### Features Added
-- Added `azmcp sql server firewall-rule create` and `azmcp sql server firewall-rule delete` commands. [#121](https://github.com/microsoft/mcp/pull/121)
+
+- Added `azmcp_sql_server_firewall-rule_create` and `azmcp_sql_server_firewall-rule_delete` commands. [[#121](https://github.com/microsoft/mcp/pull/121)]
 
 ### Bugs Fixed
 
@@ -30,7 +84,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
+AOT- Added a verb to the namespace name for bestpractices [[#109](https://github.com/microsoft/mcp/pull/109)]
 - Added instructions about consumption plan for azure functions deployment best practices [[#218](https://github.com/microsoft/mcp/pull/218)]
 
 ## 0.5.11 (2025-09-02)
@@ -52,7 +106,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 #### Dependency Updates
 
-- Updated the following dependencies to improve .NET Ahead-of-Time (AOT) compilation support: 
+- Updated the following dependencies to improve .NET Ahead-of-Time (AOT) compilation support:
   - Microsoft.Azure.Cosmos `3.51.0` → Microsoft.Azure.Cosmos.Aot `0.1.1-preview.1`. [[#37](https://github.com/microsoft/mcp/pull/37)]
 
 ## 0.5.8 (2025-08-21)

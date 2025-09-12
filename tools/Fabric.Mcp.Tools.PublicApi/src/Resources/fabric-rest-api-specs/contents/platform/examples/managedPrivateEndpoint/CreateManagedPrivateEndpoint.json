@@ -1,0 +1,25 @@
+{
+    "parameters": {
+        "workspaceId": "47482db6-4583-4672-86dd-999d0f8f4d7a",
+        "createManagedPrivateEndpointRequest": {
+            "name": "testprivatendpoint1",
+            "targetPrivateLinkResourceId": "/subscriptions/2374e587-d28b-4898-a39c-6070e078ae31/resourceGroups/testrg/providers/Microsoft.Sql/servers/testsql1",
+            "targetSubresourceType": "sqlServer",
+            "requestMessage": "Request message to approve private endpoint"
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "id": "59a92b06-6e5a-468c-b748-e28c8ff28da3",
+                "name": "SqlPE",
+                "targetPrivateLinkResourceId": "/subscriptions/e3bf3f1a-4d64-4e42-85e9-aa1b84e3874/resourceGroups/testRG/providers/Microsoft.SqlServer/SqlServer/sql1", 
+                "provisioningState": "Provisioning", 
+                "targetSubresourceType": "sqlServer"
+            },
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/workspaces/47482db6-4583-4672-86dd-999d0f8f4d7a/managedPrivateEndpoints/59a92b06-6e5a-468c-b748-e28c8ff28da3"
+            }         
+        }
+    }
+}

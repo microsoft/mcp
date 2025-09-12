@@ -126,7 +126,7 @@ public sealed class CommandFactoryToolLoader(
 
         if (commandContext.Activity != null)
         {
-            var serviceArea = commandFactory.GetServiceArea(realCommand.Name) ?? toolName;
+            var serviceArea = commandFactory.GetServiceArea(toolName);
             commandContext.Activity.AddTag(TelemetryConstants.TagName.ToolArea, serviceArea);
         }
 
@@ -183,6 +183,15 @@ public sealed class CommandFactoryToolLoader(
             ReadOnlyHint = metadata.ReadOnly,
             Title = command.Title,
         };
+
+        // Add Secret metadata to tool.Meta if the property exists
+        if (metadata.Secret)
+        {
+            tool.Meta = new JsonObject
+            {
+                ["SecretHint"] = metadata.Secret
+            };
+        }
 
         var options = command.GetCommand().Options;
 

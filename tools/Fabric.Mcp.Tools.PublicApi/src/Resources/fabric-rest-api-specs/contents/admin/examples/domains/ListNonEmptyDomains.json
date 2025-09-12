@@ -1,0 +1,40 @@
+{
+    "parameters": {
+        "nonEmptyOnly": true
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "domains": [
+                    {
+                        "id": "bc23d4c6-cc92-4eb6-bcb5-0ff98429bbff",
+                        "displayName": "Finance",
+                        "description": "This domain is used for identifying financial data and reports.",
+                        "parentDomainId": null,
+                        "contributorsScope": "AdminsOnly"
+                    },
+                    {
+                        "id": "b0bca781-003c-4041-b1c4-f94d34ba76d4",
+                        "displayName": "Human resources",
+                        "description": null,
+                        "parentDomainId": null,
+                        "contributorsScope": "AllTenant"
+                    },
+                    {
+                        "id": "6af5a1b6-bc4c-4c0a-b60d-30c68e6e3034",
+                        "displayName": "HR Sales",
+                        "description": null,
+                        "parentDomainId": "bc23d4c6-cc92-4eb6-bcb5-0ff98429bbff",
+                        "contributorsScope": "AllTenant"
+                    },
+                    {
+                        "id": "6c00e8eb-51d4-46f7-8b90-7e98520ea7a0",
+                        "displayName": "Marketing",
+                        "parentDomainId": null,
+                        "contributorsScope": "SpecificUsersAndGroups"
+                    }
+                ]
+            }
+        }
+    }
+}

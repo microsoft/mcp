@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Commands.DataLake.FileSystem;
@@ -69,7 +68,7 @@ public class FileSystemListPathsCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<FileSystemListPathsResult>(json);
+        var result = JsonSerializer.Deserialize<FileSystemListPathsCommand.FileSystemListPathsCommandResult>(json);
 
         Assert.NotNull(result);
         Assert.Equal(expectedPaths.Count, result.Paths.Count);
@@ -98,7 +97,7 @@ public class FileSystemListPathsCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<FileSystemListPathsResult>(json);
+        var result = JsonSerializer.Deserialize<FileSystemListPathsCommand.FileSystemListPathsCommandResult>(json);
 
         Assert.NotNull(result);
         Assert.Empty(result.Paths);
@@ -158,7 +157,7 @@ public class FileSystemListPathsCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<FileSystemListPathsResult>(json);
+        var result = JsonSerializer.Deserialize<FileSystemListPathsCommand.FileSystemListPathsCommandResult>(json);
 
         Assert.NotNull(result);
         Assert.Equal(expectedPaths.Count, result.Paths.Count);
@@ -197,7 +196,7 @@ public class FileSystemListPathsCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<FileSystemListPathsResult>(json);
+        var result = JsonSerializer.Deserialize<FileSystemListPathsCommand.FileSystemListPathsCommandResult>(json);
 
         Assert.NotNull(result);
         Assert.Equal(expectedPaths.Count, result.Paths.Count);
@@ -235,7 +234,7 @@ public class FileSystemListPathsCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<FileSystemListPathsResult>(json);
+        var result = JsonSerializer.Deserialize<FileSystemListPathsCommand.FileSystemListPathsCommandResult>(json);
 
         Assert.NotNull(result);
         Assert.Equal(expectedPaths.Count, result.Paths.Count);
@@ -275,7 +274,7 @@ public class FileSystemListPathsCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<FileSystemListPathsResult>(json);
+        var result = JsonSerializer.Deserialize<FileSystemListPathsCommand.FileSystemListPathsCommandResult>(json);
 
         Assert.NotNull(result);
         Assert.Equal(expectedPaths.Count, result.Paths.Count);
@@ -314,7 +313,7 @@ public class FileSystemListPathsCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<FileSystemListPathsResult>(json);
+        var result = JsonSerializer.Deserialize<FileSystemListPathsCommand.FileSystemListPathsCommandResult>(json);
 
         Assert.NotNull(result);
         Assert.Equal(expectedPaths.Count, result.Paths.Count);
@@ -345,11 +344,5 @@ public class FileSystemListPathsCommandTests
         {
             Assert.Contains("required", response.Message.ToLower());
         }
-    }
-
-    private class FileSystemListPathsResult
-    {
-        [JsonPropertyName("paths")]
-        public List<DataLakePathInfo> Paths { get; set; } = [];
     }
 }

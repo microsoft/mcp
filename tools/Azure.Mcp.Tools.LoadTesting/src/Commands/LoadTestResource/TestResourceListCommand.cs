@@ -19,12 +19,18 @@ public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> log
         $"""
         Fetches the Load Testing resources for the current selected subscription, resource group in the logged in tenant.
         Returns a list of Load Testing resources.
-        Example:
-        azmcp loadtesting testresource list --subscription <subscription> --resource-group <resource-group>
         """;
     public override string Title => _commandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {

@@ -1,22 +1,53 @@
+parameters:
+- name: ServerName
+  type: string
+- name: NugetDevFeed
+  type: string
+  default: 'public/azure-sdk-for-net'
+
 jobs:
-- job: PublishDev
-  displayName: "Publish to dev feed"
+- job: PublishNpmToDev
+  displayName: "Publish npm packages to dev feed"
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
   steps:
   - checkout: self
 
   - download: current
-    displayName: Download $(PipelineArtifactName)_packed
-    artifact: $(PipelineArtifactName)_packed
+    displayName: Download npm_$(PipelineArtifactName)_packed
+    artifact: npm_$(PipelineArtifactName)_packed
 
   - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
     parameters:
-      PathToArtifacts: $(Pipeline.Workspace)/$(PipelineArtifactName)_packed
+      PathToArtifacts: $(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed
       Registry: https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/
       ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'IndividualCI')) }}:
         Tag: dev
       ${{ else }}:
         Tag: pre
+
+- job: PublishNugetToDev
+  displayName: "Publish NuGet packages to dev feed"
+  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  steps:
+  - checkout: self
+
+  - download: current
+    displayName: Download nuget_$(PipelineArtifactName)_packed
+    artifact: nuget_$(PipelineArtifactName)_packed
+
+  - task: 1ES.PublishNuget@1
+    displayName: Publish platform-specific Nugets
+    inputs:
+      packageParentPath: '$(Pipeline.Workspace)'
+      packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}/platform/*.nupkg;!$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}/platform/*.symbols.nupkg'
+      publishVstsFeed: ${{ parameters.NugetDevFeed }}
+
+  - task: 1ES.PublishNuget@1
+    displayName: Publish wrapper Nuget
+    inputs:
+      packageParentPath: '$(Pipeline.Workspace)'
+      packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}/wrapper/*.nupkg;!$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}/wrapper/*.symbols.nupkg'
+      publishVstsFeed: ${{ parameters.NugetDevFeed }}
 
 # - job: PublishDocsToNightly
 #   displayName: "Update Package Versions"

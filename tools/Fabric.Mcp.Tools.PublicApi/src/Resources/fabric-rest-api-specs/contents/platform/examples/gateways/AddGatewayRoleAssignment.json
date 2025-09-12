@@ -1,0 +1,27 @@
+{
+    "parameters": {
+        "gatewayId": "d12d139f-4141-467c-9f53-80787b198843",
+        "addGatewayRoleAssignmentRequest": {
+            "principal": {
+                "id": "6a002b3d-e4ec-43df-8c08-e8eb7547d9dd",
+                "type": "User"
+            },
+            "role": "ConnectionCreator"
+        }
+    },
+    "responses": {
+        "201": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/gateways/d12d139f-4141-467c-9f53-80787b198843/roleAssignments/6a002b3d-e4ec-43df-8c08-e8eb7547d9dd"
+            },
+            "body": {
+                "id": "6a002b3d-e4ec-43df-8c08-e8eb7547d9dd",
+                "principal": {
+                    "id": "6a002b3d-e4ec-43df-8c08-e8eb7547d9dd",
+                    "type": "User"
+                },
+                "role": "ConnectionCreator"
+            }
+        }
+    }
+}

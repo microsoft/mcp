@@ -1,0 +1,733 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "MirroredAzureDatabricksCatalog REST APIs",
+    "version": "v1"
+  },
+  "schemes": [
+    "https"
+  ],
+  "host": "api.fabric.microsoft.com",
+  "basePath": "/v1",
+  "paths": {
+    "/workspaces/{workspaceId}/mirroredAzureDatabricksCatalogs": {
+      "get": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nReturns a list of mirroredAzureDatabricksCatalogs from the specified workspace.",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_ListMirroredAzureDatabricksCatalogs",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/MirroredAzureDatabricksCatalogs"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidItemType - Invalid item type",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List mirroredAzureDatabricksCatalogs in workspace example": {
+            "$ref": "./examples/ListMirroredAzureDatabricksCatalogsInWorkspace.json"
+          }
+        }
+      },
+      "post": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nCreates a mirroredAzureDatabricksCatalog in the specified workspace.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes \n\n MirroredAzureDatabricksCatalog.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_CreateMirroredAzureDatabricksCatalog",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "createMirroredAzureDatabricksCatalogRequest",
+            "description": "Create item request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CreateMirroredAzureDatabricksCatalogRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully created",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/MirroredAzureDatabricksCatalog"
+            }
+          },
+          "202": {
+            "description": "Request accepted, mirroredAzureDatabricksCatalog provisioning in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidItemType - Item type is invalid\n\n* ItemDisplayNameAlreadyInUse - Item display name is already used. \n\n* CorruptedPayload - The provided payload is corrupted.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create a mirroredAzureDatabricksCatalog with creation payload example": {
+            "$ref": "./examples/CreateMirroredAzureDatabricksCatalogWithPayload.json"
+          },
+          "Create an mirroredAzureDatabricksCatalog with definition example": {
+            "$ref": "./examples/CreateMirroredAzureDatabricksCatalogWithDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/mirroredAzureDatabricksCatalogs/{mirroredAzureDatabricksCatalogId}": {
+      "get": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nReturns properties of the specified mirroredAzureDatabricksCatalog.",
+        "description": "## Permissions\n\n The caller must have *read* permissions for the mirrored azure databricks catalog. \n\n## Required Delegated Scopes \n\n MirroredAzureDatabricksCatalog.Read.All or MirroredAzureDatabricksCatalog.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_GetMirroredAzureDatabricksCatalog",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "mirroredAzureDatabricksCatalogId",
+            "description": "The mirroredAzureDatabricksCatalog ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/MirroredAzureDatabricksCatalog"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get a mirroredAzureDatabricksCatalog example": {
+            "$ref": "./examples/GetMirroredAzureDatabricksCatalog.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nUpdates the properties of the specified mirroredAzureDatabricksCatalog.",
+        "description": "## Permissions\n\n The caller must have *read and write* permissions for the mirrored azure databricks catalog. \n\n## Required Delegated Scopes \n\n MirroredAzureDatabricksCatalog.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_UpdateMirroredAzureDatabricksCatalog",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "mirroredAzureDatabricksCatalogId",
+            "description": "The mirroredAzureDatabricksCatalog ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateMirroredAzureDatabricksCatalogRequest",
+            "description": "Update mirroredAzureDatabricksCatalog request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateMirroredAzureDatabricksCatalogRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/MirroredAzureDatabricksCatalog"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found. \n\n* InvalidRequest - Invalid update request.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a mirroredAzureDatabricksCatalog example": {
+            "$ref": "./examples/UpdateMirroredAzureDatabricksCatalog.json"
+          },
+          "Update a mirroredAzureDatabricksCatalog with updateable prperties example": {
+            "$ref": "./examples/UpdateMirroredAzureDatabricksCatalogWithUpdateableProperties.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nDeletes the specified mirroredAzureDatabricksCatalog.",
+        "description": "## Permissions\n\n The caller must have *write* permissions for the mirrored azure databricks catalog. \n\n## Required Delegated Scopes \n\n MirroredAzureDatabricksCatalog.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_DeleteMirroredAzureDatabricksCatalog",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "mirroredAzureDatabricksCatalogId",
+            "description": "The mirroredAzureDatabricksCatalog ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete a mirroredAzureDatabricksCatalog example": {
+            "$ref": "./examples/DeleteMirroredAzureDatabricksCatalog.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/mirroredAzureDatabricksCatalogs/{mirroredAzureDatabricksCatalogId}/getDefinition": {
+      "post": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nReturns the specified mirroredAzureDatabricksCatalog public definition.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have *read and write* permissions for the mirrored azure databricks catalog. \n\n## Required Delegated Scopes \n\n MirroredAzureDatabricksCatalog.ReadWrite.All or Item.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_GetMirroredAzureDatabricksCatalogDefinition",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "mirroredAzureDatabricksCatalogId",
+            "description": "The mirroredAzureDatabricksCatalog ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/MirroredAzureDatabricksCatalogDefinitionResponse"
+            }
+          },
+          "202": {
+            "description": "Request accepted. Retrieving the definition is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get a mirrored database definition example": {
+            "$ref": "./examples/GetMirroredAzureDatabricksCatalogDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/mirroredAzureDatabricksCatalogs/{mirroredAzureDatabricksCatalogId}/updateDefinition": {
+      "post": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nOverrides the definition for the specified mirroredAzureDatabricksCatalog.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The caller must have *read and write* permissions for the mirrored azure databricks catalog. \n## Required Delegated Scopes \n\n MirroredAzureDatabricksCatalog.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_UpdateMirroredAzureDatabricksCatalogDefinition",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "mirroredAzureDatabricksCatalogId",
+            "description": "The mirroredAzureDatabricksCatalog ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateMirroredAzureDatabricksCatalogDefinitionRequest",
+            "description": "Update mirroredAzureDatabricksCatalog definition request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdatemirroredAzureDatabricksCatalogDefinitionRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "202": {
+            "description": "Request accepted. Update definition is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item. \n\n* CorruptedPayload - The provided payload is corrupted.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a mirrored AzureDatabricks Catalog definition example": {
+            "$ref": "./examples/UpdateMirroredAzureDatabricksCatalogDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/mirroredAzureDatabricksCatalogs/{mirroredAzureDatabricksCatalogId}/refreshCatalogMetadata": {
+      "post": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nRefresh Databricks catalog metadata in mirroredAzureDatabricksCatalogs Item.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\n The API caller must have *contributor* or higher workspace role. \n## Required Delegated Scopes \n\n MirroredAzureDatabricksCatalog.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Refresh"
+        ],
+        "operationId": "Refresh_RefreshCatalogMetadata",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "mirroredAzureDatabricksCatalogId",
+            "description": "The mirroredAzureDatabricksCatalog ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "202": {
+            "description": "Request accepted. Databricks Catalog metadata refresh is in progress",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item. \n\n* CorruptedPayload - The provided payload is corrupted.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Refresh Catalog Metadata example": {
+            "$ref": "./examples/RefreshCatalogMetadata.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/azuredatabricks/catalogs": {
+      "get": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nReturns a list of catalogs from Unity Catalog.",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All or DatabricksCatalog.Read.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Discovery"
+        ],
+        "operationId": "Discovery_DiscoverCatalogs",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "databricksWorkspaceConnectionId",
+            "description": "The Databricks workspace connection ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "maxResults",
+            "description": "The maximum number of results to return.",
+            "type": "integer",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/DatabricksCatalogs"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item. \n\n* CorruptedPayload - The provided payload is corrupted.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List Databricks catalogs example": {
+            "$ref": "./examples/GetDatabricksCatalogs.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/azuredatabricks/catalogs/{catalogName}/schemas": {
+      "get": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nReturns a list of schemas in the given catalog from Unity Catalog.",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All or DatabricksCatalog.Read.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Discovery"
+        ],
+        "operationId": "Discovery_DiscoverSchemas",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "catalogName",
+            "description": "The catalog name.",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "databricksWorkspaceConnectionId",
+            "description": "The Databricks workspace connection ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "maxResults",
+            "description": "The maximum number of results to return.",
+            "type": "integer",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/DatabricksSchemas"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item. \n\n* CorruptedPayload - The provided payload is corrupted.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List Databricks schemas example": {
+            "$ref": "./examples/GetDatabricksSchemas.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/azuredatabricks/catalogs/{catalogName}/schemas/{schemaName}/tables": {
+      "get": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nReturns a list of tables in the given schema from Unity Catalog.",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All or DatabricksCatalog.Read.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Discovery"
+        ],
+        "operationId": "Discovery_DiscoverTables",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "catalogName",
+            "description": "The catalog name.",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "schemaName",
+            "description": "The schema name.",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "databricksWorkspaceConnectionId",
+            "description": "The Databricks workspace connection ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "maxResults",
+            "description": "The maximum number of results to return.",
+            "type": "integer",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/DatabricksTables"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item. \n\n* CorruptedPayload - The provided payload is corrupted.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List Databricks tables example": {
+            "$ref": "./examples/GetDatabricksTables.json"
+          }
+        }
+      }
+    }
+  },
+  "responses": {},
+  "security": [],
+  "tags": []
+}

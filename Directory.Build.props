@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <IsPackable>False</IsPackable>
+    <TrimMode>full</TrimMode>
     <!-- Suppress SYSLIB0020 for generated System.Text.Json code that uses obsolete IgnoreNullValues -->
     <NoWarn>$(NoWarn);SYSLIB0020</NoWarn>
     <BuildNative Condition="'$(BuildNative)' == ''">false</BuildNative>
@@ -29,6 +30,9 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <!-- Keep these aligned with OS + arch build-matrix.json. -->
     <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <CopyOutputSymbolsToPublishDirectory>true</CopyOutputSymbolsToPublishDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsServerProject)' == 'true' and '$(RuntimeIdentifier)' == ''">
     <McpServerJsonTemplateFile>$(RepoRoot)/eng/dnx/.mcp/server.json</McpServerJsonTemplateFile>
@@ -37,9 +41,7 @@
     <!-- AOT native build flags -->
     <IsAotCompatible>true</IsAotCompatible>
     <PublishAot>true</PublishAot>
-    <TrimMode>full</TrimMode>
     <IlcOptimizationPreference>Size</IlcOptimizationPreference>
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
-    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
   </PropertyGroup>
 </Project>

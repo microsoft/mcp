@@ -21,7 +21,15 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = true
+    };
 
     public override string Description =>
         """

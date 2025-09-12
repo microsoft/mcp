@@ -1,0 +1,27 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "lakehouseId": "5b218778-e7a5-4d73-8187-f10824047715"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "displayName": "Lakehouse_created_with_schema",
+                "description": "A schema enabled lakehouse.",
+                "type": "Lakehouse",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "5b218778-e7a5-4d73-8187-f10824047715",
+                "properties": {
+                    "oneLakeTablesPath":"https://onelake.dfs.fabric.microsoft.com/2382cdf5-d577-44d0-a1fc-42184f29a7eb/e5fb215b-1934-413e-b33a-debaf844afde/Tables",
+                    "oneLakeFilesPath":"https://onelake.dfs.fabric.microsoft.com/2382cdf5-d577-44d0-a1fc-42184f29a7eb/e5fb215b-1934-413e-b33a-debaf844afde/Files",
+                    "sqlEndpointProperties":{
+                        "connectionString":"qvrmbuxie7we7glrekxgy6npqu-6xgyei3x2xiejip4iime6knh5m.datawarehouse.fabric.microsoft.com",
+                        "id":"37dc8a41-dea9-465d-b528-3e95043b2356",
+                        "provisioningStatus":"Success"
+                    },
+                    "defaultSchema": "dbo"
+                }
+            }
+        }
+    }
+}

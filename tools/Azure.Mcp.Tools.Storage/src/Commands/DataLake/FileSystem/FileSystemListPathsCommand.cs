@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
@@ -27,7 +28,15 @@ public sealed class FileSystemListPathsCommand(ILogger<FileSystemListPathsComman
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -78,5 +87,5 @@ public sealed class FileSystemListPathsCommand(ILogger<FileSystemListPathsComman
         return context.Response;
     }
 
-    internal record FileSystemListPathsCommandResult(List<DataLakePathInfo> Paths);
+    internal record FileSystemListPathsCommandResult([property: JsonPropertyName("paths")] List<DataLakePathInfo> Paths);
 }

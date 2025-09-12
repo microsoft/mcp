@@ -1,0 +1,20 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff227"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "applicationId" : "00a4a8f9-78d3-41b3-b87a-6ae5271c8d0d",
+                "servicePrincipalId": "5ba4ae58-d402-45c6-a848-0253e834fd78"
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "Retry-After": 5
+            }
+        }
+    }
+}
