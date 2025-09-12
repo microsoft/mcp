@@ -508,8 +508,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
                 new ChatConfiguration(azureOpenAIChatClient),
                 evaluationContexts);
 
-            // Prepare the response
-            var response = new Dictionary<string, object>
+            return new Dictionary<string, object>
             {
                 { "success", true },
                 { "agent_id", agentId },
@@ -523,8 +522,6 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
                 { "evaluation_result", evaluationResult },
                 { "citations", connectAgentResult["citations"] ?? string.Empty },
             };
-
-            return response;
         }
         catch (Exception ex)
         {
