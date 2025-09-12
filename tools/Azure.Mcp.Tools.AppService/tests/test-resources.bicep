@@ -162,16 +162,6 @@ resource sqlContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2
   }
 }
 
-// Role assignment for test application - Cosmos DB Contributor
-resource cosmosContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(cosmosAccount.id, testApplicationOid, '5bd9cd88-fe45-4216-938b-f97437e15450')
-  scope: cosmosAccount
-  properties: {
-    principalId: testApplicationOid
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5bd9cd88-fe45-4216-938b-f97437e15450') // DocumentDB Account Contributor
-  }
-}
-
 // Outputs for test usage
 output webAppName string = webApp.name
 output webAppResourceGroup string = resourceGroup().name
