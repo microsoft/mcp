@@ -137,7 +137,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var projectName = $"{Settings.ResourceBaseName}-ai-projects";
         var accounts = Settings.ResourceBaseName;
         var agentName = $"test-agent-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
-        var query = "What is the weather today?";
+        var query = "What is the weather today in NYC?";
         var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
 
         var agentId = await CreateAgent(agentName, endpoint, "gpt-4o");
