@@ -1,0 +1,18 @@
+{
+    "parameters": {
+        "workspaceId": "1565e6a3-c020-4c0c-dda7-92bafe99eec5",
+        "gitConnectRequest": {
+            "gitProviderDetails": {
+                "organizationName": "Test Organization",
+                "projectName": "Test Project",
+                "gitProviderType": "AzureDevOps",
+                "repositoryName": "Test Repo",
+                "branchName": "Test Branch",
+                "directoryName": "Test Directory"
+            }
+        }
+    },
+    "responses": {
+        "200": {}
+    }
+}

@@ -1,0 +1,39 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "mirroredAzureDatabricksCatalogId": "5b218778-e7a5-4d73-8187-f10824047715",
+    "updateMirroredAzureDatabricksCatalogRequest": {
+      "displayName": "MirroredAzureDatabricksCatalog_New_Name",
+      "description": "A new description for mirroredAzureDatabricksCatalog."
+    }
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "displayName": "MirroredAzureDatabricksCatalog_New_Name",
+        "description": "A new description for mirroredAzureDatabricksCatalog.",
+        "type": "MirroredAzureDatabricksCatalog",
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "id": "5b218778-e7a5-4d73-8187-f10824047715",
+        "properties": {
+          "catalogName": "catalog_1",
+          "databricksWorkspaceConnectionId": "0c9e2ee0-f451-40f3-8355-9bb6d133237d",
+          "mirroringMode": "Partial",
+          "oneLakeTablesPath": "https://onelake.dfs.fabric.microsoft.com/2382cdf5-d577-44d0-a1fc-42184f29a7eb/e5fb215b-1934-413e-b33a-debaf844afde/Tables",
+          "sqlEndpointProperties": {
+            "connectionString": "qvrmbuxie7we7glrekxgy6npqu-6xgyei3x2xiejip4iime6knh5m.datawarehouse.fabric.microsoft.com",
+            "id": "37dc8a41-dea9-465d-b528-3e95043b2356"
+          },
+          "syncDetails": {
+            "status": "Success",
+            "lastSyncDateTime": "2024-12-26T09:40:38.8583698Z",
+            "errorInfo": null
+          },
+          "mirrorStatus": "NotMirrored",
+          "autoSync": "Disabled",
+          "storageConnectionId": null
+        }
+      }
+    }
+  }
+}

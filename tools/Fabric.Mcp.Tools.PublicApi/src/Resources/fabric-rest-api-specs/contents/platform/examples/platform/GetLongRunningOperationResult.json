@@ -1,0 +1,16 @@
+{
+    "parameters": {
+        "operationId": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "f2d65699-dd22-4889-980c-15226deb0e1b",
+                "type": "Notebook",
+                "displayName": "Notebook1",
+                "description": "",
+                "workspaceId": "f2d65699-dd22-4889-980c-15226deb0e1b"
+            }
+        }
+    }
+}

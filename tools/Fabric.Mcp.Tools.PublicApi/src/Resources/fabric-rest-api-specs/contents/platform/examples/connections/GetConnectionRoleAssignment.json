@@ -1,0 +1,18 @@
+{
+    "parameters": {
+        "connectionId": "4bbb41c0-1dcc-4a8c-aff5-c681a3d10208",
+        "connectionRoleAssignmentId": "43970761-afc9-4428-ae6e-3b08bef098ff"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "43970761-afc9-4428-ae6e-3b08bef098ff",
+                "principal": {
+                    "id": "43970761-afc9-4428-ae6e-3b08bef098ff",
+                    "type": "User"
+                },
+                "role": "Owner"
+            }
+        }
+    }
+}

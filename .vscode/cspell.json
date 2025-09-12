@@ -33,7 +33,8 @@
         "**/bin/**",
         "**/eng/common/**",
         "**/obj/**",
-        "!**/.devcontainer/**"
+        "!**/.devcontainer/**",
+        "**/Fabric.Mcp.Tools.PublicApi/src/Resources/**"
     ],
     "dictionaryDefinitions": [
         {
@@ -127,6 +128,7 @@
                 "entraadmin",
                 "entraid",
                 "existingaccount",
+                "fabmcp",
                 "filestorage",
                 "fname",
                 "funkyfoo",
@@ -169,6 +171,7 @@
                 "pipefail",
                 "privatelink",
                 "psscriptanalyzer",
+                "publicapis",
                 "quickstart",
                 "reportgenerator",
                 "reporttypes",

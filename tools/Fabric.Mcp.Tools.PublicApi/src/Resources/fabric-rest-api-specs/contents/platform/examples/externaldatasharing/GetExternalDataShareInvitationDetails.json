@@ -1,0 +1,29 @@
+{
+    "parameters": {
+        "invitationId": "dccc162f-7a41-4720-83c3-5c7e81187959",
+        "providerTenantId": "34f92457-fe9d-4c36-92a8-499fdfaf0f8f"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "providerTenantDetails": {
+                    "tenantId": "34f92457-fe9d-4c36-92a8-499fdfaf0f8f",
+                    "displayName": "Contoso, Ltd",
+                    "verifiedDomainName": "contoso.com"
+                },
+                "pathsDetails": [
+                    {
+                        "pathId": "5c95314c-ef86-4663-9f1e-dee186f38715",
+                        "type": "Folder",
+                        "name": "Contoso_Sales_2023"
+                    },
+                    {
+                        "pathId": "6c95314c-ef86-4663-9f1e-dee186f38716",
+                        "type": "Folder",
+                        "name": "Contoso_Sales_2024"
+                    }
+                ]
+            }
+        }
+    }
+}

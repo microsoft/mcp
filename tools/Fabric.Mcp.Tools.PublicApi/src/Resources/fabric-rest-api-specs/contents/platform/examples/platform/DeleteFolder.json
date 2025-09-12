@@ -1,0 +1,9 @@
+{
+    "parameters": {
+        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+        "folderId": "bbbbbbbb-1111-2222-3333-cccccccccccc"
+    },
+    "responses": {
+        "200": {}
+    }
+}

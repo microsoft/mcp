@@ -1,0 +1,19 @@
+{
+    "parameters": {
+        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+        "createFolderRequest": {
+            "displayName": "Q3",
+            "parentFolderId": "bbbbbbbb-1111-2222-3333-cccccccccccc"
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "id": "ffffffff-5555-6666-7777-aaaaaaaaaaaa",
+                "displayName": "Q3",
+                "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+                "parentFolderId": "bbbbbbbb-1111-2222-3333-cccccccccccc"
+            }
+        }
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "parameters": {
+        "workspaceId": "1565e6a3-c020-4c0c-dda7-92bafe99eec5",
+        "commitToGitRequest": {
+            "mode": "All",
+            "workspaceHead": "eaa737b48cda41b37ffefac772ea48f6fed3eac4",
+            "comment": "I'm committing all my changes."
+        }
+    },
+    "responses": {
+        "200": {
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "x-ms-operation-id": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "Retry-After": 30
+            }
+        }
+    }
+}

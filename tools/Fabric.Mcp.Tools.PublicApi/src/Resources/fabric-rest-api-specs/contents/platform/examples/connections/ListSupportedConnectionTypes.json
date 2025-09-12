@@ -1,0 +1,42 @@
+{
+    "parameters": {
+        "gatewayId": "6d824cb9-6bfb-4bdb-a702-238e172a8743"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "type": "SQL",
+                        "creationMethods": [
+                            {
+                                "name": "SQL",
+                                "parameters": [
+                                    {
+                                        "name": "server",
+                                        "dataType": "Text",
+                                        "required": true
+                                    },
+                                    {
+                                        "name": "database",
+                                        "dataType": "Text",
+                                        "required": false
+                                    }
+                                ]                                
+                            }
+                        ],
+                        "supportedCredentialTypes": [
+                            "Basic", "OAuth2"
+                        ],
+                        "supportedConnectionEncryptionTypes": [
+                            "Encrypted", "NotEncrypted"
+                        ],
+                        "supportsSkipTestConnection": true
+                    }
+                ],
+                "continuationToken": "LDEsMTAwMDAwLDA%3D",
+                "continuationUri": "https://api.fabric.microsoft.com/v1/connections/supportedConnections?connectivityType=ShareableCloud&continuationToken=LDEsMTAwMDAwLDA%3D"
+            }
+        }
+    }
+}
