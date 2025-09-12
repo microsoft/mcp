@@ -4,9 +4,6 @@ parameters:
 - name: NugetDevFeed
   type: string
   default: 'public/azure-sdk-for-net'
-- name: NugetDevFeedUrl
-  type: string
-  default: 'https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-net/nuget/v3/index.json'
 
 jobs:
 - job: PublishNpmToDev
@@ -42,25 +39,14 @@ jobs:
     displayName: Publish platform-specific Nugets
     inputs:
       packageParentPath: '$(Pipeline.Workspace)'
-      packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/platform/*.nupkg;!$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/platform/*.symbols.nupkg'
+      packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}/platform/*.nupkg;!$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}/platform/*.symbols.nupkg'
       publishVstsFeed: ${{ parameters.NugetDevFeed }}
-
-  - task: Powershell@2
-    displayName: "Confirm that Nugets are in feed"
-    inputs:
-      pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Confirm-NugetInFeed.ps1
-      arguments: >
-        -PackagesDirectory '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/platform'
-        -ServerName '${{ parameters.ServerName }}'
-        -VersionSuffix '$(VersionSuffix)'
-        -FeedUrl ${{ parameters.NugetDevFeedUrl }}
 
   - task: 1ES.PublishNuget@1
     displayName: Publish wrapper Nuget
     inputs:
       packageParentPath: '$(Pipeline.Workspace)'
-      packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/wrapper/*.nupkg;!$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}-native/wrapper/*.symbols.nupkg'
+      packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}/wrapper/*.nupkg;!$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}/wrapper/*.symbols.nupkg'
       publishVstsFeed: ${{ parameters.NugetDevFeed }}
 
 # - job: PublishDocsToNightly

@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Commands.Table;
@@ -65,7 +64,7 @@ public class TableListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TableListResult>(json);
+        var result = JsonSerializer.Deserialize<TableListCommand.TableListCommandResult>(json);
 
         Assert.NotNull(result);
         Assert.Equal(expectedTables, result.Tables);
@@ -116,11 +115,5 @@ public class TableListCommandTests
         Assert.NotNull(response);
         Assert.Equal(500, response.Status);
         Assert.StartsWith(expectedError, response.Message);
-    }
-
-    private class TableListResult
-    {
-        [JsonPropertyName("tables")]
-        public List<string> Tables { get; set; } = [];
     }
 }

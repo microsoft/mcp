@@ -55,12 +55,7 @@ public class IndexQueryCommandTests
             ).RootElement
         ];
 
-        _searchService
-            .QueryIndex(
-                Arg.Is<string>(s => s == serviceName),
-                Arg.Is<string>(i => i == indexName),
-                Arg.Is<string>(q => q == queryText),
-                Arg.Any<RetryPolicyOptions?>())
+        _searchService.QueryIndex(Arg.Is(serviceName), Arg.Is(indexName), Arg.Is(queryText), Arg.Any<RetryPolicyOptions?>())
             .Returns(expectedResults);
 
         var command = new IndexQueryCommand(_logger);
@@ -90,12 +85,7 @@ public class IndexQueryCommandTests
         var indexName = "index1";
         var queryText = "test query";
 
-        _searchService
-            .QueryIndex(
-                Arg.Is<string>(s => s == serviceName),
-                Arg.Is<string>(i => i == indexName),
-                Arg.Is<string>(q => q == queryText),
-                Arg.Any<RetryPolicyOptions?>())
+        _searchService.QueryIndex(Arg.Is(serviceName), Arg.Is(indexName), Arg.Is(queryText), Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new IndexQueryCommand(_logger);

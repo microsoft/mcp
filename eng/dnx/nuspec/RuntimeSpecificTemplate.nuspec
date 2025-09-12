@@ -7,6 +7,8 @@
     <license type="expression">MIT</license>
     <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
     <description>__Description__</description>
+    <copyright>&#169; Microsoft Corporation. All rights reserved.</copyright>
+    <projectUrl>__ProjectUrl__</projectUrl>
     <packageTypes>
       <packageType name="DotnetToolRidPackage" />
     </packageTypes>

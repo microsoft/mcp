@@ -193,6 +193,15 @@ public sealed class CommandFactoryToolLoader : IToolLoader
             Title = command.Title,
         };
 
+        // Add Secret metadata to tool.Meta if the property exists
+        if (metadata.Secret)
+        {
+            tool.Meta = new JsonObject
+            {
+                ["SecretHint"] = metadata.Secret
+            };
+        }
+
         var options = command.GetCommand().Options;
 
         var schema = new ToolInputSchema();

@@ -3,24 +3,18 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Models;
-using Azure.Storage.Blobs.Models;
 
 namespace Azure.Mcp.Tools.Storage.Services;
 
 public interface IStorageService
 {
-    Task<List<StorageAccountInfo>> GetStorageAccounts(
+    Task<List<Models.AccountInfo>> GetAccountDetails(
+        string? account,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<StorageAccountInfo> GetStorageAccountDetails(
-        string account,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
-
-    Task<StorageAccountInfo> CreateStorageAccount(
+    Task<Models.AccountInfo> CreateStorageAccount(
         string account,
         string resourceGroup,
         string location,
@@ -28,12 +22,6 @@ public interface IStorageService
         string? sku = null,
         string? accessTier = null,
         bool? enableHierarchicalNamespace = null,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
-
-    Task<List<string>> ListContainers(
-        string account,
-        string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
@@ -45,28 +33,22 @@ public interface IStorageService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<string>> ListBlobs(string accountName,
-        string container,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
-
-    Task<BlobProperties> GetBlobDetails(
+    Task<List<BlobInfo>> GetBlobDetails(
         string account,
         string container,
-        string blob,
+        string? blob,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<BlobContainerProperties> GetContainerDetails(
+    Task<List<ContainerInfo>> GetContainerDetails(
         string account,
-        string container,
+        string? container,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<BlobContainerProperties> CreateContainer(
+    Task<ContainerInfo> CreateContainer(
         string account,
         string container,
         string subscription,
