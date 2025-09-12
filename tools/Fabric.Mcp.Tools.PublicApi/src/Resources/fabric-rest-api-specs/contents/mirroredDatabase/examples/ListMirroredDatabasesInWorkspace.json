@@ -1,0 +1,29 @@
+{
+    "parameters": {
+        "workspaceId": "a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "b1b1b1b1-cccc-dddd-eeee-f2f2f2f2f2f2",
+                        "displayName": "Mirrored database 1",
+                        "description": "A mirrored database description.",
+                        "type": "MirroredDatabase",
+                        "workspaceId": "a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1",
+                        "properties": {
+                            "oneLakeTablesPath": "https://onelake.dfs.fabric.microsoft.com/a0a0a0a0-bbbb-cccc-dddd-e1e1e1e1e1e1/b1b1b1b1-cccc-dddd-eeee-f2f2f2f2f2f2/Tables",
+                            "sqlEndpointProperties": {
+                                "connectionString": "xxx.datawarehouse.fabric.microsoft.com",
+                                "id": "c2c2c2c2-dddd-eeee-ffff-a3a3a3a3a3a3",
+                                "provisioningStatus": "Success"
+                            },
+                            "defaultSchema": "dbo"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

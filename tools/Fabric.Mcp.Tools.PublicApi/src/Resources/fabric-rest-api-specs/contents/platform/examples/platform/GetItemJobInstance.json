@@ -1,0 +1,22 @@
+{
+    "parameters": {
+        "workspaceId": "4b218778-e7a5-4d73-8187-f10824047715",
+        "itemId": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+        "jobInstanceId": "f2d65699-dd22-4889-980c-15226deb0e1b"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "f2d65699-dd22-4889-980c-15226deb0e1b",    
+                "itemId": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "jobType": "DefaultJob",
+                "invokeType": "Manual",
+                "status": "Completed",
+                "rootActivityId": "8c2ee553-53a4-7edb-1042-0d8189a9e0ca",
+                "startTimeUtc": "2023-04-22T06:35:00.7812154",
+                "endTimeUtc": "2023-04-22T06:35:00.8033333",
+                "failureReason": null
+            }
+        }
+    }
+}

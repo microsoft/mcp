@@ -1,0 +1,767 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Environment REST APIs",
+    "version": "v1"
+  },
+  "schemes": [
+    "https"
+  ],
+  "host": "api.fabric.microsoft.com",
+  "basePath": "/v1",
+  "paths": {
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/sparkcompute": {
+      "get": {
+        "tags": [
+          "SparkCompute"
+        ],
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nGet environment staging spark compute.",
+        "description": "## Permissions\n\nRead permission to the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "SparkCompute_GetStagingSettings",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentSparkCompute"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment staging spark compute example": {
+            "$ref": "./examples/GetEnvironmentSparkCompute.json"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "SparkCompute"
+        ],
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nUpdate environment staging spark compute. If you want to delete a spark property, set its value as null.",
+        "description": "## Permissions\n\nWrite permission to the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "SparkCompute_UpdateStagingSettings",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "updateEnvironmentSparkComputeRequest",
+            "in": "body",
+            "description": "Update environment spark compute request payload.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateEnvironmentSparkComputeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentSparkCompute"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update environment staging spark compute example": {
+            "$ref": "./examples/UpdateEnvironmentSparkCompute.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/sparkcompute": {
+      "get": {
+        "tags": [
+          "SparkCompute"
+        ],
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nGet environment spark compute.",
+        "description": "## Permissions\n\nRead permission to the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "SparkCompute_GetPublishedSettings",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentSparkCompute"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment Spark compute example": {
+            "$ref": "./examples/GetEnvironmentSparkCompute.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments": {
+      "get": {
+        "summary": "Returns a list of environments from the specified workspace.",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_ListEnvironments",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Environments"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidItemType - Invalid item type",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List environments in workspace example": {
+            "$ref": "./examples/ListEnvironmentsInWorkspace.json"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates an environment in the specified workspace.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n This API does not support create a environment with definition.\n\n ## Permissions \n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes\n\n Environment.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create an environment, the workspace must be on a supported Fabric capacity.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_CreateEnvironment",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "createEnvironmentRequest",
+            "description": "Create item request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CreateEnvironmentRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully created",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Environment"
+            }
+          },
+          "202": {
+            "description": "Request accepted, environment provisioning in progress",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidItemType - Item type is invalid\n\n* ItemDisplayNameAlreadyInUse - Item display name is already used\n\n* CorruptedPayload - The provided payload is corrupted.\n\n* WorkspaceItemsLimitExceeded - Workspace item limit exceeded.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create a environment example": {
+            "$ref": "./examples/CreateEnvironment.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}": {
+      "get": {
+        "summary": "Returns properties of the specified environment.",
+        "description": "## Permissions\n\n The caller must have *read* permissions for the environment.\n\n## Required Delegated Scopes\n\nEnvironment.Read.All or Item.Read.All or Environment.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_GetEnvironment",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "environmentId",
+            "description": "The environment ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Environment"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get Environment Item example": {
+            "$ref": "./examples/GetEnvironment.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates the properties of the specified environment.",
+        "description": "## Permissions\n\n The caller must have *read and write* permissions for the environment. \n\n## Required Delegated Scopes\n\n Environment.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_UpdateEnvironment",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "environmentId",
+            "description": "The environment ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateEnvironmentRequest",
+            "description": "Update environment request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateEnvironmentRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Environment"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found. \n\n* InvalidRequest - Invalid update request",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a environment example": {
+            "$ref": "./examples/UpdateEnvironment.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes the specified environment.",
+        "description": "## Permissions\n\n The caller must have *write* permissions for the environment. \n\n## Required Delegated Scopes\n\n Environment.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_DeleteEnvironment",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "environmentId",
+            "description": "The environment ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete a environment example": {
+            "$ref": "./examples/DeleteEnvironment.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries": {
+      "get": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nGet a list of libraries staged into environment.",
+        "description": "## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SparkLibraries"
+        ],
+        "operationId": "SparkLibraries_GetStagingLibraries",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentLibraries"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any published libraries.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment staging libraries example": {
+            "$ref": "./examples/GetStagingLibraries.json"
+          }
+        }
+      },
+      "post": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nUpload spark library into environment.",
+        "description": "This API allows one file upload at a time. The supported file formats are .jar, .py, .whl, .tar.gz, or environment.yml. \n\n## Limitations\n\nThe maximum request size allowed is 100MB.\n\nNetwork issues may impact the upload size and may result in timeouts.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SparkLibraries"
+        ],
+        "operationId": "SparkLibraries_UploadStagingLibrary",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a library with a valid format such as .jar, .py, .whl, .tar.gz, or environment.yml.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Upload environment staging libraries example": {
+            "$ref": "./examples/UploadStagingLibraries.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nDeletes a library from environment. It supports deleting one file at a time.",
+        "description": "## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SparkLibraries"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "operationId": "SparkLibraries_DeleteStagingLibrary",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "libraryToDelete",
+            "in": "query",
+            "description": "The library file to be deleted. The library name needs to include its extension, for example samplefile.jar.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a library name with a valid format such as .jar, .py, .whl, .tar.gz, or environment.yml.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete environment staging libraries example": {
+            "$ref": "./examples/DeleteStagingLibraries.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/libraries": {
+      "get": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nGet environment published libraries.",
+        "description": "## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SparkLibraries"
+        ],
+        "operationId": "SparkLibraries_GetPublishedLibraries",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentLibraries"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any staged libraries.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment published libraries example": {
+            "$ref": "./examples/GetPublishedLibraries.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/publish": {
+      "post": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nTrigger an environment publish operation.",
+        "description": "## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SparkLibraries"
+        ],
+        "operationId": "SparkLibraries_PublishEnvironment",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Publish operation request has been submitted successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentPublishInfo"
+            }
+          },
+          "202": {
+            "description": "> [!NOTE]\n> This code is not available.\n\nRequest accepted, publish operation is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL to check the status of the publish operation.",
+                "type": "string"
+              },
+              "Retry-After": {
+                "type": "integer"
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidEnvironmentPublish - Environment publish operation for version <*GUID* of the failed publish operation> failed due to error: Code = EnvironmentAnotherOngoingPublishProcess.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Publish environment example": {
+            "$ref": "./examples/PublishEnvironment.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/cancelPublish": {
+      "post": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nTrigger an environment publish cancellation.",
+        "description": "## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "SparkLibraries"
+        ],
+        "operationId": "SparkLibraries_CancelPublish",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentPublishInfo"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidEnvironmentCancel - Environment cancel operation for version <*GUID* of the failed publish cancellation> failed due to error: Code = EnvironmentUpsupportedStateForCancel.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Publish environment cancellation example": {
+            "$ref": "./examples/PublishCancellation.json"
+          }
+        }
+      }
+    }
+  },
+  "responses": {},
+  "security": [],
+  "tags": []
+}

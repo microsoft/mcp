@@ -1,0 +1,57 @@
+{
+    "parameters": {
+        "createConnectionRequest": {
+            "connectivityType": "VirtualNetworkGateway",
+            "gatewayId": "93491300-cfbd-402f-bf17-9ace59a92354",
+            "displayName": "ContosoVirtualNetworkGatewayConnection",
+            "connectionDetails":{
+                "type": "SQL",
+                "creationMethod": "SQL",
+                "parameters": [
+                    { 
+                        "dataType": "Text",
+                        "name": "server",
+                        "value": "contoso.database.windows.net"
+                    },
+                    {
+                        "dataType": "Text",
+                        "name": "database",
+                        "value": "sales"
+                    }
+                ]
+            },
+            "privacyLevel": "Organizational",
+            "credentialDetails": {
+                "singleSignOnType": "None",
+                "connectionEncryption": "Encrypted",
+                "skipTestConnection": false,
+                "credentials": {
+                    "credentialType": "Basic",
+                    "username": "admin",
+                    "password": "*********"
+                }
+            }
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "id": "eeec9a3a-6ef5-4e2b-bb6a-0060bd2f0172",
+                "displayName": "ContosoVirtualNetworkGatewayConnection",
+                "gatewayId": "93491300-cfbd-402f-bf17-9ace59a92354",
+                "connectivityType": "VirtualNetworkGateway",
+                "connectionDetails":{
+                    "type": "SQL",
+                    "path": "contoso.database.windows.net;sales"
+                },
+                "privacyLevel": "Organizational",
+                "credentialDetails": {
+                    "credentialType": "Basic",
+                    "singleSignOnType": "None",
+                    "connectionEncryption": "Encrypted",
+                    "skipTestConnection": false
+                }
+            }
+        }
+    }
+}

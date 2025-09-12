@@ -1,0 +1,719 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Dataflow REST APIs",
+    "version": "v1"
+  },
+  "schemes": [
+    "https"
+  ],
+  "host": "api.fabric.microsoft.com",
+  "basePath": "/v1",
+  "paths": {
+    "/workspaces/{workspaceId}/dataflows": {
+      "get": {
+        "summary": "Returns a list of Dataflows from the specified workspace.",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_ListDataflows",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Dataflows"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidItemType - Invalid item type.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List Dataflows in workspace example": {
+            "$ref": "./examples/ListDataflowsInWorkspace.json"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a Dataflow in the specified workspace.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create Dataflow with a public definition, refer to [Dataflow](/rest/api/fabric/articles/item-management/definitions/dataflow-definition) article. \n\n ## Permissions \n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes\n\n Dataflow.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create a Dataflow the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_CreateDataflow",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "createDataflowRequest",
+            "description": "Create item request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CreateDataflowRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully created",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Dataflow"
+            }
+          },
+          "202": {
+            "description": "Request accepted, Dataflow provisioning in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidItemType - Item type is invalid\n\n* ItemDisplayNameAlreadyInUse - Item display name is already used.\n\n* CorruptedPayload - The provided payload is corrupted.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create a Dataflow example": {
+            "$ref": "./examples/CreateDataflowWithoutDefinition.json"
+          },
+          "Create a Dataflow with public definition example": {
+            "$ref": "./examples/CreateDataflow.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/dataflows/{dataflowId}": {
+      "get": {
+        "summary": "Returns properties of the specified Dataflow.",
+        "description": "## Permissions\n\n The caller must have *read* permissions for the dataflow. \n\n## Required Delegated Scopes\n\n Dataflow.Read.All or Dataflow.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_GetDataflow",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataflowId",
+            "description": "The Dataflow ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Dataflow"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get a Dataflow example": {
+            "$ref": "./examples/GetDataflow.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates the properties of the specified Dataflow.",
+        "description": "## Permissions\n\n The caller must have *read and write* permissions for the dataflow.\n\n## Required Delegated Scopes\n\n Dataflow.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_UpdateDataflow",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataflowId",
+            "description": "The Dataflow ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateDataflowRequest",
+            "description": "Update Dataflow request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateDataflowRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Dataflow"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found. \n\n* InvalidRequest - Invalid update request.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a Dataflow example": {
+            "$ref": "./examples/UpdateDataflow.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes the specified Dataflow.",
+        "description": "## Permissions\n\n The caller must have *write* permissions for the dataflow. \n\n## Required Delegated Scopes\n\n Dataflow.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_DeleteDataflow",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataflowId",
+            "description": "The Dataflow ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete a Dataflow example": {
+            "$ref": "./examples/DeleteDataflow.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/dataflows/{dataflowId}/getDefinition": {
+      "post": {
+        "summary": "Returns the specified Dataflow public definition.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a Dataflow's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\n The caller must have *read and write* permissions for the dataflow.\n## Required Delegated Scopes\n\n Dataflow.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_GetDataflowDefinition",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataflowId",
+            "description": "The Dataflow ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/DataflowDefinitionResponse"
+            }
+          },
+          "202": {
+            "description": "Request accepted. Retrieving the definition is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get a Dataflow public definition example": {
+            "$ref": "./examples/GetDataflowDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/dataflows/{dataflowId}/updateDefinition": {
+      "post": {
+        "summary": "Overrides the definition for the specified Dataflow.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n \nUpdating the Dataflow's definition, does not affect its sensitivity label. \n\n## Permissions\n\n The caller must have *read and write* permissions for the dataflow. \n## Required Delegated Scopes\n\n Dataflow.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_UpdateDataflowDefinition",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataflowId",
+            "description": "The Dataflow ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "updateMetadata",
+            "description": "When set to true and the .platform file is provided as part of the definition, the item's metadata is updated using the metadata in the .platform file",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "in": "body",
+            "name": "updateDataflowDefinitionRequest",
+            "description": "Update Dataflow definition request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateDataflowDefinitionRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "202": {
+            "description": "Request accepted. Update definition is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item. \n\n* CorruptedPayload - The provided payload is corrupted.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a Dataflow public definition example": {
+            "$ref": "./examples/UpdateDataflowDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/dataflows/{dataflowId}/jobs/Execute/schedules": {
+      "post": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nCreate a new execute schedule for a dataflow. A dataflow can create maximum 20 schedulers.",
+        "description": "## Required Delegated Scopes: \n\nDataflow.Execute.All and Dataflow.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "BackgroundJobs"
+        ],
+        "operationId": "BackgroundJobs_ScheduleExecute",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataflowId",
+            "description": "The item ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "createScheduleRequest",
+            "description": "A dataflow execute schedule create request.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CreateDataflowExecuteScheduleRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully create the schedule.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the newly created schedule.",
+                "type": "string"
+              }
+            },
+            "schema": {
+              "$ref": "./definitions.json#/definitions/DataflowSchedule"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InsufficientPrivileges - The caller does not have sufficient permissions to access the item\n\n* ItemNotFound - Requested item id not found\n\n* ScheduleExceedsLimit - The number of created schedules for the item exceeds the limit",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create dataflow Execute schedule example": {
+            "$ref": "./examples/CreateDataflowExecuteSchedule.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/dataflows/{dataflowId}/jobs/ApplyChanges/schedules": {
+      "post": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nCreate a new apply changes schedule for a dataflow. A dataflow can create maximum 20 schedulers.",
+        "description": "## Required Delegated Scopes: \n\nDataflow.Execute.All and Dataflow.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "BackgroundJobs"
+        ],
+        "operationId": "BackgroundJobs_ScheduleApplyChanges",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataflowId",
+            "description": "The item ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "createScheduleRequest",
+            "description": "A apply changes dataflow schedule create request.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CreateDataflowApplyChangesScheduleRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully create the schedule.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the newly created schedule.",
+                "type": "string"
+              }
+            },
+            "schema": {
+              "$ref": "./definitions.json#/definitions/DataflowSchedule"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InsufficientPrivileges - The caller does not have sufficient permissions to access the item\n\n* ItemNotFound - Requested item id not found\n\n* ScheduleExceedsLimit - The number of created schedules for the item exceeds the limit",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create dataflow ApplyChanges schedule example": {
+            "$ref": "./examples/CreateDataflowApplyChangesSchedule.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/dataflows/{dataflowId}/jobs/instances?jobType=Execute": {
+      "post": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nRun on-demand execute job instance.",
+        "description": "## Required Delegated Scopes\n\n For dataflows APIs use these scope types: \n- Specific scope: Dataflow.Execute.All \n\n for more information about scopes, see: [scopes article](/rest/api/fabric/articles/scopes).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "BackgroundJobs"
+        ],
+        "operationId": "BackgroundJobs_RunOnDemandExecute",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataflowId",
+            "description": "The dataflow ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "jobType",
+            "description": "*Execute* job type. *Refresh* can also be used as an alias for *Execute*.",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "runOnDemandItemJobRequest",
+            "description": "Run on-demand item job request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/RunOnDemandDataflowExecuteJobRequest"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Request accepted, job execution is in progress.",
+            "headers": {
+              "Location": {
+                "type": "string",
+                "description": "The URL to the job instance resource"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request"
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InsufficientPrivileges - The caller does not have sufficient permissions to run job instance.\n\n* InvalidJobType - The requested job type is invalid.\n\n* TooManyRequestsForJobs - The caller requests too many on-demand job requests.\n\n* ItemNotFound - Requested item ID not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Run dataflow Execute job instance with no request body example": {
+            "$ref": "./examples/RunOnDemandDataflowExecuteJob.json"
+          },
+          "Run dataflow Execute job instance with request body containing parameters example": {
+            "$ref": "./examples/RunOnDemandDataflowExecuteJobWithParameters.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/dataflows/{dataflowId}/jobs/instances?jobType=ApplyChanges": {
+      "post": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nRun on-demand apply changes job instance.",
+        "description": "## Required Delegated Scopes\n\n For dataflows APIs use these scope types: \n- Specific scope: Dataflow.Execute.All \n\n for more information about scopes, see: [scopes article](/rest/api/fabric/articles/scopes).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "BackgroundJobs"
+        ],
+        "operationId": "BackgroundJobs_RunOnDemandApplyChanges",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "dataflowId",
+            "description": "The dataflow ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "jobType",
+            "description": "*ApplyChanges* job type.",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Request accepted, job execution is in progress.",
+            "headers": {
+              "Location": {
+                "type": "string",
+                "description": "The URL to the job instance resource"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request"
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InsufficientPrivileges - The caller does not have sufficient permissions to run job instance.\n\n* InvalidJobType - The requested job type is invalid.\n\n* TooManyRequestsForJobs - The caller requests too many on-demand job requests.\n\n* ItemNotFound - Requested item ID not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Run dataflow ApplyChanges job instance example": {
+            "$ref": "./examples/RunOnDemandDataflowApplyChangesJob.json"
+          }
+        }
+      }
+    }
+  },
+  "responses": {},
+  "security": [],
+  "tags": []
+}

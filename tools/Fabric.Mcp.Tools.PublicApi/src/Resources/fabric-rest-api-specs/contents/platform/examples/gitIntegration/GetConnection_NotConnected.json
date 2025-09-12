@@ -1,0 +1,14 @@
+{
+    "parameters": {
+        "workspaceId": "1455b6a2-c120-4c1c-dda7-92bafe99bec3"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "gitProviderDetails": null,
+                "gitSyncDetails": null,
+                "gitConnectionState": "NotConnected"
+            }
+        }
+    }
+}

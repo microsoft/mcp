@@ -1,0 +1,17 @@
+{
+    "parameters": {
+        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+        "createFolderRequest": {
+            "displayName": "A folder"
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "id": "eeeeeeee-4444-5555-6666-ffffffffffff",
+                "displayName": "A folder",
+                "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb"
+            }
+        }
+    }
+}

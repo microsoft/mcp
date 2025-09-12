@@ -1,0 +1,49 @@
+{
+    "parameters": {
+        "itemId": "25bac802-080d-4f73-8a42-1b406eb1fceb",
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff222",
+        "createOrUpdateDataAccessRolesRequest": {
+            "value": [
+                {
+                    "name": "default_role_1",
+                    "decisionRules": [
+                        {
+                            "effect": "Permit",
+                            "permission": [
+                                {
+                                    "attributeName": "Path",
+                                    "attributeValueIncludedIn": [
+                                        "*"
+                                    ]
+                                },
+                                {
+                                    "attributeName": "Action",
+                                    "attributeValueIncludedIn": [
+                                        "Read"
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "members": {
+                        "fabricItemMembers": [
+                            {
+                                "itemAccess": [
+                                    "ReadAll"
+                                ],
+                                "sourcePath": "cfafbeb1-8037-4d0c-896e-a46fb27ff222/25bac802-080d-4f73-8a42-1b406eb1fceb"
+                            }
+                        ]
+                    }
+                }
+            ]            
+        }
+    },
+    "responses": {
+        "200": {
+            "headers": {
+                "ETag": "33a64df551425fcc55e4d42a148795d9f25f89d4"
+            }    
+        }
+    }
+}
