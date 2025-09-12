@@ -41,6 +41,11 @@
 # ServiceLabel: %tools-AppConfig
 # ServiceOwners:                       @shenmuxiaosen @avanigupta
 
+# PRLabel: %area-AppLens
+/tools/Azure.Mcp.Tools.AppLens/        @masalaman @microsoft/azure-mcp
+
+# ServiceLabel: %area-AppLens
+# ServiceOwners:                       @msalaman
 
 # PRLabel: %tools-ACR
 /tools/Azure.Mcp.Tools.Acr/            @jongio @microsoft/azure-mcp

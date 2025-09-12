@@ -212,6 +212,17 @@ azmcp appconfig kv unlock --subscription <subscription> \
                           [--label <label>]
 ```
 
+### Azure App Lens Operations
+
+```bash
+# Diagnose resource using Azure App Lens
+azmcp applens resource diagnose --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --question <question> \
+                                --resource-type <resource-type> \
+                                --resource <resource>
+```
+
 ### Azure CLI Operations
 
 ```bash
