@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Nodes;
+using Azure.Mcp.Core.Models;
 
 namespace Azure.Mcp.Core.Models.Elicitation;
 
@@ -20,26 +22,20 @@ public static class ElicitationSchema
     /// <returns>A JSON schema object for the elicitation request.</returns>
     public static JsonObject CreateStringSchema(string propertyName, string title, string description, bool isRequired = true)
     {
-        var schema = new JsonObject
+        var schema = new ElicitationSchemaRoot
         {
-            ["type"] = "object",
-            ["properties"] = new JsonObject
+            Properties = new Dictionary<string, ElicitationSchemaProperty>
             {
-                [propertyName] = new JsonObject
+                [propertyName] = new ElicitationSchemaProperty
                 {
-                    ["type"] = "string",
-                    ["title"] = title,
-                    ["description"] = description
+                    Title = title,
+                    Description = description
                 }
-            }
+            },
+            Required = isRequired ? [propertyName] : null
         };
 
-        if (isRequired)
-        {
-            schema["required"] = JsonNode.Parse($"[\"{propertyName}\"]");
-        }
-
-        return schema;
+        return JsonSerializer.SerializeToNode(schema, ModelsJsonContext.Default.ElicitationSchemaRoot)!.AsObject();
     }
 
     /// <summary>
@@ -52,27 +48,21 @@ public static class ElicitationSchema
     /// <returns>A JSON schema object for the elicitation request.</returns>
     public static JsonObject CreatePasswordSchema(string propertyName, string title, string description, bool isRequired = true)
     {
-        var schema = new JsonObject
+        var schema = new ElicitationSchemaRoot
         {
-            ["type"] = "object",
-            ["properties"] = new JsonObject
+            Properties = new Dictionary<string, ElicitationSchemaProperty>
             {
-                [propertyName] = new JsonObject
+                [propertyName] = new ElicitationSchemaProperty
                 {
-                    ["type"] = "string",
-                    ["title"] = title,
-                    ["description"] = description,
-                    ["format"] = "password"
+                    Title = title,
+                    Description = description,
+                    Format = "password"
                 }
-            }
+            },
+            Required = isRequired ? [propertyName] : null
         };
 
-        if (isRequired)
-        {
-            schema["required"] = JsonNode.Parse($"[\"{propertyName}\"]");
-        }
-
-        return schema;
+        return JsonSerializer.SerializeToNode(schema, ModelsJsonContext.Default.ElicitationSchemaRoot)!.AsObject();
     }
 
     /// <summary>
