@@ -134,7 +134,7 @@ public sealed class CommandFactoryToolLoader(
                 // Create the elicitation request using our custom model
                 var elicitationRequest = new ElicitationRequestParams
                 {
-                    Message = $"⚠️  SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
+                    Message = $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
                     RequestedSchema = ElicitationSchema.CreateSecretSchema("confirmation", "Confirm Action", "Type 'yes' to confirm you want to proceed with this sensitive operation", true)
                 };
 
