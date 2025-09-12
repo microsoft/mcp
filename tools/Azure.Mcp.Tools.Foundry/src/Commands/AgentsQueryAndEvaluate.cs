@@ -22,12 +22,6 @@ public sealed class AgentsQueryAndEvaluateCommand : GlobalCommand<AgentsQueryAnd
     public override string Description =>
         """
         Query an agent and evaluate its response in a single operation.
-        Parameters:
-        - agent_id: ID of the agent to query
-        - query: Text query to send to the agent
-        - evaluators: Optional list of agent evaluator names to use (intent_resolution, tool_call_accuracy, task_adherence). Default is all evaluators if not specified.
-        - Azure OpenAI endpoint: Endpoint of model to be used for evaluation
-        - Azure OpenAI deployment: Specific deployment of model to be used for evaluation
         Returns both the agent response and evaluation results
         """;
 
