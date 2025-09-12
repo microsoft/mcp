@@ -455,8 +455,6 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
                 { "agent_id", agentId },
                 { "response", convertedResponse },
                 { "query", convertedRequestMessages },
-                { "run_steps", runSteps },
-                { "run_details", run.Value },
                 { "tool_definitions", JsonSerializer.Serialize(toolDefinitions, (JsonTypeInfo<List<ToolDefinitionAIFunction>>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(List<ToolDefinitionAIFunction>))) },
                 { "citations", citations }
             };
