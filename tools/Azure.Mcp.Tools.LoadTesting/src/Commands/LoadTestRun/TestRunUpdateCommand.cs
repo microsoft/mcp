@@ -24,7 +24,11 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
         $"""
         Updates the metadata and display properties of a completed or in-progress load test run execution.
         This command allows you to modify descriptive information for better organization, documentation,
-        and identification of test runs without affecting the actual test execution or results.
+        and identification of test runs without affecting the actual test execution or results. 
+        This will only update a test run for the selected test in the load test resource. It does not help in changing the test plan configuration. 
+        This will NOT create a test and also NOT update a test resource. Only for the specified test, it will update a test run.
+        Example:
+        azmcp loadtesting testrun update --subscription <subscription> --resource-group <resource-group> --test-resource-name <test-resource-name> --test-id <test-id> --testrun-id <testrun-id> --display-name <display-name> --description <description>
         """;
     public override string Title => _commandTitle;
 
