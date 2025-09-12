@@ -10,6 +10,7 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Aks.Models;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace Azure.Mcp.Tools.Aks.Services;
 
@@ -49,7 +50,6 @@ public sealed class AksService(
 
         try
         {
-            // Use Resource Graph to query AKS clusters
             var clusters = await ExecuteResourceQueryAsync(
                 "Microsoft.ContainerService/managedClusters",
                 resourceGroup: null, // all resource groups
@@ -91,7 +91,6 @@ public sealed class AksService(
 
         try
         {
-            // Use Resource Graph to find the single cluster by name within the specified resource group
             var cluster = await ExecuteSingleResourceQueryAsync(
                 "Microsoft.ContainerService/managedClusters",
                 resourceGroup,
@@ -142,16 +141,13 @@ public sealed class AksService(
 
         try
         {
-            // Use Resource Graph to query AKS agent pools for the specified cluster
-            var filter = $"contains(id, '/managedClusters/{EscapeKqlString(clusterName)}/')";
-            var nodePools = await ExecuteResourceQueryAsync(
-                "Microsoft.ContainerService/managedClusters/agentPools",
+            var nodePools = await ExecuteSingleResourceQueryAsync(
+                "Microsoft.ContainerService/managedClusters",
                 resourceGroup,
                 subscription,
                 retryPolicy,
-                ConvertToNodePoolModel,
-                filter,
-                cancellationToken: default);
+                ConvertToClusterNodePoolModel,
+                $"name =~ '{EscapeKqlString(clusterName)}'") ?? new List<NodePool>();
 
             // Cache the results
             await _cacheService.SetAsync(CacheGroup, cacheKey, nodePools, s_cacheDuration);
@@ -187,24 +183,23 @@ public sealed class AksService(
 
         try
         {
-            // Use Resource Graph to find the single node pool by name within the specified cluster and resource group
-            var nodePool = await ExecuteSingleResourceQueryAsync(
-                "Microsoft.ContainerService/managedClusters/agentPools",
+            var nodePools = await ExecuteSingleResourceQueryAsync(
+                "Microsoft.ContainerService/managedClusters",
                 resourceGroup,
                 subscription,
                 retryPolicy,
-                ConvertToNodePoolModel,
-                $"name =~ '{EscapeKqlString(nodePoolName)}' and contains(id, '/managedClusters/{EscapeKqlString(clusterName)}/')");
+                ConvertToClusterNodePoolModel,
+                $"name =~ '{EscapeKqlString(clusterName)}'") ?? new List<NodePool>();
 
-            if (nodePool == null)
+            var nodePool = nodePools.FirstOrDefault(np => np.Name == nodePoolName);
+            if (nodePool != null)
             {
-                throw new KeyNotFoundException($"AKS node pool '{nodePoolName}' not found in cluster '{clusterName}' in resource group '{resourceGroup}' for subscription '{subscription}'.");
+                // Cache the result
+                await _cacheService.SetAsync(CacheGroup, cacheKey, nodePool, s_cacheDuration);
+                return nodePool;
             }
-
-            // Cache the result
-            await _cacheService.SetAsync(CacheGroup, cacheKey, nodePool, s_cacheDuration);
-
-            return nodePool;
+            
+            throw new KeyNotFoundException($"AKS node pool '{nodePoolName}' not found in cluster '{clusterName}' in resource group '{resourceGroup}' for subscription '{subscription}'.");
         }
         catch (Exception ex)
         {
@@ -217,9 +212,7 @@ public sealed class AksService(
 
     private static Cluster ConvertToClusterModel(JsonElement item)
     {
-        var data = Models.AksClusterData.FromJson(item);
-        if (data == null)
-            throw new InvalidOperationException("Failed to parse AKS cluster data");
+        var data = Models.AksClusterData.FromJson(item) ?? throw new InvalidOperationException("Failed to parse AKS cluster data");
 
         // Resource identity
         if (string.IsNullOrEmpty(data.ResourceId))
@@ -251,25 +244,25 @@ public sealed class AksService(
         };
     }
 
-    // JsonElement-based converter for Resource Graph results representing agent pool resources
-    private static NodePool ConvertToNodePoolModel(JsonElement item)
+    private static List<NodePool> ConvertToClusterNodePoolModel(JsonElement item)
     {
-        var data = Models.AksAgentPoolData.FromJson(item);
-        if (data == null)
-            throw new InvalidOperationException("Failed to parse AKS agent pool data");
+        var data = Models.AksClusterData.FromJson(item) ?? throw new InvalidOperationException("Failed to parse AKS cluster data");
 
-        return new NodePool
-        {
-            Name = data.ResourceName ?? "Unknown",
-            NodeCount = data.Properties?.Count,
-            NodeVmSize = data.Properties?.VmSize?.ToString(),
-            OsType = data.Properties?.OSType?.ToString(),
-            Mode = data.Properties?.Mode?.ToString(),
-            OrchestratorVersion = data.Properties?.OrchestratorVersion,
-            EnableAutoScaling = data.Properties?.EnableAutoScaling,
-            MinCount = data.Properties?.MinCount,
-            MaxCount = data.Properties?.MaxCount,
-            ProvisioningState = data.Properties?.ProvisioningState
-        };
+        return data.Properties?.AgentPoolProfiles?
+            .Select(node => new NodePool
+            {
+                Name = node.Name ?? "Unknown",
+                NodeCount = node.Count,
+                NodeVmSize = node.VmSize,
+                OsType = node.OSType,
+                Mode = node.Mode,
+                OrchestratorVersion = node.OrchestratorVersion,
+                EnableAutoScaling = node.EnableAutoScaling,
+                MinCount = node.MinCount,
+                MaxCount = node.MaxCount,
+                ProvisioningState = node.ProvisioningState
+            })
+            .ToList()
+            ?? new List<NodePool>();
     }
 }

@@ -89,7 +89,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
         var errorDetails = result.Value;
         Assert.True(errorDetails.TryGetProperty("message", out _));
         Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
-        Assert.Equal("Exception", typeProperty.GetString());
+        Assert.Equal("KeyNotFoundException", typeProperty.GetString());
     }
 
     [Fact]

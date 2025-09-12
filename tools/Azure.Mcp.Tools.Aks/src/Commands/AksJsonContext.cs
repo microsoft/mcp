@@ -17,8 +17,6 @@ namespace Azure.Mcp.Tools.Aks.Commands;
 [JsonSerializable(typeof(AksManagedClusterSku))]
 [JsonSerializable(typeof(AksNetworkProfile))]
 [JsonSerializable(typeof(AksPowerState))]
-[JsonSerializable(typeof(AksAgentPoolData))]
-[JsonSerializable(typeof(AksAgentPoolProperties))]
 [JsonSerializable(typeof(NodepoolListCommand.NodepoolListCommandResult))]
 [JsonSerializable(typeof(NodepoolGetCommand.NodepoolGetCommandResult))]
 [JsonSerializable(typeof(Models.NodePool))]
