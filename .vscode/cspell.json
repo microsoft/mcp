@@ -518,6 +518,9 @@
         "WINDOWSVMIMAGE",
         "wscript",
         "xvfb",
-        "Xunit"
+        "Xunit",
+        "aieval",
+        "requesturl",
+        "dataagent"
     ]
 }

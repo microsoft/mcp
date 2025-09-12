@@ -104,12 +104,40 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-
   name: 'gpt-4o'
   sku: {
     name: 'Standard'
-    capacity: 1
+    capacity: 115
   }
   properties: {
     model: {
       format: 'OpenAI'
       name: 'gpt-4o'
+    }
+  }
+}
+
+resource bingGroundingSearch 'Microsoft.Bing/accounts@2020-06-10' = {
+  name: '${baseName}-bing-grounding'
+  location: 'Global'
+  sku: {
+    name: 'G1'
+  }
+  kind: 'Bing.Grounding'
+}
+
+resource bingGroundingConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-04-01-preview' = {
+  parent: aiProjects
+  name: '${baseName}-bing-connection'
+  properties: {
+    authType: 'ApiKey'
+    metadata: {
+      type: 'bing_grounding'
+      ApiType: 'Azure'
+      ResourceId: bingGroundingSearch.id
+    }
+    target: 'https://api.bing.microsoft.com/'
+    category: 'GroundingWithBingSearch'
+    group: 'AzureAI'
+    credentials: {
+      key: bingGroundingSearch.listKeys().key1
     }
   }
 }
