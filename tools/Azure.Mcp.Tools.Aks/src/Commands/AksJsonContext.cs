@@ -4,6 +4,7 @@
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Aks.Commands.Cluster;
 using Azure.Mcp.Tools.Aks.Services.Models;
+using Azure.Mcp.Tools.Aks.Commands.Nodepool;
 
 namespace Azure.Mcp.Tools.Aks.Commands;
 
@@ -16,5 +17,10 @@ namespace Azure.Mcp.Tools.Aks.Commands;
 [JsonSerializable(typeof(AksManagedClusterSku))]
 [JsonSerializable(typeof(AksNetworkProfile))]
 [JsonSerializable(typeof(AksPowerState))]
+[JsonSerializable(typeof(AksAgentPoolData))]
+[JsonSerializable(typeof(AksAgentPoolProperties))]
+[JsonSerializable(typeof(NodepoolListCommand.NodepoolListCommandResult))]
+[JsonSerializable(typeof(NodepoolGetCommand.NodepoolGetCommandResult))]
+[JsonSerializable(typeof(Models.NodePool))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class AksJsonContext : JsonSerializerContext;

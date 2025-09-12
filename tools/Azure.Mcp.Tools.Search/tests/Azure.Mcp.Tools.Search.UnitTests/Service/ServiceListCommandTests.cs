@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Search.Commands.Service;
@@ -53,7 +52,7 @@ public class ServiceListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ServiceListResult>(json);
+        var result = JsonSerializer.Deserialize<ServiceListCommand.ServiceListCommandResult>(json);
 
         Assert.NotNull(result);
         Assert.Equal(expectedServices, result.Services);
@@ -101,11 +100,5 @@ public class ServiceListCommandTests
         Assert.NotNull(response);
         Assert.Equal(500, response.Status);
         Assert.StartsWith(expectedError, response.Message);
-    }
-
-    private class ServiceListResult
-    {
-        [JsonPropertyName("services")]
-        public List<string> Services { get; set; } = [];
     }
 }

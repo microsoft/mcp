@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
@@ -31,7 +32,15 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -80,5 +89,5 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
         return context.Response;
     }
 
-    internal record DirectoryCreateCommandResult(DataLakePathInfo Directory);
+    internal record DirectoryCreateCommandResult([property: JsonPropertyName("directory")] DataLakePathInfo Directory);
 }

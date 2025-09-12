@@ -28,7 +28,15 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
         + "If it's a .NET Aspire application, check aspireManifest.json file if there is. Try your best to fulfill the input schema with your analyze result.";
 
     public override string Title => "Generate Architecture Diagram";
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -64,6 +72,11 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
             {
                 throw new ArgumentException($"Invalid JSON format: {ex.Message}", nameof(rawMcpToolInput), ex);
             }
+
+            context.Activity?
+                .AddTag(DeployTelemetryTags.ServiceCount, appTopology.Services.Length)
+                .AddTag(DeployTelemetryTags.ComputeHostResources, string.Join(", ", appTopology.Services.Select(s => s.AzureComputeHost)))
+                .AddTag(DeployTelemetryTags.BackingServiceResources, string.Join(", ", appTopology.Services.SelectMany(s => s.Dependencies).Select(d => d.ServiceType)));
 
             _logger.LogInformation("Successfully parsed app topology with {ServiceCount} services", appTopology.Services.Length);
 

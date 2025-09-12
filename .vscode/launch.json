@@ -326,6 +326,34 @@
             }
         },
         {
+            "name": "Debug Applens Resource Diagnose",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "applens",
+                "resource",
+                "diagnose",
+                "--resource-name",
+                "${input:resourceName}",
+                "--question",
+                "${input:question}",
+                "--subscription",
+                "${input:subscription}",
+                "--resource-group",
+                "${input:resourceGroup}",
+                "--resource-type",
+                "${input:resourceType}",
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
             "name": "Debug ACR Registry List",
             "type": "coreclr",
             "request": "launch",

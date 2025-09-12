@@ -21,7 +21,15 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
 
     public override string Title => _commandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = true
+    };
 
     public override string Description =>
         """

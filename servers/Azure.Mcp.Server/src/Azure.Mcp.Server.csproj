@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.5.13</Version>
+    <Version>0.6.0</Version>
     <CliName>azmcp</CliName>
     <AssemblyTitle>Azure MCP Server</AssemblyTitle>
     <Description>Azure MCP Server - Model Context Protocol implementation for Azure</Description>
@@ -23,7 +23,6 @@
     <PublishReadyToRun>false</PublishReadyToRun>
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
   <!-- Enable Trim and AOT Analyzers -->
@@ -33,8 +32,6 @@
     <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
     <TrimmerSingleWarn>false</TrimmerSingleWarn>
     <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
-    <!-- Suppress IL3000 warning in Microsoft.Identity.Client.NativeInterop -->
-    <NoWarn>$(NoWarn);IL3000</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
@@ -57,13 +54,6 @@
     <PackageDescription>Azure MCP Server - Model Context Protocol implementation for Azure. Internal
       implementation package for $(RuntimeIdentifier).</PackageDescription>
   </PropertyGroup>
-  <!-- Debug configuration -->
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <PublishSingleFile>false</PublishSingleFile>
-    <SelfContained>false</SelfContained>
-    <DebugType>portable</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
@@ -74,13 +64,5 @@
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
-  </ItemGroup>
-  <!-- IMPORTANT: DO NOT ADD EXCLUSIONS HERE -->
-  <!-- If the "(Native AOT) Build module" stage fails in CI, follow the AOT compatibility guide:
-       https://github.com/Azure/azure-mcp/blob/main/docs/aot-compatibility.md
-       Do not add ProjectReference removals in this ItemGroup. -->
-  <ItemGroup Condition="'$(BuildNative)' == 'true'">
-    <ProjectReference
-      Remove="$(RepoRoot)\tools\azuremanagedlustre\src\AzureMcp.AzureManagedLustre\AzureMcp.AzureManagedLustre.csproj" />
   </ItemGroup>
 </Project>

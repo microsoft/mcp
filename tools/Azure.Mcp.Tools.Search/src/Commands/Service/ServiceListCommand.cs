@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.Search.Options.Service;
@@ -18,15 +19,20 @@ public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger) : Sub
 
     public override string Description =>
         """
-        List all Azure AI Search services in a subscription.
-
-        Required arguments:
-        - subscription
+        Lists all Azure AI Search services in a subscription.
         """;
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -60,5 +66,5 @@ public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger) : Sub
         return context.Response;
     }
 
-    internal sealed record ServiceListCommandResult(List<string> Services);
+    internal sealed record ServiceListCommandResult([property: JsonPropertyName("services")] List<string> Services);
 }
