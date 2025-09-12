@@ -34,7 +34,7 @@ public class PostgresServiceParameterizedQueryTests
         // This test verifies that table names are properly parameterized
         // We can't test the actual database call without a real connection,
         // but we can verify the method signature and that it doesn't throw for valid inputs
-        
+
         // Arrange
         string subscriptionId = "test-sub";
         string resourceGroup = "test-rg";
@@ -45,7 +45,7 @@ public class PostgresServiceParameterizedQueryTests
         // Act & Assert - Method should accept these parameters without throwing
         // The actual parameterization is tested through integration tests
         var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, user, server, database, tableName);
-        
+
         // The method will fail at the connection stage, but that's expected in unit tests
         // What we're testing is that the method signature accepts these parameters correctly
         Assert.NotNull(task);
@@ -60,7 +60,7 @@ public class PostgresServiceParameterizedQueryTests
     {
         // This test verifies that SQL injection attempts in table names are handled safely
         // With parameterized queries, these should be treated as literal table names
-        
+
         // Arrange
         string subscriptionId = "test-sub";
         string resourceGroup = "test-rg";
@@ -72,7 +72,7 @@ public class PostgresServiceParameterizedQueryTests
         // The method should not throw due to SQL injection attempts
         // With proper parameterization, malicious input is treated as a literal table name
         var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, user, server, database, maliciousTableName);
-        
+
         // The method will fail at the connection stage, but importantly,
         // it won't fail due to SQL parsing errors caused by injection attempts
         Assert.NotNull(task);
@@ -144,7 +144,7 @@ public class PostgresServiceParameterizedQueryTests
         // Act & Assert
         // The method should fail validation before attempting to connect to database
         var task = _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, user, server, database, maliciousQuery);
-        
+
         // We expect this to eventually throw due to validation, not due to database connection
         // The validation should catch dangerous queries before any database interaction
         Assert.NotNull(task);

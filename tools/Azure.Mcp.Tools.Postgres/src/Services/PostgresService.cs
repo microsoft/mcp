@@ -15,7 +15,7 @@ public class PostgresService : BaseAzureService, IPostgresService
     private readonly IResourceGroupService _resourceGroupService;
     private string? _cachedEntraIdAccessToken;
     private DateTime _tokenExpiryTime;
-    
+
     // Maximum number of items to return to prevent DoS attacks and performance issues
     private const int MaxResultLimit = 10000;
 
@@ -170,19 +170,19 @@ public class PostgresService : BaseAzureService, IPostgresService
             dbs.Add(reader.GetString(0));
             dbCount++;
         }
-        
+
         if (dbCount >= MaxResultLimit)
         {
             dbs.Add($"... (output limited to {MaxResultLimit:N0} databases for security and performance reasons)");
         }
-        
+
         return dbs;
     }
 
     public async Task<List<string>> ExecuteQueryAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string query)
     {
         ValidateQuerySafety(query);
-        
+
         var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
         var host = NormalizeServerName(server);
         var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken}";
@@ -197,7 +197,7 @@ public class PostgresService : BaseAzureService, IPostgresService
                                .Select(reader.GetName)
                                .ToArray();
         rows.Add(string.Join(", ", columnNames));
-        
+
         var rowCount = 0;
         while (await reader.ReadAsync() && rowCount < MaxResultLimit)
         {
@@ -209,12 +209,12 @@ public class PostgresService : BaseAzureService, IPostgresService
             rows.Add(string.Join(", ", row));
             rowCount++;
         }
-        
+
         if (rowCount >= MaxResultLimit)
         {
             rows.Add($"... (output limited to {MaxResultLimit:N0} rows for security and performance reasons)");
         }
-        
+
         return rows;
     }
 
@@ -235,12 +235,12 @@ public class PostgresService : BaseAzureService, IPostgresService
             tables.Add(reader.GetString(0));
             tableCount++;
         }
-        
+
         if (tableCount >= MaxResultLimit)
         {
             tables.Add($"... (output limited to {MaxResultLimit:N0} tables for security and performance reasons)");
         }
-        
+
         return tables;
     }
 
