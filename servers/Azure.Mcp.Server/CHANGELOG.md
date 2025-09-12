@@ -18,6 +18,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Marked the secret hint of 'secret_create' tool to true.
+
 ### Other Changes
 
 ## 0.6.0 (2025-09-11)
