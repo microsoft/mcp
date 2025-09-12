@@ -81,3 +81,4 @@ jobs:
 - template: /eng/pipelines/templates/jobs/vsix/pack-and-sign-vsix.yml
   parameters:
     DependsOn: Sign
+    ServerName: ${{ parameters.ServerName }}
