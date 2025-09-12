@@ -223,23 +223,6 @@ azmcp applens resource diagnose --subscription <subscription> \
                                 --resource <resource>
 ```
 
-### Azure CLI Operations
-
-```bash
-# Execute any Azure CLI command
-azmcp extension az --command "<command>"
-
-# Examples:
-# List resource groups
-azmcp extension az --command "group list"
-
-# Get storage account details
-azmcp extension az --command "storage account show --name <account> --resource-group <resource-group>"
-
-# List virtual machines
-azmcp extension az --command "vm list --resource-group <resource-group>"
-```
-
 ### Azure Container Registry (ACR) Operations
 
 ```bash
@@ -457,17 +440,6 @@ azmcp postgres server param set --subscription <subscription> \
                                 --server <server> \
                                 --param <parameter> \
                                 --value <value>
-```
-
-### Azure Developer CLI Operations
-
-```bash
-# Execute any Azure CLI command
-azmcp extension azd --command "<command>"
-
-# Examples:
-# Create a sample todo list app with NodeJS and MongoDB
-azmcp extension azd --command "init --template todo-nodejs-mongo"
 ```
 
 ### Azure Deploy Operations

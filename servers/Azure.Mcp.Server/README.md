@@ -160,11 +160,6 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * Get secure, production-grade Azure SDK best practices for effective code generation.
 
-### 🖥️ Azure CLI Extension
-
-* Execute Azure CLI commands directly
-* Support for all Azure CLI functionality
-
 ### 📦 Azure Container Registry (ACR)
 
 * List Azure Container Registries and repositories in a subscription
@@ -199,12 +194,6 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * List and query databases.
 * List and get schema for tables.
 * List, get configuration and get/set parameters for servers.
-
-### 🛠️ Azure Developer CLI (azd) Extension
-
-* Execute Azure Developer CLI commands directly
-* Support for template discovery, template initialization, provisioning and deployment
-* Cross-platform compatibility
 
 ### 🚀 Azure Deploy
 

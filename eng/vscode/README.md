@@ -162,11 +162,6 @@ Here are some cool prompts you can try across our supported Azure services:
 
 * Get secure, production-grade Azure SDK best practices for effective code generation.
 
-### 🖥️ Azure CLI Extension
-
-* Execute Azure CLI commands directly
-* Support for all Azure CLI functionality
-
 ### 📦 Azure Container Registry (ACR)
 
 * List Azure Container Registries and repositories in a subscription
@@ -201,12 +196,6 @@ Here are some cool prompts you can try across our supported Azure services:
 * List and query databases.
 * List and get schema for tables.
 * List, get configuration and get/set parameters for servers.
-
-### 🛠️ Azure Developer CLI (azd) Extension
-
-* Execute Azure Developer CLI commands directly
-* Support for template discovery, template initialization, provisioning and deployment
-* Cross-platform compatibility
 
 ### 🚀 Azure Deploy
 
@@ -380,18 +369,16 @@ For the complete list of supported services and sample prompts, see our [full do
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **28 Azure service areas**:
+The Azure MCP Server provides tools for interacting with **26 Azure service areas**:
 
 - 🔎 **Azure AI Search** - Search engine/vector database operations
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
-- 🖥️ **Azure CLI Extension** - Direct Azure CLI command execution
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 🐬 **Azure Database for MySQL** - MySQL database management
-- 🛠️ **Azure Developer CLI (azd)** - Template and deployment management
 - 📊 **Azure Event Grid** - Event routing and management
 - ⚡ **Azure Functions** - Function App management
 - 🧮 **Azure Foundry** - AI model management, AI model deployment, and knowledge index management
