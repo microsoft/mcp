@@ -246,6 +246,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * List Azure Managed Lustre filesystems
 * Get the number of IP addresses required for a specific SKU and size of Azure Managed Lustre filesystem
+* Get information of Azure Managed Lustre SKUs available in a specific Azure region
 
 ### 🏪 Azure Marketplace
 

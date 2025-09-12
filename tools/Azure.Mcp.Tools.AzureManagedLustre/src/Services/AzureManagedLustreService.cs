@@ -71,6 +71,21 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         );
     }
 
+    private static List<AzureManagedLustreSkuCapability> MapCapabilities(IEnumerable<StorageCacheSkuCapability>? caps)
+    {
+        var list = new List<AzureManagedLustreSkuCapability>();
+        if (caps is null)
+            return list;
+        foreach (var cap in caps)
+        {
+            var name = cap?.Name;
+            if (string.IsNullOrWhiteSpace(name))
+                continue;
+            list.Add(new AzureManagedLustreSkuCapability(name!, cap?.Value ?? string.Empty));
+        }
+        return list;
+    }
+
     public async Task<int> GetRequiredAmlFSSubnetsSize(string subscription,
     string sku, int size,
         string? tenant = null,
@@ -93,6 +108,52 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         catch (Exception ex)
         {
             throw new Exception($"Error retrieving required subnet size: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<List<AzureManagedLustreSkuInfo>> SkuGetInfoAsync(
+        string subscription,
+        string? tenant = null,
+        string? location = null,
+        RetryPolicyOptions? retryPolicy = null
+        )
+    {
+        ValidateRequiredParameters(subscription);
+
+        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
+
+        try
+        {
+            var results = new List<AzureManagedLustreSkuInfo>();
+
+            await foreach (var sku in sub.GetStorageCacheSkusAsync())
+            {
+
+                if (sku is null ||
+                    !string.Equals(sku.ResourceType, "amlFilesystems", StringComparison.OrdinalIgnoreCase) ||
+                    sku.LocationInfo is null ||
+                    string.IsNullOrEmpty(sku.Name))
+                    continue;
+
+                var name = sku.Name;
+                var capabilities = MapCapabilities(sku.Capabilities);
+
+                foreach (var locationInfo in sku.LocationInfo)
+                {
+                    var foundLocation = locationInfo?.Location;
+                    if (string.IsNullOrWhiteSpace(foundLocation) || (!string.IsNullOrWhiteSpace(location) && !string.Equals(foundLocation, location, StringComparison.OrdinalIgnoreCase)))
+                        continue;
+                    var supportsZones = (locationInfo?.Zones?.Count ?? 0) > 1;
+
+                    results.Add(new AzureManagedLustreSkuInfo(name, foundLocation, supportsZones, [.. capabilities]));
+                }
+            }
+
+            return results;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving Azure Managed Lustre SKUs for subscription '{subscription}': {ex.Message}", ex);
         }
     }
 }
