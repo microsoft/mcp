@@ -42,7 +42,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
         """;
 
     public override string Title => CommandTitle;
-    
+
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
