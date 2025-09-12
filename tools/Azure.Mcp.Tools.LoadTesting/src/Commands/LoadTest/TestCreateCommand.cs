@@ -26,13 +26,11 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
     public override string Description =>
         $"""
         Creates a new load test plan or configuration for performance testing scenarios. This command creates a basic URL-based load test that can be used to evaluate the performance
-        and scalability of web applications and APIs. The test configuration defines the target endpoint, load parameters, and test duration. Once we create a test configuration plan, we can use that to trigger test runs to test the endpoints set using the 'azmcp loadtesting testrun create' command.
-        This is not going to trigger or create any test runs and only will setup your configuration for your test plan. Also, this is NOT going to create any test resource in azure. 
+        and scalability of web applications and APIs. The test configuration defines target endpoint, load parameters, and test duration. Once we create a test plan, we can use that to trigger test runs to test the endpoints set using the 'azmcp loadtesting testrun create' command.
+        This is NOT going to trigger or create any test runs and only will setup your test plan. Also, this is NOT going to create any test resource in azure. 
         It will only create a test in an already existing load test resource.
-        Required parameters: --test-id <test-id> --test-resource-name <test-resource-name> --duration <duration-in-minutes> --virtual-users <number-of-users> --endpoint-url <url>
         Example:
         azmcp loadtesting test create --test-id <test-id> --test-resource-name <test-resource-name> --duration 5 --virtual-users 50 --endpoint-url https://example.com --display-name "SmokeTest"
-        Returns: the created test configuration (TestId and LoadTestConfiguration).
         """;
     public override string Title => _commandTitle;
 

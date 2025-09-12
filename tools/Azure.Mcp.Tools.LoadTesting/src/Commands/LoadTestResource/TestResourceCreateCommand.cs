@@ -19,7 +19,6 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
         $"""
         Returns the created Load Testing resource. This creates the resource in Azure only. It does not create any test plan or test run. 
         Once the resource is setup, you can go and configure test plans in the resource and then trigger test runs for your test plans.
-        Required parameters: --subscription <subscription> --resource-group <resource-group> --test-resource-name <test-resource-name>
         Example:
         azmcp loadtesting testresource create --subscription <subscription> --resource-group <resource-group> --test-resource-name <test-resource-name>
         """;

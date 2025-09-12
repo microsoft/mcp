@@ -25,7 +25,6 @@ public sealed class TestRunCreateCommand(ILogger<TestRunCreateCommand> logger)
         $"""
         This will only create a test run for the selected test in the load test resource. It does not help in changing the test plan configuration. 
         This will NOT create a test and also NOT create a test resource. Only for the specified test, it will trigger/create a test run.
-        Required parameters: --test-id <test-id> --test-resource-name <test-resource-name> --testrun-id <testrun-id>
         Example:
         azmcp loadtesting testrun create --subscription <subscription> --resource-group <resource-group> --test-resource-name <test-resource-name> --test-id <test-id> --testrun-id <testrun-id> --display-name <display-name> --description <description> --old-testrun-id <old-testrun-id>
         """;
