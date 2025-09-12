@@ -1,14 +1,9 @@
 # CHANGELOG 📝
 
-## 0.0.12 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
-
-### Bugs Fixed
+## 0.0.12 (2025-09-12)
 
 ### Other Changes
+- Update README.md
 
 ## 0.0.11 (2025-09-11)
 

@@ -1,4 +1,4 @@
-# <img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> Azure MCP Server
+# Azure MCP Server
 
 The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services.  Azure MCP Server can be used alone or with the [GitHub Copilot for Azure extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-github-copilot) in VS Code.  This project is in Public Preview and implementation may significantly change prior to our General Availability.
 
@@ -26,7 +26,7 @@ The Azure MCP Server implements the [MCP specification](https://modelcontextprot
     - [Contributing](#contributing)
     - [Code of Conduct](#code-of-conduct)
 
-## <a id="vs-code-install-guide-recommended"></a>✅ VS Code Install Guide (Recommended)
+## <a style="display:hidden" id="vs-code-install-guide-recommended"></a>✅ VS Code Install Guide (Recommended)
 
 1. Install either the stable or Insiders release of VS Code:
    * [💫 Stable release](https://code.visualstudio.com/download)
@@ -35,14 +35,14 @@ The Azure MCP Server implements the [MCP specification](https://modelcontextprot
 1. Install the [Azure MCP Server](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server) extension
 
 
-## <a id="intellij-install-guide"></a> IntelliJ Install Guide
+## <a style="display:hidden" id="intellij-install-guide"></a> IntelliJ Install Guide
 
 1. Install either the [IntelliJ IDEA Ultimate](https://www.jetbrains.com/idea/download) or [IntelliJ IDEA Community](https://www.jetbrains.com/idea/download) edition.
 1. Install the [GitHub Copilot](https://plugins.jetbrains.com/plugin/17718-github-copilot) plugin.
 1. Install the [Azure Toolkit for Intellij](https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij) plugin.
 
 
-## <a id="quick-start"></a> 🚀 Quick Start
+## <a style="display:hidden" id="quick-start"></a> 🚀 Quick Start
 
 1. Open GitHub Copilot in [VS Code](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode) or [IntelliJ](https://github.blog/changelog/2025-05-19-agent-mode-and-mcp-support-for-copilot-in-jetbrains-eclipse-and-xcode-now-in-public-preview/#agent-mode) and switch to Agent mode.
 1. Click `refresh` on the tools list
@@ -138,7 +138,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "Send a message to my storage queue"
 
 
-## <a id="currently-supported-tools"></a> 🛠️ Currently Supported Tools
+## <a style="display:hidden" id="currently-supported-tools"></a> 🛠️ Currently Supported Tools
 
 <details>
 <summary>The Azure MCP Server provides tools for interacting with the following Azure services</summary>
@@ -370,7 +370,7 @@ Agents and models can discover and learn best practices and usage guidelines for
 
 For detailed command documentation and examples, see [Azure MCP Commands](https://github.com/microsoft/mcp/blob/main/docs/azmcp-commands.md).
 
-## <a id="upgrading"></a> 🔄️ Upgrading
+## <a style="display:hidden" id="upgrading"></a> 🔄️ Upgrading
 
 <details>
 <summary>How to stay current with releases of Azure MCP Server</summary>
@@ -398,7 +398,7 @@ If the Azure MCP server is configured by Azure Toolkit for IntelliJ plugin, the 
 </details>
 
 
-## <a id="advanced-install-scenarios-optional"></a> ⚙️ Advanced Install Scenarios (Optional)
+## <a style="display:hidden" id="advanced-install-scenarios-optional"></a> ⚙️ Advanced Install Scenarios (Optional)
 
 <details>
 <summary>Docker containers, custom MCP clients, and manual install options</summary>
@@ -495,7 +495,7 @@ More end-to-end MCP client/agent guides are coming soon!
 </details>
 
 
-## <a id="data-collection"></a> Data Collection
+## <a style="display:hidden" id="data-collection"></a> Data Collection
 
 The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft's [privacy statement](https://www.microsoft.com/privacy/privacystatement). You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
 
@@ -506,7 +506,7 @@ Telemetry collection is on by default.
 To opt out, set the environment variable `AZURE_MCP_COLLECT_TELEMETRY` to `false` in your environment.
 
 
-## <a id="troubleshooting"></a> 📝 Troubleshooting
+## <a style="display:hidden" id="troubleshooting"></a> 📝 Troubleshooting
 
 See [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md) for help with common issues and logging.
 
@@ -522,7 +522,7 @@ If you're running into any issues with authentication, visit our [troubleshootin
 For enterprise authentication scenarios, including network restrictions, security policies, and protected resources, see [Authentication Scenarios in Enterprise Environments](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md#authentication-scenarios-in-enterprise-environments).
 </details>
 
-## <a id="security-note"></a> 🛡️ Security Note
+## <a style="display:hidden" id="security-note"></a> 🛡️ Security Note
 
 Your credentials are always handled securely through the official [Azure Identity SDK](https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/identity/Azure.Identity/README.md) - **we never store or manage tokens directly**.
 
@@ -530,7 +530,7 @@ MCP as a phenomenon is very novel and cutting-edge. As with all new technology s
 
 
 
-## <a id="contributing"></a> 👥 Contributing
+## <a style="display:hidden" id="contributing"></a> 👥 Contributing
 
 We welcome contributions to the Azure MCP Server! Whether you're fixing bugs, adding new features, or improving documentation, your contributions are welcome.
 
@@ -542,7 +542,7 @@ Please read our [Contributing Guide](https://github.com/microsoft/mcp/blob/main/
 * 🔄 Making pull requests
 
 
-## <a id="code-of-conduct"></a> 🤝 Code of Conduct
+## <a style="display:hidden" id="code-of-conduct"></a> 🤝 Code of Conduct
 
 This project has adopted the
 [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
