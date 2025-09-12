@@ -18,7 +18,7 @@ jobs:
     displayName: "Pack modules for Npm"
     inputs:
       pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Modules.ps1
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Npm.ps1
       arguments: >
         -ArtifactsPath '$(Build.ArtifactStagingDirectory)/signed'
         -OutputPath '$(Build.ArtifactStagingDirectory)/packed'
