@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.RegularExpressions;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
@@ -14,6 +15,38 @@ public class PostgresService : BaseAzureService, IPostgresService
     private readonly IResourceGroupService _resourceGroupService;
     private string? _cachedEntraIdAccessToken;
     private DateTime _tokenExpiryTime;
+    
+    // Maximum number of items to return to prevent DoS attacks and performance issues
+    private const int MaxResultLimit = 10000;
+
+    // Static arrays for security validation - initialized once per class
+    private static readonly string[] DangerousKeywords =
+    [
+        // Data manipulation that could be harmful
+        "DROP", "DELETE", "TRUNCATE", "ALTER", "CREATE", "INSERT", "UPDATE",
+        // Administrative operations
+        "GRANT", "REVOKE", "SET", "RESET", "KILL", "SHUTDOWN", "RESTART",
+        // Information disclosure
+        "SHOW", "EXPLAIN", "ANALYZE",
+        // System operations
+        "COPY", "\\COPY", "VACUUM", "REINDEX",
+        // User/privilege management
+        "CREATE USER", "DROP USER", "ALTER USER", "CREATE ROLE", "DROP ROLE",
+        // Database structure changes
+        "CREATE DATABASE", "DROP DATABASE", "CREATE SCHEMA", "DROP SCHEMA",
+        // Stored procedures and functions
+        "CREATE FUNCTION", "DROP FUNCTION", "CREATE PROCEDURE", "DROP PROCEDURE",
+        // Triggers and events
+        "CREATE TRIGGER", "DROP TRIGGER",
+        // Views that could modify data
+        "CREATE VIEW", "DROP VIEW",
+        // Index operations
+        "CREATE INDEX", "DROP INDEX",
+        // Transaction control in unsafe contexts
+        "BEGIN", "COMMIT", "ROLLBACK", "SAVEPOINT",
+        // Extensions and languages
+        "CREATE EXTENSION", "DROP EXTENSION", "CREATE LANGUAGE", "DROP LANGUAGE"
+    ];
 
     public PostgresService(IResourceGroupService resourceGroupService)
     {
@@ -47,6 +80,77 @@ public class PostgresService : BaseAzureService, IPostgresService
         return server;
     }
 
+    private static void ValidateQuerySafety(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            throw new ArgumentException("Query cannot be null or empty.", nameof(query));
+        }
+
+        // Prevent DoS attacks by limiting query length
+        if (query.Length > MaxResultLimit)
+        {
+            throw new InvalidOperationException($"Query length exceeds the maximum allowed limit of {MaxResultLimit:N0} characters to prevent potential DoS attacks.");
+        }
+
+        // Clean the query: remove comments, normalize whitespace, and trim
+        var cleanedQuery = query;
+
+        // Remove line comments (-- comment)
+        cleanedQuery = Regex.Replace(cleanedQuery, @"--.*?$", "", RegexOptions.Multiline);
+
+        // Remove block comments (/* comment */)
+        cleanedQuery = Regex.Replace(cleanedQuery, @"/\*.*?\*/", "", RegexOptions.Singleline);
+
+        // Normalize whitespace: replace multiple whitespace characters with single space
+        cleanedQuery = Regex.Replace(cleanedQuery, @"\s+", " ", RegexOptions.Multiline);
+
+        // Trim the result
+        cleanedQuery = cleanedQuery.Trim();
+
+        // Ensure the cleaned query is not empty
+        if (string.IsNullOrWhiteSpace(cleanedQuery))
+        {
+            throw new ArgumentException("Query cannot be empty after removing comments and whitespace.", nameof(query));
+        }
+
+        // Regex pattern to detect multiple SQL statements (semicolon not at end)
+        var multipleStatementsPattern = new Regex(
+            @";\s*\w",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled
+        );
+
+        if (multipleStatementsPattern.IsMatch(cleanedQuery))
+        {
+            throw new InvalidOperationException("Multiple SQL statements are not allowed. Use only a single SELECT statement.");
+        }
+
+        // List of dangerous SQL keywords that should be blocked
+        var queryUpper = cleanedQuery.ToUpperInvariant();
+
+        foreach (var keyword in DangerousKeywords)
+        {
+            if (queryUpper.Contains(keyword))
+            {
+                throw new InvalidOperationException($"Query contains dangerous keyword '{keyword}' which is not allowed for security reasons.");
+            }
+        }
+
+        // Additional validation: Only allow SELECT statements
+        var trimmedQuery = queryUpper.Trim();
+        var allowedStartPatterns = new[]
+        {
+            "SELECT", "WITH"
+        };
+
+        bool isAllowed = allowedStartPatterns.Any(pattern => trimmedQuery.StartsWith(pattern));
+
+        if (!isAllowed)
+        {
+            throw new InvalidOperationException("Only SELECT and WITH statements are allowed for security reasons.");
+        }
+    }
+
     public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string server)
     {
         var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
@@ -58,15 +162,25 @@ public class PostgresService : BaseAzureService, IPostgresService
         await using var command = new NpgsqlCommand(query, resource.Connection);
         await using var reader = await command.ExecuteReaderAsync();
         var dbs = new List<string>();
-        while (await reader.ReadAsync())
+        var dbCount = 0;
+        while (await reader.ReadAsync() && dbCount < MaxResultLimit)
         {
             dbs.Add(reader.GetString(0));
+            dbCount++;
         }
+        
+        if (dbCount >= MaxResultLimit)
+        {
+            dbs.Add($"... (output limited to {MaxResultLimit:N0} databases for security and performance reasons)");
+        }
+        
         return dbs;
     }
 
     public async Task<List<string>> ExecuteQueryAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string query)
     {
+        ValidateQuerySafety(query);
+        
         var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
         var host = NormalizeServerName(server);
         var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken}";
@@ -81,7 +195,9 @@ public class PostgresService : BaseAzureService, IPostgresService
                                .Select(reader.GetName)
                                .ToArray();
         rows.Add(string.Join(", ", columnNames));
-        while (await reader.ReadAsync())
+        
+        var rowCount = 0;
+        while (await reader.ReadAsync() && rowCount < MaxResultLimit)
         {
             var row = new List<string>();
             for (int i = 0; i < reader.FieldCount; i++)
@@ -89,7 +205,14 @@ public class PostgresService : BaseAzureService, IPostgresService
                 row.Add(reader[i]?.ToString() ?? "NULL");
             }
             rows.Add(string.Join(", ", row));
+            rowCount++;
         }
+        
+        if (rowCount >= MaxResultLimit)
+        {
+            rows.Add($"... (output limited to {MaxResultLimit:N0} rows for security and performance reasons)");
+        }
+        
         return rows;
     }
 
@@ -104,10 +227,18 @@ public class PostgresService : BaseAzureService, IPostgresService
         await using var command = new NpgsqlCommand(query, resource.Connection);
         await using var reader = await command.ExecuteReaderAsync();
         var tables = new List<string>();
-        while (await reader.ReadAsync())
+        var tableCount = 0;
+        while (await reader.ReadAsync() && tableCount < MaxResultLimit)
         {
             tables.Add(reader.GetString(0));
+            tableCount++;
         }
+        
+        if (tableCount >= MaxResultLimit)
+        {
+            tables.Add($"... (output limited to {MaxResultLimit:N0} tables for security and performance reasons)");
+        }
+        
         return tables;
     }
 
