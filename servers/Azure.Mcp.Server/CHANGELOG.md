@@ -6,6 +6,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added the following Azure Managed Lustre commands: [[#100](https://github.com/microsoft/mcp/issues/100)]
+  - `azmcp_azuremanagedlustre_filesystem_get_sku_info`: Get information about Azure Managed Lustre SKU.
+
 ### Breaking Changes
 
 ### Bugs Fixed
