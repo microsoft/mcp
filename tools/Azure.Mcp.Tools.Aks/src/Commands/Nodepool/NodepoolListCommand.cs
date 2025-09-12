@@ -54,7 +54,7 @@ public sealed class NodepoolListCommand(ILogger<NodepoolListCommand> logger) : B
         try
         {
             var aksService = context.GetService<IAksService>();
-            var nodePools = await aksService.ListNodePools(
+            var nodePools = await aksService.ListNodePoolsAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.ClusterName!,

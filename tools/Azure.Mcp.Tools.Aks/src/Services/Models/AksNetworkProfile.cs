@@ -1,10 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Azure.Mcp.Tools.Aks.Commands;
-
 namespace Azure.Mcp.Tools.Aks.Services.Models;
 
 internal sealed class AksNetworkProfile

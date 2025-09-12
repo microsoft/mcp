@@ -63,7 +63,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
         try
         {
             var aksService = context.GetService<IAksService>();
-            var cluster = await aksService.GetCluster(
+            var cluster = await aksService.GetClusterAsync(
                 options.Subscription!,
                 options.ClusterName!,
                 options.ResourceGroup!,

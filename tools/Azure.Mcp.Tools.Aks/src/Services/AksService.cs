@@ -10,7 +10,6 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Aks.Models;
 using Microsoft.Extensions.Logging;
-using System.Linq;
 
 namespace Azure.Mcp.Tools.Aks.Services;
 
@@ -29,7 +28,7 @@ public sealed class AksService(
     private const string AksNodePoolsCacheKey = "nodepools";
     private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
 
-    public async Task<List<Cluster>> ListClusters(
+    public async Task<List<Cluster>> ListClustersAsync(
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
@@ -68,7 +67,7 @@ public sealed class AksService(
         }
     }
 
-    public async Task<Cluster?> GetCluster(
+    public async Task<Cluster?> GetClusterAsync(
         string subscription,
         string clusterName,
         string resourceGroup,
@@ -118,7 +117,7 @@ public sealed class AksService(
         }
     }
 
-    public async Task<List<NodePool>> ListNodePools(
+    public async Task<List<NodePool>> ListNodePoolsAsync(
         string subscription,
         string resourceGroup,
         string clusterName,
@@ -159,7 +158,7 @@ public sealed class AksService(
         }
     }
 
-    public async Task<NodePool?> GetNodePool(
+    public async Task<NodePool?> GetNodePoolAsync(
         string subscription,
         string resourceGroup,
         string clusterName,
