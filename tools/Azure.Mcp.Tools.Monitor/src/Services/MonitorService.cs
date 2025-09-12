@@ -2,13 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Nodes;
+using System.Text.Json;
+using System.Net.Http.Headers;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Models;
+using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
 using Azure.Monitor.Query;
 using Azure.Monitor.Query.Models;
 using Azure.ResourceManager.OperationalInsights;
@@ -17,14 +21,27 @@ namespace Azure.Mcp.Tools.Monitor.Services;
 
 public class MonitorService : BaseAzureService, IMonitorService
 {
+    private const string ActivityLogApiVersion = "2017-03-01-preview";
+    private const string ActivityLogEndpointFormat
+        = "https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values";
+
     private readonly ISubscriptionService _subscriptionService;
     private readonly IResourceGroupService _resourceGroupService;
+    private readonly IResourceResolverService _resourceResolverService;
+    private readonly HttpClient _httpClient;
 
-    public MonitorService(ISubscriptionService subscriptionService, ITenantService tenantService, IResourceGroupService resourceGroupService)
+    public MonitorService(
+        ISubscriptionService subscriptionService, 
+        ITenantService tenantService, 
+        IResourceGroupService resourceGroupService,
+        IResourceResolverService resourceResolverService,
+        HttpClient httpClient)
         : base(tenantService)
     {
         _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
         _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
+        _resourceResolverService = resourceResolverService ?? throw new ArgumentNullException(nameof(resourceResolverService));
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     }
 
     public async Task<List<JsonNode>> QueryResourceLogs(
@@ -350,6 +367,119 @@ public class MonitorService : BaseAzureService, IMonitorService
         catch (Exception ex)
         {
             throw new Exception($"Error listing table types for workspace {workspace}: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<List<ActivityLogEventData>> ListActivityLogs(
+        string subscription,
+        string resourceName,
+        string? resourceGroup = null,
+        string? resourceType = null,
+        double hours = 1.0,
+        ActivityLogEventLevel? eventLevel = null,
+        int top = 10,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(subscription, resourceName);
+
+        if (top < 1)
+        {
+            top = 10;
+        }
+
+        try
+        {
+            // Resolve the resource ID from the resource name
+            var resourceIdentifier = await _resourceResolverService.ResolveResourceIdAsync(
+                subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy);
+
+            string resourceId = resourceIdentifier.ToString();
+            string subscriptionId = resourceIdentifier.SubscriptionId 
+                ?? throw new ArgumentException($"Unable to extract subscription ID from resource ID: {resourceId}");
+
+            // Get the activity logs from the Azure Management API
+            var activityLogs = await CallActivityLogApiAsync(subscriptionId, resourceId, hours, eventLevel, tenant, retryPolicy);
+
+            // Take only the requested number of logs
+            return activityLogs.Take(top).ToList();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving activity logs for resource '{resourceName}': {ex.Message}", ex);
+        }
+    }
+
+    private async Task<List<ActivityLogEventData>> CallActivityLogApiAsync(
+        string subscriptionId,
+        string resourceId,
+        double hours,
+        ActivityLogEventLevel? eventLevel,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy)
+    {
+        var returnValue = new List<ActivityLogEventData>();
+
+        string endpoint = string.Format(ActivityLogEndpointFormat, subscriptionId);
+        var uriBuilder = new UriBuilder(endpoint);
+
+        // Build the query parameters
+        string query = $"api-version={ActivityLogApiVersion}";
+
+        // Create the time filter
+        DateTimeOffset startDate = DateTimeOffset.UtcNow.AddHours(-hours).ToUniversalTime();
+        DateTimeOffset endDate = DateTimeOffset.UtcNow;
+        string filter = $"eventTimestamp ge '{startDate:yyyy-MM-ddTHH:mm:ss.fffZ}' " +
+                       $"and eventTimestamp le '{endDate:yyyy-MM-ddTHH:mm:ss.fffZ}' " +
+                       $"and resourceId eq '{resourceId}'";
+
+        if (eventLevel != null)
+        {
+            filter += $" and levels eq '{eventLevel}'";
+        }
+
+        query += $"&$filter={Uri.EscapeDataString(filter)}";
+        uriBuilder.Query = query;
+
+        // Get access token
+        var credential = await GetCredential(tenant);
+        var tokenRequestContext = new TokenRequestContext(new[] { "https://management.azure.com/.default" });
+        var token = await credential.GetTokenAsync(tokenRequestContext, default);
+
+        // Make paginated requests
+        string? nextRequestUrl = uriBuilder.Uri.ToString();
+        do
+        {
+            ActivityLogListResponse listResponse = await MakeActivityLogRequestAsync(nextRequestUrl, token);
+            returnValue.AddRange(listResponse.Value);
+            nextRequestUrl = listResponse.NextLink;
+        } while (!string.IsNullOrEmpty(nextRequestUrl));
+
+        return returnValue;
+    }
+
+    private async Task<ActivityLogListResponse> MakeActivityLogRequestAsync(string url, AccessToken token)
+    {
+        using HttpRequestMessage httpRequest = new(HttpMethod.Get, url);
+        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+
+        using HttpResponseMessage response = await _httpClient.SendAsync(httpRequest);
+        string responseString = await response.Content.ReadAsStringAsync();
+
+        if (response.IsSuccessStatusCode)
+        {
+            using Stream responseStream = await response.Content.ReadAsStreamAsync();
+            ActivityLogListResponse? responseObject = await JsonSerializer.DeserializeAsync(
+                responseStream,
+                MonitorJsonContext.Default.ActivityLogListResponse);
+            return responseObject ?? new ActivityLogListResponse();
+        }
+        else
+        {
+            string errorMessage = !string.IsNullOrEmpty(responseString) ? responseString :
+                (!string.IsNullOrEmpty(response.ReasonPhrase) ? response.ReasonPhrase :
+                "Unknown Error");
+            throw new HttpRequestException($"Activity Log API returned error {response.StatusCode}: {errorMessage}");
         }
     }
 
