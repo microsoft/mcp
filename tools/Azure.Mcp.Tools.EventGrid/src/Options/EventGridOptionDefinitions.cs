@@ -7,7 +7,7 @@ namespace Azure.Mcp.Tools.EventGrid.Options;
 
 public static class EventGridOptionDefinitions
 {
-    public const string TopicNameParam = "topic-name";
+    public const string TopicNameParam = "topic";
     public const string LocationParam = "location";
 
     public static readonly Option<string> TopicName = new(
