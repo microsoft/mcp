@@ -20,10 +20,6 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
         """
         Connect to a specific Azure AI Agent and run a query.
         Returns the agent's response along with thread and run IDs for potential evaluation.
-          Required options:
-        - AgentId: ID of the agent to connect to
-        - Query: Text query to send to the agent
-        - Endpoint: The endpoint URL for the Azure AI Agent service
         """;
 
     public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
@@ -42,7 +38,6 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
         options.AgentId = parseResult.GetValue(_agentIdOption);
         options.Query = parseResult.GetValue(_queryOption);
         options.Endpoint = parseResult.GetValue(_endpointOption);
-
         return options;
     }
 

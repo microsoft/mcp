@@ -21,15 +21,7 @@ public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
 
     public override string Description =>
         """
-        Run agent evaluation on agent data. Accepts JSON strings.
-        Parameters:
-        - evaluator_name: Name of the agent evaluator to use (intent_resolution, tool_call_accuracy, task_adherence)
-        - query: User query (JSON string)
-        - response: Agent response (JSON string)
-        - tool_calls: Optional tool calls data (JSON string)
-        - tool_definitions: Optional tool definitions (JSON string)
-        - azure_openai_endpoint: Endpoint of model to be used for evaluation
-        - azure_openai_deployment: Specific deployment of model to be used for evaluation
+        Run agent evaluation on agent data. Requires JSON strings for query, response, and tool definitions.
         """;
 
     public override string Title => CommandTitle;
@@ -56,7 +48,6 @@ public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
         options.ToolDefinitions = parseResult.GetValue(_toolDefinitionsOption);
         options.AzureOpenAIEndpoint = parseResult.GetValue(_azureOpenAIEndpointOption);
         options.AzureOpenAIDeployment = parseResult.GetValue(_azureOpenAIDeploymentOption);
-
         return options;
     }
 
