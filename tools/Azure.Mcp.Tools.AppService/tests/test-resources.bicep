@@ -223,7 +223,6 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
 
     // Test container
     resource testContainer 'containers@2024-11-15' = {
-      parent: testDatabase
       name: 'testcontainer'
       properties: {
         resource: {
@@ -257,17 +256,6 @@ resource sqlContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2
   properties: {
     principalId: testApplicationOid
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '9b7fa17d-e63e-47b0-bb0a-15c516ac86ec') // SQL DB Contributor
-  }
-}
-
-// Assign CosmosDB Contributor role for the Web App on the Cosmos Account
-resource sqlRoleAssignment 'sqlRoleAssignments@2024-11-15' = {
-  name: guid(cosmosContributorRoleId, testApplicationOid, cosmosAccount.id)
-  parent: cosmosAccount
-  properties:{
-    principalId: testApplicationOid
-    roleDefinitionId: '${resourceGroup().id}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosAccount.name}/sqlRoleDefinitions/${cosmosContributorRoleId}'
-    scope: cosmosAccount.id
   }
 }
 
