@@ -261,6 +261,7 @@ resource sqlContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2
   }
 }
 
+<<<<<<< HEAD
 // Assign CosmosDB Contributor role for the Web App on the Cosmos Account
 resource sqlRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-11-15' = {
   name: guid(cosmosContributorRoleId, testApplicationOid, cosmosAccount.id)
@@ -272,6 +273,8 @@ resource sqlRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignm
   }
 }
 
+=======
+>>>>>>> 62c5ad3173f5e84618bf81dba2c10d3d9d9c44cd
 // Outputs for test usage
 output webAppName string = webApp.name
 output webAppResourceGroup string = resourceGroup().name
