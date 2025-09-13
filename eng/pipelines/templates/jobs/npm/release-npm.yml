@@ -28,6 +28,15 @@ jobs:
     runOnce:
       deploy:
         steps:
+        - pwsh: |
+            $path = '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform'
+            Write-Host "Contents of $path:"
+            Get-ChildItem $path -Recurse
+
+            $path = '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper'
+            Write-Host "`n`nContents of $path:"
+            Get-ChildItem $path -Recurse
+
         - task: EsrpRelease@9
           displayName: Publish platform packages to npmjs.com
           inputs:
