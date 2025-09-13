@@ -24,6 +24,7 @@ public class SearchSetup : IAreaSetup
         services.AddSingleton<IndexQueryCommand>();
         services.AddSingleton<KnowledgeSourceListCommand>();
         services.AddSingleton<KnowledgeAgentListCommand>();
+        services.AddSingleton<KnowledgeAgentRunRetrievalCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -32,17 +33,17 @@ public class SearchSetup : IAreaSetup
         """
         Search operations - Commands for Azure AI Search (formerly known as \"Azure Cognitive Search\") services,
         search indexes, knowledge sources and knowledge agents. Use this tool when you need to retrieve knowledge,
-        search indexes, or introspect search services and their components. You can use knowledge agents for
-        in-depth agentic retrieval, or use execute searches against search indexes for fast single-shot search.
-        There are also commands for listing indexes, knowledge sources and knowledge agents, and to describe
-        schemas. This tool supports  enterprise search, document search, and knowledge mining workloads. Do not
-        use this tool for database queries, Azure Monitor log searches, general web search, or simple string
-        matching operations - this tool is specifically designed for Azure AI Search service management and
-        complex search operations. This tool is a hierarchical MCP command router where sub-commands are routed to
-        MCP servers that require specific fields inside the \"parameters\" object. To invoke a command, set
-        \"command\" and wrap its arguments in \"parameters\". Set \"learn=true\" to discover available
-        sub-commands for different search service and index operations. Note that this tool requires appropriate
-        Azure AI Search permissions and will only access search services and indexes accessible to the
+        search indexes, or introspect search services and their components. You can use knowledge agents for 
+        in-depth agentic retrieval, or just execute searches against search indexes for fast single-shot search. 
+        There are also commands for listing indexes, knowledge sources and knowledge agents, and to describe 
+        schemas. This tool supports  enterprise search, document search, and knowledge mining workloads. Do not 
+        use this tool for database queries, Azure Monitor log searches, general web search, or simple string 
+        matching operations - this tool is specifically designed for Azure AI Search service management and 
+        complex search operations. This tool is a hierarchical MCP command router where sub-commands are routed to 
+        MCP servers that require specific fields inside the \"parameters\" object. To invoke a command, set 
+        \"command\" and wrap its arguments in \"parameters\". Set \"learn=true\" to discover available 
+        sub-commands for different search service and index operations. Note that this tool requires appropriate 
+        Azure AI Search permissions and will only access search services and indexes accessible to the 
         authenticated user.
         """);
 
@@ -72,6 +73,8 @@ public class SearchSetup : IAreaSetup
         knowledge.AddSubGroup(knowledgeAgent);
         var knowledgeAgentList = serviceProvider.GetRequiredService<KnowledgeAgentListCommand>();
         knowledgeAgent.AddCommand(knowledgeAgentList.Name, knowledgeAgentList);
+        var knowledgeAgentRunRetrieval = serviceProvider.GetRequiredService<KnowledgeAgentRunRetrievalCommand>();
+        knowledgeAgent.AddCommand(knowledgeAgentRunRetrieval.Name, knowledgeAgentRunRetrieval);
 
         return search;
     }

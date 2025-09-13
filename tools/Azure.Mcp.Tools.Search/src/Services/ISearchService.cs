@@ -31,4 +31,11 @@ public interface ISearchService
         string indexName,
         string searchText,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<string> RetrieveFromKnowledgeAgent(
+        string serviceName,
+        string agentName,
+        string? query,
+        IEnumerable<(string role, string message)>? messages,
+        RetryPolicyOptions? retryPolicy = null);
 }

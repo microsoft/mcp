@@ -9,9 +9,12 @@ using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.ResourceManager.Search;
 using Azure.Search.Documents;
+using Azure.Search.Documents.Agents;
+using Azure.Search.Documents.Agents.Models;
 using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.Models;
+using Microsoft.VisualBasic;
 
 namespace Azure.Mcp.Tools.Search.Services;
 
@@ -186,6 +189,39 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
         catch (Exception ex)
         {
             throw new Exception($"Error querying Search index: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<string> RetrieveFromKnowledgeAgent(
+        string serviceName,
+        string agentName,
+        string? query,
+        IEnumerable<(string role, string message)>? messages,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters((nameof(serviceName), serviceName), (nameof(agentName), agentName));
+
+        try
+        {
+            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy);
+
+            var clientOptions = AddDefaultPolicies(new SearchClientOptions());
+            ConfigureRetryPolicy(clientOptions, retryPolicy);
+
+            var knowledgeAgentClient = new KnowledgeAgentRetrievalClient(searchClient.Endpoint, agentName, await GetCredential(), clientOptions);
+
+            var request = new KnowledgeAgentRetrievalRequest(
+                messages != null ?
+                    messages.Select(m => new KnowledgeAgentMessage([new KnowledgeAgentMessageTextContent(m.message)]) { Role = m.role }) :
+                    [new KnowledgeAgentMessage([new KnowledgeAgentMessageTextContent(query)]) { Role = "user" }]);
+
+            var response = await knowledgeAgentClient.RetrieveAsync(request);
+
+            return response.GetRawResponse().Content.ToString();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving data from knowledge agent: {ex.Message}", ex);
         }
     }
 

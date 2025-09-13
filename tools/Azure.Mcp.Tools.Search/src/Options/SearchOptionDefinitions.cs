@@ -8,6 +8,8 @@ public static class SearchOptionDefinitions
     public const string ServiceName = "service";
     public const string IndexName = "index";
     public const string QueryName = "query";
+    public const string AgentName = "agent";
+    public const string MessagesName = "messages";
 
     public static readonly Option<string> Service = new(
         $"--{ServiceName}"
@@ -31,5 +33,29 @@ public static class SearchOptionDefinitions
     {
         Description = "The search query to execute against the Azure AI Search index.",
         Required = true
+    };
+
+    public static readonly Option<string> Agent = new(
+        $"--{AgentName}"
+    )
+    {
+        Description = "The name of the knowledge agent within the Azure AI Search service.",
+        Required = true
+    };
+
+    public static readonly Option<string> OptionalQuery = new(
+        $"--{QueryName}"
+    )
+    {
+        Description = "Optional natural language query for retrieval when a conversational message history isn't provided.",
+        Required = false
+    };
+
+    public static readonly Option<string[]> Messages = new(
+        $"--{MessagesName}")
+    {
+        Description = "Optional conversation history messages passed to the knowledge agent. Specify multiple --messages entries. Each entry formatted as role:content, where role is `user` or `assistant` (e.g., user:How many docs?).",
+        Arity = ArgumentArity.ZeroOrMore,
+        AllowMultipleArgumentsPerToken = true
     };
 }
