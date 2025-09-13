@@ -26,6 +26,9 @@ var webAppName = '${baseName}-webapp'
 var appServicePlanName = '${baseName}-plan'
 var sqlServerName = '${baseName}-sql'
 var sqlDatabaseName = '${baseName}db'
+var cosmosAccountName = '${baseName}-cosmos'
+var cosmosDatabaseName = '${baseName}cosmosdb'
+var cosmosContributorRoleId = '00000000-0000-0000-0000-000000000002' // Built-in Contributor role
 
 // App Service Plan
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
@@ -112,15 +115,6 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
     publicNetworkAccess: 'Enabled'
   }
 
-  // Firewall rule to allow Azure services
-  resource allowAzureServices 'firewallRules@2023-05-01-preview' = {
-    name: 'AllowAllWindowsAzureIps'
-    properties: {
-      startIpAddress: '0.0.0.0'
-      endIpAddress: '0.0.0.0'
-    }
-  }
-
   // Test SQL Database
   resource testDatabase 'databases@2023-05-01-preview' = {
     name: sqlDatabaseName
@@ -138,6 +132,111 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
       readScale: 'Disabled'
       requestedBackupStorageRedundancy: 'Local'
       isLedgerOn: false
+    }
+  }
+}
+
+// SQL DB Contributor role definition
+resource sqlDbContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  // This is the SQL DB Contributor role
+  // Lets you manage SQL databases, but not access to them
+  // See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#sql-db-contributor
+  name: '9b7fa17d-e63e-47b0-bb0a-15c516ac86ec'
+}
+
+// Role assignment for test application
+resource appSqlRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(sqlDbContributorRoleDefinition.id, testApplicationOid, sqlServer.id)
+  scope: sqlServer
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: sqlDbContributorRoleDefinition.id
+    description: 'SQL DB Contributor for testApplicationOid'
+  }
+}
+
+// Cosmos DB Account
+resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
+  name: cosmosAccountName
+  location: 'centralus'
+  tags: {
+    defaultExperience: 'Core (SQL)'
+    CosmosAccountType: 'Non-Production'
+  }
+  kind: 'GlobalDocumentDB'
+  properties: {
+    publicNetworkAccess: 'Enabled'
+    enableAutomaticFailover: false
+    enableMultipleWriteLocations: false
+    isVirtualNetworkFilterEnabled: false
+    virtualNetworkRules: []
+    disableKeyBasedMetadataWriteAccess: false
+    enableFreeTier: false
+    enableAnalyticalStorage: false
+    analyticalStorageConfiguration: {
+      schemaType: 'WellDefined'
+    }
+    databaseAccountOfferType: 'Standard'
+    defaultIdentity: 'FirstPartyIdentity'
+    networkAclBypass: 'None'
+    disableLocalAuth: true
+    enablePartitionMerge: false
+    minimalTlsVersion: 'Tls12'
+    consistencyPolicy: {
+      defaultConsistencyLevel: 'Session'
+      maxIntervalInSeconds: 5
+      maxStalenessPrefix: 100
+    }
+    locations: [
+      {
+        locationName: location
+        failoverPriority: 0
+        isZoneRedundant: false
+      }
+    ]
+    cors: []
+    capabilities: []
+    ipRules: []
+    backupPolicy: {
+      type: 'Periodic'
+      periodicModeProperties: {
+        backupIntervalInMinutes: 240
+        backupRetentionIntervalInHours: 8
+        backupStorageRedundancy: 'Geo'
+      }
+    }
+    networkAclBypassResourceIds: []
+  }
+
+  // Test Cosmos Database
+  resource testDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2024-11-15' = {
+    parent: cosmosAccount
+    name: cosmosDatabaseName
+    properties: {
+      resource: {
+        id: cosmosDatabaseName
+      }
+      options: {
+        throughput: 400
+      }
+    }
+
+    // Test container
+    resource testContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-11-15' = {
+      parent: testDatabase
+      name: 'testcontainer'
+      properties: {
+        resource: {
+          id: 'testcontainer'
+          partitionKey: {
+            paths: [
+              '/id'
+            ]
+            kind: 'Hash'
+          }
+        }
+      }
     }
   }
 }
@@ -162,13 +261,14 @@ resource sqlContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2
   }
 }
 
-// Role assignment for test application - Cosmos DB Contributor
-resource cosmosContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(cosmosAccount.id, testApplicationOid, '5bd9cd88-fe45-4216-938b-f97437e15450')
-  scope: cosmosAccount
-  properties: {
+// Assign CosmosDB Contributor role for the Web App on the Cosmos Account
+resource sqlRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-11-15' = {
+  name: guid(cosmosContributorRoleId, testApplicationOid, cosmosAccount.id)
+  parent: cosmosAccount
+  properties:{
     principalId: testApplicationOid
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5bd9cd88-fe45-4216-938b-f97437e15450') // DocumentDB Account Contributor
+    roleDefinitionId: '${resourceGroup().id}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosAccount.name}/sqlRoleDefinitions/${cosmosContributorRoleId}'
+    scope: cosmosAccount.id
   }
 }
 
@@ -178,5 +278,9 @@ output webAppResourceGroup string = resourceGroup().name
 output sqlServerName string = sqlServer.name
 output sqlDatabaseName string = sqlDatabaseName
 output sqlConnectionString string = 'Server=${sqlServer.properties.fullyQualifiedDomainName};Database=${sqlDatabaseName};Authentication=Active Directory Default;TrustServerCertificate=True;'
+
+output cosmosAccountName string = cosmosAccount.name
+output cosmosDatabaseName string = cosmosDatabaseName
+output cosmosConnectionString string = 'AccountEndpoint=${cosmosAccount.properties.documentEndpoint};AccountKey=${cosmosAccount.listKeys().primaryMasterKey};Database=${cosmosDatabaseName};'
 output baseName string = baseName
 output location string = 'centralus'
