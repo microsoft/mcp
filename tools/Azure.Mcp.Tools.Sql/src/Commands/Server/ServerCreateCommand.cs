@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
@@ -39,35 +40,35 @@ public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_administratorLoginOption);
-        command.AddOption(_administratorPasswordOption);
-        command.AddOption(_locationOption);
-        command.AddOption(_versionOption);
-        command.AddOption(_publicNetworkAccessOption);
+        command.Options.Add(_administratorLoginOption);
+        command.Options.Add(_administratorPasswordOption);
+        command.Options.Add(_locationOption);
+        command.Options.Add(_versionOption);
+        command.Options.Add(_publicNetworkAccessOption);
     }
 
     protected override ServerCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.AdministratorLogin = parseResult.GetValueForOption(_administratorLoginOption);
-        options.AdministratorPassword = parseResult.GetValueForOption(_administratorPasswordOption);
-        options.Location = parseResult.GetValueForOption(_locationOption);
-        options.Version = parseResult.GetValueForOption(_versionOption);
-        options.PublicNetworkAccess = parseResult.GetValueForOption(_publicNetworkAccessOption);
+        options.AdministratorLogin = parseResult.GetValueOrDefault(_administratorLoginOption);
+        options.AdministratorPassword = parseResult.GetValueOrDefault(_administratorPasswordOption);
+        options.Location = parseResult.GetValueOrDefault(_locationOption);
+        options.Version = parseResult.GetValueOrDefault(_versionOption);
+        options.PublicNetworkAccess = parseResult.GetValueOrDefault(_publicNetworkAccessOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var sqlService = context.GetService<ISqlService>();
 
             var server = await sqlService.CreateServerAsync(

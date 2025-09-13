@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Sql.Commands.Server;
@@ -20,7 +21,7 @@ public class ServerCreateCommandTests
     private readonly ILogger<ServerCreateCommand> _logger;
     private readonly ServerCreateCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public ServerCreateCommandTests()
     {
@@ -33,7 +34,7 @@ public class ServerCreateCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -88,7 +89,7 @@ public class ServerCreateCommandTests
         }
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -136,7 +137,7 @@ public class ServerCreateCommandTests
             .Returns(expectedServer);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123!");
+        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123!");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -190,7 +191,7 @@ public class ServerCreateCommandTests
             .Returns(expectedServer);
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123! --version 12.0 --public-network-access Disabled");
+        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123! --version 12.0 --public-network-access Disabled");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -230,7 +231,7 @@ public class ServerCreateCommandTests
             .Returns(Task.FromException<SqlServer>(new Exception("Test error")));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123!");
+        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123!");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);
@@ -260,7 +261,7 @@ public class ServerCreateCommandTests
             .Returns(Task.FromException<SqlServer>(requestException));
 
         var context = new CommandContext(_serviceProvider);
-        var parseResult = _parser.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123!");
+        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123!");
 
         // Act
         var response = await _command.ExecuteAsync(context, parseResult);

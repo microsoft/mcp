@@ -58,50 +58,50 @@ public static class SqlOptionDefinitions
     };
 
     public static readonly Option<string> AdministratorLoginOption = new(
-        $"--{AdministratorLogin}",
-        "The administrator login name for the SQL server."
+        $"--{AdministratorLogin}"
     )
     {
-        IsRequired = true
+        Description = "The administrator login name for the SQL server.",
+        Required = true
     };
 
     public static readonly Option<string> AdministratorPasswordOption = new(
-        $"--{AdministratorPassword}",
-        "The administrator password for the SQL server."
+        $"--{AdministratorPassword}"
     )
     {
-        IsRequired = true
+        Description = "The administrator password for the SQL server.",
+        Required = true
     };
 
     public static readonly Option<string> LocationOption = new(
-        $"--{Location}",
-        "The Azure region location where the SQL server will be created."
+        $"--{Location}"
     )
     {
-        IsRequired = true
+        Description = "The Azure region location where the SQL server will be created.",
+        Required = true
     };
 
     public static readonly Option<string> VersionOption = new(
-        $"--{Version}",
-        "The version of SQL Server to create (e.g., '12.0')."
+        $"--{Version}"
     )
     {
-        IsRequired = false
+        Description = "The version of SQL Server to create (e.g., '12.0').",
+        Required = false
     };
 
     public static readonly Option<string> PublicNetworkAccessOption = new(
-        $"--{PublicNetworkAccess}",
-        "Whether public network access is enabled for the SQL server ('Enabled' or 'Disabled')."
+        $"--{PublicNetworkAccess}"
     )
     {
-        IsRequired = false
+        Description = "Whether public network access is enabled for the SQL server ('Enabled' or 'Disabled').",
+        Required = false
     };
 
     public static readonly Option<bool> ForceOption = new(
-        $"--{Force}",
-        "Force delete the server without confirmation prompts."
+        $"--{Force}"
     )
     {
-        IsRequired = false
+        Description = "Force delete the server without confirmation prompts.",
+        Required = false
     };
 }

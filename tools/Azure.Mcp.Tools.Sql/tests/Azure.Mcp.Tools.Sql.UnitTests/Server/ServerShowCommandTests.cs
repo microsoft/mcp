@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Sql.Commands.Server;
@@ -21,7 +22,7 @@ public class ServerShowCommandTests
     private readonly ILogger<ServerShowCommand> _logger;
     private readonly ServerShowCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public ServerShowCommandTests()
     {
@@ -34,7 +35,7 @@ public class ServerShowCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -54,7 +55,7 @@ public class ServerShowCommandTests
     [InlineData("--resource-group rg --server testserver", false)] // Missing subscription
     public async Task ExecuteAsync_ValidationScenarios_ReturnsExpectedResults(string args, bool shouldSucceed)
     {
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         if (shouldSucceed)
@@ -94,7 +95,7 @@ public class ServerShowCommandTests
             .Returns(expectedServer);
 
         // Act
-        var parseResult = _parser.Parse("--subscription test-sub --resource-group test-rg --server test-server");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server test-server");
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
@@ -115,7 +116,7 @@ public class ServerShowCommandTests
             .Returns(Task.FromException<SqlServer>(new KeyNotFoundException("SQL server not found")));
 
         // Act
-        var parseResult = _parser.Parse("--subscription test-sub --resource-group test-rg --server nonexistent-server");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server nonexistent-server");
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
@@ -137,7 +138,7 @@ public class ServerShowCommandTests
             .Returns(Task.FromException<SqlServer>(requestFailedException));
 
         // Act
-        var parseResult = _parser.Parse("--subscription test-sub --resource-group test-rg --server missing-server");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server missing-server");
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
@@ -159,7 +160,7 @@ public class ServerShowCommandTests
             .Returns(Task.FromException<SqlServer>(requestFailedException));
 
         // Act
-        var parseResult = _parser.Parse("--subscription test-sub --resource-group test-rg --server test-server");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server test-server");
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
@@ -180,7 +181,7 @@ public class ServerShowCommandTests
             .Returns(Task.FromException<SqlServer>(new ArgumentException("Invalid server name")));
 
         // Act
-        var parseResult = _parser.Parse("--subscription test-sub --resource-group test-rg --server invalid");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server invalid");
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
@@ -201,7 +202,7 @@ public class ServerShowCommandTests
             .Returns(Task.FromException<SqlServer>(new InvalidOperationException("Unexpected error")));
 
         // Act
-        var parseResult = _parser.Parse("--subscription test-sub --resource-group test-rg --server test-server");
+        var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server test-server");
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert

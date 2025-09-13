@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Sql.Commands.Server;
@@ -19,7 +20,7 @@ public class ServerDeleteCommandTests
     private readonly ILogger<ServerDeleteCommand> _logger;
     private readonly ServerDeleteCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public ServerDeleteCommandTests()
     {
@@ -32,7 +33,7 @@ public class ServerDeleteCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -66,7 +67,7 @@ public class ServerDeleteCommandTests
                 .Returns(true);
         }
 
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -86,7 +87,7 @@ public class ServerDeleteCommandTests
     public async Task ExecuteAsync_WhenForceNotSpecified_ReturnsWarning()
     {
         // Arrange
-        var parseResult = _parser.Parse("--subscription sub --resource-group rg --server testserver");
+        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -110,7 +111,7 @@ public class ServerDeleteCommandTests
             Arg.Any<CancellationToken>())
             .Returns(true);
 
-        var parseResult = _parser.Parse("--subscription sub --resource-group rg --server testserver --force");
+        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --force");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -133,7 +134,7 @@ public class ServerDeleteCommandTests
             Arg.Any<CancellationToken>())
             .Returns(false);
 
-        var parseResult = _parser.Parse("--subscription sub --resource-group rg --server testserver --force");
+        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --force");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -155,7 +156,7 @@ public class ServerDeleteCommandTests
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(new Exception("Test error")));
 
-        var parseResult = _parser.Parse("--subscription sub --resource-group rg --server testserver --force");
+        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --force");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -179,7 +180,7 @@ public class ServerDeleteCommandTests
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(requestException));
 
-        var parseResult = _parser.Parse("--subscription sub --resource-group rg --server testserver --force");
+        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --force");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -203,7 +204,7 @@ public class ServerDeleteCommandTests
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(requestException));
 
-        var parseResult = _parser.Parse("--subscription sub --resource-group rg --server testserver --force");
+        var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --force");
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
