@@ -7,8 +7,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Added elicitation support. An elicitation request is sent if the tool annotation secret hint is true. [[#404](https://github.com/microsoft/mcp/pull/404)]
-- Added the following Azure Managed Lustre commands: [[#100](https://github.com/microsoft/mcp/issues/100)]
-  - `azmcp_azuremanagedlustre_filesystem_get_sku_info`: Get information about Azure Managed Lustre SKU.
+- Added the following Azure Managed Lustre commands: 
+  - `azmcp_azuremanagedlustre_filesystem_get_sku_info`: Get information about Azure Managed Lustre SKU [[#100](https://github.com/microsoft/mcp/issues/100)].
+  - `azmcp_azuremanagedlustre_filesystem_subnetsize_validate`: Check if the subnet can host the target Azure Managed Lustre SKU and size [[#110](https://github.com/microsoft/mcp/issues/110)].
 
 ### Features Removed
 
@@ -19,6 +20,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+- Changed the following Azure Managed Lustre commands:
+  - `azmcp_azuremanagedlustre_filesystem_required-subnet-size` becomes `azmcp_azuremanagedlustre_filesystem_subnetsize_ask`
 
 ## 0.6.0 (2025-09-11)
 
