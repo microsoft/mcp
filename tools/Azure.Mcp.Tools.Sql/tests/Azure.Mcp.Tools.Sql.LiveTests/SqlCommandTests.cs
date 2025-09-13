@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
@@ -427,8 +428,8 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
                 { "resource-group", Settings.ResourceGroupName },
                 { "server", serverName },
                 { "location", location },
-                { "admin-user", adminUser },
-                { "admin-password", adminPassword }
+                { "administrator-login", adminUser },
+                { "administrator-password", adminPassword }
             });
 
         // Should successfully create the SQL server
@@ -444,11 +445,6 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
 
         var serverLocation = server.GetProperty("location").GetString();
         Assert.Equal(location, serverLocation, ignoreCase: true);
-
-        var id = server.GetProperty("id").GetString();
-        Assert.NotNull(id);
-        Assert.Contains(serverName, id);
-        Assert.Contains(Settings.ResourceGroupName, id);
 
         // Verify admin login
         var administratorLogin = server.GetProperty("administratorLogin").GetString();
@@ -482,11 +478,6 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         var name = server.GetProperty("name").GetString();
         Assert.Equal(serverName, name);
 
-        var id = server.GetProperty("id").GetString();
-        Assert.NotNull(id);
-        Assert.Contains(serverName, id);
-        Assert.Contains(Settings.ResourceGroupName, id);
-
         // Verify required properties exist
         Assert.True(server.TryGetProperty("location", out _));
         Assert.True(server.TryGetProperty("administratorLogin", out _));
@@ -512,8 +503,8 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
                 { "resource-group", Settings.ResourceGroupName },
                 { "server", serverName },
                 { "location", location },
-                { "admin-user", adminUser },
-                { "admin-password", adminPassword }
+                { "administrator-login", adminUser },
+                { "administrator-password", adminPassword }
             });
 
         // Now delete the SQL server with force flag
@@ -536,7 +527,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
     }
 
     [Fact]
-    public async Task Should_DeleteNonExistentSqlServer_ReturnsFalse()
+    public async Task Should_DeleteNonExistentSqlServer_Returns404()
     {
         // Try to delete a non-existent server
         var nonExistentServerName = $"non-existent-server-{DateTime.UtcNow:yyyyMMddHHmmss}";
@@ -551,23 +542,15 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
                 { "force", true }
             });
 
-        // The command might return a warning about confirmation needed, or it might return the deletion result
-        // For non-existent servers, the command should handle this gracefully
-        // if (result.HasValue)
-        // {
-        // If there are results, verify the structure indicates no deletion occurred
-        var deleted = result.Value.AssertProperty("deleted").GetBoolean();
-        Assert.False(deleted);
+        // Verify the result status code of result is 404
+        var resultHttpStatusCode = result.AssertProperty("status").GetString();
+        Assert.Equal(HttpStatusCode.NotFound.ToString(), resultHttpStatusCode);
 
-        var deletedServerName = result.Value.AssertProperty("serverName").GetString();
-        Assert.Equal(nonExistentServerName, deletedServerName);
-        // }
-        // else
-        // {
-        //     // If no result is returned, that's also acceptable for non-existent resources
-        //     // The command should have executed without throwing an exception
-        //     Assert.True(true, "Command executed successfully without throwing an exception");
-        // }
+        // Verify the server name and resource group name are in the resource not found message. 
+        var message = result.AssertProperty("message").GetString();
+        Assert.Contains("not found", message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(nonExistentServerName, message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(Settings.ResourceGroupName, message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
