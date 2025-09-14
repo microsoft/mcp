@@ -139,9 +139,9 @@ public class DatabaseCreateCommandTests
             .Returns(mockDatabase);
 
         var args = _commandDefinition.Parse([
-            "--subscription", "sub", 
-            "--resource-group", "rg", 
-            "--server", "server1", 
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1",
             "--database", "testdb",
             "--sku-name", "S0",
             "--sku-tier", "Standard",
