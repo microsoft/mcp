@@ -100,7 +100,7 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
-            $"SQL server '{GetResourceName(ex)}' not found. It may have already been deleted.",
+            $"The given SQL server not found. It may have already been deleted.",
         Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed deleting the SQL server. Verify you have appropriate permissions. Details: {reqEx.Message}",
         Azure.RequestFailedException reqEx when reqEx.Status == 409 =>
@@ -116,21 +116,6 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
         ArgumentException => 400,
         _ => base.GetStatusCode(ex)
     };
-
-    private static string GetResourceName(Exception ex)
-    {
-        // Try to extract resource name from exception message if available
-        if (ex is Azure.RequestFailedException reqEx && reqEx.Message.Contains("'") && reqEx.Message.Contains("'"))
-        {
-            var start = reqEx.Message.IndexOf("'") + 1;
-            var end = reqEx.Message.IndexOf("'", start);
-            if (end > start)
-            {
-                return reqEx.Message.Substring(start, end - start);
-            }
-        }
-        return "unknown";
-    }
 
     internal record ServerDeleteResult(string Message, bool Success);
 }
