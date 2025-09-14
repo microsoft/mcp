@@ -164,4 +164,22 @@ public interface ISqlService
         string firewallRuleName,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes a SQL database from Azure SQL Server.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server</param>
+    /// <param name="databaseName">The name of the database to delete</param>
+    /// <param name="resourceGroup">The resource group name</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="retryPolicy">Optional retry policy options</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>True if the database was successfully deleted</returns>
+    Task<bool> DeleteDatabaseAsync(
+        string serverName,
+        string databaseName,
+        string resourceGroup,
+        string subscription,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

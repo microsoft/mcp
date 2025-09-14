@@ -471,6 +471,63 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         }
     }
 
+    /// <summary>
+    /// Deletes a SQL database from an Azure SQL Server.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server</param>
+    /// <param name="databaseName">The name of the database to delete</param>
+    /// <param name="resourceGroup">The name of the resource group containing the server</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>True if the database was successfully deleted</returns>
+    /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
+    public async Task<bool> DeleteDatabaseAsync(
+        string serverName,
+        string databaseName,
+        string resourceGroup,
+        string subscription,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(serverName, databaseName, resourceGroup, subscription);
+
+        try
+        {
+            // Use ARM client directly for delete operations
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
+
+            var databaseResource = await sqlServerResource.Value.GetSqlDatabases().GetAsync(databaseName);
+
+            await databaseResource.Value.DeleteAsync(Azure.WaitUntil.Completed, cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully deleted SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",
+                serverName, databaseName, resourceGroup);
+
+            return true;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            _logger.LogWarning(
+                "Database not found during delete operation. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",
+                serverName, databaseName, resourceGroup);
+
+            // Return false to indicate the database was not found (idempotent delete)
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error deleting SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                serverName, databaseName, resourceGroup, subscription);
+            throw;
+        }
+    }
+
     private static SqlDatabase ConvertToSqlDatabaseModel(JsonElement item)
     {
         Models.SqlDatabaseData? sqlDatabase = Azure.Mcp.Tools.Sql.Services.Models.SqlDatabaseData.FromJson(item);
