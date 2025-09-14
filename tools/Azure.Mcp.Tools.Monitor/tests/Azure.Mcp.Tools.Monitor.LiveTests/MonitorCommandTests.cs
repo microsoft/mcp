@@ -30,10 +30,9 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         _logHelper = new LogAnalyticsHelper(Settings.ResourceBaseName, Settings.SubscriptionId, _monitorService, Settings.TenantId, TestLogType);
     }
 
-    public override ValueTask DisposeAsync()
+    protected override void Dispose(bool disposing)
     {
-        base.Dispose();
-        return ValueTask.CompletedTask;
+        base.Dispose(disposing);
     }
 
     private static IMonitorService GetMonitorService()
