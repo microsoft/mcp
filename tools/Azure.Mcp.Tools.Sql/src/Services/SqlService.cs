@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services.Models;
 using Azure.ResourceManager.Sql;
+using Azure.ResourceManager.Sql.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Sql.Services;
@@ -383,8 +384,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             {
                 // Set the public network access value - defaults to "Enabled" if not "Disabled"
                 serverData.PublicNetworkAccess = publicNetworkAccess.Equals("Enabled", StringComparison.OrdinalIgnoreCase)
-                    ? SqlServerPublicNetworkAccess.Enabled
-                    : SqlServerPublicNetworkAccess.Disabled;
+                    ? ServerNetworkAccessFlag.Enabled
+                    : ServerNetworkAccessFlag.Disabled;
             }
 
             var operation = await resourceGroupResource.Value.GetSqlServers().CreateOrUpdateAsync(
