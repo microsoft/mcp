@@ -381,13 +381,10 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             // Set PublicNetworkAccess if specified
             if (!string.IsNullOrEmpty(publicNetworkAccess))
             {
-                // Try to set the public network access value - defaults to "Enabled" if not "Disabled"
-                // The property type is likely an enum with Enabled/Disabled values
-                //
-                // serverData.PublicNetworkAccess = publicNetworkAccess.Equals("Enabled", StringComparison.OrdinalIgnoreCase)
-                //     ? SqlServerPublicNetworkAccess.Enabled
-                //     : SqlServerPublicNetworkAccess.Disabled;
-
+                // Set the public network access value - defaults to "Enabled" if not "Disabled"
+                serverData.PublicNetworkAccess = publicNetworkAccess.Equals("Enabled", StringComparison.OrdinalIgnoreCase)
+                    ? SqlServerPublicNetworkAccess.Enabled
+                    : SqlServerPublicNetworkAccess.Disabled;
             }
 
             var operation = await resourceGroupResource.Value.GetSqlServers().CreateOrUpdateAsync(
