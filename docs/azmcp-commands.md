@@ -956,7 +956,6 @@ azmcp sql server create --subscription <subscription> \
                         --admin-user <admin-username> \
                         --admin-password <admin-password> \
                         [--version <server-version>] \
-                        [--minimal-tls-version <tls-version>] \
                         [--public-network-access <enabled|disabled>]
 
 # Delete a SQL server
