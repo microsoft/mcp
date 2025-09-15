@@ -7,8 +7,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Added elicitation support. An elicitation request is sent if the tool annotation secret hint is true. [[#404](https://github.com/microsoft/mcp/pull/404)]
+- Added `azmcp sql server create`, `azmcp sql server delete`, `azmcp sql server show` to support SQL server create, delete, and show commands. [[#312](https://github.com/microsoft/mcp/pull/312)]
 - Added the following Azure Managed Lustre commands: [[#100](https://github.com/microsoft/mcp/issues/100)]
   - `azmcp_azuremanagedlustre_filesystem_get_sku_info`: Get information about Azure Managed Lustre SKU.
+- `azmcp_functionapp_get` can now list Function Apps on a resource group level.
 - Added validation logic in Cosmos query. [[#448](https://github.com/microsoft/mcp/pull/448)]
 
 ### Features Removed
@@ -17,7 +19,11 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
+- Merged `azmcp_functionapp_list` into `azmcp_functionapp_get`, which can perform both operations based on whether `--function-app` is passed. [[#427](https://github.com/microsoft/mcp/pull/427)]
+
 ### Bugs Fixed
+
+- Marked the secret hint of 'secret_create' tool to true. [[#430](https://github.com/microsoft/mcp/pull/430)]
 
 ### Other Changes
 

@@ -140,6 +140,11 @@
 # ServiceLabel: %tools-MySQL
 # ServiceOwners:                       @ramnov @mattkohnms
 
+# PRLabel: %tools-SQL
+/tools/Azure.Mcp.Tools.Sql/          @ericshape @AV25242 @akromm @jeremyfrosti @mitesh-pv @achyuth-ms @microsoft/azure-mcp
+
+# ServiceLabel: %tools-SQL
+# ServiceOwners:                     @ericshape @AV25242 @akromm @jeremyfrosti @mitesh-pv @achyuth-ms
 
 # PRLabel: %tools-Postgres
 /tools/Azure.Mcp.Tools.Postgres/       @kk-src @shreyaaithal @maxluk @xiangyan99 @microsoft/azure-mcp

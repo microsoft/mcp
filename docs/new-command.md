@@ -601,6 +601,11 @@ LocalRequired = true,   // Azure CLI wrappers, local file operations, tools requ
 LocalRequired = false,  // Azure Resource Manager API calls, cloud service queries, remote operations
 ```
 
+Guidelines:
+- Commands returning array payloads return an empty array (`[]`) if the service returned a null or empty array.
+- Fully declare `ToolMetadata` properties even if they are using the default value.
+- Only override `GetErrorMessage` and `GetStatusCode` if the logic differs from the super class definition.
+
 ### 4. Service Interface and Implementation
 
 Each toolset has its own service interface that defines the methods that commands will call. The interface will have an implementation that contains the actual logic.
@@ -907,6 +912,7 @@ Guidelines:
 - Keep attribute list minimal but complete
 - Use one context per toolset (preferred) unless size forces logical grouping
 - Ensure filename matches class for navigation (`{Toolset}JsonContext.cs`)
+- Keep `JsonSerializable` sorted based on the `typeof` model name.
 
 ## Error Handling
 

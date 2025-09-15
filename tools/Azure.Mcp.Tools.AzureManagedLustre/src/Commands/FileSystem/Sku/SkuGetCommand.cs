@@ -26,9 +26,10 @@ public sealed class SkuGetCommand(ILogger<SkuGetCommand> logger)
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        OpenWorld = true,
         Idempotent = true,
+        OpenWorld = true,
         ReadOnly = true,
+        LocalRequired = false,
         Secret = false
     };
 
