@@ -20,7 +20,7 @@ public class RedisSetup : IAreaSetup
         services.AddSingleton<IRedisService, RedisService>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var redis = new CommandGroup(Name, "Redis Cache operations - Commands for managing Azure Redis Cache and Azure Managed Redis resources. Includes operations for listing cache instances, managing clusters and databases, configuring access policies, and working with both traditional Redis Cache and Managed Redis services.");
         rootGroup.AddSubGroup(redis);

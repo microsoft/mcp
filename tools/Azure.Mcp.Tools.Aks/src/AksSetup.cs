@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Aks.Commands.Cluster;
 using Azure.Mcp.Tools.Aks.Commands.Nodepool;
 using Azure.Mcp.Tools.Aks.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Aks;
 
@@ -18,13 +17,17 @@ public class AksSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAksService, AksService>();
+
+        services.AddSingleton<ClusterListCommand>();
+        services.AddSingleton<ClusterGetCommand>();
+        services.AddSingleton<NodepoolListCommand>();
+        services.AddSingleton<NodepoolGetCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create AKS command group
         var aks = new CommandGroup(Name, "Azure Kubernetes Service operations - Commands for managing Azure Kubernetes Service (AKS) cluster resources. Includes operations for listing clusters, retrieving cluster configurations, and managing Kubernetes environments in Azure.");
-        rootGroup.AddSubGroup(aks);
 
         // Create AKS subgroups
         var cluster = new CommandGroup("cluster", "AKS cluster operations - Commands for listing and managing AKS clusters in your Azure subscription.");
@@ -33,9 +36,11 @@ public class AksSetup : IAreaSetup
         aks.AddSubGroup(nodepool);
 
         // Register AKS commands
-        cluster.AddCommand("list", new ClusterListCommand(loggerFactory.CreateLogger<ClusterListCommand>()));
-        cluster.AddCommand("get", new ClusterGetCommand(loggerFactory.CreateLogger<ClusterGetCommand>()));
-        nodepool.AddCommand("list", new NodepoolListCommand(loggerFactory.CreateLogger<NodepoolListCommand>()));
-        nodepool.AddCommand("get", new NodepoolGetCommand(loggerFactory.CreateLogger<NodepoolGetCommand>()));
+        cluster.AddCommand("list", serviceProvider.GetRequiredService<ClusterListCommand>());
+        cluster.AddCommand("get", serviceProvider.GetRequiredService<ClusterGetCommand>());
+        nodepool.AddCommand("list", serviceProvider.GetRequiredService<NodepoolListCommand>());
+        nodepool.AddCommand("get", serviceProvider.GetRequiredService<NodepoolGetCommand>());
+
+        return aks;
     }
 }

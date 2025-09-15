@@ -20,7 +20,7 @@ public class SearchSetup : IAreaSetup
         services.AddSingleton<ISearchService, SearchService>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var search = new CommandGroup(Name,
         """

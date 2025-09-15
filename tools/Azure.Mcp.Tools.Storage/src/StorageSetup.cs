@@ -21,7 +21,7 @@ public class StorageSetup : IAreaSetup
         services.AddSingleton<IStorageService, StorageService>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var storage = new CommandGroup(Name,
             """

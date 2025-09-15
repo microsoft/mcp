@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AppConfig;
 
@@ -19,13 +18,21 @@ public class AppConfigSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAppConfigService, AppConfigService>();
+        
+        services.AddSingleton<AccountListCommand>();
+
+        services.AddSingleton<KeyValueListCommand>();
+        services.AddSingleton<KeyValueSetCommand>();
+        services.AddSingleton<KeyValueShowCommand>();
+        services.AddSingleton<KeyValueDeleteCommand>();
+
+        services.AddSingleton<KeyValueLockSetCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create AppConfig command group
         var appConfig = new CommandGroup(Name, "App Configuration operations - Commands for managing Azure App Configuration stores and key-value settings. Includes operations for listing configuration stores, managing key-value pairs, setting labels, locking/unlocking settings, and retrieving configuration data.");
-        rootGroup.AddSubGroup(appConfig);
 
         // Create AppConfig subgroups
         var accounts = new CommandGroup("account", "App Configuration store operations");
@@ -39,14 +46,15 @@ public class AppConfigSetup : IAreaSetup
         keyValue.AddSubGroup(lockGroup);
 
         // Register AppConfig commands
-        accounts.AddCommand("list", new AccountListCommand(
-            loggerFactory.CreateLogger<AccountListCommand>()));
+        accounts.AddCommand("list", serviceProvider.GetRequiredService<AccountListCommand>());
 
-        keyValue.AddCommand("delete", new KeyValueDeleteCommand(loggerFactory.CreateLogger<KeyValueDeleteCommand>()));
-        keyValue.AddCommand("list", new KeyValueListCommand(loggerFactory.CreateLogger<KeyValueListCommand>()));
-        keyValue.AddCommand("set", new KeyValueSetCommand(loggerFactory.CreateLogger<KeyValueSetCommand>()));
-        keyValue.AddCommand("show", new KeyValueShowCommand(loggerFactory.CreateLogger<KeyValueShowCommand>()));
+        keyValue.AddCommand("delete", serviceProvider.GetRequiredService<KeyValueDeleteCommand>());
+        keyValue.AddCommand("list", serviceProvider.GetRequiredService<KeyValueListCommand>());
+        keyValue.AddCommand("set", serviceProvider.GetRequiredService<KeyValueSetCommand>());
+        keyValue.AddCommand("show", serviceProvider.GetRequiredService<KeyValueShowCommand>());
 
-        lockGroup.AddCommand("set", new KeyValueLockSetCommand(loggerFactory.CreateLogger<KeyValueLockSetCommand>()));
+        lockGroup.AddCommand("set", serviceProvider.GetRequiredService<KeyValueLockSetCommand>());
+
+        return appConfig;
     }
 }

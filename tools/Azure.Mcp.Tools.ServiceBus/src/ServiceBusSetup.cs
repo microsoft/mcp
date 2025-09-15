@@ -20,7 +20,7 @@ public class ServiceBusSetup : IAreaSetup
         services.AddSingleton<IServiceBusService, ServiceBusService>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var serviceBus = new CommandGroup(Name, "Service Bus operations - Commands for managing Azure Service Bus resources including queues, topics, and subscriptions. Includes operations for managing message queues, topic subscriptions, and retrieving details about Service Bus entities.");
         rootGroup.AddSubGroup(serviceBus);

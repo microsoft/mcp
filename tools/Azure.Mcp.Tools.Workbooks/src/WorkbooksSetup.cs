@@ -19,7 +19,7 @@ public class WorkbooksSetup : IAreaSetup
         services.AddSingleton<IWorkbooksService, WorkbooksService>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var workbooks = new CommandGroup(Name, "Workbooks operations - Commands for managing Azure Workbooks resources and interactive data visualization dashboards. Includes operations for listing, creating, updating, and deleting workbooks, as well as managing workbook configurations and content.");
         rootGroup.AddSubGroup(workbooks);

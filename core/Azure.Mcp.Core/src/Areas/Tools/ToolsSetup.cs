@@ -14,15 +14,16 @@ public sealed class ToolsSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        // No additional services needed for Tools area
+        services.AddSingleton<ToolsListCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Tools command group
         var tools = new CommandGroup(Name, "CLI tools operations - Commands for discovering and exploring the functionality available in this CLI tool.");
-        rootGroup.AddSubGroup(tools);
 
-        tools.AddCommand("list", new ToolsListCommand(loggerFactory.CreateLogger<ToolsListCommand>()));
+        tools.AddCommand("list", serviceProvider.GetRequiredService<ToolsListCommand>());
+
+        return tools;
     }
 }
