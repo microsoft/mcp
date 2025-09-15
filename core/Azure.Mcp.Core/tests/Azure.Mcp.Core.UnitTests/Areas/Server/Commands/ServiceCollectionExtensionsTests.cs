@@ -9,6 +9,7 @@ using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Runtime;
 using Microsoft.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Microsoft.Mcp.Core.Areas.Server.Options;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Server;
 using Xunit;
@@ -23,8 +24,11 @@ public class ServiceCollectionExtensionsTests
     private IServiceCollection SetupBaseServices()
     {
         var services = new ServiceCollection();
+        var factory = CommandFactoryHelpers.CreateCommandFactory();
+
         services.AddLogging();
-        services.AddSingleton(CommandFactoryHelpers.CreateCommandFactory);
+
+        services.AddSingleton<ICommandFactory>(factory);
         services.AddSingleton<ITelemetryService, CommandFactoryHelpers.NoOpTelemetryService>();
 
         return services;
