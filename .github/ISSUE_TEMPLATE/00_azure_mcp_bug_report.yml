@@ -1,1 +1,6 @@
+name: Azure MCP Server Bug Report
+description: Create a bug report to help us improve Azure MCP Server
+title: "[BUG]"
+labels: ["needs-triage","Azure.Mcp.Server"]
+projects: ["Microsoft/1976"]
 
