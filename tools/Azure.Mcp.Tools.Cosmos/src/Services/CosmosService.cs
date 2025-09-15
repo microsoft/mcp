@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.RegularExpressions;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -23,6 +24,32 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
     private const string CosmosContainersCacheKeyPrefix = "containers_";
     private static readonly TimeSpan s_cacheDurationResources = TimeSpan.FromMinutes(15);
     private bool _disposed;
+
+    // Maximum number of results to prevent DoS attacks and performance issues
+    private const int MaxResultLimit = 1000;
+
+    // Maximum query length to prevent DoS attacks
+    private const int MaxQueryLength = 8000;
+
+    // Static arrays for security validation - initialized once per class
+    private static readonly string[] DangerousKeywords =
+    [
+        // Cosmos DB system functions that could be misused for accessing system metadata
+        "UDF(", "AGGREGATE(",
+        // Potentially dangerous operations (though Cosmos DB SQL is read-only by nature, these might be attempts at injection)
+        "DELETE", "DROP", "CREATE", "ALTER", "INSERT", "UPDATE", "REPLACE", "UPSERT",
+        // System procedure calls that shouldn't be accessible through queries
+        "EXEC", "EXECUTE", "SP_", "STORED"
+    ];
+
+    private static readonly string[] SuspiciousPatterns =
+    [
+        // Potential injection patterns
+        "UNION", "OR 1=1", "AND 1=1", "--", "/*", "*/",
+        // Functions that might be used for expensive operations or potential misuse
+        // Note: Removed some legitimate Cosmos DB functions that are commonly used
+        "REGEXMATCH("
+    ];
 
     private async Task<CosmosDBAccountResource> GetCosmosAccountAsync(
         string subscription,
@@ -285,6 +312,93 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         return containers;
     }
 
+    private static void ValidateQuerySafety(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            throw new ArgumentException("Query cannot be null or empty.", nameof(query));
+        }
+
+        // Prevent DoS attacks by limiting query length
+        if (query.Length > MaxQueryLength)
+        {
+            throw new InvalidOperationException($"Query length exceeds the maximum allowed limit of {MaxQueryLength:N0} characters to prevent potential DoS attacks.");
+        }
+
+        // Clean the query: remove comments, normalize whitespace, and trim
+        var cleanedQuery = query;
+
+        // Remove line comments (-- comment)
+        cleanedQuery = Regex.Replace(cleanedQuery, @"--.*?$", "", RegexOptions.Multiline);
+
+        // Remove block comments (/* comment */)
+        cleanedQuery = Regex.Replace(cleanedQuery, @"/\*.*?\*/", "", RegexOptions.Singleline);
+
+        // Normalize whitespace: replace multiple whitespace characters with single space
+        cleanedQuery = Regex.Replace(cleanedQuery, @"\s+", " ", RegexOptions.Multiline);
+
+        // Trim the result
+        cleanedQuery = cleanedQuery.Trim();
+
+        // Ensure the cleaned query is not empty
+        if (string.IsNullOrWhiteSpace(cleanedQuery))
+        {
+            throw new ArgumentException("Query cannot be empty after removing comments and whitespace.", nameof(query));
+        }
+
+        // Check for multiple statements (semicolons followed by non-whitespace)
+        var multipleStatementsPattern = new Regex(
+            @";\s*\w",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled
+        );
+
+        if (multipleStatementsPattern.IsMatch(cleanedQuery))
+        {
+            throw new InvalidOperationException("Multiple SQL statements are not allowed. Use only a single SELECT statement.");
+        }
+
+        var queryUpper = cleanedQuery.ToUpperInvariant();
+
+        // Check for dangerous keywords
+        foreach (var keyword in DangerousKeywords)
+        {
+            if (queryUpper.Contains(keyword))
+            {
+                throw new InvalidOperationException($"Query contains dangerous keyword '{keyword}' which is not allowed for security reasons.");
+            }
+        }
+
+        // Check for suspicious patterns that might indicate injection attempts
+        foreach (var pattern in SuspiciousPatterns)
+        {
+            if (queryUpper.Contains(pattern))
+            {
+                throw new InvalidOperationException($"Query contains suspicious pattern '{pattern}' which is not allowed for security reasons.");
+            }
+        }
+
+        // Additional validation: Only allow SELECT statements for Cosmos DB
+        var trimmedQuery = queryUpper.Trim();
+        if (!trimmedQuery.StartsWith("SELECT"))
+        {
+            throw new InvalidOperationException("Only SELECT statements are allowed for security reasons.");
+        }
+
+        // Check for excessive use of wildcards which could cause performance issues
+        var wildcardCount = Regex.Matches(queryUpper, @"\*").Count;
+        if (wildcardCount > 5)
+        {
+            throw new InvalidOperationException("Query contains too many wildcard operators (*) which could cause performance issues.");
+        }
+
+        // Limit nested function calls to prevent complex queries that could impact performance
+        var nestedFunctionCount = Regex.Matches(queryUpper, @"\w+\s*\(").Count;
+        if (nestedFunctionCount > 10)
+        {
+            throw new InvalidOperationException("Query contains too many function calls which could cause performance issues.");
+        }
+    }
+
     public async Task<List<JsonElement>> QueryItems(
         string accountName,
         string databaseName,
@@ -303,19 +417,43 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         {
             var container = client.GetContainer(databaseName, containerName);
             var baseQuery = string.IsNullOrEmpty(query) ? "SELECT * FROM c" : query;
+            
+            // Validate query safety before execution
+            ValidateQuerySafety(baseQuery);
+            
             var queryDef = new QueryDefinition(baseQuery);
 
             var items = new List<JsonElement>();
             var queryIterator = container.GetItemQueryStreamIterator(
                 queryDef,
-                requestOptions: new QueryRequestOptions { MaxItemCount = -1 }
+                requestOptions: new QueryRequestOptions { MaxItemCount = MaxResultLimit }
             );
 
-            while (queryIterator.HasMoreResults)
+            int totalItemsProcessed = 0;
+
+            while (queryIterator.HasMoreResults && totalItemsProcessed < MaxResultLimit)
             {
                 var response = await queryIterator.ReadNextAsync();
                 using var document = JsonDocument.Parse(response.Content);
-                items.Add(document.RootElement.Clone());
+                
+                if (document.RootElement.TryGetProperty("Documents", out var documentsElement))
+                {
+                    foreach (var item in documentsElement.EnumerateArray())
+                    {
+                        if (totalItemsProcessed >= MaxResultLimit)
+                        {
+                            break;
+                        }
+                        items.Add(item.Clone());
+                        totalItemsProcessed++;
+                    }
+                }
+                else
+                {
+                    // Fallback for cases where response structure might differ
+                    items.Add(document.RootElement.Clone());
+                    totalItemsProcessed++;
+                }
             }
 
             return items;

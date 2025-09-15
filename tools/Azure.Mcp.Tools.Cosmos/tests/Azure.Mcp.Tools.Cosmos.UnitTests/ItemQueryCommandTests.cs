@@ -1,4 +1,5 @@
 ﻿using System.CommandLine;
+using System.Linq;
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
@@ -199,5 +200,196 @@ public class ItemQueryCommandTests
         // Assert
         Assert.Equal(400, response.Status);
         Assert.Contains("required", response.Message.ToLower());
+    }
+
+    [Theory]
+    [InlineData("DELETE FROM c")] // DELETE statement
+    [InlineData("INSERT INTO c VALUES ('test')")] // INSERT statement
+    [InlineData("UPDATE c SET name = 'test'")] // UPDATE statement
+    [InlineData("DROP TABLE c")] // DROP statement
+    [InlineData("CREATE TABLE test (id int)")] // CREATE statement
+    [InlineData("ALTER TABLE c ADD column test")] // ALTER statement
+    [InlineData("SELECT * FROM c WHERE 1=1 OR 1=1")] // Potential SQL injection pattern
+    [InlineData("SELECT * FROM c UNION SELECT * FROM d")] // UNION injection attempt
+    [InlineData("SELECT * FROM c; DROP TABLE c")] // Multiple statements
+    [InlineData("SELECT * FROM c --comment")] // Comment injection
+    [InlineData("SELECT * FROM c /* comment */")] // Block comment
+    public async Task ExecuteAsync_Returns400_WhenQueryContainsDangerousPatterns(string maliciousQuery)
+    {
+        // Arrange
+        _cosmosService.QueryItems(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            maliciousQuery,
+            Arg.Any<string>(),
+            Arg.Any<AuthMethod>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new InvalidOperationException($"Query contains dangerous patterns which are not allowed for security reasons."));
+
+        var args = _commandDefinition.Parse([
+            "--account", "account123",
+            "--database", "database123",
+            "--container", "container123",
+            "--subscription", "sub123",
+            "--query", maliciousQuery
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(400, response.Status);
+        Assert.Contains("security", response.Message.ToLower());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Returns400_WhenQueryIsTooLong()
+    {
+        // Arrange
+        var longQuery = "SELECT * FROM c WHERE " + string.Join(" OR ", Enumerable.Range(1, 1000).Select(i => $"c.field{i} = 'value{i}'"));
+        
+        _cosmosService.QueryItems(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            longQuery,
+            Arg.Any<string>(),
+            Arg.Any<AuthMethod>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new InvalidOperationException("Query exceeds maximum length to prevent DoS attacks."));
+
+        var args = _commandDefinition.Parse([
+            "--account", "account123",
+            "--database", "database123",
+            "--container", "container123",
+            "--subscription", "sub123",
+            "--query", longQuery
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(400, response.Status);
+        Assert.Contains("DoS", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Returns400_WhenQueryIsEmpty()
+    {
+        // Arrange
+        _cosmosService.QueryItems(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            "",
+            Arg.Any<string>(),
+            Arg.Any<AuthMethod>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new InvalidOperationException("Query cannot be empty."));
+
+        var args = _commandDefinition.Parse([
+            "--account", "account123",
+            "--database", "database123",
+            "--container", "container123",
+            "--subscription", "sub123",
+            "--query", ""
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(400, response.Status);
+        Assert.Contains("empty", response.Message.ToLower());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Returns400_WhenQueryContainsTooManyWildcards()
+    {
+        // Arrange
+        var query = "SELECT * FROM * WHERE * = * AND * > * OR * < *"; // 7 wildcards, exceeds limit of 5
+        
+        _cosmosService.QueryItems(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            query,
+            Arg.Any<string>(),
+            Arg.Any<AuthMethod>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new InvalidOperationException("Query contains too many wildcard operators (*) which could cause performance issues."));
+
+        var args = _commandDefinition.Parse([
+            "--account", "account123",
+            "--database", "database123",
+            "--container", "container123",
+            "--subscription", "sub123",
+            "--query", query
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(400, response.Status);
+        Assert.Contains("wildcard", response.Message.ToLower());
+    }
+
+    [Theory]
+    [InlineData("SELECT c.id FROM c")] // Simple valid query
+    [InlineData("SELECT * FROM c WHERE c.type = 'product'")] // Valid with WHERE clause
+    [InlineData("SELECT TOP 10 c.id, c.name FROM c")] // Valid with TOP
+    [InlineData("SELECT c.id FROM c ORDER BY c.timestamp DESC")] // Valid with ORDER BY
+    [InlineData("SELECT c.id FROM c WHERE CONTAINS(c.description, 'test')")] // Valid with CONTAINS function
+    public async Task ExecuteAsync_SuccessfullyExecutes_WhenQueryIsValid(string validQuery)
+    {
+        // Arrange
+        var expectedItems = new List<JsonElement>
+        {
+            JsonDocument.Parse("{\"id\":\"item1\"}").RootElement.Clone()!
+        };
+
+        _cosmosService.QueryItems(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is(validQuery),
+            Arg.Any<string>(),
+            Arg.Any<AuthMethod>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>())
+            .Returns(Task.FromResult(expectedItems));
+
+        var args = _commandDefinition.Parse([
+            "--account", "account123",
+            "--database", "database123",
+            "--container", "container123",
+            "--subscription", "sub123",
+            "--query", validQuery
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.NotEqual(500, response.Status); // Should not be a server error
+        
+        // Verify that the CosmosService was called with the validated query
+        await _cosmosService.Received(1).QueryItems(
+            "account123",
+            "database123",
+            "container123",
+            validQuery,
+            "sub123",
+            Arg.Any<AuthMethod>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>());
     }
 }

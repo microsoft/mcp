@@ -23,7 +23,8 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
         Execute a SQL query against items in a Cosmos DB container. Requires {CosmosOptionDefinitions.AccountName},
         {CosmosOptionDefinitions.DatabaseName}, and {CosmosOptionDefinitions.ContainerName}.
         The {CosmosOptionDefinitions.QueryText} parameter accepts SQL query syntax. Results are returned as a
-        JSON array of documents.
+        JSON array of documents. For security, only SELECT statements are allowed, and queries are validated
+        to prevent injection attacks and limit resource consumption.
         """;
 
     public override string Title => CommandTitle;
@@ -87,6 +88,20 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
 
         return context.Response;
     }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        InvalidOperationException invalidOpEx => invalidOpEx.Message,
+        ArgumentException argEx => argEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
+
+    protected override int GetStatusCode(Exception ex) => ex switch
+    {
+        InvalidOperationException => 400, // Bad Request for validation failures
+        ArgumentException => 400,
+        _ => base.GetStatusCode(ex)
+    };
 
     internal record ItemQueryCommandResult(List<JsonElement> Items);
 }
