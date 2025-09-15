@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.RegularExpressions;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -23,6 +24,130 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
     private const string CosmosContainersCacheKeyPrefix = "containers_";
     private static readonly TimeSpan s_cacheDurationResources = TimeSpan.FromMinutes(15);
     private bool _disposed;
+
+    // Maximum query length to prevent DoS attacks
+    private const int MaxQueryLength = 10000;
+
+    // Dangerous keywords that should be blocked in Cosmos DB SQL queries
+    private static readonly string[] DangerousKeywords =
+    [
+        // System functions that could expose sensitive information
+        "UDF(", "DATEDIFF(", "IS_DEFINED(", "IS_NULL(", "IS_NUMBER(", "IS_STRING(",
+        "IS_BOOL(", "IS_FINITE(", "IS_OBJECT(", "IS_PRIMITIVE(", "IS_ARRAY(",
+        // Mathematical functions that could be used for resource exhaustion
+        "POWER(", "EXP(", "LOG(", "LOG10(", "SQRT(", "SQUARE(",
+        // String manipulation functions that could be used for obfuscation
+        "SUBSTRING(", "LEFT(", "RIGHT(", "LTRIM(", "RTRIM(", "TRIM(",
+        "UPPER(", "LOWER(", "CONCAT(", "CONTAINS(", "STARTSWITH(", "ENDSWITH(",
+        "INDEX_OF(", "REPLACE(", "REPLICATE(", "REVERSE(",
+        // Type conversion functions
+        "ToString(", "TOSTRING(", "TONUMBER(", "TOBOOLEAN(",
+        // Array and object manipulation
+        "ARRAY_SLICE(", "ARRAY_LENGTH(", "ARRAY_CONCAT(",
+        // Regular expressions
+        "RegexMatch(", "REGEXMATCH("
+    ];
+
+    // Obfuscation patterns that could hide malicious queries
+    private static readonly string[] ObfuscationPatterns =
+    [
+        "CHAR(", "CHR(", "ASCII(", "UNICODE(", "HEX(",
+        "BINARY(", "CONVERT(", "CAST(", "TRY_CAST(",
+        "ENCODE(", "DECODE(", "COMPRESS(", "DECOMPRESS("
+    ];
+
+    /// <summary>
+    /// Validates that the provided query is safe to execute and does not contain malicious content.
+    /// </summary>
+    /// <param name="query">The Cosmos DB SQL query to validate</param>
+    /// <exception cref="ArgumentException">Thrown when query is null or empty</exception>
+    /// <exception cref="InvalidOperationException">Thrown when query contains dangerous patterns</exception>
+    private static void ValidateQuerySafety(string? query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            throw new ArgumentException("Query cannot be null or empty.", nameof(query));
+        }
+
+        // Prevent DoS attacks by limiting query length
+        if (query.Length > MaxQueryLength)
+        {
+            throw new InvalidOperationException($"Query length exceeds the maximum allowed limit of {MaxQueryLength:N0} characters to prevent potential DoS attacks.");
+        }
+
+        // Clean the query: remove comments, normalize whitespace, and trim
+        var cleanedQuery = query;
+
+        // Remove line comments (-- comment)
+        cleanedQuery = Regex.Replace(cleanedQuery, @"--.*?$", "", RegexOptions.Multiline);
+
+        // Remove hash comments (# comment)
+        cleanedQuery = Regex.Replace(cleanedQuery, @"#.*?$", "", RegexOptions.Multiline);
+
+        // Remove block comments (/* comment */)
+        cleanedQuery = Regex.Replace(cleanedQuery, @"/\*.*?\*/", "", RegexOptions.Singleline);
+
+        // Normalize whitespace: replace multiple whitespace characters with single space
+        cleanedQuery = Regex.Replace(cleanedQuery, @"\s+", " ", RegexOptions.Multiline);
+
+        // Trim the result
+        cleanedQuery = cleanedQuery.Trim();
+
+        // Ensure the cleaned query is not empty
+        if (string.IsNullOrWhiteSpace(cleanedQuery))
+        {
+            throw new ArgumentException("Query cannot be empty after removing comments and whitespace.", nameof(query));
+        }
+
+        var queryUpper = cleanedQuery.ToUpperInvariant();
+
+        // Additional validation: Only allow SELECT statements for Cosmos DB
+        var trimmedQuery = queryUpper.Trim();
+        if (!trimmedQuery.StartsWith("SELECT"))
+        {
+            throw new InvalidOperationException("Only SELECT statements are allowed for security reasons.");
+        }
+
+        // Check for dangerous keywords and patterns
+        foreach (var keyword in DangerousKeywords)
+        {
+            if (queryUpper.Contains(keyword.ToUpperInvariant()))
+            {
+                throw new InvalidOperationException($"Query contains potentially dangerous function '{keyword.TrimEnd('(')}' which is restricted for security reasons.");
+            }
+        }
+
+        // Check for obfuscation patterns
+        foreach (var pattern in ObfuscationPatterns)
+        {
+            if (queryUpper.Contains(pattern.ToUpperInvariant()))
+            {
+                throw new InvalidOperationException($"Query contains obfuscation function '{pattern.TrimEnd('(')}' which is not allowed for security reasons.");
+            }
+        }
+
+        // Prevent overly complex queries that could cause resource exhaustion
+        // Check for excessive nesting of functions or subqueries
+        var openParenCount = cleanedQuery.Count(c => c == '(');
+        var closeParenCount = cleanedQuery.Count(c => c == ')');
+
+        if (openParenCount != closeParenCount)
+        {
+            throw new InvalidOperationException("Query has mismatched parentheses.");
+        }
+
+        if (openParenCount > 50) // Reasonable limit for nested functions/subqueries
+        {
+            throw new InvalidOperationException("Query complexity exceeds allowed limits. Too many nested functions or subqueries.");
+        }
+
+        // Check for excessive JOINs that could cause cross-partition queries
+        var joinCount = Regex.Matches(queryUpper, @"\bJOIN\b").Count;
+        if (joinCount > 10)
+        {
+            throw new InvalidOperationException("Query contains too many JOIN operations which could impact performance.");
+        }
+    }
 
     private async Task<CosmosDBAccountResource> GetCosmosAccountAsync(
         string subscription,
@@ -297,12 +422,15 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
     {
         ValidateRequiredParameters(accountName, databaseName, containerName, subscription);
 
+        // Use default query if none provided, otherwise validate the provided query
+        var baseQuery = string.IsNullOrEmpty(query) ? "SELECT * FROM c" : query;
+        ValidateQuerySafety(baseQuery);
+
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy);
 
         try
         {
             var container = client.GetContainer(databaseName, containerName);
-            var baseQuery = string.IsNullOrEmpty(query) ? "SELECT * FROM c" : query;
             var queryDef = new QueryDefinition(baseQuery);
 
             var items = new List<JsonElement>();
