@@ -22,7 +22,7 @@ public class FabricPublicApiSetup : IAreaSetup
         services.AddHttpClient<FabricPublicApiService>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var fabricPublicApis = new CommandGroup(Name,
             """

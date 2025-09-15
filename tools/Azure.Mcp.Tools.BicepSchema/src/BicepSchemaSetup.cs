@@ -17,14 +17,17 @@ public class BicepSchemaSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IBicepSchemaService, BicepSchemaService>();
+
+        services.AddSingleton<BicepSchemaGetCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var bicepschema = new CommandGroup(Name, "Bicep schema operations - Commands for working with Azure Bicep Infrastructure as Code (IaC) generation and schema management. Includes operations for retrieving Bicep schemas, templates, and resource definitions to support infrastructure deployment automation.");
-        rootGroup.AddSubGroup(bicepschema);
 
         // Register Bicep Schema command
-        bicepschema.AddCommand("get", new BicepSchemaGetCommand(loggerFactory.CreateLogger<BicepSchemaGetCommand>()));
+        bicepschema.AddCommand("get", serviceProvider.GetRequiredService<BicepSchemaGetCommand>());
+
+        return bicepschema;
     }
 }

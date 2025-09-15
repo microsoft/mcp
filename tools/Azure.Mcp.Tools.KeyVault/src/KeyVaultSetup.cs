@@ -21,7 +21,7 @@ public class KeyVaultSetup : IAreaSetup
         services.AddSingleton<IKeyVaultService, KeyVaultService>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var keyVault = new CommandGroup(Name, "Key Vault operations - Commands for managing and accessing Azure Key Vault resources.");
         rootGroup.AddSubGroup(keyVault);

@@ -20,7 +20,7 @@ public class ResourceHealthSetup : IAreaSetup
         services.AddSingleton<IResourceHealthService, ResourceHealthService>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var resourceHealth = new CommandGroup(Name,
             """

@@ -22,7 +22,7 @@ public class LoadTestingSetup : IAreaSetup
         services.AddSingleton<ILoadTestingService, LoadTestingService>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Load Testing command group
         var service = new CommandGroup(

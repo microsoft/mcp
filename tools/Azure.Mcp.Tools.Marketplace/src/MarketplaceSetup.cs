@@ -19,7 +19,7 @@ public class MarketplaceSetup : IAreaSetup
         services.AddSingleton<IMarketplaceService, MarketplaceService>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Marketplace command group
         var marketplace = new CommandGroup(Name, "Marketplace operations - Commands for managing and accessing Azure Marketplace products and offers.");

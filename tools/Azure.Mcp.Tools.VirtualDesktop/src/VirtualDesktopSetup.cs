@@ -20,7 +20,7 @@ public class VirtualDesktopSetup : IAreaSetup
         services.AddSingleton<IVirtualDesktopService, VirtualDesktopService>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var desktop = new CommandGroup(Name, "Azure Virtual Desktop operations - Commands for managing and accessing Azure Virtual Desktop resources. Includes operations for hostpools, session hosts, and user sessions.");
         rootGroup.AddSubGroup(desktop);

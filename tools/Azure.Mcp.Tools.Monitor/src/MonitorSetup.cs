@@ -28,7 +28,7 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<IMonitorMetricsService, MonitorMetricsService>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Monitor command group
         var monitor = new CommandGroup(Name, "Azure Monitor operations - Commands for querying and analyzing Azure Monitor logs and metrics.");

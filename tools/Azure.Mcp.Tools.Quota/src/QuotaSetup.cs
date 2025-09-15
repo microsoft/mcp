@@ -24,7 +24,7 @@ public sealed class QuotaSetup : IAreaSetup
             new QuotaService(serviceProvider.GetService<ILoggerFactory>(), serviceProvider.GetRequiredService<IHttpClientService>()));
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var quota = new CommandGroup(Name, "Quota commands for getting the available regions of specific Azure resource types"
                     + " or checking Azure resource quota and usage");

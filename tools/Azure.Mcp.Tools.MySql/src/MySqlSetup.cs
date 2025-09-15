@@ -21,7 +21,7 @@ public class MySqlSetup : IAreaSetup
         services.AddSingleton<IMySqlService, MySqlService>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var mysql = new CommandGroup(Name, "MySQL operations - Commands for managing Azure Database for MySQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.");
         rootGroup.AddSubGroup(mysql);
