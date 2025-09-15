@@ -33,7 +33,7 @@ public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
         OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
-        Secret = true
+        Secret = false
     };
 
     protected override void RegisterOptions(Command command)

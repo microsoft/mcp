@@ -34,7 +34,7 @@ public sealed class AgentsQueryAndEvaluateCommand : GlobalCommand<AgentsQueryAnd
         OpenWorld = true,
         ReadOnly = false,
         LocalRequired = false,
-        Secret = true
+        Secret = false
     };
 
     protected override void RegisterOptions(Command command)
