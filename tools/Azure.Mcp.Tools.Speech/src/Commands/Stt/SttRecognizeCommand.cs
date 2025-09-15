@@ -25,7 +25,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
     public override string Description =>
         """
         Recognize speech from an audio file using Azure AI Services Speech. This command takes an audio file and converts it to text using advanced speech recognition capabilities.
-        You must provide an Azure AI Services endpoint (e.g., https://your-service.services.ai.azure.com/) and a path to the audio file. The audio file must be in a supported format (WAV is recommended).
+        You must provide an Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/) and a path to the audio file. The audio file must be in a supported format (WAV is recommended).
         Optional parameters include language specification, phrase hints for better accuracy, output format (simple or detailed), and profanity filtering.
         """;
 
@@ -82,7 +82,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
         // Additional validation
         if (string.IsNullOrWhiteSpace(options.Endpoint))
         {
-            context.Response.Message = "Azure AI Services endpoint is required (e.g., https://your-service.services.ai.azure.com/).";
+            context.Response.Message = "Azure AI Services endpoint is required (e.g., https://your-service.cognitiveservices.azure.com/).";
             context.Response.Status = 400;
             return context.Response;
         }
@@ -92,7 +92,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
             (!endpointUri.Host.EndsWith(".cognitiveservices.azure.com", StringComparison.OrdinalIgnoreCase) &&
              !endpointUri.Host.EndsWith(".services.ai.azure.com", StringComparison.OrdinalIgnoreCase)))
         {
-            context.Response.Message = "Endpoint must be a valid Azure AI Services endpoint (e.g., https://your-service.services.ai.azure.com/).";
+            context.Response.Message = "Endpoint must be a valid Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/).";
             context.Response.Status = 400;
             return context.Response;
         }

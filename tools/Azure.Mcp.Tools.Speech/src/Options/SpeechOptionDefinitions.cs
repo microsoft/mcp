@@ -15,7 +15,7 @@ public static class SpeechOptionDefinitions
     public static readonly Option<string> Endpoint = new(
         $"--{EndpointName}")
     {
-        Description = "The Azure AI Services endpoint URL (e.g., https://your-service.services.ai.azure.com/).",
+        Description = "The Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/).",
         Required = true
     };
 

@@ -46,5 +46,5 @@ resource appAiServicesRoleAssignment 'Microsoft.Authorization/roleAssignments@20
 
 // Outputs for test consumption
 output aiServicesName string = aiServices.name
-output aiServicesEndpoint string = aiServices.properties.endpoint
+output aiServicesEndpoint string = aiServices.properties.endpoint // Will be https://{baseName}.cognitiveservices.azure.com/
 output aiServicesLocation string = aiServices.location

@@ -17,7 +17,7 @@ public class SpeechService(ITenantService tenantService) : BaseAzureService(tena
     /// <summary>
     /// Recognizes speech from an audio file using Azure AI Services Speech.
     /// </summary>
-    /// <param name="endpoint">Azure AI Services endpoint (e.g., https://your-service.services.ai.azure.com/)</param>
+    /// <param name="endpoint">Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/)</param>
     /// <param name="filePath">Path to the audio file to process</param>
     /// <param name="language">Speech recognition language (default: en-US)</param>
     /// <param name="phrases">Optional phrases to improve recognition accuracy</param>
@@ -80,7 +80,7 @@ public class SpeechService(ITenantService tenantService) : BaseAzureService(tena
 
         // Use streaming recognition for file-based speech recognition
         // This is more robust for various audio formats and file lengths
-        var taskCompletionSource = new TaskCompletionSource<SdkSpeechRecognitionResult>();
+        var taskCompletionSource = new TaskCompletionSource<SdkSpeechRecognitionResult?>();
         var recognizedText = new System.Text.StringBuilder();
         SdkSpeechRecognitionResult? lastResult = null;
         
@@ -101,22 +101,14 @@ public class SpeechService(ITenantService tenantService) : BaseAzureService(tena
         
         recognizer.Canceled += (s, e) =>
         {
-            taskCompletionSource.SetResult(e.Result);
+            // taskCompletionSource.SetResult(e.Result);
+            Console.WriteLine($"Recognition canceled: {e.Reason}, {e.ErrorDetails}");
         };
         
         recognizer.SessionStopped += (s, e) =>
         {
-            // Use the last successful result, or create a no-match result
-            if (lastResult != null && recognizedText.Length > 0)
-            {
-                taskCompletionSource.TrySetResult(lastResult);
-            }
-            else
-            {
-                // If no speech was recognized, we need to handle this case
-                // We'll use the canceled event result or create a synthetic one
-                taskCompletionSource.TrySetResult(lastResult ?? throw new InvalidOperationException("No recognition result available"));
-            }
+            // If we have a result, use it; otherwise signal completion with null
+            taskCompletionSource.TrySetResult(lastResult);
         };
 
         // Start continuous recognition
@@ -136,6 +128,12 @@ public class SpeechService(ITenantService tenantService) : BaseAzureService(tena
 
         var result = await taskCompletionSource.Task;
         
+        // Handle case where no recognition result was obtained
+        if (result == null)
+        {
+            return CreateNoMatchResult();
+        }
+
         // If we accumulated text from multiple recognition events, update the result
         if (recognizedText.Length > 0 && result.Text != recognizedText.ToString())
         {
@@ -147,7 +145,14 @@ public class SpeechService(ITenantService tenantService) : BaseAzureService(tena
 
         return ConvertToSpeechRecognitionResult(result, format);
     }
-
+    private Models.SpeechRecognitionResult CreateNoMatchResult()
+    {
+        return new Models.SpeechRecognitionResult
+        {
+            Text = string.Empty,
+            Reason = ResultReason.NoMatch.ToString()
+        };
+    }
     private static ProfanityOption GetProfanityOption(string profanity) =>
         profanity.ToLowerInvariant() switch
         {

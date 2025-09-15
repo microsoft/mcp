@@ -25,7 +25,7 @@ public class SttRecognizeCommandTests
     private readonly SttRecognizeCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
-    private readonly string _knownEndpoint = "https://eastus.services.ai.azure.com/";
+    private readonly string _knownEndpoint = "https://eastus.cognitiveservices.azure.com/";
     private readonly string _knownSubscription = "sub123";
 
     public SttRecognizeCommandTests()
@@ -66,10 +66,10 @@ public class SttRecognizeCommandTests
     [Theory]
     [InlineData("", false, "Missing Required options: --endpoint, --file")]
     [InlineData("--subscription sub123", false, "Missing Required options: --endpoint, --file")]
-    [InlineData("--subscription sub123 --endpoint https://test.services.ai.azure.com/", false, "Missing Required options: --file")]
-    [InlineData("--subscription sub123 --endpoint https://test.services.ai.azure.com/ --file nonexistent.wav", false, "Audio file not found")]
-    [InlineData("--subscription sub123 --endpoint https://test.services.ai.azure.com/ --file test.wav --format invalid", false, "Format must be 'simple' or 'detailed'")]
-    [InlineData("--subscription sub123 --endpoint https://test.services.ai.azure.com/ --file test.wav --profanity invalid", false, "Profanity filter must be 'masked', 'removed', or 'raw'")]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/", false, "Missing Required options: --file")]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file nonexistent.wav", false, "Audio file not found")]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --format invalid", false, "Format must be 'simple' or 'detailed'")]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --profanity invalid", false, "Profanity filter must be 'masked', 'removed', or 'raw'")]
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed, string expectedError)
     {
         // Create a test file if needed
@@ -246,7 +246,7 @@ public class SttRecognizeCommandTests
         try
         {
             // Act - Use a valid Azure AI endpoint
-            var args = $"--subscription {_knownSubscription} --endpoint https://myservice.services.ai.azure.com --file {testFile}";
+            var args = $"--subscription {_knownSubscription} --endpoint https://myservice.cognitiveservices.azure.com --file {testFile}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
             var response = await _command.ExecuteAsync(_context, parseResult);
 

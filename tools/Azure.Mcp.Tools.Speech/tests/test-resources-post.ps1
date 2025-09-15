@@ -1,24 +1,25 @@
-#!/usr/bin/env pwsh
-
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
-#Requires -Version 6.0
-#Requires -PSEdition Core
-
-[CmdletBinding()]
-param (
-    [Parameter(Mandatory)]
-    [hashtable] $AdditionalParameters
+param(
+    [string] $TenantId,
+    [string] $TestApplicationId,
+    [string] $ResourceGroupName,
+    [string] $BaseName,
+    [hashtable] $DeploymentOutputs
 )
+
+$ErrorActionPreference = "Stop"
+
+. "$PSScriptRoot/../../../eng/common/scripts/common.ps1"
+. "$PSScriptRoot/../../../eng/scripts/helpers/TestResourcesHelpers.ps1"
+
+$testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
 Write-Host "Running Speech post-deployment setup..."
 
 try {
     # Extract outputs from deployment
-    $aiServicesName = $AdditionalParameters['aiServicesName']
-    $aiServicesEndpoint = $AdditionalParameters['aiServicesEndpoint']
-    $aiServicesLocation = $AdditionalParameters['aiServicesLocation']
+    $aiServicesName = $DeploymentOutputs['aiServicesName']
+    $aiServicesEndpoint = $DeploymentOutputs['aiServicesEndpoint']
+    $aiServicesLocation = $DeploymentOutputs['aiServicesLocation']
 
     Write-Host "Azure AI Services '$aiServicesName' deployed successfully."
     Write-Host "Endpoint: $aiServicesEndpoint"
