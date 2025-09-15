@@ -145,7 +145,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNullResults_WhenNoWorkbooksExist()
+    public async Task ExecuteAsync_ReturnsEmptyResults_WhenNoWorkbooksExist()
     {
         // Arrange
         _service.ListWorkbooks(
@@ -180,7 +180,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNullResults_WhenServiceReturnsNull()
+    public async Task ExecuteAsync_ReturnsEmptyResults_WhenServiceReturnsNull()
     {
         // Arrange
         _service.ListWorkbooks(

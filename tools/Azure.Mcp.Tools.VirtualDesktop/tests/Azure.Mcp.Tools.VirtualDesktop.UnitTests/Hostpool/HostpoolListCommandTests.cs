@@ -106,7 +106,7 @@ public class HostpoolListCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
     }
 
     [Fact]
