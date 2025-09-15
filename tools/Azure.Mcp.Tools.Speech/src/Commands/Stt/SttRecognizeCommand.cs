@@ -88,7 +88,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
         }
 
         // Validate endpoint format
-        if (!Uri.TryCreate(options.Endpoint, UriKind.Absolute, out var endpointUri) || 
+        if (!Uri.TryCreate(options.Endpoint, UriKind.Absolute, out var endpointUri) ||
             (!endpointUri.Host.EndsWith(".cognitiveservices.azure.com", StringComparison.OrdinalIgnoreCase) &&
              !endpointUri.Host.EndsWith(".services.ai.azure.com", StringComparison.OrdinalIgnoreCase)))
         {
@@ -120,7 +120,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
         }
 
         // Validate profanity option
-        if (!string.IsNullOrEmpty(options.Profanity) && 
+        if (!string.IsNullOrEmpty(options.Profanity) &&
             options.Profanity != "masked" && options.Profanity != "removed" && options.Profanity != "raw")
         {
             context.Response.Message = "Profanity filter must be 'masked', 'removed', or 'raw'.";

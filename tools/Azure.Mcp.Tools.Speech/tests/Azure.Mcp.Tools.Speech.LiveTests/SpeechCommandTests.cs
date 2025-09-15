@@ -43,9 +43,9 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     {
         // This test validates complete end-to-end speech recognition with the test-audio.wav file from TestResources
         var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", "test-audio.wav");
-        
+
         // STRICT REQUIREMENT: The test audio file MUST exist in TestResources
-        Assert.True(File.Exists(testAudioFile), 
+        Assert.True(File.Exists(testAudioFile),
             $"Test audio file not found at: {testAudioFile}. Please ensure test-audio.wav exists in TestResources folder.");
 
         var fileInfo = new FileInfo(testAudioFile);
@@ -69,39 +69,39 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
 
         // STRICT REQUIREMENT: Speech recognition must return a result
         Assert.NotNull(result);
-        
+
         var resultText = result.ToString();
         Output.WriteLine($"Speech recognition result: {resultText}");
-        
+
         // Validate the result structure
         Assert.NotNull(resultText);
         Assert.NotEmpty(resultText);
-        
+
         // Parse the JSON result to check the recognition outcome
         try
         {
             var jsonResult = JsonDocument.Parse(resultText);
             var resultObject = jsonResult.RootElement;
-            
+
             if (resultObject.TryGetProperty("result", out var resultProperty))
             {
-                var reason = resultProperty.TryGetProperty("reason", out var reasonProperty) 
-                    ? reasonProperty.GetString() 
+                var reason = resultProperty.TryGetProperty("reason", out var reasonProperty)
+                    ? reasonProperty.GetString()
                     : "Unknown";
-                    
-                var text = resultProperty.TryGetProperty("text", out var textProperty) 
-                    ? textProperty.GetString() 
+
+                var text = resultProperty.TryGetProperty("text", out var textProperty)
+                    ? textProperty.GetString()
                     : "";
-                
+
                 Output.WriteLine($"Recognition reason: {reason}");
                 Output.WriteLine($"Recognition text: '{text}'");
-                
+
                 // For a real audio file, we expect the specific recognized text
                 var expectedText = "By voice is my passport. Verify me.";
-                
+
                 // Assert that we got the exact expected text from the test audio file
                 Assert.Equal(expectedText, text);
-                
+
                 Output.WriteLine($"✅ Successfully recognized expected speech: '{text}'");
             }
             else

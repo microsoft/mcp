@@ -44,17 +44,17 @@ public class SpeechService(ITenantService tenantService) : BaseAzureService(tena
 
         // Get Azure AD credential and token
         var credential = await GetCredential();
-        
+
         // Get access token for Cognitive Services with proper scope
         var tokenRequestContext = new TokenRequestContext(["https://cognitiveservices.azure.com/.default"]);
         var accessToken = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
 
         // Configure Speech SDK with endpoint - this is the correct approach for Azure AI Services
         var config = SpeechConfig.FromEndpoint(new Uri(endpoint));
-        
+
         // Set the authorization token - this is the key for Azure AI Services authentication
         config.AuthorizationToken = accessToken.Token;
-        
+
         // Set language (default to en-US)
         config.SpeechRecognitionLanguage = language ?? "en-US";
 
@@ -83,13 +83,13 @@ public class SpeechService(ITenantService tenantService) : BaseAzureService(tena
         var taskCompletionSource = new TaskCompletionSource<SdkSpeechRecognitionResult?>();
         var recognizedText = new System.Text.StringBuilder();
         SdkSpeechRecognitionResult? lastResult = null;
-        
+
         // Subscribe to recognition events
         recognizer.Recognizing += (s, e) =>
         {
             // Intermediate results (optional for streaming)
         };
-        
+
         recognizer.Recognized += (s, e) =>
         {
             if (e.Result.Reason == ResultReason.RecognizedSpeech)
@@ -98,13 +98,13 @@ public class SpeechService(ITenantService tenantService) : BaseAzureService(tena
                 lastResult = e.Result;
             }
         };
-        
+
         recognizer.Canceled += (s, e) =>
         {
             // taskCompletionSource.SetResult(e.Result);
             Console.WriteLine($"Recognition canceled: {e.Reason}, {e.ErrorDetails}");
         };
-        
+
         recognizer.SessionStopped += (s, e) =>
         {
             // If we have a result, use it; otherwise signal completion with null
@@ -113,21 +113,21 @@ public class SpeechService(ITenantService tenantService) : BaseAzureService(tena
 
         // Start continuous recognition
         await recognizer.StartContinuousRecognitionAsync();
-        
+
         // Wait for completion or timeout (30 seconds should be enough for most audio files)
         var timeoutTask = Task.Delay(30000);
         var completedTask = await Task.WhenAny(taskCompletionSource.Task, timeoutTask);
-        
+
         // Stop recognition
         await recognizer.StopContinuousRecognitionAsync();
-        
+
         if (completedTask == timeoutTask)
         {
             throw new TimeoutException("Speech recognition timed out after 30 seconds");
         }
 
         var result = await taskCompletionSource.Task;
-        
+
         // Handle case where no recognition result was obtained
         if (result == null)
         {
@@ -177,7 +177,7 @@ public class SpeechService(ITenantService tenantService) : BaseAzureService(tena
         {
             var cancellation = CancellationDetails.FromResult(speechResult);
             var errorMessage = $"Speech recognition canceled. Reason: {cancellation.Reason}, ErrorCode: {cancellation.ErrorCode}, ErrorDetails: {cancellation.ErrorDetails}";
-            
+
             // Add error details to the text field for debugging
             result.Text = errorMessage;
         }
