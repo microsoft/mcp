@@ -55,9 +55,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseSto
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = tables?.Count > 0
-                ? ResponseResult.Create(new TableListCommandResult(tables), StorageJsonContext.Default.TableListCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(tables ?? []), StorageJsonContext.Default.TableListCommandResult);
 
             // Only show warning if we actually had to fall back to a different auth method
             if (context.Response.Results is not null && !string.IsNullOrEmpty(context.Response.Message))
