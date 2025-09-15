@@ -10,12 +10,15 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added `azmcp sql server create`, `azmcp sql server delete`, `azmcp sql server show` to support SQL server create, delete, and show commands. [[#312](https://github.com/microsoft/mcp/pull/312)]
 - Added the following Azure Managed Lustre commands: [[#100](https://github.com/microsoft/mcp/issues/100)]
   - `azmcp_azuremanagedlustre_filesystem_get_sku_info`: Get information about Azure Managed Lustre SKU.
+- `azmcp_functionapp_get` can now list Function Apps on a resource group level.
 
 ### Features Removed
 
 - Removed Azure CLI (`az`) and Azure Developer CLI (`azd`) extension tools from the MCP server to reduce complexity and focus on native Azure service operations.
 
 ### Breaking Changes
+
+- Merged `azmcp_functionapp_list` into `azmcp_functionapp_get`, which can perform both operations based on whether `--function-app` is passed. [[#427](https://github.com/microsoft/mcp/pull/427)]
 
 ### Bugs Fixed
 

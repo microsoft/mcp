@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
-using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
@@ -20,12 +19,10 @@ namespace Azure.Mcp.Tools.FunctionApp.Services;
 public sealed class FunctionAppService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ICacheService cacheService,
-    IResourceGroupService resourceGroupService) : BaseAzureService(tenantService), IFunctionAppService
+    ICacheService cacheService) : BaseAzureService(tenantService), IFunctionAppService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-    private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
 
     private const string CacheGroup = "functionapp";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
@@ -117,8 +114,10 @@ public sealed class FunctionAppService(
         return inputs;
     }
 
-    public async Task<List<FunctionAppInfo>?> ListFunctionApps(
+    public async Task<List<FunctionAppInfo>?> GetFunctionApp(
         string subscription,
+        string? functionAppName,
+        string? resourceGroup,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
@@ -143,12 +142,7 @@ public sealed class FunctionAppService(
         return functionApps;
     }
 
-    public async Task<FunctionAppInfo?> GetFunctionApp(
-        string subscription,
-        string functionAppName,
-        string resourceGroup,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+    private static async Task RetrieveAndAddFunctionApp(AsyncPageable<WebSiteResource> sites, List<FunctionAppInfo> functionApps)
     {
         ValidateRequiredParameters(subscription, resourceGroup, functionAppName);
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);

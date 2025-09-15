@@ -16,12 +16,12 @@ public static class FunctionAppOptionDefinitions
     public const string StorageAccountName = "storage-account";
     public const string ContainerAppsEnvironmentName = "container-apps-environment";
 
-    public static readonly Option<string> FunctionApp = new(
+    public static readonly Option<string> OptionalFunctionApp = new(
         $"--{FunctionAppName}"
     )
     {
         Description = "The name of the Function App.",
-        Required = true
+        Required = false
     };
 
     public static readonly Option<string> Location = new(

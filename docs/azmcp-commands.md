@@ -483,13 +483,10 @@ azmcp eventgrid topic list --subscription <subscription> \
 ### Azure Function App Operations
 
 ```bash
-# Get details for a specific Function App
+# Get detailed properties of function apps
 azmcp functionapp get --subscription <subscription> \
-                      --resource-group <resource-group> \
-                      --function-app <function-app-name>
-
-# List function apps in a subscription
-azmcp functionapp list --subscription <subscription>
+                      [--resource-group <resource-group>] \
+                      [--function-app <function-app-name>]
 ```
 
 ### Azure Key Vault Operations

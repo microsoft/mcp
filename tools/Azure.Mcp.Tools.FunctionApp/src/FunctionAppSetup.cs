@@ -32,5 +32,6 @@ public class FunctionAppSetup : IAreaSetup
 
         functionApp.AddCommand("create", new FunctionAppCreateCommand(
             loggerFactory.CreateLogger<FunctionAppCreateCommand>()));
+        functionApp.AddCommand("get", new FunctionAppGetCommand(loggerFactory.CreateLogger<FunctionAppGetCommand>()));
     }
 }
