@@ -97,8 +97,8 @@ extends:
         - template: /eng/pipelines/templates/jobs/live-test.yml
 
     - ${{ if eq(parameters.PublishPackages, 'true') }}:
-      - stage: Sign
-        displayName: 'Sign'
+      - stage: SignAndPack
+        displayName: 'Sign and Pack'
         dependsOn:
         - Initialize
         - Build
@@ -120,7 +120,7 @@ extends:
         - stage: Release
           dependsOn:
           - Initialize
-          - Sign
+          - SignAndPack
           pool:
             name: $(LINUXPOOL)
             image: $(LINUXVMIMAGE)
@@ -140,7 +140,7 @@ extends:
         - stage: Integration
           dependsOn:
           - Initialize
-          - Sign
+          - SignAndPack
           pool:
             name: $(LINUXPOOL)
             image: $(LINUXVMIMAGE)
