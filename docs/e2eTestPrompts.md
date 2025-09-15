@@ -365,6 +365,19 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_servicebus_topic_details | Show me the details of service bus <service_bus_name> topic <topic_name> |
 | azmcp_servicebus_topic_subscription_details | Show me the details of service bus <service_bus_name> subscription <subscription_name> |
 
+## Azure AI Services Speech
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_speech_stt_recognize | Convert this audio file to text using Azure Speech Services |
+| azmcp_speech_stt_recognize | Recognize speech from my audio file with language detection |
+| azmcp_speech_stt_recognize | Transcribe speech from audio file <file_path> with profanity filtering |
+| azmcp_speech_stt_recognize | Convert speech to text from audio file <file_path> using endpoint <endpoint> |
+| azmcp_speech_stt_recognize | Transcribe the audio file <file_path> in Spanish language |
+| azmcp_speech_stt_recognize | Convert speech to text with detailed output format from audio file <file_path> |
+| azmcp_speech_stt_recognize | Recognize speech from <file_path> with phrase hints for better accuracy |
+| azmcp_speech_stt_recognize | Transcribe audio with raw profanity output from file <file_path> |
+
 ## Azure SQL Database
 
 | Tool Name | Test Prompt |
