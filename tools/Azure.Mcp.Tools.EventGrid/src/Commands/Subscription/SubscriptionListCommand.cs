@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Mcp.Tools.EventGrid.Options;
@@ -22,7 +23,9 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         """
         List event subscriptions for topics with filtering and endpoint configuration. This tool shows all active 
         subscriptions including webhook endpoints, event filters, and delivery retry policies. Returns subscription 
-        details as JSON array. Requires topic-name or subscription.
+        details as JSON array. Requires either --topic (bare topic name) OR --subscription. If only --topic is provided
+        the tool searches all accessible subscriptions for a topic with that name. Optional --resource-group/--location
+        may only be used alongside --subscription or --topic. Examples:\n  --subscription <subId>\n  --subscription <subId> --topic <topicName>\n  --topic <topicName>
         """;
 
     public override string Title => CommandTitle;
@@ -35,6 +38,22 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         UseResourceGroup(); // Optional resource group filtering
         command.Options.Add(_topicNameOption);
         command.Options.Add(_locationOption);
+
+        // Remove the default subscription validator from base class and add custom validation
+        command.Validators.Clear();
+        
+        // Custom validation: Either --topic or --subscription (or env var) is required
+        command.Validators.Add(commandResult =>
+        {
+            var hasSubscriptionOption = commandResult.HasOptionResult(_subscriptionOption);
+            var hasEnv = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID"));
+            var hasTopicOption = commandResult.HasOptionResult(_topicNameOption);
+            
+            if (!hasSubscriptionOption && !hasEnv && !hasTopicOption)
+            {
+                commandResult.AddError("Either --subscription or --topic is required.");
+            }
+        });
     }
 
     protected override SubscriptionListOptions BindOptions(ParseResult parseResult)
@@ -54,19 +73,86 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
         var options = BindOptions(parseResult);
 
+    // Validation rules / behaviors:
+    // 1. Either --topic (bare topic name) or --subscription is mandatory.
+    // 2. --resource-group and --location are optional but cannot be provided alone (must accompany --topic or --subscription).
+    // 3. If only --topic (bare name) is provided (no --subscription) perform a cross-subscription search
+    //    across all accessible subscriptions for a topic with that name and aggregate results.
+    // 4. If only --subscription is provided (no --topic) list all event subscriptions from every custom and system
+    //    topic in that subscription (optionally filtered by --resource-group / --location).
+
+        var hasSubscription = !string.IsNullOrWhiteSpace(options.Subscription);
+        var hasTopic = !string.IsNullOrWhiteSpace(options.TopicName);
+        var hasRg = !string.IsNullOrWhiteSpace(options.ResourceGroup);
+        var hasLocation = !string.IsNullOrWhiteSpace(options.Location);
+
+        // Either topic or subscription is mandatory
+        if (!hasSubscription && !hasTopic)
+        {
+            context.Response.Status = 400;
+            context.Response.Message = "Either --subscription or --topic is required.";
+            return context.Response;
+        }
+
+        // Location and resource-group can only be used with subscription or topic
+        if ((hasRg || hasLocation) && !hasSubscription && !hasTopic)
+        {
+            context.Response.Status = 400;
+            context.Response.Message = "Either --subscription or --topic is required when using --resource-group or --location.";
+            return context.Response;
+        }
+
+    // Bare topic name without subscription triggers cross-subscription search
+    bool crossSubscriptionSearch = !hasSubscription && hasTopic;
+
         try
         {
             var eventGridService = context.GetService<IEventGridService>();
-            var subscriptions = await eventGridService.GetSubscriptionsAsync(
-                options.Subscription!,
-                options.ResourceGroup,
-                options.TopicName,
-                options.Location,
-                options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create<SubscriptionListCommandResult>(
-                new SubscriptionListCommandResult(subscriptions ?? []),
-                EventGridJsonContext.Default.SubscriptionListCommandResult);
+            if (crossSubscriptionSearch)
+            {
+                // Iterate all subscriptions and aggregate
+                var subscriptionService = context.GetService<Azure.Mcp.Core.Services.Azure.Subscription.ISubscriptionService>();
+                var allSubs = await subscriptionService.GetSubscriptions(null, options.RetryPolicy);
+                var aggregate = new List<EventGridSubscriptionInfo>();
+                foreach (var sub in allSubs)
+                {
+                    try
+                    {
+                        var found = await eventGridService.GetSubscriptionsAsync(
+                            sub.SubscriptionId,
+                            options.ResourceGroup,
+                            options.TopicName, // bare name
+                            options.Location,
+                            options.RetryPolicy);
+                        if (found?.Count > 0)
+                        {
+                            aggregate.AddRange(found);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed searching topic '{Topic}' in subscription '{Sub}'. Continuing.", options.TopicName, sub.SubscriptionId);
+                        continue;
+                    }
+                }
+                context.Response.Results = ResponseResult.Create<SubscriptionListCommandResult>(
+                    new SubscriptionListCommandResult(aggregate),
+                    EventGridJsonContext.Default.SubscriptionListCommandResult);
+            }
+            else
+            {
+                var subscriptions = await eventGridService.GetSubscriptionsAsync(
+                    options.Subscription!,
+                    options.ResourceGroup,
+                    options.TopicName,
+                    options.Location,
+                    options.RetryPolicy);
+
+                context.Response.Results = ResponseResult.Create<SubscriptionListCommandResult>(
+                    new SubscriptionListCommandResult(subscriptions ?? []),
+                    EventGridJsonContext.Default.SubscriptionListCommandResult);
+            }
         }
         catch (Exception ex)
         {

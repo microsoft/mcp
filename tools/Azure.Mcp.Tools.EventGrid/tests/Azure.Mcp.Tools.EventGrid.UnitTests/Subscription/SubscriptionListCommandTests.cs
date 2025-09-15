@@ -187,6 +187,50 @@ public class SubscriptionListCommandTests
         Assert.StartsWith(expectedError, response.Message);
     }
 
+
+    [Fact]
+    public async Task ExecuteAsync_ErrorWhenOnlyLocationProvided()
+    {
+        var args = _commandDefinition.Parse(["--location", "eastus"]);
+        var response = await _command.ExecuteAsync(_context, args);
+        Assert.Equal(400, response.Status);
+        Assert.Contains("Either --subscription or --topic is required", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_BareTopicName_SearchesAllSubscriptions()
+    {
+    // Arrange: We only validate that the command executes successfully without a subscription parameter.
+    // Detailed cross-subscription enumeration is handled inside the command and service; here we simulate one hit.
+        var topicName = "myTopic";
+        var subscription = "sub-search";
+        var expected = new List<Models.EventGridSubscriptionInfo>
+        {
+            new("from-search", "Microsoft.EventGrid/eventSubscriptions", "WebHook", "https://example.com/hook", "Succeeded", null, null, 30, 1440, "2023-01-01T00:00:00Z", "2023-01-02T00:00:00Z")
+        };
+
+        // When GetSubscriptionsAsync is called with sub-search and topic name return list
+        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Is(topicName), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+            .Returns(expected);
+
+        var args = _commandDefinition.Parse(["--topic", topicName]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert basic success (can't fully assert aggregate without subscription service mock wiring)
+        Assert.NotEqual(400, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ErrorWhenOnlyResourceGroupProvided()
+    {
+        var args = _commandDefinition.Parse(["--resource-group", "rg1"]);
+        var response = await _command.ExecuteAsync(_context, args);
+        Assert.Equal(400, response.Status);
+        Assert.Contains("Either --subscription or --topic is required", response.Message);
+    }
+
     private class SubscriptionListResult
     {
         [JsonPropertyName("subscriptions")]

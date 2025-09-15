@@ -152,7 +152,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_eventgrid_subscription_list | List all Event Grid subscriptions in subscription <subscription> |
 | azmcp_eventgrid_subscription_list | Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription> |
 | azmcp_eventgrid_subscription_list | List Event Grid subscriptions for topic <topic_name> in subscription <subscription> |
-| azmcp_eventgrid_subscription_list | Show Event Grid subscriptions for topic <topic_name> in location <location> |
 | azmcp_eventgrid_subscription_list | List Event Grid subscriptions for subscription <subscription> in location <location> |
 
 ## Azure Function App
