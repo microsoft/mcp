@@ -27,7 +27,15 @@ public sealed class AgentsQueryAndEvaluateCommand : GlobalCommand<AgentsQueryAnd
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = true
+    };
 
     protected override void RegisterOptions(Command command)
     {

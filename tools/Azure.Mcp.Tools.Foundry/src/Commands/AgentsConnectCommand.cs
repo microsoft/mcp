@@ -22,7 +22,15 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
         Returns the agent's response along with thread and run IDs for potential evaluation.
         """;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    { 
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
