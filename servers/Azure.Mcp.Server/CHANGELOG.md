@@ -2,11 +2,18 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.6.1 (Unreleased)
+## 0.7.0 (Unreleased)
 
 ### Features Added
 
 - Added support for Azure AI Services Speech recognition via the command `azmcp_speech_stt_recognize`. This tool enables speech-to-text conversion from audio files with configurable language settings, phrase hints for improved accuracy, output formats (simple or detailed), and profanity filtering options.
+- Added elicitation support. An elicitation request is sent if the tool annotation secret hint is true. [[#404](https://github.com/microsoft/mcp/pull/404)]
+- Added the following Azure Managed Lustre commands: [[#100](https://github.com/microsoft/mcp/issues/100)]
+  - `azmcp_azuremanagedlustre_filesystem_get_sku_info`: Get information about Azure Managed Lustre SKU.
+
+### Features Removed
+
+- Removed Azure CLI (`az`) and Azure Developer CLI (`azd`) extension tools from the MCP server to reduce complexity and focus on native Azure service operations.
 
 ### Breaking Changes
 
@@ -22,10 +29,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - **The Azure MCP Server is now also available on NuGet.org** [[#368](https://github.com/microsoft/mcp/pull/368)]
 - Added support for listing node pools in an AKS managed cluster. [[#360](https://github.com/microsoft/mcp/pull/360)]
 - Added support for getting node pool in an AKS managed cluster. [[#394](https://github.com/microsoft/mcp/pull/394)]
-
-### Features Removed
-
-- Removed Azure CLI (`az`) and Azure Developer CLI (`azd`) extension tools from the MCP server to reduce complexity and focus on native Azure service operations.
 
 ### Breaking Changes
 
