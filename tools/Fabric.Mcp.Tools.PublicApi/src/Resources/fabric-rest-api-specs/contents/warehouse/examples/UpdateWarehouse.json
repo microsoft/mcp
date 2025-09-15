@@ -1,0 +1,27 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "warehouseId": "5b218778-e7a5-4d73-8187-f10824047715",
+        "updateWarehouseRequest": {
+            "displayName": "Warehouse's New name",
+            "description": "A new description for warehouse."
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "displayName": "Warehouse's New name",
+                "description": "A new description for warehouse.",
+                "type": "Warehouse",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "5b218778-e7a5-4d73-8187-f10824047715",
+                "properties": {
+                    "connectionString": "x6eps4xrq2xudenlfv6naeo3i4-ro6aurrmwwpujdbmljjuqvyisi.msit-datawarehouse.fabric.microsoft.com",
+                    "createdDate": "2025-03-04T18:20:39.5261099",
+                    "lastUpdatedTime": "2025-03-05T17:23:03.3485446",
+                    "collationType": "Latin1_General_100_BIN2_UTF8"
+                }
+            }
+        }
+    }
+}

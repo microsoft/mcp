@@ -1,0 +1,25 @@
+{
+    "parameters": {
+        "workspaceId": "0ac682f5-aee3-4968-9d21-692eb3fd4056",
+        "workspaceRoleAssignmentId": "0218b8c4-f5a2-4a1e-bbbd-a986dd8aeb81",
+        "updateWorkspaceRoleAssignmentRequest": {
+            "role": "Contributor"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "0218b8c4-f5a2-4a1e-bbbd-a986dd8aeb81",
+                "principal": {
+                    "displayName": "user1",
+                    "id": "0218b8c4-f5a2-4a1e-bbbd-a986dd8aeb81",
+                    "type": "User",
+                    "userDetails": {
+                        "userPrincipalName": "user1@microsoft.com"
+                    }
+                },
+                "role": "Contributor"
+            }
+        }
+    }
+}

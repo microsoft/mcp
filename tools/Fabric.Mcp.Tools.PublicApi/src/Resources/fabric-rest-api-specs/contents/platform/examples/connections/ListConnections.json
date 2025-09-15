@@ -1,0 +1,46 @@
+{
+    "parameters": {},
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "6952a7b2-aea3-414f-9d85-6c0fe5d34539",
+                        "displayName": "ContosoConnection1",
+                        "connectivityType": "ShareableCloud",
+                        "connectionDetails": {
+                            "type": "Web",
+                            "path": "https://www.contoso.com"
+                        },
+                        "privacyLevel": "Public",
+                        "credentialDetails": {
+                            "credentialType": "Anonymous",
+                            "singleSignOnType": "None",
+                            "connectionEncryption": "NotEncrypted",
+                            "skipTestConnection": false
+                        }
+                    },
+                    {
+                        "id": "f6a39b76-9816-4e4b-b93a-f42e405017b7",
+                        "displayName": "ContosoConnection2",
+                        "gatewayId": "58376c10-5f61-4024-887e-748df4beae45",
+                        "connectivityType": "OnPremisesGateway",
+                        "connectionDetails": {
+                            "type": "SQL",
+                            "path": "contoso.database.windows.net;sales"
+                        },
+                        "privacyLevel": "Organizational",
+                        "credentialDetails": {
+                            "credentialType": "Basic",
+                            "singleSignOnType": "None",
+                            "connectionEncryption": "Any",
+                            "skipTestConnection": false
+                        }
+                    }
+                ],
+                "continuationToken": "LDEsMTAwMDAwLDA%3D",
+                "continuationUri": "https://api.fabric.microsoft.com/v1/connections?continuationToken=LDEsMTAwMDAwLDA%3D"
+            }
+        }
+    }
+}

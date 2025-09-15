@@ -1,0 +1,153 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Notebook data types"
+    },
+    "paths": {},
+    "definitions": {
+        "Notebooks": {
+            "description": "A list of notebooks.",
+            "required": [
+                "value"
+            ],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of notebooks.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Notebook"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "Notebook": {
+            "description": "A notebook object.",
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ]
+        },
+        "CreateNotebookRequest": {
+            "description": "Create notebook request payload.",
+            "required": [
+                "displayName"
+            ],
+            "properties": {
+                "displayName": {
+                    "description": "The notebook display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The notebook description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the notebook is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The notebook public definition.",
+                    "$ref": "#/definitions/NotebookDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateNotebookDefinitionRequest": {
+            "description": "Update notebook public definition request payload.",
+            "required": [
+                "definition"
+            ],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/NotebookDefinition"
+                }
+            }
+        },
+        "NotebookDefinitionResponse": {
+            "description": "Notebook public definition response.",
+            "required": [
+                "definition"
+            ],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/NotebookDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "NotebookDefinition": {
+            "description": "Notebook public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/notebook-definition) for more details on how to craft a notebook public definition.",
+            "type": "object",
+            "required": [
+                "parts"
+            ],
+            "properties": {
+                "format": {
+                    "description": "The format of the Notebook definition. Supported format: `ipynb` and `fabricGitSource`. If no format is provided, `fabricGitSource` is used.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/NotebookDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "NotebookDefinitionPart": {
+            "description": "Notebook definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The notebook part path. Supported notebook content extensions: `.ipynb` for `ipynb` format; `.py`, `.scala`, `.r`, `.sql` for `fabricGitSource` format.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The notebook part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType": {
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateNotebookRequest": {
+            "description": "Update notebook request.",
+            "properties": {
+                "displayName": {
+                    "description": "The notebook display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The notebook description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        }
+    }
+}

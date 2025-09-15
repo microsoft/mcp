@@ -1,0 +1,36 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff222", 
+        "itemId": "25bac802-080d-4f73-8a42-1b406eb1fceb",
+        "createShortcutRequest": {
+            "path": "Files/landingZone",
+            "name": "PartnerProducts",
+            "target": {
+                "adlsGen2": {
+                    "location": "https://contosoadlsaccount.dfs.core.windows.net", 
+                    "subpath": "/mycontainer/data/ContosoProducts",  
+                    "connectionId": "91324db9-8dc4-4730-a1e5-bafabf1fb91e"
+                }               
+            }
+        }
+    },
+    "responses": {
+        "201": {
+          "headers": {
+            "Location": "https://api.fabric.microsoft.com/v1/workspaces/cfafbeb1-8037-4d0c-896e-a46fb27ff222/items/25bac802-080d-4f73-8a42-1b406eb1fceb/shortcuts/Files/landingZone/PartnerProducts"
+          },
+          "body": {
+            "path": "Files/landingZone",
+            "name": "PartnerProducts",
+            "target": {
+              "type": "AdlsGen2",
+              "adlsGen2": {
+                "location": "https://contosoadlsaccount.dfs.core.windows.net",
+                "subpath": "/mycontainer/data/ContosoProducts",
+                "connectionId": "91324db9-8dc4-4730-a1e5-bafabf1fb91e"
+              }
+            }
+          }        
+        }
+    }
+}

@@ -1,0 +1,61 @@
+{
+    "parameters": {
+        "bulkRemoveSharingLinksRequest": {
+            "items": [
+                {
+                    "id": "fe472f5e-636e-4c10-a1c6-7e9edc0b542a",
+                    "type": "Report"
+                },
+                {
+                    "id": "476fcafe-b514-495d-b13f-ca9a4f0b1d8b",
+                    "type": "Report"
+                },
+                {
+                    "id": "fe472f5e-636e-4c10-a1c6-7e9edc0b542c",
+                    "type": "Report"
+                },
+                {
+                    "id": "476fcafe-b514-495d-b13f-ca9a4f0b1d8f",
+                    "type": "Notebook"
+                }
+            ],
+            "sharingLinkType": "OrgLink"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "itemsRemoveSharingLinksStatus": [
+                    {
+                        "id": "fe472f5e-636e-4c10-a1c6-7e9edc0b542a",
+                        "type": "Report",
+                        "status": "NotFound"
+                    },
+                    {
+                        "id": "476fcafe-b514-495d-b13f-ca9a4f0b1d8b",
+                        "type": "Report",
+                        "status": "Failed"
+                    },
+                    {
+                        "id": "fe472f5e-636e-4c10-a1c6-7e9edc0b542c",
+                        "type": "Report",
+                        "status": "Succeeded"
+                    },
+                    {
+                        "id": "476fcafe-b514-495d-b13f-ca9a4f0b1d8f",
+                        "type": "Notebook",
+                        "status": "Succeeded"
+                    }
+                ],
+                "sharingLinkType": "OrgLink"
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "x-ms-operation-id": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+                "Retry-After": 30
+            }
+        }
+    }
+}

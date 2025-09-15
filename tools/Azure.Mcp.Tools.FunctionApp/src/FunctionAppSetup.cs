@@ -23,10 +23,6 @@ public class FunctionAppSetup : IAreaSetup
         var functionApp = new CommandGroup(Name, "Function App operations - Commands for managing and accessing Azure Function App resources.");
         rootGroup.AddSubGroup(functionApp);
 
-        functionApp.AddCommand("list", new FunctionAppListCommand(
-            loggerFactory.CreateLogger<FunctionAppListCommand>()));
-
-        functionApp.AddCommand("get", new FunctionAppGetCommand(
-            loggerFactory.CreateLogger<FunctionAppGetCommand>()));
+        functionApp.AddCommand("get", new FunctionAppGetCommand(loggerFactory.CreateLogger<FunctionAppGetCommand>()));
     }
 }

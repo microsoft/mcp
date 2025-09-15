@@ -124,6 +124,9 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "Delete a firewall rule from my Azure SQL server 'myserver'"
 * "List all elastic pools in my Azure SQL server 'myserver'"
 * "List Active Directory administrators for my Azure SQL server 'myserver'"
+* "Create a new Azure SQL server in my resource group"
+* "Show me details about my Azure SQL server 'myserver'"
+* "Delete my Azure SQL server 'myserver'"
 
 ### 💾 Azure Storage
 
@@ -160,11 +163,6 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * Get secure, production-grade Azure SDK best practices for effective code generation.
 
-### 🖥️ Azure CLI Extension
-
-* Execute Azure CLI commands directly
-* Support for all Azure CLI functionality
-
 ### 📦 Azure Container Registry (ACR)
 
 * List Azure Container Registries and repositories in a subscription
@@ -199,12 +197,6 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * List and query databases.
 * List and get schema for tables.
 * List, get configuration and get/set parameters for servers.
-
-### 🛠️ Azure Developer CLI (azd) Extension
-
-* Execute Azure Developer CLI commands directly
-* Support for template discovery, template initialization, provisioning and deployment
-* Cross-platform compatibility
 
 ### 🚀 Azure Deploy
 
@@ -257,6 +249,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * List Azure Managed Lustre filesystems
 * Get the number of IP addresses required for a specific SKU and size of Azure Managed Lustre filesystem
+* Get information of Azure Managed Lustre SKUs available in a specific Azure region
 
 ### 🏪 Azure Marketplace
 
@@ -333,6 +326,9 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 ### 🗄️ Azure SQL Server
 
 * List Microsoft Entra ID administrators for SQL servers
+* Create new SQL servers
+* Show details and properties of SQL servers
+* Delete SQL servers
 
 ### 💾 Azure Storage
 

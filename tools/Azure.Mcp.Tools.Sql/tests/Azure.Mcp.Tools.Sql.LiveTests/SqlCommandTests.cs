@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
@@ -397,6 +398,73 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         try
         {
             var result = await CallToolAsync("azmcp_sql_server_firewall-rule_create",
+                new Dictionary<string, object?> { { "args", args } });
+
+            // If we get here, the command didn't fail as expected
+            Assert.Fail("Expected command to fail with invalid input, but it succeeded");
+        }
+        catch (Exception ex)
+        {
+            // Expected behavior - the command should fail with invalid input
+            Assert.NotNull(ex.Message);
+            Assert.NotEmpty(ex.Message);
+        }
+    }
+
+    [Theory]
+    [InlineData("--invalid-param")]
+    [InlineData("--subscription invalidSub")]
+    [InlineData("--subscription sub --resource-group rg")] // Missing server, location, admin credentials
+    [InlineData("--subscription sub --resource-group rg --server server1")] // Missing location and admin credentials
+    public async Task Should_Return400_WithInvalidSqlServerCreateInput(string args)
+    {
+        try
+        {
+            var result = await CallToolAsync("azmcp_sql_server_create",
+                new Dictionary<string, object?> { { "args", args } });
+
+            // If we get here, the command didn't fail as expected
+            Assert.Fail("Expected command to fail with invalid input, but it succeeded");
+        }
+        catch (Exception ex)
+        {
+            // Expected behavior - the command should fail with invalid input
+            Assert.NotNull(ex.Message);
+            Assert.NotEmpty(ex.Message);
+        }
+    }
+
+    [Theory]
+    [InlineData("--invalid-param")]
+    [InlineData("--subscription invalidSub")]
+    [InlineData("--subscription sub --resource-group rg")] // Missing server
+    public async Task Should_Return400_WithInvalidSqlServerShowInput(string args)
+    {
+        try
+        {
+            var result = await CallToolAsync("azmcp_sql_server_show",
+                new Dictionary<string, object?> { { "args", args } });
+
+            // If we get here, the command didn't fail as expected
+            Assert.Fail("Expected command to fail with invalid input, but it succeeded");
+        }
+        catch (Exception ex)
+        {
+            // Expected behavior - the command should fail with invalid input
+            Assert.NotNull(ex.Message);
+            Assert.NotEmpty(ex.Message);
+        }
+    }
+
+    [Theory]
+    [InlineData("--invalid-param")]
+    [InlineData("--subscription invalidSub")]
+    [InlineData("--subscription sub --resource-group rg")] // Missing server
+    public async Task Should_Return400_WithInvalidSqlServerDeleteInput(string args)
+    {
+        try
+        {
+            var result = await CallToolAsync("azmcp_sql_server_delete",
                 new Dictionary<string, object?> { { "args", args } });
 
             // If we get here, the command didn't fail as expected

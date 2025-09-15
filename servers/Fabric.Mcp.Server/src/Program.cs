@@ -65,6 +65,7 @@ internal class Program
             new Azure.Mcp.Core.Areas.Subscription.SubscriptionSetup(),
             new Microsoft.Mcp.Core.Areas.Tools.ToolsSetup(),
             // Register Fabric areas
+            new Fabric.Mcp.Tools.PublicApi.FabricPublicApiSetup(),
         ];
     }
 

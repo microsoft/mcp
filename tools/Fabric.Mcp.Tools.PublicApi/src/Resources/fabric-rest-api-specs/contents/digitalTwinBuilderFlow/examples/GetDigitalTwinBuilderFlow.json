@@ -1,0 +1,24 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "digitalTwinBuilderFlowId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+                "displayName": "DigitalTwinBuilderFlow 1",
+                "description": "A Digital Twin Builder Flow description.",
+                "type": "DigitalTwinBuilderFlow",
+                "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+                "properties": {
+                    "digitalTwinBuilderItemReference": {
+                        "referenceType": "ById",
+                        "itemId": "d96de2f4-7dd1-45ad-9ff6-37a2d6aa9861",
+                        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48"
+                    }
+                }
+            }
+        }
+    }
+}

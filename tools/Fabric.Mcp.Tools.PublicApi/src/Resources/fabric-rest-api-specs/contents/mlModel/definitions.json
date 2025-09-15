@@ -1,0 +1,131 @@
+{
+  "swagger": "2.0",
+  "info": {
+      "version": "v1",
+      "title": "MLModel data types"
+  },
+  "paths": {},
+  "definitions": {
+      "MLModels": {
+          "description": "A list of machine learning models.",
+          "required": ["value"],
+          "type": "object",
+          "properties": {
+              "value": {
+                  "description": "A list of machine learning models.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/MLModel"
+                  }
+              }
+          },
+          "allOf": [
+              {
+                  "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+              }
+          ]
+      },
+      "MLModel": {
+          "description": "A machine learning model object.",
+          "type": "object",
+          "required": ["type"],
+          "allOf": [
+            {
+                "$ref": "../common/definitions.json#/definitions/Item"
+            }
+          ]
+      },
+      "CreateMLModelRequest": {
+          "description": "Create machine learning model request payload.",
+          "required": ["displayName"],
+          "properties": {
+              "displayName": {
+                  "description": "The machine learning model display name. The display name must follow naming rules according to item type.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "description": {
+                  "description": "The machine learning model description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "folderId": {
+                  "description": "The folder ID. If not specified or null, the machine learning model is created with the workspace as its folder.",
+                  "type": "string",
+                  "format": "uuid",
+                  "readOnly": false
+              }
+          }
+      },
+      "UpdateMLModelDefinitionRequest": {
+          "description": "Update machine learning model public definition request payload.",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/MLModelDefinition"
+              }
+          }
+      },
+      "MLModelDefinitionResponse": {
+          "description": "Machine learning model public definition response.",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/MLModelDefinition",
+                  "readOnly": true
+              }
+          }
+      },
+      "MLModelDefinition" : {
+          "description": "Machine learning model public definition object.",
+          "type": "object",
+          "required": ["parts"],
+          "properties": {
+              "format": {
+                  "description": "The format of the item definition.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "parts": {
+                  "description": "A list of definition parts.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/MLModelDefinitionPart"
+                  },
+                  "readOnly": false
+              }
+          }
+      },
+      "MLModelDefinitionPart": {
+          "description": "Machine learning model definition part object.",
+          "type": "object",
+          "properties": {
+              "path": {
+                  "description": "The machine learning model part path.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payload": {
+                  "description": "The machine learning model part payload.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payloadType":{
+                  "description": "The payload type.",
+                  "$ref": "../common/definitions.json#/definitions/PayloadType",
+                  "readOnly": false
+              }
+          }
+      },
+      "UpdateMLModelRequest": {
+          "description": "Update machine learning model request.",
+          "properties": {
+              "description": {
+                  "description": "The machine learning model description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              }
+          }
+      }
+  }
+}

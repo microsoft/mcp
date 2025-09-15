@@ -1,0 +1,22 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "createKQLDatabaseRequest": {
+            "displayName": "KQLDatabase_1",
+            "description": "A KQL database description.",
+            "creationPayload": {
+                "databaseType": "ReadWrite",
+                "parentEventhouseItemId": "5b218778-e7a5-4d73-8187-f10824047836"
+            }
+        }
+    },
+    "responses": {
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "Retry-After": 30
+            }
+        }
+    }
+}

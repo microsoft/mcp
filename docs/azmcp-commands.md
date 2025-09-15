@@ -223,23 +223,6 @@ azmcp applens resource diagnose --subscription <subscription> \
                                 --resource <resource>
 ```
 
-### Azure CLI Operations
-
-```bash
-# Execute any Azure CLI command
-azmcp extension az --command "<command>"
-
-# Examples:
-# List resource groups
-azmcp extension az --command "group list"
-
-# Get storage account details
-azmcp extension az --command "storage account show --name <account> --resource-group <resource-group>"
-
-# List virtual machines
-azmcp extension az --command "vm list --resource-group <resource-group>"
-```
-
 ### Azure Container Registry (ACR) Operations
 
 ```bash
@@ -459,17 +442,6 @@ azmcp postgres server param set --subscription <subscription> \
                                 --value <value>
 ```
 
-### Azure Developer CLI Operations
-
-```bash
-# Execute any Azure CLI command
-azmcp extension azd --command "<command>"
-
-# Examples:
-# Create a sample todo list app with NodeJS and MongoDB
-azmcp extension azd --command "init --template todo-nodejs-mongo"
-```
-
 ### Azure Deploy Operations
 
 ```bash
@@ -511,13 +483,10 @@ azmcp eventgrid topic list --subscription <subscription> \
 ### Azure Function App Operations
 
 ```bash
-# Get details for a specific Function App
+# Get detailed properties of function apps
 azmcp functionapp get --subscription <subscription> \
-                      --resource-group <resource-group> \
-                      --function-app <function-app-name>
-
-# List function apps in a subscription
-azmcp functionapp list --subscription <subscription>
+                      [--resource-group <resource-group>] \
+                      [--function-app <function-app-name>]
 ```
 
 ### Azure Key Vault Operations
@@ -976,6 +945,26 @@ azmcp sql elastic-pool list --subscription <subscription> \
 ### Azure SQL Server Operations
 
 ```bash
+# Create a new SQL server
+azmcp sql server create --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --server <server-name> \
+                        --location <location> \
+                        --admin-user <admin-username> \
+                        --admin-password <admin-password> \
+                        [--version <server-version>] \
+                        [--public-network-access <enabled|disabled>]
+
+# Delete a SQL server
+azmcp sql server delete --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --server <server-name>
+
+# Show details of a specific SQL server
+azmcp sql server show --subscription <subscription> \
+                      --resource-group <resource-group> \
+                      --server <server-name>
+
 # List Microsoft Entra ID administrators for a SQL server
 azmcp sql server entra-admin list --subscription <subscription> \
                                   --resource-group <resource-group> \

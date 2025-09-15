@@ -1,0 +1,580 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Git integration data types"
+    },
+    "paths": {},
+    "definitions": {
+        "GitConnectionState": {
+            "type": "string",
+            "description": "Git connection state. Additional connection state types may be added over time.",
+            "enum": ["NotConnected", "Connected", "ConnectedAndInitialized"],
+            "x-ms-enum": {
+                "name": "GitConnectionState",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "NotConnected",
+                        "description": "Not connected state."
+                    },
+                    {
+                        "value": "Connected",
+                        "description": "Connected state."
+                    },
+                    {
+                        "value": "ConnectedAndInitialized",
+                        "description": "Connected and initialized state."
+                    }
+                ]
+            }
+        },
+        "GitSyncDetails": {
+            "description": "Contains the sync details.",
+            "type": "object",
+            "required": [ "head", "lastSyncTime" ],
+            "properties": {
+                "head": {
+                    "description": "The full Secure Hash Algorithm 1 (SHA-1) of the synced commit ID.",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "lastSyncTime": {
+                    "description": "The date and time of last sync state.",
+                    "type": "string",
+                    "format": "date-time",
+                    "readOnly": true
+                }
+            }
+        },
+        "GitConnection": {
+            "description": "Contains the Git connection details.",
+            "type": "object",
+            "properties": {
+                "gitProviderDetails": {
+                    "$ref": "../../common/definitions.json#/definitions/GitProviderDetails"
+                },
+                "gitSyncDetails": {
+                    "$ref": "#/definitions/GitSyncDetails"
+                },
+                "gitConnectionState": {
+                    "$ref": "#/definitions/GitConnectionState"
+                }
+            }
+        },
+        "GitConnectRequest": {
+            "description": "Contains the Git connect request data.",
+            "type": "object",
+            "required": [ "gitProviderDetails" ],
+            "properties": {
+              "gitProviderDetails": {
+                "$ref": "../../common/definitions.json#/definitions/GitProviderDetails"
+              },
+              "myGitCredentials": {
+                "description": "User-specific Git credentials for authentication to the GitProvider. These credentials are not shared with other workspace contributors. For GitHub, this property is required. For AzureDevOps, this property is optional. If not set, the default is AutomaticGitCredentials.",
+                "$ref": "#/definitions/GitCredentials"
+              }
+            }
+        },
+        "InitializationStrategy": {
+            "type": "string",
+            "description": "The strategy required for an initialization process when content exists on both the remote side and the workspace side. Additional strategies may be added over time.",
+            "enum": ["None", "PreferRemote", "PreferWorkspace"],
+            "x-ms-enum": {
+                "name": "InitializationStrategy",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "None",
+                        "description": "No strategy defined."
+                    },
+                    {
+                        "value": "PreferRemote",
+                        "description": "Prefer remote Git side content."
+                    },
+                    {
+                        "value": "PreferWorkspace",
+                        "description": "Prefer workspace side content."
+                    }
+                ]
+            }
+        },
+        "InitializeGitConnectionRequest": {
+            "description": "Contains the initialize Git connection request data.",
+            "type": "object",
+            "properties": {
+                "initializationStrategy": {
+                    "$ref": "#/definitions/InitializationStrategy"
+                }
+            }
+        },
+        "RequiredAction": {
+            "type": "string",
+            "description": "Required action after the initialization process has finished. Additional actions may be added over time.",
+            "enum": [ "None", "UpdateFromGit", "CommitToGit"],
+            "x-ms-enum": {
+                "name": "RequiredAction",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "None",
+                        "description": "No action is required."
+                    },
+                    {
+                        "value": "UpdateFromGit",
+                        "description": "Update from Git is required."
+                    },
+                    {
+                        "value": "CommitToGit",
+                        "description": "Commit to Git is required."
+                    }
+                ]
+            }
+        },
+        "InitializeGitConnectionResponse": {
+            "description": "Contains the initialize Git connection response data.",
+            "type": "object",
+            "properties": {
+                "requiredAction": {
+                    "$ref": "#/definitions/RequiredAction",
+                    "readOnly": true
+                },
+                "workspaceHead": {
+                    "type": "string",
+                    "description": "Full SHA hash that the workspace is synced to.",
+                    "readOnly": true
+                },
+                "remoteCommitHash": {
+                    "type": "string",
+                    "description": "Remote full SHA commit hash.",
+                    "readOnly": true
+                }
+            }
+        },
+        "UpdateOptions": {
+            "description": "Contains the options that are enabled for the update from Git.",
+            "type": "object",
+            "properties": {
+                "allowOverrideItems": {
+                    "type": "boolean",
+                    "description": "User consent to override incoming items during the update from Git process.\nWhen incoming items are present and the allow override items is not specified or is provided as false, the update operation will not start.\nDefault value is false."
+                }
+            }
+        },
+        "ConflictResolutionPolicy": {
+            "type": "string",
+            "description": "Conflict resolution policy. Additional conflict resolution policies may be added over time.",
+            "enum": ["PreferRemote", "PreferWorkspace"],
+            "x-ms-enum": {
+                "name": "ConflictResolutionPolicy",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "PreferRemote",
+                        "description": "Prefer remote Git side content."
+                    },
+                    {
+                        "value": "PreferWorkspace",
+                        "description": "Prefer workspace side content."
+                    }
+                ]
+            }
+        },
+        "ConflictResolutionType": {
+            "type": "string",
+            "description": "Conflict resolution type. Additional conflict resolution types may be added over time.",
+            "enum": ["Workspace"],
+            "x-ms-enum": {
+                "name": "ConflictResolutionType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Workspace",
+                        "description": "Conflict resolution representing the workspace level."
+                    }
+                ]
+            }
+        },
+        "WorkspaceConflictResolution": {
+            "type": "object",
+            "description": "The basic conflict resolution data.",
+            "required": ["conflictResolutionType", "conflictResolutionPolicy"],
+            "properties": {
+                "conflictResolutionType": {
+                    "$ref": "#/definitions/ConflictResolutionType"
+                },
+                "conflictResolutionPolicy": {
+                    "$ref": "#/definitions/ConflictResolutionPolicy"
+                }
+            }
+        },
+        "UpdateFromGitRequest": {
+            "description": "Contains the update from Git request data.",
+            "type": "object",
+            "required": [ "remoteCommitHash" ],
+            "properties": {
+                "workspaceHead": {
+                    "type": "string",
+                    "description": "Full SHA hash that the workspace is synced to.\nThis value may be null only after Initialize Connection.\nIn other cases, the system will validate that the given value is aligned with the head known to the system."
+                },
+                "remoteCommitHash": {
+                    "type": "string",
+                    "description": "Remote full SHA commit hash."
+                },
+                "conflictResolution": {
+                    "description": "Conflict resolution to be used in the update from Git operation.\nIf items are in conflict and a conflict resolution is not specified, the update operation will not start.",
+                    "$ref": "#/definitions/WorkspaceConflictResolution"
+                },
+                "options": {
+                    "description": "Options to be used in the update from Git operation",
+                    "$ref": "#/definitions/UpdateOptions"
+                }
+            }
+        },
+        "ConflictType": {
+            "type": "string",
+            "description": "A change of an item in both workspace and remote. Additional changed types may be added over time.",
+            "enum": [ "None", "Conflict", "SameChanges"],
+            "x-ms-enum": {
+                "name": "ConflictType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "None",
+                        "description": "There are no changes to the item."
+                    },
+                    {
+                        "value": "Conflict",
+                        "description": "There are different changes to the item in the workspace and in remote Git."
+                    },
+                    {
+                        "value": "SameChanges",
+                        "description": "There are identical changes to the item in the workspace and in remote Git."
+                    }
+                ]
+            }
+        },
+        "ChangeType": {
+            "type": "string",
+            "description": "A change of an item. Additional changed types may be added over time.",
+            "enum": ["Added", "Deleted", "Modified"],
+            "x-ms-enum": {
+                "name": "ChangeType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Added",
+                        "description": "A newly created item."
+                    },
+                    {
+                        "value": "Deleted",
+                        "description": "Item has been deleted."
+                    },
+                    {
+                        "value": "Modified",
+                        "description": "Item content has been modified."
+                    }
+                ]
+            }
+        },
+        "ItemIdentifier": {
+            "description": "Contains the item identifier. At least one of the properties must be defined.",
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 2,
+            "properties": {
+                "objectId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The object ID of the item.\nWhen the object ID isn't available because the item was deleted from the workspace, you can use the logical ID."
+                },
+                "logicalId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The logical ID of the item.\nWhen the logical ID isn't available because the item is not yet added to the workspace, you can use the object ID."
+                }
+            }
+        },
+        "ItemMetadata": {
+            "description": "Contains the item metadata.",
+            "type": "object",
+            "required": [ "itemIdentifier", "itemType", "displayName" ],
+            "properties": {
+                "itemIdentifier": {
+                    "$ref": "#/definitions/ItemIdentifier",
+                    "description": "The item identifier.",
+                    "readOnly": true
+                },
+                "itemType": {
+                    "$ref": "../../common/definitions.json#/definitions/ItemType",
+                    "description": "The item type.",
+                    "readOnly": true
+                },
+                "displayName": {
+                    "type": "string",
+                    "description": "The display name of the item.\nPrefers the workspace item's display name if it exists, otherwise displayName uses the remote item's display name.",
+                    "readOnly": true
+                }
+            }
+        },
+        "ItemChange": {
+            "description": "Contains the item's change information.",
+            "type": "object",
+            "required": [ "itemMetadata", "conflictType" ],
+            "properties": {
+                "itemMetadata": {
+                    "$ref": "#/definitions/ItemMetadata",
+                    "description": "The item metadata.",
+                    "readOnly": true
+                },
+                "remoteChange": {
+                    "$ref": "#/definitions/ChangeType",
+                    "description": "Change on the remote Git side.",
+                    "readOnly": true
+                },
+                "workspaceChange": {
+                    "$ref": "#/definitions/ChangeType",
+                    "description": "Change on the workspace side.",
+                    "readOnly": true
+                },
+                "conflictType": {
+                    "$ref": "#/definitions/ConflictType",
+                    "description": "When there are changes on both the workspace side and the remote Git side.",
+                    "readOnly": true
+                }
+            }
+        },
+        "GitStatusResponse": {
+            "description": "Contains the status response.",
+            "type": "object",
+            "required": [ "workspaceHead","remoteCommitHash", "changes" ],
+            "properties": {
+                "workspaceHead": {
+                    "type": "string",
+                    "description": "Full SHA hash that the workspace is synced to.",
+                    "readOnly": true
+                },
+                "remoteCommitHash": {
+                    "type": "string",
+                    "description": "Remote full SHA commit hash.",
+                    "readOnly": true
+                },
+                "changes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ItemChange",
+                        "description": "A list of changes in remote Git that are not applied to the given workspace, and changes in the workspace that are not applied to remote Git."
+                    }
+                }
+            }
+        },
+        "CommitMode": {
+            "type": "string",
+            "description": "Modes for the commit operation. Additional modes may be added over time.",
+            "enum": ["All", "Selective"],
+            "x-ms-enum": {
+                "name": "CommitMode",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "All",
+                        "description": "Commit all uncommitted changes. The caller is not required to provide the list of items to commit."
+                    },
+                    {
+                        "value": "Selective",
+                        "description": "Commit a specified items list that has uncommitted changes."
+                    }
+                ]
+            }
+        },
+        "CommitToGitRequest": {
+            "description": "Contains the commit request.",
+            "type": "object",
+            "required": [ "mode" ],
+            "properties": {
+                "mode": {
+                    "$ref": "#/definitions/CommitMode",
+                    "description": "The mode for the commit operation."
+                },
+                "workspaceHead": {
+                    "type": "string",
+                    "description": "Full SHA hash that the workspace is synced to.\nThe hash can be retrieved from the [Git Status](/rest/api/fabric/core/git/get-status) API."
+                },
+                "comment": {
+                    "type": "string",
+                    "maxLength": 300,
+                    "description": "Caller-free comment for this commit. Maximum length is 300 characters.\nIf no comment is provided by the caller, use the default Git provider comment."
+                },
+                "items": {
+                    "type": "array",
+                    "description": "Specific items to commit.\nThis is relevant only for Selective commit mode.\nThe items can be retrieved from the [Git Status](/rest/api/fabric/core/git/get-status) API.",
+                    "items": {
+                        "$ref": "#/definitions/ItemIdentifier"
+                    }
+                }
+            }
+        },
+        "GitCredentialsSource": {
+            "type": "string",
+            "description": "The Git credentials source. Additional Git credentials sources may be added over time.",
+            "enum": ["ConfiguredConnection", "Automatic", "None"],
+            "x-ms-enum": {
+                "name": "GitCredentialsSource",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "ConfiguredConnection",
+                        "description": "The Git credentials are obtained through a configured connection."
+                    },
+                    {
+                        "value": "Automatic",
+                        "description": "The Git credentials are automatically obtained by the system, using default credentials if available."
+                    },
+                    {
+                        "value": "None",
+                        "description": "The Git credentials are not configured."
+                    }
+                ]
+            }
+        },
+        "GitCredentialsConfigurationResponse": {
+            "type": "object",
+            "description": "The Git credentials configuration.",
+            "discriminator": "source",
+            "required": [ "source" ],
+            "properties": {
+                "source": {
+                    "description": "The Git credentials source.",
+                    "$ref": "#/definitions/GitCredentialsSource"
+                }
+            }
+        },
+        "ConfiguredConnectionGitCredentialsResponse": {
+            "type": "object",
+            "description": "Configured connection Git credentials.",
+            "required": [ "connectionId" ],
+            "properties": {
+                "connectionId": {
+                    "$ref": "#/definitions/ConnectionId"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/GitCredentialsConfigurationResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "ConfiguredConnection"
+        },
+        "AutomaticGitCredentialsResponse": {
+            "type": "object",
+            "description": "Automatic Git credentials.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/GitCredentialsConfigurationResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "Automatic"
+        },
+        "NoneGitCredentialsResponse": {
+            "type": "object",
+            "description": "Not configured Git credentials.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/GitCredentialsConfigurationResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "None"
+        },
+        "UpdateGitCredentialsRequest": {
+            "type": "object",
+            "description": "Contains the request data to update the Git credentials configuration.",
+            "required": [ "source" ],
+            "discriminator": "source",
+            "properties": {
+                "source": {
+                    "description": "The Git credentials source.",
+                    "$ref": "#/definitions/GitCredentialsSource"
+                }
+            }
+        },
+        "UpdateGitCredentialsToConfiguredConnectionRequest": {
+            "type": "object",
+            "description": "Contains the request data to update the Git credentials to configured connection.",
+            "required": [ "connectionId" ],
+            "properties": {
+                "connectionId": {
+                    "$ref": "#/definitions/ConnectionId"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UpdateGitCredentialsRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "ConfiguredConnection"
+        },
+        "UpdateGitCredentialsToNoneRequest": {
+            "type": "object",
+            "description": "Contains the request data to update the Git credentials to none.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UpdateGitCredentialsRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "None"
+        },
+        "UpdateGitCredentialsToAutomaticRequest": {
+            "type": "object",
+            "description": "Contains the request data to update the Git credentials to automatic.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UpdateGitCredentialsRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "Automatic"
+        },
+        "GitCredentials": {
+            "type": "object",
+            "description": "The Git credentials.",
+            "required": [ "source" ],
+            "discriminator": "source",
+            "properties": {
+                "source": {
+                    "description": "The Git credentials source.",
+                    "$ref": "#/definitions/GitCredentialsSource"
+                }
+            }
+        },
+        "ConfiguredConnectionGitCredentials": {
+            "type": "object",
+            "description": "Configured connection Git credentials.",
+            "required": [ "connectionId" ],
+            "properties": {
+                "connectionId": {
+                    "$ref": "#/definitions/ConnectionId"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/GitCredentials"
+                }
+            ],
+            "x-ms-discriminator-value": "ConfiguredConnection"
+        },
+        "AutomaticGitCredentials": {
+            "type": "object",
+            "description": "Automatic Git credentials.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/GitCredentials"
+                }
+            ],
+            "x-ms-discriminator-value": "Automatic"
+        },
+        "ConnectionId": {
+            "description": "The object ID of the connection.",
+            "type": "string",
+            "format": "uuid"
+        }
+    }
+}

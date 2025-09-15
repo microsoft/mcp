@@ -1,0 +1,20 @@
+{
+    "parameters": {
+        "createDomainRequest": {
+            "displayName": "Finance",
+            "description": "This domain is used for identifying financial data and reports.",
+            "parentDomainId": "5f6552c3-816c-43e7-8289-842f8b35f9df"
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "id": "9eba6944-daff-4441-b9b5-630ce34238fd",
+                "displayName": "Finance",
+                "description": "This domain is used for identifying financial data and reports.",
+                "parentDomainId": "5f6552c3-816c-43e7-8289-842f8b35f9df",
+                "contributorsScope": "AllTenant"
+            }
+        }
+    }
+}
