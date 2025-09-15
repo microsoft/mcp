@@ -40,5 +40,59 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
             var ips = result.AssertProperty("numberOfRequiredIPs");
             Assert.Equal(JsonValueKind.Number, ips.ValueKind);
         }
+
+        [Fact]
+        public async Task Should_get_sku_info()
+        {
+            var result = await CallToolAsync(
+                "azmcp_azuremanagedlustre_filesystem_sku_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId }
+                });
+
+            var skus = result.AssertProperty("skus");
+            Assert.Equal(JsonValueKind.Array, skus.ValueKind);
+        }
+
+        [Fact]
+        public async Task Should_get_sku_info_zonal_support()
+        {
+            var result = await CallToolAsync(
+                "azmcp_azuremanagedlustre_filesystem_sku_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "location", "westeurope" }
+                });
+
+            var skus = result.AssertProperty("skus");
+            foreach (var sku in skus.EnumerateArray())
+            {
+                Assert.True(sku.TryGetProperty("supportsZones", out var supportsZones), "Property 'supportsZones' is missing.");
+                Assert.True(supportsZones.GetBoolean(), "'supportsZones' must be true.");
+            }
+        }
+
+        [Fact]
+        public async Task Should_get_sku_info_no_zonal_support()
+        {
+            var result = await CallToolAsync(
+                "azmcp_azuremanagedlustre_filesystem_sku_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "location", "westus" }
+                });
+
+            var skus = result.AssertProperty("skus");
+            Assert.Equal(JsonValueKind.Array, skus.ValueKind);
+            foreach (var sku in skus.EnumerateArray())
+            {
+                Assert.True(sku.TryGetProperty("supportsZones", out var supportsZones), "Property 'supportsZones' is missing.");
+                Assert.False(supportsZones.GetBoolean(), "'supportsZones' must be false.");
+            }
+        }
+
     }
 }

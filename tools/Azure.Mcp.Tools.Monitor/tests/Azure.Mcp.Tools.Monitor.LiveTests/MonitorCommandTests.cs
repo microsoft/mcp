@@ -30,12 +30,6 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         _logHelper = new LogAnalyticsHelper(Settings.ResourceBaseName, Settings.SubscriptionId, _monitorService, Settings.TenantId, TestLogType);
     }
 
-    public override ValueTask DisposeAsync()
-    {
-        base.Dispose();
-        return ValueTask.CompletedTask;
-    }
-
     private static IMonitorService GetMonitorService()
     {
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
