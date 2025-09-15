@@ -31,6 +31,9 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
     // Maximum query length to prevent DoS attacks
     private const int MaxQueryLength = 8000;
 
+    // Regex timeout to prevent ReDoS attacks
+    private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(3);
+
     // Static arrays for security validation - initialized once per class
     private static readonly string[] DangerousKeywords =
     [
@@ -329,13 +332,13 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         var cleanedQuery = query;
 
         // Remove line comments (-- comment)
-        cleanedQuery = Regex.Replace(cleanedQuery, @"--.*?$", "", RegexOptions.Multiline);
+        cleanedQuery = Regex.Replace(cleanedQuery, @"--.*?$", "", RegexOptions.Multiline, RegexTimeout);
 
         // Remove block comments (/* comment */)
-        cleanedQuery = Regex.Replace(cleanedQuery, @"/\*.*?\*/", "", RegexOptions.Singleline);
+        cleanedQuery = Regex.Replace(cleanedQuery, @"/\*.*?\*/", "", RegexOptions.Singleline, RegexTimeout);
 
         // Normalize whitespace: replace multiple whitespace characters with single space
-        cleanedQuery = Regex.Replace(cleanedQuery, @"\s+", " ", RegexOptions.Multiline);
+        cleanedQuery = Regex.Replace(cleanedQuery, @"\s+", " ", RegexOptions.Multiline, RegexTimeout);
 
         // Trim the result
         cleanedQuery = cleanedQuery.Trim();
@@ -349,7 +352,8 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         // Check for multiple statements (semicolons followed by non-whitespace)
         var multipleStatementsPattern = new Regex(
             @";\s*\w",
-            RegexOptions.IgnoreCase | RegexOptions.Compiled
+            RegexOptions.IgnoreCase | RegexOptions.Compiled,
+            RegexTimeout
         );
 
         if (multipleStatementsPattern.IsMatch(cleanedQuery))
@@ -385,14 +389,14 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         }
 
         // Check for excessive use of wildcards which could cause performance issues
-        var wildcardCount = Regex.Matches(queryUpper, @"\*").Count;
+        var wildcardCount = Regex.Matches(queryUpper, @"\*", RegexOptions.None, RegexTimeout).Count;
         if (wildcardCount > 5)
         {
             throw new InvalidOperationException("Query contains too many wildcard operators (*) which could cause performance issues.");
         }
 
         // Limit nested function calls to prevent complex queries that could impact performance
-        var nestedFunctionCount = Regex.Matches(queryUpper, @"\w+\s*\(").Count;
+        var nestedFunctionCount = Regex.Matches(queryUpper, @"\w+\s*\(", RegexOptions.None, RegexTimeout).Count;
         if (nestedFunctionCount > 10)
         {
             throw new InvalidOperationException("Query contains too many function calls which could cause performance issues.");
