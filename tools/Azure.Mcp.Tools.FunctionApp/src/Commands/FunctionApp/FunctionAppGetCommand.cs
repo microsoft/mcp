@@ -23,9 +23,9 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
 
     public override string Description =>
         """
-        Gets Azure Function App details. If function app name and resource group is specified, retrieves the details of that specific function app.
-        Otherwise, if function app name isn't included, lists all function apps in the subscription or resource group. Retrieves the details of
-        Azure Function Apps, including its name, location, status, and app service plan name.
+        Gets Azure Function App details. Lists all Function Apps in the subscription or resource group.  If function app name and resource group
+        is specified, retrieves the details of that specific function app.  Returns the details of Azure Function Apps, including its name,
+        location, status, and app service plan name.
         """;
 
     public override string Title => CommandTitle;
