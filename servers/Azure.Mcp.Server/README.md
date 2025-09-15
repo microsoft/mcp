@@ -120,6 +120,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "Convert this audio file to text using Azure Speech Services"
 * "Recognize speech from my audio file with language detection"
 * "Transcribe speech from audio with profanity filtering"
+* "Transcribe audio with phrase hints for better accuracy"
 
 ### 🗄️ Azure SQL Database
 
@@ -318,8 +319,8 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * Convert speech from audio files to text using Azure AI Services Speech recognition
 * Support for multiple audio formats with configurable language settings
-* Phrase hints for improved recognition accuracy
-* Output formats (simple or detailed) with confidence scores
+* Enhanced phrase hints for improved recognition accuracy - supports multiple argument formats and comma-separated values
+* Output formats (simple or detailed) with confidence scores and N-best alternatives
 * Profanity filtering options (masked, removed, or raw)
 
 ### 🗄️ Azure SQL Database

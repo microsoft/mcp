@@ -377,6 +377,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_speech_stt_recognize | Transcribe the audio file <file_path> in Spanish language |
 | azmcp_speech_stt_recognize | Convert speech to text with detailed output format from audio file <file_path> |
 | azmcp_speech_stt_recognize | Recognize speech from <file_path> with phrase hints for better accuracy |
+| azmcp_speech_stt_recognize | Transcribe audio using multiple phrase hints: "Azure", "cognitive services", "machine learning" |
+| azmcp_speech_stt_recognize | Convert speech to text with comma-separated phrase hints: "Azure, cognitive services, API" |
 | azmcp_speech_stt_recognize | Transcribe audio with raw profanity output from file <file_path> |
 
 ## Azure SQL Database

@@ -5,6 +5,9 @@ using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.Speech.Models;
 
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+[JsonDerivedType(typeof(SpeechRecognitionResult), "simple")]
+[JsonDerivedType(typeof(DetailedSpeechRecognitionResult), "detailed")]
 public class SpeechRecognitionResult
 {
     [JsonPropertyName("text")]

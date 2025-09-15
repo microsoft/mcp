@@ -909,10 +909,34 @@ azmcp servicebus topic subscription details --subscription <subscription> \
 azmcp speech stt recognize --endpoint <endpoint> \
                            --file <file-path> \
                            [--language <language>] \
-                           [--phrases <phrase1> <phrase2>...] \
+                           [--phrases <phrase-hints>] \
                            [--format <simple|detailed>] \
                            [--profanity <masked|removed|raw>]
 ```
+
+#### Phrase Hints for Improved Accuracy
+
+The `--phrases` parameter supports multiple ways to specify phrase hints that improve speech recognition accuracy:
+
+**Multiple Arguments (Original):**
+```bash
+azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
+    --phrases "Azure" --phrases "cognitive services" --phrases "machine learning"
+```
+
+**Comma-Separated Values (New):**
+```bash
+azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
+    --phrases "Azure, cognitive services, machine learning"
+```
+
+**Mixed Syntax (Both):**
+```bash
+azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
+    --phrases "Azure, cognitive services" --phrases "machine learning"
+```
+
+Use phrase hints when you expect specific terminology, technical terms, or domain-specific vocabulary in your audio content. This significantly improves recognition accuracy for specialized content.
 
 ### Azure SQL Database Operations
 

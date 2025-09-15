@@ -10,5 +10,9 @@ using Azure.Mcp.Tools.Speech.Models;
 [JsonSerializable(typeof(DetailedSpeechRecognitionResult))]
 [JsonSerializable(typeof(NBestResult))]
 [JsonSerializable(typeof(WordResult))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    WriteIndented = true,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    UseStringEnumConverter = true)]
 internal partial class SpeechJsonContext : JsonSerializerContext;

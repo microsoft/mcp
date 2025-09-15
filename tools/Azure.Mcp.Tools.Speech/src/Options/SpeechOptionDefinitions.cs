@@ -35,7 +35,7 @@ public static class SpeechOptionDefinitions
     public static readonly Option<string[]?> Phrases = new(
         $"--{PhrasesName}")
     {
-        Description = "Comma-separated list of phrases to improve recognition accuracy.",
+        Description = "Phrase hints to improve recognition accuracy. Can be specified multiple times (--phrases \"phrase1\" --phrases \"phrase2\") or as comma-separated values (--phrases \"phrase1,phrase2\").",
         AllowMultipleArgumentsPerToken = true
     };
 

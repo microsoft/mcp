@@ -64,7 +64,31 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
         options.Endpoint = parseResult.GetValueOrDefault(_endpointOption);
         options.File = parseResult.GetValueOrDefault(_fileOption);
         options.Language = parseResult.GetValueOrDefault(_languageOption);
-        options.Phrases = parseResult.GetValueOrDefault(_phrasesOption);
+
+        // Process phrases to support comma-separated values
+        var rawPhrases = parseResult.GetValueOrDefault(_phrasesOption);
+        if (rawPhrases != null && rawPhrases.Length > 0)
+        {
+            var processedPhrases = new List<string>();
+            foreach (var phrase in rawPhrases)
+            {
+                if (string.IsNullOrWhiteSpace(phrase))
+                    continue;
+
+                // Split by comma and trim whitespace
+                var splitPhrases = phrase.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(p => p.Trim())
+                    .Where(p => !string.IsNullOrEmpty(p));
+
+                processedPhrases.AddRange(splitPhrases);
+            }
+            options.Phrases = processedPhrases.Count > 0 ? processedPhrases.ToArray() : null;
+        }
+        else
+        {
+            options.Phrases = rawPhrases;
+        }
+
         options.Format = parseResult.GetValueOrDefault(_formatOption);
         options.Profanity = parseResult.GetValueOrDefault(_profanityOption);
         return options;
@@ -166,5 +190,16 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
         ArgumentException argEx => $"Invalid parameter: {argEx.Message}",
         UnauthorizedAccessException => "Access denied. Check Azure AI Services credentials and permissions.",
         _ => base.GetErrorMessage(ex)
+    };
+
+    protected override int GetStatusCode(Exception ex) => ex switch
+    {
+        ArgumentException => 400,
+        FileNotFoundException => 404,
+        UnauthorizedAccessException => 401,
+        HttpRequestException => 503,
+        TimeoutException => 504,
+        InvalidOperationException => 500,
+        _ => base.GetStatusCode(ex)
     };
 }

@@ -300,6 +300,9 @@
   "azmcp_azuremanagedlustre_filesystem_required-subnet-size": [
     "Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku>"
   ],
+  "azmcp_azuremanagedlustre_filesystem_sku_get": [
+    "List the Azure Managed Lustre SKUs available in <location>"
+  ],
   "azmcp_marketplace_product_get": [
     "Get details about marketplace product <product_name>"
   ],
@@ -430,6 +433,8 @@
     "Transcribe the audio file <file_path> in Spanish language",
     "Convert speech to text with detailed output format from audio file <file_path>",
     "Recognize speech from <file_path> with phrase hints for better accuracy",
+    "Transcribe audio using multiple phrase hints: \"Azure\", \"cognitive services\", \"machine learning\"",
+    "Convert speech to text with comma-separated phrase hints: \"Azure, cognitive services, API\"",
     "Transcribe audio with raw profanity output from file <file_path>"
   ],
   "azmcp_sql_db_list": [

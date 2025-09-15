@@ -178,7 +178,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(500, response.Status);
+            Assert.Equal(401, response.Status);
             Assert.Contains("Access denied", response.Message);
         }
         finally
@@ -252,6 +252,656 @@ public class SttRecognizeCommandTests
 
             // Assert
             Assert.Equal(200, response.Status);
+        }
+        finally
+        {
+            // Clean up
+            if (File.Exists(testFile))
+            {
+                File.Delete(testFile);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithDetailedFormat_ShouldReturnDetailedResult()
+    {
+        // Arrange
+        var testFile = "test-audio-detailed.wav";
+        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+
+        var expectedResult = new DetailedSpeechRecognitionResult
+        {
+            Text = "Hello world",
+            Confidence = 0.95,
+            Reason = "RecognizedSpeech",
+            NBest = new List<NBestResult>
+            {
+                new() { Text = "Hello world", Confidence = 0.95 },
+                new() { Text = "Hello word", Confidence = 0.85 }
+            }
+        };
+
+        _speechService.RecognizeSpeechFromFile(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            "detailed",
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(expectedResult);
+
+        try
+        {
+            // Act
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --format detailed";
+            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            var response = await _command.ExecuteAsync(_context, parseResult);
+
+            // Assert
+            Assert.Equal(200, response.Status);
+            Assert.NotNull(response.Results);
+
+            var result = JsonSerializer.Deserialize<SttRecognizeCommand.SttRecognizeCommandResult>(
+                JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
+            Assert.NotNull(result);
+            Assert.Equal("Hello world", result.Result.Text);
+
+            // Verify it's a detailed result
+            Assert.IsType<DetailedSpeechRecognitionResult>(result.Result);
+            var detailedResult = (DetailedSpeechRecognitionResult)result.Result;
+            Assert.NotNull(detailedResult.NBest);
+            Assert.Equal(2, detailedResult.NBest.Count);
+        }
+        finally
+        {
+            // Clean up
+            if (File.Exists(testFile))
+            {
+                File.Delete(testFile);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("masked")]
+    [InlineData("removed")]
+    [InlineData("raw")]
+    public async Task ExecuteAsync_WithDifferentProfanityOptions_ShouldPassToService(string profanityOption)
+    {
+        // Arrange
+        var testFile = "test-audio-profanity.wav";
+        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+
+        var expectedResult = new SpeechRecognitionResult
+        {
+            Text = "Filtered text",
+            Confidence = 0.90,
+            Reason = "RecognizedSpeech"
+        };
+
+        _speechService.RecognizeSpeechFromFile(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            profanityOption,
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(expectedResult);
+
+        try
+        {
+            // Act
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --profanity {profanityOption}";
+            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            var response = await _command.ExecuteAsync(_context, parseResult);
+
+            // Assert
+            Assert.Equal(200, response.Status);
+
+            // Verify the service was called with correct profanity option
+            await _speechService.Received(1).RecognizeSpeechFromFile(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string[]>(),
+                Arg.Any<string>(),
+                profanityOption,
+                Arg.Any<RetryPolicyOptions>());
+        }
+        finally
+        {
+            // Clean up
+            if (File.Exists(testFile))
+            {
+                File.Delete(testFile);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithPhraseHints_ShouldPassToService()
+    {
+        // Arrange
+        var testFile = "test-audio-phrases.wav";
+        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+
+        var expectedResult = new SpeechRecognitionResult
+        {
+            Text = "Azure cognitive services",
+            Confidence = 0.95,
+            Reason = "RecognizedSpeech"
+        };
+
+        // Capture what phrases are actually passed for verification
+        string[]? capturedPhrases = null;
+        _speechService.RecognizeSpeechFromFile(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Do<string[]>(phrases => capturedPhrases = phrases),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(expectedResult);
+
+        try
+        {
+            // Act - Use a different approach to handle quoted arguments
+            var args = new string[]
+            {
+                "--subscription", _knownSubscription,
+                "--endpoint", _knownEndpoint,
+                "--file", testFile,
+                "--phrases", "Azure",
+                "--phrases", "cognitive services"
+            };
+            var parseResult = _commandDefinition.Parse(args);
+            var response = await _command.ExecuteAsync(_context, parseResult);
+
+            // Assert
+            Assert.Equal(200, response.Status);
+
+            // Verify that phrases were captured and contain expected values
+            Assert.NotNull(capturedPhrases);
+            Assert.Equal(2, capturedPhrases.Length);
+            Assert.Contains("Azure", capturedPhrases);
+            Assert.Contains("cognitive services", capturedPhrases);
+
+            // Verify the service was called with the expected phrases
+            await _speechService.Received(1).RecognizeSpeechFromFile(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Is<string[]>(phrases =>
+                    phrases != null &&
+                    phrases.Length == 2 &&
+                    phrases.Contains("Azure") &&
+                    phrases.Contains("cognitive services")),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>());
+        }
+        finally
+        {
+            // Clean up
+            if (File.Exists(testFile))
+            {
+                File.Delete(testFile);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("en-US")]
+    [InlineData("es-ES")]
+    [InlineData("fr-FR")]
+    [InlineData("de-DE")]
+    public async Task ExecuteAsync_WithDifferentLanguages_ShouldPassToService(string language)
+    {
+        // Arrange
+        var testFile = "test-audio-language.wav";
+        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+
+        var expectedResult = new SpeechRecognitionResult
+        {
+            Text = "Recognized text",
+            Confidence = 0.90,
+            Reason = "RecognizedSpeech"
+        };
+
+        _speechService.RecognizeSpeechFromFile(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            language,
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(expectedResult);
+
+        try
+        {
+            // Act
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language {language}";
+            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            var response = await _command.ExecuteAsync(_context, parseResult);
+
+            // Assert
+            Assert.Equal(200, response.Status);
+
+            // Verify the service was called with correct language
+            await _speechService.Received(1).RecognizeSpeechFromFile(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                language,
+                Arg.Any<string[]>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>());
+        }
+        finally
+        {
+            // Clean up
+            if (File.Exists(testFile))
+            {
+                File.Delete(testFile);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithRetryPolicy_ShouldPassToService()
+    {
+        // Arrange
+        var testFile = "test-audio-retry.wav";
+        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+
+        var expectedResult = new SpeechRecognitionResult
+        {
+            Text = "Retry succeeded",
+            Confidence = 0.88,
+            Reason = "RecognizedSpeech"
+        };
+
+        _speechService.RecognizeSpeechFromFile(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is<RetryPolicyOptions>(policy => policy.MaxRetries == 5))
+            .Returns(expectedResult);
+
+        try
+        {
+            // Act
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --retry-max-retries 5";
+            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            var response = await _command.ExecuteAsync(_context, parseResult);
+
+            // Assert
+            Assert.Equal(200, response.Status);
+
+            // Verify the service was called with retry policy
+            await _speechService.Received(1).RecognizeSpeechFromFile(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string[]>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Is<RetryPolicyOptions>(policy => policy.MaxRetries == 5));
+        }
+        finally
+        {
+            // Clean up
+            if (File.Exists(testFile))
+            {
+                File.Delete(testFile);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("HttpRequestException", 503, "Http request failed")]
+    [InlineData("TimeoutException", 504, "Speech recognition timed out")]
+    [InlineData("InvalidOperationException", 500, "Invalid operation")]
+    [InlineData("ArgumentException", 400, "Invalid argument")]
+    public async Task ExecuteAsync_HandlesSpecificExceptions(string exceptionType, int expectedStatus, string expectedMessage)
+    {
+        // Arrange
+        var testFile = "test-audio-exception.wav";
+        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+
+        Exception exceptionToThrow = exceptionType switch
+        {
+            "HttpRequestException" => new HttpRequestException("Http request failed"),
+            "TimeoutException" => new TimeoutException("Speech recognition timed out"),
+            "InvalidOperationException" => new InvalidOperationException("Invalid operation"),
+            "ArgumentException" => new ArgumentException("Invalid argument"),
+            _ => new Exception("Unknown error")
+        };
+
+        _speechService.RecognizeSpeechFromFile(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(exceptionToThrow);
+
+        try
+        {
+            // Act
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile}";
+            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            var response = await _command.ExecuteAsync(_context, parseResult);
+
+            // Assert
+            Assert.Equal(expectedStatus, response.Status);
+            Assert.Contains(expectedMessage, response.Message);
+        }
+        finally
+        {
+            // Clean up
+            if (File.Exists(testFile))
+            {
+                File.Delete(testFile);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithEmptyAudioFile_ShouldHandleGracefully()
+    {
+        // Arrange
+        var testFile = "empty-audio.wav";
+        await File.WriteAllTextAsync(testFile, "", TestContext.Current.CancellationToken); // Empty file
+
+        var expectedResult = new SpeechRecognitionResult
+        {
+            Text = "",
+            Confidence = 0.0,
+            Reason = "NoMatch"
+        };
+
+        _speechService.RecognizeSpeechFromFile(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(expectedResult);
+
+        try
+        {
+            // Act
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile}";
+            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            var response = await _command.ExecuteAsync(_context, parseResult);
+
+            // Assert
+            Assert.Equal(200, response.Status);
+            Assert.NotNull(response.Results);
+
+            var result = JsonSerializer.Deserialize<SttRecognizeCommand.SttRecognizeCommandResult>(
+                JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
+            Assert.NotNull(result);
+            Assert.Equal("", result.Result.Text);
+            Assert.Equal("NoMatch", result.Result.Reason);
+        }
+        finally
+        {
+            // Clean up
+            if (File.Exists(testFile))
+            {
+                File.Delete(testFile);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithLargeAudioFile_ShouldHandleCorrectly()
+    {
+        // Arrange
+        var testFile = "large-audio.wav";
+        var largeContent = new string('A', 10000); // Create a large file
+        await File.WriteAllTextAsync(testFile, largeContent, TestContext.Current.CancellationToken);
+
+        var expectedResult = new SpeechRecognitionResult
+        {
+            Text = "Long audio content recognition result",
+            Confidence = 0.85,
+            Reason = "RecognizedSpeech"
+        };
+
+        _speechService.RecognizeSpeechFromFile(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(expectedResult);
+
+        try
+        {
+            // Act
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile}";
+            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            var response = await _command.ExecuteAsync(_context, parseResult);
+
+            // Assert
+            Assert.Equal(200, response.Status);
+        }
+        finally
+        {
+            // Clean up
+            if (File.Exists(testFile))
+            {
+                File.Delete(testFile);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithSemicolonSeparatedPhrases_ShouldTreatAsOnePhrase()
+    {
+        // Arrange
+        var testFile = "test-audio-semicolon-phrases.wav";
+        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+
+        var expectedResult = new SpeechRecognitionResult
+        {
+            Text = "Azure cognitive services",
+            Confidence = 0.95,
+            Reason = "RecognizedSpeech"
+        };
+
+        // Capture what phrases are actually passed for verification
+        string[]? capturedPhrases = null;
+        _speechService.RecognizeSpeechFromFile(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Do<string[]>(phrases => capturedPhrases = phrases),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(expectedResult);
+
+        try
+        {
+            // Act - Test semicolon-separated phrases in a single argument
+            var args = new string[]
+            {
+                "--subscription", _knownSubscription,
+                "--endpoint", _knownEndpoint,
+                "--file", testFile,
+                "--phrases", "Azure; cognitive services"
+            };
+            var parseResult = _commandDefinition.Parse(args);
+            var response = await _command.ExecuteAsync(_context, parseResult);
+
+            // Assert
+            Assert.Equal(200, response.Status);
+
+            // Check what phrases were actually captured
+            Assert.NotNull(capturedPhrases);
+
+            // The current implementation likely treats this as a single phrase
+            // Let's see what we actually get
+            var phrasesDebug = string.Join(", ", capturedPhrases.Select(p => $"\"{p}\""));
+
+            // Based on System.CommandLine behavior, this should be treated as one phrase
+            Assert.Single(capturedPhrases);
+            Assert.Equal("Azure; cognitive services", capturedPhrases[0]);
+        }
+        finally
+        {
+            // Clean up
+            if (File.Exists(testFile))
+            {
+                File.Delete(testFile);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithCommaSeparatedPhrases_ShouldSplitIntoSeparatePhrases()
+    {
+        // Arrange
+        var testFile = "test-audio-comma-phrases.wav";
+        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+
+        var expectedResult = new SpeechRecognitionResult
+        {
+            Text = "Azure cognitive services",
+            Confidence = 0.95,
+            Reason = "RecognizedSpeech"
+        };
+
+        // Capture what phrases are actually passed for verification
+        string[]? capturedPhrases = null;
+        _speechService.RecognizeSpeechFromFile(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Do<string[]>(phrases => capturedPhrases = phrases),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(expectedResult);
+
+        try
+        {
+            // Act - Test comma-separated phrases in a single argument
+            var args = new string[]
+            {
+                "--subscription", _knownSubscription,
+                "--endpoint", _knownEndpoint,
+                "--file", testFile,
+                "--phrases", "Azure, cognitive services"
+            };
+            var parseResult = _commandDefinition.Parse(args);
+            var response = await _command.ExecuteAsync(_context, parseResult);
+
+            // Assert
+            Assert.Equal(200, response.Status);
+
+            // Check what phrases were actually captured
+            Assert.NotNull(capturedPhrases);
+
+            // The new implementation should split comma-separated phrases
+            Assert.Equal(2, capturedPhrases.Length);
+            Assert.Contains("Azure", capturedPhrases);
+            Assert.Contains("cognitive services", capturedPhrases);
+        }
+        finally
+        {
+            // Clean up
+            if (File.Exists(testFile))
+            {
+                File.Delete(testFile);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithMixedPhrasesSyntax_ShouldCombineCorrectly()
+    {
+        // Arrange
+        var testFile = "test-audio-mixed-phrases.wav";
+        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+
+        var expectedResult = new SpeechRecognitionResult
+        {
+            Text = "Azure cognitive services machine learning",
+            Confidence = 0.95,
+            Reason = "RecognizedSpeech"
+        };
+
+        // Capture what phrases are actually passed for verification
+        string[]? capturedPhrases = null;
+        _speechService.RecognizeSpeechFromFile(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Do<string[]>(phrases => capturedPhrases = phrases),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(expectedResult);
+
+        try
+        {
+            // Act - Test combination of multiple arguments and comma-separated phrases
+            var args = new string[]
+            {
+                "--subscription", _knownSubscription,
+                "--endpoint", _knownEndpoint,
+                "--file", testFile,
+                "--phrases", "Azure, cognitive services",  // Comma-separated in first argument
+                "--phrases", "machine learning"            // Single phrase in second argument
+            };
+            var parseResult = _commandDefinition.Parse(args);
+            var response = await _command.ExecuteAsync(_context, parseResult);
+
+            // Assert
+            Assert.Equal(200, response.Status);
+
+            // Check what phrases were actually captured
+            Assert.NotNull(capturedPhrases);
+
+            // Should have 3 phrases total: "Azure", "cognitive services", "machine learning"
+            Assert.Equal(3, capturedPhrases.Length);
+            Assert.Contains("Azure", capturedPhrases);
+            Assert.Contains("cognitive services", capturedPhrases);
+            Assert.Contains("machine learning", capturedPhrases);
+
+            // Verify the service was called with all expected phrases
+            await _speechService.Received(1).RecognizeSpeechFromFile(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Is<string[]>(phrases =>
+                    phrases != null &&
+                    phrases.Length == 3 &&
+                    phrases.Contains("Azure") &&
+                    phrases.Contains("cognitive services") &&
+                    phrases.Contains("machine learning")),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>());
         }
         finally
         {

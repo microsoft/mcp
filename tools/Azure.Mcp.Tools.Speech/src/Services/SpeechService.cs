@@ -8,12 +8,14 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models;
 using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
+using Microsoft.Extensions.Logging;
 using SdkSpeechRecognitionResult = Microsoft.CognitiveServices.Speech.SpeechRecognitionResult;
 
 namespace Azure.Mcp.Tools.Speech.Services;
 
-public class SpeechService(ITenantService tenantService) : BaseAzureService(tenantService), ISpeechService
+public class SpeechService(ITenantService tenantService, ILogger<SpeechService> logger) : BaseAzureService(tenantService), ISpeechService
 {
+    private readonly ILogger<SpeechService> _logger = logger;
     /// <summary>
     /// Recognizes speech from an audio file using Azure AI Services Speech.
     /// </summary>
@@ -83,6 +85,7 @@ public class SpeechService(ITenantService tenantService) : BaseAzureService(tena
         var taskCompletionSource = new TaskCompletionSource<SdkSpeechRecognitionResult?>();
         var recognizedText = new System.Text.StringBuilder();
         SdkSpeechRecognitionResult? lastResult = null;
+        CancellationDetails? cancellationDetails = null;
 
         // Subscribe to recognition events
         recognizer.Recognizing += (s, e) =>
@@ -97,12 +100,20 @@ public class SpeechService(ITenantService tenantService) : BaseAzureService(tena
                 recognizedText.Append(e.Result.Text);
                 lastResult = e.Result;
             }
+            else if (e.Result.Reason == ResultReason.NoMatch)
+            {
+                lastResult = e.Result;
+            }
         };
 
         recognizer.Canceled += (s, e) =>
         {
-            // taskCompletionSource.SetResult(e.Result);
-            Console.WriteLine($"Recognition canceled: {e.Reason}, {e.ErrorDetails}");
+            cancellationDetails = CancellationDetails.FromResult(e.Result);
+            _logger.LogError("Recognition canceled: {Reason}, {ErrorCode}, {ErrorDetails}",
+                cancellationDetails.Reason, cancellationDetails.ErrorCode, cancellationDetails.ErrorDetails);
+
+            // Store the canceled result for analysis
+            lastResult = e.Result;
         };
 
         recognizer.SessionStopped += (s, e) =>
@@ -134,6 +145,20 @@ public class SpeechService(ITenantService tenantService) : BaseAzureService(tena
             return CreateNoMatchResult();
         }
 
+        // Check if recognition was canceled due to invalid endpoint or other errors
+        if (result.Reason == ResultReason.Canceled && cancellationDetails != null)
+        {
+            // Common error codes for invalid endpoints:
+            // - ConnectionFailure: Network connectivity issues or invalid endpoint
+            // - AuthenticationFailure: Invalid credentials or endpoint authentication issues
+            // - Forbidden: Endpoint exists but access is denied
+            if (IsInvalidEndpointError(cancellationDetails))
+            {
+                var errorMessage = $"Invalid endpoint or connectivity issue. Reason: {cancellationDetails.Reason}, ErrorCode: {cancellationDetails.ErrorCode}, Details: {cancellationDetails.ErrorDetails}";
+                throw new InvalidOperationException(errorMessage);
+            }
+        }
+
         // If we accumulated text from multiple recognition events, update the result
         if (recognizedText.Length > 0 && result.Text != recognizedText.ToString())
         {
@@ -145,7 +170,24 @@ public class SpeechService(ITenantService tenantService) : BaseAzureService(tena
 
         return ConvertToSpeechRecognitionResult(result, format);
     }
-    private Models.SpeechRecognitionResult CreateNoMatchResult()
+
+    /// <summary>
+    /// Determines if the cancellation details indicate an invalid endpoint error.
+    /// </summary>
+    /// <param name="cancellationDetails">The cancellation details from the speech recognition</param>
+    /// <returns>True if the error indicates an invalid endpoint, false otherwise</returns>
+    private static bool IsInvalidEndpointError(CancellationDetails cancellationDetails)
+    {
+        // Check for common error codes that indicate endpoint issues
+        return cancellationDetails.Reason == CancellationReason.Error &&
+               (cancellationDetails.ErrorCode == CancellationErrorCode.ConnectionFailure ||
+                cancellationDetails.ErrorCode == CancellationErrorCode.AuthenticationFailure ||
+                cancellationDetails.ErrorCode == CancellationErrorCode.Forbidden ||
+                cancellationDetails.ErrorDetails?.Contains("endpoint", StringComparison.OrdinalIgnoreCase) == true ||
+                cancellationDetails.ErrorDetails?.Contains("connection", StringComparison.OrdinalIgnoreCase) == true ||
+                cancellationDetails.ErrorDetails?.Contains("network", StringComparison.OrdinalIgnoreCase) == true);
+    }
+    private static Models.SpeechRecognitionResult CreateNoMatchResult()
     {
         return new Models.SpeechRecognitionResult
         {
@@ -186,24 +228,75 @@ public class SpeechService(ITenantService tenantService) : BaseAzureService(tena
         // But for now, we'll return the simple result
         if (format?.ToLowerInvariant() == "detailed")
         {
-            // In a real implementation, you'd parse speechResult.Properties for detailed info
+            // Parse speechResult.Properties for detailed info including NBest results
             return new Models.DetailedSpeechRecognitionResult
             {
                 Text = result.Text,
                 Reason = result.Reason,
                 Offset = result.Offset,
                 Duration = result.Duration,
-                NBest = new List<NBestResult>
-                {
-                    new()
-                    {
-                        Text = result.Text,
-                        Confidence = 0.95 // This would come from actual recognition result
-                    }
-                }
+                NBest = ExtractNBestResults(speechResult)
             };
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Extracts NBest results from speech recognition result properties.
+    /// Parses the detailed JSON response to get confidence scores and alternative text candidates.
+    /// </summary>
+    /// <param name="speechResult">The speech recognition result</param>
+    /// <returns>List of NBest results with actual confidence values</returns>
+    private static List<NBestResult> ExtractNBestResults(SdkSpeechRecognitionResult speechResult)
+    {
+        var nbestResults = new List<NBestResult>();
+
+        try
+        {
+            // Try to get the detailed JSON result from Properties
+            var jsonProperty = speechResult.Properties.GetProperty("SPEECHSDK_RECOGNITION_RESULT_JSON", null);
+
+            if (!string.IsNullOrEmpty(jsonProperty))
+            {
+                var jsonResult = System.Text.Json.JsonDocument.Parse(jsonProperty);
+
+                if (jsonResult.RootElement.TryGetProperty("NBest", out var nbestArray))
+                {
+                    foreach (var item in nbestArray.EnumerateArray())
+                    {
+                        var text = item.TryGetProperty("Display", out var displayProp) ? displayProp.GetString() :
+                                   item.TryGetProperty("Lexical", out var lexicalProp) ? lexicalProp.GetString() : "";
+
+                        var confidence = item.TryGetProperty("Confidence", out var confidenceProp) ? confidenceProp.GetDouble() : 0.0;
+
+                        if (!string.IsNullOrEmpty(text))
+                        {
+                            nbestResults.Add(new NBestResult
+                            {
+                                Text = text,
+                                Confidence = confidence
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // If JSON parsing fails, fall back to simple result
+        }
+
+        // If no NBest results were found, create a single result with the main text
+        if (nbestResults.Count == 0)
+        {
+            nbestResults.Add(new NBestResult
+            {
+                Text = speechResult.Text,
+                Confidence = speechResult.Reason == ResultReason.RecognizedSpeech ? 0.95 : 0.0 // Default confidence based on recognition success
+            });
+        }
+
+        return nbestResults;
     }
 }
