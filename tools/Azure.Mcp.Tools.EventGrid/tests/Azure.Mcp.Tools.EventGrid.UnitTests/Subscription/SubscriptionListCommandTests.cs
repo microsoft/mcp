@@ -200,8 +200,8 @@ public class SubscriptionListCommandTests
     [Fact]
     public async Task ExecuteAsync_BareTopicName_SearchesAllSubscriptions()
     {
-    // Arrange: We only validate that the command executes successfully without a subscription parameter.
-    // Detailed cross-subscription enumeration is handled inside the command and service; here we simulate one hit.
+        // Arrange: We only validate that the command executes successfully without a subscription parameter.
+        // Detailed cross-subscription enumeration is handled inside the command and service; here we simulate one hit.
         var topicName = "myTopic";
         var subscription = "sub-search";
         var expected = new List<Models.EventGridSubscriptionInfo>

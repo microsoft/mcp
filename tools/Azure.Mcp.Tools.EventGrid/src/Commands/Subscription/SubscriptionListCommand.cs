@@ -41,14 +41,14 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
         // Remove the default subscription validator from base class and add custom validation
         command.Validators.Clear();
-        
+
         // Custom validation: Either --topic or --subscription (or env var) is required
         command.Validators.Add(commandResult =>
         {
             var hasSubscriptionOption = commandResult.HasOptionResult(_subscriptionOption);
             var hasEnv = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID"));
             var hasTopicOption = commandResult.HasOptionResult(_topicNameOption);
-            
+
             if (!hasSubscriptionOption && !hasEnv && !hasTopicOption)
             {
                 commandResult.AddError("Either --subscription or --topic is required.");
@@ -73,13 +73,13 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
         var options = BindOptions(parseResult);
 
-    // Validation rules / behaviors:
-    // 1. Either --topic (bare topic name) or --subscription is mandatory.
-    // 2. --resource-group and --location are optional but cannot be provided alone (must accompany --topic or --subscription).
-    // 3. If only --topic (bare name) is provided (no --subscription) perform a cross-subscription search
-    //    across all accessible subscriptions for a topic with that name and aggregate results.
-    // 4. If only --subscription is provided (no --topic) list all event subscriptions from every custom and system
-    //    topic in that subscription (optionally filtered by --resource-group / --location).
+        // Validation rules / behaviors:
+        // 1. Either --topic (bare topic name) or --subscription is mandatory.
+        // 2. --resource-group and --location are optional but cannot be provided alone (must accompany --topic or --subscription).
+        // 3. If only --topic (bare name) is provided (no --subscription) perform a cross-subscription search
+        //    across all accessible subscriptions for a topic with that name and aggregate results.
+        // 4. If only --subscription is provided (no --topic) list all event subscriptions from every custom and system
+        //    topic in that subscription (optionally filtered by --resource-group / --location).
 
         var hasSubscription = !string.IsNullOrWhiteSpace(options.Subscription);
         var hasTopic = !string.IsNullOrWhiteSpace(options.TopicName);
@@ -102,8 +102,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
             return context.Response;
         }
 
-    // Bare topic name without subscription triggers cross-subscription search
-    bool crossSubscriptionSearch = !hasSubscription && hasTopic;
+        // Bare topic name without subscription triggers cross-subscription search
+        bool crossSubscriptionSearch = !hasSubscription && hasTopic;
 
         try
         {
