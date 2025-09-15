@@ -1,6 +1,6 @@
-# Azure MCP Server Extension for Visual Studio Code
+# Azure MCP Server .NET Tool
 
-Easily bring the power of Model Context Protocol (MCP) to your Azure projects in VS Code.
+- Install the Azure MCP Server .NET tool from NuGet to add Model Context Protocol (MCP) capabilities to your Azure projects and enable integration with VS Code.
 
 ## Table of Contents
 - [Overview](#overview)
@@ -14,7 +14,7 @@ Easily bring the power of Model Context Protocol (MCP) to your Azure projects in
 
 ## Overview
 
-**Azure MCP Server** adds smart, context-aware AI tools right inside VS Code to help you work more efficiently with Azure resources. The Azure MCP Server supercharges your agents with Azure context across **28 different Azure services**.
+**Azure MCP Server** adds smart, context-aware AI tools right inside VS Code to help you work more efficiently with Azure resources. The Azure MCP Server supercharges your agents with Azure context across **30+ different Azure services**.
 
 ## Getting Started
 
