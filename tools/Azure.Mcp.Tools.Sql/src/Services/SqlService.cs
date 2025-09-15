@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services.Models;
 using Azure.ResourceManager.Sql;
+using Azure.ResourceManager.Sql.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Sql.Services;
@@ -331,6 +332,186 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             _logger.LogError(ex,
                 "Error deleting SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Rule: {Rule}",
                 serverName, resourceGroup, subscription, firewallRuleName);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Creates a new Azure SQL Server.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server to create</param>
+    /// <param name="resourceGroup">The name of the resource group</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="location">The Azure region location where the SQL server will be created</param>
+    /// <param name="administratorLogin">The administrator login name for the SQL server</param>
+    /// <param name="administratorPassword">The administrator password for the SQL server</param>
+    /// <param name="version">The version of SQL Server to create (optional, defaults to latest)</param>
+    /// <param name="publicNetworkAccess">Whether public network access is enabled (optional)</param>
+    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>The created SQL server</returns>
+    /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
+    public async Task<SqlServer> CreateServerAsync(
+        string serverName,
+        string resourceGroup,
+        string subscription,
+        string location,
+        string administratorLogin,
+        string administratorPassword,
+        string? version,
+        string? publicNetworkAccess,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(serverName, resourceGroup, subscription, location, administratorLogin, administratorPassword);
+
+        try
+        {
+            // Use ARM client directly for create operations  
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+
+            var serverData = new SqlServerData(location)
+            {
+                AdministratorLogin = administratorLogin,
+                AdministratorLoginPassword = administratorPassword,
+                Version = version ?? "12.0", // Default to SQL Server 2014 (12.0)
+            };
+
+            // Set PublicNetworkAccess if specified
+            if (!string.IsNullOrEmpty(publicNetworkAccess))
+            {
+                // Set the public network access value - defaults to "Enabled" if not "Disabled"
+                serverData.PublicNetworkAccess = publicNetworkAccess.Equals("Enabled", StringComparison.OrdinalIgnoreCase)
+                    ? ServerNetworkAccessFlag.Enabled
+                    : ServerNetworkAccessFlag.Disabled;
+            }
+
+            var operation = await resourceGroupResource.Value.GetSqlServers().CreateOrUpdateAsync(
+                Azure.WaitUntil.Completed,
+                serverName,
+                serverData,
+                cancellationToken);
+
+            var server = operation.Value;
+            var tags = server.Data.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value) ?? new Dictionary<string, string>();
+
+            return new SqlServer(
+                Name: server.Data.Name,
+                FullyQualifiedDomainName: server.Data.FullyQualifiedDomainName,
+                Location: server.Data.Location.ToString(),
+                ResourceGroup: resourceGroup,
+                Subscription: subscription,
+                AdministratorLogin: server.Data.AdministratorLogin,
+                Version: server.Data.Version,
+                State: server.Data.State?.ToString(),
+                PublicNetworkAccess: server.Data.PublicNetworkAccess?.ToString(),
+                Tags: tags
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error creating SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Location: {Location}",
+                serverName, resourceGroup, subscription, location);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Retrieves a specific SQL server from Azure.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server</param>
+    /// <param name="resourceGroup">The name of the resource group containing the server</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>The SQL server if found, otherwise throws KeyNotFoundException</returns>
+    /// <exception cref="KeyNotFoundException">Thrown when the specified server is not found</exception>
+    /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
+    public async Task<SqlServer> GetServerAsync(
+        string serverName,
+        string resourceGroup,
+        string subscription,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(serverName, resourceGroup, subscription);
+
+        try
+        {
+            // Use ARM client directly for get operations  
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+
+            var serverResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
+            var server = serverResource.Value;
+            var tags = server.Data.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value) ?? new Dictionary<string, string>();
+
+            return new SqlServer(
+                Name: server.Data.Name,
+                FullyQualifiedDomainName: server.Data.FullyQualifiedDomainName,
+                Location: server.Data.Location.ToString(),
+                ResourceGroup: resourceGroup,
+                Subscription: subscription,
+                AdministratorLogin: server.Data.AdministratorLogin,
+                Version: server.Data.Version,
+                State: server.Data.State?.ToString(),
+                PublicNetworkAccess: server.Data.PublicNetworkAccess?.ToString(),
+                Tags: tags
+            );
+        }
+        catch (Azure.RequestFailedException reqEx) when (reqEx.Status == 404)
+        {
+            throw new KeyNotFoundException($"SQL server '{serverName}' not found in resource group '{resourceGroup}' for subscription '{subscription}'.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error getting SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                serverName, resourceGroup, subscription);
+            throw;
+        }
+    }
+
+    public async Task<bool> DeleteServerAsync(
+        string serverName,
+        string resourceGroup,
+        string subscription,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(serverName, resourceGroup, subscription);
+
+        try
+        {
+            // Use ARM client directly for delete operations  
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+
+            var serverResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
+
+            var operation = await serverResource.Value.DeleteAsync(
+                Azure.WaitUntil.Completed,
+                cancellationToken);
+
+            return true;
+        }
+        catch (Azure.RequestFailedException reqEx) when (reqEx.Status == 404)
+        {
+            _logger.LogWarning(
+                "SQL server not found during delete operation. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                serverName, resourceGroup, subscription);
+            return false; // Server doesn't exist
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error deleting SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                serverName, resourceGroup, subscription);
             throw;
         }
     }

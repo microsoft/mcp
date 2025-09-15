@@ -2,9 +2,12 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Models;
+using Azure.Mcp.Core.Models.Command;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
@@ -487,4 +490,88 @@ public class CommandFactoryToolLoaderTests
         Assert.True(secretTool.Meta.TryGetPropertyValue("SecretHint", out var secretHintNode));
         Assert.True(secretHintNode?.GetValue<bool>());
     }
+
+    #region Elicitation Tests
+
+    [Fact]
+    public async Task CallToolHandler_WithSecretTool_WhenClientDoesNotSupportElicitation_RejectsExecution()
+    {
+        var (toolLoader, commandFactory) = CreateToolLoader();
+
+        // Add the fake secret command to the command factory
+        var fakeCommand = Substitute.For<IBaseCommand>();
+        var fakeSystemCommand = new Command("fake-secret-get", "A fake secret command for testing");
+        fakeCommand.GetCommand().Returns(fakeSystemCommand);
+        fakeCommand.Title.Returns("Fake Secret Get");
+        fakeCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>())
+                   .Returns(new CommandResponse { Status = 200, Message = "Secret test response" });
+
+        // Add our fake command to the internal command map using reflection
+        var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
+        commandMap["fake-secret-get"] = fakeCommand;
+
+        // Create mock server without elicitation capabilities
+        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        mockServer.ClientCapabilities.Returns((ClientCapabilities?)null);
+
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = "fake-secret-get",
+                Arguments = new Dictionary<string, JsonElement>()
+            }
+        };
+
+        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+
+        // Should reject execution as client doesn't support elicitation (security requirement)
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        Assert.Contains("does not support elicitation", ((TextContentBlock)result.Content.First()).Text);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithNonSecretTool_DoesNotTriggerElicitation()
+    {
+        var (toolLoader, commandFactory) = CreateToolLoader();
+
+        // Add a fake non-secret command to the command factory
+        var fakeCommand = Substitute.For<IBaseCommand>();
+        var fakeSystemCommand = new Command("fake-non-secret-get", "A fake non-secret command for testing");
+        fakeCommand.GetCommand().Returns(fakeSystemCommand);
+        fakeCommand.Title.Returns("Fake Non-Secret Get");
+        fakeCommand.Metadata.Returns(new ToolMetadata { Secret = false }); // Not secret
+        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>())
+                   .Returns(new CommandResponse { Status = 200, Message = "Test response" });
+
+        // Add our fake command to the internal command map using reflection
+        var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
+        commandMap["fake-non-secret-get"] = fakeCommand;
+
+        // Create mock server with elicitation capabilities
+        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        var capabilities = new ClientCapabilities { Elicitation = new ElicitationCapability() };
+        mockServer.ClientCapabilities.Returns(capabilities);
+
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = "fake-non-secret-get",
+                Arguments = new Dictionary<string, JsonElement>()
+            }
+        };
+
+        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+
+        // Should execute without issues for non-secret tools
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+    }
+
+    #endregion
 }

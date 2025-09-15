@@ -948,6 +948,26 @@ azmcp sql elastic-pool list --subscription <subscription> \
 ### Azure SQL Server Operations
 
 ```bash
+# Create a new SQL server
+azmcp sql server create --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --server <server-name> \
+                        --location <location> \
+                        --admin-user <admin-username> \
+                        --admin-password <admin-password> \
+                        [--version <server-version>] \
+                        [--public-network-access <enabled|disabled>]
+
+# Delete a SQL server
+azmcp sql server delete --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --server <server-name>
+
+# Show details of a specific SQL server
+azmcp sql server show --subscription <subscription> \
+                      --resource-group <resource-group> \
+                      --server <server-name>
+
 # List Microsoft Entra ID administrators for a SQL server
 azmcp sql server entra-admin list --subscription <subscription> \
                                   --resource-group <resource-group> \

@@ -23,11 +23,12 @@ if(!$Version) {
 # Will fix this when we update Dockerfile to multi-platform
 $os = "linux"
 $arch = "x64"
+$SingleFile = $Trimmed
 $tag = "$dockerImageName`:$Version$VersionSuffix";
 
-& "$root/eng/scripts/Build-Module.ps1" -ServerName $ServerName -VersionSuffix $VersionSuffix -SelfContained -Trimmed:$Trimmed -DebugBuild:$DebugBuild -OperatingSystem $os -Architecture $arch
+& "$root/eng/scripts/Build-Module.ps1" -ServerName $ServerName -VersionSuffix $VersionSuffix -SelfContained -Trimmed:$Trimmed -SingleFile:$SingleFile -DebugBuild:$DebugBuild -OperatingSystem $os -Architecture $arch
 
-[string]$publishDirectory = $([System.IO.Path]::Combine($distPath, "$os-$arch", "dist"))
+[string]$publishDirectory = $([System.IO.Path]::Combine($distPath, "build", $ServerName, "$os-$arch", "dist"))
 $relativeDirectory = $(Resolve-Path $publishDirectory -Relative).Replace('\', '/')
 
 Write-Host "Building Docker image ($tag). PATH: [$relativeDirectory]. Absolute: [$publishDirectory]."

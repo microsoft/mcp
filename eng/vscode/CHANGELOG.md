@@ -1,6 +1,16 @@
 
 # Release History
 
+## 0.7.0 (Unreleased)
+
+### Added
+
+- Added elicitation support. An elicitation request is sent if the tool annotation secret hint is true. [[#404](https://github.com/microsoft/mcp/pull/404)]
+
+### Features Removed
+
+- Removed Azure CLI (`az`) and Azure Developer CLI (`azd`) extension tools from the MCP server to reduce complexity and focus on native Azure service operations.
+
 ## 0.6.0 (2025-09-11)
 
 ### Added

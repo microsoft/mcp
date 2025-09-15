@@ -18,4 +18,10 @@ public interface IAzureManagedLustreService
         string sku, int size,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<List<Models.AzureManagedLustreSkuInfo>> SkuGetInfoAsync(
+        string subscription,
+        string? tenant = null,
+        string? location = null,
+        RetryPolicyOptions? retryPolicy = null);
 }
