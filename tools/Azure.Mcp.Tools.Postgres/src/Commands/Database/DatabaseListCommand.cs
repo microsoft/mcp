@@ -41,11 +41,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
         {
             IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
             List<string> databases = await pgService.ListDatabasesAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!);
-            context.Response.Results = databases?.Count > 0 ?
-                ResponseResult.Create(
-                    new DatabaseListCommandResult(databases),
-                    PostgresJsonContext.Default.DatabaseListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(databases ?? []), PostgresJsonContext.Default.DatabaseListCommandResult);
         }
         catch (Exception ex)
         {
