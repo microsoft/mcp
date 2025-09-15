@@ -78,7 +78,7 @@ try {
             Write-Host "SetDevVersion is true, using Build.BuildId as patch number: $($serverJson.version) -> $version" -ForegroundColor Yellow
         }
 
-        # If not SetDevVersion, don't strip pre-release labels leaving the packages not publishable to the marketplace
+        # If not SetDevVersion, don't strip pre-release labels leaving the packages unpublishable
 
         $platformDirectories = Get-ChildItem $serverDirectory -Directory
         foreach ($platformDirectory in $platformDirectories) {
@@ -133,9 +133,11 @@ Processing VSIX packaging: $vsixBaseName
                 exit 1
             }
 
+            $preRelease = $setDevVersion -or $version -match '-'
+
             ## Run package command
             Write-Host "Packaging $vsixBaseName"
-            Invoke-LoggedCommand "npx --no @vscode/vsce package --target $target --out $vsixPath --ignoreFile .vscodeignore" | Out-Host
+            Invoke-LoggedCommand "npx --no @vscode/vsce package --target $target --out $vsixPath --ignoreFile .vscodeignore $($preRelease ? '--pre-release' : '')" | Out-Host
 
             ## Create manifest
             Write-Host "Generating signing manifest for $vsixBaseName"
