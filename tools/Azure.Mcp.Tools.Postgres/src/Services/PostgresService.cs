@@ -25,11 +25,11 @@ public class PostgresService : BaseAzureService, IPostgresService
         // Data manipulation that could be harmful
         "DROP", "DELETE", "TRUNCATE", "ALTER", "CREATE", "INSERT", "UPDATE",
         // Administrative operations
-        "GRANT", "REVOKE", "SET", "RESET", "KILL", "SHUTDOWN", "RESTART",
+        "GRANT", "REVOKE", "SET", "RESET", "RESTART",
         // Information disclosure
-        "SHOW", "EXPLAIN", "ANALYZE",
+        "SHOW", "EXPLAIN", "ANALYZE", "ANALYSE",
         // System operations
-        "COPY", "\\COPY", "VACUUM", "REINDEX",
+        "COPY", "VACUUM", "REINDEX",
         // User/privilege management
         "CREATE USER", "DROP USER", "ALTER USER", "CREATE ROLE", "DROP ROLE",
         // Database structure changes
