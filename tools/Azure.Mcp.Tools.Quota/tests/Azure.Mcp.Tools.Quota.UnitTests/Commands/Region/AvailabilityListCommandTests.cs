@@ -294,7 +294,7 @@ public sealed class AvailabilityListCommandTests
     }
 
     [Fact]
-    public async Task Should_return_null_results_when_no_regions_found()
+    public async Task Should_return_empty_results_when_no_regions_found()
     {
         // Arrange
         var subscriptionId = "test-subscription-id";
@@ -306,7 +306,7 @@ public sealed class AvailabilityListCommandTests
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>())
-            .Returns(new List<string>());
+            .Returns([]);
 
         var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
@@ -321,7 +321,18 @@ public sealed class AvailabilityListCommandTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(200, result.Status);
-        Assert.Null(result.Results); // Should be null when no regions are found
+        Assert.NotNull(result.Results); // Should be empty when no regions are found
+
+        var json = JsonSerializer.Serialize(result.Results);
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        };
+
+        var response = JsonSerializer.Deserialize<AvailabilityListCommand.RegionCheckCommandResult>(json, options);
+        Assert.NotNull(response);
+        Assert.Empty(response.AvailableRegions);
     }
 
     [Fact]
