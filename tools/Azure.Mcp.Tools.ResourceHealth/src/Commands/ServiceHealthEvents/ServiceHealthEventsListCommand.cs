@@ -104,9 +104,7 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new ServiceHealthEventsListCommandResult(events),
-                ResourceHealthJsonContext.Default.ServiceHealthEventsListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(events ?? []), ResourceHealthJsonContext.Default.ServiceHealthEventsListCommandResult);
         }
         catch (Exception ex)
         {
