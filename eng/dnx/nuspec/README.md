@@ -19,7 +19,7 @@
 ## Getting Started
 
 ### Requirements
-To run the Azure MCP server, you must have [.NET 10 Preview 6 or later](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) installed. This version of .NET adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
+To run the Azure MCP server, you must have [.NET 10 Preview 6 or later](https://dotnet.microsoft.com/download/dotnet/10.0) installed. This version of .NET adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
 
 To verify your .NET version, run the following command in your terminal:
 
@@ -423,7 +423,7 @@ The Azure MCP Server provides tools for interacting with **26 Azure service area
 ## Contributing
 
 Want to contribute?
-Check out our [contribution guide](https://github.com/microsoft/mcp/blob/main/eng/vscode/CONTRIBUTING.md) to get started.
+Check out our [contribution guide](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md) to get started.
 
 ## License
 
