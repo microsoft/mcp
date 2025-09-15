@@ -1,6 +1,6 @@
 ---
-name: "/microsoft/mcp Repository Onboarding Request"
-description: "Request to add a new Server to the repository"
+name: "New Microsoft MCP Server Onboarding Request"
+description: "Request a new Server to be added to the repository"
 title: "[MCP Server Request] <Proposed Server Name>"
 labels: ["onboarding", "Template.Mcp.Server"]
 assignees: []
