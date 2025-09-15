@@ -1,4 +1,4 @@
-name: Azure MCP: Bug Report
+name: Azure MCP - Bug Report
 description: Create a bug report to help us improve Azure MCP Server
 title: "[BUG]"
 labels: ["needs-triage","Azure.Mcp.Server"]
