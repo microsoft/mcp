@@ -133,6 +133,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Foundry", "
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{70CADE69-D2B1-ED23-4BCD-2FABD273428B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.EventHubs", "tools\Azure.Mcp.Tools.EventHubs\src\Azure.Mcp.Tools.EventHubs.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Foundry", "tools\Azure.Mcp.Tools.Foundry\src\Azure.Mcp.Tools.Foundry.csproj", "{BA7AC885-A065-41F2-98FF-281C82994F7C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.FunctionApp", "Azure.Mcp.Tools.FunctionApp", "{E938B49F-87B3-0DAA-220C-07320FBA6C2A}"
@@ -376,6 +378,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Extension.UnitTests", "tools\Azure.Mcp.Tools.Extension\tests\Azure.Mcp.Tools.Extension.UnitTests\Azure.Mcp.Tools.Extension.UnitTests.csproj", "{CE923FCF-F208-4BC5-8C9B-AA54E2930993}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{2BABADA8-D4EC-AEA2-C105-00C894829DE1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.EventHubs.LiveTests", "tools\Azure.Mcp.Tools.EventHubs\tests\Azure.Mcp.Tools.EventHubs.LiveTests\Azure.Mcp.Tools.EventHubs.LiveTests.csproj", "{B2C3D4E5-F6A7-8901-BCDE-F23456789012}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.EventHubs.UnitTests", "tools\Azure.Mcp.Tools.EventHubs\tests\Azure.Mcp.Tools.EventHubs.UnitTests\Azure.Mcp.Tools.EventHubs.UnitTests.csproj", "{C3D4E5F6-A789-0123-CDEF-456789012345}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Foundry.LiveTests", "tools\Azure.Mcp.Tools.Foundry\tests\Azure.Mcp.Tools.Foundry.LiveTests\Azure.Mcp.Tools.Foundry.LiveTests.csproj", "{EB564D80-A767-4431-9918-16BE87407068}"
 EndProject
