@@ -97,8 +97,8 @@ extends:
         - template: /eng/pipelines/templates/jobs/live-test.yml
 
     - ${{ if eq(parameters.PublishPackages, 'true') }}:
-      - stage: Sign
-        displayName: 'Sign'
+      - stage: SignAndPack
+        displayName: 'Sign and Pack'
         dependsOn:
         - Initialize
         - Build
@@ -116,50 +116,11 @@ extends:
           parameters:
             ServerName: ${{ parameters.ServerName }}
 
-        - template: /eng/pipelines/templates/jobs/sign-and-pack-vsix.yml
-          parameters:
-            DependsOn: SignAndPack
-            ServerName: ${{ parameters.ServerName }}
-
-        - job: Verify_Signing
-          displayName: "Verify Signing"
-          dependsOn: SignAndPack
-          pool:
-            name: $(WINDOWSPOOL) # Signing verification must happen on windows
-            image: $(WINDOWSVMIMAGE)
-            os: windows
-          variables:
-          - template: /eng/pipelines/templates/variables/image.yml
-          - template: /eng/pipelines/templates/variables/globals.yml
-          steps:
-          - checkout: none
-          - download: current
-            artifact: $(PipelineArtifactName)_signed
-            displayName: "Download signed MCP server binaries"
-          - pwsh: |
-              Write-Host "Verifying binary signing for win-x64 and win-arm64 binaries..."
-              $allSigned = $true
-              $signedBinaries = Get-ChildItem -Path '$(Pipeline.Workspace)/$(PipelineArtifactName)_signed/**/win-*' -Recurse -Include @("*.dll", "*.exe")
-              foreach ($binary in $signedBinaries) {
-                  if ((Get-AuthenticodeSignature -FilePath $binary.FullName).Status -ne 'Valid') {
-                      Write-Host "Binary $($binary.FullName) is NOT signed correctly."
-                      $allSigned = $false
-                  }
-                  else {
-                      Write-Host "Binary $($binary.FullName) is signed correctly."
-                  }
-              }
-              if (-not $allSigned) {
-                  Write-Error "One or more binaries are not signed correctly."
-                  exit 1
-              }
-            displayName: "Verify Binary Signing"
-
       - ${{ if eq(parameters.ReleaseRun, 'true') }}:
         - stage: Release
           dependsOn:
           - Initialize
-          - Sign
+          - SignAndPack
           pool:
             name: $(LINUXPOOL)
             image: $(LINUXVMIMAGE)
@@ -173,18 +134,13 @@ extends:
               VsixTargets: ${{ parameters.VsixTargets }}
               ServerName: ${{ parameters.ServerName }}
               IncludeNative: false
-          - ${{ if ne(parameters.SkipDockerRelease, 'true') }}:
-            - template: /eng/pipelines/templates/jobs/docker.yml
-              parameters:
-                ContainerRegistry: 'azuresdkimages'
-                DeploymentEnvironment: 'public'
-                ServerName: ${{ parameters.ServerName }}
+              SkipDockerRelease: ${{ parameters.SkipDockerRelease }}
 
       - ${{ else }}:
         - stage: Integration
           dependsOn:
           - Initialize
-          - Sign
+          - SignAndPack
           pool:
             name: $(LINUXPOOL)
             image: $(LINUXVMIMAGE)

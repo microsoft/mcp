@@ -1,0 +1,30 @@
+parameters:
+- name: DependsOn
+  type: object
+
+jobs:
+- job: PackNpm
+  displayName: "Pack Npm"
+  dependsOn: ${{ parameters.DependsOn }}
+  timeoutInMinutes: 120
+  steps:
+  - checkout: self
+
+  - download: current
+    displayName: Download $(PipelineArtifactName)_signed
+    artifact: $(PipelineArtifactName)_signed
+
+  - task: Powershell@2
+    displayName: "Pack modules for Npm"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Npm.ps1
+      arguments: >
+        -ArtifactsPath '$(Pipeline.Workspace)/$(PipelineArtifactName)_signed'
+        -OutputPath '$(Build.ArtifactStagingDirectory)/packed'
+
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactPath: $(Build.ArtifactStagingDirectory)/packed/npm
+      ArtifactName: npm_$(PipelineArtifactName)_packed
+      SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
