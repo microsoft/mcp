@@ -23,7 +23,7 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
         """;
 
     public override ToolMetadata Metadata => new()
-    { 
+    {
         Destructive = false,
         Idempotent = false,
         OpenWorld = true,
