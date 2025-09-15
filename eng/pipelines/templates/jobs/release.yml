@@ -81,4 +81,6 @@ jobs:
       CommitMsg: "Increment package version after release"
       PRTitle: "Increment version after release"
       RepoOwner: microsoft
-      CloseAfterOpenForTesting: $(SetDevVersion)
+      # For CloseAfterOpenForTesting, create-pull-request.yml expects a bool as a string  and adds `$` to the front for
+      # powershell. We pass an environment variable reference and omit the `$`
+      CloseAfterOpenForTesting: env:SETDEVVERSION
