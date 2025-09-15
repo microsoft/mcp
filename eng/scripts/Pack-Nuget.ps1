@@ -94,7 +94,7 @@ try {
             -replace "__CommitSHA__", $CommitSha `
             -replace "__TargetFramework__", $sharedProjectProperties.TargetFramework |
             Set-Content -Path $wrapperToolNuspec
-        Copy-Item -Path "$serverDirectory/README.md" -Destination $tempNugetWrapperDir -Force
+        Copy-Item -Path "$nuspecSourcePath/README.md" -Destination $tempNugetWrapperDir -Force
 		Copy-Item -Path $azureIconPath -Destination $tempNugetWrapperDir -Force
 
 		# Build the project
