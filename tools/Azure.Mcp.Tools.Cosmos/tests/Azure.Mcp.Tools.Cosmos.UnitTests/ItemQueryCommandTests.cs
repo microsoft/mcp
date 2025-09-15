@@ -249,7 +249,7 @@ public class ItemQueryCommandTests
     {
         // Arrange
         var longQuery = "SELECT * FROM c WHERE " + string.Join(" OR ", Enumerable.Range(1, 1000).Select(i => $"c.field{i} = 'value{i}'"));
-        
+
         _cosmosService.QueryItems(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -313,7 +313,7 @@ public class ItemQueryCommandTests
     {
         // Arrange
         var query = "SELECT * FROM * WHERE * = * AND * > * OR * < *"; // 7 wildcards, exceeds limit of 5
-        
+
         _cosmosService.QueryItems(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -380,7 +380,7 @@ public class ItemQueryCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotEqual(500, response.Status); // Should not be a server error
-        
+
         // Verify that the CosmosService was called with the validated query
         await _cosmosService.Received(1).QueryItems(
             "account123",

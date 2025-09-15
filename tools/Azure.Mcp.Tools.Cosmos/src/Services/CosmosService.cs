@@ -417,10 +417,10 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         {
             var container = client.GetContainer(databaseName, containerName);
             var baseQuery = string.IsNullOrEmpty(query) ? "SELECT * FROM c" : query;
-            
+
             // Validate query safety before execution
             ValidateQuerySafety(baseQuery);
-            
+
             var queryDef = new QueryDefinition(baseQuery);
 
             var items = new List<JsonElement>();
@@ -435,7 +435,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
             {
                 var response = await queryIterator.ReadNextAsync();
                 using var document = JsonDocument.Parse(response.Content);
-                
+
                 if (document.RootElement.TryGetProperty("Documents", out var documentsElement))
                 {
                     foreach (var item in documentsElement.EnumerateArray())
