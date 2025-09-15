@@ -30,11 +30,11 @@ jobs:
         steps:
         - pwsh: |
             $path = '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/platform'
-            Write-Host "Contents of $path:"
+            Write-Host "Contents of $path`:"
             Get-ChildItem $path -Recurse
 
             $path = '$(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/wrapper'
-            Write-Host "`n`nContents of $path:"
+            Write-Host "`n`nContents of $path`:"
             Get-ChildItem $path -Recurse
 
         - task: EsrpRelease@9

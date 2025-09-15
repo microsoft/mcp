@@ -50,7 +50,7 @@ extends:
       jobs:
       - template: /eng/pipelines/templates/jobs/initialize.yml
         parameters:
-          DynamicPrereleaseVersion: ${{ not(parameters.ReleaseRun) }}
+          DynamicPrereleaseVersion: ${{ or(not(parameters.ReleaseRun), eq(variables['SetDevVersion'], 'true')) }}
           ServerName: ${{ parameters.ServerName }}
 
     - stage: Build
