@@ -6,6 +6,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added support for Azure AI Services Speech recognition via the command `azmcp_speech_stt_recognize`. This tool enables speech-to-text conversion from audio files with configurable language settings, phrase hints for improved accuracy, output formats (simple or detailed), and profanity filtering options.
+
 ### Breaking Changes
 
 ### Bugs Fixed

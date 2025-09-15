@@ -902,6 +902,18 @@ azmcp servicebus topic subscription details --subscription <subscription> \
                                             --subscription-name <subscription-name>
 ```
 
+### Azure AI Services Speech Operations
+
+```bash
+# Recognize speech from an audio file using Azure AI Services Speech
+azmcp speech stt recognize --endpoint <endpoint> \
+                           --file <file-path> \
+                           [--language <language>] \
+                           [--phrases <phrase1> <phrase2>...] \
+                           [--format <simple|detailed>] \
+                           [--profanity <masked|removed|raw>]
+```
+
 ### Azure SQL Database Operations
 
 ```bash
