@@ -68,9 +68,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseMon
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = tables?.Count > 0 ?
-                ResponseResult.Create(new TableListCommandResult(tables), MonitorJsonContext.Default.TableListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(tables ?? []), MonitorJsonContext.Default.TableListCommandResult);
         }
         catch (Exception ex)
         {
