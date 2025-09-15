@@ -19,10 +19,6 @@ public class KustoCommandTests(ITestOutputHelper output)
 {
     private const string TestDatabaseName = "ToDoLists";
 
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
-    }
 
     public override async ValueTask InitializeAsync()
     {
