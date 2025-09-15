@@ -83,7 +83,6 @@ public class ServiceListCommandTests
         Assert.NotNull(result);
         Assert.Empty(result.Services);
     }
-    }
 
     [Fact]
     public async Task ExecuteAsync_HandlesException()
