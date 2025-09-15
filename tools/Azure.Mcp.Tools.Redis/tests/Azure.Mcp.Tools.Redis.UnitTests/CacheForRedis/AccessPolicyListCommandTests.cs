@@ -75,7 +75,7 @@ public class AccessPolicyListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoAccessPolicyAssignments()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccessPolicyAssignments()
     {
         _redisService.ListAccessPolicyAssignmentsAsync(
             "cache1",
@@ -92,7 +92,17 @@ public class AccessPolicyListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<AccessPolicyListCommandResult>(json, new JsonSerializerOptions()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        });
+
+        Assert.NotNull(result);
+        Assert.Empty(result.AccessPolicyAssignments);
     }
 
     [Fact]
