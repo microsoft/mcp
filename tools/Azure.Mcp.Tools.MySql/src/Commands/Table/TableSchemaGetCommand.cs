@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Database;
-using Azure.Mcp.Tools.MySql.Json;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Options.Table;
 using Azure.Mcp.Tools.MySql.Services;
