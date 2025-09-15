@@ -18,7 +18,7 @@ jobs:
       useGlobalJson: true
 
   - pwsh: |
-      Write-Host "Attaching build reason string to the build for additional tag generation."
+      Write-Host "Attaching build reason string to the build for additional tag generation. '${{ variables.SetDevVersion }}'"
       @('$(Build.Reason)') | ConvertTo-Json -AsArray | Out-File -FilePath $(System.DefaultWorkingDirectory)/build-reason.json -Encoding utf8
       Write-Host '##vso[task.addattachment type=AdditionalTags;name=AdditionalTags;]$(System.DefaultWorkingDirectory)/build-reason.json'
     displayName: Tag build reason
