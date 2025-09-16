@@ -17,4 +17,9 @@
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Azure.Mcp.AzTypes.Internal.Compact">
+      <HintPath>C:\Users\masalama\bicep-types-az-compact\src\Bicep.Types.Az\bin\Debug\netstandard2.0\Microsoft.Azure.Mcp.AzTypes.Internal.Compact.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>
