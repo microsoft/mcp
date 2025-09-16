@@ -6,6 +6,12 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Enhanced Azure authentication with targeted credential selection via `AZURE_TOKEN_CREDENTIALS` environment variable:
+  - `"dev"`: Development credentials (Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI)
+  - `"prod"`: Production credentials (Environment → Workload Identity → Managed Identity)
+  - Specific credential names (e.g., `"AzureCliCredential"`): Target only that credential
+  - Improved Visual Studio Code credential error handling with proper exception wrapping for credential chaining
+  - Replaced custom `DefaultAzureCredential` implementation with explicit credential chain for better control and transparency
 - Added elicitation support. An elicitation request is sent if the tool annotation secret hint is true. [[#404](https://github.com/microsoft/mcp/pull/404)]
 - Added `azmcp sql server create`, `azmcp sql server delete`, `azmcp sql server show` to support SQL server create, delete, and show commands. [[#312](https://github.com/microsoft/mcp/pull/312)]
 - Added the following Azure Managed Lustre commands: [[#100](https://github.com/microsoft/mcp/issues/100)]
@@ -15,6 +21,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Removed
 
 - Removed Azure CLI (`az`) and Azure Developer CLI (`azd`) extension tools from the MCP server to reduce complexity and focus on native Azure service operations.
+- Removed support for `AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS` environment variable. Use `AZURE_TOKEN_CREDENTIALS` instead for more flexible credential selection.
 
 ### Breaking Changes
 

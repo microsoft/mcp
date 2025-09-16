@@ -15,16 +15,13 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// InteractiveBrowserCredential to provide a seamless authentication experience.
 /// </summary>
 /// <remarks>
-/// This credential attempts authentication in the following order:
-/// 1. Environment Credential (AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID)
-/// 2. Workload Identity Credential (if production credentials enabled)
-/// 3. Managed Identity Credential (if production credentials enabled)
-/// 4. Visual Studio Credential
-/// 5. Visual Studio Code Credential (with error wrapping)
-/// 6. Azure CLI Credential
-/// 7. Azure PowerShell Credential
-/// 8. Azure Developer CLI Credential
-/// 9. Interactive browser authentication with Identity Broker (supporting Windows Hello, biometrics, etc.)
+/// The credential chain behavior can be controlled via the AZURE_TOKEN_CREDENTIALS environment variable:
+/// - "dev": Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI
+/// - "prod": Environment → Workload Identity → Managed Identity
+/// - Specific credential name (e.g., "AzureCliCredential"): Only that credential
+/// - Not set or empty: Full chain (Environment → Workload Identity → Managed Identity → Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI)
+/// 
+/// After the credential chain, Interactive Browser Authentication with Identity Broker is always added as the final fallback.
 /// </remarks>
 public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null) : TokenCredential
 {
@@ -47,7 +44,7 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
     private const string BrowserAuthenticationTimeoutEnvVarName = "AZURE_MCP_BROWSER_AUTH_TIMEOUT_SECONDS";
     private const string OnlyUseBrokerCredentialEnvVarName = "AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL";
     private const string ClientIdEnvVarName = "AZURE_MCP_CLIENT_ID";
-    private const string IncludeProductionCredentialEnvVarName = "AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS";
+    private const string TokenCredentialsEnvVarName = "AZURE_TOKEN_CREDENTIALS";
 
     private static bool ShouldUseOnlyBrokerCredential()
     {
@@ -116,70 +113,158 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
 
     private static ChainedTokenCredential CreateDefaultCredential(string? tenantId)
     {
-        var includeProdCreds = EnvironmentHelpers.GetEnvironmentVariableAsBool(IncludeProductionCredentialEnvVarName);
+        string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
         var credentials = new List<TokenCredential>();
 
-        // 1. EnvironmentCredential - reads AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID
-        credentials.Add(new EnvironmentCredential());
-
-        // 2. WorkloadIdentityCredential (if production credentials are enabled)
-        if (includeProdCreds)
+        // Handle specific credential targeting
+        if (!string.IsNullOrEmpty(tokenCredentials))
         {
-            var workloadOptions = new WorkloadIdentityCredentialOptions();
-            if (!string.IsNullOrEmpty(tenantId))
+            switch (tokenCredentials.ToLowerInvariant())
             {
-                workloadOptions.TenantId = tenantId;
+                case "dev":
+                    // Dev chain: VS -> VSCode -> CLI -> PowerShell -> AzD
+                    AddVisualStudioCredential(credentials, tenantId);
+                    AddVisualStudioCodeCredential(credentials, tenantId);
+                    AddAzureCliCredential(credentials, tenantId);
+                    AddAzurePowerShellCredential(credentials, tenantId);
+                    AddAzureDeveloperCliCredential(credentials, tenantId);
+                    break;
+
+                case "prod":
+                    // Prod chain: Environment -> WorkloadIdentity -> ManagedIdentity
+                    AddEnvironmentCredential(credentials);
+                    AddWorkloadIdentityCredential(credentials, tenantId);
+                    AddManagedIdentityCredential(credentials);
+                    break;
+
+                case "environmentcredential":
+                    AddEnvironmentCredential(credentials);
+                    break;
+
+                case "workloadidentitycredential":
+                    AddWorkloadIdentityCredential(credentials, tenantId);
+                    break;
+
+                case "managedidentitycredential":
+                    AddManagedIdentityCredential(credentials);
+                    break;
+
+                case "visualstudiocredential":
+                    AddVisualStudioCredential(credentials, tenantId);
+                    break;
+
+                case "visualstudiocodecredential":
+                    AddVisualStudioCodeCredential(credentials, tenantId);
+                    break;
+
+                case "azureclicredential":
+                    AddAzureCliCredential(credentials, tenantId);
+                    break;
+
+                case "azurepowershellcredential":
+                    AddAzurePowerShellCredential(credentials, tenantId);
+                    break;
+
+                case "azuredeveloperclicredential":
+                    AddAzureDeveloperCliCredential(credentials, tenantId);
+                    break;
+
+                default:
+                    // Unknown value, fall back to full chain
+                    AddFullCredentialChain(credentials, tenantId);
+                    break;
             }
-            credentials.Add(new WorkloadIdentityCredential(workloadOptions));
         }
-
-        // 3. ManagedIdentityCredential (if production credentials are enabled)
-        if (includeProdCreds)
+        else
         {
-            credentials.Add(new ManagedIdentityCredential());
+            // No AZURE_TOKEN_CREDENTIALS specified, use full chain
+            AddFullCredentialChain(credentials, tenantId);
         }
 
-        // 4. VisualStudioCredential
+        return new ChainedTokenCredential([.. credentials]);
+    }
+
+    private static void AddFullCredentialChain(List<TokenCredential> credentials, string? tenantId)
+    {
+        // Full chain: Environment -> WorkloadIdentity -> ManagedIdentity -> VS -> VSCode -> CLI -> PowerShell -> AzD
+        AddEnvironmentCredential(credentials);
+        AddWorkloadIdentityCredential(credentials, tenantId);
+        AddManagedIdentityCredential(credentials);
+        AddVisualStudioCredential(credentials, tenantId);
+        AddVisualStudioCodeCredential(credentials, tenantId);
+        AddAzureCliCredential(credentials, tenantId);
+        AddAzurePowerShellCredential(credentials, tenantId);
+        AddAzureDeveloperCliCredential(credentials, tenantId);
+    }
+
+    private static void AddEnvironmentCredential(List<TokenCredential> credentials)
+    {
+        credentials.Add(new EnvironmentCredential());
+    }
+
+    private static void AddWorkloadIdentityCredential(List<TokenCredential> credentials, string? tenantId)
+    {
+        var workloadOptions = new WorkloadIdentityCredentialOptions();
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            workloadOptions.TenantId = tenantId;
+        }
+        credentials.Add(new WorkloadIdentityCredential(workloadOptions));
+    }
+
+    private static void AddManagedIdentityCredential(List<TokenCredential> credentials)
+    {
+        credentials.Add(new ManagedIdentityCredential());
+    }
+
+    private static void AddVisualStudioCredential(List<TokenCredential> credentials, string? tenantId)
+    {
         var vsOptions = new VisualStudioCredentialOptions();
         if (!string.IsNullOrEmpty(tenantId))
         {
             vsOptions.TenantId = tenantId;
         }
         credentials.Add(new VisualStudioCredential(vsOptions));
+    }
 
-        // 5. VisualStudioCodeCredential
+    private static void AddVisualStudioCodeCredential(List<TokenCredential> credentials, string? tenantId)
+    {
         var vscodeOptions = new VisualStudioCodeCredentialOptions();
         if (!string.IsNullOrEmpty(tenantId))
         {
             vscodeOptions.TenantId = tenantId;
         }
         credentials.Add(new VsCodeCredentialWrapper(new VisualStudioCodeCredential(vscodeOptions)));
+    }
 
-        // 6. AzureCliCredential
+    private static void AddAzureCliCredential(List<TokenCredential> credentials, string? tenantId)
+    {
         var cliOptions = new AzureCliCredentialOptions();
         if (!string.IsNullOrEmpty(tenantId))
         {
             cliOptions.TenantId = tenantId;
         }
         credentials.Add(new AzureCliCredential(cliOptions));
+    }
 
-        // 7. AzurePowerShellCredential
+    private static void AddAzurePowerShellCredential(List<TokenCredential> credentials, string? tenantId)
+    {
         var psOptions = new AzurePowerShellCredentialOptions();
         if (!string.IsNullOrEmpty(tenantId))
         {
             psOptions.TenantId = tenantId;
         }
         credentials.Add(new AzurePowerShellCredential(psOptions));
+    }
 
-        // 8. AzureDeveloperCliCredential
+    private static void AddAzureDeveloperCliCredential(List<TokenCredential> credentials, string? tenantId)
+    {
         var azdOptions = new AzureDeveloperCliCredentialOptions();
         if (!string.IsNullOrEmpty(tenantId))
         {
             azdOptions.TenantId = tenantId;
         }
         credentials.Add(new AzureDeveloperCliCredential(azdOptions));
-
-        return new ChainedTokenCredential([.. credentials]);
     }
 
 
