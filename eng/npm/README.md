@@ -16,7 +16,7 @@ The `@azure/mcp` package is a wrapper package that takes optional dependencies o
 
 ## Overview
 
-**Azure MCP Server** adds smart, context-aware AI tools right inside VS Code to help you work more efficiently with Azure resources. The Azure MCP Server supercharges your agents with Azure context across **28 different Azure services**.
+**Azure MCP Server** adds smart, context-aware AI tools right inside VS Code to help you work more efficiently with Azure resources. The Azure MCP Server supercharges your agents with Azure context across **30+ different Azure services**.
 
 ## Getting Started
 
@@ -63,18 +63,18 @@ Alternatively, you can also install a targeted version of the @azure/mcp package
 
    #### **Manual Start (through mcp.json)**
       1. Click Start Server button above the name of the mcp server listed in mcp.json
-      [Start Server tooltip in mcp.json](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/StartServerMcpJson.png)
+      [Start Server tooltip in mcp.json](https://raw.githubusercontent.com/microsoft/mcp/main/eng/npm/resources/Walkthrough/StartServerMcpJson.png)
 
    #### **Manual Start (through VS Code IDE)**
       1. Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
       2. Run `MCP: List Servers`.
 
-         ![List Servers](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ListServers.png)
+         ![List Servers](https://raw.githubusercontent.com/microsoft/mcp/main/eng/npm/resources/Walkthrough/ListServers.png)
 
       3. Select the name of the server (As defined in the mcp.json), then click **Start Server**.
 
-         ![Select Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/SelectServer.png)
-         ![Start Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/StartServer.png)
+         ![Select Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/npm/resources/Walkthrough/SelectServer.png)
+         ![Start Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/npm/resources/Walkthrough/StartServer.png)
 
  > **VS Code (version 1.103 or above):** You can now configure MCP servers to start automatically using the `chat.mcp.autostart` setting, instead of manually restarting them after configuration changes.
 
@@ -83,13 +83,13 @@ Alternatively, you can also install a targeted version of the @azure/mcp package
       2. Search for `chat.mcp.autostart`.
       3. Select **newAndOutdated** to automatically start MCP servers without manual refresh.
       4. You can also set this from the **refresh icon tooltip** in the Chat view, which also shows which servers will auto-start.
-         ![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ToolTip.png)
+         ![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/eng/npm/resources/Walkthrough/ToolTip.png)
 
 3. **Check Output for MCP server**
          - Go to the **Output** tab in VS Code.
          - Look for log messages confirming the server started successfully.
 
-         ![Output](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/McpJsonOutput.png)
+         ![Output](https://raw.githubusercontent.com/microsoft/mcp/main/eng/npm/resources/Walkthrough/McpJsonOutput.png)
 
 You’re all set! Azure MCP Server is now ready to help you work smarter with Azure resources in VS Code.
 
@@ -446,7 +446,7 @@ The Azure MCP Server provides tools for interacting with **26 Azure service area
 ## Contributing
 
 Want to contribute?
-Check out our [contribution guide](https://github.com/microsoft/mcp/blob/main/eng/vscode/CONTRIBUTING.md) to get started.
+Check out our [contribution guide](https://github.com/microsoft/mcp/blob/main/eng/npm/CONTRIBUTING.md) to get started.
 
 ## License
 
