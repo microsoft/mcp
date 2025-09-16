@@ -94,7 +94,8 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
             }
         }
 
-        public async Task Should_create_import_job()
+    [Fact]
+    public async Task Should_create_import_job()
         {
             var result = await CallToolAsync(
                 "azmcp_azuremanagedlustre_filesystem_import-job_create",
