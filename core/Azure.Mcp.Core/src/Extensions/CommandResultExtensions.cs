@@ -76,23 +76,32 @@ public static class CommandResultExtensions
 
     public static T? GetValueOrDefault<T>(this CommandResult commandResult, Option<T> option)
     {
-        // If the option was explicitly provided, return its value (including empty strings)
-        if (commandResult.HasOptionResult(option) && commandResult.TryGetValue(option, out T? value))
-        {
-            return value;
-        }
+        if (commandResult is null)
+            throw new ArgumentNullException(nameof(commandResult));
+        if (option is null)
+            throw new ArgumentNullException(nameof(option));
 
-        // If not explicitly provided but option has a default value, use the default
-        if (option.HasDefaultValue)
+        // Find the OptionResult in the parse tree
+        var optionResult = commandResult.GetResult(option);
+
+        // If the option was not provided (null) OR it was implicitly assigned (no token supplied),
+        // check if there's a default value before returning null
+        if (optionResult is null || optionResult.Implicit)
         {
-            var defaultValue = option.GetDefaultValue();
-            if (defaultValue is T typed)
+            // If the option has a default value, return it
+            if (option.HasDefaultValue)
             {
-                return typed;
+                var def = option.GetDefaultValue();
+                if (def is T typed)
+                {
+                    return typed;
+                }
             }
+            return default; // For value types, this is default(T?) => null; for refs => null
         }
 
-        // No explicit result and no option default; return null to indicate absence
-        return default(T?);
+        // At this point it was explicitly supplied by the user; get its value.
+        // Using the System.CommandLine API directly to avoid accidental recursion.
+        return optionResult.GetValueOrDefault<T>();
     }
 }
