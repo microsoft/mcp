@@ -163,14 +163,20 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
 
         try
         {
-            ArmClient armClient = await CreateArmClientAsync(null, retryPolicy);
+            // Create ArmClient for deployments
+            var options = new ArmClientOptions();
+            options.SetApiVersion("Microsoft.CognitiveServices/accounts/deployments", "2025-06-01");
+            ArmClient armClient = await CreateArmClientAsync(null, retryPolicy, options);
 
-            var subscription =
-                armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscriptionId));
-            var resourceGroupResource = await subscription.GetResourceGroupAsync(resourceGroup);
+            // Retrieve the Cognitive Services account
+            var genericResources = armClient.GetGenericResources();
+            var cognitiveServicesAccount = await genericResources.GetAsync(
+                new ResourceIdentifier($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.CognitiveServices/accounts/{azureAiServicesName}"));
+            if (!cognitiveServicesAccount.Value.HasData)
+                throw new InvalidOperationException($"Services account '{azureAiServicesName}' not found in resource group '{resourceGroup}'.");
 
-            var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
-            var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(azureAiServicesName);
+            // Prepare data for the deployment
+            ResourceIdentifier id = new ResourceIdentifier($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.CognitiveServices/accounts/{azureAiServicesName}/deployments/{deploymentName}");
 
             var deploymentData = new CognitiveServicesAccountDeploymentData
             {
