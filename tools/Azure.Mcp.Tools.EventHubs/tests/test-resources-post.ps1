@@ -1,41 +1,25 @@
-#!/usr/bin/env pwsh
-
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
-
-#Requires -Version 6.0
-#Requires -PSEdition Core
-
-[CmdletBinding()]
-param (
-    [Parameter(Mandatory)]
+param(
+    [string] $TenantId,
+    [string] $TestApplicationId,
     [string] $ResourceGroupName,
-    [Parameter(Mandatory)]
-    [hashtable] $DeploymentOutputs,
-    [Parameter(Mandatory)]
-    [hashtable] $AdditionalParameters
+    [string] $BaseName,
+    [hashtable] $DeploymentOutputs
 )
 
-Write-Host "Running EventHubs post-deployment setup..."
+$ErrorActionPreference = "Stop"
 
-try {
-    # Extract outputs from deployment
-    $eventHubsNamespaceName = $DeploymentOutputs['eventHubsNamespaceName']
-    $eventHubName = $DeploymentOutputs['eventHubName']
-    
-    Write-Host "EventHubs namespace: $eventHubsNamespaceName"
-    Write-Host "EventHub: $eventHubName"
-    
-    # Create test settings file for integration tests
-    . "$PSScriptRoot/../../../eng/common/scripts/common.ps1"
-    . "$PSScriptRoot/../../../eng/scripts/helpers/TestResourcesHelpers.ps1"
-    
-    $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
-    
-    Write-Host "EventHubs post-deployment setup completed successfully."
-}
-catch {
-    Write-Error "Failed to complete EventHubs post-deployment setup: $_"
-    exit 1
-    throw
-}
+. "$PSScriptRoot/../../../eng/common/scripts/common.ps1"
+. "$PSScriptRoot/../../../eng/scripts/helpers/TestResourcesHelpers.ps1"
+
+$testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
+
+# Create EventHub namespace and EventHub
+$eventHubNamespaceName = $BaseName
+$eventHubName = "test-hub"
+
+# Add EventHub details to test settings
+$testSettings["EVENTHUB_NAMESPACE_NAME"] = $eventHubNamespaceName
+$testSettings["EVENTHUB_NAME"] = $eventHubName
+$testSettings["EVENTHUB_CONNECTION_STRING"] = (Get-AzEventHubKey -ResourceGroupName $ResourceGroupName -NamespaceName $eventHubNamespaceName -AuthorizationRuleName "RootManageSharedAccessKey").PrimaryConnectionString
+
+Write-TestSettings -TestSettings $testSettings -OutputPath $PSScriptRoot
