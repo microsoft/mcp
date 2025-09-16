@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AzureManagedLustre.Commands.FileSystem;
@@ -72,7 +71,7 @@ public class FileSystemSubnetSizeCommandTests
         // Assert
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ResultJson>(json);
+        var result = JsonSerializer.Deserialize<FileSystemSubnetSizeCommand.FileSystemSubnetSizeResult>(json);
         Assert.NotNull(result);
         Assert.Equal(21, result!.NumberOfRequiredIPs);
     }
@@ -128,11 +127,5 @@ public class FileSystemSubnetSizeCommandTests
         // Assert
         Assert.True(response.Status >= 500);
         Assert.Contains("boom", response.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private class ResultJson
-    {
-        [JsonPropertyName("numberOfRequiredIPs")]
-        public int NumberOfRequiredIPs { get; set; }
     }
 }

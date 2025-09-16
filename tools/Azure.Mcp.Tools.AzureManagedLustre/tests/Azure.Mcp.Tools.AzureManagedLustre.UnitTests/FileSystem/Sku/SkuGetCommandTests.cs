@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AzureManagedLustre.Commands.FileSystem;
@@ -13,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
-namespace Azure.Mcp.Tools.AzureManagedLustre.UnitTests.FileSystem;
+namespace Azure.Mcp.Tools.AzureManagedLustre.UnitTests.FileSystem.Sku;
 
 public class SkuGetCommandTests
 {
@@ -57,10 +56,7 @@ public class SkuGetCommandTests
                 name: "AMLFS-Durable-Premium-40",
                 location: "eastus",
                 supportsZones: true,
-                capabilities: new List<AzureManagedLustreSkuCapability>
-                {
-                    new("maxCapacityTiB", "500"),
-                }
+                capabilities: [ new("maxCapacityTiB", "500") ]
             ),
             new(
                 name: "AMLFS-Durable-Premium-125",
@@ -74,8 +70,7 @@ public class SkuGetCommandTests
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>()
-            )
+            Arg.Any<RetryPolicyOptions?>())
             .Returns(expected);
 
         var args = _commandDefinition.Parse([
@@ -90,7 +85,7 @@ public class SkuGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ResultJson>(json);
+        var result = JsonSerializer.Deserialize<SkuGetCommand.SkuGetResult>(json);
 
         Assert.NotNull(result);
         Assert.NotNull(result!.Skus);
@@ -106,38 +101,12 @@ public class SkuGetCommandTests
         if (shouldSucceed)
         {
             _amlfsService.SkuGetInfoAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-                .Returns(new List<AzureManagedLustreSkuInfo> { new("n", "eastus", false, []) });
+                .Returns([new("n", "eastus", false, [])]);
         }
 
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
-    }
-
-    private class ResultJson
-    {
-        [JsonPropertyName("skus")]
-        public List<SkuJson> Skus { get; set; } = [];
-    }
-
-    private class SkuJson
-    {
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = string.Empty;
-        [JsonPropertyName("region")]
-        public string Region { get; set; } = string.Empty;
-        [JsonPropertyName("supportsZones")]
-        public bool SupportsZones { get; set; }
-        [JsonPropertyName("capabilities")]
-        public List<CapJson> Capabilities { get; set; } = [];
-    }
-
-    private class CapJson
-    {
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = string.Empty;
-        [JsonPropertyName("value")]
-        public string Value { get; set; } = string.Empty;
     }
 }
