@@ -74,6 +74,94 @@ When configured this way, you will need to update the version as new release bec
 
 Here are some cool prompts you can try across our supported Azure services:
 
+### 🔎 Azure AI Search
+
+* "What indexes do I have in my Azure AI Search service 'mysvc'?"
+* "Let's search this index for 'my search query'"
+
+### ⚙️ Azure App Configuration
+
+* "List my App Configuration stores"
+* "Show my key-value pairs in App Config"
+
+### ⚙️ Azure App Lens
+
+* "Help me diagnose issues with my app"
+
+### 📦 Azure Container Registry (ACR)
+
+* "List all my Azure Container Registries"
+* "Show me my container registries in the 'my-resource-group' resource group"
+* "List all my Azure Container Registry repositories"
+
+### ☸️ Azure Kubernetes Service (AKS)
+
+* "List my AKS clusters in my subscription"
+* "Show me all my Azure Kubernetes Service clusters"
+* "List the node pools for my AKS cluster"
+* "Get details for the node pool 'np1' of my AKS cluster 'my-aks-cluster' in the 'my-resource-group' resource group"
+
+### 📊 Azure Cosmos DB
+
+* "Show me all my Cosmos DB databases"
+* "List containers in my Cosmos DB database"
+
+### 🧮 Azure Data Explorer
+
+* "Get Azure Data Explorer databases in cluster 'mycluster'"
+* "Sample 10 rows from table 'StormEvents' in Azure Data Explorer database 'db1'"
+
+### 📣 Azure Event Grid
+
+* "List all Event Grid topics in subscription 'my-subscription'"
+* "Show me the Event Grid topics in my subscription"
+* "List all Event Grid topics in resource group 'my-resource-group' in my subscription"
+
+### ⚡ Azure Managed Lustre
+
+* "List the Azure Managed Lustre clusters in resource group 'my-resource-group'"
+* "How many IP Addresses I need to create a 128 TiB cluster of AMLFS 500?"
+
+### 📊 Azure Monitor
+
+* "Query my Log Analytics workspace"
+
+### 🔧 Azure Resource Management
+
+* "List my resource groups"
+* "List my Azure CDN endpoints"
+* "Help me build an Azure application using Node.js"
+
+### 🗄️ Azure SQL Database
+
+* "Show me details about my Azure SQL database 'mydb'"
+* "List all databases in my Azure SQL server 'myserver'"
+* "List all firewall rules for my Azure SQL server 'myserver'"
+* "Create a firewall rule for my Azure SQL server 'myserver'"
+* "Delete a firewall rule from my Azure SQL server 'myserver'"
+* "List all elastic pools in my Azure SQL server 'myserver'"
+* "List Active Directory administrators for my Azure SQL server 'myserver'"
+* "Create a new Azure SQL server in my resource group 'my-resource-group'"
+* "Show me details about my Azure SQL server 'myserver'"
+* "Delete my Azure SQL server 'myserver'"
+
+### 💾 Azure Storage
+
+* "List my Azure storage accounts"
+* "Get details about my storage account 'mystorageaccount'"
+* "Create a new storage account in East US with Data Lake support"
+* "Show me the tables in my Storage account"
+* "Get details about my Storage container"
+* "Upload my file to the blob container"
+* "List paths in my Data Lake file system"
+* "List files and directories in my File Share"
+* "Send a message to my storage queue"
+
+## 🛠️ Currently Supported Tools
+
+<details>
+<summary>The Azure MCP Server provides tools for interacting with the following Azure services</summary>
+
 ### 🔎 Azure AI Search (search engine/vector database)
 
 * List Azure AI Search services
@@ -297,6 +385,8 @@ Here are some cool prompts you can try across our supported Azure services:
 Agents and models can discover and learn best practices and usage guidelines for the `azd` MCP tool. For more information, see [AZD Best Practices](https://github.com/microsoft/mcp/tree/main/tools/Azure.Mcp.Tools.Extension/src/Resources/azd-best-practices.txt).
 
 For detailed command documentation and examples, see [Azure MCP Commands](https://github.com/microsoft/mcp/blob/main/docs/azmcp-commands.md).
+
+</details>
 
 ## Complete List of Supported Azure Services
 
