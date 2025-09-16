@@ -342,7 +342,7 @@ azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> -
 
 ### Azure Database for MySQL Operations
 
-#### Database commands
+#### Database
 
 ```bash
 # List all databases in a MySQL server
@@ -360,7 +360,7 @@ azmcp mysql database query --subscription <subscription> \
                            --query <query>
 ```
 
-#### Table Commands
+#### Table
 
 ```bash
 # List all tables in a MySQL database
@@ -379,7 +379,7 @@ azmcp mysql table schema get --subscription <subscription> \
                              --table <table>
 ```
 
-#### Server Commands
+#### Server
 
 ```bash
 # Retrieve the configuration of a MySQL server
@@ -411,7 +411,7 @@ azmcp mysql server param set --subscription <subscription> \
 
 ### Azure Database for PostgreSQL Operations
 
-#### Database commands
+#### Database
 
 ```bash
 # List all databases in a PostgreSQL server
@@ -429,7 +429,7 @@ azmcp postgres database query --subscription <subscription> \
                               --query <query>
 ```
 
-#### Table Commands
+#### Table
 
 ```bash
 # List all tables in a PostgreSQL database
@@ -448,7 +448,7 @@ azmcp postgres table schema get --subscription <subscription> \
                                 --table <table>
 ```
 
-#### Server Commands
+#### Server
 
 ```bash
 # Retrieve the configuration of a PostgreSQL server
@@ -527,6 +527,8 @@ azmcp functionapp get --subscription <subscription> \
 
 ### Azure Key Vault Operations
 
+#### Certificates
+
 ```bash
 # Creates a certificate in a key vault with the default policy
 azmcp keyvault certificate create --subscription <subscription> \
@@ -548,7 +550,11 @@ azmcp keyvault certificate import --subscription <subscription> \
 # Lists certificates in a key vault
 azmcp keyvault certificate list --subscription <subscription> \
                                 --vault <vault-name>
+```
 
+#### Keys
+
+```bash
 # Creates a key in a key vault
 azmcp keyvault key create --subscription <subscription> \
                           --vault <vault-name> \
@@ -559,7 +565,11 @@ azmcp keyvault key create --subscription <subscription> \
 azmcp keyvault key list --subscription <subscription> \
                         --vault <vault-name> \
                         --include-managed <true/false>
+```
 
+#### Secrets
+
+```bash
 # Creates a secret in a key vault
 azmcp keyvault secret create --subscription <subscription> \
                              --vault <vault-name> \
@@ -581,16 +591,16 @@ azmcp aks cluster get --subscription <subscription> \
 # List AKS clusters in a subscription
 azmcp aks cluster list --subscription <subscription>
 
-# List AKS cluster's nodepools
-azmcp aks nodepool list --subscription <subscription> \
-                        --resource-group <resource-group> \
-                        --cluster <cluster>
-
 # Get details of a specific AKS nodepool
 azmcp aks nodepool get --subscription <subscription> \
                        --resource-group <resource-group> \
                        --cluster <cluster> \
                        --nodepool <nodepool>
+
+# List AKS cluster's nodepools
+azmcp aks nodepool list --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --cluster <cluster>
 ```
 
 ### Azure Load Testing Operations
@@ -821,9 +831,10 @@ azmcp azuremanagedlustre filesystem list --subscription <subscription> \
 azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \
                                       --sku <azure-managed-lustre-sku> \
                                       --size <filesystem-size-in-tib>
+
+azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
+                                            --location <location>
 ```
-
-
 
 ### Azure Native ISV Operations
 
@@ -935,7 +946,9 @@ azmcp servicebus topic subscription details --subscription <subscription> \
                                             --subscription-name <subscription-name>
 ```
 
-### Azure SQL Database Operations
+### Azure SQL Operations
+
+#### Database
 
 ```bash
 # Gets a list of all databases in a SQL server
@@ -948,6 +961,34 @@ azmcp sql db show --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name> \
                   --database <database>
+```
+
+#### Elastic Pool
+
+```bash
+# List all elastic pools in a SQL server
+azmcp sql elastic-pool list --subscription <subscription> \
+                            --resource-group <resource-group> \
+                            --server <server-name>
+```
+
+#### Server
+
+```bash
+# Create a new SQL server
+azmcp sql server create --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --server <server-name> \
+                        --location <location> \
+                        --admin-user <admin-username> \
+                        --admin-password <admin-password> \
+                        [--version <server-version>] \
+                        [--public-network-access <enabled|disabled>]
+
+# List Microsoft Entra ID administrators for a SQL server
+azmcp sql server entra-admin list --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --server <server-name>
 
 # Create a firewall rule for a SQL server
 azmcp sql server firewall-rule create --subscription <subscription> \
@@ -967,29 +1008,6 @@ azmcp sql server firewall-rule delete --subscription <subscription> \
 azmcp sql server firewall-rule list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
-```
-
-### Azure SQL Elastic Pool Operations
-
-```bash
-# List all elastic pools in a SQL server
-azmcp sql elastic-pool list --subscription <subscription> \
-                            --resource-group <resource-group> \
-                            --server <server-name>
-```
-
-### Azure SQL Server Operations
-
-```bash
-# Create a new SQL server
-azmcp sql server create --subscription <subscription> \
-                        --resource-group <resource-group> \
-                        --server <server-name> \
-                        --location <location> \
-                        --admin-user <admin-username> \
-                        --admin-password <admin-password> \
-                        [--version <server-version>] \
-                        [--public-network-access <enabled|disabled>]
 
 # Delete a SQL server
 azmcp sql server delete --subscription <subscription> \
@@ -1000,14 +1018,11 @@ azmcp sql server delete --subscription <subscription> \
 azmcp sql server show --subscription <subscription> \
                       --resource-group <resource-group> \
                       --server <server-name>
-
-# List Microsoft Entra ID administrators for a SQL server
-azmcp sql server entra-admin list --subscription <subscription> \
-                                  --resource-group <resource-group> \
-                                  --server <server-name>
 ```
 
 ### Azure Storage Operations
+
+#### Account
 
 ```bash
 # Create a new Storage account with custom configuration
@@ -1023,7 +1038,11 @@ azmcp storage account create --subscription <subscription> \
 azmcp storage account get --subscription <subscription> \
                               [--account <account>] \
                               [--tenant <tenant>]
+```
 
+#### Blob Storage
+
+```bash
 # Set access tier for multiple blobs in a batch operation
 azmcp storage blob batch set-tier --subscription <subscription> \
                                   --account <account> \
@@ -1053,7 +1072,11 @@ azmcp storage blob upload --subscription <subscription> \
                           --container <container> \
                           --blob <blob> \
                           --local-file-path <path-to-local-file>
+```
 
+#### DataLake
+
+```bash
 # Create a directory in DataLake using a specific path
 azmcp storage datalake directory create --subscription <subscription> \
                                         --account <account> \
@@ -1065,7 +1088,30 @@ azmcp storage datalake file-system list-paths --subscription <subscription> \
                                               --file-system <file-system> \
                                               [--filter-path <filter-path>] \
                                               [--recursive]
+```
 
+#### Files
+
+```bash
+# List files and directories in a File Share directory
+azmcp storage share file list --subscription <subscription> \
+                              --account <account> \
+                              --share <share> \
+                              --directory-path <directory-path> \
+                              [--prefix <prefix>]
+```
+
+#### Tables
+```bash
+
+# List tables in a Storage account
+azmcp storage table list --subscription <subscription> \
+                         --account <account>
+```
+
+#### Queues
+
+```bash
 # Send a message to a Storage queue
 azmcp storage queue message send --subscription <subscription> \
                                  --account <account> \
@@ -1073,17 +1119,6 @@ azmcp storage queue message send --subscription <subscription> \
                                  --message "<message>" \
                                  [--time-to-live-in-seconds <seconds>] \
                                  [--visibility-timeout-in-seconds <seconds>]
-
-# List files and directories in a File Share directory
-azmcp storage share file list --subscription <subscription> \
-                              --account <account> \
-                              --share <share> \
-                              --directory-path <directory-path> \
-                              [--prefix <prefix>]
-
-# List tables in a Storage account
-azmcp storage table list --subscription <subscription> \
-                         --account <account>
 ```
 
 ### Azure Subscription Management
