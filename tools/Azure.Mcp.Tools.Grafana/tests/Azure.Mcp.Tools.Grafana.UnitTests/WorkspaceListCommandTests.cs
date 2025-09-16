@@ -91,11 +91,11 @@ public sealed class WorkspaceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoWorkspacesExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoWorkspacesExist()
     {
         // Arrange
         _grafana.ListWorkspacesAsync("sub123", null, Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<Workspace>());
+            .Returns([]);
 
         var command = new WorkspaceListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
@@ -106,7 +106,13 @@ public sealed class WorkspaceListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<WorkspaceListCommand.WorkspaceListCommandResult>(json);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Workspaces);
     }
 
     [Fact]
