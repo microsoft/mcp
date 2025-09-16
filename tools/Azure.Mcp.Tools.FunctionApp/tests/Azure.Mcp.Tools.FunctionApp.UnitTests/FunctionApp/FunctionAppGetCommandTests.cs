@@ -148,7 +148,7 @@ public sealed class FunctionAppGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<FunctionAppGetCommand.FunctionAppGetCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.FunctionApps);
@@ -239,7 +239,7 @@ public sealed class FunctionAppGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<FunctionAppGetCommand.FunctionAppGetCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.FunctionApps);

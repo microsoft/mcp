@@ -134,7 +134,7 @@ public sealed class ClusterListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ClusterListCommand.ClusterListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, AksJsonContext.Default.ClusterListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Clusters);

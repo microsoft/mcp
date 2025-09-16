@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.AzureManagedLustre.Commands;
 using Azure.Mcp.Tools.AzureManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.AzureManagedLustre.Models;
 using Azure.Mcp.Tools.AzureManagedLustre.Services;
@@ -106,7 +107,7 @@ public class FileSystemListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<FileSystemListCommand.FileSystemListResult>(json);
+        var result = JsonSerializer.Deserialize(json, AzureManagedLustreJsonContext.Default.FileSystemListResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result!.FileSystems);
@@ -165,7 +166,7 @@ public class FileSystemListCommandTests
             Assert.Equal("Success", response.Message);
 
             var json = JsonSerializer.Serialize(response.Results);
-            var result = JsonSerializer.Deserialize<FileSystemListCommand.FileSystemListResult>(json);
+            var result = JsonSerializer.Deserialize(json, AzureManagedLustreJsonContext.Default.FileSystemListResult);
             Assert.NotNull(result!.FileSystems);
             Assert.NotNull(result.FileSystems[0].Name);
             Assert.Equal("fs1", result.FileSystems[0].Name);
@@ -200,7 +201,7 @@ public class FileSystemListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<FileSystemListCommand.FileSystemListResult>(json);
+        var result = JsonSerializer.Deserialize(json, AzureManagedLustreJsonContext.Default.FileSystemListResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.FileSystems);

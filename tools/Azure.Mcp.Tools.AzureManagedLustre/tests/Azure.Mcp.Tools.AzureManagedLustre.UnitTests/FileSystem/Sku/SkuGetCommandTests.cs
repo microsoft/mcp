@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.AzureManagedLustre.Commands;
 using Azure.Mcp.Tools.AzureManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.AzureManagedLustre.Models;
 using Azure.Mcp.Tools.AzureManagedLustre.Services;
@@ -85,7 +86,7 @@ public class SkuGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<SkuGetCommand.SkuGetResult>(json);
+        var result = JsonSerializer.Deserialize(json, AzureManagedLustreJsonContext.Default.SkuGetResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result!.Skus);

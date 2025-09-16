@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -62,7 +63,7 @@ public class TopicListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TopicListCommand.TopicListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.TopicListCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result!.Topics);
@@ -89,7 +90,7 @@ public class TopicListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TopicListCommand.TopicListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.TopicListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Topics);

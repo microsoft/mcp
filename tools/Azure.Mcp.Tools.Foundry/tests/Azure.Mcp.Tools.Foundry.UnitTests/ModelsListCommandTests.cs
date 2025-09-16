@@ -56,7 +56,7 @@ public class ModelsListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ModelsListCommand.ModelsListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, FoundryJsonContext.Default.ModelsListCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Models);
@@ -93,7 +93,7 @@ public class ModelsListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ModelsListCommand.ModelsListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, FoundryJsonContext.Default.ModelsListCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Models);
@@ -121,7 +121,7 @@ public class ModelsListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ModelsListCommand.ModelsListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, FoundryJsonContext.Default.ModelsListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Models);

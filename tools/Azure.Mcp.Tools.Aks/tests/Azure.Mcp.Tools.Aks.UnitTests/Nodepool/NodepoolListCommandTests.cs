@@ -135,7 +135,7 @@ public sealed class NodepoolListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<NodepoolListCommand.NodepoolListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, AksJsonContext.Default.NodepoolListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.NodePools);

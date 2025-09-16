@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Key;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -69,7 +70,7 @@ public class KeyListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<KeyListCommand.KeyListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.KeyListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedKeys, result.Keys);
@@ -100,7 +101,7 @@ public class KeyListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<KeyListCommand.KeyListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.KeyListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Keys);

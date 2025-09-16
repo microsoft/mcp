@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -67,7 +68,7 @@ public class CertificateListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<CertificateListCommand.CertificateListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.CertificateListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedCertificates, result.Certificates);
@@ -97,7 +98,7 @@ public class CertificateListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<CertificateListCommand.CertificateListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.CertificateListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Certificates);

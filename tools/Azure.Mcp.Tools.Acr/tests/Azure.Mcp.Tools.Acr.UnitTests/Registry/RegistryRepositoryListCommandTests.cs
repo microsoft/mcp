@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Acr.Commands;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -104,7 +105,7 @@ public class RegistryRepositoryListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<RegistryRepositoryListCommand.RegistryRepositoryListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, AcrJsonContext.Default.RegistryRepositoryListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.RepositoriesByRegistry);

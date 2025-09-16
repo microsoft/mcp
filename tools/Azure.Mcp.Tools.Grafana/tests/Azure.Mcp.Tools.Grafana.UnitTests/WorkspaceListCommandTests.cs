@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Grafana.Commands;
 using Azure.Mcp.Tools.Grafana.Commands.Workspace;
 using Azure.Mcp.Tools.Grafana.Models.Workspace;
 using Azure.Mcp.Tools.Grafana.Services;
@@ -109,7 +110,7 @@ public sealed class WorkspaceListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<WorkspaceListCommand.WorkspaceListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, GrafanaJsonContext.Default.WorkspaceListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Workspaces);
