@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.ResourceManager;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
@@ -49,6 +50,20 @@ public abstract class BaseAzureResourceService(
     }
 
     /// <summary>
+    /// Validates that the specified resource group exists within the given subscription.
+    /// </summary>
+    /// <param name="subscriptionResource">The subscription resource to check against.</param>
+    /// <param name="resourceGroupName">The name of the resource group to validate.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if the resource group exists; otherwise, false.</returns>
+    private async Task<bool> ValidateResourceGroupExistsAsync(SubscriptionResource subscriptionResource, string resourceGroupName, CancellationToken cancellationToken = default)
+    {
+        var resourceGroupCollection = subscriptionResource.GetResourceGroups();
+        var result = await resourceGroupCollection.ExistsAsync(resourceGroupName, cancellationToken).ConfigureAwait(false);
+        return result.Value;
+    }
+
+    /// <summary>
     /// Executes a Resource Graph query and returns a list of resources of the specified type.
     /// </summary>
     /// <typeparam name="T">The type to convert each resource to</typeparam>
@@ -82,6 +97,10 @@ public abstract class BaseAzureResourceService(
         var queryFilter = $"Resources | where type =~ '{EscapeKqlString(resourceType)}'";
         if (!string.IsNullOrEmpty(resourceGroup))
         {
+            if (!await ValidateResourceGroupExistsAsync(subscriptionResource, resourceGroup, cancellationToken))
+            {
+                throw new KeyNotFoundException($"Resource group '{resourceGroup}' does not exist in subscription '{subscriptionResource.Data.SubscriptionId}'");
+            }
             queryFilter += $" and resourceGroup =~ '{EscapeKqlString(resourceGroup)}'";
         }
         if (!string.IsNullOrEmpty(additionalFilter))
@@ -142,6 +161,10 @@ public abstract class BaseAzureResourceService(
         var queryFilter = $"Resources | where type =~ '{EscapeKqlString(resourceType)}'";
         if (!string.IsNullOrEmpty(resourceGroup))
         {
+            if (!await ValidateResourceGroupExistsAsync(subscriptionResource, resourceGroup, cancellationToken))
+            {
+                throw new KeyNotFoundException($"Resource group '{resourceGroup}' does not exist in subscription '{subscriptionResource.Data.SubscriptionId}'");
+            }
             queryFilter += $" and resourceGroup =~ '{EscapeKqlString(resourceGroup)}'";
         }
         if (!string.IsNullOrEmpty(additionalFilter))

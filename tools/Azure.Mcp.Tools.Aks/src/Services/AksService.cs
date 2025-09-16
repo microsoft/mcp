@@ -146,8 +146,11 @@ public sealed class AksService(
                 subscription,
                 retryPolicy,
                 ConvertToClusterNodePoolModel,
-                $"name =~ '{EscapeKqlString(clusterName)}'") ?? new List<NodePool>();
-
+                $"name =~ '{EscapeKqlString(clusterName)}'");
+            if (nodePools == null)
+            {
+                throw new KeyNotFoundException($"No node pools found for cluster '{clusterName}' in resource group '{resourceGroup}' for subscription '{subscription}'");
+            }
             // Cache the results
             await _cacheService.SetAsync(CacheGroup, cacheKey, nodePools, s_cacheDuration);
             return nodePools;
