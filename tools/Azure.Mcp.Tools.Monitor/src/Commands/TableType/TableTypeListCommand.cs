@@ -30,20 +30,6 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) :
         Secret = false
     };
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        //command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-    }
-
-    protected override TableTypeListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        //options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        return options;
-    }
-
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
