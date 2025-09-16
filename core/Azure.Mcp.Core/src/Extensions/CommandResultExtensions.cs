@@ -63,6 +63,12 @@ public static class CommandResultExtensions
         if (option.HasDefaultValue)
         {
             var def = option.GetDefaultValue();
+            // Handle nullable types explicitly - null is a valid value for nullable types
+            if (def is null && typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                value = default(T); // This will be null for nullable types
+                return true;
+            }
             if (def is T typed)
             {
                 value = typed;
@@ -92,6 +98,11 @@ public static class CommandResultExtensions
             if (option.HasDefaultValue)
             {
                 var def = option.GetDefaultValue();
+                // Handle nullable types explicitly - null is a valid value for nullable types
+                if (def is null && typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))
+                {
+                    return default(T); // This will be null for nullable types
+                }
                 if (def is T typed)
                 {
                     return typed;

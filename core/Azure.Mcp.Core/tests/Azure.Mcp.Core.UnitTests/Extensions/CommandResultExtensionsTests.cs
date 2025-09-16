@@ -189,4 +189,40 @@ public class CommandResultExtensionsTests
         // Assert
         Assert.Null(result);
     }
+
+    [Fact]
+    public void GetValueOrDefault_WithNullableIntDefaultValue_ReturnsDefault()
+    {
+        // Arrange
+        var option = new Option<int?>("--count")
+        {
+            DefaultValueFactory = _ => 42
+        };
+        var command = new Command("test") { option };
+        var parseResult = command.Parse("");
+
+        // Act
+        var result = parseResult.CommandResult.GetValueOrDefault(option);
+
+        // Assert
+        Assert.Equal(42, result);
+    }
+
+    [Fact]
+    public void GetValueOrDefault_WithNullableIntNullDefaultValue_ReturnsNull()
+    {
+        // Arrange
+        var option = new Option<int?>("--count")
+        {
+            DefaultValueFactory = _ => null
+        };
+        var command = new Command("test") { option };
+        var parseResult = command.Parse("");
+
+        // Act
+        var result = parseResult.CommandResult.GetValueOrDefault(option);
+
+        // Assert
+        Assert.Null(result);
+    }
 }
