@@ -43,7 +43,7 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output)
         Assert.Equal(JsonValueKind.Array, nodePools.ValueKind);
         Assert.True(nodePools.GetArrayLength() > 0, "Expected at least one node pool in the cluster");
 
-        // Validate a few common properties exist on each node pool
+        // Validate properties exist on each node pool
         foreach (var pool in nodePools.EnumerateArray())
         {
             Assert.Equal(JsonValueKind.Object, pool.ValueKind);
@@ -58,6 +58,66 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output)
             if (pool.TryGetProperty("provisioningState", out var stateProperty))
             {
                 Assert.False(string.IsNullOrEmpty(stateProperty.GetString()));
+            }
+
+            if (pool.TryGetProperty("osDiskSizeGB", out var osDiskSize))
+            {
+                Assert.True(osDiskSize.ValueKind is JsonValueKind.Number or JsonValueKind.Null);
+            }
+            if (pool.TryGetProperty("osDiskType", out var osDiskType))
+            {
+                Assert.True(osDiskType.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+            }
+            if (pool.TryGetProperty("kubeletDiskType", out var kubeletDiskType))
+            {
+                Assert.True(kubeletDiskType.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+            }
+            if (pool.TryGetProperty("maxPods", out var maxPods))
+            {
+                Assert.True(maxPods.ValueKind is JsonValueKind.Number or JsonValueKind.Null);
+            }
+            if (pool.TryGetProperty("type", out var typeProperty))
+            {
+                Assert.True(typeProperty.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+            }
+            if (pool.TryGetProperty("enableAutoScaling", out var autoScale))
+            {
+                Assert.True(autoScale.ValueKind is JsonValueKind.True or JsonValueKind.False or JsonValueKind.Null);
+            }
+            if (pool.TryGetProperty("powerState", out var powerState) && powerState.ValueKind == JsonValueKind.Object)
+            {
+                if (powerState.TryGetProperty("code", out var code))
+                {
+                    Assert.True(code.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+                }
+            }
+            if (pool.TryGetProperty("currentOrchestratorVersion", out var currVer))
+            {
+                Assert.True(currVer.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+            }
+            if (pool.TryGetProperty("enableNodePublicIP", out var pubIP))
+            {
+                Assert.True(pubIP.ValueKind is JsonValueKind.True or JsonValueKind.False or JsonValueKind.Null);
+            }
+            if (pool.TryGetProperty("scaleSetPriority", out var priority))
+            {
+                Assert.True(priority.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+            }
+            if (pool.TryGetProperty("nodeLabels", out var labels))
+            {
+                Assert.True(labels.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+            }
+            if (pool.TryGetProperty("nodeTaints", out var taints))
+            {
+                Assert.True(taints.ValueKind is JsonValueKind.Array or JsonValueKind.Null);
+            }
+            if (pool.TryGetProperty("osSKU", out var osSku))
+            {
+                Assert.True(osSku.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+            }
+            if (pool.TryGetProperty("nodeImageVersion", out var imgVer))
+            {
+                Assert.True(imgVer.ValueKind is JsonValueKind.String or JsonValueKind.Null);
             }
         }
     }
