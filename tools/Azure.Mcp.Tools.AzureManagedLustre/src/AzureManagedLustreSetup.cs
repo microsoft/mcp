@@ -48,7 +48,7 @@ public class AzureManagedLustreSetup : IAreaSetup
 
         sku.AddCommand("get", new SkuGetCommand(loggerFactory.CreateLogger<SkuGetCommand>()));
 
-        var importJob = new CommandGroup("import-job", "AMLFS import job operations - Create manual import jobs to hydrate the file system namespace.");
+        var importJob = new CommandGroup("import-job", "Azure Managed Lustre file system import job operations - Create manual import jobs to hydrate the file system namespace.");
         fileSystem.AddSubGroup(importJob);
 
         importJob.AddCommand("create", new FileSystemImportJobCreateCommand(loggerFactory.CreateLogger<FileSystemImportJobCreateCommand>()));

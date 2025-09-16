@@ -983,7 +983,7 @@ azmcp azuremanagedlustre filesystem import-job create --subscription <subscripti
                                      [--conflict-resolution-mode <conflict-mode>] \
                                      [--maximum-errors <maximum-errors>] \
                                      [--admin-status <admin-status>] \
-                                     [--job-name <job-name>]
+                                     [--name <name>]
 ```
 
 ### Azure Native ISV Operations

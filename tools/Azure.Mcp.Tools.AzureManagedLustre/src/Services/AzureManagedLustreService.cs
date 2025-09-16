@@ -168,9 +168,9 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
-        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup);
-        ArgumentException.ThrowIfNullOrWhiteSpace(fileSystemName);
+        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters(resourceGroup);
+        ValidateRequiredParameters(fileSystemName);
 
         // NOTE: The StorageCache SDK (as of current version) does not expose an import job create API.
         // Placeholder implementation constructs a job object. Wire up REST call when SDK/REST details available.
@@ -187,8 +187,11 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
             var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
                 ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
-            var fs = await rg.GetAmlFileSystemAsync(fileSystemName);
-            var fsResource = fs.Value;
+            // NOTE: GetAmlFileSystemAsync returns a Response<AmlFileSystemResource> in this SDK version.
+            // The concrete Response<T> here does NOT implement IDisposable (compiler error if used in a using statement),
+            // so no explicit disposal is required. If a future azure-core version makes it disposable, wrap in a using.
+            var fsResponse = await rg.GetAmlFileSystemAsync(fileSystemName);
+            var fsResource = fsResponse.Value;
             var jobs = fsResource.GetStorageCacheImportJobs();
 
             // Import job configuration data
