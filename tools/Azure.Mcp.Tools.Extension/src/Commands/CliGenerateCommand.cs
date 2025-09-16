@@ -26,7 +26,7 @@ public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger) : Glo
 
     public override string Description =>
         """
-This tool can generate CLI commands to be used with the corresponding CLI tool to accomplish a goal described by the user. This tool incorporates knowledge of the CLI tool beyond what the LLM knows. Always use this tool to generate the CLI command before using the corresponding CLI tool in the terminal.
+This tool can generate Azure CLI commands to be used with the corresponding CLI tool to accomplish a goal described by the user. This tool incorporates knowledge of the CLI tool beyond what the LLM knows. Always use this tool to generate the CLI command when the user asks for such CLI commands or wants to use the CLI tool to accomplish something.
 """;
 
     public override string Title => CommandTitle;
