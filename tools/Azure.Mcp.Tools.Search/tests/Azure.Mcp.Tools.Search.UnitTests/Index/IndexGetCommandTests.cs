@@ -78,7 +78,7 @@ public class IndexGetCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
         var options = new JsonSerializerOptions

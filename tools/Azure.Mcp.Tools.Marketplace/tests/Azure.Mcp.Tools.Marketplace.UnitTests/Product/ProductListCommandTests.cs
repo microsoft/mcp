@@ -29,7 +29,7 @@ public class ProductListCommandTests
         _marketplaceService = Substitute.For<IMarketplaceService>();
         _logger = Substitute.For<ILogger<ProductListCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton<IMarketplaceService>(_marketplaceService);
+        var collection = new ServiceCollection().AddSingleton(_marketplaceService);
         _serviceProvider = collection.BuildServiceProvider();
 
         _command = new(_logger);
@@ -153,7 +153,6 @@ public class ProductListCommandTests
     {
         // Arrange
         var subscriptionId = "test-sub";
-        var emptyProducts = new List<ProductSummary>();
 
         _marketplaceService.ListProducts(
             Arg.Is(subscriptionId),
@@ -166,7 +165,7 @@ public class ProductListCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
-            .Returns(new ProductListResponseWithNextCursor { Items = emptyProducts });
+            .Returns(new ProductListResponseWithNextCursor { Items = [] });
 
         var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
 
@@ -176,7 +175,7 @@ public class ProductListCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
     }
 
     [Fact]
