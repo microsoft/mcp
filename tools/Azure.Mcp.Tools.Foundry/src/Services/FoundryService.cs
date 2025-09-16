@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tools.Foundry.Services;
 public class FoundryService(
     IHttpClientService httpClientService,
     ISubscriptionService subscriptionService,
-    ITenantService tenantService) : BaseAzureResourceService(subscriptionService, tenantService), IFoundryService
+    ITenantService tenantService) : BaseAzureResourceService(subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService)), tenantService ?? throw new ArgumentNullException(nameof(tenantService))), IFoundryService
 {
     private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
     public async Task<List<ModelInformation>> ListModels(
