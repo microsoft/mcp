@@ -13,64 +13,16 @@ Why this project?
 ---
 
 ## Table of Contents
-- [Quick Start](#quick-start)
-- [Installation](#installation)
 - [What Can You Do?](#what-can-you-do)
+- [Getting Started](#getting-started)
 - [Available Tools](#available-tools)
-- [Configuration](#configuration)
 - [Development & Contributing](#development--contributing)
 - [Support](#support)
 - [License](#license)
 
 ---
 
-## Quick Start
-A short path to get the server running locally for development and experimentation.
-
-1. Clone the repository and change into it.
-2. Ensure your machine has a compatible .NET SDK installed (see Installation).
-3. Build the server and run it in development:
-
-```bash
-# from repository root
-dotnet build servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj
-dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- --help
-```
-
-4. Integrate with an MCP client (example `.vscode/mcp.json` below) and verify the client can connect.
-
-This README includes both quick examples and deeper guidance for publishing, configuration, and contribution workflows.
-
----
-
-## Installation
-Comprehensive installation guidance, for both development and preview/demo packaging.
-
-### Prerequisites
-- .NET 9.x SDK is recommended. Check `global.json` at the repository root for any pinned SDK version.
-  - If `global.json` pins a preview SDK not installed locally, either install the requested preview SDK or update `global.json` for local development.
-- An MCP-compatible client (VS Code with an MCP extension, Claude Desktop, etc.).
-
-### Build (development)
-- Build the project with `dotnet build` to ensure compilation succeeds.
-- Run with `dotnet run` during development; this automatically rebuilds before starting.
-
-### Publish (preview/packaging)
-- To deliver a self-contained preview artifact, publish for a target RID:
-
-```bash
-# Example: publish for current machine (replace <RID> with target runtime identifier)
-dotnet publish -c Release -r <RID> --self-contained true -o ./publish/fabric-mcp-server
-```
-
-- Deploy the published folder; use the executable in your MCP client configuration.
-
-### Common issues
-- SDK mismatch: If `dotnet` outputs an SDK resolution error, inspect `global.json` and align local SDKs or the file. For CI, prefer publishing a self-contained artifact.
-
----
-
-## <a id="what-can-you-do"></a> What Can You Do?
+## What Can You Do?
 The Fabric MCP Server unlocks practical developer workflows by providing local access to Fabric API context:
 
 - Generate or scaffold Fabric resource definitions (Lakehouse, data pipelines, notebooks, reports).
@@ -89,24 +41,58 @@ The Fabric MCP Server unlocks practical developer workflows by providing local a
 
 ---
 
-## <a id="available-tools"></a> Available Tools
-Use the server's CLI to query embedded data and examples. Commands are organized under a `publicapis` command group in code.
+## Getting Started
 
-| Command | Purpose | Implementation |
-|---|---|---|
-| `publicapis list` | List supported workload names (e.g. notebook, report) | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/PublicApis/ListWorkloadsCommand.cs |
-| `publicapis get --workload-type <workload>` | Fetch OpenAPI & examples for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/PublicApis/GetWorkloadApisCommand.cs |
-| `publicapis platform get` | Retrieve platform-level API specs | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/PublicApis/GetPlatformApisCommand.cs |
-| `publicapis bestpractices get --workload-type <workload>` | Retrieve best-practice guidance for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetBestPracticesCommand.cs |
-| `publicapis examples get --workload-type <workload>` | Retrieve example request/response files for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetExamplesCommand.cs |
-| `publicapis itemdefinition get --workload-type <workload>` | Get JSON schema definitions for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetWorkloadDefinitionCommand.cs |
+### Prerequisites
+- .NET 9.x SDK is recommended. Check `global.json` at the repository root for any pinned SDK version.
+  - If `global.json` pins a preview SDK not installed locally, either install the requested preview SDK or update `global.json` for local development.
+- An MCP-compatible client (VS Code with an MCP extension, Claude Desktop, etc.).
 
-> Always verify the available commands in your build via `--help` before scripting against them; command names and availability are code-driven and may change between releases.
+3. **Publish the executable:**
+   ```bash
+    # For Windows
+   dotnet publish -c Release -r win-x64 --self-contained
+   
+      # For Linux
+   dotnet publish -c Release -r linux-x64 --self-contained
 
----
+   # For Apple Silicon Macs
+   dotnet publish -c Release -r osx-arm64 --self-contained
+   
+   # For Intel Macs
+   dotnet publish -c Release -r osx-x64 --self-contained
 
-## Configuration
-The MCP client starts the server using a command and args. Example `.vscode/mcp.json` for development:
+   ```
+
+4. **Find your executable:**
+   ```
+   # The executable will be in:
+   bin/Release/net9.0/{your-rid}/publish/Fabric.Mcp.Server
+   
+   # For example, on Apple Silicon Mac:
+   bin/Release/net9.0/osx-arm64/publish/Fabric.Mcp.Server
+   ```
+
+5. **Configure your MCP client:**
+
+Template MCP client configuration (replace placeholders):
+
+```json
+{
+  "servers": {
+    "<SERVER_NAME>": {
+      "command": "<ABSOLUTE_PATH_TO_PUBLISHED_EXECUTABLE>",
+      "args": ["server", "start", "--mode", "all"],
+      "env": {
+        "PATH": "<PATH_WITH_DOTNET_AND_TOOLS>"
+      }
+    }
+  }
+}
+```
+
+### For contributors — run from source
+If you're contributing or iterating quickly, run from source:
 
 ```json
 {
@@ -119,7 +105,28 @@ The MCP client starts the server using a command and args. Example `.vscode/mcp.
 }
 ```
 
-For a published server, point the client to the published executable path.
+**Development notes:**
+- `dotnet run` automatically builds and starts the server; convenient for iterative development.
+- Use `dotnet publish` to test the published experience.
+
+### Common issues
+- SDK mismatch: If `dotnet` outputs an SDK resolution error, inspect `global.json` and align local SDKs or update the file.
+
+---
+
+## Available Tools
+Use the server's CLI to query embedded data and examples. Commands are organized under a `publicapis` command group in code.
+
+| Command | Purpose | Implementation |
+|---|---|---|
+| `publicapis list` | List supported workload names (e.g. notebook, report) | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/PublicApis/ListWorkloadsCommand.cs |
+| `publicapis get --workload-type <workload>` | Fetch OpenAPI & examples for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/PublicApis/GetWorkloadApisCommand.cs |
+| `publicapis platform get` | Retrieve platform-level API specs | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/PublicApis/GetPlatformApisCommand.cs |
+| `publicapis bestpractices get --workload-type <workload>` | Retrieve best-practice guidance for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetBestPracticesCommand.cs |
+| `publicapis examples get --workload-type <workload>` | Retrieve example request/response files for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetExamplesCommand.cs |
+| `publicapis itemdefinition get --workload-type <workload>` | Get JSON schema definitions for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetWorkloadDefinitionCommand.cs |
+
+> Always verify the available commands in your build via `--help` before scripting against them; command names and availability are code-driven and may change between releases.
 
 ---
 

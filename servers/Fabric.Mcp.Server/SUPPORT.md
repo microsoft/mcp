@@ -77,7 +77,7 @@ Microsoft customers with support agreements may receive assistance with:
 
 As a **Public Preview** project, please note:
 
-- **🔄 Breaking Changes**: Implementation may change significantly before General Availability
+- **🔄 Breaking Changes**: Implementation may change before General Availability
 - **🚧 Feature Completeness**: Some features are still being developed
 - **⚖️ Stability**: While functional, the software is still being refined
 - **📚 Documentation**: Some documentation may be incomplete or evolving
