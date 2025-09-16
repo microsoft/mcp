@@ -199,7 +199,7 @@ public class FoundryService(
                     Capacity = skuCapacity
                 }
             };
-            
+
             var result = await CreateOrUpdateGenericResourceAsync(
                 armClient,
                 deploymentId,
