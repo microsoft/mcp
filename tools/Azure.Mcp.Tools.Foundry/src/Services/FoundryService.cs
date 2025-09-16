@@ -1,17 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ClientModel.Primitives;
 using System.Text;
+using System.Text.Json;
 using Azure.AI.Projects;
+using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
+using Azure.Mcp.Tools.Foundry.Services.Models;
 using Azure.ResourceManager;
-using Azure.ResourceManager.CognitiveServices;
-using Azure.ResourceManager.CognitiveServices.Models;
 using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.Foundry.Services;
@@ -198,7 +200,10 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
 
             if (!string.IsNullOrEmpty(skuName))
             {
-                deploymentData.Sku = new CognitiveServicesSku(skuName);
+                deploymentData.Sku = new CognitiveServicesSku()
+                {
+                    Name = skuName
+                };
                 if (skuCapacity.HasValue)
                 {
                     deploymentData.Sku.Capacity = skuCapacity;
@@ -214,12 +219,15 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
                 };
             }
 
-            var deploymentOperation = await cognitiveServicesAccount.Value.GetCognitiveServicesAccountDeployments()
-                .CreateOrUpdateAsync(waitUntil: WaitUntil.Completed, deploymentName, deploymentData);
-
-            CognitiveServicesAccountDeploymentResource deployment = deploymentOperation.Value;
-
-            if (!deployment.HasData)
+            // Convert from CognitiveServicesAccountDeploymentData to GenericResourceData
+            byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(deploymentData, FoundryJsonContext.Default.CognitiveServicesAccountDeploymentData);
+            var reader = new Utf8JsonReader(jsonBytes);
+            var dataModel = (IJsonModel<GenericResourceData>)new GenericResourceData(cognitiveServicesAccount.Value.Data.Location);
+            GenericResourceData data = dataModel.Create(ref reader, new ModelReaderWriterOptions("W"))
+                ?? throw new InvalidOperationException("Failed to create deployment data");
+            // Create the deployment
+            var createResult = await armClient.GetGenericResources().CreateOrUpdateAsync(WaitUntil.Completed, id, data);
+            if (!createResult.Value.HasData)
             {
                 return new ModelDeploymentResult
                 {
@@ -227,6 +235,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
                 };
             }
 
+            var deployment = createResult.Value;
             return new ModelDeploymentResult
             {
                 HasData = true,
@@ -235,7 +244,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
                 Type = deployment.Data.ResourceType.ToString(),
                 Sku = deployment.Data.Sku,
                 Tags = deployment.Data.Tags,
-                Properties = deployment.Data.Properties
+                Properties = deployment.Data.Properties?.ToObjectFromJson(FoundryJsonContext.Default.IDictionaryStringObject)
             };
         }
         catch (Exception ex)

@@ -28,3 +28,5 @@ public record ModelDeploymentResult
 
     [JsonPropertyName("properties")]
     public IDictionary<string, object>? Properties { get; init; }
+}
+
