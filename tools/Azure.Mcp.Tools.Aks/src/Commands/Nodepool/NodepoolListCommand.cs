@@ -69,11 +69,7 @@ public sealed class NodepoolListCommand(ILogger<NodepoolListCommand> logger) : B
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = nodePools?.Count > 0 ?
-                ResponseResult.Create(
-                    new NodepoolListCommandResult(nodePools),
-                    AksJsonContext.Default.NodepoolListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(nodePools ?? []), AksJsonContext.Default.NodepoolListCommandResult);
         }
         catch (Exception ex)
         {
@@ -94,12 +90,6 @@ public sealed class NodepoolListCommand(ILogger<NodepoolListCommand> logger) : B
             $"Authorization failed accessing AKS node pools. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record NodepoolListCommandResult(List<Models.NodePool> NodePools);

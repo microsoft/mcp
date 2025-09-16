@@ -96,11 +96,5 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
     internal record ClusterGetCommandResult(Models.Cluster Cluster);
 }

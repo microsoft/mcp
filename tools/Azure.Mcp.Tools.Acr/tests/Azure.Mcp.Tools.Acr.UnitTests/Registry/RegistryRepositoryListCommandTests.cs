@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
@@ -47,7 +48,7 @@ public class RegistryRepositoryListCommandTests
             _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
                 .Returns(new Dictionary<string, List<string>>
                 {
-                    ["myacr"] = new List<string> { "repo1", "repo2" }
+                    ["myacr"] = ["repo1", "repo2"]
                 });
         }
 
@@ -87,11 +88,11 @@ public class RegistryRepositoryListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Empty_ReturnsNullResults()
+    public async Task ExecuteAsync_Empty_ReturnsEmptyResults()
     {
         // Arrange
         _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-            .Returns(new Dictionary<string, List<string>>());
+            .Returns([]);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
@@ -100,6 +101,12 @@ public class RegistryRepositoryListCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<RegistryRepositoryListCommand.RegistryRepositoryListCommandResult>(json);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.RepositoriesByRegistry);
     }
 }
