@@ -55,12 +55,12 @@ jobs:
   steps:
   - checkout: none
   - download: current
-    artifact: vsix_binaries_signed
+    artifact: packages_vsix_signed
     displayName: "Download signed MCP server VSIX files"
   - pwsh: |
       Write-Host "Verifying VSIX signing by parsing CodeSignSummary markdown files..."
 
-      $root = "$(Pipeline.Workspace)/vsix_binaries_signed"
+      $root = "$(Pipeline.Workspace)/packages_vsix_signed"
       $summaries = Get-ChildItem -Path $root -Recurse -Filter 'CodeSignSummary-*.md'
 
       if (-not $summaries) {
