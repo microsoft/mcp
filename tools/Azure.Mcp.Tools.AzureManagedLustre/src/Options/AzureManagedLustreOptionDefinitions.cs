@@ -67,7 +67,7 @@ public static class AzureManagedLustreOptionDefinitions
         $"--{conflictResolutionMode}"
     )
     {
-        Description = "How to handle conflicts during import. Allowed values: OverwriteIfDirty, OverwriteAlways, Fail, Skip. Default: OverwriteAlways.",
+        Description = "How to handle conflicts during import. Allowed values: OverwriteIfDirty, OverwriteAlways, Fail, Skip. Default: Skip.",
         Required = false
     };
 

@@ -73,7 +73,7 @@ public class FileSystemImportJobCreateCommandTests
                 "Skip",
                 -1,
                 "Active",
-                new List<string>{"/"}));
+                new List<string> { "/" }));
 
         var args = _commandDefinition.Parse([
             "--subscription", _subscription,
@@ -151,18 +151,18 @@ public class FileSystemImportJobCreateCommandTests
         // Act
         var response = await _command.ExecuteAsync(_context, args);
 
-    // Assert
-    Assert.Equal(200, response.Status);
-    await _amlfsService.Received(1).CreateImportJobAsync(
-            _subscription,
-            _resourceGroup,
-            _fileSystem,
-            name,
-            Arg.Is<IList<string>?>(p => p != null && p.Count == prefixes.Length && p[0] == prefixes[0] && p[1] == prefixes[1]),
-            "Skip",
-            5,
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>());
+        // Assert
+        Assert.Equal(200, response.Status);
+        await _amlfsService.Received(1).CreateImportJobAsync(
+                _subscription,
+                _resourceGroup,
+                _fileSystem,
+                name,
+                Arg.Is<IList<string>?>(p => p != null && p.Count == prefixes.Length && p[0] == prefixes[0] && p[1] == prefixes[1]),
+                "Skip",
+                5,
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions?>());
     }
 
     [Theory]

@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureManagedLustre.Options;
 using Azure.Mcp.Tools.AzureManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.AzureManagedLustre.Services;
-using Azure.Mcp.Core.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.Commands.FileSystem;
@@ -56,7 +56,7 @@ public sealed class FileSystemImportJobCreateCommand(ILogger<FileSystemImportJob
         {
             options.ImportPrefixes = prefixes.ToList();
         }
-        options.ConflictResolutionMode = parseResult.GetValueOrDefault(_conflictResolutionModeOption) ?? "OverwriteAlways";
+        options.ConflictResolutionMode = parseResult.GetValueOrDefault(_conflictResolutionModeOption) ?? "Skip";
         options.MaximumErrors = parseResult.GetValueOrDefault(_maximumErrorsOption) ?? -1;
         options.AdminStatus = "Active"; // Hard-coded since service no longer accepts parameter
         options.Name = parseResult.GetValueOrDefault(_nameOption);
@@ -80,7 +80,7 @@ public sealed class FileSystemImportJobCreateCommand(ILogger<FileSystemImportJob
                 options.FileSystem!,
                 options.Name,
                 options.ImportPrefixes,
-                options.ConflictResolutionMode ?? "OverwriteAlways",
+                options.ConflictResolutionMode ?? "Skip",
                 options.MaximumErrors ?? -1,
                 options.Tenant,
                 options.RetryPolicy);
