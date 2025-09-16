@@ -122,7 +122,6 @@ The specified framework 'Microsoft.NETCore.App', version '9.0.0', apply_patches=
 - `realtime` - Eventstream, Reflex, Eventhouse workloads
 - `reporting` - Report, Dashboard, Semantic Model workloads
 
-> **Note**: This is a planned feature for a future release. Currently, all workloads are loaded by default.
 
 ### Server starts but no tools are available
 
