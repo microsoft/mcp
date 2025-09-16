@@ -146,7 +146,7 @@ See [CONTRIBUTING.md](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md
 
 ## Support
 If you encounter issues:
-1. Search existing issues and discussions.
+1. Search existing issues.
 2. If none match, file a new issue with:
    - OS and `.NET` SDK version (`dotnet --info`).
    - The command used to start the server.

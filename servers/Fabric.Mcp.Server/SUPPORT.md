@@ -18,11 +18,10 @@ This project uses [GitHub Issues][gh-issue] to track bugs and feature requests. 
 **Before filing an issue:**
 1. **📖 Read our documentation**: Check our [README][fabric-readme] and [TROUBLESHOOTING][fabric-troubleshooting] guides
 2. **🔍 Search existing issues**: Someone may have already reported your issue
-3. **💬 Check discussions**: Visit [GitHub Discussions][gh-discussions] for community support
 
 **Ways to get help:**
 - **🐛 Bug Reports**: Use [GitHub Issues][gh-issue] for unexpected behavior or errors
-- **❓ Questions**: Use [GitHub Discussions][gh-discussions] for usage questions
+- **❓ Questions**: Use [GitHub Issues][gh-issue] for usage questions and help
 - **💡 Feature Requests**: Use [GitHub Issues][gh-issue] with the feature request template
 - **🤝 Contributing**: See our [CONTRIBUTING doc][contribute] to help improve the project
 
@@ -61,8 +60,7 @@ To help us resolve issues quickly, please include:
 The Microsoft Fabric MCP Server is an **open-source project in Public Preview**. Support is provided through community channels and GitHub repositories.
 
 **Community Support (Primary):**
-- [GitHub Issues][gh-issue] - Bug reports and feature requests
-- [GitHub Discussions][gh-discussions] - Questions and community help
+- [GitHub Issues][gh-issue] - Bug reports, feature requests, and questions
 - [Microsoft Fabric Community][fabric-community] - Broader Fabric platform questions
 
 **Enterprise Support (Limited):**
@@ -142,7 +140,7 @@ We welcome contributions! The Fabric MCP Server is part of the broader Microsoft
 **Getting started with contributions:**
 1. Read our [CONTRIBUTING guide][contribute] for detailed instructions
 2. Look for "good first issue" labels in [GitHub Issues][gh-issue]
-3. Join discussions to understand current development priorities
+3. Review open issues to understand current development priorities
 4. Set up your development environment (see Development Setup below)
 
 ### Development Setup
@@ -192,14 +190,12 @@ This project is licensed under the MIT License - see the [LICENSE][license] file
 **Ready to build amazing Fabric experiences with AI?** 
 
 🌟 Star the repository to stay updated  
-💬 Join our discussions for community support  
-🚀 Try the server with your favorite AI assistant  
+ Try the server with your favorite AI assistant  
 
 Together, we're building the future of AI-assisted data analytics development!
 
 [gh-issue]: https://github.com/microsoft/mcp/issues/new/choose
 [exist-issue]: https://github.com/microsoft/mcp/issues
-[gh-discussions]: https://github.com/microsoft/mcp/discussions
 [fabric-readme]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/README.md
 [fabric-troubleshooting]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md
 [contribute]: https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md
