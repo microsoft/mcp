@@ -95,11 +95,11 @@ Use the server's CLI to query embedded data and examples. Commands are organized
 | Command | Purpose | Implementation |
 |---|---|---|
 | `publicapis list` | List supported workload names (e.g. notebook, report) | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/PublicApis/ListWorkloadsCommand.cs |
-| `publicapis get <workload>` | Fetch OpenAPI & examples for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/PublicApis/GetWorkloadApisCommand.cs |
+| `publicapis get --workload-type <workload>` | Fetch OpenAPI & examples for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/PublicApis/GetWorkloadApisCommand.cs |
 | `publicapis platform get` | Retrieve platform-level API specs | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/PublicApis/GetPlatformApisCommand.cs |
-| `publicapis bestpractices get` | Retrieve best-practice guidance | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetBestPracticesCommand.cs |
-| `publicapis examples get` | Retrieve example request/response files | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetExamplesCommand.cs |
-| `publicapis itemdefinition get` | Get JSON schema definitions for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetWorkloadDefinitionCommand.cs |
+| `publicapis bestpractices get --workload-type <workload>` | Retrieve best-practice guidance for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetBestPracticesCommand.cs |
+| `publicapis examples get --workload-type <workload>` | Retrieve example request/response files for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetExamplesCommand.cs |
+| `publicapis itemdefinition get --workload-type <workload>` | Get JSON schema definitions for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetWorkloadDefinitionCommand.cs |
 
 > Always verify the available commands in your build via `--help` before scripting against them; command names and availability are code-driven and may change between releases.
 

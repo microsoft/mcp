@@ -27,116 +27,42 @@ Resolution
 Symptoms
 - Build failures, missing resource or JSON files at runtime, or the server not exposing expected tools.
 
-<<<<<<< HEAD
 How to verify and fix
-=======
-3. **Check available runtimes**:
-   ```bash
-   dotnet --list-runtimes
-   # Look for Microsoft.NETCore.App 9.0.x
-   ```
-
-4. **If issues persist**, restart your terminal/command prompt after installation
-
-### Can I select specific Fabric workloads to load?
-
-**Yes!** You can configure the server to expose only specific Fabric workloads, which is useful for reducing tool count or focusing on specific scenarios.
-
-**Example configuration for selective loading:**
-
-```json
-{
-  "servers": {
-    "Fabric Platform APIs": {
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj",
-        "--",
-        "--workload-filter",
-        "platform"
-      ]
-    },
-    "Fabric Best Practices": {
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj",
-        "--",
-        "--workload-filter",
-        "bestpractices"
-      ]
-    }
-  }
-}
+```bash
+dotnet --version
+dotnet --list-runtimes
 ```
 
-**Available workload filters:**
-- `platform` - Core platform APIs and workspace management
-- `bestpractices` - Best practices, examples, and guidance
-- `analytics` - Lakehouse, Warehouse, KQL Database, Notebook workloads
-- `integration` - Data Pipeline, Dataflow, Copy Job workloads
-- `realtime` - Eventstream, Reflex, Eventhouse workloads
-- `reporting` - Report, Dashboard, Semantic Model workloads
+Resolution
+- If the SDK or runtime is missing or incompatible, inspect `global.json` at the repository root. Either install the requested SDK (for example, .NET 9.x) or update `global.json` to match an SDK you have available for local development.
+- After installing or changing SDKs, restart your terminal so environment changes take effect.
 
+Note: We intentionally avoid documenting unverified runtime flags or ad-hoc workload-filter examples here. To discover supported server commands and capabilities for your build, run the server `--help` and prefer the implemented, code-driven commands (for example `publicapis list`) when available.
 
-### Server starts but no tools are available
+### Server starts but tools aren't available to clients
+Troubleshooting steps
+1. Confirm the server process started and did not exit with an error
+2. Check server output and logs (see Logging section below)
+3. Verify your MCP client configuration (paths and args) matches the server invocation you intend to run
 
-**Possible causes:**
-1. **Embedded resources not loaded properly**
-2. **Build artifacts missing**
-3. **Resource file corruption**
-4. **MCP client not detecting tools correctly**
+Important: example commands or flags (for listing tools or filtering workloads) vary by release. Do not assume a flag exists; run the server's help to confirm supported arguments:
 
-**Resolution steps:**
-
-1. **Clean and rebuild the project**:
-   ```bash
-   dotnet clean servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj
-   dotnet build servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj --configuration Release
-   ```
-
-2. **Verify embedded resources exist**:
-   ```bash
-   # Check if resource files are present (Linux/macOS)
-   ls -la tools/Fabric.Mcp.Tools.PublicApi/src/Resources/
-   
-   # Windows PowerShell
-   Get-ChildItem tools/Fabric.Mcp.Tools.PublicApi/src/Resources/ -Recurse
-   ```
+```bash
+# Shows documented flags and subcommands for this server
+dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- --help
+```
 
 3. **Test the server directly** (if supported):
-   ```bash
-   dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- --list-tools
-   ```
+```bash
+# To list workloads implemented in this build, prefer the code-driven command:
+# (verify via --help first)
+
+dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis list
+```
 
 4. **Check MCP client logs** for connection issues
 
 5. **Verify MCP client configuration** matches the expected format
-
-### API specifications seem outdated
-
-The Fabric MCP Server includes embedded API specifications that are current as of the release date.
-
-**To check embedded API version:**
-1. **Look for version information** in resource files:
-   ```bash
-   find tools/Fabric.Mcp.Tools.PublicApi/src/Resources/ -name "*.json" -exec grep -l "version\|timestamp" {} \;
-   ```
-
-2. **Check the CHANGELOG** for the last API specification update date
-
-3. **Compare with latest documentation**:
-   - [Fabric REST API Reference](https://learn.microsoft.com/rest/api/fabric/)
-   - [Official Fabric API Repository](https://github.com/microsoft/fabric-docs)
-
-**To get the latest specifications:**
-1. **Update to the latest server release** - specifications are updated with each release
-2. **Build from source** using the latest code for the most recent specifications
-3. **Check release notes** in the [CHANGELOG](CHANGELOG.md) for API specification updates
-4. **Report missing APIs** as feature requests if new Fabric APIs aren't included
 
 ## VS Code Integration Issues
 
@@ -146,26 +72,19 @@ VS Code Copilot has a 128-tool limit per request. The Fabric MCP Server is desig
 
 **Current tool count:** ~15-20 tools (well below the limit)
 
-If you're hitting the limit with multiple MCP servers:
+If you're hitting the limit with multiple MCP servers, prefer one of the following approaches:
 
-**Option 1: Use Selective Server Loading**
-```json
-{
-  "servers": {
-    "Fabric APIs": {
-      "command": "dotnet",
-      "args": ["run", "--project", "servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj", "--", "--workload", "platform"]
-    },
-    "Fabric Examples": {
-      "command": "dotnet", 
-      "args": ["run", "--project", "servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj", "--", "--workload", "bestpractices"]
-    }
-  }
-}
-```
+**Option 1: Run focused server instances (recommended)**
+- Publish the server as a self-contained executable and run multiple instances configured to expose only the subset of tools or contexts you need. Point your MCP client to the specific executable for each scenario.
+- Example (high-level): configure multiple server entries in your MCP client, each pointing to a published executable that is preconfigured for a particular workload area.
 
-**Option 2: Use VS Code Custom Chat Modes**
-Create different chat modes for different scenarios (API development vs. best practices research).
+**Option 2: Use server commands to retrieve specific context**
+- Instead of exposing all workloads at once, use the server's `publicapis` commands to fetch a workload's OpenAPI or examples on-demand (for example, use `publicapis list` to discover workloads and `publicapis get --workload-type <name>` to fetch a workload's spec).
+
+**Option 3: Client-side filtering or multiple chat modes**
+- Use client-side grouping or separate chat modes to restrict the number of tools presented to the assistant for a given task.
+
+> Key point: avoid relying on unverified CLI flags in documentation. Confirm available commands for your build with `--help` and prefer code-driven commands such as `publicapis list` and `publicapis get --workload-type <name>` for reproducible automation.
 
 ### VS Code only shows a subset of tools available
 
@@ -252,7 +171,6 @@ If you encounter issues with stale configurations:
 ### Permission Denied Errors
 
 **On Unix-like systems (Linux/macOS):**
->>>>>>> origin/main
 ```bash
 dotnet clean servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj
 dotnet build servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj --configuration Release
@@ -272,7 +190,17 @@ Important: example commands or flags (for listing tools or filtering workloads) 
 dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- --help
 ```
 
-If a `--list-tools` or similar command is supported in your build, confirm it via `--help` before documenting it in this repository.
+3. **Test the server directly** (if supported):
+```bash
+# To list workloads implemented in this build, prefer the code-driven command:
+# (verify via --help first)
+
+dotnet run --project servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -- publicapis list
+```
+
+4. **Check MCP client logs** for connection issues
+
+5. **Verify MCP client configuration** matches the expected format
 
 ## Configuration and path issues
 - Prefer `dotnet run --project <path-to-csproj>` over directly invoking csproj paths as commands in MCP configuration.
