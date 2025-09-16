@@ -25,6 +25,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
+                { "user", "mcptestadmin" },
                 { "server", serverName }
             });
 
@@ -62,6 +63,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
+                { "user", "mcptestadmin" },
                 { "server", serverName },
                 { "database", databaseName },
                 { "query", "SELECT version()" }
@@ -92,7 +94,8 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName }
+                { "resource-group", Settings.ResourceGroupName },
+                { "user", "mcptestadmin" }
             });
 
         // Should successfully retrieve the list of servers
@@ -129,6 +132,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
+                { "user", "mcptestadmin" },
                 { "server", serverName }
             });
 
@@ -162,6 +166,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
+                { "user", "mcptestadmin" },
                 { "server", serverName },
                 { "parameter-name", parameterName }
             });
@@ -191,6 +196,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
+                { "user", "mcptestadmin" },
                 { "server", serverName },
                 { "database", databaseName }
             });
@@ -229,6 +235,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
+                { "user", "mcptestadmin" },
                 { "server", serverName },
                 { "database", databaseName },
                 { "query", "CREATE TABLE IF NOT EXISTS test_schema_table (id SERIAL PRIMARY KEY, name VARCHAR(100), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)" }
@@ -241,6 +248,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
+                { "user", "mcptestadmin" },
                 { "server", serverName },
                 { "database", databaseName },
                 { "table", "test_schema_table" }
@@ -271,6 +279,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
+                { "user", "mcptestadmin" },
                 { "server", serverName },
                 { "database", databaseName },
                 { "query", "DROP TABLE IF EXISTS test_schema_table" }
