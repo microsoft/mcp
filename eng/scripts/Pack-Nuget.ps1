@@ -21,6 +21,7 @@ $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 $mcpServerjson = "$RepoRoot/eng/dnx/.mcp/server.json"
 $nuspecSourcePath = "$RepoRoot/eng/dnx/nuspec"
+$azureIconPath = "$RepoRoot/eng/images/azureicon.png"
 $projectPropertiesScript = "$RepoRoot/eng/scripts/Get-ProjectProperties.ps1"
 
 if(!$ArtifactsPath) {
@@ -66,6 +67,7 @@ try {
         New-Item -ItemType Directory -Force -Path "$tempNugetWrapperDir/.mcp" | Out-Null
 
 		$packageVersion = "$($serverProjectProperties.Version)$VersionSuffix"
+		$releaseTag = "$serverName-$packageVersion"
         
         (Get-Content -Path "$nuspecSourcePath/RuntimeAgnosticToolSettingsTemplate.xml") `
             -replace "__CommandName__", $serverProjectProperties.CliName |
@@ -84,14 +86,16 @@ try {
             -replace "__Version__", $packageVersion `
             -replace "__Authors__", $wrapperPackageJson.author `
             -replace "__Description__", $wrapperPackageJson.description `
-            -replace "__Tags__", $serverProjectProperties.PackageTags `
-            -replace "__ProjectUrl__", "$RepoUrl/tree/main/servers/$serverName" `
+            -replace "__Tags__", ($serverProjectProperties.PackageTags -replace ';', ' ').Trim() `
+            -replace "__ProjectUrl__", "$RepoUrl/tree/$releaseTag/servers/$serverName" `
+			-replace "__ReleaseNotes__", "$RepoUrl/tree/$releaseTag/servers/$serverName/CHANGELOG.md" `
             -replace "__RepositoryUrl__", $RepoUrl `
             -replace "__RepositoryBranch__", $Branch `
             -replace "__CommitSHA__", $CommitSha `
             -replace "__TargetFramework__", $sharedProjectProperties.TargetFramework |
             Set-Content -Path $wrapperToolNuspec
-        Copy-Item -Path "$serverDirectory/README.md" -Destination $tempNugetWrapperDir -Force
+        Copy-Item -Path "$nuspecSourcePath/README.md" -Destination $tempNugetWrapperDir -Force
+		Copy-Item -Path $azureIconPath -Destination $tempNugetWrapperDir -Force
 
 		# Build the project
 		foreach ($platformDirectory in $platformDirectories) {
@@ -103,6 +107,7 @@ try {
 			New-Item -ItemType Directory -Force -Path $platformToolDir | Out-Null
 
 			Copy-Item -Path "$platformDirectory/dist/*" -Destination $platformToolDir -Recurse -Force
+			Copy-Item -Path $azureIconPath -Destination $tempPlatformDir -Force
 			$platformToolEntryPoint = (
 				Get-ChildItem -Path $platformToolDir -Filter "$($serverProjectProperties.CliName)*" -Recurse |
 				Where-Object { $_.PSIsContainer -eq $false -and ($_.Extension -eq ".exe" -or $_.Extension -eq "") } |
@@ -113,8 +118,10 @@ try {
 				-replace "__Version__", $packageVersion `
 				-replace "__Authors__", $wrapperPackageJson.author `
 				-replace "__Description__", ($serverProjectProperties.PackageDescription -replace '\$\(RuntimeIdentifier\)', $platformOSArch) `
+				-replace "__Tags__", ($serverProjectProperties.PackageTags -replace ';', ' ').Trim() `
 				-replace "__RepositoryUrl__", $RepoUrl `
-				-replace "__ProjectUrl__", "$RepoUrl/tree/main/servers/$serverName" `
+				-replace "__ProjectUrl__", "$RepoUrl/tree/$releaseTag/servers/$serverName" `
+				-replace "__ReleaseNotes__", "$RepoUrl/tree/$releaseTag/servers/$serverName/CHANGELOG.md" `
 				-replace "__RepositoryBranch__", $Branch `
 				-replace "__CommitSHA__", $CommitSha `
 				-replace "__TargetFramework__", $sharedProjectProperties.TargetFramework |
