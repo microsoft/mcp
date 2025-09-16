@@ -168,7 +168,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                 { "resource-group", Settings.ResourceGroupName },
                 { "user", "mcptestadmin" },
                 { "server", serverName },
-                { "parameter-name", parameterName }
+                { "param", parameterName }
             });
 
         // Should successfully retrieve the parameter
