@@ -73,7 +73,7 @@ public class DatabaseListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoDataBaseExists()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDataBaseExists()
     {
         // Arrange
         _cosmosService.ListDatabases(
@@ -82,7 +82,7 @@ public class DatabaseListCommandTests
             Arg.Any<AuthMethod>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<string>());
+            .Returns([]);
 
         var args = _commandDefinition.Parse([
             "--account", "account123",
@@ -94,7 +94,14 @@ public class DatabaseListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<DatabaseListCommandResult>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+        Assert.NotNull(result);
+        Assert.Empty(result.Databases);
     }
 
     [Fact]

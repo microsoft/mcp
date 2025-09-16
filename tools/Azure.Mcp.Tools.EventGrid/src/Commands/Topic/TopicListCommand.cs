@@ -1,11 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Options.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Topic;
 
@@ -58,9 +55,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
                 options.ResourceGroup,
                 options.RetryPolicy);
 
-            context.Response.Results = topics?.Count > 0
-                ? ResponseResult.Create<TopicListCommandResult>(new TopicListCommandResult(topics), EventGridJsonContext.Default.TopicListCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(topics ?? []), EventGridJsonContext.Default.TopicListCommandResult);
         }
         catch (Exception ex)
         {
