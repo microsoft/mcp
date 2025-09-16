@@ -22,7 +22,7 @@ jobs:
     displayName: 'Download signed packages'
     inputs:
       buildType: 'current'
-      artifactName: $(PipelineArtifactName)_signed
+      artifactName: binaries_signed
       targetPath: $(Build.ArtifactStagingDirectory)
 
   - task: CopyFiles@2

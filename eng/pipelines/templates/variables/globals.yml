@@ -1,6 +1,15 @@
 variables:
   OfficialBuildId: $(Build.BuildNumber)
   skipComponentGovernanceDetection: true
-  PipelineArtifactName: packages
   nugetMultiFeedWarnLevel: 'none'
   GDN_SUPPRESS_FORKED_BUILD_WARNING: true
+
+  # Manual builds of main or hotfix/* are "release builds" and get no dynamic version suffix.
+  ${{ if and(or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix/')), eq(variables['Build.Reason'], 'Manual')) }}:
+    VersionSuffix: ''
+  # CI builds of main are "beta"
+  ${{ elseif and(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+    VersionSuffix: '-beta.$(Build.BuildId)'
+  # Everything else is an "alpha".
+  ${{ else }}:
+    VersionSuffix: '-alpha.$(Build.BuildId)'
