@@ -2,7 +2,7 @@
 
 The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. With [@azure/mcp npm package](https://www.npmjs.com/package/@azure/mcp) you can easily bring the power of Model Context Protocol (MCP) to your Azure projects.
 
-The `@azure/mcp` package is a wrapper package that takes optional dependencies on 5 platform specific packages: `@azure/mcp-win32-x64`, `@azure/mcp-darwin-arm64`, etc. The `@azure/mcp` contains just `index.js`, which is responsible for detecting the platform and cpu it's running on, loading the platform specific package, then passing all of its cli args to the platform package's `index.js` file.
+The `@azure/mcp` is a platform-agnostic wrapper that automatically detects your system architecture and loads the appropriate native package (`@azure/mcp-win32-x64`, `@azure/mcp-darwin-arm64`, etc.). It contains only `index.js`, which handles platform detection and forwards CLI arguments to the correct platform-specific implementation.
 
 ## Table of Contents
 - [Overview](#overview)
@@ -57,7 +57,6 @@ Alternatively, you can also install a targeted version of the @azure/mcp package
   } 
 }
 ```
-**Note: `@azure/mcp` is a platform-agnostic wrapper that automatically detects your system architecture and loads the appropriate native package (`@azure/mcp-win32-x64`, `@azure/mcp-darwin-arm64`, etc.). It contains only `index.js`, which handles platform detection and forwards CLI arguments to the correct platform-specific implementation.
 
 2. **Start (or Auto-Start) the MCP Server**
 
