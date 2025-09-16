@@ -392,7 +392,7 @@ For the complete list of supported services and sample prompts, see our [full do
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **26 Azure service areas**:
+The Azure MCP Server provides tools for interacting with **30+ Azure service areas**:
 
 - 🔎 **Azure AI Search** - Search engine/vector database operations
 - ⚙️ **Azure App Configuration** - Configuration management
