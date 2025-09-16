@@ -19,7 +19,9 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// - "dev": Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI
 /// - "prod": Environment → Workload Identity → Managed Identity
 /// - Specific credential name (e.g., "AzureCliCredential"): Only that credential
-/// - Not set or empty: Full chain (Environment → Workload Identity → Managed Identity → Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI)
+/// - Not set or empty: Development chain (Environment → Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI)
+/// 
+/// By default, production credentials (Workload Identity and Managed Identity) are excluded unless explicitly requested via AZURE_TOKEN_CREDENTIALS="prod".
 /// 
 /// Special behavior: When running in VS Code context (VSCODE_PID environment variable is set) and AZURE_TOKEN_CREDENTIALS is not explicitly specified,
 /// Visual Studio Code credential is automatically prioritized first in the chain.
@@ -205,10 +207,8 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
 
     private static void AddFullCredentialChain(List<TokenCredential> credentials, string? tenantId)
     {
-        // Full chain: Environment -> WorkloadIdentity -> ManagedIdentity -> VS -> VSCode -> CLI -> PowerShell -> AzD
+        // Full chain: Environment -> VS -> VSCode -> CLI -> PowerShell -> AzD (excludes production credentials by default)
         AddEnvironmentCredential(credentials);
-        AddWorkloadIdentityCredential(credentials, tenantId);
-        AddManagedIdentityCredential(credentials);
         AddVisualStudioCredential(credentials, tenantId);
         AddVisualStudioCodeCredential(credentials, tenantId);
         AddAzureCliCredential(credentials, tenantId);
@@ -290,11 +290,9 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
     {
         var credentials = new List<TokenCredential>();
 
-        // VS Code first, then the rest of the full chain (excluding VS Code to avoid duplication)
+        // VS Code first, then the rest of the full chain (excluding VS Code to avoid duplication and excluding production credentials by default)
         AddVisualStudioCodeCredential(credentials, tenantId);
         AddEnvironmentCredential(credentials);
-        AddWorkloadIdentityCredential(credentials, tenantId);
-        AddManagedIdentityCredential(credentials);
         AddVisualStudioCredential(credentials, tenantId);
         // Skip VS Code credential here since it's already first
         AddAzureCliCredential(credentials, tenantId);
