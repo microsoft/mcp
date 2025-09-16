@@ -18,7 +18,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 | MCP Server           |  README              | Source Code             |    CHANGELOG          | Releases             | Documentation             | Troubleshooting             | Support             |
 |:---------------------|:--------------------:|:-----------------------:|:---------------------:|:--------------------:|:-------------------------:|:---------------------------:|:-------------------:|
 | Azure MCP            | [Azure MCP README]   | [Azure MCP Source Code] | [Azure MCP CHANGELOG] | [Azure MCP Releases] | [Azure MCP Documentation] | [Azure MCP Troubleshooting] | [Azure MCP Support] |
-| Microsoft Fabric MCP | [Fabric MCP README]  | [Fabric MCP Source Code]| [Fabric MCP CHANGELOG]| [Fabric MCP Releases]| [Fabric Documentation]| [Fabric MCP Troubleshooting]| [Fabric MCP Support]|
+| Microsoft Fabric MCP | [Fabric MCP README]  | [Fabric MCP Source Code] | [Fabric MCP CHANGELOG] | [Fabric MCP Releases] | [Fabric Documentation] | [Fabric MCP Troubleshooting] | [Fabric MCP Support] |
 
 [Azure MCP README]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md
 [Azure MCP CHANGELOG]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/CHANGELOG.md

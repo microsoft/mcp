@@ -1,6 +1,6 @@
 # <img height="36" width="36" src="https://learn.microsoft.com/fabric/media/fabric-icon.png" alt="Microsoft Fabric Logo" /> Microsoft Fabric MCP Server
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](../../LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/microsoft/mcp/blob/main/LICENSE)
 [![Repo](https://img.shields.io/badge/repo-microsoft/mcp-blue)](https://github.com/microsoft/mcp)
 
 A local, AI-friendly Model Context Protocol (MCP) server that packages Microsoft Fabric's OpenAPI specifications, schema definitions, examples, and curated guidance into a single context layer for AI agents and developer tools.
@@ -140,7 +140,7 @@ We welcome contributions. Please follow the repository's contribution guidelines
 - Run `eng` validation scripts where applicable (spelling, linters).
 - Provide a clear PR description and link relevant issues.
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for full guidance.
+See [CONTRIBUTING.md](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md) for full guidance.
 
 ---
 
@@ -158,7 +158,7 @@ For troubleshooting steps, consult `TROUBLESHOOTING.md`.
 ---
 
 ## License
-This project is licensed under the MIT License — see the [LICENSE](../../LICENSE) file for details.
+This project is licensed under the MIT License — see the [LICENSE](https://github.com/microsoft/mcp/blob/main/LICENSE) file for details.
 
 ---
 
