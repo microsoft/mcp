@@ -30,7 +30,15 @@ public sealed class FileSystemImportJobCreateCommand(ILogger<FileSystemImportJob
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -56,7 +64,22 @@ public sealed class FileSystemImportJobCreateCommand(ILogger<FileSystemImportJob
         {
             options.ImportPrefixes = prefixes.ToList();
         }
-        options.ConflictResolutionMode = parseResult.GetValueOrDefault(_conflictResolutionModeOption) ?? "Skip";
+        var conflictMode = parseResult.GetValueOrDefault(_conflictResolutionModeOption);
+        if (string.IsNullOrWhiteSpace(conflictMode))
+        {
+            conflictMode = "Skip"; // default
+        }
+        else
+        {
+            if (!string.Equals(conflictMode, "Skip", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(conflictMode, "Fail", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("Azure MCP Server's Managed Lustre tooling does not support the specified conflict resolution mode. This is because the mode doesn't exist or the tool does not support potentially destructive import conflict resolution modes (overwrite variants).", nameof(_conflictResolutionModeOption));
+            }
+            // Normalize casing
+            conflictMode = char.ToUpperInvariant(conflictMode[0]) + conflictMode.Substring(1).ToLowerInvariant();
+        }
+        options.ConflictResolutionMode = conflictMode;
         options.MaximumErrors = parseResult.GetValueOrDefault(_maximumErrorsOption) ?? -1;
         options.AdminStatus = "Active"; // Hard-coded since service no longer accepts parameter
         options.Name = parseResult.GetValueOrDefault(_nameOption);
@@ -80,7 +103,7 @@ public sealed class FileSystemImportJobCreateCommand(ILogger<FileSystemImportJob
                 options.FileSystem!,
                 options.Name,
                 options.ImportPrefixes,
-                options.ConflictResolutionMode,
+                options.ConflictResolutionMode!,
                 options.MaximumErrors,
                 options.Tenant,
                 options.RetryPolicy);

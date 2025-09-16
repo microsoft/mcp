@@ -244,4 +244,19 @@ public class FileSystemImportJobCreateCommandTests
         Assert.True(response.Status >= 500);
         Assert.Contains("boom", response.Message, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_InvalidConflictResolutionMode_ThrowsArgumentException()
+    {
+        var args = _commandDefinition.Parse([
+            "--subscription", _subscription,
+            "--resource-group", _resourceGroup,
+            "--file-system", _fileSystem,
+            "--conflict-resolution-mode", "OverwriteAlways"
+        ]);
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(async () => await _command.ExecuteAsync(_context, args));
+        Assert.Contains("does not support", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("overwrite", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
 }
