@@ -76,7 +76,7 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
 
         // Check if we are running in a VS Code context. VSCODE_PID is set by VS Code when launching processes, and is a reliable indicator for VS Code-hosted processes.
         bool isVsCodeContext = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VSCODE_PID"));
-        
+
         // Check if AZURE_TOKEN_CREDENTIALS is explicitly set
         string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
         bool hasExplicitCredentialSetting = !string.IsNullOrEmpty(tokenCredentials);
@@ -91,7 +91,7 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
             // Use the default credential chain (respects AZURE_TOKEN_CREDENTIALS if set)
             creds.Add(CreateDefaultCredential(tenantId));
         }
-        
+
         creds.Add(CreateBrowserCredential(tenantId, authRecord));
         return new ChainedTokenCredential([.. creds]);
     }
@@ -191,23 +191,23 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
                     break;
 
                 default:
-                    // Unknown value, fall back to full chain
-                    AddFullCredentialChain(credentials, tenantId);
+                    // Unknown value, fall back to default chain
+                    AddDefaultCredentialChain(credentials, tenantId);
                     break;
             }
         }
         else
         {
-            // No AZURE_TOKEN_CREDENTIALS specified, use full chain
-            AddFullCredentialChain(credentials, tenantId);
+            // No AZURE_TOKEN_CREDENTIALS specified, use default chain
+            AddDefaultCredentialChain(credentials, tenantId);
         }
 
         return new ChainedTokenCredential([.. credentials]);
     }
 
-    private static void AddFullCredentialChain(List<TokenCredential> credentials, string? tenantId)
+    private static void AddDefaultCredentialChain(List<TokenCredential> credentials, string? tenantId)
     {
-        // Full chain: Environment -> VS -> VSCode -> CLI -> PowerShell -> AzD (excludes production credentials by default)
+        // Default chain: Environment -> VS -> VSCode -> CLI -> PowerShell -> AzD (excludes production credentials by default)
         AddEnvironmentCredential(credentials);
         AddVisualStudioCredential(credentials, tenantId);
         AddVisualStudioCodeCredential(credentials, tenantId);
@@ -290,7 +290,7 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
     {
         var credentials = new List<TokenCredential>();
 
-        // VS Code first, then the rest of the full chain (excluding VS Code to avoid duplication and excluding production credentials by default)
+        // VS Code first, then the rest of the default chain (excluding VS Code to avoid duplication)
         AddVisualStudioCodeCredential(credentials, tenantId);
         AddEnvironmentCredential(credentials);
         AddVisualStudioCredential(credentials, tenantId);
