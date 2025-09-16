@@ -5,15 +5,16 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json.Serialization;
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp;
+using Microsoft.Mcp.Core.Areas;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Commands;
 
-public class CommandFactory
+public class CommandFactory : ICommandFactory
 {
     private readonly IAreaSetup[] _serviceAreas;
     private readonly IServiceProvider _serviceProvider;
@@ -23,7 +24,6 @@ public class CommandFactory
     private readonly ModelsJsonContext _srcGenWithOptions;
 
     private const string RootCommandGroupName = "azmcp";
-    public const char Separator = '_';
 
     /// <summary>
     /// Mapping of tokenized command names to their <see cref="IBaseCommand" />
@@ -68,6 +68,8 @@ public class CommandFactory
     public RootCommand RootCommand => _rootCommand;
 
     public CommandGroup RootGroup => _rootGroup;
+
+    public char Separator => '_';
 
     public IReadOnlyDictionary<string, IBaseCommand> AllCommands => _commandMap;
 
@@ -288,7 +290,7 @@ public class CommandFactory
             : null;
     }
 
-    internal static Dictionary<string, IBaseCommand> CreateCommandDictionary(CommandGroup node, string prefix)
+    internal Dictionary<string, IBaseCommand> CreateCommandDictionary(CommandGroup node, string prefix)
     {
         var aggregated = new Dictionary<string, IBaseCommand>();
         var updatedPrefix = GetPrefix(prefix, node.Name);
@@ -319,7 +321,7 @@ public class CommandFactory
         return aggregated;
     }
 
-    internal static string GetPrefix(string currentPrefix, string additional) => string.IsNullOrEmpty(currentPrefix)
+    internal string GetPrefix(string currentPrefix, string additional) => string.IsNullOrEmpty(currentPrefix)
         ? additional
         : currentPrefix + Separator + additional;
 

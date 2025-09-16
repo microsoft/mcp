@@ -4,6 +4,7 @@
 using System.Diagnostics;
 using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.Options;
+using Microsoft.Mcp.Core.Services.Telemetry;
 using ModelContextProtocol.Protocol;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 

@@ -4,7 +4,6 @@
 using Azure.Core;
 using Azure.Data.AppConfiguration;
 using Azure.Mcp.Core.Models.Identity;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -14,7 +13,7 @@ using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.AppConfig.Services;
 
-using ETag = Core.Models.ETag;
+using ETag = Microsoft.Mcp.Core.Models.ETag;
 
 public class AppConfigService(ISubscriptionService subscriptionService, ITenantService tenantService)
     : BaseAzureService(tenantService), IAppConfigService

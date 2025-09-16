@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Deploy.Commands.App;
 using Azure.Mcp.Tools.Deploy.Commands.Architecture;
 using Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
@@ -11,6 +9,7 @@ using Azure.Mcp.Tools.Deploy.Commands.Plan;
 using Azure.Mcp.Tools.Deploy.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Areas;
 
 namespace Azure.Mcp.Tools.Deploy;
 

@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Models.Command;
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Search.Commands.Index;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.UnitTests.Areas.Server;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Commands;
@@ -17,12 +17,12 @@ public class DashSupportTests
     public void Separator_Change_Demonstration()
     {
         // This test documents the simple fix: changing separator from '-' to '_'
-
         // Before the fix: separator was '-'
         // After the fix: separator is '_'
 
         // Arrange & Act
-        var separator = CommandFactory.Separator;
+        var factory = CommandFactoryHelpers.CreateCommandFactory();
+        var separator = factory.Separator;
 
         // Assert
         Assert.Equal('_', separator);
