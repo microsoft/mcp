@@ -24,4 +24,15 @@ public interface IAzureManagedLustreService
         string? tenant = null,
         string? location = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<ImportJobInfo> CreateImportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string fileSystemName,
+        string? name = null,
+        IList<string>? importPrefixes = null,
+        string conflictResolutionMode = "Skip",
+        int? maximumErrors = 0,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
 }
