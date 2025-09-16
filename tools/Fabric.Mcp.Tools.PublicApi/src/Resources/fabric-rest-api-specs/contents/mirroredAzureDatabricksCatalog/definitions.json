@@ -1,0 +1,636 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "MirroredAzureDatabricksCatalog data types",
+    "version": "v1"
+  },
+  "paths": {},
+  "definitions": {
+    "MirroredAzureDatabricksCatalogs": {
+      "description": "A list of MirroredAzureDatabricksCatalogs.",
+      "required": [
+        "value"
+      ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of MirroredAzureDatabricksCatalogs.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MirroredAzureDatabricksCatalog"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "MirroredAzureDatabricksCatalog": {
+      "description": "A MirroredAzureDatabricksCatalog item.",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/Item"
+        }
+      ],
+      "properties": {
+        "properties": {
+          "description": "The MirroredAzureDatabricksCatalog properties.",
+          "$ref": "#/definitions/MirroredAzureDatabricksCatalogProperties"
+        }
+      }
+    },
+    "MirroredAzureDatabricksCatalogProperties": {
+      "required": [
+        "oneLakeTablesPath",
+        "catalogName",
+        "databricksWorkspaceConnectionId",
+        "autoSync",
+        "mirroringMode"
+      ],
+      "description": "The MirroredAzureDatabricksCatalog properties.",
+      "type": "object",
+      "properties": {
+        "catalogName": {
+          "description": "Azure databricks catalog name.",
+          "type": "string"
+        },
+        "databricksWorkspaceConnectionId": {
+          "description": "The Azure databricks workspace connection id.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "oneLakeTablesPath": {
+          "description": "OneLake path to the MirroredAzureDatabricksCatalog tables directory.",
+          "type": "string"
+        },
+        "sqlEndpointProperties": {
+          "description": "An object containing the properties of the SQL endpoint.",
+          "$ref": "#/definitions/SqlEndpointProperties"
+        },
+        "autoSync": {
+          "description": "Auto sync the catalog. Additional `autoSync` types may be added over time.",
+          "$ref": "#/definitions/AutoSync"
+        },
+        "mirroringMode": {
+          "description": "Mirroring mode. Additional mirroringMode may be added over time.",
+          "$ref": "#/definitions/MirroringModes"
+        },
+        "syncDetails": {
+          "description": "The MirroredAzureDatabricksCatalog sync status.",
+          "$ref": "#/definitions/SyncDetails"
+        },
+        "mirrorStatus": {
+          "description": "The MirroredAzureDatabricksCatalog sync status.",
+          "$ref": "#/definitions/MirrorStatus"
+        },
+        "storageConnectionId": {
+          "description": "The storage connection id.",
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "SqlEndpointProperties": {
+      "required": [
+        "id",
+        "connectionString"
+      ],
+      "description": "An object containing the properties of the SQL endpoint.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "SQL endpoint ID.",
+          "type": "string"
+        },
+        "connectionString": {
+          "description": "SQL endpoint connection string.",
+          "type": "string"
+        }
+      }
+    },
+    "SyncDetails": {
+      "required": [
+        "status",
+        "lastSyncDateTime"
+      ],
+      "description": "The MirroredAzureDatabricksCatalog mirroring status.",
+      "type": "object",
+      "properties": {
+        "status": {
+          "description": "The sync status. Additional status may be added over time.",
+          "enum": [
+            "NotStarted",
+            "InProgress",
+            "Success",
+            "Failed"
+          ],
+          "x-ms-enum": {
+            "name": "Status",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "NotStarted",
+                "description": "The catalog mirroring is not started yet"
+              },
+              {
+                "value": "InProgress",
+                "description": "The mirroring process is currently in progress."
+              },
+              {
+                "value": "Success",
+                "description": "The catalog has been successfully mirrored."
+              },
+              {
+                "value": "Failed",
+                "description": "The mirroring process has failed."
+              }
+            ]
+          }
+        },
+        "lastSyncDateTime": {
+          "description": "The last sync date time in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "errorInfo": {
+          "description": "The error information.",
+          "$ref": "#/definitions/ErrorInfo"
+        }
+      }
+    },
+    "ErrorInfo": {
+      "required": [
+        "errorCode",
+        "errorMessage"
+      ],
+      "description": "The error information.",
+      "type": "object",
+      "properties": {
+        "errorCode": {
+          "description": "The error code.",
+          "type": "string"
+        },
+        "errorMessage": {
+          "description": "The error message.",
+          "type": "string"
+        },
+        "errorDetails": {
+          "description": "The error details.",
+          "type": "string"
+        }
+      }
+    },
+    "CreateMirroredAzureDatabricksCatalogRequest": {
+      "description": "Create MirroredAzureDatabricksCatalog request payload.",
+      "required": [
+        "displayName"
+      ],
+      "properties": {
+        "displayName": {
+          "description": "The MirroredAzureDatabricksCatalog display name. The display name must follow naming rules according to item type.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The MirroredAzureDatabricksCatalog description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        },
+        "creationPayload": {
+          "description": "The MirroredAzureDatabricksCatalog creation payload.",
+          "$ref": "#/definitions/MirroredAzureDatabricksCatalogCreationPayload",
+          "readOnly": false
+        },
+        "definition": {
+          "description": "The MirroredAzureDatabricksCatalog public definition. Use `definition` or `creationPayload`. You can't use both at the same time.",
+          "$ref": "#/definitions/MirroredAzureDatabricksCatalogPublicDefinition",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateMirroredAzureDatabricksCatalogRequest": {
+      "description": "Update MirroredAzureDatabricksCatalog request.",
+      "properties": {
+        "displayName": {
+          "description": "The MirroredAzureDatabricksCatalog display name. The display name must follow naming rules according to item type.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The MirroredAzureDatabricksCatalog description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        },
+        "publicUpdateableExtendedProperties": {
+          "description": "The MirroredAzureDatabricksCatalog updateable properties payload.",
+          "$ref": "#/definitions/MirroredAzureDatabricksCatalogUpdatePayload",
+          "readOnly": false
+        }
+      }
+    },
+    "MirroredAzureDatabricksCatalogCreationPayload": {
+      "description": "MirroredAzureDatabricksCatalog create item payload.",
+      "type": "object",
+      "required": [
+        "catalogName",
+        "databricksWorkspaceConnectionId",
+        "mirroringMode"
+      ],
+      "properties": {
+        "catalogName": {
+          "description": "Azure databricks catalog name.",
+          "type": "string"
+        },
+        "databricksWorkspaceConnectionId": {
+          "description": "The Azure databricks workspace connection id.",
+          "type": "string",
+          "format": "uuid"
+        },
+        "mirroringMode": {
+          "description": "Mirroring mode.",
+          "$ref": "#/definitions/MirroringModes"
+        },
+        "storageConnectionId": {
+          "description": "The storage connection id.",
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "MirroredAzureDatabricksCatalogUpdatePayload": {
+      "description": "MirroredAzureDatabricksCatalog update item payload.",
+      "type": "object",
+      "properties": {
+        "autoSync": {
+          "description": "Auto sync the catalog.",
+          "$ref": "#/definitions/AutoSync"
+        },
+        "mirroringMode": {
+          "description": "Mirroring mode.",
+          "$ref": "#/definitions/MirroringModes"
+        },
+        "storageConnectionId": {
+          "description": "The storage connection id.",
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "MirroredAzureDatabricksCatalogDefinitionResponse": {
+      "description": "API for mirroredAzureDatabricksCatalog public definition response.",
+      "required": [
+        "definition"
+      ],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/MirroredAzureDatabricksCatalogPublicDefinition",
+          "readOnly": true
+        }
+      }
+    },
+    "MirroredAzureDatabricksCatalogPublicDefinition": {
+      "description": "MirroredAzureDatabricksCatalog public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/mirroredazuredatabrickscatalog-definition) for more details on how to craft a MirroredAzureDatabricksCatalog definition public definition.",
+      "type": "object",
+      "required": [
+        "parts"
+      ],
+      "properties": {
+        "format": {
+          "description": "The format of the item definition.",
+          "type": "string",
+          "readOnly": false
+        },
+        "parts": {
+          "description": "A list of definition parts.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MirroredAzureDatabricksCatalogPublicDefinitionPart"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "MirroredAzureDatabricksCatalogPublicDefinitionPart": {
+      "description": "MirroredAzureDatabricksCatalog definition part object.",
+      "type": "object",
+      "required": [
+        "path",
+        "payload",
+        "payloadType"
+      ],
+      "properties": {
+        "path": {
+          "description": "The MirroredAzureDatabricksCatalog part path.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payload": {
+          "description": "The MirroredAzureDatabricksCatalog part payload.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payloadType": {
+          "description": "The payload type.",
+          "$ref": "../common/definitions.json#/definitions/PayloadType",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdatemirroredAzureDatabricksCatalogDefinitionRequest": {
+      "description": "Update MirroredAzureDatabricksCatalog public definition request payload.",
+      "required": [
+        "definition"
+      ],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/MirroredAzureDatabricksCatalogPublicDefinition"
+        }
+      }
+    },
+    "AutoSync": {
+      "description": "Enable or disable automatic synchronization for the catalog. When enabled, all metadata changes, including schemas and tables, are automatically synchronized every 15 minutes. When disabled, users must manually refresh the metadata. This setting can only be modified during an update request. Additional `autoSync` types may be added over time.",
+      "type": "string",
+      "enum": [
+        "Enabled",
+        "Disabled"
+      ],
+      "x-ms-enum": {
+        "name": "AutoSync",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Enabled",
+            "description": "Automatic synchronization is enabled."
+          },
+          {
+            "value": "Disabled",
+            "description": "Automatic synchronization is disabled."
+          }
+        ]
+      }
+    },
+    "MirroringModes": {
+      "description": "Mode for mirroring. Additional mirroringMode may be added over time.",
+      "type": "string",
+      "enum": [
+        "Full",
+        "Partial"
+      ],
+      "x-ms-enum": {
+        "name": "MirroringModes",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Full",
+            "description": "Mirror everything inside a catalog except specifically excluded schemas and tables. Everything is synced by default if no exclusion is provided."
+          },
+          {
+            "value": "Partial",
+            "description": "Only selected schemas and tables are mirrored. Nothing is synced by default."
+          }
+        ]
+      }
+    },
+    "MirrorStatus": {
+      "description": "Status of mirroring. Additional status may be added over time.",
+      "type": "string",
+      "enum": [
+        "Mirrored",
+        "NotMirrored"
+      ],
+      "x-ms-enum": {
+        "name": "MirrorStatus",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Mirrored",
+            "description": "Indicates that the entire catalog has been successfully mirrored, ensuring that all schemas and tables from the source are fully synchronized with the MirroredAzureDatabricksCatalog item."
+          },
+          {
+            "value": "NotMirrored",
+            "description": "Indicates that the catalog has not been mirrored yet. No schemas or tables are synchronized by default unless explicitly configured."
+          }
+        ]
+      }
+    },
+    "DatabricksCatalogs": {
+      "description": "A list of catalogs from Unity Catalog.",
+      "required": [
+        "value"
+      ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of Catalogs.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DatabricksCatalog"
+          }
+        },
+        "Error": {
+          "description": "Error is set if unable to fetch catalogs",
+          "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "DatabricksCatalog": {
+      "description": "A catalog from Unity Catalog",
+      "required": [
+        "name",
+        "catalogType",
+        "storageLocation",
+        "fullName"
+      ],
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "The name of the catalog.",
+          "type": "string"
+        },
+        "catalogType": {
+          "description": "The type of the catalog.",
+          "$ref": "#/definitions/CatalogType"
+        },
+        "storageLocation": {
+          "description": "The storage location of the catalog.",
+          "type": "string"
+        },
+        "fullName": {
+          "description": "The full name of the catalog. This variable depends on name.",
+          "type": "string"
+        }
+      }
+    },
+    "CatalogType": {
+      "description": "The type of the catalog. Additional CatalogType types may be added over time.",
+      "type": "string",
+      "enum": [
+        "MANAGED_CATALOG"
+      ],
+      "x-ms-enum": {
+        "name": "CatalogType",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "MANAGED_CATALOG",
+            "description": "Managed Catalog"
+          }
+        ]
+      }
+    },
+    "DatabricksSchemas": {
+      "description": "A list of schemas from Unity Catalog.",
+      "required": [
+        "value"
+      ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of Databricks schemas.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DatabricksSchema"
+          }
+        },
+        "Error": {
+          "description": "Error is set if unable to fetch schemas",
+          "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "DatabricksSchema": {
+      "description": "A schema from Unity Catalog",
+      "required": [
+        "name",
+        "fullName"
+      ],
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "The name of the schema, relative to the parent catalog.",
+          "type": "string"
+        },
+        "storageLocation": {
+          "description": "The storage location of the schema.",
+          "type": "string"
+        },
+        "fullName": {
+          "description": "The full name of the schema, in the form of catalog_name.schema_name.",
+          "type": "string"
+        }
+      }
+    },
+    "DatabricksTables": {
+      "description": "A list of tables from Unity Catalog.",
+      "required": [
+        "value"
+      ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of Databricks tables.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DatabricksTable"
+          }
+        },
+        "Error": {
+          "description": "Error is set if unable to fetch tables",
+          "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "DatabricksTable": {
+      "description": "A table from Unity Catalog",
+      "required": [
+        "name",
+        "storageLocation",
+        "fullName",
+        "tableType",
+        "dataSourceFormat"
+      ],
+      "properties": {
+        "name": {
+          "description": "The name of the table, relative to the parent schema.",
+          "type": "string"
+        },
+        "storageLocation": {
+          "description": "The storage location of the table.",
+          "type": "string"
+        },
+        "fullName": {
+          "description": "The full name of the table, in the form of catalog_name.schema_name.table_name.",
+          "type": "string"
+        },
+        "tableType": {
+          "description": "The type of the table.",
+          "$ref": "#/definitions/TableType"
+        },
+        "dataSourceFormat": {
+          "description": "The data source format of the table.",
+          "$ref": "#/definitions/DataSourceFormat"
+        }
+      }
+    },
+    "TableType": {
+      "description": "The type of the table. Additional TableType types may be added over time.",
+      "type": "string",
+      "enum": [
+        "MANAGED",
+        "EXTERNAL"
+      ],
+      "x-ms-enum": {
+        "name": "TableType",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "MANAGED",
+            "description": "Managed Table"
+          },
+          {
+            "value": "EXTERNAL",
+            "description": "External Table"
+          }
+        ]
+      }
+    },
+    "DataSourceFormat": {
+      "description": "The data source format of the table. Additional DataSourceFormat types may be added over time.",
+      "type": "string",
+      "enum": [
+        "DELTA"
+      ],
+      "x-ms-enum": {
+        "name": "DataSourceFormat",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "DELTA",
+            "description": "Delta format"
+          }
+        ]
+      }
+    }
+  }
+}

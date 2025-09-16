@@ -280,38 +280,6 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task NamespaceProxyMode_IncludesExtensionTools()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "namespace");
-
-        // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotEmpty(listResult);
-
-        var toolNames = listResult.Select(t => t.Name).ToList();
-
-        // Should include specific extension tools
-        var hasExtensionAz = toolNames.Any(name => name.Equals("extension_az", StringComparison.OrdinalIgnoreCase));
-        var hasExtensionAzd = toolNames.Any(name => name.Equals("extension_azd", StringComparison.OrdinalIgnoreCase));
-
-        Assert.True(hasExtensionAz, "Should have extension_az tool");
-        Assert.True(hasExtensionAzd, "Should have extension_azd tool");
-
-        Output.WriteLine($"Namespace proxy mode with [extension] loaded {toolNames.Count} tools");
-        Output.WriteLine($"Found extension_az: {hasExtensionAz}");
-        Output.WriteLine($"Found extension_azd: {hasExtensionAzd}");
-
-        // Log all tools for debugging
-        foreach (var name in toolNames)
-        {
-            Output.WriteLine($"  - {name}");
-        }
-    }
-
-    [Fact]
     public async Task NamespaceProxyMode_StorageToolLearnMode_ReturnsStorageCommands()
     {
         // Arrange
@@ -342,8 +310,8 @@ public class ServerCommandTests(ITestOutputHelper output)
         Assert.Contains("storage", responseText, StringComparison.OrdinalIgnoreCase);
 
         // Verify it contains specific storage commands we expect
-        Assert.Contains("storage_account_list", responseText, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("storage_blob_container_details", responseText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("storage_account_get", responseText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("storage_blob_container_get", responseText, StringComparison.OrdinalIgnoreCase);
 
         Output.WriteLine("Storage tool learn mode response:");
         Output.WriteLine(responseText);

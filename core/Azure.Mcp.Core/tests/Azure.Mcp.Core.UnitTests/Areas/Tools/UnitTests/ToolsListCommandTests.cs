@@ -268,7 +268,7 @@ public class ToolsListCommandTests
         // Verify specific known commands exist
         Assert.Contains(result, cmd => cmd.Command == "azmcp subscription list");
         Assert.Contains(result, cmd => cmd.Command == "azmcp keyvault key list");
-        Assert.Contains(result, cmd => cmd.Command == "azmcp storage account list");
+        Assert.Contains(result, cmd => cmd.Command == "azmcp storage account get");
         Assert.Contains(result, cmd => cmd.Command == "azmcp appconfig account list");
 
         // Verify that each command has proper structure

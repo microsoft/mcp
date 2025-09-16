@@ -1,0 +1,145 @@
+{
+  "swagger": "2.0",
+  "info": {
+      "version": "v1",
+      "title": "Eventstream data types"
+  },
+  "paths": {},
+  "definitions": {
+      "Eventstreams": {
+          "description": "A list of eventstreams.",
+          "required": ["value"],
+          "type": "object",
+          "properties": {
+              "value": {
+                  "description": "A list of eventstreams.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Eventstream"
+                  }
+              }
+          },
+          "allOf": [
+              {
+                  "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+              }
+          ]
+      },
+      "Eventstream": {
+          "description": "An eventstream object.",
+          "type": "object",
+          "required": ["type"],
+          "allOf": [
+            {
+                "$ref": "../common/definitions.json#/definitions/Item"
+            }
+          ]
+      },
+      "CreateEventstreamRequest": {
+          "description": "Create eventstream request payload.",
+          "type": "object",
+          "required": ["displayName"],
+          "properties": {
+              "displayName": {
+                  "description": "The eventstream display name. The display name must follow naming rules according to item type.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "description": {
+                  "description": "The eventstream description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "folderId": {
+                  "description": "The folder ID. If not specified or null, the eventstream is created with the workspace as its folder.",
+                  "type": "string",
+                  "format": "uuid",
+                  "readOnly": false
+              },
+              "definition": {
+                  "description": "The [eventstream public definition](/rest/api/fabric/articles/item-management/definitions/eventstream-definition).",
+                  "$ref": "#/definitions/EventstreamDefinition",
+                  "readOnly": false
+              }
+          }
+      },
+      "UpdateEventstreamDefinitionRequest": {
+          "description": "Update eventstream public definition request payload.",
+          "type": "object",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/EventstreamDefinition"
+              }
+          }
+      },
+      "EventstreamDefinitionResponse": {
+          "description": "Eventstream public definition response.",
+          "type": "object",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/EventstreamDefinition",
+                  "readOnly": true
+              }
+          }
+      },
+      "EventstreamDefinition" : {
+          "description": "Eventstream public definition object.",
+          "type": "object",
+          "required": ["parts"],
+          "properties": {
+              "format": {
+                  "description": "The format of the item definition.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "parts": {
+                  "description": "A list of definition parts.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/EventstreamDefinitionPart"
+                  },
+                  "readOnly": false
+              }
+          }
+      },
+      "EventstreamDefinitionPart": {
+          "description": "Eventstream definition part object.",
+          "type": "object",
+          "properties": {
+              "path": {
+                  "description": "The eventstream part path.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payload": {
+                  "description": "The eventstream part payload.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payloadType":{
+                  "description": "The payload type.",
+                  "$ref": "../common/definitions.json#/definitions/PayloadType",
+                  "readOnly": false
+              }
+          }
+      },
+      "UpdateEventstreamRequest": {
+          "description": "Update eventstream request.",
+          "type": "object",
+          "properties": {
+              "displayName": {
+                  "description": "The eventstream display name. The display name must follow naming rules according to item type.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "description": {
+                  "description": "The eventstream description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              }
+          }
+      }
+  }
+}

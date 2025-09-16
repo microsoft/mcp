@@ -7,6 +7,8 @@
     <license type="expression">MIT</license>
     <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
     <description>__Description__</description>
+    <releaseNotes>__ReleaseNotes__</releaseNotes>
+    <tags>__Tags__</tags>
     <copyright>&#169; Microsoft Corporation. All rights reserved.</copyright>
     <projectUrl>__ProjectUrl__</projectUrl>
     <packageTypes>
@@ -18,5 +20,6 @@
         <frameworkReference name="Microsoft.AspNetCore.App" />
       </group>
     </frameworkReferences>
+    <icon>azureicon.png</icon>
   </metadata>
 </package>

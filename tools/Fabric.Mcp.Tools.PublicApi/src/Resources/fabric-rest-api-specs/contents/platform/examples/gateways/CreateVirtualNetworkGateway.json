@@ -1,0 +1,35 @@
+{
+    "parameters": {
+        "createGatewayRequest": {
+            "type": "VirtualNetwork",
+            "displayName": "ContosoVirtualNetworkGateway",
+            "capacityId": "ed26b6f3-7bc5-44b0-9565-a8942619ef4c",
+            "virtualNetworkAzureResource": {
+                "subscriptionId": "879b4ba0-ed17-4ff2-851e-4a2228e00b70",
+                "resourceGroupName": "ContosoResourceGroup",
+                "virtualNetworkName": "ContosoVirtualNetwork",
+                "subnetName": "ContosoSubnet"
+            },
+            "inactivityMinutesBeforeSleep": 120,
+            "numberOfMemberGateways": 3
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "271c5c9a-0860-4927-b1da-ce49008d6565",
+                "type": "VirtualNetwork",
+                "displayName": "ContosoVirtualNetworkGateway",
+                "capacityId": "ed26b6f3-7bc5-44b0-9565-a8942619ef4c",
+                "virtualNetworkAzureResource": {
+                    "subscriptionId": "879b4ba0-ed17-4ff2-851e-4a2228e00b70",
+                    "resourceGroupName": "ContosoResourceGroup",
+                    "virtualNetworkName": "ContosoVirtualNetwork",
+                    "subnetName": "ContosoSubnet"
+                },
+                "inactivityMinutesBeforeSleep": 120,
+                "numberOfMemberGateways": 3
+            }
+        }
+    }
+}

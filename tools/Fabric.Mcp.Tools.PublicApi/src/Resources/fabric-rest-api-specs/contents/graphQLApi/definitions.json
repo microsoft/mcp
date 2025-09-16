@@ -1,0 +1,141 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "GraphQLApi data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "GraphQLApi": {
+            "description": "An API for GraphQL item.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ]
+        },
+        "GraphQLApis": {
+            "description": "A list of API for GraphQL items.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+              "value": {
+                "description": "A list of API for GraphQL items.",
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/GraphQLApi"
+                }
+              }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateGraphQLApiRequest": {
+            "description": "Create API for GraphQL request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The API for GraphQL display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The API for GraphQL description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the API for GraphQL is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The API for GraphQL public definition.",
+                    "$ref": "#/definitions/GraphQLApiPublicDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateGraphQLApiDefinitionRequest": {
+            "description": "Update API for GraphQL public definition request payload.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/GraphQLApiPublicDefinition"
+                }
+            }
+        },
+        "GraphQLApiDefinitionResponse": {
+            "description": "API for GraphQL public definition response.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/GraphQLApiPublicDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "GraphQLApiPublicDefinition" : {
+            "description": "API for GraphQL public definition object. To create the definition, see [GraphQLApi definition](/rest/api/fabric/articles/item-management/definitions/graphql-api-definition).",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "format": {
+                    "description": "The format of the item definition.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GraphQLApiPublicDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "GraphQLApiPublicDefinitionPart": {
+            "description": "API for GraphQL definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The API for GraphQL definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The API for GraphQL definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateGraphQLApiRequest": {
+          "description": "Update API for GraphQL request.",
+          "properties": {
+            "displayName": {
+              "description": "The API for GraphQL display name. The display name must follow naming rules according to item type.",
+              "type": "string",
+              "readOnly": false
+            },
+            "description": {
+              "description": "The API for GraphQL description. Maximum length is 256 characters.",
+              "type": "string",
+              "readOnly": false
+            }
+          }
+        }
+    }
+}

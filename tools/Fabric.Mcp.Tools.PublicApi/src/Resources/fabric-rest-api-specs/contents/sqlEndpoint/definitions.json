@@ -1,0 +1,122 @@
+{
+  "swagger": "2.0",
+  "info": {
+      "version": "v1",
+      "title": "SQLEndpoint data types"
+  },
+  "paths": {},
+  "definitions": {
+      "SQLEndpoints": {
+        "description": "A list of SQL endpoints.",
+          "required": ["value"],
+          "type": "object",
+          "properties": {
+              "value": {
+                  "description": "A list of SQL endpoints.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/SQLEndpoint"
+                  }
+              }
+          },
+          "allOf": [
+              {
+                  "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+              }
+          ]
+      },
+    "SQLEndpoint": {
+        "description": "A SQL endpoint object.",
+        "type": "object",
+        "required": ["type"],
+        "allOf": [
+          {
+              "$ref": "../common/definitions.json#/definitions/Item"
+          }
+        ]
+    },
+    "SqlEndpointRefreshMetadataRequest": {
+      "description": "Refresh SQL analaytics endpoint request payload.",
+      "properties": {
+        "timeout": {
+          "description": "The request duration before timing out. The default value is 15 minutes.",
+          "$ref": "../common/definitions.json#/definitions/Duration"
+        }
+      }
+    },
+    "TableSyncStatuses": {
+      "description": "A list of table synchronization statuses.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TableSyncStatus"
+      }
+    },
+    "TableSyncStatus": {
+      "description": "A table synchronization status object.",
+      "type": "object",
+      "required": [
+        "tableName",
+        "startDateTime",
+        "endDateTime",
+        "status",
+        "lastSuccessfulSyncDateTime"
+      ],
+      "properties": {
+        "tableName": {
+          "description": "The name of the table that synchronized.",
+          "type": "string"
+        },
+        "startDateTime": {
+          "description": "The date and time when the table synchronization started in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "endDateTime": {
+          "description": "The date and time when the table synchronization completed in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "error": {
+          "description": "The error response details",
+          "$ref": "../common/definitions.json#/definitions/ErrorResponseDetails"
+        },
+        "status": {
+          "description": "Whether the table synchronized without errors.",
+          "$ref": "#/definitions/SyncStatus"
+        },
+        "lastSuccessfulSyncDateTime": {
+          "description": "The date and time when the table synchronization was successful in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "SyncStatus": {
+      "description": "The status of the synchronization operation. Additional SyncStatus types may be added over time.",
+      "type": "string",
+      "enum": [
+        "Success",
+        "Failure",
+        "NotRun"
+      ],
+      "x-ms-enum": {
+        "name": "SyncStatus",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Success",
+            "description": "Indicates a success."
+          },
+          {
+            "value": "Failure",
+            "description": "Indicates a failure."
+          },
+          {
+            "value": "NotRun",
+            "description": "Indicates that the operation did not run."
+          }
+        ]
+      }
+    }
+  }
+}

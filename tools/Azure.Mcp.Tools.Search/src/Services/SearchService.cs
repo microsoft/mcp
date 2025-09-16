@@ -12,7 +12,6 @@ using Azure.Search.Documents;
 using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.Models;
-using static Azure.Mcp.Tools.Search.Commands.Index.IndexDescribeCommand;
 
 namespace Azure.Mcp.Tools.Search.Services;
 
@@ -64,47 +63,47 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
         return services;
     }
 
-    public async Task<List<IndexInfo>> ListIndexes(
+    public async Task<List<IndexInfo>> GetIndexDetails(
         string serviceName,
+        string? indexName,
         RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters(serviceName);
 
         var indexes = new List<IndexInfo>();
 
-        try
+        if (string.IsNullOrEmpty(indexName))
         {
-            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy);
-            await foreach (var index in searchClient.GetIndexesAsync())
+            try
             {
-                indexes.Add(new IndexInfo(index.Name, index.Description));
+                var searchClient = await GetSearchIndexClient(serviceName, retryPolicy);
+                await foreach (var index in searchClient.GetIndexesAsync())
+                {
+                    indexes.Add(MapToIndexInfo(index));
+                }
+                return indexes;
             }
-            return indexes;
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving Search indexes: {ex.Message}", ex);
+            }
         }
-        catch (Exception ex)
+        else
         {
-            throw new Exception($"Error retrieving Search indexes: {ex.Message}", ex);
-        }
-    }
+            try
+            {
+                var searchClient = await GetSearchIndexClient(serviceName, retryPolicy);
+                var index = await searchClient.GetIndexAsync(indexName);
 
-    public async Task<SearchIndexProxy?> DescribeIndex(
-        string serviceName,
-        string indexName,
-        RetryPolicyOptions? retryPolicy = null)
-    {
-        ValidateRequiredParameters(serviceName, indexName);
-
-        try
-        {
-            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy);
-            var index = await searchClient.GetIndexAsync(indexName);
-
-            return new(index.Value);
+                indexes.Add(MapToIndexInfo(index.Value));
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving Search index details: {ex.Message}", ex);
+            }
         }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error retrieving Search index details: {ex.Message}", ex);
-        }
+
+        return indexes;
     }
 
     public async Task<List<JsonElement>> QueryIndex(
@@ -233,4 +232,11 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
             options.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
         }
     }
+
+    private static IndexInfo MapToIndexInfo(SearchIndex index)
+        => new(index.Name, index.Description, [.. index.Fields.Select(MapToFieldInfo)]);
+
+    private static FieldInfo MapToFieldInfo(SearchField field)
+        => new(field.Name, field.Type.ToString(), field.IsKey, field.IsSearchable, field.IsFilterable, field.IsSortable,
+            field.IsFacetable, field.IsHidden != true);
 }

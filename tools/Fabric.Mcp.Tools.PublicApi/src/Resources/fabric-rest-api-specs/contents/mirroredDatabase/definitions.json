@@ -1,0 +1,365 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "MirroredDatabase data types"
+    },
+    "paths": {},
+    "definitions": {
+        "MirroredDatabases": {
+            "description": "A list of mirrored databases.",
+            "required": [
+                "value"
+            ],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of mirrored databases.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MirroredDatabase"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "MirroredDatabase": {
+            "description": "A mirrored database item.",
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The mirrored database properties.",
+                    "$ref": "#/definitions/MirroredDatabaseProperties"
+                }
+            }
+        },
+        "MirroredDatabaseProperties": {
+            "description": "The mirrored database properties.",
+            "type": "object",
+            "properties": {
+                "oneLakeTablesPath": {
+                    "description": "OneLake path to the mirrored database tables directory.",
+                    "type": "string"
+                },
+                "sqlEndpointProperties": {
+                    "description": "An object containing the properties of the SQL endpoint.",
+                    "$ref": "../lakehouse/definitions.json#/definitions/SqlEndpointProperties"
+                },
+                "defaultSchema": {
+                    "description": "Default schema of the mirrored database. This property is returned only for mirrored database that enables default schema in definition.",
+                    "type": "string"
+                }
+            }
+        },
+        "CreateMirroredDatabaseRequest": {
+            "description": "Create mirrored database request payload.",
+            "required": [
+                "displayName",
+                "definition"
+            ],
+            "properties": {
+                "displayName": {
+                    "description": "The mirrored database display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The mirrored database description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the mirrored database is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The mirrored database public definition.",
+                    "$ref": "#/definitions/MirroredDatabaseDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateMirroredDatabaseDefinitionRequest": {
+            "description": "Update mirrored database public definition request payload.",
+            "required": [
+                "definition"
+            ],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/MirroredDatabaseDefinition"
+                }
+            }
+        },
+        "MirroredDatabaseDefinitionResponse": {
+            "description": "Mirrored database public definition response.",
+            "required": [
+                "definition"
+            ],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/MirroredDatabaseDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "MirroredDatabaseDefinition": {
+            "description": "Mirrored database public definition object.",
+            "type": "object",
+            "required": [
+                "parts"
+            ],
+            "properties": {
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MirroredDatabaseDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "MirroredDatabaseDefinitionPart": {
+            "description": "Mirrored database definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The mirrored database part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The mirrored database part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType": {
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateMirroredDatabaseRequest": {
+            "description": "Update mirrored database request.",
+            "properties": {
+                "displayName": {
+                    "description": "The mirrored database display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The mirrored database description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "MirroringStatusResponse": {
+            "description": "Response of getting mirroring status.",
+            "required": ["status"],
+            "properties": {
+                "status": {
+                    "description": "The status of mirroring",
+                    "$ref": "#/definitions/MirroringStatus"
+                },
+                "error": {
+                    "description": "Error is set if error happens in mirroring",
+                    "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+                }
+            }
+        },
+        "MirroringStatus": {
+            "type": "string",
+            "description": "The mirroring status type. Additional `MirroringStatus` types may be added over time.",
+            "enum": [
+                "Initializing",
+                "Initialized",
+                "Starting",
+                "Running",
+                "Stopping",
+                "Stopped"
+            ],
+            "x-ms-enum": {
+                "name": "MirroringStatus",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Initializing",
+                        "description": "The associated SQL endpoint provisioning is in progress."
+                    },
+                    {
+                        "value": "Initialized",
+                        "description": "The associated SQL endpoint provisioning is succeeded and the mirrored database is ready for start."
+                    },
+                    {
+                        "value": "Starting",
+                        "description": "The mirroring instance for the mirrored database is starting."
+                    },
+                    {
+                        "value": "Running",
+                        "description": "The mirroring instance for the mirrored database is running."
+                    },
+                    {
+                        "value": "Stopping",
+                        "description": "The mirroring instance for the mirrored database is stopping."
+                    },
+                    {
+                        "value": "Stopped",
+                        "description": "The mirroring instance for the mirrored database is stopped."
+                    }
+                ]
+            }
+        },
+        "TablesMirroringStatusResponse": {
+            "required": ["data"],
+            "description": "A paginated list of table mirroring statuses.",
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "A list of table mirroring statuses.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/TableMirroringStatusResponse"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "TableMirroringStatusResponse": {
+            "description": "Table mirroring status response.",
+            "type": "object",
+            "required": ["status", "sourceObjectType"],
+            "properties": {
+                "sourceObjectType": {
+                    "description": "Source object type.",
+                    "$ref": "#/definitions/TableSourceObjectType"
+                },
+                "sourceSchemaName": {
+                    "type": "string",
+                    "description": "Source table schema name."
+                },
+                "sourceTableName": {
+                    "type": "string",
+                    "description": "Source table name."
+                },
+                "status": {
+                    "description": "The mirroring status type of table.",
+                    "$ref": "#/definitions/TableMirroringStatus"
+                },
+                "metrics": {
+                    "description": "The mirroring metrics of table.",
+                    "$ref": "#/definitions/TableMirroringMetrics"
+                },
+                "error": {
+                    "description": "Table level error is set if error happens in mirroring for this table",
+                    "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+                }
+            }
+        },
+        "TableSourceObjectType": {
+            "type": "string",
+            "description": "The table source object type. Additional `TableSourceObjectType` types may be added over time.",
+            "enum": [
+                "Table",
+                "View"
+            ],
+            "x-ms-enum": {
+                "name": "TableSourceObjectType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Table",
+                        "description": "Table type"
+                    },
+                    {
+                        "value": "View",
+                        "description": "View type"
+                    }
+                ]
+            }
+        },
+        "TableMirroringStatus": {
+            "type": "string",
+            "description": "The table mirroring status type. Additional `TableMirroringStatus` types may be added over time.",
+            "enum": [
+                "Initialized",
+                "Snapshotting",
+                "Replicating",
+                "Reseeding",
+                "Stopped",
+                "Failed"
+            ],
+            "x-ms-enum": {
+                "name": "TableMirroringStatus",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Initialized",
+                        "description": "Mirroing of the table is initialized."
+                    },
+                    {
+                        "value": "Snapshotting",
+                        "description": "The table is snapshotting."
+                    },
+                    {
+                        "value": "Replicating",
+                        "description": "The table is replicating."
+                    },
+                    {
+                        "value": "Reseeding",
+                        "description": "The table is reseeding."
+                    },
+                    {
+                        "value": "Stopped",
+                        "description": "Mirroring of the table is stopped."
+                    },
+                    {
+                        "value": "Failed",
+                        "description": "Mirroing of the table failed with error."
+                    }
+                ]
+            }
+        },
+        "TableMirroringMetrics": {
+            "description": "Table mirroring metrics.",
+            "type": "object",
+            "required": ["processedBytes", "processedRows", "lastSyncDateTime"],
+            "properties": {
+                "processedBytes": {
+                    "format": "int64",
+                    "type": "integer",
+                    "description": "Processed bytes for this table."
+                },
+                "processedRows": {
+                    "format": "int64",
+                    "type": "integer",
+                    "description": "Processed row count for this table."
+                },
+                "lastSyncDateTime": {
+                    "format": "date-time",
+                    "type": "string",
+                    "description": "Last processed time of the table in in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
+                }
+            }
+        }
+    }
+}

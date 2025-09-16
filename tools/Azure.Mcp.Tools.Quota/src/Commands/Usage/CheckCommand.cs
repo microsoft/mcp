@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Options;
 using Azure.Mcp.Tools.Quota.Options.Usage;
 using Azure.Mcp.Tools.Quota.Services;
@@ -27,7 +28,15 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
         """;
 
     public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -55,6 +64,10 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
 
         try
         {
+            context.Activity?
+                .AddTag(QuotaTelemetryTags.Region, options.Region)
+                .AddTag(QuotaTelemetryTags.ResourceTypes, options.ResourceTypes);
+
             var resourceTypes = options.ResourceTypes.Split(',')
                 .Select(rt => rt.Trim())
                 .Where(rt => !string.IsNullOrWhiteSpace(rt))

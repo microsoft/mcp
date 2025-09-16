@@ -1,0 +1,23 @@
+{
+    "parameters": {
+        "gatewayId": "8e41c4dd-a382-4937-9bf3-695ab881f7c2"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "8e41c4dd-a382-4937-9bf3-695ab881f7c2",
+                "type": "OnPremises",
+                "displayName": "ContosoOnPremisesGateway",
+                "publicKey": {
+                    "exponent": "AQGB",
+                    "modulus": "od9b...90Jp1Q=="
+                },
+                "version": "3000.1.1",
+                "numberOfMemberGateways": 2,
+                "loadBalancingSetting": "DistributeEvenly",
+                "allowCloudConnectionRefresh": true,
+                "allowCustomConnectors": true
+            }
+        }
+    }
+}

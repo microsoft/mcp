@@ -1,0 +1,119 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "SharingLinks - Admin APIs data types"
+    },
+    "paths": {},
+    "definitions": {
+        "BulkRemoveSharingLinksResponse": {
+            "description": "A list of the unique IDs and sharing links removal status of the Fabric items in remove sharing links request",
+            "properties": {
+                "itemsRemoveSharingLinksStatus": {
+                    "type": "array",
+                    "description": "A list of items remove sharing link status.",
+                    "items": {
+                        "$ref": "#/definitions/ItemRemoveSharingLinksStatus"
+                    }
+                },
+                "sharingLinkType": {
+                    "description": "Specifies the type of sharing link that is requested for deletion for each Fabric item. Additional sharing link types may be added over time.",
+                    "readOnly": true,
+                    "$ref": "#/definitions/SharingLinkType"
+                }
+            }
+        },
+        "ItemRemoveSharingLinksStatus": {
+            "description": "The unique ID and sharing links removal status of a Fabric item",
+            "required": [
+                "status"
+            ],
+            "allOf": [
+                {
+                    "$ref": "../definitions.json#/definitions/ItemInfo"
+                }
+            ],
+            "properties": {
+                "status": {
+                    "description": "The status of sharing links removal operation. Additional property types may be added over time.",
+                    "readOnly": true,
+                    "$ref": "#/definitions/SharingLinksRemovalStatus"
+                }
+            }
+        },
+        "BulkRemoveSharingLinksRequest": {
+            "description": "A list of items for which all sharing links and related access is required to be removed. Also accepts the type of sharing link to be removed.",
+            "required": [
+                "items",
+                "sharingLinkType"
+            ],
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "description": "A list of items. The list includes item ID and type.",
+                    "readOnly": false,
+                    "items": {
+                        "$ref": "../definitions.json#/definitions/ItemInfo"
+                    }
+                },
+                "sharingLinkType": {
+                    "description": "Specifies the type of sharing link that is required to be deleted for each Fabric item. Additional sharing link types may be added over time.",
+                    "readOnly": false,
+                    "$ref": "#/definitions/SharingLinkType"
+                }
+            }
+        },
+        "RemoveAllSharingLinksRequest": {
+            "description": "Accepts the type of sharing link to be removed for all Fabric items in organization.",
+            "required": [
+                "sharingLinkType"
+            ],
+            "properties": {
+                "sharingLinkType": {
+                    "description": "Specifies the type of sharing link that is required to be deleted. Additional sharing link types may be added over time.",
+                    "readOnly": false,
+                    "$ref": "#/definitions/SharingLinkType"
+                }
+            }
+        },
+        "SharingLinksRemovalStatus": {
+            "type": "string",
+            "description": "The status of removal of sharing links. Additional `SharingLinksRemovalStatus` types may be added over time.",
+            "enum": [
+                "Succeeded",
+                "NotFound"
+            ],
+            "x-ms-enum": {
+                "name": "SharingLinksRemovalStatus",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "NotFound",
+                        "description": "The Fabric item ID, label or type wasn't found."
+                    },
+                    {
+                        "value": "Succeeded",
+                        "description": "All sharing links were removed."
+                    }
+                ]
+            }
+        },
+        "SharingLinkType": {
+            "type": "string",
+            "description": "Specifies the type of sharing link that is required to be deleted for each Fabric item. Additional sharing link types may be added over time.",
+            "enum": [
+                "OrgLink"
+            ],
+            "x-ms-enum": {
+                "name": "SharingLinkType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "OrgLink",
+                        "description": "The sharing link grants access to entire organization (default value)."
+                    }
+                ]
+            }
+        }
+    }
+}

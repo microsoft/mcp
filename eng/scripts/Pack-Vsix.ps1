@@ -10,6 +10,9 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 $sourcePath = "$RepoRoot/eng/vscode"
 
+$buildId = $env:BUILD_BUILDID
+$setDevVersion = $env:SETDEVVERSION -eq "true" # spellchecker: ignore SETDEVVERSION
+
 if(!$ArtifactsPath) {
     $ArtifactsPath = "$RepoRoot/.work/build"
 }
@@ -57,6 +60,25 @@ try {
         $version = $serverJson.version
         $serverDirectory = $serverJsonFile.Directory
         $serverName = $serverDirectory.Name
+
+        if($setDevVersion -and $buildId) {
+            <#
+                VS Code Marketplace doesn't support pre-release versions. Also, the major.minor.patch portion of the
+                version number is stored in the repo, making the pre-release suffix the only dynamic portion of the
+                version.
+
+                In build runs with "SetDevVersion" set to true, we are intentionally publishing dynamically
+                numbered packages to the marketplace. In this case, we use the CI build id as the patch number
+                (e.g. 1.2.3 -> 1.2.56789)
+            #>
+            $semver = [AzureEngSemanticVersion]::new($version)
+            $semver.PrereleaseLabel = ''
+            $semver.Patch = $buildId
+            $version = $semver.ToString()
+            Write-Host "SetDevVersion is true, using Build.BuildId as patch number: $($serverJson.version) -> $version" -ForegroundColor Yellow
+        }
+
+        # If not SetDevVersion, don't strip pre-release labels leaving the packages unpublishable
 
         $platformDirectories = Get-ChildItem $serverDirectory -Directory
         foreach ($platformDirectory in $platformDirectories) {
@@ -111,9 +133,11 @@ Processing VSIX packaging: $vsixBaseName
                 exit 1
             }
 
+            $preRelease = $setDevVersion -or $version -match '-'
+
             ## Run package command
             Write-Host "Packaging $vsixBaseName"
-            Invoke-LoggedCommand "npx --no @vscode/vsce package --target $target --out $vsixPath --ignoreFile .vscodeignore" | Out-Host
+            Invoke-LoggedCommand "npx --no @vscode/vsce package --target $target --out $vsixPath --ignoreFile .vscodeignore $($preRelease ? '--pre-release' : '')" | Out-Host
 
             ## Create manifest
             Write-Host "Generating signing manifest for $vsixBaseName"

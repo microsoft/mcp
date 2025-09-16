@@ -1,0 +1,42 @@
+{
+    "parameters": {},
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "bc23d4c6-cc92-4eb6-bcb5-0ff98429bbff",
+                        "displayName": "Finance"
+                    },
+                    {
+                        "id": "b0bca781-003c-4041-b1c4-f94d34ba76d4",
+                        "displayName": "Human resources"
+                    },
+                    {
+                        "id": "6af5a1b6-bc4c-4c0a-b60d-30c68e6e3034",
+                        "displayName": "Engineering P1"
+                    },
+                    {
+                        "id": "6c00e8eb-51d4-46f7-8b90-7e98520ea7a0",
+                        "displayName": "Marketing Q1"
+                    },
+                    {
+                        "id": "17df435d-9efd-48c1-a937-7d6fd70ab26a",
+                        "displayName": "HR Sales Q1"
+                    },
+                    {
+                        "id": "fb765fe3-d404-4f24-9d67-5916449c4c50",
+                        "displayName": "Root"
+                    },
+                    {
+                        "id": "bda31be4-7efe-4272-8b85-e1b2ff0f0592",
+                        "displayName": "Legal EMEA"
+                    }
+                ],
+                "continuationToken": "LDEsMTAwMDAwLDA%3D",
+                "continuationUri": "https://api.fabric.microsoft.com/v1/admin/tags?continuationToken=LDEsMTAwMDAwLDA%3D"
+            }
+        }
+    }
+}
+
