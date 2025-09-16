@@ -28,7 +28,7 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
         OpenWorld = true,
         ReadOnly = false,
         LocalRequired = false,
-        Secret = true
+        Secret = false
     };
 
     public override string Description =>
