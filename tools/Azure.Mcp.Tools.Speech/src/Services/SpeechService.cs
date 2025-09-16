@@ -36,8 +36,7 @@ public class SpeechService(ITenantService tenantService, ILogger<SpeechService> 
         string? profanity = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(endpoint);
-        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        ValidateRequiredParameters(endpoint, filePath);
 
         if (!File.Exists(filePath))
         {
@@ -51,10 +50,10 @@ public class SpeechService(ITenantService tenantService, ILogger<SpeechService> 
         var tokenRequestContext = new TokenRequestContext(["https://cognitiveservices.azure.com/.default"]);
         var accessToken = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
 
-        // Configure Speech SDK with endpoint - this is the correct approach for Azure AI Services
+        // Configure Speech SDK with endpoint
         var config = SpeechConfig.FromEndpoint(new Uri(endpoint));
 
-        // Set the authorization token - this is the key for Azure AI Services authentication
+        // Set the authorization token
         config.AuthorizationToken = accessToken.Token;
 
         // Set language (default to en-US)
@@ -66,8 +65,8 @@ public class SpeechService(ITenantService tenantService, ILogger<SpeechService> 
             config.SetProfanity(GetProfanityOption(profanity));
         }
 
-        // Create audio configuration from file
-        using var audioConfig = AudioConfig.FromWavFileInput(filePath);
+        // Create audio configuration from file (supports multiple formats)
+        using var audioConfig = CreateAudioConfigFromFile(filePath);
         using var recognizer = new SpeechRecognizer(config, audioConfig);
 
         // Add phrase hints if provided
@@ -187,6 +186,92 @@ public class SpeechService(ITenantService tenantService, ILogger<SpeechService> 
                 cancellationDetails.ErrorDetails?.Contains("connection", StringComparison.OrdinalIgnoreCase) == true ||
                 cancellationDetails.ErrorDetails?.Contains("network", StringComparison.OrdinalIgnoreCase) == true);
     }
+
+    /// <summary>
+    /// Creates an AudioConfig from a file, automatically detecting the format based on file extension.
+    /// Supports WAV, MP3, OPUS/OGG, FLAC, and other common audio formats using GStreamer when available.
+    /// </summary>
+    /// <param name="filePath">Path to the audio file</param>
+    /// <returns>AudioConfig configured for the specified audio file</returns>
+    private static AudioConfig CreateAudioConfigFromFile(string filePath)
+    {
+        var extension = Path.GetExtension(filePath).ToLowerInvariant();
+
+        try
+        {
+            return extension switch
+            {
+                ".wav" => AudioConfig.FromWavFileInput(filePath),
+                ".mp3" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.MP3),
+                ".ogg" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.OGG_OPUS),
+                ".opus" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.OGG_OPUS),
+                ".flac" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.FLAC),
+                ".alaw" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.ALAW),
+                ".mulaw" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.MULAW),
+                ".mp4" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.ANY),
+                ".m4a" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.ANY),
+                ".aac" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.ANY),
+                _ => AudioConfig.FromWavFileInput(filePath) // Default to WAV for unsupported formats
+            };
+        }
+        catch (Exception)
+        {
+            // Fallback to WAV if compressed format fails (e.g., GStreamer not available)
+            return AudioConfig.FromWavFileInput(filePath);
+        }
+    }
+
+    /// <summary>
+    /// Creates an AudioConfig for compressed audio formats using PullAudioInputStream.
+    /// Requires GStreamer to be installed and available in the system PATH.
+    /// </summary>
+    /// <param name="filePath">Path to the compressed audio file</param>
+    /// <param name="containerFormat">The audio container format</param>
+    /// <returns>AudioConfig configured for the compressed audio file</returns>
+    private static AudioConfig CreateCompressedAudioConfig(string filePath, AudioStreamContainerFormat containerFormat)
+    {
+        // Create compressed audio stream format
+        var audioFormat = AudioStreamFormat.GetCompressedFormat(containerFormat);
+
+        // Create a custom PullAudioInputStream using a callback
+        var callback = new BinaryFileReaderCallback(filePath);
+        var pullStream = AudioInputStream.CreatePullStream(callback, audioFormat);
+
+        return AudioConfig.FromStreamInput(pullStream);
+    }
+
+    /// <summary>
+    /// Binary file reader callback for PullAudioInputStream.
+    /// Reads binary audio data from file for compressed audio processing.
+    /// </summary>
+    private sealed class BinaryFileReaderCallback : PullAudioInputStreamCallback
+    {
+        private readonly FileStream _fileStream;
+
+        public BinaryFileReaderCallback(string filePath)
+        {
+            _fileStream = File.OpenRead(filePath);
+        }
+
+        public override int Read(byte[] dataBuffer, uint size)
+        {
+            try
+            {
+                var bytesToRead = Math.Min((int)size, dataBuffer.Length);
+                return _fileStream.Read(dataBuffer, 0, bytesToRead);
+            }
+            catch
+            {
+                return 0; // End of stream or error
+            }
+        }
+
+        public override void Close()
+        {
+            _fileStream?.Dispose();
+        }
+    }
+
     private static Models.SpeechRecognitionResult CreateNoMatchResult()
     {
         return new Models.SpeechRecognitionResult

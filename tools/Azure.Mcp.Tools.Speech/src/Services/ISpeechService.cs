@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.Tools.Speech.Models;
 
 namespace Azure.Mcp.Tools.Speech.Services;
 

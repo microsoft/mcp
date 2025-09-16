@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Speech.Commands.Stt;
@@ -909,6 +908,161 @@ public class SttRecognizeCommandTests
             if (File.Exists(testFile))
             {
                 File.Delete(testFile);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("test-audio.wav")]
+    [InlineData("test-audio.mp3")]
+    [InlineData("test-audio.m4a")]
+    [InlineData("test-audio.flac")]
+    [InlineData("test-audio.ogg")]
+    public async Task ExecuteAsync_WithDifferentAudioFormats_ShouldSucceed(string fileName)
+    {
+        // Arrange
+        await File.WriteAllTextAsync(fileName, "test audio content", TestContext.Current.CancellationToken);
+
+        var expectedResult = new SpeechRecognitionResult
+        {
+            Text = "Hello world",
+            Confidence = 0.95,
+            Reason = "RecognizedSpeech"
+        };
+
+        _speechService.RecognizeSpeechFromFile(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(expectedResult);
+
+        try
+        {
+            // Act
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {fileName}";
+            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            var response = await _command.ExecuteAsync(_context, parseResult);
+
+            // Assert
+            Assert.Equal(200, response.Status);
+            Assert.NotNull(response.Results);
+
+            var result = JsonSerializer.Deserialize<SttRecognizeCommand.SttRecognizeCommandResult>(
+                JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
+            Assert.NotNull(result);
+            Assert.Equal("Hello world", result.Result.Text);
+
+            // Verify the service was called with the correct file path
+            await _speechService.Received(1).RecognizeSpeechFromFile(
+                Arg.Any<string>(),
+                fileName,
+                Arg.Any<string>(),
+                Arg.Any<string[]>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>());
+        }
+        finally
+        {
+            // Clean up
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("invalid-extension.txt")]
+    [InlineData("audio-file-without-extension")]
+    [InlineData("audio.unknown")]
+    public async Task ExecuteAsync_WithInvalidFileExtensions_ShouldReturnValidationError(string fileName)
+    {
+        // Arrange - Create file with test content
+        await File.WriteAllTextAsync(fileName, "test content", TestContext.Current.CancellationToken);
+
+        try
+        {
+            // Act
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file \"{fileName}\"";
+            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            var response = await _command.ExecuteAsync(_context, parseResult);
+
+            // Assert - The command should return validation error for invalid file extensions
+            Assert.Equal(400, response.Status);
+            Assert.NotNull(response.Message);
+
+            // Verify the service was NOT called with invalid file extensions
+            await _speechService.DidNotReceive().RecognizeSpeechFromFile(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string[]>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>());
+        }
+        finally
+        {
+            // Clean up
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithLargeAudioFile_ShouldHandleGracefully()
+    {
+        // Arrange
+        var largeFileName = "large-audio-file.wav";
+        var largeContent = new string('A', 10_000_000); // 10MB of content
+        await File.WriteAllTextAsync(largeFileName, largeContent, TestContext.Current.CancellationToken);
+
+        var expectedResult = new SpeechRecognitionResult
+        {
+            Text = "Large file processed",
+            Confidence = 0.85,
+            Reason = "RecognizedSpeech"
+        };
+
+        _speechService.RecognizeSpeechFromFile(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(expectedResult);
+
+        try
+        {
+            // Act
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {largeFileName}";
+            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            var response = await _command.ExecuteAsync(_context, parseResult);
+
+            // Assert
+            Assert.Equal(200, response.Status);
+            Assert.NotNull(response.Results);
+
+            var result = JsonSerializer.Deserialize<SttRecognizeCommand.SttRecognizeCommandResult>(
+                JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
+            Assert.NotNull(result);
+            Assert.Equal("Large file processed", result.Result.Text);
+        }
+        finally
+        {
+            // Clean up
+            if (File.Exists(largeFileName))
+            {
+                File.Delete(largeFileName);
             }
         }
     }

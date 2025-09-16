@@ -6,8 +6,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-- Added support for Azure AI Services Speech recognition via the command `azmcp_speech_stt_recognize`. This tool enables speech-to-text conversion from audio files with configurable language settings, enhanced phrase hints for improved accuracy (supports both multiple arguments and comma-separated values), output formats (simple or detailed), and profanity filtering options.
-- Enhanced phrase hints functionality in Speech recognition: users can now specify phrases using multiple `--phrases` arguments, comma-separated values within a single argument, or a combination of both syntaxes for maximum flexibility.
+- Added support for Azure AI Services Speech recognition via the command `azmcp_speech_stt_recognize`. This tool enables speech-to-text conversion from audio files with configurable language settings, phrase hints for improved accuracy (supports both multiple arguments and comma-separated values), output formats (simple or detailed), and profanity filtering options.
 - Added elicitation support. An elicitation request is sent if the tool annotation secret hint is true. [[#404](https://github.com/microsoft/mcp/pull/404)]
 - Added the following Azure Managed Lustre commands: [[#100](https://github.com/microsoft/mcp/issues/100)]
   - `azmcp_azuremanagedlustre_filesystem_get_sku_info`: Get information about Azure Managed Lustre SKU.

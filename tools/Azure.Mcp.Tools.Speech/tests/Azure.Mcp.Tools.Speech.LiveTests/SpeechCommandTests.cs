@@ -436,4 +436,259 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             }
         }
     }
+
+    [Theory]
+    [InlineData("test-audio.wav", "By voice is my passport. Verify me.")]
+    [InlineData("whatstheweatherlike.mp3", "What's the weather like?")]
+    public async Task Should_recognize_speech_from_different_audio_formats(string fileName, string expectedText)
+    {
+        // This test validates speech recognition with different audio file formats
+        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", fileName);
+
+        // STRICT REQUIREMENT: The test audio file MUST exist in TestResources
+        Assert.True(File.Exists(testAudioFile),
+            $"Test audio file not found at: {testAudioFile}. Please ensure {fileName} exists in TestResources folder.");
+
+        var fileInfo = new FileInfo(testAudioFile);
+        Output.WriteLine($"Using test audio file: {testAudioFile}");
+        Output.WriteLine($"Test audio file size: {fileInfo.Length} bytes");
+        Output.WriteLine($"Test audio file format: {Path.GetExtension(fileName)}");
+        Assert.True(fileInfo.Length > 0, "Test audio file must not be empty");
+
+        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+
+        // Test with the audio file - expect successful speech recognition
+        var result = await CallToolAsync(
+            "azmcp_speech_stt_recognize",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "endpoint", aiServicesEndpoint },
+                { "file", testAudioFile },
+                { "language", "en-US" },
+                { "format", "simple" }
+            });
+
+        // STRICT REQUIREMENT: Speech recognition must return a result
+        Assert.NotNull(result);
+
+        var resultText = result.ToString();
+        Output.WriteLine($"Speech recognition result: {resultText}");
+
+        // Validate the result structure
+        Assert.NotNull(resultText);
+        Assert.NotEmpty(resultText);
+
+        // Parse the JSON result to check the recognition outcome
+        try
+        {
+            var jsonResult = JsonDocument.Parse(resultText);
+            var resultObject = jsonResult.RootElement;
+
+            if (resultObject.TryGetProperty("result", out var resultProperty))
+            {
+                var reason = resultProperty.TryGetProperty("reason", out var reasonProperty)
+                    ? reasonProperty.GetString()
+                    : "Unknown";
+
+                var text = resultProperty.TryGetProperty("text", out var textProperty)
+                    ? textProperty.GetString()
+                    : "";
+
+                Output.WriteLine($"Recognition reason: {reason}");
+                Output.WriteLine($"Recognition text: '{text}'");
+
+                // Assert that we got the expected text from the test audio file
+                Assert.Equal(expectedText, text);
+
+                Output.WriteLine($"✅ Successfully recognized expected speech from {Path.GetExtension(fileName)} format: '{text}'");
+            }
+            else
+            {
+                Assert.Fail("Result JSON does not contain expected 'result' property");
+            }
+        }
+        catch (JsonException ex)
+        {
+            Assert.Fail($"Failed to parse speech recognition result as JSON: {ex.Message}");
+        }
+
+        Output.WriteLine($"✅ Speech recognition completed successfully with {Path.GetExtension(fileName)} audio file");
+    }
+
+    [Theory]
+    [InlineData("test-audio.wav")]
+    [InlineData("whatstheweatherlike.mp3")]
+    public async Task Should_handle_detailed_format_with_different_audio_formats(string fileName)
+    {
+        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", fileName);
+        Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
+
+        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+
+        var result = await CallToolAsync(
+            "azmcp_speech_stt_recognize",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "endpoint", aiServicesEndpoint },
+                { "file", testAudioFile },
+                { "language", "en-US" },
+                { "format", "detailed" }
+            });
+
+        Assert.NotNull(result);
+        var resultText = result.ToString();
+        Assert.NotNull(resultText);
+        Output.WriteLine($"Detailed format result for {Path.GetExtension(fileName)}: {resultText}");
+
+        // Parse the JSON result to verify detailed format structure
+        var jsonResult = JsonDocument.Parse(resultText);
+        var resultObject = jsonResult.RootElement;
+
+        Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
+
+        // Detailed format should include additional properties like NBest, offset, or duration
+        var hasNBest = resultProperty.TryGetProperty("NBest", out _) ||
+                      resultProperty.TryGetProperty("nBest", out _);
+        var hasOffset = resultProperty.TryGetProperty("offset", out _);
+        var hasDuration = resultProperty.TryGetProperty("duration", out _);
+
+        Assert.True(hasNBest || hasOffset || hasDuration,
+                   "Detailed format should include NBest, offset, or duration properties");
+
+        Output.WriteLine($"✅ Detailed format recognition completed successfully for {Path.GetExtension(fileName)}");
+    }
+
+    [Theory]
+    [InlineData("test-audio.wav")]
+    [InlineData("whatstheweatherlike.mp3")]
+    public async Task Should_apply_phrase_hints_with_different_audio_formats(string fileName)
+    {
+        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", fileName);
+        Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
+
+        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+
+        // Use appropriate phrase hints based on the file
+        var phrases = fileName.Contains("weather")
+            ? new[] { "weather", "like", "what" }
+            : new[] { "passport", "verify", "voice" };
+
+        var result = await CallToolAsync(
+            "azmcp_speech_stt_recognize",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "endpoint", aiServicesEndpoint },
+                { "file", testAudioFile },
+                { "language", "en-US" },
+                { "format", "simple" },
+                { "phrases", phrases }
+            });
+
+        Assert.NotNull(result);
+        var resultText = result.ToString();
+        Assert.NotNull(resultText);
+        Output.WriteLine($"Phrase hints result for {Path.GetExtension(fileName)}: {resultText}");
+
+        // Validate JSON structure
+        var jsonResult = JsonDocument.Parse(resultText);
+        var resultObject = jsonResult.RootElement;
+        Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
+
+        var text = resultProperty.TryGetProperty("text", out var textProperty)
+            ? textProperty.GetString()
+            : "";
+
+        // With phrase hints, we should get text containing at least one of the hint words
+        var containsHint = phrases.Any(phrase => text?.ToLower().Contains(phrase.ToLower()) == true);
+        Assert.True(containsHint, $"Recognition text should contain at least one phrase hint. Text: '{text}', Hints: [{string.Join(", ", phrases)}]");
+
+        Output.WriteLine($"✅ Phrase hints test completed for {Path.GetExtension(fileName)}");
+    }
+
+    [Fact]
+    public async Task Should_handle_large_mp3_file_timeout()
+    {
+        // Create a large temporary MP3 file to simulate a large audio file
+        var largeMp3File = Path.GetTempFileName();
+        var largeMp3FilePath = Path.ChangeExtension(largeMp3File, ".mp3");
+        File.Move(largeMp3File, largeMp3FilePath);
+
+        var largeContent = new string('A', 1000000); // 1MB of content
+        File.WriteAllText(largeMp3FilePath, largeContent);
+
+        try
+        {
+            var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+
+            var result = await CallToolAsync(
+                "azmcp_speech_stt_recognize",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "endpoint", aiServicesEndpoint },
+                    { "file", largeMp3FilePath },
+                    { "language", "en-US" },
+                    { "format", "simple" },
+                    { "retry-network-timeout", 30000 } // 30 second timeout
+                });
+
+            // Should either succeed or handle timeout gracefully
+            if (result != null)
+            {
+                var resultText = result.ToString();
+                Output.WriteLine($"Large MP3 file result: {resultText}");
+            }
+
+            Output.WriteLine("✅ Large MP3 file timeout handling test completed");
+        }
+        finally
+        {
+            // Clean up temporary file
+            if (File.Exists(largeMp3FilePath))
+            {
+                File.Delete(largeMp3FilePath);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("test-audio.wav")]
+    [InlineData("whatstheweatherlike.mp3")]
+    public async Task Should_handle_profanity_filtering_with_different_formats(string fileName)
+    {
+        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", fileName);
+        Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
+
+        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+
+        foreach (var profanityOption in new[] { "masked", "removed", "raw" })
+        {
+            var result = await CallToolAsync(
+                "azmcp_speech_stt_recognize",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "endpoint", aiServicesEndpoint },
+                    { "file", testAudioFile },
+                    { "language", "en-US" },
+                    { "format", "simple" },
+                    { "profanity", profanityOption }
+                });
+
+            Assert.NotNull(result);
+            var resultText = result.ToString();
+            Assert.NotNull(resultText);
+            Output.WriteLine($"Profanity option '{profanityOption}' result for {Path.GetExtension(fileName)}: {resultText}");
+
+            // Validate JSON structure
+            var jsonResult = JsonDocument.Parse(resultText);
+            var resultObject = jsonResult.RootElement;
+            Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
+        }
+
+        Output.WriteLine($"✅ Profanity filtering test completed for {Path.GetExtension(fileName)}");
+    }
 }

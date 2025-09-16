@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Speech.Models;
@@ -25,7 +23,8 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
     public override string Description =>
         """
         Recognize speech from an audio file using Azure AI Services Speech. This command takes an audio file and converts it to text using advanced speech recognition capabilities.
-        You must provide an Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/) and a path to the audio file. The audio file must be in a supported format (WAV is recommended).
+        You must provide an Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/) and a path to the audio file.
+        Supported audio formats include WAV, MP3, OPUS/OGG, FLAC, ALAW, MULAW, MP4, M4A, and AAC. Compressed formats require GStreamer to be installed on the system.
         Optional parameters include language specification, phrase hints for better accuracy, output format (simple or detailed), and profanity filtering.
         """;
 
@@ -50,7 +49,6 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_endpointOption);
         command.Options.Add(_fileOption);
         command.Options.Add(_languageOption);
         command.Options.Add(_phrasesOption);
@@ -61,7 +59,6 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
     protected override SttRecognizeOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValueOrDefault(_endpointOption);
         options.File = parseResult.GetValueOrDefault(_fileOption);
         options.Language = parseResult.GetValueOrDefault(_languageOption);
 
