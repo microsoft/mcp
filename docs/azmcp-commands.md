@@ -218,6 +218,12 @@ azmcp applens resource diagnose --subscription <subscription> \
                                 --resource <resource>
 ```
 
+### Azure Cli Generate Operations
+```bash
+# Generate an Azure Cli command based on user intent
+azmcp extension cligenerate --cli-type <cli-type> --intent <intent>
+```
+
 ### Azure Container Registry (ACR) Operations
 
 ```bash

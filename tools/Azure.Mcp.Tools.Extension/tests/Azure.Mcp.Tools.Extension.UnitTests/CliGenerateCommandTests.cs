@@ -8,6 +8,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Extension.Commands;
+using Azure.Mcp.Tools.Extension.Options;
 using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -54,7 +55,7 @@ public sealed class CliGenerateCommandTests
 
         var mockIntent = "\"Create a resource group named 'TestRG' in the 'eastus' region\"";
         var mockCliType = "\"az\"";
-        var args = command.GetCommand().Parse($"--intent {mockIntent} --cliType {mockCliType}");
+        var args = command.GetCommand().Parse($"--{ExtensionOptionDefinitions.CliGenerate.IntentName} {mockIntent} --{ExtensionOptionDefinitions.CliGenerate.CliTypeName} {mockCliType}");
         var context = new CommandContext(_serviceProvider);
 
         try

@@ -74,9 +74,7 @@ This tool can generate CLI commands to be used with the corresponding CLI tool t
                     var accessToken = await cliGenerateService.GetAzCliGenerateTokenAsync();
 
                     // GHCP4A Prod app
-                    //const string url = "https://aiservice.ghcpaz-prod.azure.com/api/azurecli/generate";
-                    // GHCP4A Staging app
-                    const string url = "https://azcpai-staging-eastus2.azurewebsites.net/api/azurecli/generate";
+                    const string url = "https://aiservice.ghcpaz-prod.azure.com/api/azurecli/generate";
 
                     var requestBody = new AzureCliGenerateRequest() {
                         Question = intent,

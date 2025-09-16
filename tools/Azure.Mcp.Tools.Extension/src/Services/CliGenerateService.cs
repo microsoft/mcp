@@ -14,9 +14,7 @@ internal class CliGenerateService(IHttpClientService httpClientService) : ICliGe
     public async Task<AccessToken> GetAzCliGenerateTokenAsync()
     {
         // GHCP4A Prod app
-        //const string apiScope = "9577cf87-9600-4e0d-94cd-0941e6f3c187/.default";
-        // GHCP4A Staging app
-        const string apiScope = "8ff10aec-84be-48a1-a752-0e21a3c839cf/.default";
+        const string apiScope = "9577cf87-9600-4e0d-94cd-0941e6f3c187/.default";
 
         var credential = new CustomChainedCredential();
         var accessToken = await credential.GetTokenAsync(new TokenRequestContext([apiScope]), CancellationToken.None);

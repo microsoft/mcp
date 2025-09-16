@@ -16,7 +16,7 @@ public static class ExtensionOptionDefinitions
             Required = true
         };
 
-        public const string CliTypeName = "cliType";
+        public const string CliTypeName = "cli-type";
         public static readonly Option<string> CliType = new(
             $"--{CliTypeName}"
         )

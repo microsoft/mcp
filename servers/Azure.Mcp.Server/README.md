@@ -168,6 +168,10 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * Get secure, production-grade Azure SDK best practices for effective code generation.
 
+### 🖥️ Azure Cli Generate
+
+* Generate Azure Cli commands based on user intent
+
 ### 📦 Azure Container Registry (ACR)
 
 * List Azure Container Registries and repositories in a subscription
