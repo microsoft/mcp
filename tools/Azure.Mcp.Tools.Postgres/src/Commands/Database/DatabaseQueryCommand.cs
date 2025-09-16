@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Database;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -12,7 +13,6 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Database;
 public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) : BaseDatabaseCommand<DatabaseQueryOptions>(logger)
 {
     private const string CommandTitle = "Query PostgreSQL Database";
-    private readonly Option<string> _queryOption = PostgresOptionDefinitions.Query;
     public override string Name => "query";
 
     public override string Description => "Executes a query on the PostgreSQL database.";
@@ -32,13 +32,13 @@ public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) :
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_queryOption);
+        command.Options.Add(PostgresOptionDefinitions.Query);
     }
 
     protected override DatabaseQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValue(_queryOption);
+        options.Query = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Query.Name);
         return options;
     }
 

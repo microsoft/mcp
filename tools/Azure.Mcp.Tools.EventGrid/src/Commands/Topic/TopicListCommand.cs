@@ -17,8 +17,8 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
 
     public override string Description =>
         """
-        List all Event Grid topics in a subscription with configuration and status information. This tool retrieves 
-        topic details including endpoints, access keys, and subscription information for event publishing and management. 
+        List all Event Grid topics in a subscription with configuration and status information. This tool retrieves
+        topic details including endpoints, access keys, and subscription information for event publishing and management.
         Returns topic information as JSON array. Requires subscription.
         """;
 
@@ -65,7 +65,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
                 options.RetryPolicy);
 
             context.Response.Results = topics?.Count > 0
-                ? ResponseResult.Create<TopicListCommandResult>(new TopicListCommandResult(topics), EventGridJsonContext.Default.TopicListCommandResult)
+                ? ResponseResult.Create(new TopicListCommandResult(topics), EventGridJsonContext.Default.TopicListCommandResult)
                 : null;
         }
         catch (Exception ex)

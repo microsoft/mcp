@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Models;
@@ -12,10 +14,6 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class ModelsListCommand : GlobalCommand<ModelsListOptions>
 {
     private const string CommandTitle = "List Models from Model Catalog";
-    private readonly Option<bool> _searchForFreePlaygroundOption = FoundryOptionDefinitions.SearchForFreePlaygroundOption;
-    private readonly Option<string> _publisherNameOption = FoundryOptionDefinitions.PublisherNameOption;
-    private readonly Option<string> _licenseNameOption = FoundryOptionDefinitions.LicenseNameOption;
-    private readonly Option<string> _optionalModelNameOption = FoundryOptionDefinitions.OptionalModelNameOption;
 
     public override string Name => "list";
 
@@ -47,19 +45,19 @@ public sealed class ModelsListCommand : GlobalCommand<ModelsListOptions>
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_searchForFreePlaygroundOption);
-        command.Options.Add(_publisherNameOption);
-        command.Options.Add(_licenseNameOption);
-        command.Options.Add(_optionalModelNameOption);
+        command.Options.Add(FoundryOptionDefinitions.SearchForFreePlaygroundOption);
+        command.Options.Add(FoundryOptionDefinitions.PublisherNameOption);
+        command.Options.Add(FoundryOptionDefinitions.LicenseNameOption);
+        command.Options.Add(FoundryOptionDefinitions.ModelNameOption.AsOptional());
     }
 
     protected override ModelsListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SearchForFreePlayground = parseResult.GetValue(_searchForFreePlaygroundOption);
-        options.PublisherName = parseResult.GetValue(_publisherNameOption);
-        options.LicenseName = parseResult.GetValue(_licenseNameOption);
-        options.ModelName = parseResult.GetValue(_optionalModelNameOption);
+        options.SearchForFreePlayground = parseResult.GetValueOrDefault<bool>(FoundryOptionDefinitions.SearchForFreePlaygroundOption.Name);
+        options.PublisherName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.PublisherNameOption.Name);
+        options.LicenseName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.LicenseNameOption.Name);
+        options.ModelName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.ModelNameOption.Name);
 
         return options;
     }

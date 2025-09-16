@@ -194,7 +194,7 @@ public class ChatMessageResponseBody
 
     public static ChatMessageResponseBody FromJson(string json)
     {
-        return JsonSerializer.Deserialize<ChatMessageResponseBody>(json, AppLensJsonContext.Default.ChatMessageResponseBody)!;
+        return JsonSerializer.Deserialize(json, AppLensJsonContext.Default.ChatMessageResponseBody)!;
     }
 }
 

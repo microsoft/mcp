@@ -28,7 +28,7 @@ public class ProductListCommandTests
         _marketplaceService = Substitute.For<IMarketplaceService>();
         _logger = Substitute.For<ILogger<ProductListCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton<IMarketplaceService>(_marketplaceService);
+        var collection = new ServiceCollection().AddSingleton(_marketplaceService);
         _serviceProvider = collection.BuildServiceProvider();
 
         _command = new(_logger);

@@ -15,10 +15,6 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> logger) : SubscriptionCommand<SubscriptionPeekOptions>
 {
     private const string CommandTitle = "Peek Messages from Service Bus Topic Subscription";
-    private readonly Option<string> _topicOption = ServiceBusOptionDefinitions.Topic;
-    private readonly Option<string> _subscriptionNameOption = ServiceBusOptionDefinitions.Subscription;
-    private readonly Option<int> _maxMessagesOption = ServiceBusOptionDefinitions.MaxMessages;
-    private readonly Option<string> _namespaceOption = ServiceBusOptionDefinitions.Namespace;
     private readonly ILogger<SubscriptionPeekCommand> _logger = logger;
     public override string Name => "peek";
 
@@ -51,19 +47,19 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_namespaceOption);
-        command.Options.Add(_topicOption);
-        command.Options.Add(_subscriptionNameOption);
-        command.Options.Add(_maxMessagesOption);
+        command.Options.Add(ServiceBusOptionDefinitions.Namespace);
+        command.Options.Add(ServiceBusOptionDefinitions.Topic);
+        command.Options.Add(ServiceBusOptionDefinitions.Subscription);
+        command.Options.Add(ServiceBusOptionDefinitions.MaxMessages);
     }
 
     protected override SubscriptionPeekOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SubscriptionName = parseResult.GetValueOrDefault(_subscriptionNameOption);
-        options.TopicName = parseResult.GetValueOrDefault(_topicOption);
-        options.Namespace = parseResult.GetValueOrDefault(_namespaceOption);
-        options.MaxMessages = parseResult.GetValueOrDefault(_maxMessagesOption);
+        options.SubscriptionName = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Subscription.Name);
+        options.TopicName = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Topic.Name);
+        options.Namespace = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Namespace.Name);
+        options.MaxMessages = parseResult.GetValueOrDefault<int>(ServiceBusOptionDefinitions.MaxMessages.Name);
         return options;
     }
 

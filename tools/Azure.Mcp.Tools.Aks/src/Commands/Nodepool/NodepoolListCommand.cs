@@ -16,8 +16,6 @@ public sealed class NodepoolListCommand(ILogger<NodepoolListCommand> logger) : B
     private const string CommandTitle = "List AKS Node Pools";
     private readonly ILogger<NodepoolListCommand> _logger = logger;
 
-    private readonly Option<string> _clusterNameOption = AksOptionDefinitions.Cluster;
-
     public override string Name => "list";
 
     public override string Description =>

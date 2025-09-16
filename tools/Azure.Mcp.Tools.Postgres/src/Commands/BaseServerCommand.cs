@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Postgres.Options;
 using Microsoft.Extensions.Logging;
 
@@ -13,7 +14,6 @@ public abstract class BaseServerCommand<
     : BasePostgresCommand<TOptions>(logger) where TOptions : BasePostgresOptions, new()
 
 {
-    private readonly Option<string> _serverOption = PostgresOptionDefinitions.Server;
 
     public override string Name => "server";
 
@@ -23,13 +23,13 @@ public abstract class BaseServerCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_serverOption);
+        command.Options.Add(PostgresOptionDefinitions.Server);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Server = parseResult.GetValue(_serverOption);
+        options.Server = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Server.Name);
         return options;
     }
 }

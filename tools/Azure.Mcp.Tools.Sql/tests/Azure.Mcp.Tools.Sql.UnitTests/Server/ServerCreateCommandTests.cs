@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Models;
@@ -83,7 +82,7 @@ public class ServerCreateCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+                Arg.Any<Core.Options.RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedServer);
         }
@@ -132,7 +131,7 @@ public class ServerCreateCommandTests
             "Password123!",
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedServer);
 
@@ -156,7 +155,7 @@ public class ServerCreateCommandTests
             "Password123!",
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -186,7 +185,7 @@ public class ServerCreateCommandTests
             "Password123!",
             "12.0",
             "Disabled",
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedServer);
 
@@ -209,7 +208,7 @@ public class ServerCreateCommandTests
             "Password123!",
             "12.0",
             "Disabled",
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -226,7 +225,7 @@ public class ServerCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServer>(new Exception("Test error")));
 
@@ -245,7 +244,7 @@ public class ServerCreateCommandTests
     public async Task ExecuteAsync_WhenServerAlreadyExists_Returns409StatusCode()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(409, "Conflict: Server already exists");
+        var requestException = new RequestFailedException(409, "Conflict: Server already exists");
 
         _service.CreateServerAsync(
             Arg.Any<string>(),
@@ -256,7 +255,7 @@ public class ServerCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServer>(requestException));
 

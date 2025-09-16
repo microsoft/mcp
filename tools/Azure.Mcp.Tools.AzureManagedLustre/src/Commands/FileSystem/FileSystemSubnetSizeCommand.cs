@@ -42,21 +42,18 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
         "AMLFS-Durable-Premium-500"
     ];
 
-    private readonly Option<string> _skuOption = AzureManagedLustreOptionDefinitions.SkuOption;
-    private static readonly Option<int> _sizeOption = AzureManagedLustreOptionDefinitions.SizeOption;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_skuOption);
-        command.Options.Add(_sizeOption);
+        command.Options.Add(AzureManagedLustreOptionDefinitions.SkuOption);
+        command.Options.Add(AzureManagedLustreOptionDefinitions.SizeOption);
     }
 
     protected override FileSystemSubnetSizeOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Sku = parseResult.GetValue(_skuOption);
-        options.Size = parseResult.GetValue(_sizeOption);
+        options.Sku = parseResult.GetValueOrDefault<string>(AzureManagedLustreOptionDefinitions.SkuOption.Name);
+        options.Size = parseResult.GetValueOrDefault<int>(AzureManagedLustreOptionDefinitions.SizeOption.Name);
         return options;
     }
 
@@ -66,7 +63,7 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
 
         if (result.IsValid)
         {
-            if (commandResult.TryGetValue(_skuOption, out var skuName)
+            if (commandResult.TryGetValue(AzureManagedLustreOptionDefinitions.SkuOption, out var skuName)
                 && !string.IsNullOrWhiteSpace(skuName)
                 && !AllowedSkus.Contains(skuName))
             {
