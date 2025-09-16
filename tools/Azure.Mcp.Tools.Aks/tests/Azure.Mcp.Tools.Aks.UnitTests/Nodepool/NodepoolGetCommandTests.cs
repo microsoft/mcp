@@ -62,7 +62,7 @@ public sealed class NodepoolGetCommandTests
                 NodeVmSize = "Standard_DS2_v2",
                 Mode = "System"
             };
-            _aksService.GetNodePool(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            _aksService.GetNodePoolAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(testNodePool);
         }
 
@@ -95,7 +95,7 @@ public sealed class NodepoolGetCommandTests
             NodeVmSize = "Standard_D4s_v5",
             Mode = "User"
         };
-        _aksService.GetNodePool(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _aksService.GetNodePoolAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedNodePool);
 
         var context = new CommandContext(_serviceProvider);
@@ -108,7 +108,7 @@ public sealed class NodepoolGetCommandTests
         Assert.Equal(200, response.Status);
         Assert.NotNull(response.Results);
 
-        await _aksService.Received(1).GetNodePool(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
+        await _aksService.Received(1).GetNodePoolAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AksJsonContext.Default.NodepoolGetCommandResult);
@@ -123,7 +123,7 @@ public sealed class NodepoolGetCommandTests
     public async Task ExecuteAsync_ReturnsNullWhenNodePoolNotFound()
     {
         // Arrange
-        _aksService.GetNodePool(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _aksService.GetNodePoolAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns((Models.NodePool?)null);
 
         var context = new CommandContext(_serviceProvider);
@@ -141,7 +141,7 @@ public sealed class NodepoolGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _aksService.GetNodePool(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _aksService.GetNodePoolAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<Models.NodePool?>(new Exception("Test error")));
 
         var context = new CommandContext(_serviceProvider);
