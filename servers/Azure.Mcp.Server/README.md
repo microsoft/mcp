@@ -62,6 +62,13 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "What indexes do I have in my Azure AI Search service 'mysvc'?"
 * "Let's search this index for 'my search query'"
 
+### 🎤 Azure AI Services Speech
+
+* "Convert this audio file to text using Azure Speech Services"
+* "Recognize speech from my audio file with language detection"
+* "Transcribe speech from audio with profanity filtering"
+* "Transcribe audio with phrase hints for better accuracy"
+
 ### ⚙️ Azure App Configuration
 
 * "List my App Configuration stores"
@@ -151,6 +158,10 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * List Azure AI Search services
 * List indexes and look at their schema and configuration
 * Query search indexes
+
+### 🎤 Azure AI Services Speech
+
+* Convert speech from audio files to text using Azure AI Services Speech recognition
 
 ### ⚙️ Azure App Configuration
 
