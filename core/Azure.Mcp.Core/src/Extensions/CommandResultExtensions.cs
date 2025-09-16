@@ -16,7 +16,18 @@ public static class CommandResultExtensions
         if (result is null)
             return false;
 
-        // For zero-arity options (e.g., bool switches), identifier presence indicates explicit usage
+        // Bool options (nullable or non-nullable) can work as switches or with explicit values
+        // Check if this is a bool option by looking at the value type
+        var isBoolOption = option.ValueType == typeof(bool) || option.ValueType == typeof(bool?);
+        if (isBoolOption)
+        {
+            // For bool options, consider present if:
+            // 1. Identifier was provided (switch usage: --verbose)
+            // 2. OR explicit value tokens exist (explicit usage: --verbose true)
+            return result.IdentifierTokenCount > 0;
+        }
+
+        // For other zero-arity options, identifier presence indicates explicit usage
         var expectsValue = option.Arity.MaximumNumberOfValues > 0;
         if (!expectsValue)
         {
@@ -65,7 +76,8 @@ public static class CommandResultExtensions
 
     public static T? GetValueOrDefault<T>(this CommandResult commandResult, Option<T> option)
     {
-        if (commandResult.TryGetValue(option, out T? value))
+        // Only return the value if the option was explicitly provided
+        if (commandResult.HasOptionResult(option) && commandResult.TryGetValue(option, out T? value))
         {
             return value;
         }
