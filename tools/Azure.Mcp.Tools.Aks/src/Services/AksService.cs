@@ -197,7 +197,7 @@ public sealed class AksService(
                 await _cacheService.SetAsync(CacheGroup, cacheKey, nodePool, s_cacheDuration);
                 return nodePool;
             }
-            
+
             throw new KeyNotFoundException($"AKS node pool '{nodePoolName}' not found in cluster '{clusterName}' in resource group '{resourceGroup}' for subscription '{subscription}'.");
         }
         catch (Exception ex)

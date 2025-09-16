@@ -3,8 +3,8 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Aks.Commands.Cluster;
-using Azure.Mcp.Tools.Aks.Services.Models;
 using Azure.Mcp.Tools.Aks.Commands.Nodepool;
+using Azure.Mcp.Tools.Aks.Services.Models;
 
 namespace Azure.Mcp.Tools.Aks.Commands;
 
