@@ -483,13 +483,10 @@ azmcp eventgrid topic list --subscription <subscription> \
 ### Azure Function App Operations
 
 ```bash
-# Get details for a specific Function App
+# Get detailed properties of function apps
 azmcp functionapp get --subscription <subscription> \
-                      --resource-group <resource-group> \
-                      --function-app <function-app-name>
-
-# List function apps in a subscription
-azmcp functionapp list --subscription <subscription>
+                      [--resource-group <resource-group>] \
+                      [--function-app <function-app-name>]
 ```
 
 ### Azure Key Vault Operations
@@ -968,6 +965,26 @@ azmcp sql elastic-pool list --subscription <subscription> \
 ### Azure SQL Server Operations
 
 ```bash
+# Create a new SQL server
+azmcp sql server create --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --server <server-name> \
+                        --location <location> \
+                        --admin-user <admin-username> \
+                        --admin-password <admin-password> \
+                        [--version <server-version>] \
+                        [--public-network-access <enabled|disabled>]
+
+# Delete a SQL server
+azmcp sql server delete --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --server <server-name>
+
+# Show details of a specific SQL server
+azmcp sql server show --subscription <subscription> \
+                      --resource-group <resource-group> \
+                      --server <server-name>
+
 # List Microsoft Entra ID administrators for a SQL server
 azmcp sql server entra-admin list --subscription <subscription> \
                                   --resource-group <resource-group> \

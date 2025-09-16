@@ -1,5 +1,5 @@
-name: Azure MCP Onboarding Request
-description: Use this template to file an onboarding request for a new service / tool for the Azure MCP server.
+name: Azure MCP - Service Onboarding Request
+description: Request for a new service / tool for the Azure MCP server.
 title: "[ONBOARD]"
 labels: ["onboarding","needs-triage","Azure.Mcp.Server"]
 projects: ["Microsoft/1976"]

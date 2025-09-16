@@ -1,0 +1,45 @@
+parameters:
+- name: ServerName
+  type: string
+- name: VsixTargets
+  type: object
+- name: DependsOn
+  type: object
+
+jobs:
+# Deployment Jobs: Publish VSIX artifacts to Marketplace for each vsix target
+- ${{ each VsixTarget in parameters.VsixTargets }}:
+  - deployment: PublishVSIX_${{ replace(VsixTarget, '-', '_') }}
+    displayName: "Publish VSIX Artifact to Marketplace - ${{ VsixTarget }}"
+    dependsOn: ${{ parameters.DependsOn }}
+    condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+    templateContext:
+      type: releaseJob
+      isProduction: true
+      inputs:
+      - input: pipelineArtifact
+        artifactName: vsix_packages_signed
+        targetPath: $(Pipeline.Workspace)/drop
+    environment: package-publish
+    pool:
+      name: azsdk-pool
+      image: ubuntu-24.04
+      os: linux
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureCLI@2
+            displayName: "Publish (using vsce) - ${{ VsixTarget }}"
+            inputs:
+              azureSubscription: azure-sdk-vsmarketplace
+              scriptType: pscore
+              scriptLocation: inlineScript
+              workingDirectory: $(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/${{ VsixTarget }}
+              inlineScript: |
+                Write-Host "Publishing VSIX for ${{ VsixTarget }}"
+                $baseName = Get-ChildItem *.vsix | Select-Object -First 1 | ForEach-Object { $_.BaseName }
+                Write-Host "VSIX baseName: $baseName"
+                npm install -g @vscode/vsce
+                echo "vsce publish --azure-credential --packagePath ""$($baseName).vsix"" --manifestPath ""$($baseName).manifest"" --signaturePath ""$($baseName).signature.p7s"""
+                vsce publish --azure-credential --packagePath "$($baseName).vsix" --manifestPath "$($baseName).manifest" --signaturePath "$($baseName).signature.p7s"
