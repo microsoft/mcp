@@ -1,0 +1,2 @@
+<!--BEGIN-Nuget:R-->
+# <img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /><!--END--> Azure MCP Server <!--SINGLE-Nuget:S{{.NET Tool}}-->
