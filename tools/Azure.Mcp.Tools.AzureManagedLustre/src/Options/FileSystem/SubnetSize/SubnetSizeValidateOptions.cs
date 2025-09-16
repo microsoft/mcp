@@ -7,7 +7,6 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.Options.FileSystem;
 
 public sealed class SubnetSizeValidateOptions : BaseAzureManagedLustreOptions
 {
-
     [JsonPropertyName(AzureManagedLustreOptionDefinitions.sku)]
     public string? Sku { get; set; }
 
