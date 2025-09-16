@@ -282,12 +282,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         RetryPolicyOptions? retryPolicy = null
     )
     {
-        ValidateRequiredParameters(subscription);
-        ValidateRequiredParameters(resourceGroup);
-        ValidateRequiredParameters(name);
-        ValidateRequiredParameters(location);
-        ValidateRequiredParameters(sku);
-        ValidateRequiredParameters(subnetId);
+        ValidateRequiredParameters(subscription, resourceGroup, name, location, sku, subnetId);
 
         var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
@@ -391,9 +386,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(subscription);
-        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup);
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ValidateRequiredParameters(subscription, resourceGroup, name);
 
         var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
