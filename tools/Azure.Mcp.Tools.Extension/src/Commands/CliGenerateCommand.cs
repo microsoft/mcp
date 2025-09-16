@@ -31,7 +31,7 @@ This tool can generate CLI commands to be used with the corresponding CLI tool t
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
 
     protected override void RegisterOptions(Command command)
     {
