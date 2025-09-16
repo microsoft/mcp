@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -23,7 +24,7 @@ public class FileSystemImportJobCreateCommandTests
     private readonly ILogger<FileSystemImportJobCreateCommand> _logger;
     private readonly FileSystemImportJobCreateCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
     private readonly string _subscription = "sub123";
     private readonly string _resourceGroup = "rg1";
     private readonly string _fileSystem = "fs1";
@@ -38,7 +39,7 @@ public class FileSystemImportJobCreateCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -53,13 +54,13 @@ public class FileSystemImportJobCreateCommandTests
     public async Task ExecuteAsync_Succeeds_WithRequiredParameters()
     {
         // Arrange
-    _amlfsService.CreateImportJobAsync(
+        _amlfsService.CreateImportJobAsync(
             Arg.Is(_subscription),
             Arg.Is(_resourceGroup),
             Arg.Is(_fileSystem),
             Arg.Is<string?>(x => x == null),
             Arg.Any<IList<string>?>(),
-            Arg.Is("OverwriteAlways"),
+            Arg.Is("Skip"),
             Arg.Is<int?>(-1), // defaulted by command now
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
@@ -69,12 +70,12 @@ public class FileSystemImportJobCreateCommandTests
                 _resourceGroup,
                 _subscription,
                 "Submitted (placeholder)",
-                "OverwriteAlways",
+                "Skip",
                 -1,
                 "Active",
                 new List<string>{"/"}));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", _subscription,
             "--resource-group", _resourceGroup,
             "--file-system", _fileSystem
@@ -88,16 +89,16 @@ public class FileSystemImportJobCreateCommandTests
         Assert.NotNull(response.Results);
 
         // Verify required args & defaults passed to service
-    await _amlfsService.Received(1).CreateImportJobAsync(
-        _subscription,
-        _resourceGroup,
-        _fileSystem,
-        null,
-        Arg.Any<IList<string>?>(),
-        "OverwriteAlways",
-        -1,
-        Arg.Any<string?>(),
-        Arg.Any<RetryPolicyOptions?>());
+        await _amlfsService.Received(1).CreateImportJobAsync(
+            _subscription,
+            _resourceGroup,
+            _fileSystem,
+            null,
+            Arg.Any<IList<string>?>(),
+            "Skip",
+            -1,
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>());
 
         // Inspect captured call to verify prefixes list content
         var call = _amlfsService.ReceivedCalls().First(c => c.GetMethodInfo().Name == nameof(IAzureManagedLustreService.CreateImportJobAsync));
@@ -107,7 +108,7 @@ public class FileSystemImportJobCreateCommandTests
         Assert.Equal("/", prefixesArg![0]);
         // Inspect captured call to verify conflict resolution mode
         var conflictModeArg = (string)call.GetArguments()[5]!;
-        Assert.Equal("OverwriteAlways", conflictModeArg);
+        Assert.Equal("Skip", conflictModeArg);
     }
 
     [Fact]
@@ -116,7 +117,7 @@ public class FileSystemImportJobCreateCommandTests
         // Arrange
         var prefixes = new[] { "/a", "/b" };
         var name = "custom-job";
-    _amlfsService.CreateImportJobAsync(
+        _amlfsService.CreateImportJobAsync(
             Arg.Is(_subscription),
             Arg.Is(_resourceGroup),
             Arg.Is(_fileSystem),
@@ -137,14 +138,13 @@ public class FileSystemImportJobCreateCommandTests
                 "Active",
                 prefixes.ToList()));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", _subscription,
             "--resource-group", _resourceGroup,
             "--file-system", _fileSystem,
             "--import-prefixes", prefixes[0], prefixes[1],
             "--conflict-resolution-mode", "Skip",
             "--maximum-errors", "5",
-            "--admin-status", "Active",
             "--name", name
         ]);
 
@@ -172,7 +172,7 @@ public class FileSystemImportJobCreateCommandTests
     public async Task ExecuteAsync_ValidationErrors_Return400(string argLine, bool shouldSucceed)
     {
         // Arrange
-        var args = _parser.Parse(argLine.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var args = _commandDefinition.Parse(argLine.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -189,7 +189,7 @@ public class FileSystemImportJobCreateCommandTests
     public async Task ExecuteAsync_ServiceThrows_RequestFailed_UsesStatusCode()
     {
         // Arrange
-    _amlfsService.CreateImportJobAsync(
+        _amlfsService.CreateImportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -201,7 +201,7 @@ public class FileSystemImportJobCreateCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Azure.RequestFailedException(404, "not found"));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", _subscription,
             "--resource-group", _resourceGroup,
             "--file-system", _fileSystem
@@ -219,7 +219,7 @@ public class FileSystemImportJobCreateCommandTests
     public async Task ExecuteAsync_ServiceThrows_GenericException_Returns500()
     {
         // Arrange
-    _amlfsService.CreateImportJobAsync(
+        _amlfsService.CreateImportJobAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -231,7 +231,7 @@ public class FileSystemImportJobCreateCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Exception("boom"));
 
-        var args = _parser.Parse([
+        var args = _commandDefinition.Parse([
             "--subscription", _subscription,
             "--resource-group", _resourceGroup,
             "--file-system", _fileSystem

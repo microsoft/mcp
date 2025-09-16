@@ -47,51 +47,51 @@ public static class AzureManagedLustreOptionDefinitions
     };
 
     public static readonly Option<string> FileSystemOption = new(
-        $"--{fileSystem}",
-        "The name of the Azure Managed Lustre file system (AMLFS)."
+        $"--{fileSystem}"
     )
     {
-        IsRequired = true
+        Description = "The name of the Azure Managed Lustre file system (AMLFS).",
+        Required = true
     };
 
     public static readonly Option<string[]> ImportPrefixesOption = new(
-        $"--{importPrefixes}",
-        "List of path prefixes in the linked HSM/Blob container to import. Provide multiple prefixes separated by spaces. If omitted, the entire container may be considered depending on service defaults."
+        $"--{importPrefixes}"
     )
     {
-        IsRequired = false,
+        Description = "List of path prefixes in the linked HSM/Blob container to import. Provide multiple prefixes separated by spaces. If omitted, the entire container may be considered depending on service defaults.",
+        Required = false,
         AllowMultipleArgumentsPerToken = true
     };
 
     public static readonly Option<string> ConflictResolutionModeOption = new(
-        $"--{conflictResolutionMode}",
-        "How to handle conflicts during import. Allowed values: OverwriteIfDirty, OverwriteAlways, Fail, Skip. Default: OverwriteAlways."
+        $"--{conflictResolutionMode}"
     )
     {
-        IsRequired = false
+        Description = "How to handle conflicts during import. Allowed values: OverwriteIfDirty, OverwriteAlways, Fail, Skip. Default: OverwriteAlways.",
+        Required = false
     };
 
     public static readonly Option<int?> MaximumErrorsOption = new(
-        $"--{maximumErrors}",
-        "Maximum number of errors before the import job fails fast. Default: 0 (fail on first error)."
+        $"--{maximumErrors}"
     )
     {
-        IsRequired = false
+        Description = "Maximum number of errors before the import job fails fast. Default: 0 (fail on first error).",
+        Required = false
     };
 
     public static readonly Option<string> AdminStatusOption = new(
-        $"--{adminStatus}",
-        "Administrative status of the job. Usually 'Active'."
+        $"--{adminStatus}"
     )
     {
-        IsRequired = false
+        Description = "Administrative status of the job. Usually 'Active'.",
+        Required = false
     };
 
     public static readonly Option<string> NameOption = new(
-        $"--{name}",
-        "An optional name for the import job. If omitted a timestamp-based name will be generated."
+        $"--{name}"
     )
     {
-        IsRequired = false
+        Description = "An optional name for the import job. If omitted a timestamp-based name will be generated.",
+        Required = false
     };
 }

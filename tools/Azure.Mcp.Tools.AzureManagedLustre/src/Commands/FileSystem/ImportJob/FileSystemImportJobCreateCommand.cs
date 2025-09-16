@@ -5,6 +5,7 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.AzureManagedLustre.Options;
 using Azure.Mcp.Tools.AzureManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.AzureManagedLustre.Services;
+using Azure.Mcp.Core.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.Commands.FileSystem;
@@ -35,19 +36,18 @@ public sealed class FileSystemImportJobCreateCommand(ILogger<FileSystemImportJob
     {
         base.RegisterOptions(command);
         RequireResourceGroup();
-        command.AddOption(_fileSystemOption);
-        command.AddOption(_importPrefixesOption);
-        command.AddOption(_conflictResolutionModeOption);
-        command.AddOption(_maximumErrorsOption);
-    // Admin status removed from service; keep option for backward compat? (omitted here)
-        command.AddOption(_nameOption);
+        command.Options.Add(_fileSystemOption);
+        command.Options.Add(_importPrefixesOption);
+        command.Options.Add(_conflictResolutionModeOption);
+        command.Options.Add(_maximumErrorsOption);
+        command.Options.Add(_nameOption);
     }
 
     protected override FileSystemImportJobCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.FileSystem = parseResult.GetValueForOption(_fileSystemOption);
-        var prefixes = parseResult.GetValueForOption(_importPrefixesOption);
+        options.FileSystem = parseResult.GetValueOrDefault(_fileSystemOption);
+        var prefixes = parseResult.GetValueOrDefault(_importPrefixesOption);
         if (prefixes == null || prefixes.Length == 0)
         {
             options.ImportPrefixes = new List<string> { "/" };
@@ -56,10 +56,10 @@ public sealed class FileSystemImportJobCreateCommand(ILogger<FileSystemImportJob
         {
             options.ImportPrefixes = prefixes.ToList();
         }
-        options.ConflictResolutionMode = parseResult.GetValueForOption(_conflictResolutionModeOption) ?? "OverwriteAlways";
-        options.MaximumErrors = parseResult.GetValueForOption(_maximumErrorsOption) ?? -1;
-    options.AdminStatus = "Active"; // Hard-coded since service no longer accepts parameter
-        options.Name = parseResult.GetValueForOption(_nameOption);
+        options.ConflictResolutionMode = parseResult.GetValueOrDefault(_conflictResolutionModeOption) ?? "OverwriteAlways";
+        options.MaximumErrors = parseResult.GetValueOrDefault(_maximumErrorsOption) ?? -1;
+        options.AdminStatus = "Active"; // Hard-coded since service no longer accepts parameter
+        options.Name = parseResult.GetValueOrDefault(_nameOption);
         return options;
     }
 
