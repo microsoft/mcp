@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.ResourceHealth.Commands.AvailabilityStatus;
 using Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.ResourceHealth;
 
@@ -18,6 +17,11 @@ public class ResourceHealthSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IResourceHealthService, ResourceHealthService>();
+
+        services.AddSingleton<AvailabilityStatusGetCommand>();
+        services.AddSingleton<AvailabilityStatusListCommand>();
+
+        services.AddSingleton<ServiceHealthEventsListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -29,7 +33,6 @@ public class ResourceHealthSetup : IAreaSetup
             This tool provides access to Azure Resource Health data including availability state, detailed status,
             historical health information, and service health events for troubleshooting and monitoring purposes.
             """);
-        rootGroup.AddSubGroup(resourceHealth);
 
         // Create availability-status subgroup
         var availabilityStatus = new CommandGroup("availability-status",
@@ -42,9 +45,11 @@ public class ResourceHealthSetup : IAreaSetup
         resourceHealth.AddSubGroup(serviceHealthEvents);
 
         // Register commands
-        availabilityStatus.AddCommand("get", new AvailabilityStatusGetCommand(loggerFactory.CreateLogger<AvailabilityStatusGetCommand>()));
-        availabilityStatus.AddCommand("list", new AvailabilityStatusListCommand(loggerFactory.CreateLogger<AvailabilityStatusListCommand>()));
+        availabilityStatus.AddCommand("get", serviceProvider.GetRequiredService<AvailabilityStatusGetCommand>());
+        availabilityStatus.AddCommand("list", serviceProvider.GetRequiredService<AvailabilityStatusListCommand>());
 
-        serviceHealthEvents.AddCommand("list", new ServiceHealthEventsListCommand(loggerFactory.CreateLogger<ServiceHealthEventsListCommand>()));
+        serviceHealthEvents.AddCommand("list", serviceProvider.GetRequiredService<ServiceHealthEventsListCommand>());
+
+        return resourceHealth;
     }
 }
