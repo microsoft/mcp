@@ -76,10 +76,20 @@ public static class CommandResultExtensions
 
     public static T? GetValueOrDefault<T>(this CommandResult commandResult, Option<T> option)
     {
-        // Only return the value if the option was explicitly provided
+        // If the option was explicitly provided, return its value (including empty strings)
         if (commandResult.HasOptionResult(option) && commandResult.TryGetValue(option, out T? value))
         {
             return value;
+        }
+
+        // If not explicitly provided but option has a default value, use the default
+        if (option.HasDefaultValue)
+        {
+            var defaultValue = option.GetDefaultValue();
+            if (defaultValue is T typed)
+            {
+                return typed;
+            }
         }
 
         // No explicit result and no option default; return null to indicate absence
