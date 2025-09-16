@@ -54,7 +54,7 @@ public class DeploymentsListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoDeploymentsExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDeploymentsExist()
     {
         var endpoint = "https://test-endpoint.com";
 
@@ -62,7 +62,7 @@ public class DeploymentsListCommandTests
                 Arg.Is<string>(s => s == endpoint),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<Deployment>());
+            .Returns([]);
 
         var command = new DeploymentsListCommand();
         var args = command.GetCommand().Parse(["--endpoint", endpoint]);
@@ -70,7 +70,7 @@ public class DeploymentsListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
     }
 
     [Fact]
