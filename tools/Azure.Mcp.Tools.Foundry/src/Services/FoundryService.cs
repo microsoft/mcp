@@ -376,7 +376,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
         }
     }
 
-    public async Task<Dictionary<string, object>> ConnectAgent(
+    public async Task<AgentsConnectResult> ConnectAgent(
         string agentId,
         string query,
         string endpoint,
@@ -445,18 +445,17 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
 
             var toolDefinitions = ConvertTools(run.Value.Tools).ToList();
 
-            return new Dictionary<string, object>
+            return new AgentsConnectResult
             {
-                { "success", true },
-                { "thread_id", threadId },
-                { "run_id", runId },
-                { "text_response", textResponse.ToString().Trim() },
-                { "text_query", query },
-                { "agent_id", agentId },
-                { "response", convertedResponse },
-                { "query", convertedRequestMessages },
-                { "tool_definitions", JsonSerializer.Serialize(toolDefinitions, (JsonTypeInfo<List<ToolDefinitionAIFunction>>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(List<ToolDefinitionAIFunction>))) },
-                { "citations", citations }
+                AgentId = agentId,
+                ThreadId = threadId,
+                RunId = runId,
+                ResponseText = textResponse.ToString().Trim(),
+                QueryText = query,
+                Response = convertedResponse,
+                Query = convertedRequestMessages,
+                ToolDefinitions = JsonSerializer.Serialize(toolDefinitions, (JsonTypeInfo<List<ToolDefinitionAIFunction>>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(List<ToolDefinitionAIFunction>))),
+                Citations = citations
             };
         }
         catch (Exception ex)
@@ -465,7 +464,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
         }
     }
 
-    public async Task<Dictionary<string, object>> QueryAndEvaluateAgent(string agentId, string query, string endpoint, string azureOpenAIEndpoint, string azureOpenAIDeployment, string? tenant = null, List<string>? evaluatorNames = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<AgentsQueryAndEvaluateResult> QueryAndEvaluateAgent(string agentId, string query, string endpoint, string azureOpenAIEndpoint, string azureOpenAIDeployment, string? tenant = null, List<string>? evaluatorNames = null, RetryPolicyOptions? retryPolicy = null)
     {
         try
         {
@@ -477,7 +476,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
 
             List<IEvaluator> evaluators = [];
             List<EvaluationContext> evaluationContexts = [];
-            var toolDefinitions = connectAgentResult["tool_definitions"] as string;
+            var toolDefinitions = connectAgentResult.ToolDefinitions;
             var loadedToolDefinitions = ConvertToolDefinitionsFromString(toolDefinitions);
 
             if (evaluatorNames == null || evaluatorNames.Count == 0)
@@ -500,24 +499,24 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
             var azureOpenAIChatClient = GetAzureOpenAIChatClient(azureOpenAIEndpoint, azureOpenAIDeployment, credential);
 
             var evaluationResult = await compositeEvaluator.EvaluateAsync(
-                connectAgentResult["query"] as List<ChatMessage> ?? [],
-                new ChatResponse(connectAgentResult["response"] as List<ChatMessage> ?? []),
+                connectAgentResult.Query ?? [],
+                new ChatResponse(connectAgentResult.Response ?? []),
                 new ChatConfiguration(azureOpenAIChatClient),
                 evaluationContexts);
 
-            return new Dictionary<string, object>
+            return new AgentsQueryAndEvaluateResult
             {
-                { "success", true },
-                { "agent_id", agentId },
-                { "thread_id", connectAgentResult["thread_id"] },
-                { "run_id", connectAgentResult["run_id"] ?? string.Empty },
-                { "text_response", connectAgentResult["text_response"] ?? string.Empty },
-                { "text_query", query },
-                { "query", connectAgentResult["query"] as List<ChatMessage> ?? [] },
-                { "response", connectAgentResult["response"] as List<ChatMessage> ?? [] },
-                { "evaluators", evaluatorNames },
-                { "evaluation_result", evaluationResult },
-                { "citations", connectAgentResult["citations"] ?? string.Empty },
+                AgentId = agentId,
+                ThreadId = connectAgentResult.ThreadId,
+                RunId = connectAgentResult.RunId,
+                ResponseText = connectAgentResult.ResponseText,
+                QueryText = connectAgentResult.QueryText,
+                Response = connectAgentResult.Response,
+                Query = connectAgentResult.Query,
+                ToolDefinitions = connectAgentResult.ToolDefinitions,
+                Citations = connectAgentResult.Citations,
+                Evaluators = evaluatorNames,
+                EvaluationResult = evaluationResult
             };
         }
         catch (Exception ex)
@@ -526,7 +525,7 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
         }
     }
 
-    public async Task<Dictionary<string, object>> EvaluateAgent(string evaluatorName, string query, string agentResponse, string azureOpenAIEndpoint, string azureOpenAIDeployment, string? toolDefinitions, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<AgentsEvaluateResult> EvaluateAgent(string evaluatorName, string query, string agentResponse, string azureOpenAIEndpoint, string azureOpenAIDeployment, string? toolDefinitions, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters(evaluatorName, query, agentResponse);
         try
@@ -554,10 +553,10 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
                 new ChatConfiguration(azureOpenAIChatClient),
                 evaluationContext);
 
-            return new Dictionary<string, object>
+            return new AgentsEvaluateResult
             {
-                { "evaluator", evaluatorName },
-                { "result", result }
+                Evaluator = evaluatorName,
+                EvaluationResult = result
             };
         }
         catch (Exception ex)

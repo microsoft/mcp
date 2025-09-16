@@ -31,5 +31,8 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 [JsonSerializable(typeof(List<ChatMessage>))]
 [JsonSerializable(typeof(EvaluationResult))]
 [JsonSerializable(typeof(AgentsEvaluateCommand.AgentsEvaluateCommandResult))]
+[JsonSerializable(typeof(AgentsConnectResult))]
+[JsonSerializable(typeof(AgentsQueryAndEvaluateResult))]
+[JsonSerializable(typeof(AgentsEvaluateResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
 internal sealed partial class FoundryJsonContext : JsonSerializerContext;

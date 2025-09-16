@@ -56,14 +56,14 @@ public interface IFoundryService
     Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<Dictionary<string, object>> ConnectAgent(
+    Task<AgentsConnectResult> ConnectAgent(
         string agentId,
         string query,
         string endpoint,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<Dictionary<string, object>> QueryAndEvaluateAgent(
+    Task<AgentsQueryAndEvaluateResult> QueryAndEvaluateAgent(
         string agentId,
         string query,
         string endpoint,
@@ -73,7 +73,7 @@ public interface IFoundryService
         List<string>? evaluatorNames = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<Dictionary<string, object>> EvaluateAgent(
+    Task<AgentsEvaluateResult> EvaluateAgent(
         string evaluatorName,
         string query,
         string agentResponse,

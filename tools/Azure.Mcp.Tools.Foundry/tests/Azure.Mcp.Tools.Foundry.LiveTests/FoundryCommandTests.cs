@@ -155,10 +155,10 @@ public class FoundryCommandTests(ITestOutputHelper output)
         Assert.NotEmpty(response.EnumerateObject());
         response.AssertProperty("query");
         response.AssertProperty("response");
-        response.AssertProperty("text_query");
-        response.AssertProperty("text_response");
-        response.AssertProperty("agent_id");
-        response.AssertProperty("tool_definitions");
+        response.AssertProperty("queryText");
+        response.AssertProperty("responseText");
+        response.AssertProperty("agentId");
+        response.AssertProperty("toolDefinitions");
     }
 
     [Fact]
@@ -217,10 +217,10 @@ public class FoundryCommandTests(ITestOutputHelper output)
         Assert.NotEmpty(response.EnumerateObject());
         response.AssertProperty("query");
         response.AssertProperty("response");
-        response.AssertProperty("text_query");
-        response.AssertProperty("text_response");
+        response.AssertProperty("queryText");
+        response.AssertProperty("responseText");
         response.AssertProperty("evaluators");
-        var evaluationResults = response.AssertProperty("evaluation_result");
+        var evaluationResults = response.AssertProperty("evaluationResult");
         Assert.Equal(JsonValueKind.Object, evaluationResults.ValueKind);
         Assert.NotEmpty(evaluationResults.EnumerateObject());
         var metrics = evaluationResults.AssertProperty("metrics");

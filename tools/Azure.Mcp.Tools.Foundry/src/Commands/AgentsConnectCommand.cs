@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Services;
+using Azure.Mcp.Tools.Foundry.Models;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
@@ -82,5 +83,5 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
         return context.Response;
     }
 
-    internal record AgentsConnectCommandResult(Dictionary<string, object> Response);
+    internal record AgentsConnectCommandResult(AgentsConnectResult Response);
 }

@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Services;
+using Azure.Mcp.Tools.Foundry.Models;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
@@ -91,5 +92,5 @@ public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
         return context.Response;
     }
 
-    internal record AgentsEvaluateCommandResult(Dictionary<string, object> Response);
+    internal record AgentsEvaluateCommandResult(AgentsEvaluateResult Response);
 }
