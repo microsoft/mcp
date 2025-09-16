@@ -1,0 +1,449 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Gateways data types"
+    },
+    "paths": {},
+    "definitions": {
+        "GatewayType": {
+            "type": "string",
+            "description": "The type of the gateway. Additional gateway types may be added over time.",
+            "enum": ["OnPremises", "OnPremisesPersonal", "VirtualNetwork"],
+            "x-ms-enum": {     
+                "name": "GatewayType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "OnPremises",
+                        "description": "The on-premises gateway."
+                    },
+                    {
+                        "value": "OnPremisesPersonal",
+                        "description": "The on-premises gateway (personal mode)."
+                    },
+                    {
+                        "value": "VirtualNetwork",
+                        "description": "The virtual network gateway."
+                    }
+                ]
+            }
+        },
+        "LoadBalancingSetting": {
+            "type": "string",
+            "description": "The load balancing setting of the gateway cluster. Additional load balancing settings may be added over time.",
+            "enum": ["Failover", "DistributeEvenly"],
+            "x-ms-enum": {     
+                "name": "LoadBalancingSetting",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Failover",
+                        "description": "Requests will be sent to the first available gateway cluster member."
+                    },
+                    {
+                        "value": "DistributeEvenly",
+                        "description": "Requests will be distributed evenly among all enabled gateway cluster members."
+                    }
+                ]
+            }
+        },
+        "PublicKey": {
+            "required": ["exponent", "modulus"],
+            "type": "object",
+            "description": "The public key of the on-premises gateway.",
+            "properties": {
+                "exponent": {
+                    "description": "The exponent of the public key.",
+                    "type": "string"
+                },
+                "modulus": {
+                    "description": "The modulus of the public key.",
+                    "type": "string"
+                }
+            }
+        },
+        "OnPremisesGatewayMember": {
+            "required": ["id", "displayName", "publicKey", "version", "enabled"],
+            "type": "object",
+            "description": "The gateway member information.",
+            "properties": {
+                "id": {
+                    "description": "The object ID of the gateway member.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "displayName": {
+                    "description": "The display name of the gateway member.",
+                    "type": "string"
+                },
+                "publicKey": {
+                    "description": "The public key of the gateway member. Used to encrypt the credentials for creating and updating connections.",
+                    "$ref": "#/definitions/PublicKey"
+                },
+                "version": {
+                    "type": "string",
+                    "description": "The version of the installed gateway member."
+                },
+                "enabled": {
+                    "type": "boolean",
+                    "description": "Whether the gateway member is enabled. True - Enabled, False - Not enabled."
+                }
+            }
+        },
+        "Gateway": {
+            "required": ["id", "type"],
+            "type": "object",
+            "description": "The base object of gateway.",
+            "discriminator": "type",
+            "properties": {
+                "id": {
+                    "description": "The object ID of the gateway.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "type": {
+                    "description": "The type of the gateway.",
+                    "$ref": "#/definitions/GatewayType"
+                }
+            }
+        },
+        "OnPremisesGateway": {
+            "required": ["displayName", "publicKey", "version", "numberOfMemberGateways", "loadBalancingSetting", "allowCloudConnectionRefresh", "allowCustomConnectors"],
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Gateway"
+                }
+            ],
+            "x-ms-discriminator-value": "OnPremises",
+            "properties": {
+                "displayName": {
+                    "type": "string",
+                    "description": "The display name of the on-premises gateway."
+                },
+                "publicKey": {
+                    "description": "The public key of the primary gateway member. Used to encrypt the credentials for creating and updating connections.",
+                    "$ref": "#/definitions/PublicKey"
+                },
+                "version": {
+                    "type": "string",
+                    "description": "The version of the installed primary gateway member."
+                },
+                "numberOfMemberGateways": {
+                    "type": "integer",
+                    "description": "The number of gateway members in the on-premises gateway."
+                },
+                "loadBalancingSetting": {
+                    "description": "The load balancing setting of the on-premises gateway.",
+                    "$ref": "#/definitions/LoadBalancingSetting"
+                },
+                "allowCloudConnectionRefresh": {
+                    "type": "boolean",
+                    "description": "Whether to allow cloud connections to refresh through this on-premises gateway. True - Allow, False - Do not allow."
+                },
+                "allowCustomConnectors": {
+                    "type": "boolean",
+                    "description": "Whether to allow custom connectors to be used with this on-premises gateway. True - Allow, False - Do not allow."
+                }
+            }
+        },
+        "OnPremisesGatewayPersonal": {
+            "required": ["publicKey", "version"],
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Gateway"
+                }
+            ],
+            "x-ms-discriminator-value": "OnPremisesPersonal",
+            "properties": {
+                "publicKey": {
+                    "description": "The public key of the gateway. Used to encrypt the credentials for creating and updating connections.",
+                    "$ref": "#/definitions/PublicKey"
+                },
+                "version": {
+                    "type": "string",
+                    "description": "The version of the gateway."
+                }
+            }
+        },
+        "VirtualNetworkGateway": {
+            "required": ["displayName", "virtualNetworkAzureResource", "inactivityMinutesBeforeSleep", "numberOfMemberGateways"],
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Gateway"
+                }
+            ],
+            "x-ms-discriminator-value": "VirtualNetwork",
+            "properties": {
+                "displayName": {
+                    "type": "string",
+                    "description": "The display name of the virtual network gateway."
+                },
+                "capacityId": {
+                    "description": "The object ID of the Fabric license capacity.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "virtualNetworkAzureResource": {
+                    "description": "The Azure virtual network resource.",
+                    "$ref": "../../common/definitions.json#/definitions/VirtualNetworkAzureResource"
+                },
+                "inactivityMinutesBeforeSleep": {
+                    "description": "The minutes of inactivity before the virtual network gateway goes into auto-sleep.",
+                    "type": "integer"
+                },
+                "numberOfMemberGateways": {
+                    "description": "The number of member gateways.",
+                    "type": "integer"
+                }
+            }
+        },
+        "ListGatewaysResponse": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of gateways returned.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Gateway"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateGatewayRequest": {
+            "required": ["type"],
+            "type": "object",
+            "description": "The base object of create gateway request.",
+            "discriminator": "type",
+            "properties": {
+                "type": {
+                    "description": "The type of the gateway.",
+                    "$ref": "#/definitions/GatewayType"
+                }
+            }
+        },
+        "CreateVirtualNetworkGatewayRequest": {
+            "required": ["displayName", "capacityId", "virtualNetworkAzureResource", "inactivityMinutesBeforeSleep", "numberOfMemberGateways"],
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/CreateGatewayRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "VirtualNetwork",
+            "properties": {
+                "displayName": {
+                    "type": "string",
+                    "description": "The display name of the virtual network gateway. Maximum length is 200 characters."
+                },
+                "capacityId": {
+                    "description": "The object ID of the Fabric license capacity.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "virtualNetworkAzureResource": {
+                    "description": "The Azure virtual network resource.",
+                    "$ref": "../../common/definitions.json#/definitions/VirtualNetworkAzureResource"
+                },
+                "inactivityMinutesBeforeSleep": {
+                    "description": "The minutes of inactivity before the virtual network gateway goes into auto-sleep. Must be one of the following values: 30, 60, 90, 120, 150, 240, 360, 480, 720, 1440.",
+                    "type": "integer"
+                },
+                "numberOfMemberGateways": {
+                    "description": "The number of member gateways. A number between 1 and 7.",
+                    "type": "integer"
+                }
+            }
+        },
+        "UpdateGatewayRequest": {
+            "required": ["type"],
+            "type": "object",
+            "description": "The base object of update gateway request.",
+            "discriminator": "type",
+            "properties": {
+                "type": {
+                    "description": "The type of the gateway.",
+                    "$ref": "#/definitions/GatewayType"
+                },
+                "displayName": {
+                    "description": "The name of the gateway. Maximum length is 200 characters.",
+                    "type": "string"
+                }
+            }
+        },
+        "UpdateOnPremisesGatewayRequest": {
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UpdateGatewayRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "OnPremises",
+            "properties": {
+                "loadBalancingSetting": {
+                    "description": "The load balancing setting of the on-premises gateway.",
+                    "$ref": "#/definitions/LoadBalancingSetting"
+                },
+                "allowCloudConnectionRefresh": {
+                    "type": "boolean",
+                    "description": "Whether to allow cloud connections to refresh through this on-premises gateway. True - Allow, False - Do not allow."
+                },
+                "allowCustomConnectors": {
+                    "type": "boolean",
+                    "description": "Whether to allow custom connectors to be used with this on-premises gateway. True - Allow, False - Do not allow."
+                }
+            }
+        },
+        "UpdateVirtualNetworkGatewayRequest": {
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UpdateGatewayRequest"
+                }
+            ],
+            "x-ms-discriminator-value": "VirtualNetwork",
+            "properties": {
+                "capacityId": {
+                    "description": "The object ID of the Fabric license capacity.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "inactivityMinutesBeforeSleep": {
+                    "description": "The minutes of inactivity before the virtual network gateway goes into auto-sleep. Must be one of the following values: 30, 60, 90, 120, 150, 240, 360, 480, 720, 1440.",
+                    "type": "integer"
+                },
+                "numberOfMemberGateways": {
+                    "description": "The number of member gateways. A number between 1 and 7.",
+                    "type": "integer"
+                }
+            }
+        },
+        "ListGatewayMembersResponse": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of gateway cluster members returned.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/OnPremisesGatewayMember"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "UpdateGatewayMemberRequest": {
+            "type": "object",
+            "properties": {
+                "displayName": {
+                    "description": "The display name of the gateway member. Maximum length is 200 characters.",
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean",
+                    "description": "Whether the gateway member is enabled. True - Enabled, False - Not enabled."
+                }
+            }
+        },
+        "AddGatewayRoleAssignmentRequest": {
+            "type": "object",
+            "description": "The add gateway role assignment request for a principal.",
+            "required": ["principal", "role"],
+            "properties": {
+                "principal": {
+                    "description": "The principal.",
+                    "$ref": "../../common/definitions.json#/definitions/Principal"
+                },
+                "role": {
+                    "description": "The gateway role of the principal.",
+                    "$ref": "#/definitions/GatewayRole"
+                }
+            }
+        },
+        "UpdateGatewayRoleAssignmentRequest": {
+            "type": "object",
+            "description": "An update gateway role assignment request payload.",
+            "required": ["role"],
+            "properties": {
+                "role": {
+                    "description": "The gateway role of the principal.",
+                    "$ref": "#/definitions/GatewayRole"
+                }
+            }
+        },
+        "GatewayRoleAssignment": {
+            "type": "object",
+            "description": "The gateway role assignment for a principal.",
+            "required": ["id", "principal", "role"],
+            "properties": {
+                "id": {
+                    "description": "The object ID of the gateway role assignment.",
+                    "type": "string",
+                    "format": "uuid"
+                },
+                "principal": {
+                    "description": "The principal.",
+                    "$ref": "../../common/definitions.json#/definitions/Principal"
+                },
+                "role": {
+                    "description": "The gateway role of the principal.",
+                    "$ref": "#/definitions/GatewayRole"
+                }
+            }
+        },
+        "GatewayRoleAssignments": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of gateway role assignments.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GatewayRoleAssignment"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "GatewayRole": {
+            "type": "string",
+            "description": "A Gateway role. Additional gateway roles may be added over time.",
+            "enum": ["Admin", "ConnectionCreatorWithResharing", "ConnectionCreator"],
+            "x-ms-enum": {
+                "name": "GatewayRole",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Admin",
+                        "description": "Enables administrative access for the gateway."
+                    },
+                    {
+                        "value": "ConnectionCreatorWithResharing",
+                        "description": "Enables connection creator with resharing access for the gateway."
+                    },
+                    {
+                        "value": "ConnectionCreator",
+                        "description": "Enables connection creator access for the gateway."
+                    }
+                ]
+            }
+        }
+    }
+}

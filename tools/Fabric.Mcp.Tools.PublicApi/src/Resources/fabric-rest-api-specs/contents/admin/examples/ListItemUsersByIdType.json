@@ -1,0 +1,35 @@
+{
+    "parameters": {
+        "itemId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "workspaceId": "7f4496db-9929-47bd-89c0-d7eb2f517a98",
+        "type": "Report"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "accessDetails": [
+                    {
+                        "principal": {
+                        "id": "f3052d1c-61a9-46fb-8df9-0d78916ae041",
+                        "displayName": "Jacob Hancock",
+                        "type": "User",
+                        "userDetails": {
+                            "userPrincipalName": "jacob@example.com"
+                            }
+                        },
+                        "itemAccessDetails": {
+                            "type": "Report",
+                            "permissions": [
+                                "Read",
+                                "Reshare"
+                            ],
+                            "additionalPermissions" : [
+                                "ReadAll"
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

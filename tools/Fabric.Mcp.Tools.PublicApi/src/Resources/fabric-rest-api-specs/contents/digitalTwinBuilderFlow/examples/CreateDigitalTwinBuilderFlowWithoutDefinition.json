@@ -1,0 +1,34 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "createDigitalTwinBuilderFlowRequest": {
+            "displayName": "DigitalTwinBuilderFlow 1",
+            "description": "A Digital Twin Builder Flow description.",
+            "creationPayload": {
+                "digitalTwinBuilderItemReference": {
+                    "referenceType": "ById",
+                    "itemId": "d96de2f4-7dd1-45ad-9ff6-37a2d6aa9861",
+                    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                }
+            }
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "displayName": "DigitalTwinBuilderFlow 1",
+                "description": "A Digital Twin Builder Flow description.",
+                "type": "DigitalTwinBuilderFlow",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "5b218778-e7a5-4d73-8187-f10824047715"
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "Retry-After": 30
+            }
+        }
+    }
+}

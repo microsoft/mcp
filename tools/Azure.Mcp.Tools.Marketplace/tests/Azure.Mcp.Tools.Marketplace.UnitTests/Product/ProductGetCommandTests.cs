@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Marketplace.Commands.Product;
@@ -23,19 +23,19 @@ public class ProductGetCommandTests
     private readonly ILogger<ProductGetCommand> _logger;
     private readonly ProductGetCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public ProductGetCommandTests()
     {
         _marketplaceService = Substitute.For<IMarketplaceService>();
         _logger = Substitute.For<ILogger<ProductGetCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton<IMarketplaceService>(_marketplaceService);
+        var collection = new ServiceCollection().AddSingleton(_marketplaceService);
         _serviceProvider = collection.BuildServiceProvider();
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public class ProductGetCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .Returns(expectedProduct);
 
-        var args = _parser.Parse(["--subscription", subscriptionId, "--product-id", productId]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--product-id", productId]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -90,7 +90,7 @@ public class ProductGetCommandTests
     public async Task ExecuteAsync_WithMissingSubscription_ReturnsValidationError()
     {
         // Arrange
-        var args = _parser.Parse(["--product-id", "test-product"]);
+        var args = _commandDefinition.Parse(["--product-id", "test-product"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -124,7 +124,7 @@ public class ProductGetCommandTests
             Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var args = _parser.Parse(["--subscription", subscriptionId, "--product-id", productId]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--product-id", productId]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);

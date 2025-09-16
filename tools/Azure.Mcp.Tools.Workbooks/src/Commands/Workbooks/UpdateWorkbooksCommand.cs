@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
@@ -29,36 +30,44 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = true,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_workbookIdOption);
-        command.AddOption(_displayNameOption);
-        command.AddOption(_serializedContentOption);
+        command.Options.Add(_workbookIdOption);
+        command.Options.Add(_displayNameOption);
+        command.Options.Add(_serializedContentOption);
     }
 
     protected override UpdateWorkbooksOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkbookId = parseResult.GetValueForOption(_workbookIdOption);
-        options.DisplayName = parseResult.GetValueForOption(_displayNameOption);
-        options.SerializedContent = parseResult.GetValueForOption(_serializedContentOption);
+        options.WorkbookId = parseResult.GetValueOrDefault(_workbookIdOption);
+        options.DisplayName = parseResult.GetValueOrDefault(_displayNameOption);
+        options.SerializedContent = parseResult.GetValueOrDefault(_serializedContentOption);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var workbooksService = context.GetService<IWorkbooksService>();
             var updatedWorkbook = await workbooksService.UpdateWorkbook(
                 options.WorkbookId!,

@@ -1,0 +1,58 @@
+{
+    "parameters": {
+        "workspaceId": "f8113ba8-dd81-443e-811a-b385340f3f05",
+        "sparkJobDefinitionId": "8cee7699-2e81-4121-9a53-cc9025046193",
+        "livyId": "9611f500-bf44-42e0-a0de-78dacb374398"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "sparkApplicationId": "application_1730933685452_0001",
+                "state": "Cancelled",
+                "livyId": "9611f500-bf44-42e0-a0de-78dacb374398",
+                "origin": "SubmittedJob",
+                "attemptNumber": 1,
+                "maxNumberOfAttempts": 1,
+                "livyName": "random_test_name_app",
+                "submitter": {
+                    "id": "6f23a8a6-d954-4550-b91a-4df73ccd0311",
+                    "type": "User"
+                },
+                "item": {
+                    "workspaceId": "f8113ba8-dd81-443e-811a-b385340f3f05",
+                    "itemId": "8cee7699-2e81-4121-9a53-cc9025046193",
+                    "referenceType": "ById"
+                },
+                "itemName": "lh_itemName",
+                "itemType": "SparkJobDefinition",
+                "jobType": "SparkBatch",
+                "submittedDateTime": "2025-01-31T15:32:03Z",
+                "startDateTime": "2025-01-31T15:34:11Z",
+                "endDateTime": "2025-01-31T15:37:30Z",
+                "queuedDuration": {
+                    "value": 1,
+                    "timeUnit": "Seconds"
+                },
+                "runningDuration": {
+                    "value": 180,
+                    "timeUnit": "Seconds"
+                },
+                "totalDuration": {
+                    "value": 360,
+                    "timeUnit": "Seconds"
+                },
+                "jobInstanceId": "c2baabbd-5327-430c-87a6-ff4f98285601",
+                "creatorItem": {
+                    "workspaceId": "f8113ba8-dd81-443e-811a-b385340f3f05",
+                    "itemId": "8cee7699-2e81-4121-9a53-cc9025046193",
+                    "referenceType": "ById"
+                },
+                "cancellationReason": "User cancelled the Spark batch",
+                "capacityId": "3c0cd366-dc28-4b6d-a525-4d415a8666e7",
+                "operationName": "Batch Livy Run",
+                "runtimeVersion": "1.3",
+                "livySessionItemResourceUri": ""
+            }        
+        }
+    }
+}

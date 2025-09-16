@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Monitor.Options.TableType;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
@@ -21,7 +20,15 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) :
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -32,15 +39,15 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) :
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var monitorService = context.GetService<IMonitorService>();
             var tableTypes = await monitorService.ListTableTypes(
                 options.Subscription!,
@@ -50,7 +57,7 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) :
                 options.RetryPolicy);
 
             context.Response.Results = tableTypes?.Count > 0 ?
-                ResponseResult.Create<TableTypeListCommandResult>(
+                ResponseResult.Create(
                     new TableTypeListCommandResult(tableTypes),
                     MonitorJsonContext.Default.TableTypeListCommandResult // Changed to match the expected type
                 ) :

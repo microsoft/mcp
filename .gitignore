@@ -6,6 +6,7 @@ tests/test-cmds.txt
 bin/
 obj/
 .vs/
+.idea/
 TestResults/
 *.binlog
 
@@ -15,3 +16,6 @@ node_modules/
 .env
 .env.local
 .env.*.local
+
+generated/
+/docs/commandline

@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Queue;
 
@@ -18,13 +19,13 @@ public abstract class BaseQueueCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_queueOption);
+        command.Options.Add(_queueOption);
     }
 
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Queue = parseResult.GetValueForOption(_queueOption);
+        options.Queue = parseResult.GetValueOrDefault(_queueOption);
         return options;
     }
 }

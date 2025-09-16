@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.Sql.Commands.Database;
 using Azure.Mcp.Tools.Sql.Commands.ElasticPool;
 using Azure.Mcp.Tools.Sql.Commands.EntraAdmin;
 using Azure.Mcp.Tools.Sql.Commands.FirewallRule;
+using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services.Models;
 
@@ -15,8 +16,14 @@ namespace Azure.Mcp.Tools.Sql.Commands;
 [JsonSerializable(typeof(DatabaseListCommand.DatabaseListResult))]
 [JsonSerializable(typeof(EntraAdminListCommand.EntraAdminListResult))]
 [JsonSerializable(typeof(FirewallRuleListCommand.FirewallRuleListResult))]
+[JsonSerializable(typeof(FirewallRuleCreateCommand.FirewallRuleCreateResult))]
+[JsonSerializable(typeof(FirewallRuleDeleteCommand.FirewallRuleDeleteResult))]
+[JsonSerializable(typeof(ServerCreateCommand.ServerCreateResult))]
+[JsonSerializable(typeof(ServerDeleteCommand.ServerDeleteResult))]
+[JsonSerializable(typeof(ServerShowCommand.ServerShowResult))]
 [JsonSerializable(typeof(ElasticPoolListCommand.ElasticPoolListResult))]
 [JsonSerializable(typeof(SqlDatabase))]
+[JsonSerializable(typeof(SqlServer))]
 [JsonSerializable(typeof(SqlServerEntraAdministrator))]
 [JsonSerializable(typeof(SqlServerFirewallRule))]
 [JsonSerializable(typeof(SqlElasticPool))]

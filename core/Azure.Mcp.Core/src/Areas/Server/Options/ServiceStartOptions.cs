@@ -37,4 +37,17 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("readOnly")]
     public bool? ReadOnly { get; set; } = null;
+
+    /// <summary>
+    /// Gets or sets whether debug mode is enabled.
+    /// When true, verbose logging will be sent to stderr.
+    /// </summary>
+    [JsonPropertyName("debug")]
+    public bool Debug { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets whether insecure transport mechanisms are enabled.
+    /// </summary>
+    [JsonPropertyName("enableInsecureTransports")]
+    public bool EnableInsecureTransports { get; set; } = false;
 }

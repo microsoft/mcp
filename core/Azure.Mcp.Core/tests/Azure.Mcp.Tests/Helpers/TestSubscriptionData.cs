@@ -18,7 +18,7 @@ public static class TestSubscriptionData
         }
 
         // Create subscription data using reflection
-        var data = (SubscriptionData)s_constructor.Invoke(Array.Empty<object>());
+        var data = (SubscriptionData)s_constructor.Invoke([]);
 
         // Use reflection to set the read-only properties
         typeof(SubscriptionData)

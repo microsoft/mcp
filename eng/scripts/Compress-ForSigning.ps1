@@ -21,6 +21,7 @@ if(!$ArtifactPrefix) {
 
 if(!$OutputPath) {
     $OutputPath = "$RepoRoot/.work/signed"
+    Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 if(!(Test-Path -Path $ArtifactsPath -PathType Container)) {
@@ -34,7 +35,6 @@ $artifactDirectories = Get-ChildItem -Path $ArtifactsPath -Directory
 | Where-Object { $_.Name -like "$ArtifactPrefix*" }
 | Where-Object { $_.Name -notlike '*FailedAttempt*' }
 
-Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $OutputPath | Out-Null
 $OutputPath = (Resolve-Path $OutputPath).Path.Replace('\', '/')
 

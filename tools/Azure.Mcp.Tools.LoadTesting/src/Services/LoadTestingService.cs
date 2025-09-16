@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure;
 using Azure.Core;
 using Azure.Developer.LoadTesting;
 using Azure.Mcp.Core.Options;
@@ -160,7 +159,7 @@ public class LoadTestingService(ISubscriptionService subscriptionService) : Base
         var testRuns = new List<TestRun>();
         await foreach (var binaryData in loadTestRunResponse)
         {
-            var testRun = JsonSerializer.Deserialize<TestRun>(binaryData.ToString(), LoadTestJsonContext.Default.TestRun);
+            var testRun = JsonSerializer.Deserialize(binaryData.ToString(), LoadTestJsonContext.Default.TestRun);
             if (testRun != null)
             {
                 testRuns.Add(testRun);
@@ -209,7 +208,7 @@ public class LoadTestingService(ISubscriptionService subscriptionService) : Base
         }
 
         var loadTestRun = loadTestRunResponse.WaitForCompletionAsync().Result.Value.ToString();
-        return JsonSerializer.Deserialize<TestRun>(loadTestRun, LoadTestJsonContext.Default.TestRun) ?? new TestRun();
+        return JsonSerializer.Deserialize(loadTestRun, LoadTestJsonContext.Default.TestRun) ?? new TestRun();
     }
 
     public async Task<Test> GetTestAsync(string subscription, string testResourceName, string testId, string? resourceGroup = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null)

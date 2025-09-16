@@ -1,0 +1,29 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "itemId": "5b218778-e7a5-4d73-8187-f10824047715",
+        "externalDataShareId": "dccc162f-7a41-4720-83c3-5c7e81187959"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "dccc162f-7a41-4720-83c3-5c7e81187959",
+                "paths": [
+                    "Files/Sales/Contoso_Sales_2023"
+                ],
+                "creatorPrincipal": {
+                    "id": "f3052d1c-61a9-46fb-8df9-0d78916ae041",
+                    "type": "User"
+                },
+                "recipient": {
+                    "userPrincipalName": "lisa@fabrikam.com"
+                },
+                "status": "Pending",
+                "expirationTimeUtc": "2024-12-13T00:00:00.000Z",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "itemId": "5b218778-e7a5-4d73-8187-f10824047715",
+                "invitationUrl": "https://app.fabric.microsoft.com/externaldatasharing/accept?providerTenantId=34f92457-fe9d-4c36-92a8-499fdfaf0f8f&shareId=dccc162f-7a41-4720-83c3-5c7e81187959"
+            }
+        }
+    }
+}

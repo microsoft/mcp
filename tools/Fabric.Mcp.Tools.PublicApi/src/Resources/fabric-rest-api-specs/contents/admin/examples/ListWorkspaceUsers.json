@@ -1,0 +1,55 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "accessDetails": [
+                    {
+                        "principal": {
+                        "id": "f3052d1c-61a9-46fb-8df9-0d78916ae041",
+                        "displayName": "Jacob Hancock",
+                        "type": "User",
+                        "userDetails": {
+                            "userPrincipalName": "jacob@example.com"
+                            }
+                        },
+                        "workspaceAccessDetails":  {                         
+                            "type": "Workspace",
+                            "workspaceRole": "Admin"
+                        }
+                    },
+                    {
+                        "principal": {
+                            "id": "c7db8e03-c8cb-4d4c-9f64-1dcd327c9d3c",
+                            "displayName": "Caleb Foster",
+                            "type": "User",
+                            "userDetails": {
+                                "userPrincipalName": "caleb@example.com"
+                            }
+                        },
+                        "workspaceAccessDetails": {
+                            "type": "Workspace",
+                            "workspaceRole": "Viewer"
+                        }
+                    },
+                    {
+                        "principal": {
+                            "id": "f51b705f-a409-4d40-9197-c5d5f349e2f0",
+                            "displayName": "TestSecurityGroup",
+                            "type": "Group",
+                            "groupDetails": {
+                                "groupType": "SecurityGroup"
+                            }
+                        },
+                        "workspaceAccessDetails": {
+                            "type": "Workspace",
+                            "workspaceRole": "Contributor"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

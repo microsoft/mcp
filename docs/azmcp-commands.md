@@ -123,6 +123,10 @@ azmcp server start \
 # List knowledge indexes in an AI Foundry project
 azmcp foundry knowledge index list --endpoint <endpoint>
 
+# Get knowledge index schema information
+azmcp foundry knowledge index schema --endpoint <endpoint> \
+                                     --index <index>
+
 # Deploy an AI Foundry model
 azmcp foundry models deploy --subscription <subscription> \
                             --resource-group <resource-group> \
@@ -150,14 +154,9 @@ azmcp foundry models list [--search-for-free-playground <search-for-free-playgro
 ### Azure AI Search Operations
 
 ```bash
-# Get AI Search index
-azmcp search index describe --subscription <subscription> \
-                            --service <service> \
-                            --index <index>
-
-# List AI Search indexes in account
-azmcp search index list --subscription <subscription> \
-                        --service <service>
+# Get detailed properties of AI Search indexes
+azmcp search index get --service <service> \
+                       [--index <index>]
 
 # Query AI Search index
 azmcp search index query --subscription <subscription> \
@@ -213,21 +212,15 @@ azmcp appconfig kv unlock --subscription <subscription> \
                           [--label <label>]
 ```
 
-### Azure CLI Operations
+### Azure App Lens Operations
 
 ```bash
-# Execute any Azure CLI command
-azmcp extension az --command "<command>"
-
-# Examples:
-# List resource groups
-azmcp extension az --command "group list"
-
-# Get storage account details
-azmcp extension az --command "storage account show --name <account> --resource-group <resource-group>"
-
-# List virtual machines
-azmcp extension az --command "vm list --resource-group <resource-group>"
+# Diagnose resource using Azure App Lens
+azmcp applens resource diagnose --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --question <question> \
+                                --resource-type <resource-type> \
+                                --resource <resource>
 ```
 
 ### Azure Container Registry (ACR) Operations
@@ -449,17 +442,6 @@ azmcp postgres server param set --subscription <subscription> \
                                 --value <value>
 ```
 
-### Azure Developer CLI Operations
-
-```bash
-# Execute any Azure CLI command
-azmcp extension azd --command "<command>"
-
-# Examples:
-# Create a sample todo list app with NodeJS and MongoDB
-azmcp extension azd --command "init --template todo-nodejs-mongo"
-```
-
 ### Azure Deploy Operations
 
 ```bash
@@ -490,16 +472,21 @@ azmcp deploy plan get --workspace-folder <workspace-folder> \
                       [--azd-iac-options <azd-iac-options>]
 ```
 
+### Azure Event Grid Operations
+
+```bash
+# List all Event Grid topics in a subscription or resource group
+azmcp eventgrid topic list --subscription <subscription> \
+                           [--resource-group <resource-group>]
+```
+
 ### Azure Function App Operations
 
 ```bash
-# Get details for a specific Function App
+# Get detailed properties of function apps
 azmcp functionapp get --subscription <subscription> \
-                      --resource-group <resource-group> \
-                      --function-app <function-app-name>
-
-# List function apps in a subscription
-azmcp functionapp list --subscription <subscription>
+                      [--resource-group <resource-group>] \
+                      [--function-app <function-app-name>]
 ```
 
 ### Azure Key Vault Operations
@@ -557,6 +544,17 @@ azmcp aks cluster get --subscription <subscription> \
 
 # List AKS clusters in a subscription
 azmcp aks cluster list --subscription <subscription>
+
+# List AKS cluster's nodepools
+azmcp aks nodepool list --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --cluster <cluster>
+
+# Get details of a specific AKS nodepool
+azmcp aks nodepool get --subscription <subscription> \
+                       --resource-group <resource-group> \
+                       --cluster <cluster> \
+                       --nodepool <nodepool>
 ```
 
 ### Azure Load Testing Operations
@@ -632,6 +630,16 @@ azmcp grafana list --subscription <subscription>
 ### Azure Marketplace Operations
 
 ```bash
+# List marketplace products available to a subscription
+azmcp marketplace product list --subscription <subscription> \
+                               [--language <language-code>] \
+                               [--search <terms>] \
+                               [--filter <odata-filter>] \
+                               [--orderby <odata-orderby>] \
+                               [--select <odata-select>] \
+                               [--expand <odata-expand>] \
+                               [--next-cursor <pagination-cursor>]
+
 # Get details about an Azure Marketplace product
 azmcp marketplace product get --subscription <subscription> \
                               --product-id <product-id> \
@@ -771,7 +779,7 @@ azmcp monitor metrics query --subscription <subscription> \
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 azmcp azuremanagedlustre filesystem list --subscription <subscription> \
-                                      --resource-group <resource-group> 
+                                      --resource-group <resource-group>
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
 azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \
@@ -862,6 +870,13 @@ azmcp resourcehealth availability-status get --resourceId <resource-id>
 # List availability statuses for all resources in a subscription
 azmcp resourcehealth availability-status list --subscription <subscription> \
                                               [--resource-group <resource-group>]
+
+# List service health events in a subscription
+azmcp resourcehealth service-health-events list --subscription <subscription> \
+                                                [--event-type <event-type>] \
+                                                [--status <status>] \
+                                                [--query-start-time <start-time>] \
+                                                [--query-end-time <end-time>]
 ```
 
 ### Azure Service Bus Operations
@@ -898,8 +913,22 @@ azmcp sql db show --subscription <subscription> \
                   --server <server-name> \
                   --database <database>
 
+# Create a firewall rule for a SQL server
+azmcp sql server firewall-rule create --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --server <server-name> \
+                                      --firewall-rule-name <rule-name> \
+                                      --start-ip-address <start-ip> \
+                                      --end-ip-address <end-ip>
+
+# Delete a firewall rule from a SQL server
+azmcp sql server firewall-rule delete --subscription <subscription> \
+                                      --resource-group <resource-group> \
+                                      --server <server-name> \
+                                      --firewall-rule-name <rule-name>
+
 # Gets a list of firewall rules for a SQL server
-azmcp sql firewall-rule list --subscription <subscription> \
+azmcp sql server firewall-rule list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
 ```
@@ -916,6 +945,26 @@ azmcp sql elastic-pool list --subscription <subscription> \
 ### Azure SQL Server Operations
 
 ```bash
+# Create a new SQL server
+azmcp sql server create --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --server <server-name> \
+                        --location <location> \
+                        --admin-user <admin-username> \
+                        --admin-password <admin-password> \
+                        [--version <server-version>] \
+                        [--public-network-access <enabled|disabled>]
+
+# Delete a SQL server
+azmcp sql server delete --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --server <server-name>
+
+# Show details of a specific SQL server
+azmcp sql server show --subscription <subscription> \
+                      --resource-group <resource-group> \
+                      --server <server-name>
+
 # List Microsoft Entra ID administrators for a SQL server
 azmcp sql server entra-admin list --subscription <subscription> \
                                   --resource-group <resource-group> \
@@ -931,19 +980,13 @@ azmcp storage account create --subscription <subscription> \
                              --resource-group <resource-group> \
                              --location <location> \
                              --sku <sku> \
-                             --kind <kind> \
                              --access-tier <access-tier> \
-                             --enable-https-traffic-only true \
-                             --allow-blob-public-access false \
                              --enable-hierarchical-namespace false
 
-# Get detailed information about a specific Storage account
-azmcp storage account details --subscription <subscription> \
-                              --account <account> \
+# Get detailed properties of Storage accounts
+azmcp storage account get --subscription <subscription> \
+                              [--account <account>] \
                               [--tenant <tenant>]
-
-# List Storage accounts in a subscription
-azmcp storage account list --subscription <subscription>
 
 # Set access tier for multiple blobs in a batch operation
 azmcp storage blob batch set-tier --subscription <subscription> \
@@ -955,36 +998,25 @@ azmcp storage blob batch set-tier --subscription <subscription> \
 # Create a blob container with optional public access
 azmcp storage blob container create --subscription <subscription> \
                                     --account <account> \
-                                    --container <container> \
-                                    [--blob-container-public-access <blob|container>]
+                                    --container <container>
 
-# Get detailed properties of a storage container
-azmcp storage blob container details --subscription <subscription> \
+# Get detailed properties of Storage containers
+azmcp storage blob container get --subscription <subscription> \
                                      --account <account> \
-                                     --container <container>
+                                     [--container <container>]
 
-# List containers in a Storage blob service
-azmcp storage blob container list --subscription <subscription> \
-                                  --account <account>
-
-# Get detailed properties of a blob
-azmcp storage blob details --subscription <subscription> \
+# Get detailed properties of Storage blobs
+azmcp storage blob get --subscription <subscription> \
                            --account <account> \
                            --container <container> \
-                           --blob <blob>
+                           [--blob <blob>]
 
-# List blobs in a Storage container
-azmcp storage blob list --subscription <subscription> \
-                        --account <account> \
-                        --container <container>
-
-# Upload a file to a Storage blob container
+# Upload a file to a Storage blob
 azmcp storage blob upload --subscription <subscription> \
                           --account <account> \
                           --container <container> \
                           --blob <blob> \
-                          --local-file-path <path-to-local-file> \
-                          [--overwrite]
+                          --local-file-path <path-to-local-file>
 
 # Create a directory in DataLake using a specific path
 azmcp storage datalake directory create --subscription <subscription> \
@@ -1162,4 +1194,3 @@ The CLI returns structured JSON responses for errors, including:
 
 - Service availability issues
 - Authentication errors
-

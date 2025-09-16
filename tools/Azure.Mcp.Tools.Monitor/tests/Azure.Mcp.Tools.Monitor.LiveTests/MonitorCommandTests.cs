@@ -15,24 +15,19 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.LiveTests;
 
-public class MonitorCommandTests(LiveTestFixture fixture, ITestOutputHelper output) : CommandTestsBase(fixture, output), IClassFixture<LiveTestFixture>, IAsyncLifetime
+public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     private LogAnalyticsHelper? _logHelper;
     private const string TestLogType = "TestLogs_CL";
     private IMonitorService? _monitorService;
-    private string _storageAccountName = $"{fixture.Settings.ResourceBaseName}mon";
+    private string? _storageAccountName;
 
-    ValueTask IAsyncLifetime.InitializeAsync()
+    public override async ValueTask InitializeAsync()
     {
+        await base.InitializeAsync();
         _monitorService = GetMonitorService();
+        _storageAccountName = $"{Settings.ResourceBaseName}mon";
         _logHelper = new LogAnalyticsHelper(Settings.ResourceBaseName, Settings.SubscriptionId, _monitorService, Settings.TenantId, TestLogType);
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask DisposeAsync()
-    {
-        base.Dispose();
-        return ValueTask.CompletedTask;
     }
 
     private static IMonitorService GetMonitorService()
@@ -459,3 +454,4 @@ public class MonitorCommandTests(LiveTestFixture fixture, ITestOutputHelper outp
         }
     }
 }
+

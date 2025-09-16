@@ -1,0 +1,41 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "3546052c-ae64-4526-b1a8-52af7761426f",
+                        "displayName": "DigitalTwinBuilderFlow Name 1",
+                        "description": "A Digital Twin Builder Flow description.",
+                        "type": "DigitalTwinBuilderFlow",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "digitalTwinBuilderItemReference": {
+                                "referenceType": "ById",
+                                "itemId": "d96de2f4-7dd1-45ad-9ff6-37a2d6aa9861",
+                                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                            }
+                        }
+                    },
+                    {
+                        "id": "f697fb63-abd4-4399-9548-be7e3c3c0dac",
+                        "displayName": "DigitalTwinBuilderFlow Name 2",
+                        "description": "A Digital Twin Builder Flow description.",
+                        "type": "DigitalTwinBuilderFlow",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "digitalTwinBuilderItemReference": {
+                                "referenceType": "ById",
+                                "itemId": "d96de2f4-7dd1-45ad-9ff6-37a2d6aa9861",
+                                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

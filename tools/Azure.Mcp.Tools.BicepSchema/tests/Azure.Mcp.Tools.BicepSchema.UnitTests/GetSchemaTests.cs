@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.BicepSchema.Services;
 using Azure.Mcp.Tools.BicepSchema.Services.ResourceProperties;
 using Azure.Mcp.Tools.BicepSchema.Services.ResourceProperties.Entities;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace Azure.Mcp.Tools.BicepSchema.UnitTests;
@@ -239,9 +238,10 @@ public class GetSchemaTests
         // Verify
         Assert.Contains($"{resourceType}@{apiVersion}", response);
 
-        JArray root = JArray.Parse(response);
-        Assert.Equal("Resource", root.SelectToken("[0].$type")!.ToString());
-        Assert.Equal($"{resourceType}@{apiVersion}", root.SelectToken("[0].name")!.ToString());
+        using JsonDocument document = JsonDocument.Parse(response);
+        JsonElement root = document.RootElement;
+        Assert.Equal("Resource", root[0].GetProperty("$type").GetString());
+        Assert.Equal($"{resourceType}@{apiVersion}", root[0].GetProperty("name").GetString());
 
         //TODO: Consider more checks after optimizing output
     }

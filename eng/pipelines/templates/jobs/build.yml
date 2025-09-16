@@ -12,6 +12,9 @@ parameters:
   type: object
 - name: TestTimeoutInMinutes
   type: number
+- name: ServerName
+  type: string
+  default: ''
 
 jobs:
 - job: Build_${{ parameters.OSName }}
@@ -48,13 +51,16 @@ jobs:
     condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
     inputs:
       pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Code.ps1
       arguments: >
+        -ServerName '${{ parameters.ServerName }}'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
         -VersionSuffix '$(VersionSuffix)'
         -OperatingSystem '${{ parameters.OSName }}'
         -Architecture '$(Architecture)'
         -SelfContained
+        -Trimmed
+        -SingleFile
 
   - task: Powershell@2
     displayName: "Run tests"
@@ -95,9 +101,10 @@ jobs:
     condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
     inputs:
       pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Code.ps1
       arguments: >
-        -OutputPath '$(Agent.TempDirectory)/native-build'
+        -ServerName '${{ parameters.ServerName }}'
+        -OutputPath '$(Build.ArtifactStagingDirectory)'
         -VersionSuffix '$(VersionSuffix)'
         -OperatingSystem '${{ parameters.OSName }}'
         -Architecture '$(Architecture)'

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models;
@@ -58,8 +57,8 @@ public sealed class TableListCommandTests
                 .Returns(expectedTables);
         }
         var command = new TableListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(cliArgs);
+
+        var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -94,8 +93,8 @@ public sealed class TableListCommandTests
                 .Returns(new List<string>());
         }
         var command = new TableListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(cliArgs);
+
+        var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -124,8 +123,8 @@ public sealed class TableListCommandTests
                 .Returns(Task.FromException<List<string>>(new Exception("Test error")));
         }
         var command = new TableListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse(cliArgs);
+
+        var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -138,8 +137,8 @@ public sealed class TableListCommandTests
     public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
     {
         var command = new TableListCommand(_logger);
-        var parser = new Parser(command.GetCommand());
-        var args = parser.Parse("");
+
+        var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);

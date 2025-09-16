@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
@@ -20,7 +20,7 @@ public class RegistryRepositoryListCommandTests
     private readonly ILogger<RegistryRepositoryListCommand> _logger;
     private readonly RegistryRepositoryListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public RegistryRepositoryListCommandTests()
     {
@@ -31,7 +31,7 @@ public class RegistryRepositoryListCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Theory]
@@ -51,7 +51,7 @@ public class RegistryRepositoryListCommandTests
                 });
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -75,7 +75,7 @@ public class RegistryRepositoryListCommandTests
         _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromException<Dictionary<string, List<string>>>(new Exception("Test error")));
 
-        var parseResult = _parser.Parse(["--subscription", "sub"]);
+        var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -93,7 +93,7 @@ public class RegistryRepositoryListCommandTests
         _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(new Dictionary<string, List<string>>());
 
-        var parseResult = _parser.Parse(["--subscription", "sub"]);
+        var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

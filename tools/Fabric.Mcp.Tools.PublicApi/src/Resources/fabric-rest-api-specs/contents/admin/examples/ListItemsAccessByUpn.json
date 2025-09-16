@@ -1,0 +1,32 @@
+{
+    "parameters": {
+        "userId": "Test@Contoso.com"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "accessEntities": [
+                    {
+                        "id": "17d8929d-ab32-46d1-858b-fdea74e93bf2",
+                        "displayName": "TestNotebook",
+                        "category": "Item",
+                        "itemAccessDetails": {
+                            "type": "Notebook",
+                            "permissions": [
+                                "Read",
+                                "Reshare",
+                                "Explore"
+                            ],
+                            "additionalPermissions" : [
+                                "ReadAll",
+                                "viewOutput"
+                            ]
+                        }
+                    }
+                ],
+                "continuationUri": "https://api.fabric.microsoft.com/v1/admin/users/f3052d1c-61a9-46fb-8df9-0d78916ae041/access/?continuationToken=MSwxMDAwMCww",
+                "continuationToken": "MSwxMDAwMCww"
+            }
+        }
+    }
+}

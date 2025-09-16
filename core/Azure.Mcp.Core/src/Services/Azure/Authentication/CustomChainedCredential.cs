@@ -137,7 +137,7 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
         return new DefaultAzureCredential(defaultCredentialOptions);
     }
 
-    private static TokenCredential? CreateVsCodeCredential(string? tenantId)
+    private static TokenCredential? CreateVsCodeBrokerCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null)
     {
         var options = new VisualStudioCodeCredentialOptions();
         

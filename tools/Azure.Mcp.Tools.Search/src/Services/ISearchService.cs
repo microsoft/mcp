@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Search.Models;
-using static Azure.Mcp.Tools.Search.Commands.Index.IndexDescribeCommand;
+using static Azure.Mcp.Tools.Search.Commands.Index.IndexGetCommand;
 
 namespace Azure.Mcp.Tools.Search.Services;
 
@@ -14,13 +14,9 @@ public interface ISearchService
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<IndexInfo>> ListIndexes(
+    Task<List<IndexInfo>> GetIndexDetails(
         string serviceName,
-        RetryPolicyOptions? retryPolicy = null);
-
-    Task<SearchIndexProxy?> DescribeIndex(
-        string serviceName,
-        string indexName,
+        string? indexName,
         RetryPolicyOptions? retryPolicy = null);
 
     Task<List<JsonElement>> QueryIndex(

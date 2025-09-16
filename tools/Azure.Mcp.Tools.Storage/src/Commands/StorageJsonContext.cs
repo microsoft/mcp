@@ -15,16 +15,16 @@ using Azure.Mcp.Tools.Storage.Models;
 
 namespace Azure.Mcp.Tools.Storage.Commands;
 
-[JsonSerializable(typeof(AccountCreateCommand.AccountCreateCommandResult), TypeInfoPropertyName = "AccountCreateCommandResult")]
-[JsonSerializable(typeof(AccountDetailsCommand.AccountDetailsCommandResult), TypeInfoPropertyName = "AccountDetailsCommandResult")]
-[JsonSerializable(typeof(AccountListCommand.AccountListCommandResult), TypeInfoPropertyName = "AccountListCommandResult")]
+[JsonSerializable(typeof(AccountCreateCommand.AccountCreateCommandResult))]
+[JsonSerializable(typeof(AccountGetCommand.AccountGetCommandResult))]
+[JsonSerializable(typeof(AccountInfo))]
 [JsonSerializable(typeof(BatchSetTierCommand.BatchSetTierCommandResult))]
-[JsonSerializable(typeof(BlobDetailsCommand.BlobDetailsCommandResult))]
-[JsonSerializable(typeof(BlobListCommand.BlobListCommandResult))]
+[JsonSerializable(typeof(BlobGetCommand.BlobGetCommandResult))]
+[JsonSerializable(typeof(BlobInfo))]
 [JsonSerializable(typeof(BlobUploadResult))]
 [JsonSerializable(typeof(ContainerCreateCommand.ContainerCreateCommandResult))]
-[JsonSerializable(typeof(ContainerDetailsCommand.ContainerDetailsCommandResult))]
-[JsonSerializable(typeof(ContainerListCommand.ContainerListCommandResult))]
+[JsonSerializable(typeof(ContainerGetCommand.ContainerGetCommandResult))]
+[JsonSerializable(typeof(ContainerInfo))]
 [JsonSerializable(typeof(DataLakePathInfo))]
 [JsonSerializable(typeof(DirectoryCreateCommand.DirectoryCreateCommandResult))]
 [JsonSerializable(typeof(FileListCommand.FileListCommandResult))]
@@ -32,7 +32,6 @@ namespace Azure.Mcp.Tools.Storage.Commands;
 [JsonSerializable(typeof(FileSystemListPathsCommand.FileSystemListPathsCommandResult))]
 [JsonSerializable(typeof(QueueMessageSendCommand.QueueMessageSendCommandResult))]
 [JsonSerializable(typeof(QueueMessageSendResult))]
-[JsonSerializable(typeof(StorageAccountInfo))]
 [JsonSerializable(typeof(TableListCommand.TableListCommandResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class StorageJsonContext : JsonSerializerContext

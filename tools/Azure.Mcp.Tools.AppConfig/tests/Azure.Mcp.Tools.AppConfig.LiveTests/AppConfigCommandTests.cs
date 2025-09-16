@@ -14,24 +14,19 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.LiveTests;
 
-public class AppConfigCommandTests : CommandTestsBase,
-    IClassFixture<LiveTestFixture>
+public class AppConfigCommandTests : CommandTestsBase
 {
     private const string AccountsKey = "accounts";
     private const string SettingsKey = "settings";
     private readonly AppConfigService _appConfigService;
-    private readonly string _subscriptionId;
-    private readonly string _accountName;
 
-    public AppConfigCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : base(liveTestFixture, output)
+    public AppConfigCommandTests(ITestOutputHelper output) : base(output)
     {
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new CacheService(memoryCache);
         var tenantService = new TenantService(cacheService);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);
         _appConfigService = new AppConfigService(subscriptionService, tenantService);
-        _subscriptionId = Settings.SubscriptionId;
-        _accountName = Settings.ResourceBaseName;
     }
 
     [Fact]
@@ -42,14 +37,14 @@ public class AppConfigCommandTests : CommandTestsBase,
             "azmcp_appconfig_account_list",
             new()
             {
-                { "subscription", _subscriptionId }
+                { "subscription", Settings.SubscriptionId }
             });
 
         // assert
         var accountsArray = result.AssertProperty(AccountsKey);
         Assert.Equal(JsonValueKind.Array, accountsArray.ValueKind);
         Assert.NotEmpty(accountsArray.EnumerateArray());
-        Assert.Contains(accountsArray.EnumerateArray(), acc => acc.GetProperty("name").GetString() == _accountName);
+        Assert.Contains(accountsArray.EnumerateArray(), acc => acc.GetProperty("name").GetString() == Settings.ResourceBaseName);
     }
 
     [Fact]
@@ -61,16 +56,16 @@ public class AppConfigCommandTests : CommandTestsBase,
         const string key1 = "bar";
         const string value1 = "bar-value";
 
-        await _appConfigService.SetKeyValue(_accountName, key0, value0, _subscriptionId);
-        await _appConfigService.SetKeyValue(_accountName, key1, value1, _subscriptionId);
+        await _appConfigService.SetKeyValue(Settings.ResourceBaseName, key0, value0, Settings.SubscriptionId);
+        await _appConfigService.SetKeyValue(Settings.ResourceBaseName, key1, value1, Settings.SubscriptionId);
 
         // act
         var result = await CallToolAsync(
             "azmcp_appconfig_kv_list",
             new()
             {
-                { "subscription", _subscriptionId },
-                { "account", _accountName }
+                { "subscription", Settings.SubscriptionId },
+                { "account", Settings.ResourceBaseName }
             });
 
         // assert
@@ -93,15 +88,15 @@ public class AppConfigCommandTests : CommandTestsBase,
         const string key = "foo1";
         const string value = "foo-value";
         const string label = "foobar";
-        await _appConfigService.SetKeyValue(_accountName, key, value, _subscriptionId, label: label);
+        await _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, value, Settings.SubscriptionId, label: label);
 
         // act
         var result = await CallToolAsync(
             "azmcp_appconfig_kv_list",
             new()
             {
-                { "subscription", _subscriptionId },
-                { "account", _accountName },
+                { "subscription", Settings.SubscriptionId },
+                { "account", Settings.ResourceBaseName },
                 { "key", key },
                 { "label", label }
             });
@@ -127,27 +122,27 @@ public class AppConfigCommandTests : CommandTestsBase,
         try
         {
             // if it exists, unlock it
-            await _appConfigService.UnlockKeyValue(_accountName, key, _subscriptionId, label: label);
+            await _appConfigService.UnlockKeyValue(Settings.ResourceBaseName, key, Settings.SubscriptionId, label: label);
         }
         catch
         {
         }
         // make sure it exists
-        await _appConfigService.SetKeyValue(_accountName, key, value, _subscriptionId, label: label);
+        await _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, value, Settings.SubscriptionId, label: label);
 
         // act
         var result = await CallToolAsync(
             "azmcp_appconfig_kv_lock",
             new()
             {
-                { "subscription", _subscriptionId },
-                { "account", _accountName },
+                { "subscription", Settings.SubscriptionId },
+                { "account", Settings.ResourceBaseName },
                 { "key", key },
                 { "label", label }
             });
 
         // assert
-        await Assert.ThrowsAnyAsync<Exception>(() => _appConfigService.SetKeyValue(_accountName, key, newValue, _subscriptionId, label: label));
+        await Assert.ThrowsAnyAsync<Exception>(() => _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, newValue, Settings.SubscriptionId, label: label));
     }
 
     [Fact]
@@ -160,26 +155,26 @@ public class AppConfigCommandTests : CommandTestsBase,
         try
         {
             // if it exists, unlock it
-            await _appConfigService.UnlockKeyValue(_accountName, key, _subscriptionId);
+            await _appConfigService.UnlockKeyValue(Settings.ResourceBaseName, key, Settings.SubscriptionId);
         }
         catch
         {
         }
         // make sure it exists
-        await _appConfigService.SetKeyValue(_accountName, key, value, _subscriptionId);
+        await _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, value, Settings.SubscriptionId);
 
         // act
         var result = await CallToolAsync(
             "azmcp_appconfig_kv_lock",
             new()
             {
-                { "subscription", _subscriptionId },
-                { "account", _accountName },
+                { "subscription", Settings.SubscriptionId },
+                { "account", Settings.ResourceBaseName },
                 { "key", key }
             });
 
         // assert
-        await Assert.ThrowsAnyAsync<Exception>(() => _appConfigService.SetKeyValue(_accountName, key, newValue, _subscriptionId));
+        await Assert.ThrowsAnyAsync<Exception>(() => _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, newValue, Settings.SubscriptionId));
     }
 
     [Fact]
@@ -193,22 +188,22 @@ public class AppConfigCommandTests : CommandTestsBase,
         try
         {
             // if it exists, unlock it
-            await _appConfigService.UnlockKeyValue(_accountName, key, _subscriptionId, label: label);
+            await _appConfigService.UnlockKeyValue(Settings.ResourceBaseName, key, Settings.SubscriptionId, label: label);
         }
         catch
         {
         }
         // make sure it exists
-        await _appConfigService.SetKeyValue(_accountName, key, value, _subscriptionId, label: label);
-        await _appConfigService.LockKeyValue(_accountName, key, _subscriptionId, label: label);
+        await _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, value, Settings.SubscriptionId, label: label);
+        await _appConfigService.LockKeyValue(Settings.ResourceBaseName, key, Settings.SubscriptionId, label: label);
 
         // act
         _ = await CallToolAsync(
             "azmcp_appconfig_kv_unlock",
             new()
             {
-                { "subscription", _subscriptionId },
-                { "account", _accountName },
+                { "subscription", Settings.SubscriptionId },
+                { "account", Settings.ResourceBaseName },
                 { "key", key },
                 { "label", "staging" }
             });
@@ -216,7 +211,7 @@ public class AppConfigCommandTests : CommandTestsBase,
         // assert
         try
         {
-            await _appConfigService.SetKeyValue(_accountName, key, newValue, _subscriptionId, label: label);
+            await _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, newValue, Settings.SubscriptionId, label: label);
         }
         catch (Exception ex)
         {
@@ -234,29 +229,29 @@ public class AppConfigCommandTests : CommandTestsBase,
         try
         {
             // if it exists, unlock it
-            await _appConfigService.UnlockKeyValue(_accountName, key, _subscriptionId);
+            await _appConfigService.UnlockKeyValue(Settings.ResourceBaseName, key, Settings.SubscriptionId);
         }
         catch
         {
         }
         // make sure it exists
-        await _appConfigService.SetKeyValue(_accountName, key, value, _subscriptionId);
-        await _appConfigService.LockKeyValue(_accountName, key, _subscriptionId);
+        await _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, value, Settings.SubscriptionId);
+        await _appConfigService.LockKeyValue(Settings.ResourceBaseName, key, Settings.SubscriptionId);
 
         // act
         _ = await CallToolAsync(
             "azmcp_appconfig_kv_unlock",
             new()
             {
-                { "subscription", _subscriptionId },
-                { "account", _accountName },
+                { "subscription", Settings.SubscriptionId },
+                { "account", Settings.ResourceBaseName },
                 { "key", key }
             });
 
         // assert
         try
         {
-            await _appConfigService.SetKeyValue(_accountName, key, newValue, _subscriptionId);
+            await _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, newValue, Settings.SubscriptionId);
         }
         catch (Exception ex)
         {
@@ -271,15 +266,15 @@ public class AppConfigCommandTests : CommandTestsBase,
         const string key = "foo6";
         const string value = "foo-value";
         const string label = "staging";
-        await _appConfigService.SetKeyValue(_accountName, key, value, _subscriptionId, label: label);
+        await _appConfigService.SetKeyValue(Settings.ResourceBaseName, key, value, Settings.SubscriptionId, label: label);
 
         // act
         var result = await CallToolAsync(
             "azmcp_appconfig_kv_show",
             new()
             {
-                { "subscription", _subscriptionId },
-                { "account", _accountName },
+                { "subscription", Settings.SubscriptionId },
+                { "account", Settings.ResourceBaseName },
                 { "key", key },
                 { "label", label }
             });
@@ -304,8 +299,8 @@ public class AppConfigCommandTests : CommandTestsBase,
             "azmcp_appconfig_kv_set",
             new()
             {
-                { "subscription", _subscriptionId },
-                { "account", _accountName },
+                { "subscription", Settings.SubscriptionId },
+                { "account", Settings.ResourceBaseName },
                 { "key", key },
                 { "value", value }
             });
@@ -317,8 +312,8 @@ public class AppConfigCommandTests : CommandTestsBase,
             "azmcp_appconfig_kv_delete",
             new()
             {
-                { "subscription", _subscriptionId },
-                { "account", _accountName },
+                { "subscription", Settings.SubscriptionId },
+                { "account", Settings.ResourceBaseName },
                 { "key", key }
             });
 
@@ -340,8 +335,8 @@ public class AppConfigCommandTests : CommandTestsBase,
             "azmcp_appconfig_kv_set",
             new()
             {
-                { "subscription", _subscriptionId },
-                { "account", _accountName },
+                { "subscription", Settings.SubscriptionId },
+                { "account", Settings.ResourceBaseName },
                 { "key", key },
                 { "value", value },
                 { "content-type", contentType }
@@ -360,8 +355,8 @@ public class AppConfigCommandTests : CommandTestsBase,
             "azmcp_appconfig_kv_show",
             new()
             {
-                { "subscription", _subscriptionId },
-                { "account", _accountName },
+                { "subscription", Settings.SubscriptionId },
+                { "account", Settings.ResourceBaseName },
                 { "key", key }
             });
 
@@ -389,17 +384,17 @@ public class AppConfigCommandTests : CommandTestsBase,
 
         // act - set key-value with content type
         await _appConfigService.SetKeyValue(
-           _accountName,
+           Settings.ResourceBaseName,
            key,
            value,
-           _subscriptionId,
+           Settings.SubscriptionId,
            contentType: contentType);
 
         // act - get key-value to verify content type was preserved
         var setting = await _appConfigService.GetKeyValue(
-            _accountName,
+            Settings.ResourceBaseName,
             key,
-            _subscriptionId);
+            Settings.SubscriptionId);
 
         // assert - verify content type was properly set and retrieved
         Assert.Equal(key, setting.Key);
@@ -423,8 +418,8 @@ public class AppConfigCommandTests : CommandTestsBase,
             "azmcp_appconfig_kv_set",
             new()
             {
-                    { "subscription", _subscriptionId },
-                    { "account", _accountName },
+                    { "subscription", Settings.SubscriptionId },
+                    { "account", Settings.ResourceBaseName },
                     { "key", key },
                     { "value", value },
                     { "tags", $"{tagKey}={tagValue}" }
@@ -454,8 +449,8 @@ public class AppConfigCommandTests : CommandTestsBase,
             "azmcp_appconfig_kv_set",
             new()
             {
-                    { "subscription", _subscriptionId },
-                    { "account", _accountName },
+                    { "subscription", Settings.SubscriptionId },
+                    { "account", Settings.ResourceBaseName },
                     { "key", key },
                     { "value", value },
                     { "tags", tags }
@@ -496,8 +491,8 @@ public class AppConfigCommandTests : CommandTestsBase,
             "azmcp_appconfig_kv_set",
             new()
             {
-                    { "subscription", _subscriptionId },
-                    { "account", _accountName },
+                    { "subscription", Settings.SubscriptionId },
+                    { "account", Settings.ResourceBaseName },
                     { "key", key },
                     { "value", value },
                     { "tags", tags }
@@ -519,3 +514,4 @@ public class AppConfigCommandTests : CommandTestsBase,
         }
     }
 }
+

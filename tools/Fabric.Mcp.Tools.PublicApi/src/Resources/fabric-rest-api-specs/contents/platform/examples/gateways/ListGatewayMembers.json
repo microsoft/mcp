@@ -1,0 +1,33 @@
+{
+    "parameters": {
+        "gatewayId": "8e41c4dd-a382-4937-9bf3-695ab881f7c2"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "8e41c4dd-a382-4937-9bf3-695ab881f7c2",
+                        "displayName": "ContosoPrimaryMemberGateway",
+                        "publicKey": {
+                            "exponent": "AQGB",
+                            "modulus": "od9b...90Jp1Q=="
+                        },
+                        "version": "3000.1.1",
+                        "enabled": true
+                    },
+                    {
+                        "id": "5d225cda-42d5-43d3-bc40-218f746e1d58",
+                        "displayName": "ContosoSecondaryMemberGateway",
+                        "publicKey": {
+                            "exponent": "AQCB",
+                            "modulus": "o57c...90Jh1P=="
+                        },
+                        "version": "3000.1.1",
+                        "enabled": false
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
@@ -20,7 +20,7 @@ public class RegistryListCommandTests
     private readonly ILogger<RegistryListCommand> _logger;
     private readonly RegistryListCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public RegistryListCommandTests()
     {
@@ -31,7 +31,7 @@ public class RegistryListCommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -49,18 +49,20 @@ public class RegistryListCommandTests
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
+        // Ensure environment variable fallback does not interfere with validation tests
+        Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", null);
         // Arrange
         if (shouldSucceed)
         {
             _service.ListRegistries(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-                .Returns(new List<Azure.Mcp.Tools.Acr.Models.AcrRegistryInfo>
+                .Returns(new List<Models.AcrRegistryInfo>
                 {
                     new("registry1", "eastus", "registry1.azurecr.io", "Basic", "Basic"),
                     new("registry2", "eastus2", "registry2.azurecr.io", "Standard", "Standard")
                 });
         }
 
-        var parseResult = _parser.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -82,9 +84,9 @@ public class RegistryListCommandTests
     {
         // Arrange
         _service.ListRegistries(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromException<List<Azure.Mcp.Tools.Acr.Models.AcrRegistryInfo>>(new Exception("Test error")));
+            .Returns(Task.FromException<List<Models.AcrRegistryInfo>>(new Exception("Test error")));
 
-        var parseResult = _parser.Parse(["--subscription", "sub"]);
+        var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -99,11 +101,11 @@ public class RegistryListCommandTests
     public async Task ExecuteAsync_FiltersById_ReturnsFilteredRegistries()
     {
         // Arrange
-        var expectedRegistries = new List<Azure.Mcp.Tools.Acr.Models.AcrRegistryInfo> { new("registry1", null, null, null, null) };
+        var expectedRegistries = new List<Models.AcrRegistryInfo> { new("registry1", null, null, null, null) };
         _service.ListRegistries("sub", "rg", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedRegistries);
 
-        var parseResult = _parser.Parse(["--subscription", "sub", "--resource-group", "rg"]);
+        var parseResult = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -119,9 +121,9 @@ public class RegistryListCommandTests
     {
         // Arrange
         _service.ListRegistries("sub", null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<Azure.Mcp.Tools.Acr.Models.AcrRegistryInfo>());
+            .Returns(new List<Models.AcrRegistryInfo>());
 
-        var parseResult = _parser.Parse(["--subscription", "sub"]);
+        var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -135,11 +137,11 @@ public class RegistryListCommandTests
     public async Task ExecuteAsync_ReturnsExpectedRegistryProperties()
     {
         // Arrange
-        var registry = new Azure.Mcp.Tools.Acr.Models.AcrRegistryInfo("myregistry", "eastus", "myregistry.azurecr.io", "Basic", "Basic");
+        var registry = new Models.AcrRegistryInfo("myregistry", "eastus", "myregistry.azurecr.io", "Basic", "Basic");
         _service.ListRegistries("sub", null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<Azure.Mcp.Tools.Acr.Models.AcrRegistryInfo> { registry });
+            .Returns(new List<Models.AcrRegistryInfo> { registry });
 
-        var parseResult = _parser.Parse(["--subscription", "sub"]);
+        var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);

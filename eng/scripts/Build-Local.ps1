@@ -3,6 +3,7 @@
 
 [CmdletBinding(DefaultParameterSetName='none')]
 param(
+    [string] $ServerName,
     [switch] $Trimmed,
     [switch] $NoSelfContained,
     [switch] $NoUsePaths,
@@ -25,7 +26,8 @@ $prereleaseNumber = [int]::Parse((Get-Date -UFormat %s))
 $versionSuffix = "-$prereleaseLabel.$prereleaseNumber"
 
 function Build($os, $arch) {
-    & "$RepoRoot/eng/scripts/Build-Module.ps1" `
+    & "$RepoRoot/eng/scripts/Build-Code.ps1" `
+        -ServerName $ServerName `
         -VersionSuffix $versionSuffix `
         -OperatingSystem $os `
         -Architecture $arch `
@@ -61,7 +63,7 @@ else {
     Build -os $os -arch $arch
 }
 
-& "$RepoRoot/eng/scripts/Pack-Modules.ps1" `
+& "$RepoRoot/eng/scripts/Pack-Npm.ps1" `
     -ArtifactsPath $buildOutputPath `
     -UsePaths:(!$NoUsePaths) `
     -OutputPath $packageOutputPath

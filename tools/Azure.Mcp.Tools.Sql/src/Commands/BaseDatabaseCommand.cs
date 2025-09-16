@@ -3,6 +3,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Sql.Options;
 using Microsoft.Extensions.Logging;
 
@@ -17,13 +18,13 @@ public abstract class BaseDatabaseCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_databaseOption);
+        command.Options.Add(_databaseOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Database = parseResult.GetValueForOption(_databaseOption);
+        options.Database = parseResult.GetValueOrDefault(_databaseOption);
         return options;
     }
 }

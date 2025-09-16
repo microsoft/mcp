@@ -1,0 +1,60 @@
+{
+    "parameters": {
+        "deploymentPipelineId": "a5ded933-57b7-41f4-b072-ed4c1f9d5824"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "1065e6a3-a020-4c0c-ada7-92b5fe99eec5",
+                        "type": "Deploy",
+                        "status": "Succeeded",
+                        "lastUpdatedTime": "2020-12-13T09:26:43.153",
+                        "executionStartTime": "2020-12-13T09:25:43.153Z",
+                        "executionEndTime": "2020-12-13T09:26:43.153Z",
+                        "sourceStageId": "2e6f0272-e809-410a-be63-50e1d97ba75a",
+                        "targetStageId": "d2056166-041c-4a56-8d37-ea90038bc0d6",
+                        "note": {
+                            "content": "Sample note"
+                        },
+                        "preDeploymentDiffInformation": {
+                            "newItemsCount": 0,
+                            "differentItemsCount": 0,
+                            "noDifferenceItemsCount": 1
+                        },
+                        "performedBy": {
+                            "id": "a35d842b-90d5-59a2-c56a-5f8fcff0bf9d",
+                            "type": "User"
+                        }
+                    },
+                    {
+                        "id": "7e113010-3264-41e4-93c1-1dfb34a93d06",
+                        "type": "Deploy",
+                        "status": "Failed",
+                        "lastUpdatedTime": "2020-12-14T09:26:43.153",
+                        "executionStartTime": "2020-12-14T09:25:43.153Z",
+                        "executionEndTime": "2020-12-13T09:26:43.153Z",
+                        "sourceStageId": "2e6f0272-e809-410a-be63-50e1d97ba75a",
+                        "targetStageId": "d2056166-041c-4a56-8d37-ea90038bc0d6",
+                        "note": {
+                            "content": "Lorem ipsum odor amet, consectetuer adipiscing elit. Himenaeos litora volutpat sem eget ipsum sollicitudin ad porta ligula tristique sapien suscipit magnis pulvinar placerat in vulputate aliquam mauris aptent velit phasellus netus fringilla ad taciti in himenaeos eu vitae feugiat et auctor class maximus urna integer erat amet efficitur ex tellus conubia lorem nam viverra cras magnis potenti pharetra natoque suscipit scelerisque eros adipiscing mollis sagittis habitasse ligula nullam rhoncus at scelerisque justo dolor pretium libero urna massa tristique diam viverra aenean mauris malesuada mus sed ultrices consectetur tristique pretium imperdiet vulputate ligula senectus pretium aenean inceptos id cras magna ut nisl etiam eget magna nibh feugiat duis imperdiet ut ornare arcu primis curae taciti purus quisque turpis lacus auctor ligula tristique placerat consectetur mus vitae penatibus varius proin ligula viverra diam neque at tortor porttitor urna ullamcorper ut nec lobortis porta urna egestas eu cursus ante ",
+                            "isTruncated": true
+                        },
+                        "preDeploymentDiffInformation": {
+                        "newItemsCount": 1,
+                        "differentItemsCount": 0,
+                        "noDifferenceItemsCount": 0
+                        },
+                        "performedBy": {
+                        "id": "a35d842b-90d5-59a2-c56a-5f8fcff0bf9d",
+                        "type": "User"
+                        }
+                    } 
+                ],
+                "continuationToken": "LDEsMTAwMDAwLDA%3D",
+                "continuationUri": "https://api.fabric.microsoft.com/v1/deploymentPipelines/a5ded933-57b7-41f4-b072-ed4c1f9d5824/operations?continuationToken=LDEsMTAwMDAwLDA%3D"
+            }
+        }
+    }
+}

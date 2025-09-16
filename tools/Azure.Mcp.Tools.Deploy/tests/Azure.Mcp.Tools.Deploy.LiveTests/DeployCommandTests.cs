@@ -5,20 +5,18 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
-using Azure.Mcp.Tools.Deploy.Models;
-using Azure.Mcp.Tools.Deploy.Services;
 using ModelContextProtocol.Client;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Deploy.LiveTests;
 
-public class DeployCommandTests : CommandTestsBase,
-    IClassFixture<LiveTestFixture>
+public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
-    private readonly string _subscriptionId;
+    private string _subscriptionId = default!;
 
-    public DeployCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : base(liveTestFixture, output)
+    public override async ValueTask InitializeAsync()
     {
+        await base.InitializeAsync();
         _subscriptionId = Settings.SubscriptionId;
     }
 

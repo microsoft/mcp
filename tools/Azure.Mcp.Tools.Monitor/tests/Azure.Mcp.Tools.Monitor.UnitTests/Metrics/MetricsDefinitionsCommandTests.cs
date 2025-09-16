@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
@@ -66,14 +64,13 @@ public class MetricsDefinitionsCommandTests
         // Check that all required options are present
         var optionNames = command.Options.Select(o => o.Name).ToList();
 
-        Assert.Contains("subscription", optionNames);
-        Assert.Contains("resource-type", optionNames);
-        Assert.Contains("resource", optionNames);
-        Assert.Contains("metric-namespace", optionNames);
-        Assert.Contains("search-string", optionNames);
-        Assert.Contains("limit", optionNames);
-        Assert.Contains("tenant", optionNames);
-
+        Assert.Contains("--subscription", optionNames);
+        Assert.Contains("--resource-type", optionNames);
+        Assert.Contains("--resource", optionNames);
+        Assert.Contains("--metric-namespace", optionNames);
+        Assert.Contains("--search-string", optionNames);
+        Assert.Contains("--limit", optionNames);
+        Assert.Contains("--tenant", optionNames);
         // Note: resource-group may not be registered as a separate option if resource-id parsing is used
     }
 
