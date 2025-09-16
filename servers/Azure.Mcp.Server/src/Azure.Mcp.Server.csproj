@@ -10,6 +10,7 @@
     <DockerImageName>azure-sdk/azure-mcp</DockerImageName>
     <PackageId>Azure.Mcp</PackageId>
     <ToolCommandName>$(CliName)</ToolCommandName>
+    <PackageIconPath>$(RepoRoot)/eng/images/azureicon.png</PackageIconPath>
   </PropertyGroup>
   
   <PropertyGroup>

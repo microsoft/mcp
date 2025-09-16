@@ -13,6 +13,7 @@ $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 $wrapperSourcePath = "$RepoRoot/eng/npm/wrapper"
 $platformSourcePath = "$RepoRoot/eng/npm/platform"
+$readMeProcessingScript = "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1"
 
 if(!$ArtifactsPath) {
     $ArtifactsPath = "$RepoRoot/.work/build"
@@ -91,7 +92,9 @@ try {
                 Write-Warning "Executable permissions are not set when packing on a Windows agent."
             }
 
-            Copy-Item -Path "$serverDirectory/README.md" -Destination $tempFolder -Force
+            & $readMeProcessingScript -InputReadMePath "$serverDirectory/README.md" `
+                -OutputDirectory $tempFolder -PackageType "npm" -InsertPayload @{ ToolTitle = 'NPM Package' }
+
             Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
             Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempFolder -Force
             Write-Host "Copied README.md, NOTICE.txt and LICENSE to $tempFolder"
@@ -119,7 +122,9 @@ try {
         $wrapperPackageJson | ConvertTo-Json -Depth 10 | Out-File -FilePath "$tempFolder/package.json" -Encoding utf8
         Write-Host "Created package.json in $tempFolder"
 
-        Copy-Item -Path "$serverDirectory/README.md" -Destination $tempFolder -Force
+        & $readMeProcessingScript -InputReadMePath "$serverDirectory/README.md" `
+            -OutputDirectory $tempFolder -PackageType "npm" -InsertPayload @{ ToolTitle = 'NPM Package' }
+
         Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
         Write-Host "Copied README.md and LICENSE to $tempFolder"
 
