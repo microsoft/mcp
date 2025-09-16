@@ -80,8 +80,8 @@ public sealed class FileSystemImportJobCreateCommand(ILogger<FileSystemImportJob
                 options.FileSystem!,
                 options.Name,
                 options.ImportPrefixes,
-                options.ConflictResolutionMode ?? "Skip",
-                options.MaximumErrors ?? -1,
+                options.ConflictResolutionMode,
+                options.MaximumErrors,
                 options.Tenant,
                 options.RetryPolicy);
 
