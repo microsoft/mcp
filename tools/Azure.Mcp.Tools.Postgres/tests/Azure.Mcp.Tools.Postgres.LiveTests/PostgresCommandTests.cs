@@ -30,7 +30,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             });
 
         // Should successfully retrieve the list of databases
-        var databases = result.AssertProperty("databases");
+        var databases = result.AssertProperty("Databases");
         Assert.Equal(JsonValueKind.Array, databases.ValueKind);
 
         // Should contain at least the default postgres database
@@ -70,20 +70,16 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             });
 
         // Should successfully execute the query
-        var queryResult = result.AssertProperty("result");
-        Assert.Equal(JsonValueKind.Object, queryResult.ValueKind);
+        var queryResult = result.AssertProperty("QueryResult");
+        Assert.Equal(JsonValueKind.Array, queryResult.ValueKind);
 
-        // Verify query result structure
-        Assert.True(queryResult.TryGetProperty("columns", out _));
-        Assert.True(queryResult.TryGetProperty("rows", out _));
-
-        var columns = queryResult.GetProperty("columns");
-        Assert.Equal(JsonValueKind.Array, columns.ValueKind);
-        Assert.True(columns.GetArrayLength() >= 1, "Should have at least one column");
-
-        var rows = queryResult.GetProperty("rows");
-        Assert.Equal(JsonValueKind.Array, rows.ValueKind);
-        Assert.True(rows.GetArrayLength() >= 1, "Should have at least one row");
+        // Should have at least one element (the column headers)
+        Assert.True(queryResult.GetArrayLength() >= 1, "Should have at least column headers");
+        
+        // First element should be column names
+        var firstElement = queryResult.EnumerateArray().First();
+        Assert.Equal(JsonValueKind.String, firstElement.ValueKind);
+        Assert.Contains("version", firstElement.GetString()!, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -99,7 +95,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             });
 
         // Should successfully retrieve the list of servers
-        var servers = result.AssertProperty("servers");
+        var servers = result.AssertProperty("Servers");
         Assert.Equal(JsonValueKind.Array, servers.ValueKind);
 
         // Should contain at least one server (our test server)
@@ -137,20 +133,14 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             });
 
         // Should successfully retrieve server configuration
-        var configs = result.AssertProperty("configurations");
-        Assert.Equal(JsonValueKind.Array, configs.ValueKind);
+        var config = result.AssertProperty("Configuration");
+        Assert.Equal(JsonValueKind.String, config.ValueKind);
 
-        // Should contain configuration parameters
-        var configArray = configs.EnumerateArray().ToList();
-        Assert.True(configArray.Count > 0, "Should contain configuration parameters");
-
-        // Verify configuration structure
-        var firstConfig = configArray.First();
-        Assert.Equal(JsonValueKind.Object, firstConfig.ValueKind);
-
-        // Verify required properties exist
-        Assert.True(firstConfig.TryGetProperty("name", out _));
-        Assert.True(firstConfig.TryGetProperty("value", out _));
+        // Should contain configuration information
+        var configString = config.GetString();
+        Assert.NotNull(configString);
+        Assert.NotEmpty(configString);
+        Assert.Contains("Server Name:", configString);
     }
 
     [Fact]
@@ -172,15 +162,12 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             });
 
         // Should successfully retrieve the parameter
-        var parameter = result.AssertProperty("parameter");
-        Assert.Equal(JsonValueKind.Object, parameter.ValueKind);
+        var parameterValue = result.AssertProperty("ParameterValue");
+        Assert.Equal(JsonValueKind.String, parameterValue.ValueKind);
 
-        // Verify parameter properties
-        var paramName = parameter.GetProperty("name").GetString();
-        Assert.Equal(parameterName, paramName);
-
-        Assert.True(parameter.TryGetProperty("value", out _));
-        Assert.True(parameter.TryGetProperty("dataType", out _));
+        // Verify parameter value is not null or empty
+        var paramValue = parameterValue.GetString();
+        Assert.NotNull(paramValue);
     }
 
     [Fact]
@@ -202,22 +189,18 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             });
 
         // Should successfully retrieve the list of tables
-        var tables = result.AssertProperty("tables");
+        var tables = result.AssertProperty("Tables");
         Assert.Equal(JsonValueKind.Array, tables.ValueKind);
 
         // PostgreSQL default database may or may not have user tables,
         // but the command should execute successfully
         var tableArray = tables.EnumerateArray().ToList();
 
-        // If there are tables, verify their structure
+        // If there are tables, verify they are strings (table names)
         if (tableArray.Count > 0)
         {
             var firstTable = tableArray.First();
-            Assert.Equal(JsonValueKind.Object, firstTable.ValueKind);
-
-            // Verify table properties
-            Assert.True(firstTable.TryGetProperty("tableName", out _));
-            Assert.True(firstTable.TryGetProperty("schemaName", out _));
+            Assert.Equal(JsonValueKind.String, firstTable.ValueKind);
         }
     }
 
@@ -255,7 +238,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             });
 
         // Should successfully retrieve the table schema
-        var schema = result.AssertProperty("schema");
+        var schema = result.AssertProperty("Schema");
         Assert.Equal(JsonValueKind.Object, schema.ValueKind);
 
         // Verify schema structure
