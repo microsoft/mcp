@@ -7,6 +7,11 @@
 
 - Added elicitation support. An elicitation request is sent if the tool annotation secret hint is true. [[#404](https://github.com/microsoft/mcp/pull/404)]
 
+- Added toast notification to guide users when Azure MCP settings are changed but MCP Autostart is not configured
+  - Notification includes clear instructions: "Command Palette → MCP: List Servers → Azure MCP → Start/Restart"
+  - Provides "Open Command Palette" button for quick access to MCP server management
+  - Only shows when MCP Autostart is disabled to avoid unnecessary notifications
+
 ### Features Removed
 
 - Removed Azure CLI (`az`) and Azure Developer CLI (`azd`) extension tools from the MCP server to reduce complexity and focus on native Azure service operations.
