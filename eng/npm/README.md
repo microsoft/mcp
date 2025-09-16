@@ -49,7 +49,7 @@ Alternatively, you can also install a targeted version of the @azure/mcp package
       "command": "npx",
       "args": [
         "-y",
-        "@azure/mcp@0.5.13",
+        "@azure/mcp@<version>",
         "server",
         "start"
       ]
