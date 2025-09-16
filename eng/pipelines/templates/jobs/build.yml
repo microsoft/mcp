@@ -30,6 +30,15 @@ jobs:
     ${{ else }}:
       image: $(OSVmImage)
     os: ${{ parameters.OSName }}
+
+  # Only run codeql on linux internal builds build job
+  ${{ if and(eq(parameters.OSName, 'linux'), eq(variables['System.TeamProject'], 'internal')) }}:
+    templateContext:
+      sdl:
+        codeql:
+          compiled:
+            enabled: true
+
   steps:
   - checkout: self
 
