@@ -301,12 +301,12 @@ The Azure Identity SDK supports fine-grained control over which authentication m
 
 #### Exclude Credential Categories
 
-To exclude all **production credentials** (Environment, Workload Identity, Managed Identity), set:
+To use only **production credentials** (Environment, Workload Identity, Managed Identity), set:
 ```bash
 AZURE_TOKEN_CREDENTIALS=prod
 ```
 
-To exclude all **development credentials** (Visual Studio, Visual Studio Code, Azure CLI, Azure PowerShell, Azure Developer CLI), set:
+To use only **development credentials** (Visual Studio, Visual Studio Code, Azure CLI, Azure PowerShell, Azure Developer CLI), set:
 ```bash
 AZURE_TOKEN_CREDENTIALS=dev
 ```
@@ -343,7 +343,6 @@ AZURE_TOKEN_CREDENTIALS=InteractiveBrowserCredential
 - `AzureCliCredential`
 - `AzureDeveloperCliCredential` 
 - `AzurePowerShellCredential`
-- `BrokerCredential`
 - `EnvironmentCredential`
 - `InteractiveBrowserCredential`
 - `ManagedIdentityCredential`
