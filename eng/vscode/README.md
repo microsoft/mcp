@@ -14,7 +14,7 @@ Easily bring the power of Model Context Protocol (MCP) to your Azure projects in
 
 ## Overview
 
-**Azure MCP Server** adds smart, context-aware AI tools right inside VS Code to help you work more efficiently with Azure resources. The Azure MCP Server supercharges your agents with Azure context across **28 different Azure services**.
+**Azure MCP Server** adds smart, context-aware AI tools right inside VS Code to help you work more efficiently with Azure resources. The Azure MCP Server supercharges your agents with Azure context across **30+ different Azure services**.
 
 ## Getting Started
 
@@ -369,7 +369,7 @@ For the complete list of supported services and sample prompts, see our [full do
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **26 Azure service areas**:
+The Azure MCP Server provides tools for interacting with **30+ Azure service areas**:
 
 - 🔎 **Azure AI Search** - Search engine/vector database operations
 - ⚙️ **Azure App Configuration** - Configuration management
