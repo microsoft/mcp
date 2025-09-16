@@ -71,21 +71,24 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
         command.Validators.Add(result =>
             {
                 // Validate confidence score is between 0.0 and 1.0
-                if (!result.TryGetValue(CloudArchitectOptionDefinitions.ConfidenceScore, out var confidenceScore) || confidenceScore < 0.0 || confidenceScore > 1.0)
+                var confidenceScore = result.GetValue(CloudArchitectOptionDefinitions.ConfidenceScore);
+                if (confidenceScore < 0.0 || confidenceScore > 1.0)
                 {
                     result.AddError("Confidence score must be between 0.0 and 1.0");
                     return;
                 }
 
                 // Validate question number is not negative
-                if (!result.TryGetValue(CloudArchitectOptionDefinitions.QuestionNumber, out var questionNumber) || questionNumber < 0)
+                var questionNumber = result.GetValue(CloudArchitectOptionDefinitions.QuestionNumber);
+                if (questionNumber < 0)
                 {
                     result.AddError("Question number cannot be negative");
                     return;
                 }
 
                 // Validate total questions is not negative
-                if (!result.TryGetValue(CloudArchitectOptionDefinitions.TotalQuestions, out var totalQuestions) || totalQuestions < 0)
+                var totalQuestions = result.GetValue(CloudArchitectOptionDefinitions.TotalQuestions);
+                if (totalQuestions < 0)
                 {
                     result.AddError("Total questions cannot be negative");
                     return;
