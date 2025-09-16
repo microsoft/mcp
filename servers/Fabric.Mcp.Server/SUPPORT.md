@@ -207,10 +207,9 @@ Together, we're building the future of AI-assisted data analytics development!
 
 [fabric-docs]: https://learn.microsoft.com/fabric/
 [fabric-api-docs]: https://learn.microsoft.com/rest/api/fabric/
-[fabric-dev-docs]: https://learn.microsoft.com/fabric/dev/
+[fabric-dev-docs]: https://learn.microsoft.com/fabric/
 [fabric-community]: https://community.fabric.microsoft.com/
 [fabric-blog]: https://blog.fabric.microsoft.com/
-[fabric-github]: https://github.com/microsoft/fabric-docs
 [fabric-learn]: https://learn.microsoft.com/training/paths/get-started-fabric/
 [fabric-learning-path]: https://learn.microsoft.com/training/browse/?products=fabric
 
