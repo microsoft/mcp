@@ -69,11 +69,7 @@ public sealed class CertificateListCommand(ILogger<CertificateListCommand> logge
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = certificates?.Count > 0 ?
-                ResponseResult.Create(
-                    new CertificateListCommandResult(certificates),
-                    KeyVaultJsonContext.Default.CertificateListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(certificates ?? []), KeyVaultJsonContext.Default.CertificateListCommandResult);
         }
         catch (Exception ex)
         {

@@ -60,7 +60,7 @@ public sealed class ClusterListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoClustersExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoClustersExist()
     {
         // Arrange
         _kusto.ListClusters("sub123", null, null)
@@ -75,7 +75,13 @@ public sealed class ClusterListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<ClusterListResult>(json);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Clusters!);
     }
 
     [Fact]
