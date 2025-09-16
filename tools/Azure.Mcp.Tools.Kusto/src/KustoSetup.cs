@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Kusto.Commands;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Kusto;
 
@@ -17,13 +16,23 @@ public class KustoSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IKustoService, KustoService>();
+
+        services.AddSingleton<SampleCommand>();
+        services.AddSingleton<QueryCommand>();
+
+        services.AddSingleton<ClusterListCommand>();
+        services.AddSingleton<ClusterGetCommand>();
+
+        services.AddSingleton<DatabaseListCommand>();
+
+        services.AddSingleton<TableListCommand>();
+        services.AddSingleton<TableSchemaCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Kusto command group
         var kusto = new CommandGroup(Name, "Kusto operations - Commands for managing and querying Azure Data Explorer (Kusto) resources. Includes operations for listing clusters and databases, executing KQL queries, retrieving table schemas, and working with Kusto data analytics workloads.");
-        rootGroup.AddSubGroup(kusto);
 
         // Create Kusto cluster subgroups
         var clusters = new CommandGroup("cluster", "Kusto cluster operations - Commands for listing clusters in your Azure subscription.");
@@ -35,15 +44,17 @@ public class KustoSetup : IAreaSetup
         var tables = new CommandGroup("table", "Kusto table operations - Commands for listing tables in a database.");
         kusto.AddSubGroup(tables);
 
-        kusto.AddCommand("sample", new SampleCommand(loggerFactory.CreateLogger<SampleCommand>()));
-        kusto.AddCommand("query", new QueryCommand(loggerFactory.CreateLogger<QueryCommand>()));
+        kusto.AddCommand("sample", serviceProvider.GetRequiredService<SampleCommand>());
+        kusto.AddCommand("query", serviceProvider.GetRequiredService<QueryCommand>());
 
-        clusters.AddCommand("list", new ClusterListCommand(loggerFactory.CreateLogger<ClusterListCommand>()));
-        clusters.AddCommand("get", new ClusterGetCommand(loggerFactory.CreateLogger<ClusterGetCommand>()));
+        clusters.AddCommand("list", serviceProvider.GetRequiredService<ClusterListCommand>());
+        clusters.AddCommand("get", serviceProvider.GetRequiredService<ClusterGetCommand>());
 
-        databases.AddCommand("list", new DatabaseListCommand(loggerFactory.CreateLogger<DatabaseListCommand>()));
+        databases.AddCommand("list", serviceProvider.GetRequiredService<DatabaseListCommand>());
 
-        tables.AddCommand("list", new TableListCommand(loggerFactory.CreateLogger<TableListCommand>()));
-        tables.AddCommand("schema", new TableSchemaCommand(loggerFactory.CreateLogger<TableSchemaCommand>()));
+        tables.AddCommand("list", serviceProvider.GetRequiredService<TableListCommand>());
+        tables.AddCommand("schema", serviceProvider.GetRequiredService<TableSchemaCommand>());
+
+        return kusto;
     }
 }

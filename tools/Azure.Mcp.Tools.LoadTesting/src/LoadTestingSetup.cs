@@ -9,7 +9,6 @@ using Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.LoadTesting;
 
@@ -20,6 +19,17 @@ public class LoadTestingSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ILoadTestingService, LoadTestingService>();
+
+        services.AddSingleton<TestResourceListCommand>();
+        services.AddSingleton<TestResourceCreateCommand>();
+
+        services.AddSingleton<TestGetCommand>();
+        services.AddSingleton<TestCreateCommand>();
+
+        services.AddSingleton<TestRunGetCommand>();
+        services.AddSingleton<TestRunListCommand>();
+        services.AddSingleton<TestRunCreateCommand>();
+        services.AddSingleton<TestRunUpdateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -28,7 +38,6 @@ public class LoadTestingSetup : IAreaSetup
         var service = new CommandGroup(
             Name,
             "Load Testing operations - Commands for managing Azure Load Testing resources, test configurations, and test runs. Includes operations for creating and managing load test resources, configuring test scripts, executing performance tests, and monitoring test results.");
-        rootGroup.AddSubGroup(service);
 
         // Create Load Test subgroups
         var testResource = new CommandGroup(
@@ -47,17 +56,19 @@ public class LoadTestingSetup : IAreaSetup
         service.AddSubGroup(testRun);
 
         // Register commands for Load Test Resource
-        testResource.AddCommand("list", new TestResourceListCommand(loggerFactory.CreateLogger<TestResourceListCommand>()));
-        testResource.AddCommand("create", new TestResourceCreateCommand(loggerFactory.CreateLogger<TestResourceCreateCommand>()));
+        testResource.AddCommand("list", serviceProvider.GetRequiredService<TestResourceListCommand>());
+        testResource.AddCommand("create", serviceProvider.GetRequiredService<TestResourceCreateCommand>());
 
         // Register commands for Load Test
-        test.AddCommand("get", new TestGetCommand(loggerFactory.CreateLogger<TestGetCommand>()));
-        test.AddCommand("create", new TestCreateCommand(loggerFactory.CreateLogger<TestCreateCommand>()));
+        test.AddCommand("get", serviceProvider.GetRequiredService<TestGetCommand>());
+        test.AddCommand("create", serviceProvider.GetRequiredService<TestCreateCommand>());
 
         // Register commands for Load Test Run
-        testRun.AddCommand("get", new TestRunGetCommand(loggerFactory.CreateLogger<TestRunGetCommand>()));
-        testRun.AddCommand("list", new TestRunListCommand(loggerFactory.CreateLogger<TestRunListCommand>()));
-        testRun.AddCommand("create", new TestRunCreateCommand(loggerFactory.CreateLogger<TestRunCreateCommand>()));
-        testRun.AddCommand("update", new TestRunUpdateCommand(loggerFactory.CreateLogger<TestRunUpdateCommand>()));
+        testRun.AddCommand("get", serviceProvider.GetRequiredService<TestRunGetCommand>());
+        testRun.AddCommand("list", serviceProvider.GetRequiredService<TestRunListCommand>());
+        testRun.AddCommand("create", serviceProvider.GetRequiredService<TestRunCreateCommand>());
+        testRun.AddCommand("update", serviceProvider.GetRequiredService<TestRunUpdateCommand>());
+
+        return service;
     }
 }

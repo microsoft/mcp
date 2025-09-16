@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.KeyVault.Commands.Key;
 using Azure.Mcp.Tools.KeyVault.Commands.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.KeyVault;
 
@@ -19,12 +18,24 @@ public class KeyVaultSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IKeyVaultService, KeyVaultService>();
+
+        services.AddSingleton<KeyListCommand>();
+        services.AddSingleton<KeyGetCommand>();
+        services.AddSingleton<KeyCreateCommand>();
+
+        services.AddSingleton<SecretListCommand>();
+        services.AddSingleton<SecretCreateCommand>();
+        services.AddSingleton<SecretGetCommand>();
+
+        services.AddSingleton<CertificateListCommand>();
+        services.AddSingleton<CertificateGetCommand>();
+        services.AddSingleton<CertificateCreateCommand>();
+        services.AddSingleton<CertificateImportCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var keyVault = new CommandGroup(Name, "Key Vault operations - Commands for managing and accessing Azure Key Vault resources.");
-        rootGroup.AddSubGroup(keyVault);
 
         var keys = new CommandGroup("key", "Key Vault key operations - Commands for managing and accessing keys in Azure Key Vault.");
         keyVault.AddSubGroup(keys);
@@ -35,17 +46,19 @@ public class KeyVaultSetup : IAreaSetup
         var certificate = new CommandGroup("certificate", "Key Vault certificate operations - Commands for managing and accessing certificates in Azure Key Vault.");
         keyVault.AddSubGroup(certificate);
 
-        keys.AddCommand("list", new KeyListCommand(loggerFactory.CreateLogger<KeyListCommand>()));
-        keys.AddCommand("get", new KeyGetCommand(loggerFactory.CreateLogger<KeyGetCommand>()));
-        keys.AddCommand("create", new KeyCreateCommand(loggerFactory.CreateLogger<KeyCreateCommand>()));
+        keys.AddCommand("list", serviceProvider.GetRequiredService<KeyListCommand>());
+        keys.AddCommand("get", serviceProvider.GetRequiredService<KeyGetCommand>());
+        keys.AddCommand("create", serviceProvider.GetRequiredService<KeyCreateCommand>());
 
-        secret.AddCommand("list", new SecretListCommand(loggerFactory.CreateLogger<SecretListCommand>()));
-        secret.AddCommand("create", new SecretCreateCommand(loggerFactory.CreateLogger<SecretCreateCommand>()));
-        secret.AddCommand("get", new SecretGetCommand(loggerFactory.CreateLogger<SecretGetCommand>()));
+        secret.AddCommand("list", serviceProvider.GetRequiredService<SecretListCommand>());
+        secret.AddCommand("create", serviceProvider.GetRequiredService<SecretCreateCommand>());
+        secret.AddCommand("get", serviceProvider.GetRequiredService<SecretGetCommand>());
 
-        certificate.AddCommand("list", new CertificateListCommand(loggerFactory.CreateLogger<CertificateListCommand>()));
-        certificate.AddCommand("get", new CertificateGetCommand(loggerFactory.CreateLogger<CertificateGetCommand>()));
-        certificate.AddCommand("create", new CertificateCreateCommand(loggerFactory.CreateLogger<CertificateCreateCommand>()));
-        certificate.AddCommand("import", new CertificateImportCommand(loggerFactory.CreateLogger<CertificateImportCommand>()));
+        certificate.AddCommand("list", serviceProvider.GetRequiredService<CertificateListCommand>());
+        certificate.AddCommand("get", serviceProvider.GetRequiredService<CertificateGetCommand>());
+        certificate.AddCommand("create", serviceProvider.GetRequiredService<CertificateCreateCommand>());
+        certificate.AddCommand("import", serviceProvider.GetRequiredService<CertificateImportCommand>());
+
+        return keyVault;
     }
 }

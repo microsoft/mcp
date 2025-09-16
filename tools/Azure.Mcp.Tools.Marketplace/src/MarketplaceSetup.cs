@@ -17,22 +17,24 @@ public class MarketplaceSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IMarketplaceService, MarketplaceService>();
+
+        services.AddSingleton<ProductGetCommand>();
+        services.AddSingleton<ProductListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Marketplace command group
         var marketplace = new CommandGroup(Name, "Marketplace operations - Commands for managing and accessing Azure Marketplace products and offers.");
-        rootGroup.AddSubGroup(marketplace);
 
         // Create Product subgroup
         var product = new CommandGroup("product", "Marketplace product operations - Commands for retrieving and managing marketplace products.");
         marketplace.AddSubGroup(product);
 
         // Register Product commands
-        product.AddCommand("get", new ProductGetCommand(
-            loggerFactory.CreateLogger<ProductGetCommand>()));
-        product.AddCommand("list", new ProductListCommand(
-            loggerFactory.CreateLogger<ProductListCommand>()));
+        product.AddCommand("get", serviceProvider.GetRequiredService<ProductGetCommand>());
+        product.AddCommand("list", serviceProvider.GetRequiredService<ProductListCommand>());
+
+        return marketplace;
     }
 }

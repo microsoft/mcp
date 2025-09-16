@@ -14,7 +14,6 @@ using Azure.Mcp.Tools.Storage.Commands.Share.File;
 using Azure.Mcp.Tools.Storage.Commands.Table;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Storage;
 
@@ -25,6 +24,27 @@ public class StorageSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IStorageService, StorageService>();
+
+        services.AddSingleton<AccountCreateCommand>();
+        services.AddSingleton<AccountGetCommand>();
+
+        services.AddSingleton<TableListCommand>();
+
+        services.AddSingleton<BlobGetCommand>();
+        services.AddSingleton<BlobUploadCommand>();
+
+        services.AddSingleton<BatchSetTierCommand>();
+
+        services.AddSingleton<ContainerCreateCommand>();
+        services.AddSingleton<ContainerGetCommand>();
+
+        services.AddSingleton<FileSystemListPathsCommand>();
+
+        services.AddSingleton<DirectoryCreateCommand>();
+
+        services.AddSingleton<QueueMessageSendCommand>();
+
+        services.AddSingleton<FileListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -42,7 +62,6 @@ public class StorageSetup : IAreaSetup
             tables, and queues. Note that this tool requires appropriate Storage account permissions and will only
             access storage resources accessible to the authenticated user.
             """);
-        rootGroup.AddSubGroup(storage);
 
         // Create Storage subgroups
         var storageAccount = new CommandGroup("account", "Storage account operations - Commands for listing and managing Storage account in your Azure subscription.");
@@ -91,25 +110,27 @@ public class StorageSetup : IAreaSetup
         shares.AddSubGroup(shareFiles);
 
         // Register Storage commands
-        storageAccount.AddCommand("create", new AccountCreateCommand(loggerFactory.CreateLogger<AccountCreateCommand>()));
-        storageAccount.AddCommand("get", new AccountGetCommand(loggerFactory.CreateLogger<AccountGetCommand>()));
+        storageAccount.AddCommand("create", serviceProvider.GetRequiredService<AccountCreateCommand>());
+        storageAccount.AddCommand("get", serviceProvider.GetRequiredService<AccountGetCommand>());
 
-        tables.AddCommand("list", new TableListCommand(loggerFactory.CreateLogger<TableListCommand>()));
+        tables.AddCommand("list", serviceProvider.GetRequiredService<TableListCommand>());
 
-        blobs.AddCommand("get", new BlobGetCommand(loggerFactory.CreateLogger<BlobGetCommand>()));
-        blobs.AddCommand("upload", new BlobUploadCommand(loggerFactory.CreateLogger<BlobUploadCommand>()));
+        blobs.AddCommand("get", serviceProvider.GetRequiredService<BlobGetCommand>());
+        blobs.AddCommand("upload", serviceProvider.GetRequiredService<BlobUploadCommand>());
 
-        batch.AddCommand("set-tier", new BatchSetTierCommand(loggerFactory.CreateLogger<BatchSetTierCommand>()));
+        batch.AddCommand("set-tier", serviceProvider.GetRequiredService<BatchSetTierCommand>());
 
-        blobContainer.AddCommand("create", new ContainerCreateCommand(loggerFactory.CreateLogger<ContainerCreateCommand>()));
-        blobContainer.AddCommand("get", new ContainerGetCommand(loggerFactory.CreateLogger<ContainerGetCommand>()));
+        blobContainer.AddCommand("create", serviceProvider.GetRequiredService<ContainerCreateCommand>());
+        blobContainer.AddCommand("get", serviceProvider.GetRequiredService<ContainerGetCommand>());
 
-        fileSystem.AddCommand("list-paths", new FileSystemListPathsCommand(loggerFactory.CreateLogger<FileSystemListPathsCommand>()));
+        fileSystem.AddCommand("list-paths", serviceProvider.GetRequiredService<FileSystemListPathsCommand>());
 
-        directory.AddCommand("create", new DirectoryCreateCommand(loggerFactory.CreateLogger<DirectoryCreateCommand>()));
+        directory.AddCommand("create", serviceProvider.GetRequiredService<DirectoryCreateCommand>());
 
-        queueMessage.AddCommand("send", new QueueMessageSendCommand(loggerFactory.CreateLogger<QueueMessageSendCommand>()));
+        queueMessage.AddCommand("send", serviceProvider.GetRequiredService<QueueMessageSendCommand>());
 
-        shareFiles.AddCommand("list", new FileListCommand(loggerFactory.CreateLogger<FileListCommand>()));
+        shareFiles.AddCommand("list", serviceProvider.GetRequiredService<FileListCommand>());
+
+        return storage;
     }
 }
