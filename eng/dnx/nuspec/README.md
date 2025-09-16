@@ -74,77 +74,6 @@ When configured this way, you will need to update the version as new release bec
 
 Here are some cool prompts you can try across our supported Azure services:
 
-### 🔎 Azure AI Search
-
-* "What indexes do I have in my Azure AI Search service 'mysvc'?"
-* "Let's search this index for 'my search query'"
-
-### ⚙️ Azure App Configuration
-
-* "List my App Configuration stores"
-* "Show my key-value pairs in App Config"
-
-### 📦 Azure Container Registry (ACR)
-
-* "List all my Azure Container Registries"
-* "Show me my container registries in the 'myproject' resource group"
-* "List all my Azure Container Registry repositories"
-
-### ☸️ Azure Kubernetes Service (AKS)
-
-* "List my AKS clusters in my subscription"
-* "Show me all my Azure Kubernetes Service clusters"
-
-### 📊 Azure Cosmos DB
-
-* "Show me all my Cosmos DB databases"
-* "List containers in my Cosmos DB database"
-
-### 🧮 Azure Data Explorer
-
-* "Get Azure Data Explorer databases in cluster 'mycluster'"
-* "Sample 10 rows from table 'StormEvents' in Azure Data Explorer database 'db1'"
-
-### ⚡ Azure Managed Lustre
-
-* "List the Azure Managed Lustre clusters in resource group 'my-resourcegroup'"
-* "How many IP Addresses I need to create a 128 TiB cluster of AMLFS 500?"
-
-### 📊 Azure Monitor
-
-* "Query my Log Analytics workspace"
-
-### 🔧 Azure Resource Management
-
-* "List my resource groups"
-* "List my Azure CDN endpoints"
-* "Help me build an Azure application using Node.js"
-
-### 🗄️ Azure SQL Database
-
-* "Show me details about my Azure SQL database 'mydb'"
-* "List all databases in my Azure SQL server 'myserver'"
-* "List all firewall rules for my Azure SQL server 'myserver'"
-* "List all elastic pools in my Azure SQL server 'myserver'"
-* "List Active Directory administrators for my Azure SQL server 'myserver'"
-
-### 💾 Azure Storage
-
-* "List my Azure storage accounts"
-* "Get details about my storage account 'mystorageaccount'"
-* "Create a new storage account in East US with Data Lake support"
-* "Show me the tables in my Storage account"
-* "Get details about my Storage container"
-* "Upload my file to the blob container"
-* "List paths in my Data Lake file system"
-* "List files and directories in my File Share"
-* "Send a message to my storage queue"
-
-## 🛠️ Currently Supported Tools
-
-<details>
-<summary>The Azure MCP Server provides tools for interacting with the following Azure services</summary>
-
 ### 🔎 Azure AI Search (search engine/vector database)
 
 * List Azure AI Search services
@@ -207,9 +136,9 @@ Here are some cool prompts you can try across our supported Azure services:
 
 ### 📣 Azure Event Grid
 
-* "List all Event Grid topics in subscription 'my-subscription'"
-* "Show me the Event Grid topics in my subscription"
-* "List all Event Grid topics in resource group 'my-resourcegroup' in my subscription"
+* List Event Grid topics in subscription or resource group
+* View topic configuration and status information
+* Access endpoint and key details for event publishing
 
 ### 🧮 Azure Foundry
 
@@ -217,7 +146,6 @@ Here are some cool prompts you can try across our supported Azure services:
 * Deploy foundry models
 * List foundry model deployments
 * List knowledge indexes
-* Get knowledge index schema configuration
 
 ### ☁️ Azure Function App
 
@@ -233,13 +161,14 @@ Here are some cool prompts you can try across our supported Azure services:
 ### ☸️ Azure Kubernetes Service (AKS)
 
 * List Azure Kubernetes Service clusters
+* List node pools in an AKS managed cluster
+* Get details of a node pool in an AKS managed cluster
 
 ### 📦 Azure Load Testing
 
 * List, create load test resources
 * List, create load tests
 * Get, list, (create) run and rerun, update load test runs
-
 
 ### 🚀 Azure Managed Grafana
 
@@ -249,9 +178,11 @@ Here are some cool prompts you can try across our supported Azure services:
 
 * List Azure Managed Lustre filesystems
 * Get the number of IP addresses required for a specific SKU and size of Azure Managed Lustre filesystem
+* Get information of Azure Managed Lustre SKUs available in a specific Azure region
 
 ### 🏪 Azure Marketplace
 
+* List marketplace products available to a subscription with filtering capabilities
 * Get details about Marketplace products
 
 ### 📈 Azure Monitor
@@ -270,11 +201,6 @@ Here are some cool prompts you can try across our supported Azure services:
 
 * Query Azure Monitor metrics for resources with time series data
 * List available metric definitions for resources
-
-### 🏥 Azure Service Health
-
-* Get the availability status for a specific resource
-* List availability statuses for all resources in a subscription or resource group
 
 ### ⚙️ Azure Native ISV Services
 
@@ -300,6 +226,12 @@ Here are some cool prompts you can try across our supported Azure services:
 
 * List resource groups
 
+### 🏥 Azure Resource Health
+
+* Get the availability status for a specific resource
+* List availability statuses for all resources in a subscription or resource group
+* List service health events in a subscription
+
 ### 🎭 Azure Role-Based Access Control (RBAC)
 
 * List role assignments
@@ -313,21 +245,20 @@ Here are some cool prompts you can try across our supported Azure services:
 * Show database details and properties
 * List the details and properties of all databases
 * List SQL server firewall rules
-
-### 🗄️ Azure SQL Elastic Pool
-
+* Create SQL server firewall rules
+* Delete SQL server firewall rules
 * List elastic pools in SQL servers
-
-### 🗄️ Azure SQL Server
-
 * List Microsoft Entra ID administrators for SQL servers
+* Create new SQL servers
+* Show details and properties of SQL servers
+* Delete SQL servers
 
 ### 💾 Azure Storage
 
 * List and create Storage accounts
 * Get detailed information about specific Storage accounts
 * Manage blob containers and blobs
-* Upload files to blob containers
+* Upload files to blobs
 * List and query Storage tables
 * List paths in Data Lake file systems
 * Get container properties and metadata
@@ -363,9 +294,9 @@ Here are some cool prompts you can try across our supported Azure services:
 
 * Design Azure cloud architectures through guided questions
 
-</details>
+Agents and models can discover and learn best practices and usage guidelines for the `azd` MCP tool. For more information, see [AZD Best Practices](https://github.com/microsoft/mcp/tree/main/tools/Azure.Mcp.Tools.Extension/src/Resources/azd-best-practices.txt).
 
-For the complete list of supported services and sample prompts, see our [full documentation](https://github.com/microsoft/mcp/blob/main/README.md#-what-can-you-do-with-the-azure-mcp-server).
+For detailed command documentation and examples, see [Azure MCP Commands](https://github.com/microsoft/mcp/blob/main/docs/azmcp-commands.md).
 
 ## Complete List of Supported Azure Services
 
