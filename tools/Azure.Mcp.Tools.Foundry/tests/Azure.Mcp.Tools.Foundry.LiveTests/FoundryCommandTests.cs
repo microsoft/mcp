@@ -265,7 +265,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var response = result.AssertProperty("response");
         Assert.Equal(JsonValueKind.Object, response.ValueKind);
         Assert.NotEmpty(response.EnumerateObject());
-        var evaluationResults = response.AssertProperty("result");
+        var evaluationResults = response.AssertProperty("evaluationResult");
         Assert.Equal(JsonValueKind.Object, evaluationResults.ValueKind);
         Assert.NotEmpty(evaluationResults.EnumerateObject());
         var metrics = evaluationResults.AssertProperty("metrics");
