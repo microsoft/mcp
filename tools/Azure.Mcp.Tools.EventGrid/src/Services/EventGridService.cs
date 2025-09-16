@@ -152,14 +152,14 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
                             }
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Continue with other topics if one fails
+                        // Continue with other topics if one fails - individual topic access errors
+                        // shouldn't block the entire operation since we're aggregating from multiple topics
+                        System.Diagnostics.Debug.WriteLine($"Failed to get subscriptions for topic '{topic.Data.Name}': {ex.Message}");
                         continue;
                     }
-                }
-
-                // Also check system topics in the resource group
+                }                // Also check system topics in the resource group
                 await foreach (var systemTopic in resourceGroupResource.Value.GetSystemTopics().GetAllAsync())
                 {
                     try
@@ -173,9 +173,11 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
                             }
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Continue with other system topics if one fails
+                        // Continue with other system topics if one fails - individual system topic access errors
+                        // shouldn't block the entire operation since we're aggregating from multiple topics
+                        System.Diagnostics.Debug.WriteLine($"Failed to get subscriptions for system topic '{systemTopic.Data.Name}': {ex.Message}");
                         continue;
                     }
                 }
@@ -197,9 +199,11 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
                             }
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Continue with other topics if one fails
+                        // Continue with other topics if one fails - individual topic access errors
+                        // shouldn't block the entire operation since we're aggregating from multiple topics
+                        System.Diagnostics.Debug.WriteLine($"Failed to get subscriptions for topic '{topic.Data.Name}': {ex.Message}");
                         continue;
                     }
                 }
@@ -218,9 +222,11 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
                             }
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Continue with other system topics if one fails
+                        // Continue with other system topics if one fails - individual system topic access errors
+                        // shouldn't block the entire operation since we're aggregating from multiple topics
+                        System.Diagnostics.Debug.WriteLine($"Failed to get subscriptions for system topic '{systemTopic.Data.Name}': {ex.Message}");
                         continue;
                     }
                 }
