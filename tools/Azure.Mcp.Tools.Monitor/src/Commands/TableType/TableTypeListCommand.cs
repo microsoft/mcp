@@ -33,7 +33,14 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) :
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        RequireResourceGroup();
+        //command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+    }
+
+    protected override TableTypeListOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        //options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        return options;
     }
 
 

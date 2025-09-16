@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Aks.Options;
 using Azure.Mcp.Tools.Aks.Options.Nodepool;
 using Azure.Mcp.Tools.Aks.Services;
@@ -39,14 +41,15 @@ public sealed class NodepoolListCommand(ILogger<NodepoolListCommand> logger) : B
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        RequireResourceGroup();
-        command.Options.Add(_clusterNameOption);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(AksOptionDefinitions.Cluster);
     }
 
     protected override NodepoolListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ClusterName = parseResult.GetValue(_clusterNameOption);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.ClusterName = parseResult.GetValueOrDefault<string>(AksOptionDefinitions.Cluster.Name);
         return options;
     }
 

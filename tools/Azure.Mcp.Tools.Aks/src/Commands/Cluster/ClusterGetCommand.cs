@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Aks.Options;
 using Azure.Mcp.Tools.Aks.Options.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
@@ -13,9 +15,6 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
 {
     private const string CommandTitle = "Get AKS Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
-
-    // Define options from OptionDefinitions
-    private readonly Option<string> _clusterNameOption = AksOptionDefinitions.Cluster;
 
     public override string Name => "get";
 
@@ -40,14 +39,15 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        RequireResourceGroup();
-        command.Options.Add(_clusterNameOption);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(AksOptionDefinitions.Cluster);
     }
 
     protected override ClusterGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ClusterName = parseResult.GetValue(_clusterNameOption);
+        options.ClusterName = parseResult.GetValueOrDefault<string>(AksOptionDefinitions.Cluster.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
 

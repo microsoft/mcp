@@ -17,7 +17,6 @@ public abstract class GlobalCommand<
 {
     protected readonly Option<string> _tenantOption = OptionDefinitions.Common.Tenant;
     protected readonly Option<AuthMethod> _authMethodOption = OptionDefinitions.Common.AuthMethod;
-    protected readonly Option<string> _resourceGroupOption = OptionDefinitions.Common.ResourceGroup;
     protected readonly Option<int> _retryMaxRetries = OptionDefinitions.RetryPolicy.MaxRetries;
     protected readonly Option<double> _retryDelayOption = OptionDefinitions.RetryPolicy.Delay;
     protected readonly Option<double> _retryMaxDelayOption = OptionDefinitions.RetryPolicy.MaxDelay;
@@ -83,11 +82,6 @@ public abstract class GlobalCommand<
             Tenant = parseResult.GetValue(_tenantOption),
             AuthMethod = parseResult.GetValue(_authMethodOption)
         };
-
-        if (UsesResourceGroup)
-        {
-            options.ResourceGroup = parseResult.GetValue(_resourceGroupOption);
-        }
 
         // Create a RetryPolicyOptions capturing only explicitly provided values so unspecified settings remain SDK defaults
         var hasAnyRetry = Azure.Mcp.Core.Options.ParseResultExtensions.HasAnyRetryOptions(parseResult);

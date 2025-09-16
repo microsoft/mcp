@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Areas;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.EventGrid;
 

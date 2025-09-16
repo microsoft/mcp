@@ -7,7 +7,6 @@ using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
-using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;

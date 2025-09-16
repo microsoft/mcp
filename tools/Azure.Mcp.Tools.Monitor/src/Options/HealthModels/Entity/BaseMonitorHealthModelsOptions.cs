@@ -3,7 +3,7 @@
 
 namespace Azure.Mcp.Tools.Monitor.Options.HealthModels.Entity;
 
-public class EntityGetHealthOptions : BaseMonitorOptions
+public class BaseMonitorHealthModelsOptions : BaseMonitorOptions
 {
     public string? Entity { get; set; }
     public string? HealthModelName { get; set; }
