@@ -209,9 +209,7 @@
     "Show function app details for <function_app_name> in <resource_group_name>",
     "Show me the details for the function app <function_app_name>",
     "Show plan and region for function app <function_app_name>",
-    "What is the status of function app <function_app_name>?"
-  ],
-  "azmcp_functionapp_list": [
+    "What is the status of function app <function_app_name>?",
     "List all function apps in my subscription",
     "Show me my Azure function apps",
     "What function apps do I have?"

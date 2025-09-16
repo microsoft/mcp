@@ -29,7 +29,7 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger) : S
         OpenWorld = true,
         ReadOnly = false,
         LocalRequired = false,
-        Secret = false
+        Secret = true
     };
 
     public override string Description =>

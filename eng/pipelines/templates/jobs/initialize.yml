@@ -33,17 +33,20 @@ jobs:
     workingDirectory: $(Build.SourcesDirectory)
 
   - pwsh: |
-      $label = $env:PRERELEASE_LABEL
-      $number = $env:PRERELEASE_NUMBER
-      $suffix = ($label -and $number) ? "-$label.$number" : ""
+      $buildId = $env:BUILD_BUILDID
+      $buildReason = $env:BUILD_REASON
+      $sourceBranch = $env:BUILD_SOURCEBRANCH
+      $setDevVersion = $env:SETDEVVERSION -eq 'true'
+      $dynamicPrereleaseVersion = $env:DYNAMIC -eq 'true'
 
+      $shouldSetSuffix = $setDevVersion -or $dynamicPrereleaseVersion
+
+      $label = $buildReason -eq 'IndividualCI' -and $sourceBranch -eq 'refs/heads/main' ? 'beta' : 'alpha'
+      $suffix = $shouldSetSuffix ? "-$label.$buildId" : ''
+
+      Write-Host "Setting version suffix to '$suffix'"
       Write-Host "##vso[task.setvariable variable=VersionSuffix;isOutput=true]$suffix"
     name: GetVersion
     displayName: "Get version suffix"
-    ${{ if eq(parameters.DynamicPrereleaseVersion, true) }}:
-      env:
-        PRERELEASE_NUMBER: '$(Build.BuildId)'
-        ${{ if and(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
-            PRERELEASE_LABEL: 'beta'
-        ${{ else }}:
-            PRERELEASE_LABEL: 'alpha'
+    env:
+      DYNAMIC: ${{ parameters.DynamicPrereleaseVersion }}

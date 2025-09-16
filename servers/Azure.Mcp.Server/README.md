@@ -131,6 +131,9 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "Delete a firewall rule from my Azure SQL server 'myserver'"
 * "List all elastic pools in my Azure SQL server 'myserver'"
 * "List Active Directory administrators for my Azure SQL server 'myserver'"
+* "Create a new Azure SQL server in my resource group"
+* "Show me details about my Azure SQL server 'myserver'"
+* "Delete my Azure SQL server 'myserver'"
 
 ### 💾 Azure Storage
 
@@ -334,6 +337,9 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 ### 🗄️ Azure SQL Server
 
 * List Microsoft Entra ID administrators for SQL servers
+* Create new SQL servers
+* Show details and properties of SQL servers
+* Delete SQL servers
 
 ### 💾 Azure Storage
 

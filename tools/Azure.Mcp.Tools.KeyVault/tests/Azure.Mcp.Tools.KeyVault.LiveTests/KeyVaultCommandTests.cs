@@ -116,30 +116,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     }
 
     [Fact]
-    public async Task Should_create_secret()
-    {
-        var secretName = Settings.ResourceBaseName + Random.Shared.NextInt64();
-        var secretValue = "test-value-" + Random.Shared.NextInt64();
-        var result = await CallToolAsync(
-            "azmcp_keyvault_secret_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "vault", Settings.ResourceBaseName },
-                { "secret", secretName},
-                { "value", secretValue }
-            });
-
-        var createdSecretName = result.AssertProperty("name");
-        Assert.Equal(JsonValueKind.String, createdSecretName.ValueKind);
-        Assert.Equal(secretName, createdSecretName.GetString());
-
-        var returnedValue = result.AssertProperty("value");
-        Assert.Equal(JsonValueKind.String, returnedValue.ValueKind);
-        Assert.Equal(secretValue, returnedValue.GetString());
-    }
-
-    [Fact]
     public async Task Should_list_certificates()
     {
         var result = await CallToolAsync(
@@ -176,6 +152,28 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         // Verify that the certificate has some expected properties
         ValidateCertificate(result);
     }
+
+    [Fact]
+    public async Task Should_create_certificate()
+    {
+        var certificateName = Settings.ResourceBaseName + Random.Shared.NextInt64();
+        var result = await CallToolAsync(
+            "azmcp_keyvault_certificate_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "vault", Settings.ResourceBaseName },
+                { "certificate", certificateName}
+            });
+
+        var createdCertificateName = result.AssertProperty("name");
+        Assert.Equal(JsonValueKind.String, createdCertificateName.ValueKind);
+        Assert.Equal(certificateName, createdCertificateName.GetString());
+
+        // Verify that the certificate has some expected properties
+        ValidateCertificate(result);
+    }
+
 
     [Fact]
     public async Task Should_import_certificate()

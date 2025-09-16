@@ -2392,7 +2392,7 @@
     },
     {
       "name": "get",
-      "description": "Get the Azure Function App details for the specified function app name and resource group.\r\nThis command retrieves the details of a specific Azure Function App, including its name, location, status, and app service plan name.",
+      "description": "Gets Azure Function App details. Lists all Function Apps in the subscription or resource group.  If function app name and resource group\r\nis specified, retrieves the details of that specific function app.  Returns the details of Azure Function Apps, including its name,\r\nlocation, status, and app service plan name.",
       "command": "azmcp functionapp get",
       "option": [
         {
@@ -2453,62 +2453,26 @@
           "name": "--function-app",
           "description": "The name of the Function App.",
           "type": "string",
-          "required": true
+          "required": null
         }
       ]
     },
     {
-      "name": "list",
-      "description": "Lists all Azure Function Apps in a subscription.\r\nReturns a list of function app details including name, location, status, and app service plan name.",
-      "command": "azmcp functionapp list",
+      "name": "get",
+      "description": "This tool returns a list of best practices for code generation, operations and deployment\r\n        when working with Azure services. It should be called for any code generation, deployment or\r\n        operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container\r\n        Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory,\r\n        Azure App Services, or any other Azure technology or programming language. Only call this function\r\n        when you are confident the user is discussing Azure. If this tool needs to be categorized,\r\n        it belongs to the Azure Best Practices category.",
+      "command": "azmcp get bestpractices get",
       "option": [
         {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "name": "--resource",
+          "description": "The Azure resource type for which to get best practices. Options: 'general' (general Azure), 'azurefunctions' (Azure Functions), 'static-web-app' (Azure Static Web Apps).",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "name": "--action",
+          "description": "The action type for the best practices. Options: 'all', 'code-generation', 'deployment'. Note: 'static-web-app' resource only supports 'all'.",
           "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
+          "required": true
         }
       ]
     },
@@ -9588,5 +9552,5 @@
       ]
     }
   ],
-  "duration": 61
+  "duration": 23
 }
