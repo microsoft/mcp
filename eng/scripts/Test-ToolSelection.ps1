@@ -184,7 +184,7 @@ try {
     if ($LASTEXITCODE -ne 0) {
         Write-Host "❌ Failed to build tool selection analyzer"
 
-        exit 1
+        exit $LASTEXITCODE
     }
     
     # Prepare run arguments

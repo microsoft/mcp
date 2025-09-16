@@ -429,7 +429,7 @@ class Program
                     return null; // Graceful fallback in CI
                 }
 
-                throw new FileNotFoundException("Could not locate azmcp CLI artifact in Debug/Release outputs under servers or core.");
+                throw new FileNotFoundException("Could not locate azmcp CLI artifact in Debug/Release outputs under servers.");
             }
 
             var isDll = string.Equals(cliArtifact.Extension, ".dll", StringComparison.OrdinalIgnoreCase);
