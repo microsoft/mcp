@@ -325,6 +325,7 @@ azmcp mysql database query --subscription <subscription> \
 ```
 
 #### Table
+
 ```bash
 # List all tables in a MySQL database
 azmcp mysql table list --subscription <subscription> \
@@ -488,7 +489,7 @@ azmcp functionapp get --subscription <subscription> \
                       [--function-app <function-app-name>]
 ```
 
-### Azure Key Vault Operation
+### Azure Key Vault Operations
 
 #### Certificates
 
@@ -911,7 +912,7 @@ azmcp servicebus topic subscription details --subscription <subscription> \
 
 ### Azure SQL Operations
 
-### Database
+#### Database
 
 ```bash
 # Gets a list of all databases in a SQL server
@@ -935,7 +936,7 @@ azmcp sql elastic-pool list --subscription <subscription> \
                             --server <server-name>
 ```
 
-### Server
+#### Server
 
 ```bash
 # Create a new SQL server
