@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using Azure.Mcp.Core.Helpers;
 using System.Text.Json;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Acr.Commands;

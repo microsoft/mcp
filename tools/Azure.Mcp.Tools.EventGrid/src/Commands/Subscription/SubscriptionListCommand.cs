@@ -25,7 +25,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         subscriptions including webhook endpoints, event filters, and delivery retry policies. Returns subscription 
         details as JSON array. Requires either --topic (bare topic name) OR --subscription. If only --topic is provided
         the tool searches all accessible subscriptions for a topic with that name. Optional --resource-group/--location
-        may only be used alongside --subscription or --topic. Examples:\n  --subscription <subId>\n  --subscription <subId> --topic <topicName>\n  --topic <topicName>
+        may only be used alongside --subscription or --topic.
         """;
 
     public override string Title => CommandTitle;
@@ -43,9 +43,9 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(EventGridOptionDefinitions.TopicName.AsOptional());
-        command.Options.Add(EventGridOptionDefinitions.Location.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup);
+        command.Options.Add(EventGridOptionDefinitions.TopicName);
+        command.Options.Add(EventGridOptionDefinitions.Location);
     }
 
     protected override SubscriptionListOptions BindOptions(ParseResult parseResult)

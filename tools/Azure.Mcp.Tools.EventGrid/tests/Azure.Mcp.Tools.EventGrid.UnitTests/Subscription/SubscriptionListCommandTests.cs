@@ -206,10 +206,10 @@ public class SubscriptionListCommandTests
     [InlineData("--subscription sub", true)]
     [InlineData("--subscription sub --topic my-topic", true)]
     [InlineData("--subscription sub --resource-group rg", true)]
+    [InlineData("--topic my-topic", true)] // Cross-subscription search - valid with topic alone
     [InlineData("", false)]
     [InlineData("--location eastus", false)]
     [InlineData("--resource-group rg", false)]
-    [InlineData("--topic my-topic", false)] // Cross-subscription search needs special handling, test separately
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Arrange
@@ -220,6 +220,10 @@ public class SubscriptionListCommandTests
                 {
                     new("subscription1", "Microsoft.EventGrid/eventSubscriptions", "WebHook", "https://example.com/webhook1", "Succeeded", null, null, 30, 1440, "2023-01-01T00:00:00Z", "2023-01-02T00:00:00Z")
                 });
+
+            // Set up subscription service for cross-subscription search scenario  
+            _subscriptionService.GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+                .Returns(new List<SubscriptionData>());
         }
 
         var parseResult = _commandDefinition.Parse(args);

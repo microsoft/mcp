@@ -38,7 +38,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup);
     }
 
     protected override TopicListOptions BindOptions(ParseResult parseResult)
