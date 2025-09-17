@@ -165,4 +165,178 @@ public class SubscriptionListCommandTests
             Arg.Any<RetryPolicyOptions>());
     }
 
+    [Fact]
+    public async Task ExecuteAsync_WithCharacterLimit_ParsesAndBindsCorrectly()
+    {
+        // Arrange
+        var characterLimit = 5000;
+        var subscriptions = new List<SubscriptionData>
+        {
+            SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Test Subscription 1")
+        };
+
+        _subscriptionService
+            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .Returns(subscriptions);
+
+        var args = _commandDefinition.Parse($"--character-limit {characterLimit}");
+
+        // Act
+        var result = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(200, result.Status);
+        Assert.NotNull(result.Results);
+        Assert.Contains("1 subscriptions returned", result.Message);
+        Assert.Contains("characters", result.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ResponseWithinCharacterLimit_ReturnsAllSubscriptions()
+    {
+        // Arrange
+        var characterLimit = 10000; // Large limit
+        var subscriptions = new List<SubscriptionData>
+        {
+            SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Subscription 1"),
+            SubscriptionTestHelpers.CreateSubscriptionData("sub2", "Subscription 2")
+        };
+
+        _subscriptionService
+            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .Returns(subscriptions);
+
+        var args = _commandDefinition.Parse($"--character-limit {characterLimit}");
+
+        // Act
+        var result = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(200, result.Status);
+        Assert.NotNull(result.Results);
+        
+        var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(result.Results));
+        var subscriptionsArray = jsonDoc.RootElement.GetProperty("subscriptions");
+        
+        Assert.Equal(2, subscriptionsArray.GetArrayLength());
+        Assert.Contains("All 2 subscriptions returned", result.Message);
+        Assert.Contains("characters", result.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ResponseExceedsCharacterLimit_TruncatesSubscriptions()
+    {
+        // Arrange
+        var characterLimit = 100; // Very small limit to force truncation
+        var subscriptions = SubscriptionTestHelpers.CreateTestSubscriptions(10); // Create 10 subscriptions
+
+        _subscriptionService
+            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .Returns(subscriptions);
+
+        var args = _commandDefinition.Parse($"--character-limit {characterLimit}");
+
+        // Act
+        var result = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(200, result.Status);
+        Assert.NotNull(result.Results);
+        
+        var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(result.Results));
+        var subscriptionsArray = jsonDoc.RootElement.GetProperty("subscriptions");
+        
+        // Should have fewer than 10 subscriptions due to truncation
+        Assert.True(subscriptionsArray.GetArrayLength() < 10);
+        Assert.Contains("Results truncated", result.Message);
+        Assert.Contains("of 10 subscriptions", result.Message);
+        Assert.Contains("Increase --character-limit", result.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_EmptySubscriptionListWithCharacterLimit_ReturnsAppropriateMessage()
+    {
+        // Arrange
+        var characterLimit = 5000;
+        _subscriptionService
+            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .Returns([]);
+
+        var args = _commandDefinition.Parse($"--character-limit {characterLimit}");
+
+        // Act
+        var result = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(200, result.Status);
+        Assert.Null(result.Results);
+        Assert.Equal("No subscriptions found.", result.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_DefaultCharacterLimit_UsesDefaultValue()
+    {
+        // Arrange
+        var subscriptions = new List<SubscriptionData>
+        {
+            SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Test Subscription")
+        };
+
+        _subscriptionService
+            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .Returns(subscriptions);
+
+        var args = _commandDefinition.Parse(""); // No character-limit specified
+
+        // Act
+        var result = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(200, result.Status);
+        Assert.NotNull(result.Results);
+        // Should use default behavior (10000 characters is the default)
+        Assert.Contains("1 subscriptions returned", result.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_VerySmallCharacterLimit_HandlesGracefully()
+    {
+        // Arrange - Set a very small character limit that might not even fit one subscription
+        var characterLimit = 50; 
+        var subscriptions = new List<SubscriptionData>
+        {
+            SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Test")
+        };
+
+        _subscriptionService
+            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .Returns(subscriptions);
+
+        var args = _commandDefinition.Parse($"--character-limit {characterLimit}");
+
+        // Act
+        var result = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(200, result.Status);
+        
+        // Should either return empty results or truncated results, but handle it gracefully
+        if (result.Results != null)
+        {
+            var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(result.Results));
+            var subscriptionsArray = jsonDoc.RootElement.GetProperty("subscriptions");
+            
+            // Should have 0 or 1 subscription due to very small limit
+            Assert.True(subscriptionsArray.GetArrayLength() <= 1);
+        }
+        
+        Assert.NotNull(result.Message);
+    }
+
 }

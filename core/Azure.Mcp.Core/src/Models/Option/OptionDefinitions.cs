@@ -46,6 +46,17 @@ public static partial class OptionDefinitions
             Description = "The name of the Azure resource group. This is a logical container for Azure resources.",
             Required = false
         };
+
+        public const string CharacterLimitName = "character-limit";
+
+        public static readonly Option<int> CharacterLimit = new(
+            $"--{CharacterLimitName}"
+        )
+        {
+            Description = "The maximum number of characters to return in the response. If the response exceeds this limit, it will be truncated with a status message.",
+            Required = false,
+            DefaultValueFactory = _ => 10000
+        };
     }
 
     public static class RetryPolicy
