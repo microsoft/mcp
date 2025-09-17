@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
-using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Core.Areas.Subscription.Options;
 

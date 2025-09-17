@@ -216,10 +216,10 @@ public class SubscriptionListCommandTests
         Assert.NotNull(result);
         Assert.Equal(200, result.Status);
         Assert.NotNull(result.Results);
-        
+
         var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(result.Results));
         var subscriptionsArray = jsonDoc.RootElement.GetProperty("subscriptions");
-        
+
         Assert.Equal(2, subscriptionsArray.GetArrayLength());
         Assert.Contains("All 2 subscriptions returned", result.Message);
         Assert.Contains("characters", result.Message);
@@ -245,10 +245,10 @@ public class SubscriptionListCommandTests
         Assert.NotNull(result);
         Assert.Equal(200, result.Status);
         Assert.NotNull(result.Results);
-        
+
         var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(result.Results));
         var subscriptionsArray = jsonDoc.RootElement.GetProperty("subscriptions");
-        
+
         // Should have fewer than 10 subscriptions due to truncation
         Assert.True(subscriptionsArray.GetArrayLength() < 10);
         Assert.Contains("Results truncated", result.Message);
@@ -307,7 +307,7 @@ public class SubscriptionListCommandTests
     public async Task ExecuteAsync_VerySmallCharacterLimit_HandlesGracefully()
     {
         // Arrange - Set a very small character limit that might not even fit one subscription
-        var characterLimit = 50; 
+        var characterLimit = 50;
         var subscriptions = new List<SubscriptionData>
         {
             SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Test")
@@ -325,17 +325,17 @@ public class SubscriptionListCommandTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(200, result.Status);
-        
+
         // Should either return empty results or truncated results, but handle it gracefully
         if (result.Results != null)
         {
             var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(result.Results));
             var subscriptionsArray = jsonDoc.RootElement.GetProperty("subscriptions");
-            
+
             // Should have 0 or 1 subscription due to very small limit
             Assert.True(subscriptionsArray.GetArrayLength() <= 1);
         }
-        
+
         Assert.NotNull(result.Message);
     }
 

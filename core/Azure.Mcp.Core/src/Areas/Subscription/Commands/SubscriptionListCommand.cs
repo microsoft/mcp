@@ -67,10 +67,10 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
             if (subscriptions?.Count > 0)
             {
                 var result = new SubscriptionListCommandResult(subscriptions);
-                
+
                 // Serialize to check character count
                 var json = System.Text.Json.JsonSerializer.Serialize(result, SubscriptionJsonContext.Default.SubscriptionListCommandResult);
-                
+
                 if (json.Length <= options.CharacterLimit)
                 {
                     // Response is within limit
@@ -82,13 +82,13 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                     // Response exceeds limit, truncate subscriptions
                     var truncatedSubscriptions = new List<SubscriptionData>();
                     var currentLength = 0;
-                    
+
                     foreach (var subscription in subscriptions)
                     {
                         var tempList = new List<SubscriptionData>(truncatedSubscriptions) { subscription };
                         var tempResult = new SubscriptionListCommandResult(tempList);
                         var tempJson = System.Text.Json.JsonSerializer.Serialize(tempResult, SubscriptionJsonContext.Default.SubscriptionListCommandResult);
-                        
+
                         if (tempJson.Length <= options.CharacterLimit)
                         {
                             truncatedSubscriptions.Add(subscription);
@@ -99,7 +99,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                             break;
                         }
                     }
-                    
+
                     var truncatedResult = new SubscriptionListCommandResult(truncatedSubscriptions);
                     context.Response.Results = ResponseResult.Create(truncatedResult, SubscriptionJsonContext.Default.SubscriptionListCommandResult);
                     context.Response.Message = $"Results truncated to {truncatedSubscriptions.Count} of {subscriptions.Count} subscriptions ({currentLength} characters). Increase --{OptionDefinitions.Common.CharacterLimitName} to see more results.";
