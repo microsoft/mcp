@@ -1,17 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-<<<<<<< HEAD
-=======
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.Core.Services;
-using Azure.Mcp.Tools.EventGrid.Models;
->>>>>>> 6f127f56 (AzureMcp Merge Conflicts resolved)
+using Azure.ResourceManager;
 using Azure.ResourceManager.EventGrid;
 using Azure.ResourceManager.Resources;
-using Azure.ResourceManager;
 
 namespace Azure.Mcp.Tools.EventGrid.Services;
 
@@ -142,7 +136,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             {
                 // Get topics from specific resource group and their subscriptions
                 var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
-                
+
                 // Check custom topics
                 await foreach (var topic in resourceGroupResource.Value.GetEventGridTopics().GetAllAsync())
                 {
@@ -248,7 +242,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         {
             // Search in specific resource group
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
-            
+
             await foreach (var topic in resourceGroupResource.Value.GetEventGridTopics().GetAllAsync())
             {
                 if (topic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
@@ -281,7 +275,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         {
             // Search in specific resource group
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
-            
+
             await foreach (var systemTopic in resourceGroupResource.Value.GetSystemTopics().GetAllAsync())
             {
                 if (systemTopic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
@@ -321,18 +315,18 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
     {
         string? endpointType = null;
         string? endpointUrl = null;
-        
+
         // Extract endpoint information based on type
         if (subscriptionData.Destination != null)
         {
             endpointType = subscriptionData.Destination.GetType().Name;
-            
+
             // Try to extract endpoint URL from different destination types
             var destinationType = subscriptionData.Destination.GetType();
-            var endpointProperty = destinationType.GetProperty("EndpointUri") ?? 
+            var endpointProperty = destinationType.GetProperty("EndpointUri") ??
                                   destinationType.GetProperty("EndpointUrl") ??
                                   destinationType.GetProperty("Endpoint");
-            
+
             if (endpointProperty != null)
             {
                 var endpointValue = endpointProperty.GetValue(subscriptionData.Destination);
@@ -345,16 +339,16 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         if (subscriptionData.Filter != null)
         {
             var filterDetails = new List<string>();
-            
+
             if (subscriptionData.Filter.SubjectBeginsWith != null)
                 filterDetails.Add($"SubjectBeginsWith: {subscriptionData.Filter.SubjectBeginsWith}");
-            
+
             if (subscriptionData.Filter.SubjectEndsWith != null)
                 filterDetails.Add($"SubjectEndsWith: {subscriptionData.Filter.SubjectEndsWith}");
-                
+
             if (subscriptionData.Filter.IncludedEventTypes?.Any() == true)
                 filterDetails.Add($"EventTypes: {string.Join(", ", subscriptionData.Filter.IncludedEventTypes)}");
-                
+
             if (subscriptionData.Filter.IsSubjectCaseSensitive.HasValue)
                 filterDetails.Add($"CaseSensitive: {subscriptionData.Filter.IsSubjectCaseSensitive}");
 
