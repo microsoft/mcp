@@ -21,9 +21,7 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
         $"""
         List all test runs for a give test id. Each test can have multiple test runs.
         Use this to retrieve the list of runs created for a specific test. Returns run-level metadata for each run (run id, display name, status, start/end times, duration, brief metrics summary). 
-        Does NOT return the test. To get full details for a single run use azmcp loadtesting testrun get
-        Example:
-        azmcp loadtesting testrun list --test-id <test-id> --test-resource-name <resource> --resource-group <rg> --subscription <sub>
+        Does NOT return the test. To get full details for a single run use the testrun get command NOT this one.
         """;
     public override string Title => _commandTitle;
 

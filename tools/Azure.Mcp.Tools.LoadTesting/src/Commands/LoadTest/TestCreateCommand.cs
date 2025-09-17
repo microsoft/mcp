@@ -23,8 +23,6 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
         and scalability of web applications and APIs. The test configuration defines target endpoint, load parameters, and test duration. Once we create a test plan, we can use that to trigger test runs to test the endpoints set using the 'azmcp loadtesting testrun create' command.
         This is NOT going to trigger or create any test runs and only will setup your test plan. Also, this is NOT going to create any test resource in azure. 
         It will only create a test in an already existing load test resource.
-        Example:
-        azmcp loadtesting test create --test-id <test-id> --test-resource-name <test-resource-name> --duration 5 --virtual-users 50 --endpoint-url https://example.com --display-name "SmokeTest"
         """;
     public override string Title => _commandTitle;
 

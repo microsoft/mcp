@@ -22,8 +22,6 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
         Get details for a specific test run by testrun ID.
         Use this to retrieve a single run's execution details (not a list). Returns status, start/end times, progress, aggregated metrics, and available artifacts (logs/traces). 
         Does NOT return the test plan/configuration or the test resource. Only the test run details. Also it is used to get details of SINGLE testrun based on its id. For a list of runs use testrun list command instead.
-        Example:
-        azmcp loadtesting testrun get --testrun-id <id> --test-resource-name <resource> --resource-group <rg> --subscription <sub>
         """;
     public override string Title => _commandTitle;
 
