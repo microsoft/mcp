@@ -322,6 +322,8 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * Show database details and properties
 * List the details and properties of all databases
+* Create a SQL database
+* Delete a SQL database
 * List SQL server firewall rules
 * Create SQL server firewall rules
 * Delete SQL server firewall rules
