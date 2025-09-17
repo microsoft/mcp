@@ -50,4 +50,11 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("enableInsecureTransports")]
     public bool EnableInsecureTransports { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets whether elicitation is disabled (insecure mode).
+    /// When true, elicitation will always be treated as accepted.
+    /// </summary>
+    [JsonPropertyName("insecureDisableElicitation")]
+    public bool InsecureDisableElicitation { get; set; } = false;
 }
