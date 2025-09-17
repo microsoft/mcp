@@ -1,0 +1,20 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "mlModelId": "5b218778-e7a5-4d73-8187-f10824047715",
+        "updateMLModelRequest": {
+            "description": "A new description for machine learning model."
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "displayName": "MLModel's name",
+                "description": "A new description for machine learning model.",
+                "type": "MLModel",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "5b218778-e7a5-4d73-8187-f10824047715"
+            }
+        }
+    }
+}

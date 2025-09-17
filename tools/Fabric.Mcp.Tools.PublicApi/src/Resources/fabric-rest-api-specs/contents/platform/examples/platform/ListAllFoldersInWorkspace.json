@@ -1,0 +1,36 @@
+{
+    "parameters": {
+        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "aaaaaaaa-6666-7777-8888-bbbbbbbbbbbb",
+                        "displayName": "Sales",
+                        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb"
+                    },
+                    {
+                        "id": "bbbbbbbb-1111-2222-3333-cccccccccccc",
+                        "displayName": "Y2024",
+                        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+                        "parentFolderId": "aaaaaaaa-6666-7777-8888-bbbbbbbbbbbb"
+                    },
+                    {
+                        "id": "cccccccc-8888-9999-0000-dddddddddddd",
+                        "displayName": "Q1",
+                        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+                        "parentFolderId": "bbbbbbbb-1111-2222-3333-cccccccccccc"
+                    },
+                    {
+                        "id": "dddddddd-9999-0000-1111-eeeeeeeeeeee",
+                        "displayName": "Q2",
+                        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+                        "parentFolderId": "bbbbbbbb-1111-2222-3333-cccccccccccc"
+                    }
+                ]
+            }
+        }
+    }
+}

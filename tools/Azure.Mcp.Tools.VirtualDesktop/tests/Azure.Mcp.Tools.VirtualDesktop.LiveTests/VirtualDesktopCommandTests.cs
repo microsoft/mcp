@@ -4,14 +4,12 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.LiveTests;
 
 [Trait("Area", "VirtualDesktop")]
-public class VirtualDesktopCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     [Fact]
     [Trait("Category", "Live")]

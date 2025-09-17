@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Azure.Mcp.Tools.AppConfig.Options;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue;
@@ -16,10 +16,6 @@ public sealed class KeyValueListCommand(ILogger<KeyValueListCommand> logger) : B
     private const string CommandTitle = "List App Configuration Key-Value Settings";
     private readonly ILogger<KeyValueListCommand> _logger = logger;
 
-    // KeyValueList has different key and label descriptions, which is why we are defining here instead of using BaseKeyValueCommand
-    private readonly Option<string> _keyOption = AppConfigOptionDefinitions.KeyValueList.Key;
-    private readonly Option<string> _labelOption = AppConfigOptionDefinitions.KeyValueList.Label;
-
     public override string Name => "list";
 
     public override string Description =>
@@ -31,34 +27,42 @@ public sealed class KeyValueListCommand(ILogger<KeyValueListCommand> logger) : B
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_keyOption);
-        command.AddOption(_labelOption);
+        command.Options.Add(AppConfigOptionDefinitions.KeyValueList.Key);
+        command.Options.Add(AppConfigOptionDefinitions.KeyValueList.Label);
     }
 
     protected override KeyValueListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Key = parseResult.GetValueForOption(_keyOption);
-        options.Label = parseResult.GetValueForOption(_labelOption);
+        options.Key = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.KeyValueList.Key.Name);
+        options.Label = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.KeyValueList.Label.Name);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var appConfigService = context.GetService<IAppConfigService>();
             var settings = await appConfigService.ListKeyValues(
                 options.Account!,

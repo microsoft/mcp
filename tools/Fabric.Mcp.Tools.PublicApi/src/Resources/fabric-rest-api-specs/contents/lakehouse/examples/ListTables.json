@@ -1,0 +1,24 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "lakehouseId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+        "maxResults": "10",
+        "continuationToken": ""
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "continuationToken": "+RID:~HTsuAOseYicH-GcAAAAAAA==#RT:1#TRC:1#ISV:2#IEO:65567#QCF:8#FPC:AgKfAZ8BnwEEAAe8eoA=",
+                "continuationUri": "https://api.fabric.microsoft.com/v1/workspaces/f089354e-8366-4e18-aea3-4cb4a3a50b48/lakehouses/41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87/tables?continuationToken=%2BRID%3A~HTsuAOseYicH-GcAAAAAAA%3D%3D%23RT%3A1%23TRC%3A1%23ISV%3A2%23IEO%3A65567%23QCF%3A8%23FPC%3AAgKfAZ8BnwEEAAe8eoA%3D",
+                "data": [
+                    {
+                        "type": "Managed",
+                        "name": "Table1",
+                        "location": "abfss://f089354e-8366-4e18-aea3-4cb4a3a50b48@onelake.dfs.fabric.microsoft.com/41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87/Tables/Table1",
+                        "format": "Delta"
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.DataLake.Directory;
@@ -14,8 +16,6 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
 {
     private const string CommandTitle = "Create Data Lake Directory";
     private readonly ILogger<DirectoryCreateCommand> _logger = logger;
-
-    private readonly Option<string> _directoryPathOption = StorageOptionDefinitions.DirectoryPath;
 
     public override string Name => "create";
 
@@ -30,32 +30,40 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_directoryPathOption);
+        command.Options.Add(StorageOptionDefinitions.DirectoryPath);
     }
 
     protected override DirectoryCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DirectoryPath = parseResult.GetValueForOption(_directoryPathOption);
+        options.DirectoryPath = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.DirectoryPath.Name);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var storageService = context.GetService<IStorageService>();
 
             var directory = await storageService.CreateDirectory(
@@ -79,5 +87,5 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
         return context.Response;
     }
 
-    internal record DirectoryCreateCommandResult(DataLakePathInfo Directory);
+    internal record DirectoryCreateCommandResult([property: JsonPropertyName("directory")] DataLakePathInfo Directory);
 }

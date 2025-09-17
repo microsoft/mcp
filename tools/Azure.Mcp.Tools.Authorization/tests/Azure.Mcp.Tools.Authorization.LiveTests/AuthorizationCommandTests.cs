@@ -4,15 +4,13 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Authorization.LiveTests;
 
 
-public class AuthorizationCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output),
-    IClassFixture<LiveTestFixture>
+public class AuthorizationCommandTests(ITestOutputHelper output)
+    : CommandTestsBase(output)
 {
     [Fact]
     public async Task Should_list_role_assignments()
@@ -43,3 +41,4 @@ public class AuthorizationCommandTests(LiveTestFixture liveTestFixture, ITestOut
         Assert.True(testRoleAssignmentFound, "Test role assignment not found in the list of role assignments.");
     }
 }
+

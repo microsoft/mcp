@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Models.Elicitation;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -31,6 +33,24 @@ public sealed class CommandFactoryToolLoader(
     private readonly ILogger<CommandFactoryToolLoader> _logger = logger;
 
     public const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
+
+    private static bool IsRawMcpToolInputOption(Option option)
+    {
+        if (string.Equals(NameNormalization.NormalizeOptionName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        foreach (var alias in option.Aliases)
+        {
+            if (string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Lists all tools available from the command factory.
@@ -91,10 +111,63 @@ public sealed class CommandFactoryToolLoader(
         }
         var commandContext = new CommandContext(_serviceProvider, Activity.Current);
 
+        // Check if this tool requires elicitation for sensitive data
+        var metadata = command.Metadata;
+        if (metadata.Secret)
+        {
+            // If client doesn't support elicitation, treat as rejected and don't execute
+            if (!request.Server.SupportsElicitation())
+            {
+                _logger.LogWarning("Tool '{Tool}' handles sensitive data but client does not support elicitation. Operation rejected.", toolName);
+                return new CallToolResult
+                {
+                    Content = [new TextContentBlock { Text = "This tool handles sensitive data and requires user consent, but the client does not support elicitation. Operation rejected for security." }],
+                    IsError = true
+                };
+            }
+
+            try
+            {
+                _logger.LogInformation("Tool '{Tool}' handles sensitive data. Requesting user confirmation via elicitation.", toolName);
+
+                // Create the elicitation request using our custom model
+                var elicitationRequest = new ElicitationRequestParams
+                {
+                    Message = $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
+                    RequestedSchema = ElicitationSchema.CreateSecretSchema("confirmation", "Confirm Action", "Type 'yes' to confirm you want to proceed with this sensitive operation", true)
+                };
+
+                // Use our extension method to handle the elicitation
+                var elicitationResponse = await request.Server.RequestElicitationAsync(elicitationRequest, cancellationToken);
+
+                if (elicitationResponse.Action != ElicitationAction.Accept)
+                {
+                    _logger.LogInformation("User {Action} the elicitation for tool '{Tool}'. Operation not executed.",
+                        elicitationResponse.Action.ToString().ToLower(), toolName);
+                    return new CallToolResult
+                    {
+                        Content = [new TextContentBlock { Text = $"Operation cancelled by user ({elicitationResponse.Action.ToString().ToLower()})." }],
+                        IsError = true
+                    };
+                }
+
+                _logger.LogInformation("User accepted elicitation for tool '{Tool}'. Proceeding with execution.", toolName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during elicitation for tool '{Tool}': {Error}", toolName, ex.Message);
+                return new CallToolResult
+                {
+                    Content = [new TextContentBlock { Text = $"Elicitation failed for sensitive tool '{toolName}': {ex.Message}. Operation not executed for security." }],
+                    IsError = true
+                };
+            }
+        }
+
         var realCommand = command.GetCommand();
         ParseResult? commandOptions = null;
 
-        if (realCommand.Options.Count == 1 && realCommand.Options[0].Name == RawMcpToolInputOptionName)
+        if (realCommand.Options.Count == 1 && IsRawMcpToolInputOption(realCommand.Options[0]))
         {
             commandOptions = realCommand.ParseFromRawMcpToolInput(request.Params.Arguments);
         }
@@ -107,7 +180,7 @@ public sealed class CommandFactoryToolLoader(
 
         if (commandContext.Activity != null)
         {
-            var serviceArea = commandFactory.GetServiceArea(realCommand.Name) ?? toolName;
+            var serviceArea = commandFactory.GetServiceArea(toolName);
             commandContext.Activity.AddTag(TelemetryConstants.TagName.ToolArea, serviceArea);
         }
 
@@ -165,13 +238,22 @@ public sealed class CommandFactoryToolLoader(
             Title = command.Title,
         };
 
+        // Add Secret metadata to tool.Meta if the property exists
+        if (metadata.Secret)
+        {
+            tool.Meta = new JsonObject
+            {
+                ["SecretHint"] = metadata.Secret
+            };
+        }
+
         var options = command.GetCommand().Options;
 
         var schema = new ToolInputSchema();
 
         if (options != null && options.Count > 0)
         {
-            if (options.Count == 1 && options[0].Name == RawMcpToolInputOptionName)
+            if (options.Count == 1 && IsRawMcpToolInputOption(options[0]))
             {
                 var arguments = JsonNode.Parse(options[0].Description ?? "{}") as JsonObject ?? new JsonObject();
                 tool.InputSchema = JsonSerializer.SerializeToElement(arguments, ServerJsonContext.Default.JsonObject);
@@ -182,10 +264,11 @@ public sealed class CommandFactoryToolLoader(
                 foreach (var option in options)
                 {
                     // Use the CreatePropertySchema method to properly handle array types with items
-                    schema.Properties.Add(option.Name, TypeToJsonTypeMapper.CreatePropertySchema(option.ValueType, option.Description));
+                    var propName = NameNormalization.NormalizeOptionName(option.Name);
+                    schema.Properties.Add(propName, TypeToJsonTypeMapper.CreatePropertySchema(option.ValueType, option.Description));
                 }
 
-                schema.Required = [.. options.Where(p => p.IsRequired).Select(p => p.Name)];
+                schema.Required = [.. options.Where(p => p.Required).Select(p => NameNormalization.NormalizeOptionName(p.Name))];
             }
         }
 

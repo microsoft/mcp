@@ -1,5 +1,3 @@
-using System.Text.Json.Nodes;
-
 namespace Azure.Mcp.Tools.Deploy.Models;
 
 
@@ -20,4 +18,5 @@ public static class AzureServiceNames
     public const string AzureContainerApp = "containerapp";
     public const string AzureAppService = "appservice";
     public const string AzureFunctionApp = "function";
+    public const string AzureStorage = "storage";
 }

@@ -1,0 +1,17 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "itemId": "cfafbeb1-8037-4d0c-896e-a46fb27ff230",
+        "applyTagsRequest": {
+            "tags": [
+                "97dd1d38-a4c6-41ed-bc4f-1e383f8ddd0f",
+                "41d5b790-76d9-4ebe-9f06-b34cc280a612",
+                "7b8e5ada-2dee-4b97-915e-0b9d3b416b1e"
+            ]
+        }
+    },
+    "responses": {
+        "200": {}
+    }
+}
+

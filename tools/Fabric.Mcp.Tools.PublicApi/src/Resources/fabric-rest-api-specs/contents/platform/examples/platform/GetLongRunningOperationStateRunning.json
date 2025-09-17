@@ -1,0 +1,20 @@
+{
+    "parameters": {
+        "operationId": "cfafbeb1-8037-4d0c-896e-a46fb27ff227"
+    },
+    "responses": {
+        "200": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/operations/cfafbeb1-8037-4d0c-896e-a46fb27ff227",
+                "x-ms-operation-id": "cfafbeb1-8037-4d0c-896e-a46fb27ff227",
+                "Retry-After": 20
+            },
+            "body": {
+                "status": "Running",
+                "createdTimeUtc": "2023-09-13T14:56:18.477Z",
+                "lastUpdatedTimeUtc": "2023-09-13T15:01:10.532Z",
+                "percentComplete": 25
+            }
+        }
+    }
+}

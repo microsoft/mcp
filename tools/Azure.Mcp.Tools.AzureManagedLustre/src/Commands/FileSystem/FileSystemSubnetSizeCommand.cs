@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureManagedLustre.Options;
 using Azure.Mcp.Tools.AzureManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.AzureManagedLustre.Services;
@@ -23,7 +25,15 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     private static readonly string[] AllowedSkus = [
         "AMLFS-Durable-Premium-40",
@@ -32,21 +42,18 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
         "AMLFS-Durable-Premium-500"
     ];
 
-    private readonly Option<string> _skuOption = AzureManagedLustreOptionDefinitions.SkuOption;
-    private static readonly Option<int> _sizeOption = AzureManagedLustreOptionDefinitions.SizeOption;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_skuOption);
-        command.AddOption(_sizeOption);
+        command.Options.Add(AzureManagedLustreOptionDefinitions.SkuOption);
+        command.Options.Add(AzureManagedLustreOptionDefinitions.SizeOption);
     }
 
     protected override FileSystemSubnetSizeOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Sku = parseResult.GetValueForOption(_skuOption);
-        options.Size = parseResult.GetValueForOption(_sizeOption);
+        options.Sku = parseResult.GetValueOrDefault<string>(AzureManagedLustreOptionDefinitions.SkuOption.Name);
+        options.Size = parseResult.GetValueOrDefault<int>(AzureManagedLustreOptionDefinitions.SizeOption.Name);
         return options;
     }
 
@@ -56,10 +63,9 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
 
         if (result.IsValid)
         {
-            string skuName = commandResult.GetValueForOption(_skuOption)!;
-
-
-            if (!AllowedSkus.Contains(skuName))
+            if (commandResult.TryGetValue(AzureManagedLustreOptionDefinitions.SkuOption, out var skuName)
+                && !string.IsNullOrWhiteSpace(skuName)
+                && !AllowedSkus.Contains(skuName))
             {
                 result.IsValid = false;
                 result.ErrorMessage = $"Invalid SKU '{skuName}'. Allowed values: {string.Join(", ", AllowedSkus)}";
@@ -77,12 +83,13 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            return context.Response;
+
         var options = BindOptions(parseResult);
+
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-                return context.Response;
-
             var svc = context.GetService<IAzureManagedLustreService>();
             var result = await svc.GetRequiredAmlFSSubnetsSize(
                 options.Subscription!,

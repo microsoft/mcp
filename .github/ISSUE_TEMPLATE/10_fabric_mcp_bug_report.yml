@@ -1,0 +1,52 @@
+name: Fabric MCP - Bug Report
+description: Create a bug report to help us improve Fabric MCP Server
+title: "[BUG]"
+labels: ["needs-triage","Fabric.Mcp.Server"]
+
+body:
+  - type: textarea
+    id: background
+    attributes:
+      label: Describe the bug
+      description: Please provide the description of issue you're seeing.
+      placeholder: Description
+    validations:
+      required: true 
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: |
+        Provide a description of the expected behavior.
+      placeholder: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual behavior
+      description: |
+        Provide a description of the actual behavior observed. If applicable please include any error messages, exception stacktraces or memory dumps.
+      placeholder: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: Reproduction Steps
+      description: |
+        Please include minimal steps to reproduce the problem if possible. E.g.: the smallest possible code snippet; or a small project, with steps to run it. If possible include text as text rather than screenshots (so it shows up in searches).
+      placeholder: Minimal Reproduction
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        Please provide more information on your environment:
+          * Hosting platform or OS: [e.g. Azure AppService or Windows 10]
+          * IDE and version : [e.g. Visual Studio 17.4]
+      placeholder: Environment
+    validations:
+      required: false

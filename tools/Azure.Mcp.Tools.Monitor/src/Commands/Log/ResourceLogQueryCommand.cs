@@ -13,11 +13,6 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
 {
     private const string CommandTitle = "Query Logs for Azure Resource";
     private readonly ILogger<ResourceLogQueryCommand> _logger = logger;
-    private readonly Option<string> _tableNameOption = MonitorOptionDefinitions.TableName;
-    private readonly Option<string> _queryOption = MonitorOptionDefinitions.Query;
-    private readonly Option<int> _hoursOption = MonitorOptionDefinitions.Hours;
-    private readonly Option<int> _limitOption = MonitorOptionDefinitions.Limit;
-    private readonly Option<string> _resourceIdOption = ResourceLogQueryOptionDefinitions.ResourceId;
 
     public override string Name => "query";
 
@@ -37,29 +32,48 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_resourceIdOption);
-        command.AddOption(_tableNameOption);
-        command.AddOption(_queryOption);
-        command.AddOption(_hoursOption);
-        command.AddOption(_limitOption);
+        command.Options.Add(ResourceLogQueryOptionDefinitions.ResourceId);
+        command.Options.Add(MonitorOptionDefinitions.TableName);
+        command.Options.Add(MonitorOptionDefinitions.Query);
+        command.Options.Add(MonitorOptionDefinitions.Hours);
+        command.Options.Add(MonitorOptionDefinitions.Limit);
+    }
+
+    protected override ResourceLogQueryOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.ResourceId = parseResult.GetValueOrDefault<string>(ResourceLogQueryOptionDefinitions.ResourceId.Name);
+        options.TableName = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.TableName.Name);
+        options.Query = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Query.Name);
+        options.Hours = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Hours.Name);
+        options.Limit = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Limit.Name);
+        return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var monitorService = context.GetService<IMonitorService>();
             var results = await monitorService.QueryResourceLogs(
                 options.Subscription!,
@@ -80,16 +94,5 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
         }
 
         return context.Response;
-    }
-
-    protected override ResourceLogQueryOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceId = parseResult.GetValueForOption(_resourceIdOption);
-        options.TableName = parseResult.GetValueForOption(_tableNameOption);
-        options.Query = parseResult.GetValueForOption(_queryOption);
-        options.Hours = parseResult.GetValueForOption(_hoursOption);
-        options.Limit = parseResult.GetValueForOption(_limitOption);
-        return options;
     }
 }

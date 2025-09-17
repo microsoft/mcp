@@ -3,7 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Services.Telemetry;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Mcp.Tools.ServiceBus.Options.Topic;
 using Azure.Mcp.Tools.ServiceBus.Services;
@@ -15,10 +15,6 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> logger) : SubscriptionCommand<SubscriptionPeekOptions>
 {
     private const string CommandTitle = "Peek Messages from Service Bus Topic Subscription";
-    private readonly Option<string> _topicOption = ServiceBusOptionDefinitions.Topic;
-    private readonly Option<string> _subscriptionNameOption = ServiceBusOptionDefinitions.Subscription;
-    private readonly Option<int> _maxMessagesOption = ServiceBusOptionDefinitions.MaxMessages;
-    private readonly Option<string> _namespaceOption = ServiceBusOptionDefinitions.Namespace;
     private readonly ILogger<SubscriptionPeekCommand> _logger = logger;
     public override string Name => "peek";
 
@@ -38,37 +34,46 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_namespaceOption);
-        command.AddOption(_topicOption);
-        command.AddOption(_subscriptionNameOption);
-        command.AddOption(_maxMessagesOption);
+        command.Options.Add(ServiceBusOptionDefinitions.Namespace);
+        command.Options.Add(ServiceBusOptionDefinitions.Topic);
+        command.Options.Add(ServiceBusOptionDefinitions.Subscription);
+        command.Options.Add(ServiceBusOptionDefinitions.MaxMessages);
     }
 
     protected override SubscriptionPeekOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SubscriptionName = parseResult.GetValueForOption(_subscriptionNameOption);
-        options.TopicName = parseResult.GetValueForOption(_topicOption);
-        options.Namespace = parseResult.GetValueForOption(_namespaceOption);
-        options.MaxMessages = parseResult.GetValueForOption(_maxMessagesOption);
+        options.SubscriptionName = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Subscription.Name);
+        options.TopicName = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Topic.Name);
+        options.Namespace = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Namespace.Name);
+        options.MaxMessages = parseResult.GetValueOrDefault<int>(ServiceBusOptionDefinitions.MaxMessages.Name);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
 
             var service = context.GetService<IServiceBusService>();
             var messages = await service.PeekSubscriptionMessages(

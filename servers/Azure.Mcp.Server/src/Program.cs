@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Builder;
-using System.Diagnostics;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
@@ -36,8 +34,12 @@ internal class Program
 
             var serviceProvider = services.BuildServiceProvider();
 
-            var parser = BuildCommandLineParser(serviceProvider);
-            return await parser.InvokeAsync(args);
+            var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
+            var rootCommand = commandFactory.RootCommand;
+            var parseResult = rootCommand.Parse(args);
+            var status = await parseResult.InvokeAsync();
+
+            return (status >= 200 && status < 300) ? 0 : 1;
         }
         catch (Exception ex)
         {
@@ -66,11 +68,15 @@ internal class Program
             // Register Azure service areas
             new Azure.Mcp.Tools.Aks.AksSetup(),
             new Azure.Mcp.Tools.AppConfig.AppConfigSetup(),
+            new Azure.Mcp.Tools.AppLens.AppLensSetup(),
             new Azure.Mcp.Tools.Authorization.AuthorizationSetup(),
             new Azure.Mcp.Tools.AzureIsv.AzureIsvSetup(),
+            new Azure.Mcp.Tools.AzureManagedLustre.AzureManagedLustreSetup(),
             new Azure.Mcp.Tools.AzureTerraformBestPractices.AzureTerraformBestPracticesSetup(),
             new Azure.Mcp.Tools.Deploy.DeploySetup(),
+            new Azure.Mcp.Tools.EventGrid.EventGridSetup(),
             new Azure.Mcp.Tools.Acr.AcrSetup(),
+            new Azure.Mcp.Tools.BicepSchema.BicepSchemaSetup(),
             new Azure.Mcp.Tools.Cosmos.CosmosSetup(),
             new Azure.Mcp.Tools.CloudArchitect.CloudArchitectSetup(),
             new Azure.Mcp.Tools.Foundry.FoundrySetup(),
@@ -98,37 +104,9 @@ internal class Program
             // If the "(Native AOT) Build module" stage fails in CI,
             // follow the AOT compatibility guide instead of changing this list:
             // https://github.com/Azure/azure-mcp/blob/main/docs/aot-compatibility.md
-            new Azure.Mcp.Tools.BicepSchema.BicepSchemaSetup(),
-            new Azure.Mcp.Tools.AzureManagedLustre.AzureManagedLustreSetup(),
+
 #endif
         ];
-    }
-
-    private static Parser BuildCommandLineParser(IServiceProvider serviceProvider)
-    {
-        var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
-        var rootCommand = commandFactory.RootCommand;
-        var builder = new CommandLineBuilder(rootCommand);
-
-        builder.AddMiddleware(async (context, next) =>
-        {
-            var commandContext = new CommandContext(serviceProvider, Activity.Current);
-            var command = context.ParseResult.CommandResult.Command;
-            if (command.Handler is IBaseCommand baseCommand)
-            {
-                var validationResult = baseCommand.Validate(context.ParseResult.CommandResult, commandContext.Response);
-                if (!validationResult.IsValid)
-                {
-                    WriteResponse(commandContext.Response);
-                    context.ExitCode = commandContext.Response.Status;
-                    return;
-                }
-            }
-            await next(context);
-        });
-
-        builder.UseDefaults();
-        return builder.Build();
     }
 
     private static void WriteResponse(CommandResponse response)

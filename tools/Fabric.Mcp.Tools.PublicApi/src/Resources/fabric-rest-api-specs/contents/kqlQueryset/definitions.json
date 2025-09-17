@@ -1,0 +1,141 @@
+{
+  "swagger": "2.0",
+  "info": {
+      "version": "v1",
+      "title": "KQLQueryset data types"
+  },
+  "paths": {},
+  "definitions": {
+      "KQLQuerysets": {
+          "description": "A list of KQL querysets.",
+          "required": ["value"],
+          "type": "object",
+          "properties": {
+              "value": {
+                  "description": "A list of KQL querysets.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/KQLQueryset"
+                  }
+              }
+          },
+          "allOf": [
+              {
+                  "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+              }
+          ]
+      },
+      "KQLQueryset": {
+          "description": "A KQL queryset object.",
+          "type": "object",
+          "required": ["type"],
+          "allOf": [
+            {
+                "$ref": "../common/definitions.json#/definitions/Item"
+            }
+          ]
+      },
+      "CreateKQLQuerysetRequest": {
+          "description": "Create KQL queryset request payload.",
+          "required": ["displayName"],
+          "properties": {
+              "displayName": {
+                  "description": "The KQL queryset display name. The display name must follow naming rules according to item type.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "description": {
+                  "description": "The KQL queryset description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "folderId": {
+                  "description": "The folder ID. If not specified or null, the KQL queryset is created with the workspace as its folder.",
+                  "type": "string",
+                  "format": "uuid",
+                  "readOnly": false
+              },
+              "definition": {
+                  "description": "The KQL queryset public definition.",
+                  "$ref": "#/definitions/KQLQuerysetDefinition",
+                  "readOnly": false
+              }
+          }
+      },
+      "UpdateKQLQuerysetDefinitionRequest": {
+          "description": "Update KQL queryset public definition request payload.",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/KQLQuerysetDefinition"
+              }
+          }
+      },
+      "KQLQuerysetDefinitionResponse": {
+          "description": "KQL queryset public definition response.",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/KQLQuerysetDefinition",
+                  "readOnly": true
+              }
+          }
+      },
+      "KQLQuerysetDefinition" : {
+          "description": "KQL queryset public definition object.",
+          "type": "object",
+          "required": ["parts"],
+          "properties": {
+              "format": {
+                  "description": "The format of the item definition.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "parts": {
+                  "description": "A list of definition parts.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/KQLQuerysetDefinitionPart"
+                  },
+                  "readOnly": false
+              }
+          }
+      },
+      "KQLQuerysetDefinitionPart": {
+          "description": "KQL queryset definition part object.",
+          "type": "object",
+          "properties": {
+              "path": {
+                  "description": "The KQL queryset part path.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payload": {
+                  "description": "The KQL queryset part payload.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payloadType":{
+                  "description": "The payload type.",
+                  "$ref": "../common/definitions.json#/definitions/PayloadType",
+                  "readOnly": false
+              }
+          }
+      },
+      "UpdateKQLQuerysetRequest": {
+          "description": "Update KQL queryset request.",
+          "properties": {
+              "displayName": {
+                  "description": "The KQL queryset display name. The display name must follow naming rules according to item type.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "description": {
+                  "description": "The KQL queryset description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              }
+          }
+      }
+  }
+}

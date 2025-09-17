@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AppConfig.Options;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
@@ -13,8 +13,6 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger) : BaseKeyValueCommand<KeyValueSetOptions>()
 {
     private const string CommandTitle = "Set App Configuration Key-Value Setting";
-    private readonly Option<string> _valueOption = AppConfigOptionDefinitions.Value;
-    private readonly Option<string[]> _tagsOption = AppConfigOptionDefinitions.Tags;
     private readonly ILogger<KeyValueSetCommand> _logger = logger;
 
     public override string Name => "set";
@@ -29,35 +27,43 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger) : Bas
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = true,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_valueOption);
-        command.AddOption(_tagsOption);
+        command.Options.Add(AppConfigOptionDefinitions.Value);
+        command.Options.Add(AppConfigOptionDefinitions.Tags);
     }
 
     protected override KeyValueSetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Value = parseResult.GetValueForOption(_valueOption);
-        options.Tags = parseResult.GetValueForOption(_tagsOption);
+        options.Value = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.Value.Name);
+        options.Tags = parseResult.GetValueOrDefault<string[]>(AppConfigOptionDefinitions.Tags.Name);
         return options;
     }
 
     [McpServerTool(Destructive = true, ReadOnly = false, Title = CommandTitle)]
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var appConfigService = context.GetService<IAppConfigService>();
             await appConfigService.SetKeyValue(
                 options.Account!,

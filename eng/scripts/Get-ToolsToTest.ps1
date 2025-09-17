@@ -13,18 +13,18 @@ param(
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 # When "core" is modified, include storage and keyVault as the canary service tools.
-$canaryAreas = @{
+$canaryPaths = @{
     "core/Azure.Mcp.Core"= @('tools/Azure.Mcp.Tools.Storage', 'tools/Azure.Mcp.Tools.KeyVault')
     "core/Microsoft.Mcp.Core"= @('tools/Azure.Mcp.Tools.Storage', 'tools/Azure.Mcp.Tools.KeyVault')
 }
 
-# While there is a "core" directory at the repo root, we consider the "core" area to be all of the repo outside of the
+# While there is a "core" directory at the repo root, we consider the "core" path to be all of the repo outside of the
 # "tools" directory.
 # This lets us make simple statements like:
 # - Changes in eng/ are "core" changes
 # - Changes in core/ are "core" changes
 # - Changes to tools/Azure.Mcp.Tools.Redis are "Azure.Mcp.Tools.Redis" changes
-# - If you change any "core" files, we need to test all of the "core" area as well as a few canary tools
+# - If you change any "core" files, we need to test all of the "core" path as well as a few canary tools
 # - If you change just tool files, we need to test the tools you changed
 
 # If the caller passed in a ServiceName, then only the tools that the server depends on are in scope to test
@@ -41,12 +41,12 @@ $paths = if ($ServerName) {
     Get-ChildItem $RepoRoot -Directory -Recurse
 }
 
-# Reduce the paths down to areas like:
+# Reduce down to paths like:
 #   tools/Azure.Mcp.Tools.Storage
 #   core/Fabric.Mcp.Core
 #   servers/Azure.Mcp.Server
 
-$areas = $paths
+$paths = $paths
     | Resolve-Path -Relative -RelativeBasePath $RepoRoot
     | Where-Object { ($_.Replace('\', '/') -replace '^./', '') -match '^((tools|servers|core)/[^/]+)/' }
     | ForEach-Object { $Matches[1] }
@@ -57,7 +57,7 @@ try {
     $isPullRequestBuild = $env:BUILD_REASON -eq 'PullRequest'
 
     if($isPullRequestBuild) {
-        # If we're in a pull request, use the set of changed files to narrow down the set of areas to test.
+        # If we're in a pull request, use the set of changed files to narrow down the set of paths to test.
         $changedFiles = Get-ChangedFiles
         # $changedFiles = [
         #   tools/Azure.Mcp.Tools.Storage/src/someFile.cs    <- "Azure.Mcp.Tools.Storage"
@@ -68,68 +68,69 @@ try {
         Write-Host ''
 
         # Currently, we don't exclude non-code files from the changed files list.
-        # For example, updating a markdown file in a service area will still trigger tests for that area.
-        # Updating a file outside of the defined "areas" will be seen as a change to the core area.
-        $changedAreas = @($changedFiles
-        | ForEach-Object { $_ -match '^((tools|core|servers)/.*?)/' -and $areas -contains $Matches[1] ? $Matches[1] : 'core/Microsoft.Mcp.Core' }
+        # For example, updating a markdown file in a service path will still trigger tests for that path.
+        # Updating a file outside of the defined paths will be seen as a change to the core path.
+        $changedPaths = @($changedFiles
+        | ForEach-Object { $_ -match '^((tools|core|servers)/.*?)/' -and $paths -contains $Matches[1] ? $Matches[1] : 'core/Microsoft.Mcp.Core' }
         | Sort-Object -Unique)
 
-        <# Making $changedAreas = @(
+        <# Making $changedPaths = @(
             'tools/Azure.Mcp.Tools.Storage',
             'tools/Azure.Mcp.Tools.Monitoring',
             'core/Microsoft.Mcp.Core'
         ) #>
 
-        if($changedAreas.Count -eq 0) {
-            Write-Host "No changed areas detected. Defaulting to core." -ForegroundColor Yellow
-            $changedAreas = @('core/Microsoft.Mcp.Core')
+        if($changedPaths.Count -eq 0) {
+            Write-Host "No changed, testable paths detected. Defaulting to core." -ForegroundColor Yellow
+            $changedPaths = @('core/Microsoft.Mcp.Core')
         } else {
-            Write-Host "Changed areas detected: $($changedAreas -join ', ')"
+            Write-Host "Changed paths detected: $($changedPaths -join ', ')"
         }
 
-        $areasToTest = $changedAreas
-        # If any affected area has "canaries", add them to the areas to test
-        foreach ($canaryKey in $canaryAreas.Keys) {
-            if($changedAreas -contains $canaryKey) {
-                $canaries = $canaryAreas[$canaryKey]
-                Write-Host "$canaryKey changes detected. Including canary areas: $($canaries -join ', ')" -ForegroundColor Cyan
-                $areasToTest += $canaries
+        $pathsToTest = $changedPaths
+        # If any affected path has "canaries", add them to the paths to test
+        foreach ($canaryKey in $canaryPaths.Keys) {
+            if($changedPaths -contains $canaryKey) {
+                $canaries = $canaryPaths[$canaryKey]
+                Write-Host "$canaryKey changes detected. Including canary paths: $($canaries -join ', ')" -ForegroundColor Cyan
+                $pathsToTest += $canaries
             }
         }
 
-        $areasToTest = @($areasToTest | Sort-Object -Unique)
+        $pathsToTest = @($pathsToTest | Sort-Object -Unique)
 
-        <# Making $areasToTest = @(
+        <# Making $pathsToTest = @(
             'tools/Azure.Mcp.Tools.Storage',
             'tools/Azure.Mcp.Tools.Monitoring',
             'core/Microsoft.Mcp.Core',
             'tools/Azure.Mcp.Tools.KeyVault'  <-- from Microsoft.Mcp.Core's canary list
         ) #>
     } else {
-        # If we're not in a pull request, test all areas
-        $areasToTest = $areas
+        # If we're not in a pull request, test all paths
+        $pathsToTest = $paths
     }
 
-    Write-Host "Forming area test matrix"
-    $areaMatrix = [ordered]@{}
-    foreach ($area in $areasToTest) {
-        $testResourcesPath = "$area/tests"
+    Write-Host "Forming test matrix"
+    $testMatrix = [ordered]@{}
+    foreach ($path in $pathsToTest) {
+        $testResourcesPath = "$path/tests"
         $hasTestResources = Test-Path "$RepoRoot/$testResourcesPath/test-resources.bicep"
         $hasLiveTests = (Get-ChildItem $testResourcesPath -Filter '*.LiveTests.csproj' -Recurse).Count -gt 0
         $hasUnitTests = (Get-ChildItem $testResourcesPath -Filter '*.UnitTests.csproj' -Recurse).Count -gt 0
 
         if ($TestType -eq 'Live' -and (!$hasLiveTests -or !$hasTestResources)) {
-            Write-Host "$area has changes, but no live tests or test resources found. Skipping." -ForegroundColor Yellow
+            Write-Host "$path has changes, but no live tests or test resources found. Skipping." -ForegroundColor Yellow
             continue
         }
 
         if ($TestType -eq 'Unit' -and !$hasUnitTests) {
-            Write-Host "$area has changes, but no unit tests found. Skipping." -ForegroundColor Yellow
+            Write-Host "$path has changes, but no unit tests found. Skipping." -ForegroundColor Yellow
             continue
         }
 
-        $areaMatrix[$area] = [ordered]@{
-            Area = $area
+        $testMatrix[$path] = [ordered]@{
+            # We can't use the name 'Path' here because it would override the Path environment variable in matrix based jobs
+            PathToTest = $path
             UnitTests = $hasUnitTests
             LiveTests = $hasLiveTests
             TestResources = $hasTestResources
@@ -137,21 +138,21 @@ try {
         }
     }
 
-    $hasTestAreas = $areaMatrix.Count -gt 0
+    $hasTestPaths = $testMatrix.Count -gt 0
 
     if($SetDevOpsVariables) {
-        # Set DevOps variables for changed areas
-        $json = ConvertTo-Json $areaMatrix -Compress
+        # Set DevOps variables for changed paths
+        $json = ConvertTo-Json $testMatrix -Compress
         Write-Host "##vso[task.setvariable variable=TestMatrix;isOutput=true]$json"
-        # Set a variable indicating if any areas changed
-        Write-Host "##vso[task.setvariable variable=HasTestAreas;isOutput=true]$hasTestAreas"
+        # Set a variable indicating if any paths changed
+        Write-Host "##vso[task.setvariable variable=HasTestPaths;isOutput=true]$hasTestPaths"
     }
 
     Write-Host ""
     Write-Host "TestMatrix:"
-    $areaMatrix | ConvertTo-Json | Out-Host
+    $testMatrix | ConvertTo-Json | Out-Host
 
-    Write-Host "HasTestAreas: $hasTestAreas"
+    Write-Host "HasTestPaths: $hasTestPaths"
 }
 finally {
     Pop-Location

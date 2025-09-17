@@ -3,21 +3,29 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Models.Option;
+using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Options;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels;
 
 public abstract class BaseMonitorHealthModelsCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : SubscriptionCommand<TOptions>
-    where TOptions : SubscriptionOptions, new()
+    : BaseMonitorCommand<TOptions>
+    where TOptions : BaseMonitorHealthModelsOptions, new()
 {
-    protected readonly Option<string> _entityOption = MonitorOptionDefinitions.Health.Entity;
-    protected readonly Option<string> _healthModelOption = MonitorOptionDefinitions.Health.HealthModel;
-
-    protected BaseMonitorHealthModelsCommand() : base()
+    protected override void RegisterOptions(Command command)
     {
+        base.RegisterOptions(command);
+        command.Options.Add(MonitorOptionDefinitions.Health.Entity);
+        command.Options.Add(MonitorOptionDefinitions.Health.HealthModel);
+    }
+
+    protected override TOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.Entity = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Health.Entity.Name);
+        options.HealthModelName = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Health.HealthModel.Name);
+        return options;
     }
 }

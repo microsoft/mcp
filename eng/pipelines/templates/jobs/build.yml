@@ -30,6 +30,15 @@ jobs:
     ${{ else }}:
       image: $(OSVmImage)
     os: ${{ parameters.OSName }}
+
+  # Only run codeql on linux internal build jobs to reduce overall time on pipeline
+  ${{ if and(eq(parameters.OSName, 'linux'), eq(variables['System.TeamProject'], 'internal')) }}:
+    templateContext:
+      sdl:
+        codeql:
+          compiled:
+            enabled: true
+
   steps:
   - checkout: self
 
@@ -51,7 +60,7 @@ jobs:
     condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
     inputs:
       pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Code.ps1
       arguments: >
         -ServerName '${{ parameters.ServerName }}'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
@@ -59,6 +68,8 @@ jobs:
         -OperatingSystem '${{ parameters.OSName }}'
         -Architecture '$(Architecture)'
         -SelfContained
+        -Trimmed
+        -SingleFile
 
   - task: Powershell@2
     displayName: "Run tests"
@@ -99,10 +110,10 @@ jobs:
     condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
     inputs:
       pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Module.ps1
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Code.ps1
       arguments: >
         -ServerName '${{ parameters.ServerName }}'
-        -OutputPath '$(Agent.TempDirectory)/native-build'
+        -OutputPath '$(Build.ArtifactStagingDirectory)'
         -VersionSuffix '$(VersionSuffix)'
         -OperatingSystem '${{ parameters.OSName }}'
         -Architecture '$(Architecture)'

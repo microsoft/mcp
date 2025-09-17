@@ -4,13 +4,11 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Workbooks.LiveTests;
 
-public class WorkbooksCommandTests(LiveTestFixture fixture, ITestOutputHelper output)
-    : CommandTestsBase(fixture, output), IClassFixture<LiveTestFixture>
+public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     // Test workbook content for CRUD operations
     private const string TestWorkbookContent = """
@@ -219,3 +217,4 @@ public class WorkbooksCommandTests(LiveTestFixture fixture, ITestOutputHelper ou
 
 
 }
+

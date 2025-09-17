@@ -1,0 +1,27 @@
+{
+    "parameters": {
+        "domainId": "97dd1d38-a4c6-41ed-bc4f-1e383f8ddd0f"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "e281785b-5608-41ac-a1a1-78b48b95b825",
+                        "displayName": "Mark8ProjectTeam"
+                    },
+                    {
+                        "id": "24402490-9519-48b9-9d51-b2db4095a56b",
+                        "displayName": "Team southern region"
+                    },
+                    {
+                        "id": "46f8ccd7-a209-4e12-978f-56ef3c44a68c",
+                        "displayName": "SalesAndMarketing"
+                    }
+                ],
+                "continuationToken": null,
+                "continuationUri": null
+            }
+        }
+    }
+}

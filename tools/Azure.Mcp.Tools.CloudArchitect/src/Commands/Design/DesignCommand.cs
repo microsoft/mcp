@@ -1,14 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Text.Json;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Models;
 using Azure.Mcp.Tools.CloudArchitect.Models;
 using Azure.Mcp.Tools.CloudArchitect.Options;
 using Microsoft.Extensions.Logging;
@@ -19,15 +15,6 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
 {
     private const string CommandTitle = "Design Azure cloud architectures through guided questions";
     private readonly ILogger<DesignCommand> _logger = logger;
-
-    private readonly Option<string> _questionOption = CloudArchitectOptionDefinitions.Question;
-    private readonly Option<int> _questionNumberOption = CloudArchitectOptionDefinitions.QuestionNumber;
-    private readonly Option<int> _questionTotalQuestions = CloudArchitectOptionDefinitions.TotalQuestions;
-    private readonly Option<string> _answerOption = CloudArchitectOptionDefinitions.Answer;
-    private readonly Option<bool> _nextQuestionNeededOption = CloudArchitectOptionDefinitions.NextQuestionNeeded;
-    private readonly Option<double> _confidenceScoreOption = CloudArchitectOptionDefinitions.ConfidenceScore;
-
-    private readonly Option<string> _architectureDesignToolState = CloudArchitectOptionDefinitions.State;
 
     private static readonly string s_designArchitectureText = LoadArchitectureDesignText();
 
@@ -56,7 +43,11 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        ReadOnly = true
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
     };
 
     private static string LoadArchitectureDesignText()
@@ -69,52 +60,52 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_questionOption);
-        command.AddOption(_questionNumberOption);
-        command.AddOption(_questionTotalQuestions);
-        command.AddOption(_answerOption);
-        command.AddOption(_nextQuestionNeededOption);
-        command.AddOption(_confidenceScoreOption);
-        command.AddOption(_architectureDesignToolState);
+        command.Options.Add(CloudArchitectOptionDefinitions.Question);
+        command.Options.Add(CloudArchitectOptionDefinitions.QuestionNumber);
+        command.Options.Add(CloudArchitectOptionDefinitions.TotalQuestions);
+        command.Options.Add(CloudArchitectOptionDefinitions.Answer);
+        command.Options.Add(CloudArchitectOptionDefinitions.NextQuestionNeeded);
+        command.Options.Add(CloudArchitectOptionDefinitions.ConfidenceScore);
+        command.Options.Add(CloudArchitectOptionDefinitions.State);
 
-        command.AddValidator(result =>
-        {
-            // Validate confidence score is between 0.0 and 1.0
-            var confidenceScore = result.GetValueForOption(_confidenceScoreOption);
-            if (confidenceScore < 0.0 || confidenceScore > 1.0)
+        command.Validators.Add(result =>
             {
-                result.ErrorMessage = "Confidence score must be between 0.0 and 1.0";
-                return;
-            }
+                // Validate confidence score is between 0.0 and 1.0
+                var confidenceScore = result.GetValue(CloudArchitectOptionDefinitions.ConfidenceScore);
+                if (confidenceScore < 0.0 || confidenceScore > 1.0)
+                {
+                    result.AddError("Confidence score must be between 0.0 and 1.0");
+                    return;
+                }
 
-            // Validate question number is not negative
-            var questionNumber = result.GetValueForOption(_questionNumberOption);
-            if (questionNumber < 0)
-            {
-                result.ErrorMessage = "Question number cannot be negative";
-                return;
-            }
+                // Validate question number is not negative
+                var questionNumber = result.GetValue(CloudArchitectOptionDefinitions.QuestionNumber);
+                if (questionNumber < 0)
+                {
+                    result.AddError("Question number cannot be negative");
+                    return;
+                }
 
-            // Validate total questions is not negative
-            var totalQuestions = result.GetValueForOption(_questionTotalQuestions);
-            if (totalQuestions < 0)
-            {
-                result.ErrorMessage = "Total questions cannot be negative";
-                return;
-            }
-        });
+                // Validate total questions is not negative
+                var totalQuestions = result.GetValue(CloudArchitectOptionDefinitions.TotalQuestions);
+                if (totalQuestions < 0)
+                {
+                    result.AddError("Total questions cannot be negative");
+                    return;
+                }
+            });
     }
 
     protected override ArchitectureDesignToolOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Question = parseResult.GetValueForOption(_questionOption) ?? string.Empty;
-        options.QuestionNumber = parseResult.GetValueForOption(_questionNumberOption);
-        options.TotalQuestions = parseResult.GetValueForOption(_questionTotalQuestions);
-        options.Answer = parseResult.GetValueForOption(_answerOption);
-        options.NextQuestionNeeded = parseResult.GetValueForOption(_nextQuestionNeededOption);
-        options.ConfidenceScore = parseResult.GetValueForOption(_confidenceScoreOption);
-        options.State = DeserializeState(parseResult.GetValueForOption(_architectureDesignToolState));
+        options.Question = parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.Question.Name) ?? string.Empty;
+        options.QuestionNumber = parseResult.GetValueOrDefault<int>(CloudArchitectOptionDefinitions.QuestionNumber.Name);
+        options.TotalQuestions = parseResult.GetValueOrDefault<int>(CloudArchitectOptionDefinitions.TotalQuestions.Name);
+        options.Answer = parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.Answer.Name);
+        options.NextQuestionNeeded = parseResult.GetValueOrDefault<bool>(CloudArchitectOptionDefinitions.NextQuestionNeeded.Name);
+        options.ConfidenceScore = parseResult.GetValueOrDefault<double>(CloudArchitectOptionDefinitions.ConfidenceScore.Name);
+        options.State = DeserializeState(parseResult.GetValueOrDefault<string>(CloudArchitectOptionDefinitions.State.Name));
         return options;
     }
 
@@ -127,7 +118,7 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
 
         try
         {
-            var state = JsonSerializer.Deserialize<ArchitectureDesignToolState>(stateJson, CloudArchitectJsonContext.Default.ArchitectureDesignToolState);
+            var state = JsonSerializer.Deserialize(stateJson, CloudArchitectJsonContext.Default.ArchitectureDesignToolState);
             return state ?? new ArchitectureDesignToolState();
         }
         catch (JsonException ex)
@@ -138,15 +129,15 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return Task.FromResult(context.Response);
+        }
+
+        var options = BindOptions(parseResult);
+
         try
         {
-            var options = BindOptions(parseResult);
-
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return Task.FromResult(context.Response);
-            }
-
             var designArchitecture = GetArchitectureDesignText();
             var responseObject = new CloudArchitectResponseObject
             {

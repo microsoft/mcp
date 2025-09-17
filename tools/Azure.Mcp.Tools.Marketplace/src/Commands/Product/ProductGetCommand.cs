@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Options.Product;
@@ -17,69 +18,66 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
     private const string CommandTitle = "Get Marketplace Product";
     private readonly ILogger<ProductGetCommand> _logger = logger;
 
-    // Define options from OptionDefinitions
-    private readonly Option<string> _productIdOption = OptionDefinitions.Marketplace.ProductId;
-    private readonly Option<bool> _includeStopSoldPlansOption = OptionDefinitions.Marketplace.IncludeStopSoldPlans;
-    private readonly Option<string> _languageOption = OptionDefinitions.Marketplace.Language;
-    private readonly Option<string> _marketOption = OptionDefinitions.Marketplace.Market;
-    private readonly Option<bool> _lookupOfferInTenantLevelOption = OptionDefinitions.Marketplace.LookupOfferInTenantLevel;
-    private readonly Option<string> _planIdOption = OptionDefinitions.Marketplace.PlanId;
-    private readonly Option<string> _skuIdOption = OptionDefinitions.Marketplace.SkuId;
-    private readonly Option<bool> _includeServiceInstructionTemplatesOption = OptionDefinitions.Marketplace.IncludeServiceInstructionTemplates;
-    private readonly Option<string> _pricingAudienceOption = OptionDefinitions.Marketplace.PricingAudience;
-
     public override string Name => "get";
 
     public override string Description =>
         """
-        Retrieves a single private product (offer) for a given subscription from Azure Marketplace.
-        Returns detailed information about the specified marketplace product including plans, pricing, and metadata.
+        Retrieves detailed information about a specific Azure Marketplace product (offer) for a given subscription,
+         including available plans, pricing, and product metadata.
         """;
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_productIdOption);
-        command.AddOption(_includeStopSoldPlansOption);
-        command.AddOption(_languageOption);
-        command.AddOption(_marketOption);
-        command.AddOption(_lookupOfferInTenantLevelOption);
-        command.AddOption(_planIdOption);
-        command.AddOption(_skuIdOption);
-        command.AddOption(_includeServiceInstructionTemplatesOption);
-        command.AddOption(_pricingAudienceOption);
+        command.Options.Add(OptionDefinitions.Marketplace.ProductId);
+        command.Options.Add(OptionDefinitions.Marketplace.IncludeStopSoldPlans);
+        command.Options.Add(OptionDefinitions.Marketplace.Language);
+        command.Options.Add(OptionDefinitions.Marketplace.Market);
+        command.Options.Add(OptionDefinitions.Marketplace.LookupOfferInTenantLevel);
+        command.Options.Add(OptionDefinitions.Marketplace.PlanId);
+        command.Options.Add(OptionDefinitions.Marketplace.SkuId);
+        command.Options.Add(OptionDefinitions.Marketplace.IncludeServiceInstructionTemplates);
+        command.Options.Add(OptionDefinitions.Marketplace.PricingAudience);
     }
 
     protected override ProductGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ProductId = parseResult.GetValueForOption(_productIdOption);
-        options.IncludeStopSoldPlans = parseResult.GetValueForOption(_includeStopSoldPlansOption);
-        options.Language = parseResult.GetValueForOption(_languageOption);
-        options.Market = parseResult.GetValueForOption(_marketOption);
-        options.LookupOfferInTenantLevel = parseResult.GetValueForOption(_lookupOfferInTenantLevelOption);
-        options.PlanId = parseResult.GetValueForOption(_planIdOption);
-        options.SkuId = parseResult.GetValueForOption(_skuIdOption);
-        options.IncludeServiceInstructionTemplates = parseResult.GetValueForOption(_includeServiceInstructionTemplatesOption);
-        options.PricingAudience = parseResult.GetValueForOption(_pricingAudienceOption);
+        options.ProductId = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.ProductId.Name);
+        options.IncludeStopSoldPlans = parseResult.GetValueOrDefault<bool>(OptionDefinitions.Marketplace.IncludeStopSoldPlans.Name);
+        options.Language = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Language.Name);
+        options.Market = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Market.Name);
+        options.LookupOfferInTenantLevel = parseResult.GetValueOrDefault<bool>(OptionDefinitions.Marketplace.LookupOfferInTenantLevel.Name);
+        options.PlanId = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.PlanId.Name);
+        options.SkuId = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.SkuId.Name);
+        options.IncludeServiceInstructionTemplates = parseResult.GetValueOrDefault<bool>(OptionDefinitions.Marketplace.IncludeServiceInstructionTemplates.Name);
+        options.PricingAudience = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.PricingAudience.Name);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
 
             // Get the marketplace service from DI
             var marketplaceService = context.GetService<IMarketplaceService>();

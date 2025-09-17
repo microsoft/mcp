@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
+using System.CommandLine.Parsing;
 using System.Diagnostics;
-using Azure.Mcp.Core.Models.Option;
+using Azure.Mcp.Core.Exceptions;
+using Azure.Mcp.Core.Helpers;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Commands;
@@ -15,8 +16,6 @@ public abstract class BaseCommand : IBaseCommand
     private const string TroubleshootingUrl = "https://aka.ms/azmcp/troubleshooting";
 
     private readonly Command _command;
-    private bool _usesResourceGroup;
-    private bool _requiresResourceGroup;
 
     protected BaseCommand()
     {
@@ -42,8 +41,26 @@ public abstract class BaseCommand : IBaseCommand
         context.Activity?.SetStatus(ActivityStatusCode.Error)?.AddTag(TagName.ErrorDetails, ex.Message);
 
         var response = context.Response;
+
+        // Handle structured validation errors first
+        if (ex is CommandValidationException cve)
+        {
+            response.Status = cve.StatusCode;
+            // If specific missing options are provided, format a consistent message
+            if (cve.MissingOptions is { Count: > 0 })
+            {
+                response.Message = $"{MissingRequiredOptionsPrefix}{string.Join(", ", cve.MissingOptions)}";
+            }
+            else
+            {
+                response.Message = cve.Message;
+            }
+            response.Results = null;
+            return;
+        }
+
         var result = new ExceptionResult(
-            Message: ex.Message,
+            Message: ex.Message ?? string.Empty,
 #if DEBUG
             StackTrace: ex.StackTrace,
 #else
@@ -70,30 +87,29 @@ public abstract class BaseCommand : IBaseCommand
         var result = new ValidationResult { IsValid = true };
 
         var missingOptions = commandResult.Command.Options
-            .Where(o => o.IsRequired && IsOptionValueMissing(commandResult.GetValueForOption(o)))
-            .Select(o => $"--{o.Name}")
+            .Where(o => o.Required && !o.HasDefaultValue && !commandResult.HasOptionResult(o))
+            .Select(o => $"--{NameNormalization.NormalizeOptionName(o.Name)}")
             .ToList();
 
-        if (missingOptions.Count > 0 || !string.IsNullOrEmpty(commandResult.ErrorMessage))
+        var missingOptionsJoined = string.Join(", ", missingOptions);
+
+        if (!string.IsNullOrEmpty(missingOptionsJoined))
         {
             result.IsValid = false;
-            result.ErrorMessage = missingOptions.Count > 0
-                ? $"{MissingRequiredOptionsPrefix}{string.Join(", ", missingOptions)}"
-                : commandResult.ErrorMessage;
-
+            result.ErrorMessage = $"{MissingRequiredOptionsPrefix}{missingOptionsJoined}";
             SetValidationError(commandResponse, result.ErrorMessage!);
+            return result;
         }
 
-        // Check logical requirements (e.g., resource group requirement)
-        if (result.IsValid && _requiresResourceGroup)
+        // If no missing required options, propagate parser/validator errors as-is.
+        // Commands can throw CommandValidationException for structured handling.
+        if (commandResult.Errors != null && commandResult.Errors.Any())
         {
-            var rg = commandResult.GetValueForOption(OptionDefinitions.Common.ResourceGroup);
-            if (string.IsNullOrWhiteSpace(rg))
-            {
-                result.IsValid = false;
-                result.ErrorMessage = $"{MissingRequiredOptionsPrefix}--resource-group";
-                SetValidationError(commandResponse, result.ErrorMessage);
-            }
+            result.IsValid = false;
+            var combined = string.Join(", ", commandResult.Errors.Select(e => e.Message));
+            result.ErrorMessage = combined;
+            SetValidationError(commandResponse, result.ErrorMessage);
+            return result;
         }
 
         return result;
@@ -107,28 +123,4 @@ public abstract class BaseCommand : IBaseCommand
             }
         }
     }
-
-    private static bool IsOptionValueMissing(object? value)
-    {
-        return value == null || (value is string str && string.IsNullOrWhiteSpace(str));
-    }
-
-    protected void UseResourceGroup()
-    {
-        if (_usesResourceGroup)
-            return;
-        _usesResourceGroup = true;
-        _command.AddOption(OptionDefinitions.Common.ResourceGroup);
-    }
-
-    protected void RequireResourceGroup()
-    {
-        UseResourceGroup();
-        _requiresResourceGroup = true;
-    }
-
-    protected string? GetResourceGroup(ParseResult parseResult) =>
-        _usesResourceGroup ? parseResult.GetValueForOption(OptionDefinitions.Common.ResourceGroup) : null;
-
-    protected bool UsesResourceGroup => _usesResourceGroup;
 }

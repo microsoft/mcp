@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Options;
@@ -19,16 +20,6 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
     private const string CommandTitle = "Query Azure Monitor Metrics";
     private readonly ILogger<MetricsQueryCommand> _logger = logger;
 
-    // Define options from OptionDefinitions
-    private readonly Option<string> _metricNamesOption = MonitorOptionDefinitions.Metrics.MetricNames;
-    private readonly Option<string> _startTimeOption = MonitorOptionDefinitions.Metrics.StartTime;
-    private readonly Option<string> _endTimeOption = MonitorOptionDefinitions.Metrics.EndTime;
-    private readonly Option<string> _intervalOption = MonitorOptionDefinitions.Metrics.Interval;
-    private readonly Option<string> _aggregationOption = MonitorOptionDefinitions.Metrics.Aggregation;
-    private readonly Option<string> _filterOption = MonitorOptionDefinitions.Metrics.Filter;
-    private readonly Option<string> _metricNamespaceOption = MonitorOptionDefinitions.Metrics.MetricNamespace;
-    private readonly Option<int> _maxBucketsOption = MonitorOptionDefinitions.Metrics.MaxBuckets;
-
     public override string Name => "query";
 
     public override string Description =>
@@ -38,32 +29,40 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_metricNamesOption);
-        command.AddOption(_startTimeOption);
-        command.AddOption(_endTimeOption);
-        command.AddOption(_intervalOption);
-        command.AddOption(_aggregationOption);
-        command.AddOption(_filterOption);
-        command.AddOption(_metricNamespaceOption);
-        command.AddOption(_maxBucketsOption);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.MetricNames);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.StartTime);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.EndTime);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.Interval);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.Aggregation);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.Filter);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.MetricNamespace);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.MaxBuckets);
     }
 
     protected override MetricsQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.MetricNames = parseResult.GetValueForOption(_metricNamesOption);
-        options.StartTime = parseResult.GetValueForOption(_startTimeOption);
-        options.EndTime = parseResult.GetValueForOption(_endTimeOption);
-        options.Interval = parseResult.GetValueForOption(_intervalOption);
-        options.Aggregation = parseResult.GetValueForOption(_aggregationOption);
-        options.Filter = parseResult.GetValueForOption(_filterOption);
-        options.MetricNamespace = parseResult.GetValueForOption(_metricNamespaceOption);
-        options.MaxBuckets = parseResult.GetValueForOption(_maxBucketsOption);
+        options.MetricNames = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.MetricNames.Name);
+        options.StartTime = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.StartTime.Name);
+        options.EndTime = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.EndTime.Name);
+        options.Interval = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.Interval.Name);
+        options.Aggregation = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.Aggregation.Name);
+        options.Filter = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.Filter.Name);
+        options.MetricNamespace = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.MetricNamespace.Name);
+        options.MaxBuckets = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Metrics.MaxBuckets.Name);
         return options;
     }
 
@@ -73,20 +72,34 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
 
         if (result.IsValid)
         {
-            string metricNamesValue = commandResult.GetValueForOption(_metricNamesOption)!;
+            commandResult.TryGetValue(MonitorOptionDefinitions.Metrics.MetricNames, out string? metricNamesValue);
 
-            // Validate the metric names
-            string[] metricNames = [.. metricNamesValue.Split(',').Select(t => t.Trim())];
-
-            if (metricNames.Length == 0 || metricNames.Any(s => string.IsNullOrWhiteSpace(s)))
+            if (string.IsNullOrWhiteSpace(metricNamesValue))
             {
                 result.IsValid = false;
-                result.ErrorMessage = $"Invalid format for --{_metricNamesOption.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).";
+                result.ErrorMessage = $"Invalid format for {MonitorOptionDefinitions.Metrics.MetricNames.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).";
 
                 if (commandResponse != null)
                 {
                     commandResponse.Status = 400;
                     commandResponse.Message = result.ErrorMessage!;
+                }
+            }
+            else
+            {
+                // Validate the metric names
+                string[] metricNames = [.. metricNamesValue.Split(',').Select(t => t.Trim())];
+
+                if (metricNames.Length == 0 || metricNames.Any(s => string.IsNullOrWhiteSpace(s)))
+                {
+                    result.IsValid = false;
+                    result.ErrorMessage = $"Invalid format for {MonitorOptionDefinitions.Metrics.MetricNames.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).";
+
+                    if (commandResponse != null)
+                    {
+                        commandResponse.Status = 400;
+                        commandResponse.Message = result.ErrorMessage!;
+                    }
                 }
             }
         }
@@ -95,16 +108,13 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+            return context.Response;
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             string[] metricNames = [.. options.MetricNames!.Split(',').Select(t => t.Trim())];
 
             // Get the metrics service from DI

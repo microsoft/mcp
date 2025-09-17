@@ -1,0 +1,34 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "dataPipelineId": "5b218778-e7a5-4d73-8187-f10824047715",
+    "updateMetadata": true,
+    "updatePipelineDefinitionRequest": {
+      "definition": {
+        "parts": [
+          {
+            "path": "pipeline-content.json",
+            "payload": "ewogICJwcm9wZXJ0aWVzIjogewogICAgImFjdGl2aXRpZXMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJXYWl0MSIsCiAgICAgICAgInR5cGUiOiAiV2FpdCIsCiAgICAgICAgImRlcGVuZHNPbiI6IFtdLAogICAgICAgICJ0eXBlUHJvcGVydGllcyI6IHsKICAgICAgICAgICJ3YWl0VGltZUluU2Vjb25kcyI6IDEKICAgICAgICB9CiAgICAgIH0KICAgIF0KICB9Cn0=",
+            "payloadType": "InlineBase64"
+          },
+          {
+            "path": ".platform",
+            "payload": "ZG90UGxhdGZvcm1CYXNlNjRTdHJpbmc=",
+            "payloadType": "InlineBase64"
+          }
+        ]
+      }
+    }
+  },
+  "responses": {
+    "200": {
+    },
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/427f6c34-b64e-4ee4-8ea5-b533c0e203ef",
+        "x-ms-operation-id": "427f6c34-b64e-4ee4-8ea5-b533c0e203ef",
+        "Retry-After": 30
+      }
+    }
+  }
+}

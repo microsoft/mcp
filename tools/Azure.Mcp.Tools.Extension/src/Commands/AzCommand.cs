@@ -3,6 +3,7 @@
 
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Tools.Extension.Options;
@@ -15,7 +16,6 @@ public sealed class AzCommand(ILogger<AzCommand> logger, int processTimeoutSecon
     private const string CommandTitle = "Azure CLI Command";
     private readonly ILogger<AzCommand> _logger = logger;
     private readonly int _processTimeoutSeconds = processTimeoutSeconds;
-    private readonly Option<string> _commandOption = ExtensionOptionDefinitions.Az.Command;
     private static string? _cachedAzPath;
     private volatile bool _isAuthenticated = false;
     private static readonly SemaphoreSlim s_authSemaphore = new(1, 1);
@@ -51,13 +51,13 @@ Your job is to answer questions about an Azure environment by executing Azure CL
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_commandOption);
+        command.Options.Add(ExtensionOptionDefinitions.Az.Command);
     }
 
     protected override AzOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Command = parseResult.GetValueForOption(_commandOption);
+        options.Command = parseResult.GetValueOrDefault<string>(ExtensionOptionDefinitions.Az.Command.Name);
         return options;
     }
 
@@ -161,15 +161,15 @@ Your job is to answer questions about an Azure environment by executing Azure CL
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             ArgumentNullException.ThrowIfNull(options.Command);
             var command = options.Command;
             var processService = context.GetService<IExternalProcessService>();

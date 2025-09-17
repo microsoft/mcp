@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Queue.Message;
@@ -16,18 +18,13 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
     private const string CommandTitle = "Send message to Azure Storage queue";
     private readonly ILogger<QueueMessageSendCommand> _logger = logger;
 
-    // Define options from OptionDefinitions
-    private readonly Option<string> _messageOption = StorageOptionDefinitions.Message;
-    private readonly Option<int?> _timeToLiveOption = StorageOptionDefinitions.TimeToLiveInSeconds;
-    private readonly Option<int?> _visibilityTimeoutOption = StorageOptionDefinitions.VisibilityTimeoutInSeconds;
-
     public override string Name => "send";
 
     public override string Description =>
         """
         Send messages to an Azure Storage queue for asynchronous processing. This tool sends a message to a specified queue
         with optional time-to-live and visibility delay settings. Messages are returned with receipt handles for tracking.
-        Returns a QueueMessageSendResult object containing message ID, insertion time, expiration time, pop receipt, 
+        Returns a QueueMessageSendResult object containing message ID, insertion time, expiration time, pop receipt,
         next visible time, and message content.
         """;
 
@@ -36,38 +33,41 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        ReadOnly = false
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
     };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_messageOption);
-        command.AddOption(_timeToLiveOption);
-        command.AddOption(_visibilityTimeoutOption);
+        command.Options.Add(StorageOptionDefinitions.Message);
+        command.Options.Add(StorageOptionDefinitions.TimeToLiveInSeconds);
+        command.Options.Add(StorageOptionDefinitions.VisibilityTimeoutInSeconds);
     }
 
     protected override QueueMessageSendOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Message = parseResult.GetValueForOption(_messageOption);
-        options.TimeToLiveInSeconds = parseResult.GetValueForOption(_timeToLiveOption);
-        options.VisibilityTimeoutInSeconds = parseResult.GetValueForOption(_visibilityTimeoutOption);
+        options.Message = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Message.Name);
+        options.TimeToLiveInSeconds = parseResult.GetValueOrDefault<int?>(StorageOptionDefinitions.TimeToLiveInSeconds.Name);
+        options.VisibilityTimeoutInSeconds = parseResult.GetValueOrDefault<int?>(StorageOptionDefinitions.VisibilityTimeoutInSeconds.Name);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             // Get the storage service from DI
             var service = context.GetService<IStorageService>();
 
@@ -101,23 +101,6 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
         return context.Response;
     }
 
-    // Implementation-specific error handling
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
-            "Queue not found. Verify the queue name exists and you have access.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
-            $"Authorization failed accessing the storage queue. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx => reqEx.Message,
-        _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        Azure.RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
     // Strongly-typed result record
-    internal record QueueMessageSendCommandResult(QueueMessageSendResult Message);
+    internal record QueueMessageSendCommandResult([property: JsonPropertyName("message")] QueueMessageSendResult Message);
 }

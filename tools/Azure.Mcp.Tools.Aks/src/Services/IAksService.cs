@@ -19,4 +19,19 @@ public interface IAksService
         string resourceGroup,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<List<NodePool>> ListNodePools(
+        string subscription,
+        string resourceGroup,
+        string clusterName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
+
+    Task<NodePool?> GetNodePool(
+        string subscription,
+        string resourceGroup,
+        string clusterName,
+        string nodePoolName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
 }

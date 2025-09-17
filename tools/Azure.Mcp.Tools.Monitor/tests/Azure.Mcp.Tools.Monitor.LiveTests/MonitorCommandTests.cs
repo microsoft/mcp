@@ -8,31 +8,25 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.LiveTests;
 
-public class MonitorCommandTests(LiveTestFixture fixture, ITestOutputHelper output) : CommandTestsBase(fixture, output), IClassFixture<LiveTestFixture>, IAsyncLifetime
+public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     private LogAnalyticsHelper? _logHelper;
     private const string TestLogType = "TestLogs_CL";
     private IMonitorService? _monitorService;
-    private string _storageAccountName = $"{fixture.Settings.ResourceBaseName}mon";
+    private string? _storageAccountName;
 
-    ValueTask IAsyncLifetime.InitializeAsync()
+    public override async ValueTask InitializeAsync()
     {
+        await base.InitializeAsync();
         _monitorService = GetMonitorService();
+        _storageAccountName = $"{Settings.ResourceBaseName}mon";
         _logHelper = new LogAnalyticsHelper(Settings.ResourceBaseName, Settings.SubscriptionId, _monitorService, Settings.TenantId, TestLogType);
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask DisposeAsync()
-    {
-        base.Dispose();
-        return ValueTask.CompletedTask;
     }
 
     private static IMonitorService GetMonitorService()
@@ -160,7 +154,7 @@ public class MonitorCommandTests(LiveTestFixture fixture, ITestOutputHelper outp
         Assert.NotEmpty(array);
     }
 
-    [Fact]
+    [Fact(Skip = "Intermittent failures due to slow ingestion")]
     public async Task Should_query_monitor_logs_by_resource_id()
     {
         var storageResourceId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Storage/storageAccounts/{_storageAccountName}";
@@ -459,3 +453,4 @@ public class MonitorCommandTests(LiveTestFixture fixture, ITestOutputHelper outp
         }
     }
 }
+

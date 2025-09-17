@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
@@ -15,10 +16,6 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
 {
     private const string _commandTitle = "Test Run Update";
     private readonly ILogger<TestRunUpdateCommand> _logger = logger;
-    private readonly Option<string> _testRunIdOption = OptionDefinitions.LoadTesting.TestRun;
-    private readonly Option<string> _testIdOption = OptionDefinitions.LoadTesting.Test;
-    private readonly Option<string> _displayNameOption = OptionDefinitions.LoadTesting.DisplayName;
-    private readonly Option<string> _descriptionOption = OptionDefinitions.LoadTesting.Description;
     public override string Name => "update";
     public override string Description =>
         $"""
@@ -28,37 +25,46 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
         """;
     public override string Title => _commandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = true,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_testRunIdOption);
-        command.AddOption(_testIdOption);
-        command.AddOption(_displayNameOption);
-        command.AddOption(_descriptionOption);
+        command.Options.Add(OptionDefinitions.LoadTesting.TestRun);
+        command.Options.Add(OptionDefinitions.LoadTesting.Test);
+        command.Options.Add(OptionDefinitions.LoadTesting.DisplayName);
+        command.Options.Add(OptionDefinitions.LoadTesting.Description);
     }
 
     protected override TestRunUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestRunId = parseResult.GetValueForOption(_testRunIdOption);
-        options.TestId = parseResult.GetValueForOption(_testIdOption);
-        options.DisplayName = parseResult.GetValueForOption(_displayNameOption);
-        options.Description = parseResult.GetValueForOption(_descriptionOption);
+        options.TestRunId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.TestRun.Name);
+        options.TestId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Test.Name);
+        options.DisplayName = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.DisplayName.Name);
+        options.Description = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Description.Name);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
+
         try
         {
-            // Required validation step using the base Validate method
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
             // Get the appropriate service from DI
             var service = context.GetService<ILoadTestingService>();
             // Call service operation(s)

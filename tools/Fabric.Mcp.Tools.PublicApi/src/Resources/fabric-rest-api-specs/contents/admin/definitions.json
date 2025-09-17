@@ -1,0 +1,1005 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Admin data types"
+    },
+    "paths": {},
+    "definitions": {
+      "Workspaces": {
+        "description": "A list of workspaces.",
+        "properties": {
+          "workspaces": {
+            "type": "array",
+            "description": "The list of fabric workspaces.",
+            "items": {
+              "$ref": "#/definitions/Workspace"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+          }
+        ]
+      },
+      "Workspace": {
+        "required": [ "id", "name", "type", "state" ],
+        "description": "Workspace.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "The workspace ID."
+          },
+          "name": {
+            "type": "string",
+            "description": "The workspace name."
+          },
+          "type": {
+            "type": "string",
+            "description": "The workspace type.",
+            "$ref": "../common/definitions.json#/definitions/WorkspaceType",
+            "readOnly": true
+          },
+          "state": {
+            "type": "string",
+            "description": "The workspace state.",
+            "$ref": "#/definitions/WorkspaceState",
+            "readOnly": true
+          },
+          "capacityId": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "The capacity ID of the workspace."
+          }
+        }
+      },
+      "GitConnections": {
+        "description": "A response wrapper for a list of all the Git connections for a given tenant with a continuous token.",
+        "properties": {
+          "value": {
+            "type": "array",
+            "description": "The list of Git connections for a given tenant.",
+            "items": {
+              "$ref": "#/definitions/GitConnectionDetails"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+          }
+        ]
+      },
+      "Items": {
+        "description": "A list of items.",
+        "properties": {
+          "itemEntities": {
+            "type": "array",
+            "description": "The list of items for a given tenant.",
+            "items": {
+              "$ref": "#/definitions/Item"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+          }
+        ]
+      },
+      "Item": {
+        "required": [ "id" ],
+        "description": "Item details.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "The item ID."
+          },
+          "name": {
+            "type": "string",
+            "description": "The item name."
+          },
+          "type": {
+            "description": "The item type. Includes values such as Synapse, Notebook, Kqldatabase and SynapseWorkbook.",
+            "$ref": "../common/definitions.json#/definitions/ItemType",
+            "readOnly": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Item details including item type and item usage."
+          },
+          "state": {
+            "type": "string",
+            "description": "The item status.",
+            "$ref": "#/definitions/ItemState",
+            "readOnly": true
+          },
+          "lastUpdatedDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The last updated date and time."
+          },
+          "creatorPrincipal": {
+            "description": "The item's owner.",
+            "$ref": "../common/definitions.json#/definitions/Principal",
+            "readOnly": true
+          },
+          "workspaceId": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "The workspace ID of item."
+          },
+          "capacityId": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "The capacity ID of the workspace."
+          },
+          "folderId": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "The folder ID of the item."
+          }
+        }
+      },
+      "WorkspaceAccessDetailsResponse": {
+        "description": "A list of users with access to a given entity.",
+        "properties": {
+          "accessDetails": {
+            "type": "array",
+            "description": "A list of users with access to an entity.",
+            "items": {
+              "$ref": "#/definitions/WorkspaceAccessDetails"
+            }
+          }
+        }
+      },
+      "ItemAccessDetailsResponse": {
+        "description": "A list of users with access to a given entity.",
+        "properties": {
+          "accessDetails": {
+            "type": "array",
+            "description": "A list of users with access to an entity.",
+            "items": {
+              "$ref": "#/definitions/ItemAccessDetails"
+            }
+          }
+        }
+      },
+      "ItemAccessDetails": {
+        "type": "object",
+        "description": "User access details for an item.",
+        "properties": {
+          "principal": {
+            "description": "Information regarding the user who has access to the entity.",
+            "$ref": "../common/definitions.json#/definitions/Principal",
+            "readOnly": true
+          },
+          "itemAccessDetails": {
+            "description": "Item permissions for the user.",
+            "$ref": "#/definitions/ItemAccessDetail",
+            "readOnly": true
+          }
+        }
+      },
+      "WorkspaceAccessDetails": {
+        "type": "object",
+        "description": "User access details for the workspace.",
+        "properties": {
+          "principal": {
+            "description": "Information regarding the user who has access to the entity.",
+            "$ref": "../common/definitions.json#/definitions/Principal",
+            "readOnly": true
+          },
+          "workspaceAccessDetails": {
+            "description": "Workspace permissions for the user.",
+            "$ref": "#/definitions/WorkspaceAccessDetail",
+            "readOnly": true
+          }
+        }
+      },
+      "AccessDetails": {
+        "type": "object",
+        "description": "User access details for the given entity.",
+        "properties": {
+          "principal": {
+            "description": "Information regarding the user who has access to the entity.",
+            "$ref": "../common/definitions.json#/definitions/Principal",
+            "readOnly": true
+          },
+          "workspaceAccessDetails": {
+            "description": "Workspace permissions for the user.",
+            "$ref": "#/definitions/WorkspaceAccessDetail",
+            "readOnly": true
+          },
+          "itemAccessDetails": {
+            "description": "Item permissions for the user.",
+            "$ref": "#/definitions/ItemAccessDetail",
+            "readOnly": true
+          }
+        }
+      },
+      "WorkspaceAccessDetail": {
+        "type": "object",
+        "description": "Workspace permission details.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Workspace type.",
+            "$ref": "../common/definitions.json#/definitions/WorkspaceType"
+          },
+          "workspaceRole": {
+            "description": "The workspace role.",
+            "$ref": "../common/definitions.json#/definitions/WorkspaceRole"
+          }
+        }
+      },
+      "ItemAccessDetail": {
+        "type": "object",
+        "description": "Item permission details such as *read* and *reshare*. ",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Entity type.",
+            "$ref": "../common/definitions.json#/definitions/ItemType"
+          },
+          "permissions": {
+            "type": "array",
+            "description": "Item permissions such as *read* and *reshare*.",
+            "items": {
+              "type": "string",
+              "$ref": "../common/definitions.json#/definitions/ItemPermissions"
+            }
+          },
+          "additionalPermissions": {
+            "type": "array",
+            "description": "Workload permissions such as *readAll* and *viewOutput*.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AccessEntityResponse": {
+        "description": "A list of entities and permissions.",
+        "properties": {
+          "accessEntities": {
+            "type": "array",
+            "description": "A list of users with access to an entity.",
+            "items": {
+              "$ref": "#/definitions/AccessEntity"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+          }
+        ]
+      },
+      "AccessEntity": {
+        "description": "Access details for the given user.",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "Entity name."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "The object ID of the entity."
+          },
+          "category": {
+            "description": "Entity category such as item.",
+            "$ref": "#/definitions/Category"
+          },
+          "type": {
+            "type": "string",
+            "description": "Entity type."
+          },
+          "itemAccessDetails": {
+            "description": "Item permissions.",
+            "$ref": "#/definitions/ItemAccessDetail"
+          }
+        }
+      },
+      "BaseTenantSetting": {
+        "required": [
+          "settingName",
+          "title",
+          "enabled",
+          "canSpecifySecurityGroups"
+        ],
+        "description": "The base object of tenant setting details.",
+        "properties": {
+          "settingName": {
+            "type": "string",
+            "description": "The name of the tenant setting."
+          },
+          "title": {
+            "type": "string",
+            "description": "The title of the tenant setting."
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "The status of the tenant setting. False - Disabled, True - Enabled."
+          },
+          "canSpecifySecurityGroups": {
+            "type": "boolean",
+            "description": "Indicates if the tenant setting is enabled for a security group. False - The tenant setting is enabled for the entire organization. True - The tenant setting is enabled for security groups."
+          },
+          "enabledSecurityGroups": {
+            "type": "array",
+            "description": "A list of enabled security groups.",
+            "items": {
+              "$ref": "#/definitions/TenantSettingSecurityGroup"
+            }
+          },
+          "excludedSecurityGroups": {
+            "type": "array",
+            "description": "A list of excluded security groups.",
+            "items": {
+              "$ref": "#/definitions/TenantSettingSecurityGroup"
+            }
+          },
+          "tenantSettingGroup": {
+            "type": "string",
+            "description": "Tenant setting group name."
+          },
+          "properties": {
+            "type": "array",
+            "description": "Tenant setting properties.",
+            "items": {
+              "$ref": "#/definitions/TenantSettingProperty"
+            }
+          }
+        }
+      },
+      "CapacityTenantSetting": {
+        "description": "Capacity tenant setting details.",
+        "properties": {
+          "delegateToWorkspace": {
+            "type": "boolean",
+            "description": "Indicates whether the tenant setting can be delegated to a workspace admin. False - Workspace admin cannot override the tenant setting. True - Workspace admin can override the tenant setting."
+          },
+          "delegatedFrom": {
+            "type": "string",
+            "description": "Tenant setting delegated from tenant, capacity or domain.",
+            "$ref": "#/definitions/DelegatedFrom",
+            "readOnly": false
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "#/definitions/BaseTenantSetting"
+          }
+        ]
+      },
+      "DomainTenantSetting": {
+        "description": "Domain tenant setting details.",
+        "properties": {
+          "delegateToWorkspace": {
+            "type": "boolean",
+            "description": "Indicates whether the tenant setting can be delegated to a workspace admin. False - Workspace admin cannot override the tenant setting. True - Workspace admin can override the tenant setting."
+          },
+          "delegatedFrom": {
+            "type": "string",
+            "description": "Tenant setting delegated from tenant, capacity or domain.",
+            "$ref": "#/definitions/DelegatedFrom",
+            "readOnly": false
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "#/definitions/BaseTenantSetting"
+          }
+        ]
+      },
+      "WorkspaceTenantSetting": {
+        "description": "Workspace tenant setting details.",
+        "properties": {
+          "delegatedFrom": {
+            "type": "string",
+            "description": "Tenant setting delegated from tenant, capacity or domain.",
+            "$ref": "#/definitions/DelegatedFrom",
+            "readOnly": false
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "#/definitions/BaseTenantSetting"
+          }
+        ]
+      },
+      "TenantSetting": {
+        "description": "Tenant level setting details.",
+        "properties": {
+          "delegateToWorkspace": {
+            "type": "boolean",
+            "description": "Indicates whether the tenant setting can be delegated to a workspace admin. False - Workspace admin cannot override the tenant setting. True - Workspace admin can override the tenant setting."
+          },
+          "delegateToCapacity": {
+            "type": "boolean",
+            "description": "Indicates whether the tenant setting can be delegated to a capacity admin. False - Capacity admin cannot override the tenant setting. True - Capacity admin can override the tenant setting."
+          },
+          "delegateToDomain": {
+            "type": "boolean",
+            "description": "Indicates whether the tenant setting can be delegated to a domain admin. False - Domain admin cannot override the tenant setting. True - Domain admin can override the tenant setting."
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "#/definitions/BaseTenantSetting"
+          }
+        ]
+      },
+      "TenantSettings": {
+        "description": "A list of tenant settings.",
+        "properties": {
+          "value": {
+            "type": "array",
+            "description": "A list of tenant settings.",
+            "items": {
+              "$ref": "#/definitions/TenantSetting"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+          }
+        ]
+      },
+      "CapacityTenantSettingOverride": {
+        "description": "A capacity admin can override the tenant setting.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of a capacity."
+          },
+          "tenantSettings": {
+            "type": "array",
+            "description": "A list of capacity tenant settings.",
+            "items": {
+              "$ref": "#/definitions/CapacityTenantSetting"
+            }
+          }
+        }
+      },
+      "DomainTenantSettingOverride": {
+        "description": "A domain admin can override the tenant setting.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of a domain.",
+            "format": "uuid"
+          },
+          "tenantSettings": {
+            "type": "array",
+            "description": "A list of domain tenant settings.",
+            "items": {
+              "$ref": "#/definitions/DomainTenantSetting"
+            }
+          }
+        }
+      },
+      "WorkspaceTenantSettingOverride": {
+        "description": "A workspaceadmin can override the tenant setting.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The ID of a workspace.",
+            "format": "uuid"
+          },
+          "tenantSettings": {
+            "type": "array",
+            "description": "A list of workspace tenant settings.",
+            "items": {
+              "$ref": "#/definitions/WorkspaceTenantSetting"
+            }
+          }
+        }
+      },
+      "CapacityTenantSettingOverrides": {
+        "description": "A list of tenant settings overrides.",
+        "properties": {
+          "value": {
+            "type": "array",
+            "description": "A list of tenant settings that were overridden by capacity admin.",
+            "items": {
+              "$ref": "#/definitions/CapacityTenantSettingOverride"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+          }
+        ]
+      },
+      "CapacityTenantSettingsByCapacityIdResponse": {
+        "description": "A list of tenant settings overrides for given capacityId",
+        "properties": {
+          "value": {
+            "type": "array",
+            "description": "A list of tenant settings that were overridden by capacity admin for given capacityId.",
+            "items": {
+              "$ref": "#/definitions/CapacityTenantSetting"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+          }
+        ]
+      },
+      "DomainTenantSettingOverrides": {
+        "description": "A list of tenant settings overrides.",
+        "properties": {
+          "value": {
+            "type": "array",
+            "description": "A list of tenant settings that were overridden by a domain admin.",
+            "items": {
+              "$ref": "#/definitions/DomainTenantSettingOverride"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+          }
+        ]
+      },
+      "WorkspaceTenantSettingOverrides": {
+        "description": "A list of tenant settings overrides.",
+        "properties": {
+          "value": {
+            "type": "array",
+            "description": "A list of tenant settings that were overridden by a workspace admin.",
+            "items": {
+              "$ref": "#/definitions/WorkspaceTenantSettingOverride"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+          }
+        ]
+      },
+      "UpdateTenantSettingRequest": {
+        "required": [
+          "enabled"
+        ],
+        "description": "Tenant setting update request.",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "The status of the tenant setting. False - Disabled, True - Enabled."
+          },
+          "enabledSecurityGroups": {
+            "type": "array",
+            "description": "A list of enabled security groups.",
+            "items": {
+              "$ref": "#/definitions/TenantSettingSecurityGroup"
+            }
+          },
+          "excludedSecurityGroups": {
+            "type": "array",
+            "description": "A list of excluded security groups.",
+            "items": {
+              "$ref": "#/definitions/TenantSettingSecurityGroup"
+            }
+          },
+          "properties": {
+            "type": "array",
+            "description": "Tenant setting properties.",
+            "items": {
+              "$ref": "#/definitions/TenantSettingProperty"
+            }
+          },
+          "delegateToCapacity": {
+            "type": "boolean",
+            "description": "Indicates whether the tenant setting can be delegated to a capacity admin. False - Capacity admin cannot override the tenant setting. True - Capacity admin can override the tenant setting. "
+          },
+          "delegateToDomain": {
+            "type": "boolean",
+            "description": "Indicates whether the tenant setting can be delegated to a domain admin. False - Domain admin cannot override the tenant setting. True - Domain admin can override the tenant setting."
+          },
+          "delegateToWorkspace": {
+            "type": "boolean",
+            "description": "Indicates whether the tenant setting can be delegated to a workspace admin. False - Workspace admin cannot override the tenant setting. True - Workspace admin can override the tenant setting."
+          }
+        }
+      },
+      "UpdateTenantSettingResponse": {
+        "description": "Tenant setting update response.",
+        "properties": {
+          "tenantSettings": {
+            "type": "array",
+            "description": "A list of tenant settings that were updated.",
+            "items": {
+              "$ref": "#/definitions/TenantSetting"
+            }
+          }
+        }
+      },
+      "UpdateCapacityTenantSettingOverrideRequest": {
+        "required": [
+          "enabled"
+        ],
+        "type": "object",
+        "description": "Capacity tenant setting override update request.",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "The status of the tenant setting. False - Disabled, True - Enabled."
+          },
+          "enabledSecurityGroups": {
+            "type": "array",
+            "description": "A list of enabled security groups.",
+            "items": {
+              "$ref": "#/definitions/TenantSettingSecurityGroup"
+            }
+          },
+          "excludedSecurityGroups": {
+            "type": "array",
+            "description": "A list of excluded security groups.",
+            "items": {
+              "$ref": "#/definitions/TenantSettingSecurityGroup"
+            }
+          },
+          "delegateToWorkspace": {
+            "type": "boolean",
+            "description": "Indicates whether the tenant setting can be delegated to a workspace admin. False - Workspace admin cannot override the tenant setting. True - Workspace admin can override the tenant setting."
+          }
+        }
+      },
+      "UpdateCapacityTenantSettingOverrideResponse": {
+        "description": "Capacity tenant setting override update request.",
+        "properties": {
+          "overrides": {
+            "type": "array",
+            "description": "A list of tenant settings that were updated in given capacity.",
+            "items": {
+              "$ref": "#/definitions/CapacityTenantSetting"
+            }
+          }
+        }
+      },
+      "TenantSettingSecurityGroup": {
+        "required": [ "graphId", "name" ],
+        "type": "object",
+        "description": "Tenant setting security group.",
+        "properties": {
+          "graphId": {
+            "type": "string",
+            "description": "The graph ID of the security group."
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the security group."
+          }
+        }
+      },
+      "TenantSettingProperty": {
+        "description": "Tenant setting property.",
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the property."
+          },
+          "value": {
+            "type": "string",
+            "description": "The value of the property."
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the property.",
+            "$ref": "#/definitions/TenantSettingPropertyType"
+          }
+        }
+      },
+      "TenantSettingPropertyType": {
+        "type": "string",
+        "description": "Tenant setting property type. Additional tenant setting property types may be added over time.",
+        "enum": [ "FreeText", "Url", "Boolean", "MailEnabledSecurityGroup", "Integer" ],
+        "x-ms-enum": {
+          "name": "TenantSettingPropertyType",
+          "modelAsString": true,
+          "values": [
+            {
+              "value": "FreeText",
+              "description": "UI accepts any string for the text box."
+            },
+            {
+              "value": "Url",
+              "description": "UI accepts only URLs for the text box."
+            },
+            {
+              "value": "Boolean",
+              "description": "A checkbox in the UI."
+            },
+            {
+              "value": "MailEnabledSecurityGroup",
+              "description": "UI accepts only email enabled security groups for the text box."
+            },
+            {
+              "value": "Integer",
+              "description": "UI accepts only integers for the text box."
+            }
+          ]
+        }
+      },
+      "DelegatedFrom": {
+        "type": "string",
+        "description": "The Fabric component (workspace, capacity or domain) that the tenant setting was delegated from. Additional `DelegatedFrom` may be added over time.",
+        "enum": [ "Tenant", "Capacity", "Domain" ],
+        "x-ms-enum": {
+          "name": "DelegatedFrom",
+          "modelAsString": true,
+          "values": [
+            {
+              "value": "Tenant",
+              "description": "The setting is delegated from a tenant."
+            },
+            {
+              "value": "Capacity",
+              "description": "The setting is delegated from a capacity."
+            },
+            {
+              "value": "Domain",
+              "description": "The setting is delegated from a domain."
+            }
+          ]
+        }
+      },
+      "Category": {
+        "type": "string",
+        "description": "The category of the item type. Additional category types may be added over time.",
+        "enum": [ "Item" ],
+        "x-ms-enum": {
+          "name": "Category",
+          "modelAsString": true,
+          "values": [
+            {
+              "value": "Item",
+              "description": "Fabric items such as Notebook, Synapse and KQL Database."
+            }
+          ]
+        }
+      },
+      "WorkspaceState": {
+        "type": "string",
+        "description": "The workspace state. Additional workspace states may be added over time.",
+        "enum": [ "Active", "Deleted" ],
+        "x-ms-enum": {
+          "name": "WorkspaceState",
+          "modelAsString": true,
+          "values": [
+            {
+              "value": "Active",
+              "description": "The workspace is active. Orphaned workspaces are displayed as active."
+            },
+            {
+              "value": "Deleted",
+              "description": "The workspace is deleted."
+            }
+          ]
+        }
+      },
+      "GitConnectionDetails": {
+        "type": "object",
+        "description": "Represents the details of a Git connection for a workspace.",
+        "required": [
+          "workspaceId",
+          "gitProviderDetails"
+        ],
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "The workspace ID.",
+            "format": "uuid"
+          },
+          "gitProviderDetails": {
+            "description": "The provider details.",
+            "$ref": "../common/definitions.json#/definitions/GitProviderDetails"
+          }
+        }
+      },
+      "ItemState": {
+        "type": "string",
+        "description": "The item state. Additional item states may be added over time.",
+        "enum": [ "Active" ],
+        "x-ms-enum": {
+          "name": "ItemState",
+          "modelAsString": true,
+          "values": [
+            {
+              "value": "Active",
+              "description": "An active item."
+            }
+          ]
+        }
+      },
+      "RemoveLabelsRequest": {
+        "description": "A list of items requiring an information protection label update. Each item in the list includes the item ID and Fabric item type.",
+        "properties": {
+          "items": {
+            "type": "array",
+            "description": "A list of items.",
+            "items": {
+              "$ref": "#/definitions/ItemInfo"
+            }
+          }
+        }
+      },
+      "ItemsChangeLabelResponse": {
+        "description": "A list of the unique IDs and information protection label change status of the Fabric items in the label change request.",
+        "properties": {
+          "itemsChangeLabelStatus": {
+            "type": "array",
+            "description": "A list of items change label status.",
+            "items": {
+              "$ref": "#/definitions/ItemChangeLabelStatus"
+            }
+          }
+        }
+      },
+      "ItemChangeLabelStatus": {
+        "description": "The unique ID and information protection label change status of a Fabric item",
+        "required": [
+          "id",
+          "type",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique ID of a Fabric item. The ID is in UUID format.",
+            "readOnly": true
+          },
+          "type": {
+            "description": "The Fabric item type.",
+            "readOnly": true,
+            "$ref": "../common/definitions.json#/definitions/ItemType"
+          },
+          "status": {
+            "type": "string",
+            "description": "The status of an information protection label change operation. Additional tenant setting property types may be added over time.",
+            "readOnly": true,
+            "enum": [
+              "Failed",
+              "FailedToGetUsageRights",
+              "InsufficientUsageRights",
+              "NotFound",
+              "Succeeded"
+            ],
+            "x-ms-enum": {
+              "name": "Status",
+              "modelAsExtensible": true,
+              "modelAsString": true,
+              "values": [
+                {
+                  "value": "Failed",
+                  "description": "Failed to set a new label. Please retry."
+                },
+                {
+                  "value": "FailedToGetUsageRights",
+                  "description": "Failed to set a new label. The Fabric item has a sensitivity label with protection settings, and Fabric was unable to verify that the user has sufficient usage rights to change the label."
+                },
+                {
+                  "value": "InsufficientUsageRights",
+                  "description": "Failed to set a new label. The Fabric item has a sensitivity label with protection settings, and the admin user (and the delegated user, if provided) doesn't have sufficient usage rights to change the label."
+                },
+                {
+                  "value": "NotFound",
+                  "description": "The Fabric item ID, label or type wasn't found."
+                },
+                {
+                  "value": "Succeeded",
+                  "description": "The Fabric item label was changed."
+                }
+              ]
+            }
+          }
+        }
+      },
+      "SetLabelsRequest": {
+        "description": "A composite of label information required to update an information protection label.",
+        "required": [
+          "items",
+          "labelId"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "description": "A list of items. The list includes item ID and type.",
+            "readOnly": false,
+            "items": {
+              "$ref": "#/definitions/ItemInfo"
+            }
+          },
+          "labelId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The label ID, which must be in the user's label policy.",
+            "readOnly": false
+          },
+          "delegatedPrincipal": {
+            "description": "Delegated user details. A delegated user is a user within an organization whose admin sets a label on behalf of the user. Although the admin sets the label, the delegated user is marked as the label issuer. Only principals of type 'User' are supported.",
+            "readOnly": false,
+            "$ref": "../common/definitions.json#/definitions/Principal"
+          },
+          "assignmentMethod": {
+            "type": "string",
+            "description": "Specifies whether the assigned label was set by an automated process or manually. Additional tenant setting property types may be added over time.",
+            "readOnly": false,
+            "enum": [
+              "Standard",
+              "Priviledged"
+            ],
+            "x-ms-enum": {
+              "name": "AssignmentMethod",
+              "modelAsExtensible": true,
+              "modelAsString": true,
+              "values": [
+                {
+                  "value": "Standard",
+                  "description": "The label was set by an automated process (default value)."
+                },
+                {
+                  "value": "Priviledged",
+                  "description": "The label was set manually."
+                }
+              ]
+            }
+          }
+        }
+      },
+      "ItemInfo": {
+        "description": "The item information, including item ID and type.",
+        "type": "object",
+        "required": [
+          "id",
+          "type"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "An ID in UUID format.",
+            "format": "uuid"
+
+          },
+          "type": {
+            "description": "The item type.",
+            "$ref": "../common/definitions.json#/definitions/ItemType"
+          }
+        }
+      },
+      "RestoreWorkspaceRequest": {
+        "description": "The request to restore a deleted workspace.",
+        "properties": {
+          "newWorkspaceName": {
+            "type": "string",
+            "description": "The name of the workspace. Mandatory if the restore request is for *My workspace*."
+          },
+          "newWorkspaceAdminPrincipal": {
+            "description": "The workspace's admin.",
+            "$ref": "../common/definitions.json#/definitions/Principal"
+          }
+        }
+      }
+    }
+}

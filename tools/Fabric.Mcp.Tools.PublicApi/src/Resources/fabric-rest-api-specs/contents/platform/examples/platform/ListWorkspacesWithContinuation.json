@@ -1,0 +1,32 @@
+{
+    "parameters": {},
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "fa9ad228-3e6b-44d4-b5f4-e275f337afa9",
+                        "displayName": "My workspace",
+                        "description": "",
+                        "type": "Personal"
+                    },
+                    {
+                        "id": "cfafbeb1-8037-4d0c-896e-a46fb27ff227",
+                        "displayName": "Marketing",
+                        "description": "A  workspace used by the marketing team",
+                        "type": "Workspace"
+                    },
+                    {
+                        "id": "f2d70dc6-8f3e-4f2c-b00e-e2d336d7d711",
+                        "displayName": "Finance",
+                        "description": "A workspace used by the finance team",
+                        "type": "Workspace",
+                        "capacityId": "171018af-1531-4e61-942a-74f024b7f9fd"
+                    }
+                ],
+                "continuationToken": "LDEsMTAwMDAwLDA%3D",
+                "continuationUri": "https://api.fabric.microsoft.com/v1/workspaces?continuationToken=LDEsMTAwMDAwLDA%3D"
+            }
+        }
+    }
+}

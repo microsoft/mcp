@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -23,7 +22,7 @@ public sealed class WorkspaceLogQueryCommandTests
     private readonly ILogger<WorkspaceLogQueryCommand> _logger;
     private readonly WorkspaceLogQueryCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     private const string _knownSubscription = "knownSubscription";
     private const string _knownWorkspace = "knownWorkspace";
@@ -45,13 +44,13 @@ public sealed class WorkspaceLogQueryCommandTests
 
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Theory]
-    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query {_knownQuery}", true)]
-    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query {_knownQuery} --hours {_knownHours} --limit {_knownLimit}", true)]
-    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --table {_knownTable} --query {_knownQuery}", false)] // missing resource-group
+    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query \"{_knownQuery}\"", true)]
+    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query \"{_knownQuery}\" --hours {_knownHours} --limit {_knownLimit}", true)]
+    [InlineData($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --table {_knownTable} --query \"{_knownQuery}\"", false)] // missing resource-group
     [InlineData($"--subscription {_knownSubscription}", false)]
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
@@ -77,7 +76,7 @@ public sealed class WorkspaceLogQueryCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _parser.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
 
         // Assert
         Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
@@ -113,13 +112,7 @@ public sealed class WorkspaceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(mockResults);
 
-        var args = _parser.Parse([
-            "--subscription", _knownSubscription,
-            "--workspace", _knownWorkspace,
-            "--resource-group", _knownResourceGroup,
-            "--table", _knownTable,
-            "--query", _knownQuery
-        ]);
+        var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query \"{_knownQuery}\"");
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -156,16 +149,7 @@ public sealed class WorkspaceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(mockResults);
 
-        var args = _parser.Parse([
-            "--subscription", _knownSubscription,
-            "--workspace", _knownWorkspace,
-            "--resource-group", _knownResourceGroup,
-            "--table", _knownTable,
-            "--query", _knownQuery,
-            "--hours", _knownHours,
-            "--limit", _knownLimit,
-            "--tenant", _knownTenant
-        ]);
+        var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query \"{_knownQuery}\" --hours {_knownHours} --limit {_knownLimit} --tenant {_knownTenant}");
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -199,13 +183,7 @@ public sealed class WorkspaceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(mockResults);
 
-        var args = _parser.Parse([
-            "--subscription", _knownSubscription,
-            "--workspace", _knownWorkspace,
-            "--resource-group", _knownResourceGroup,
-            "--table", _knownTable,
-            "--query", _knownQuery
-        ]);
+        var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query \"{_knownQuery}\"");
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -238,13 +216,7 @@ public sealed class WorkspaceLogQueryCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<List<JsonNode>>(new Exception("Test error")));
 
-        var args = _parser.Parse([
-            "--subscription", _knownSubscription,
-            "--workspace", _knownWorkspace,
-            "--resource-group", _knownResourceGroup,
-            "--table", _knownTable,
-            "--query", _knownQuery
-        ]);
+        var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --workspace {_knownWorkspace} --resource-group {_knownResourceGroup} --table {_knownTable} --query \"{_knownQuery}\"");
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);

@@ -3,6 +3,8 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
@@ -16,10 +18,6 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
     private const string CommandTitle = "Create Workbook";
     private readonly ILogger<CreateWorkbooksCommand> _logger = logger;
 
-    private readonly Option<string> _displayNameOption = WorkbooksOptionDefinitions.DisplayNameRequired;
-    private readonly Option<string> _serializedContentOption = WorkbooksOptionDefinitions.SerializedContentRequired;
-    private readonly Option<string> _sourceIdOption = WorkbooksOptionDefinitions.SourceId;
-
     public override string Name => "create";
 
     public override string Description =>
@@ -31,37 +29,46 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        RequireResourceGroup();
-        command.AddOption(_displayNameOption);
-        command.AddOption(_serializedContentOption);
-        command.AddOption(_sourceIdOption);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(WorkbooksOptionDefinitions.DisplayNameRequired);
+        command.Options.Add(WorkbooksOptionDefinitions.SerializedContentRequired);
+        command.Options.Add(WorkbooksOptionDefinitions.SourceId);
     }
 
     protected override CreateWorkbookOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DisplayName = parseResult.GetValueForOption(_displayNameOption);
-        options.SerializedContent = parseResult.GetValueForOption(_serializedContentOption);
-        options.SourceId = parseResult.GetValueForOption(_sourceIdOption);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.DisplayName = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.DisplayNameRequired.Name);
+        options.SerializedContent = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.SerializedContentRequired.Name);
+        options.SourceId = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.SourceId.Name);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var workbooksService = context.GetService<IWorkbooksService>();
             var createdWorkbook = await workbooksService.CreateWorkbook(
                 options.Subscription!,

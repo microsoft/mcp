@@ -3,13 +3,11 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Services.Telemetry;
+using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Options;
 using Azure.Mcp.Tools.Quota.Options.Usage;
 using Azure.Mcp.Tools.Quota.Services;
 using Azure.Mcp.Tools.Quota.Services.Util;
-using Azure.Mcp.Tools.Quota.Services.Util.Usage;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Commands.Usage;
@@ -19,9 +17,6 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
     private const string CommandTitle = "Check Azure resources usage and quota in a region";
     private readonly ILogger<CheckCommand> _logger = logger;
 
-    private readonly Option<string> _regionOption = QuotaOptionDefinitions.QuotaCheck.Region;
-    private readonly Option<string> _resourceTypesOption = QuotaOptionDefinitions.QuotaCheck.ResourceTypes;
-
     public override string Name => "check";
 
     public override string Description =>
@@ -30,41 +25,53 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
         """;
 
     public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_regionOption);
-        command.AddOption(_resourceTypesOption);
+        command.Options.Add(QuotaOptionDefinitions.QuotaCheck.Region);
+        command.Options.Add(QuotaOptionDefinitions.QuotaCheck.ResourceTypes);
     }
 
     protected override CheckOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Region = parseResult.GetValueForOption(_regionOption) ?? string.Empty;
-        options.ResourceTypes = parseResult.GetValueForOption(_resourceTypesOption) ?? string.Empty;
+        options.Region = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.QuotaCheck.Region.Name) ?? string.Empty;
+        options.ResourceTypes = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.QuotaCheck.ResourceTypes.Name) ?? string.Empty;
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
+            context.Activity?
+                .AddTag(QuotaTelemetryTags.Region, options.Region)
+                .AddTag(QuotaTelemetryTags.ResourceTypes, options.ResourceTypes);
 
-            var ResourceTypes = options.ResourceTypes.Split(',')
+            var resourceTypes = options.ResourceTypes.Split(',')
                 .Select(rt => rt.Trim())
                 .Where(rt => !string.IsNullOrWhiteSpace(rt))
                 .ToList();
             var quotaService = context.GetService<IQuotaService>();
             Dictionary<string, List<UsageInfo>> toolResult = await quotaService.GetAzureQuotaAsync(
-                ResourceTypes,
+                resourceTypes,
                 options.Subscription!,
                 options.Region);
 

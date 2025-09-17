@@ -23,7 +23,15 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -51,11 +59,10 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         var commandDetails = command.GetCommand();
 
         var optionInfos = commandDetails.Options?
-            .Where(arg => !arg.IsHidden)
             .Select(arg => new OptionInfo(
                 name: arg.Name,
                 description: arg.Description!,
-                required: arg.IsRequired))
+                required: arg.Required))
             .ToList();
 
         return new CommandInfo
