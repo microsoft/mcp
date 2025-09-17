@@ -6,6 +6,8 @@
 ### Added
 
 ### Changed
+- Made trimmed binaries the default for better performance
+- Added opt-out mechanism via `azureMcp.useNonTrimmedBinaries: true` to use non-trimmed binaries.
 
 ### Fixed
 

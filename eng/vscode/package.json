@@ -143,6 +143,11 @@
                     "type": "boolean",
                     "default": false,
                     "markdownDescription": "Start the Azure MCP server in read-only mode (operations that modify resources will be disabled)."
+                },
+                "azureMcp.useNonTrimmedBinaries": {
+                    "type": "boolean",
+                    "default": false,
+                    "markdownDescription": "Opt out of the trimmed single-file Azure MCP Server and use the standard self-contained version (with the .NET runtime, entry point executable, and all DLLs)."
                 }
             }
         }
