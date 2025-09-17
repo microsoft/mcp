@@ -6,6 +6,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Update `IAreaSetup` API so the area's command tree is returned rather than modifying an existing object and more DI-testing friendly.
+
 ### Breaking Changes
 
 ### Bugs Fixed
