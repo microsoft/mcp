@@ -51,4 +51,15 @@ public interface IFoundryService
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null
     );
+
+    Task<CompletionResult> CreateCompletionAsync(
+        string resourceName,
+        string deploymentName,
+        string promptText,
+        string subscription,
+        string resourceGroup,
+        int? maxTokens = null,
+        double? temperature = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
 }

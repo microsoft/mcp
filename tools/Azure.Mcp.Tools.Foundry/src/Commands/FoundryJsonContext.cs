@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.ResourceManager.CognitiveServices.Models;
 
@@ -12,6 +13,7 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 [JsonSerializable(typeof(ModelDeploymentCommand.ModelDeploymentCommandResult))]
 [JsonSerializable(typeof(KnowledgeIndexListCommand.KnowledgeIndexListCommandResult))]
 [JsonSerializable(typeof(KnowledgeIndexSchemaCommand.KnowledgeIndexSchemaCommandResult))]
+[JsonSerializable(typeof(OpenAiCompletionsCreateCommand.OpenAiCompletionsCreateCommandResult))]
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(ModelCatalogFilter))]
 [JsonSerializable(typeof(ModelCatalogRequest))]
@@ -21,6 +23,8 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 [JsonSerializable(typeof(ModelDeploymentResult))]
 [JsonSerializable(typeof(KnowledgeIndexInformation))]
 [JsonSerializable(typeof(KnowledgeIndexSchema))]
+[JsonSerializable(typeof(CompletionResult))]
+[JsonSerializable(typeof(CompletionUsageInfo))]
 [JsonSerializable(typeof(CognitiveServicesAccountSku))]
 [JsonSerializable(typeof(CognitiveServicesAccountDeploymentProperties))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
