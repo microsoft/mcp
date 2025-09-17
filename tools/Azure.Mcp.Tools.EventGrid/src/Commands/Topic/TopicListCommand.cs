@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Options.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Topic;
 
@@ -18,8 +17,8 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
 
     public override string Description =>
         """
-        List all Event Grid topics in a subscription with configuration and status information. This tool retrieves 
-        topic details including endpoints, access keys, and subscription information for event publishing and management. 
+        List all Event Grid topics in a subscription with configuration and status information. This tool retrieves
+        topic details including endpoints, access keys, and subscription information for event publishing and management.
         Returns topic information as JSON array. Requires subscription.
         """;
 
@@ -38,7 +37,14 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        UseResourceGroup(); // Optional resource group filtering
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+    }
+
+    protected override TopicListOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
@@ -59,7 +65,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
                 options.RetryPolicy);
 
             context.Response.Results = topics?.Count > 0
-                ? ResponseResult.Create<TopicListCommandResult>(new TopicListCommandResult(topics), EventGridJsonContext.Default.TopicListCommandResult)
+                ? ResponseResult.Create(new TopicListCommandResult(topics), EventGridJsonContext.Default.TopicListCommandResult)
                 : null;
         }
         catch (Exception ex)

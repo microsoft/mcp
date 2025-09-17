@@ -14,18 +14,16 @@ public abstract class BaseQueueCommand<
     : BaseStorageCommand<T>
     where T : BaseQueueOptions, new()
 {
-    protected readonly Option<string> _queueOption = StorageOptionDefinitions.Queue;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_queueOption);
+        command.Options.Add(StorageOptionDefinitions.Queue);
     }
 
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Queue = parseResult.GetValueOrDefault(_queueOption);
+        options.Queue = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Queue.Name);
         return options;
     }
 }

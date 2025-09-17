@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Models;
@@ -10,7 +9,6 @@ using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.UnitTests.Server;
@@ -90,7 +88,7 @@ public class ServerShowCommandTests
             "test-server",
             "test-rg",
             "test-sub",
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedServer);
 
@@ -111,7 +109,7 @@ public class ServerShowCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServer>(new KeyNotFoundException("SQL server not found")));
 
@@ -128,12 +126,12 @@ public class ServerShowCommandTests
     public async Task ExecuteAsync_WhenAzureRequestFails404_ReturnsNotFound()
     {
         // Arrange
-        var requestFailedException = new Azure.RequestFailedException(404, "Resource not found");
+        var requestFailedException = new RequestFailedException(404, "Resource not found");
         _service.GetServerAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServer>(requestFailedException));
 
@@ -150,12 +148,12 @@ public class ServerShowCommandTests
     public async Task ExecuteAsync_WhenAzureRequestFails403_ReturnsAuthorizationError()
     {
         // Arrange
-        var requestFailedException = new Azure.RequestFailedException(403, "Authorization failed");
+        var requestFailedException = new RequestFailedException(403, "Authorization failed");
         _service.GetServerAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServer>(requestFailedException));
 
@@ -176,7 +174,7 @@ public class ServerShowCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServer>(new ArgumentException("Invalid server name")));
 
@@ -197,7 +195,7 @@ public class ServerShowCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServer>(new InvalidOperationException("Unexpected error")));
 

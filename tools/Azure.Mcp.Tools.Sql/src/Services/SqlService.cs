@@ -367,7 +367,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         try
         {
-            // Use ARM client directly for create operations  
+            // Use ARM client directly for create operations
             var armClient = await CreateArmClientAsync(null, retryPolicy);
             var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
@@ -441,7 +441,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         try
         {
-            // Use ARM client directly for get operations  
+            // Use ARM client directly for get operations
             var armClient = await CreateArmClientAsync(null, retryPolicy);
             var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
@@ -463,7 +463,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 Tags: tags
             );
         }
-        catch (Azure.RequestFailedException reqEx) when (reqEx.Status == 404)
+        catch (RequestFailedException reqEx) when (reqEx.Status == 404)
         {
             throw new KeyNotFoundException($"SQL server '{serverName}' not found in resource group '{resourceGroup}' for subscription '{subscription}'.");
         }
@@ -487,7 +487,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         try
         {
-            // Use ARM client directly for delete operations  
+            // Use ARM client directly for delete operations
             var armClient = await CreateArmClientAsync(null, retryPolicy);
             var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
@@ -500,7 +500,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
             return true;
         }
-        catch (Azure.RequestFailedException reqEx) when (reqEx.Status == 404)
+        catch (RequestFailedException reqEx) when (reqEx.Status == 404)
         {
             _logger.LogWarning(
                 "SQL server not found during delete operation. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",

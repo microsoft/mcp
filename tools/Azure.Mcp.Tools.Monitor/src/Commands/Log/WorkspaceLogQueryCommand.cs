@@ -8,14 +8,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Log;
 
-public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> logger) : BaseMonitorCommand<WorkspaceLogQueryOptions>()
+public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> logger) : BaseWorkspaceMonitorCommand<WorkspaceLogQueryOptions>()
 {
     private const string CommandTitle = "Query Log Analytics Workspace";
     private readonly ILogger<WorkspaceLogQueryCommand> _logger = logger;
-    private readonly Option<string> _tableNameOption = MonitorOptionDefinitions.TableName;
-    private readonly Option<string> _queryOption = MonitorOptionDefinitions.Query;
-    private readonly Option<int> _hoursOption = MonitorOptionDefinitions.Hours;
-    private readonly Option<int> _limitOption = MonitorOptionDefinitions.Limit;
 
     public override string Name => "query";
 
@@ -43,19 +39,19 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_tableNameOption);
-        command.Options.Add(_queryOption);
-        command.Options.Add(_hoursOption);
-        command.Options.Add(_limitOption);
+        command.Options.Add(MonitorOptionDefinitions.TableName);
+        command.Options.Add(MonitorOptionDefinitions.Query);
+        command.Options.Add(MonitorOptionDefinitions.Hours);
+        command.Options.Add(MonitorOptionDefinitions.Limit);
     }
 
     protected override WorkspaceLogQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TableName = parseResult.GetValueOrDefault(_tableNameOption);
-        options.Query = parseResult.GetValueOrDefault(_queryOption);
-        options.Hours = parseResult.GetValueOrDefault(_hoursOption);
-        options.Limit = parseResult.GetValueOrDefault(_limitOption);
+        options.TableName = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.TableName.Name);
+        options.Query = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Query.Name);
+        options.Hours = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Hours.Name);
+        options.Limit = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Limit.Name);
         return options;
     }
 

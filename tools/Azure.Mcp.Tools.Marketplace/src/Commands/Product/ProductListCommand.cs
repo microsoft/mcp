@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Marketplace.Models;
 using Azure.Mcp.Tools.Marketplace.Options.Product;
@@ -16,15 +17,6 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
 {
     private const string CommandTitle = "List Marketplace Products";
     private readonly ILogger<ProductListCommand> _logger = logger;
-
-    // Define options from OptionDefinitions
-    private readonly Option<string> _languageOption = OptionDefinitions.Marketplace.Language;
-    private readonly Option<string> _searchOption = OptionDefinitions.Marketplace.Search;
-    private readonly Option<string> _filterOption = OptionDefinitions.Marketplace.Filter;
-    private readonly Option<string> _orderByOption = OptionDefinitions.Marketplace.OrderBy;
-    private readonly Option<string> _selectOption = OptionDefinitions.Marketplace.Select;
-    private readonly Option<string> _nextCursorOption = OptionDefinitions.Marketplace.NextCursor;
-    private readonly Option<string> _expandOption = OptionDefinitions.Marketplace.Expand;
 
     public override string Name => "list";
 
@@ -68,25 +60,25 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
 
         // Add marketplace-specific options
         var options = command.Options;
-        options.Add(_languageOption);
-        options.Add(_searchOption);
-        options.Add(_filterOption);
-        options.Add(_orderByOption);
-        options.Add(_selectOption);
-        options.Add(_nextCursorOption);
-        options.Add(_expandOption);
+        options.Add(OptionDefinitions.Marketplace.Language);
+        options.Add(OptionDefinitions.Marketplace.Search);
+        options.Add(OptionDefinitions.Marketplace.Filter);
+        options.Add(OptionDefinitions.Marketplace.OrderBy);
+        options.Add(OptionDefinitions.Marketplace.Select);
+        options.Add(OptionDefinitions.Marketplace.NextCursor);
+        options.Add(OptionDefinitions.Marketplace.Expand);
     }
 
     protected override ProductListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Language = parseResult.GetValue(_languageOption);
-        options.Search = parseResult.GetValue(_searchOption);
-        options.Filter = parseResult.GetValue(_filterOption);
-        options.OrderBy = parseResult.GetValue(_orderByOption);
-        options.Select = parseResult.GetValue(_selectOption);
-        options.NextCursor = parseResult.GetValue(_nextCursorOption);
-        options.Expand = parseResult.GetValue(_expandOption);
+        options.Language = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Language.Name);
+        options.Search = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Search.Name);
+        options.Filter = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Filter.Name);
+        options.OrderBy = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.OrderBy.Name);
+        options.Select = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Select.Name);
+        options.NextCursor = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.NextCursor.Name);
+        options.Expand = parseResult.GetValueOrDefault<string>(OptionDefinitions.Marketplace.Expand.Name);
         return options;
     }
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Azure.Mcp.Tools.AppConfig.Options;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue;
@@ -14,10 +15,6 @@ public sealed class KeyValueListCommand(ILogger<KeyValueListCommand> logger) : B
 {
     private const string CommandTitle = "List App Configuration Key-Value Settings";
     private readonly ILogger<KeyValueListCommand> _logger = logger;
-
-    // KeyValueList has different key and label descriptions, which is why we are defining here instead of using BaseKeyValueCommand
-    private readonly Option<string> _keyOption = AppConfigOptionDefinitions.KeyValueList.Key;
-    private readonly Option<string> _labelOption = AppConfigOptionDefinitions.KeyValueList.Label;
 
     public override string Name => "list";
 
@@ -43,15 +40,15 @@ public sealed class KeyValueListCommand(ILogger<KeyValueListCommand> logger) : B
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_keyOption);
-        command.Options.Add(_labelOption);
+        command.Options.Add(AppConfigOptionDefinitions.KeyValueList.Key);
+        command.Options.Add(AppConfigOptionDefinitions.KeyValueList.Label);
     }
 
     protected override KeyValueListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Key = parseResult.GetValue(_keyOption);
-        options.Label = parseResult.GetValue(_labelOption);
+        options.Key = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.KeyValueList.Key.Name);
+        options.Label = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.KeyValueList.Label.Name);
         return options;
     }
 

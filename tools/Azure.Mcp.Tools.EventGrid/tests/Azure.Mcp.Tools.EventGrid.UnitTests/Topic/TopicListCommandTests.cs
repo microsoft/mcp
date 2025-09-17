@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
@@ -45,7 +44,7 @@ public class TopicListCommandTests
     {
         // Arrange
         var subscriptionId = "sub123";
-        var expectedTopics = new List<Azure.Mcp.Tools.EventGrid.Models.EventGridTopicInfo>
+        var expectedTopics = new List<Models.EventGridTopicInfo>
         {
             new("topic1", "eastus", "https://topic1.eastus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema"),
             new("topic2", "westus", "https://topic2.westus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema")
@@ -79,7 +78,7 @@ public class TopicListCommandTests
         var subscriptionId = "sub123";
 
         _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromResult(new List<Azure.Mcp.Tools.EventGrid.Models.EventGridTopicInfo>()));
+            .Returns(Task.FromResult(new List<Models.EventGridTopicInfo>()));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
@@ -123,7 +122,7 @@ public class TopicListCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            var expectedTopics = new List<Azure.Mcp.Tools.EventGrid.Models.EventGridTopicInfo>
+            var expectedTopics = new List<Models.EventGridTopicInfo>
             {
                 new("topic1", "eastus", "https://topic1.eastus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema"),
                 new("topic2", "westus", "https://topic2.westus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema")
@@ -154,6 +153,6 @@ public class TopicListCommandTests
     private class TopicListResult
     {
         [JsonPropertyName("topics")]
-        public List<Azure.Mcp.Tools.EventGrid.Models.EventGridTopicInfo>? Topics { get; set; }
+        public List<Models.EventGridTopicInfo>? Topics { get; set; }
     }
 }

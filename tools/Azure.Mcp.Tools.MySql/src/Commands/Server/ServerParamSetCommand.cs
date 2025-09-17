@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.MySql.Json;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Options.Server;
@@ -13,8 +14,6 @@ namespace Azure.Mcp.Tools.MySql.Commands.Server;
 public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger) : BaseServerCommand<ServerParamSetOptions>(logger)
 {
     private const string CommandTitle = "Set MySQL Server Parameter";
-    private readonly Option<string> _paramOption = MySqlOptionDefinitions.Param;
-    private readonly Option<string> _valueOption = MySqlOptionDefinitions.Value;
 
     public override string Name => "set";
 
@@ -35,15 +34,15 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_paramOption);
-        command.Options.Add(_valueOption);
+        command.Options.Add(MySqlOptionDefinitions.Param);
+        command.Options.Add(MySqlOptionDefinitions.Value);
     }
 
     protected override ServerParamSetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Param = parseResult.GetValue(_paramOption);
-        options.Value = parseResult.GetValue(_valueOption);
+        options.Param = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.Param.Name);
+        options.Value = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.Value.Name);
         return options;
     }
 

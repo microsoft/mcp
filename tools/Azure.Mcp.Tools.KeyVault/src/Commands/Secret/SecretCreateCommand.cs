@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -14,9 +15,6 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger) : S
 {
     private const string CommandTitle = "Create Key Vault Secret";
     private readonly ILogger<SecretCreateCommand> _logger = logger;
-    private readonly Option<string> _vaultOption = KeyVaultOptionDefinitions.VaultName;
-    private readonly Option<string> _secretOption = KeyVaultOptionDefinitions.SecretName;
-    private readonly Option<string> _valueOption = KeyVaultOptionDefinitions.SecretValue;
 
     public override string Name => "create";
 
@@ -41,17 +39,17 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger) : S
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_vaultOption);
-        command.Options.Add(_secretOption);
-        command.Options.Add(_valueOption);
+        command.Options.Add(KeyVaultOptionDefinitions.VaultName);
+        command.Options.Add(KeyVaultOptionDefinitions.SecretName);
+        command.Options.Add(KeyVaultOptionDefinitions.SecretValue);
     }
 
     protected override SecretCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValue(_vaultOption);
-        options.SecretName = parseResult.GetValue(_secretOption);
-        options.SecretValue = parseResult.GetValue(_valueOption);
+        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
+        options.SecretName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.SecretName.Name);
+        options.SecretValue = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.SecretValue.Name);
         return options;
     }
 

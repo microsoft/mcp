@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Server;
 using Azure.Mcp.Tools.Sql.Services;
@@ -16,14 +15,12 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
 {
     private const string CommandTitle = "Delete SQL Server";
 
-    private readonly Option<bool> _forceOption = SqlOptionDefinitions.ForceOption;
-
     public override string Name => "delete";
 
     public override string Description =>
         """
-        Deletes an Azure SQL server and all of its databases from the specified resource group. 
-        This operation is irreversible and will permanently remove the server and all its data. 
+        Deletes an Azure SQL server and all of its databases from the specified resource group.
+        This operation is irreversible and will permanently remove the server and all its data.
         Use the --force flag to skip confirmation prompts.
         """;
 
@@ -42,13 +39,13 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_forceOption);
+        command.Options.Add(SqlOptionDefinitions.ForceOption);
     }
 
     protected override ServerDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Force = parseResult.GetValueOrDefault(_forceOption);
+        options.Force = parseResult.GetValueOrDefault<bool>(SqlOptionDefinitions.ForceOption.Name);
         return options;
     }
 
@@ -107,20 +104,20 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == 404 =>
             $"The given SQL server not found. It may have already been deleted.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed deleting the SQL server. Verify you have appropriate permissions. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx when reqEx.Status == 409 =>
+        RequestFailedException reqEx when reqEx.Status == 409 =>
             $"Cannot delete SQL server due to a conflict. It may be in use or have dependent resources. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException reqEx => reqEx.Message,
         ArgumentException argEx => $"Invalid parameter: {argEx.Message}",
         _ => base.GetErrorMessage(ex)
     };
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => reqEx.Status,
+        RequestFailedException reqEx => reqEx.Status,
         ArgumentException => 400,
         _ => base.GetStatusCode(ex)
     };
