@@ -18,6 +18,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 | MCP Server           |  README              | Source Code             |    CHANGELOG          | Releases             | Documentation             | Troubleshooting             | Support             |
 |:---------------------|:--------------------:|:-----------------------:|:---------------------:|:--------------------:|:-------------------------:|:---------------------------:|:-------------------:|
 | Azure MCP            | [Azure MCP README]   | [Azure MCP Source Code] | [Azure MCP CHANGELOG] | [Azure MCP Releases] | [Azure MCP Documentation] | [Azure MCP Troubleshooting] | [Azure MCP Support] |
+| Microsoft Fabric MCP | [Fabric MCP README]  | [Fabric MCP Source Code] | [Fabric MCP CHANGELOG] | [Fabric MCP Releases] | [Fabric Documentation] | [Fabric MCP Troubleshooting] | [Fabric MCP Support] |
 
 [Azure MCP README]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md
 [Azure MCP CHANGELOG]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/CHANGELOG.md
@@ -27,6 +28,14 @@ This repository contains core libraries, test frameworks, engineering systems, p
 [Azure MCP Troubleshooting]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md
 [Azure MCP Support]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/SUPPORT.md
 
+[Fabric MCP README]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/README.md
+[Fabric MCP CHANGELOG]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/CHANGELOG.md
+[Fabric MCP Source Code]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server
+[Fabric MCP Releases]: https://github.com/microsoft/mcp/releases?q=Fabric.Mcp.Server-0
+[Fabric Documentation]: https://learn.microsoft.com/fabric/
+[Fabric MCP Troubleshooting]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md
+[Fabric MCP Support]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/SUPPORT.md
+
 
 ## 📚 Which MCP Servers are available from Microsoft?
 
@@ -34,6 +43,12 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **REPOSITORY**: [microsoft/mcp](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server#readme)
 - **DESCRIPTION**: All Azure MCP tools in a single server.  The Azure MCP Server implements the MCP specification to create a seamless connection between AI agents and Azure services.  Azure MCP Server can be used alone or with the GitHub Copilot for Azure extension in VS Code.
 - **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
+- **TYPE**: `Local`
+
+### <img height="18" width="18" src="https://learn.microsoft.com/fabric/media/fabric-icon.png" alt="Microsoft Fabric Logo" /> Microsoft Fabric (Public Preview)
+- **REPOSITORY**: [microsoft/mcp](https://github.com/microsoft/mcp/tree/main/servers/Fabric.Mcp.Server#readme)
+- **DESCRIPTION**: A local-first MCP server providing AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. Enables AI-assisted development for all Fabric workloads without connecting to live environments.
+- **CATEGORY**: `DATA AND ANALYTICS`
 - **TYPE**: `Local`
 
 ### ✨ Azure AI Foundry

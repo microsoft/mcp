@@ -9,6 +9,7 @@
     <NpmPackageKeywords>fabric,mcp,model-context-protocol</NpmPackageKeywords>
     <PackageId>Microsoft.Fabric.Mcp</PackageId>
     <ToolCommandName>$(CliName)</ToolCommandName>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <PropertyGroup>
