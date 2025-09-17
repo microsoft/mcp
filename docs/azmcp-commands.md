@@ -478,6 +478,13 @@ azmcp deploy plan get --workspace-folder <workspace-folder> \
 # List all Event Grid topics in a subscription or resource group
 azmcp eventgrid topic list --subscription <subscription> \
                            [--resource-group <resource-group>]
+
+
+# List all Event Grid subscriptions in a subscription, resource group, or topic
+azmcp eventgrid subscription list --subscription <subscription> \
+                                  [--resource-group <resource-group>] \
+                                  [--topic <topic>]
+                                  [--location <location>]
 ```
 
 ### Azure Function App Operations

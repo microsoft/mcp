@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 
@@ -20,9 +22,7 @@ public abstract class SubscriptionCommand<
         // This mirrors the prior behavior that preferred the explicit option but fell back to env var.
         command.Validators.Add(commandResult =>
         {
-            var hasOption = commandResult.HasOptionResult(OptionDefinitions.Common.Subscription.Name);
-            var hasEnv = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID"));
-            if (!hasOption && !hasEnv)
+            if (!HasSubscriptionAvailable(commandResult))
             {
                 commandResult.AddError("Missing Required options: --subscription");
             }
@@ -36,7 +36,7 @@ public abstract class SubscriptionCommand<
         // Get subscription from command line option or fallback to environment variable
         var subscriptionValue = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Subscription.Name);
 
-        var envSubscription = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
+        var envSubscription = EnvironmentHelpers.GetAzureSubscriptionId();
         options.Subscription = (string.IsNullOrEmpty(subscriptionValue)
             || IsPlaceholder(subscriptionValue))
             && !string.IsNullOrEmpty(envSubscription)
@@ -44,6 +44,18 @@ public abstract class SubscriptionCommand<
             : subscriptionValue;
 
         return options;
+    }
+
+    /// <summary>
+    /// Checks if a subscription is available either from the command option or AZURE_SUBSCRIPTION_ID environment variable.
+    /// </summary>
+    /// <param name="commandResult">The command result to check for the subscription option.</param>
+    /// <returns>True if a subscription is available, false otherwise.</returns>
+    protected static bool HasSubscriptionAvailable(CommandResult commandResult)
+    {
+        var hasOption = commandResult.HasOptionResult(OptionDefinitions.Common.Subscription);
+        var hasEnv = !string.IsNullOrEmpty(EnvironmentHelpers.GetAzureSubscriptionId());
+        return hasOption || hasEnv;
     }
 
     private static bool IsPlaceholder(string value)

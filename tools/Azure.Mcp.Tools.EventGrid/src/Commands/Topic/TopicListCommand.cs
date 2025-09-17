@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
+using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Mcp.Tools.EventGrid.Options.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
 
@@ -37,7 +38,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup);
     }
 
     protected override TopicListOptions BindOptions(ParseResult parseResult)
@@ -62,9 +63,12 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
             var topics = await eventGridService.GetTopicsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
+                options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(new(topics ?? []), EventGridJsonContext.Default.TopicListCommandResult);
+            context.Response.Results = ResponseResult.Create(
+                new TopicListCommandResult(topics ?? []),
+                EventGridJsonContext.Default.TopicListCommandResult);
         }
         catch (Exception ex)
         {
