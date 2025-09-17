@@ -1,0 +1,34 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "3546052c-ae64-4526-b1a8-52af7761426f",
+                        "displayName": "KQLQueryset_1",
+                        "description": "A KQL queryset description.",
+                        "type": "KQLQueryset",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                    },
+                    {
+                        "id": "4c9adc22-ffb1-491f-baaa-9c9987745591",
+                        "displayName": "KQLQueryset_2",
+                        "description": "A KQL queryset description.",
+                        "type": "KQLQueryset",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                    },
+                    {
+                        "id": "8b681594-894d-4adf-8ae8-aed415dd1de6",
+                        "displayName": "KQLQueryset_3",
+                        "description": "A KQL queryset description.",
+                        "type": "KQLQueryset",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,33 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "createMirroredAzureDatabricksCatalogRequest": {
+      "displayName": "MirroredAzureDatabricksCatalog_created_with_creationPayload",
+      "description": "A MirroredAzureDatabricksCatalog created with creation payload.",
+      "creationPayload": {
+        "catalogName": "catalog_1",
+        "databricksWorkspaceConnectionId": "c1128f28-d84f-417c-8234-0feb91e35f86",
+        "mirroringMode": "Full",
+        "storageConnectionId": "c1128f28-d84f-417c-8234-0feb91e35f87"
+      }
+    }
+  },
+  "responses": {
+    "201": {
+      "body": {
+        "displayName": "MirroredAzureDatabricksCatalog_created_with_creationPayload",
+        "description": "A MirroredAzureDatabricksCatalog created with creation payload.",
+        "type": "MirroredAzureDatabricksCatalog",
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "id": "5b218778-e7a5-4d73-8187-f10824047715"
+      }
+    },
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "Retry-After": 30
+      }
+    }
+  }
+}

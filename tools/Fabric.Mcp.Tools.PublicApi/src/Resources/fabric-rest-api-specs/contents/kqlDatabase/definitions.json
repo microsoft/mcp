@@ -1,0 +1,266 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "KQLDatabase data types"
+    },
+    "paths": {},
+    "definitions": {
+        "KQLDatabases": {
+            "description": "A list of KQL databases.",
+            "type": "object",
+            "required": [
+                "value"
+            ],
+            "properties": {
+                "value": {
+                    "description": "A list of KQL databases.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KQLDatabase"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "KQLDatabase": {
+            "description": "A KQL database object.",
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The KQL database properties.",
+                    "$ref": "#/definitions/KQLDatabaseProperties"
+                }
+            }
+        },
+        "CreateKQLDatabaseRequest": {
+            "description": "Create KQL database request payload.",
+            "required": [
+                "displayName"
+            ],
+            "properties": {
+                "displayName": {
+                    "description": "The KQL database display name. The database name can contain alphanumeric characters, underscores, periods, and hyphens. Special characters aren't supported.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The KQL database description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the KQL database is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "creationPayload": {
+                    "description": "The KQL database creation payload. Use `definition` or `creationPayload`. You can't use both at the same time.",
+                    "$ref": "#/definitions/KQLDatabaseCreationPayload",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The KQL database public definition. Use `creationPayload` or `definition`. You can't use both at the same time.",
+                    "$ref": "#/definitions/KQLDatabaseDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "KQLDatabaseProperties": {
+            "description": "The KQL database properties.",
+            "type": "object",
+            "required": [
+                "queryServiceUri",
+                "ingestionServiceUri"
+            ],
+            "properties": {
+                "parentEventhouseItemId": {
+                    "description": "Parent eventhouse ID.",
+                    "type": "string"
+                },
+                "queryServiceUri": {
+                    "description": "Query service URI.",
+                    "type": "string"
+                },
+                "ingestionServiceUri": {
+                    "description": "Ingestion service URI.",
+                    "type": "string"
+                },
+                "databaseType": {
+                    "description": "The type of the database.",
+                    "$ref": "#/definitions/KQLDatabaseType"
+                }
+            }
+        },
+        "KQLDatabaseType": {
+            "description": "The KQL database type. Additional `KQLDatabaseType` types may be added over time.",
+            "type": "string",
+            "enum": [
+                "ReadWrite",
+                "Shortcut"
+            ],
+            "x-ms-enum": {
+                "name": "KqlDatabaseType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "ReadWrite",
+                        "description": "Allows read and write operations on the database."
+                    },
+                    {
+                        "value": "Shortcut",
+                        "description": "A shortcut is an embedded reference allowing read only operations on a source database. The source can be in the same or different tenants, either in an Azure Data Explorer cluster or a Fabric Eventhouse."
+                    }
+                ]
+            }
+        },
+        "UpdateKQLDatabaseDefinitionRequest": {
+            "description": "Update KQL database public definition request payload.",
+            "required": [
+                "definition"
+            ],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/KQLDatabaseDefinition"
+                }
+            }
+        },
+        "KQLDatabaseDefinitionResponse": {
+            "description": "KQL database public definition response.",
+            "required": [
+                "definition"
+            ],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/KQLDatabaseDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "KQLDatabaseDefinition": {
+            "description": "KQL database public definition object.",
+            "type": "object",
+            "required": [
+                "parts"
+            ],
+            "properties": {
+                "format": {
+                    "description": "The format of the item definition.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/KQLDatabaseDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "KQLDatabaseDefinitionPart": {
+            "description": "KQL database definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The KQL database part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The KQL database part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType": {
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateKQLDatabaseRequest": {
+            "description": "Update KQL database request.",
+            "properties": {
+                "displayName": {
+                    "description": "The KQL database display name. The database name can contain alphanumeric characters, underscores, periods, and hyphens. Special characters aren't supported.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The KQL database description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "KQLDatabaseCreationPayload": {
+            "description": "KQL database item payload",
+            "type": "object",
+            "required": [
+                "databaseType",
+                "parentEventhouseItemId"
+            ],
+            "discriminator": "databaseType",
+            "properties": {
+                "databaseType": {
+                    "description": "The type of the KQL database",
+                    "$ref": "#/definitions/KQLDatabaseType"
+                },
+                "parentEventhouseItemId": {
+                    "description": "Parent eventhouse item ID.",
+                    "type": "string",
+                    "format": "uuid"
+                }
+            }
+        },
+        "ReadWriteDatabaseCreationPayload": {
+            "description": "ReadWrite KQL database item creation payload",
+            "type": "object",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/KQLDatabaseCreationPayload"
+                }
+            ],
+            "x-ms-discriminator-value": "ReadWrite"
+        },
+        "ShortcutDatabaseCreationPayload": {
+            "description": "Shortcut KQL database item creation payload",
+            "type": "object",
+            "properties": {
+                "sourceClusterUri": {
+                    "description": "The URI of the source Eventhouse or Azure Data Explorer cluster",
+                    "type": "string"
+                },
+                "sourceDatabaseName": {
+                    "description": "The name of the database to follow in the source Eventhouse or Azure Data Explorer cluster.",
+                    "type": "string"
+                },
+                "invitationToken": {
+                    "description": "Invitation token to follow the source database",
+                    "type": "string"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/KQLDatabaseCreationPayload"
+                }
+            ],
+            "x-ms-discriminator-value": "Shortcut"
+        }
+    }
+}

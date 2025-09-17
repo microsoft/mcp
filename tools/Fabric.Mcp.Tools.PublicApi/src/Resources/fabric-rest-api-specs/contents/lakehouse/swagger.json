@@ -1,0 +1,650 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Lakehouse REST APIs",
+    "version": "v1"
+  },
+  "schemes": [
+    "https"
+  ],
+  "host": "api.fabric.microsoft.com",
+  "basePath": "/v1",
+  "paths": {
+    "/workspaces/{workspaceId}/lakehouses": {
+      "get": {
+        "summary": "Returns a list of lakehouses from the specified workspace.",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_ListLakehouses",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Lakehouses"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidItemType - Invalid item type",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List lakehouses in workspace example": {
+            "$ref": "./examples/ListLakehousesInWorkspace.json"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a lakehouse in the specified workspace.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nThis API does not support create a lakehouse with definition.\n\n## Permissions\n\n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes \n\n Lakehouse.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_CreateLakehouse",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "createLakehouseRequest",
+            "description": "Create item request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CreateLakehouseRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully created",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Lakehouse"
+            }
+          },
+          "202": {
+            "description": "Request accepted, lakehouse provisioning in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidItemType - Item type is invalid\n\n* ItemDisplayNameAlreadyInUse - Item display name is already used. \n\n* CorruptedPayload - The provided payload is corrupted. \n\n* WorkspaceItemsLimitExceeded - Workspace item limit exceeded.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create a lakehouse example": {
+            "$ref": "./examples/CreateLakehouse.json"
+          },
+          "Create a lakehouse with schema example": {
+            "$ref": "./examples/CreateLakehouseWithPayload.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}": {
+      "get": {
+        "summary": "Returns properties of the specified lakehouse.",
+        "description": "## Permissions\n\n The caller must have *read* permissions for the lakehouse. \n\n## Required Delegated Scopes \n\n Lakehouse.Read.All or Lakehouse.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_GetLakehouse",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "lakehouseId",
+            "description": "The lakehouse ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Lakehouse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get a lakehouse example": {
+            "$ref": "./examples/GetLakehouse.json"
+          },
+          "Get a lakehouse with schema example": {
+            "$ref": "./examples/GetLakehouseWithSchema.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates the properties of the specified lakehouse.",
+        "description": "## Permissions\n\n The caller must have *read and write* permissions for the lakehouse. \n\n## Required Delegated Scopes \n\n Lakehouse.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_UpdateLakehouse",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "lakehouseId",
+            "description": "The lakehouse ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateLakehouseRequest",
+            "description": "Update lakehouse request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateLakehouseRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Lakehouse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found. \n\n* InvalidRequest - Invalid update request.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a lakehouse example": {
+            "$ref": "./examples/UpdateLakehouse.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes the specified lakehouse.",
+        "description": "## Permissions\n\n The caller must have *write* permissions for the lakehouse. \n\n## Required Delegated Scopes \n\n Lakehouse.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_DeleteLakehouse",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "lakehouseId",
+            "description": "The lakehouse ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete a lakehouse example": {
+            "$ref": "./examples/DeleteLakehouse.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/tables": {
+      "get": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nReturns a list of lakehouse Tables.",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Required Delegated Scopes \n\nLakehouse.Read.All or Lakehouse.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Tables"
+        ],
+        "operationId": "Tables_ListTables",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri",
+          "itemName": "data"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "lakehouseId",
+            "description": "The lakehouse ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "maxResults",
+            "description": "The maximum number of results per page to return.",
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 100,
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "Token to retrieve the next page of results, if available.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/Tables"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List tables example": {
+            "$ref": "./examples/ListTables.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/tables/{tableName}/load": {
+      "post": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nStarts a load table operation and returns the operation status URL in the response location header.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\nWrite permission to the lakehouse item. \n\n## Required Delegated Scopes \n\nLakehouse.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Tables"
+        ],
+        "operationId": "Tables_LoadTable",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "lakehouseId",
+            "in": "path",
+            "description": "The lakehouse item ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "tableName",
+            "in": "path",
+            "description": "The table name.",
+            "required": true,
+            "type": "string",
+            "pattern": "^(?=[0-9]*[a-zA-Z_])[a-zA-Z0-9_]{1,256}$"
+          },
+          {
+            "name": "loadTableRequest",
+            "in": "body",
+            "description": "The load table request payload.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions.json#/definitions/LoadTableRequest"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Request accepted, load table operation is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "description": "The number of seconds to wait before retrying the request.",
+                "type": "integer"
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Load table operation Example": {
+            "$ref": "./examples/LoadTableOperation.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/jobs/instances?jobType=TableMaintenance": {
+      "post": {
+        "summary": "> [!NOTE]\n> This API is in preview.\n\nRun on-demand [table maintenance](/fabric/data-engineering/lakehouse-table-maintenance) job instance.",
+        "description": "## Required Delegated Scopes \n\nLakehouse.Execute.All or Item.Execute.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "BackgroundJobs"
+        ],
+        "operationId": "BackgroundJobs_RunOnDemandTableMaintenance",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "lakehouseId",
+            "description": "The Lakehouse item ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "jobType",
+            "description": "*TableMaintenance* job type.",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "runOnDemandTableMaintenanceRequest",
+            "description": "Run on-demand table maintenance request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/RunOnDemandTableMaintenanceRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Request accepted, job execution is in progress.",
+            "headers": {
+              "Location": {
+                "type": "string",
+                "description": "The URL to the job instance resource."
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* MissingMinimalPermissions - The caller does not have sufficient permissions to run job instance. \n\n* InvalidJobType - The requested job type is invalid. \n\n* TooManyRequestsForJobs - The caller is spamming by lots of run on-demand job requests. \n\n* ItemNotFound - Requested item id not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Run table maintenance with optimize Z-Order and vacuum enabled.": {
+            "$ref": "./examples/RunOnDemandTableMaintenance1.json"
+          },
+          "Run table maintenance with optimize enabled and vacuum disabled.": {
+            "$ref": "./examples/RunOnDemandTableMaintenance2.json"
+          },
+          "Run table maintenance with optimize Z-Order and vacuum enabled for schema enabled lakehouse.": {
+            "$ref": "./examples/RunOnDemandTableMaintenanceForSchemaEnabledLakehouse.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/livySessions": {
+      "get": {
+          "tags": [
+              "LivySessions"
+          ],
+          "summary": "Returns a list of livy sessions from the specified item identifier.",
+          "description": "This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\n Lakehouse.Read.All or Lakehouse.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+          "operationId": "LivySessions_ListLivySessions",
+          "x-ms-pageable": {
+              "nextLinkName": "continuationUri"
+          },
+          "produces": [
+              "application/json"
+          ],
+          "parameters": [
+              {
+                  "in": "path",
+                  "name": "workspaceId",
+                  "description": "The workspace identifier.",
+                  "required": true,
+                  "type": "string"
+              },
+              {
+                  "in": "path",
+                  "name": "lakehouseId",
+                  "description": "The lakehouse ID.",
+                  "type": "string",
+                  "format": "uuid",
+                  "required": true
+              },
+              {
+                  "in": "query",
+                  "name": "continuationToken",
+                  "description": "Token to retrieve the next page of results, if available.",
+                  "type": "string",
+                  "required": false
+              }
+          ],
+          "responses": {
+              "200": {
+                  "description": "OK -- Returns a list of all livy sessions associated to an itemId.",
+                  "schema": {
+                      "$ref": "../common/spark_definitions.json#/definitions/LivySessions"
+                  }
+              },
+              "default": {
+                  "description": "Common error codes:\n\n* SparkCoreItemNotFound - Lakehouse identifier does not exist\n\n* SparkCoreUnexpectedException - Unhandled exception ocurred.",
+                  "schema": {
+                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+                  }
+              }
+          },
+          "x-ms-examples": {
+              "List all livy sessions example": {
+                  "$ref": "./examples/ListSessionsInItemId.json"
+              }
+          }
+      }
+    },
+    "/workspaces/{workspaceId}/lakehouses/{lakehouseId}/livySessions/{livyId}": {
+      "get": {
+          "tags": [
+              "LivySessions"
+          ],
+          "operationId": "LivySessions_GetLivySession",
+          "summary": "Returns properties of the specified livy session.",
+          "description": "## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\n Lakehouse.Read.All or Lakehouse.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+          "produces": [
+              "application/json"
+          ],
+          "parameters": [
+              {
+                  "in": "path",
+                  "name": "workspaceId",
+                  "description": "The workspace identifier.",
+                  "type": "string",
+                  "required": true
+              },
+              {
+                  "in": "path",
+                  "name": "lakehouseId",
+                  "description": "The lakehouse ID.",
+                  "type": "string",
+                  "format": "uuid",
+                  "required": true
+              },
+              {
+                  "in": "path",
+                  "name": "livyId",
+                  "description": "The session identifier.",
+                  "required": true,
+                  "type": "string"
+              }
+          ],
+          "responses": {
+              "200": {
+                  "description": "OK -- Returns a livy session by its id.",
+                  "schema": {
+                      "$ref": "../common/spark_definitions.json#/definitions/LivySession"
+                  }
+              },
+              "default": {
+                  "description": "Common error codes:\n\n* SparkCoreSessionNotFound - Livy identifier does not exist\n\n* SparkCoreUnexpectedException - Unhandled exception ocurred.",
+                  "schema": {
+                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+                  }
+              }
+          },
+          "x-ms-examples": {
+              "Get a livy session example": {
+                  "$ref": "./examples/GetSessionInItemId.json"
+              }
+          }
+      }
+    }
+  },
+  "responses": {},
+  "security": [],
+  "tags": []
+}

@@ -1,0 +1,34 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "3546052c-ae64-4526-b1a8-52af7761426f",
+                        "displayName": "Eventstream_1",
+                        "description": "An eventstream description.",
+                        "type": "Eventstream",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                    },
+                    {
+                        "id": "dc307e72-3e89-4425-97c3-a364d86dddfa",
+                        "displayName": "Eventstream_2",
+                        "description": "An eventstream description.",
+                        "type": "Eventstream",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                    },
+                    {
+                        "id": "b48a1f80-862a-4b97-b672-7217bf064dc0",
+                        "displayName": "Eventstream_3",
+                        "description": "An eventstream description.",
+                        "type": "Eventstream",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                    }
+                ]
+            }
+        }
+    }
+}

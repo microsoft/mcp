@@ -1,0 +1,37 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff222",
+        "itemId": "25bac802-080d-4f73-8a42-1b406eb1fceb",
+        "shortcutConflictPolicy": "CreateOrOverwrite",
+        "createShortcutRequest": {
+            "path": "Files/blafolder/folder3",
+            "name": "MyOneLakeShortcut",
+            "target": {
+                "oneLake": {
+                    "workspaceId": "acafbeb1-8037-4d0c-896e-a46fb27ff256",
+                    "itemId": "56bac802-080d-4f73-8a42-1b406eb1fcac",
+                    "path": "Tables/myTablesFolder/someTableSubFolder"
+                }
+            }
+        }
+    },
+    "responses": {
+        "200": {
+          "headers": {
+            "Location": "https://api.fabric.microsoft.com/v1/workspaces/cfafbeb1-8037-4d0c-896e-a46fb27ff222/items/25bac802-080d-4f73-8a42-1b406eb1fceb/shortcuts/Files/blafolder/folder3/MyOneLakeShortcut"
+          },
+          "body": {
+            "path": "Files/blafolder/folder3",
+            "name": "MyOneLakeShortcut",
+            "target": {
+              "type": "OneLake",
+              "oneLake": {
+                "workspaceId": "acafbeb1-8037-4d0c-896e-a46fb27ff256",
+                "itemId": "56bac802-080d-4f73-8a42-1b406eb1fcac",
+                "path": "Tables/myTablesFolder/someTableSubFolder"
+              }
+            }
+          }
+        }
+    }
+}

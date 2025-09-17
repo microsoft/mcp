@@ -1,0 +1,11 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff512",
+        "assignWorkspaceToCapacityRequest": {
+            "capacityId": "0f084df7-c13d-451b-af5f-ed0c466403b2"
+        }
+    },
+    "responses": {
+        "202": {}
+    }
+}

@@ -1,0 +1,24 @@
+{
+	"parameters": {
+		"workspaceId": "bf94607f-3ba1-4a95-8259-27649ccd7755", 
+        "itemId": "884e71cd-f5b4-45f9-8e00-b71355f7ea5d",
+		"shortcutPath": "Files",
+		"shortcutName": "MyAzureBlobStorage"
+	},
+	"responses": {
+		"200": {
+			"body": {
+				"path": "Files",
+                "name": "MyAzureBlobStorage",
+                "target": {
+                    "type": "AzureBlobStorage",
+                    "azureBlobStorage": {
+						"connectionId": "97e33458-1353-4911-96b1-6f4f4bbfd335",
+						"location": "https://azureblobstoragetesting.blob.core.windows.net",
+                        "subpath": "tables"
+					}
+                }
+			}				
+		}
+	}
+}

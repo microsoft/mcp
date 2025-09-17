@@ -1,0 +1,21 @@
+{
+    "parameters": {
+        "workspaceId": "4b218778-e7a5-4d73-8187-f10824047715",
+        "lakehouseId": "431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7",
+        "jobType": "TableMaintenance",
+        "runOnDemandTableMaintenanceRequest": {
+            "executionData": {
+                "tableName": "table1",
+                "optimizeSettings": {}
+            }
+        }
+    },
+    "responses": {
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/workspaces/4b218778-e7a5-4d73-8187-f10824047715/items/431e8d7b-4a95-4c02-8ccd-6faef5ba1bd7/jobs/instances/f2d65699-dd22-4889-980c-15226deb0e1b",
+                "Retry-After": 60
+            }
+        }
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "parameters": {
+        "workspaceId": "314fff62-7c47-4225-9a6c-1a2220f4ce32",
+        "kqlQuerysetId": "9b7de20c-a62f-470e-931d-e7e53f373c0c"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "definition": {
+                    "parts": [
+                        {
+                            "path": "RealTimeQueryset.json",
+                            "payload": "ewogICAgInF1ZXJ5c2V0IjogewogICAgICAgICJ2ZXJzaW9uIjogIjEuMC4wIiwKICAgICAgICAiZGF0YVNvdXJjZXMiOiBbewogICAgICAgICAgICAgICAgImlkIjogImMyNDM0YmY4LTI1YmItNGFhMC04NzQ2LWRiNDcwNTMzYWRhZiIsCiAgICAgICAgICAgICAgICAiY2x1c3RlclVyaSI6ICJodHRwczovL2hlbHAua3VzdG8ud2luZG93cy5uZXQvIiwKICAgICAgICAgICAgICAgICJ0eXBlIjogIkF6dXJlRGF0YUV4cGxvcmVyIiwKICAgICAgICAgICAgICAgICJkYXRhYmFzZU5hbWUiOiAiU2FtcGxlcyIKICAgICAgICAgICAgfQogICAgICAgIF0sCiAgICAgICAgInRhYnMiOiBbewogICAgICAgICAgICAgICAgImlkIjogImNjZDdiOTBjLTUxZmUtNDI5Zi1hODUzLTM4NWIwMmJkNzRjOSIsCiAgICAgICAgICAgICAgICAiY29udGVudCI6ICJTdG9ybUV2ZW50c1xcXFxufCBjb3VudCIsCiAgICAgICAgICAgICAgICAidGl0bGUiOiAiVGFiMU5hbWUiLAogICAgICAgICAgICAgICAgImRhdGFTb3VyY2VJZCI6ICJjMjQzNGJmOC0yNWJiLTRhYTAtODc0Ni1kYjQ3MDUzM2FkYWYiCiAgICAgICAgICAgIH0KICAgICAgICBdCiAgICB9Cn0=",
+                            "payloadType": "InlineBase64"
+                        },
+                        {
+                            "path": ".platform",
+                            "payload": "ewogICIkc2NoZW1hIjogImh0dHBzOi8vZGV2ZWxvcGVyLm1pY3Jvc29mdC5jb20vanNvbi1zY2hlbWFzL2ZhYnJpYy9naXRJbnRlZ3JhdGlvbi9wbGF0Zm9ybVByb3BlcnRpZXMvMi4wLjAvc2NoZW1hLmpzb24iLAogICJtZXRhZGF0YSI6IHsKICAgICJ0eXBlIjogIktRTFF1ZXJ5c2V0IiwKICAgICJkaXNwbGF5TmFtZSI6ICJjeHp2ZWFyZ2giLAogICAgImRlc2NyaXB0aW9uIjogImN4enZlYXJnaCIKICB9LAogICJjb25maWciOiB7CiAgICAidmVyc2lvbiI6ICIyLjAiLAogICAgImxvZ2ljYWxJZCI6ICIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDAiCiAgfQp9",
+                            "payloadType": "InlineBase64"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

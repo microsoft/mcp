@@ -1,0 +1,22 @@
+{
+    "parameters": {
+        "state": "Active"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "workspaces": [
+                    {
+                        "id": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+                        "name": "test report",
+                        "type": "Workspace",
+                        "state": "Active",
+                        "capacityId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e84"
+                    }
+                ],
+                "continuationUri": null,
+                "continuationToken": null
+            }
+        }
+    }
+}

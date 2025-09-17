@@ -5,7 +5,9 @@ using System.Diagnostics;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Models.Elicitation;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -109,6 +111,59 @@ public sealed class CommandFactoryToolLoader(
             };
         }
         var commandContext = new CommandContext(_serviceProvider, Activity.Current);
+
+        // Check if this tool requires elicitation for sensitive data
+        var metadata = command.Metadata;
+        if (metadata.Secret)
+        {
+            // If client doesn't support elicitation, treat as rejected and don't execute
+            if (!request.Server.SupportsElicitation())
+            {
+                _logger.LogWarning("Tool '{Tool}' handles sensitive data but client does not support elicitation. Operation rejected.", toolName);
+                return new CallToolResult
+                {
+                    Content = [new TextContentBlock { Text = "This tool handles sensitive data and requires user consent, but the client does not support elicitation. Operation rejected for security." }],
+                    IsError = true
+                };
+            }
+
+            try
+            {
+                _logger.LogInformation("Tool '{Tool}' handles sensitive data. Requesting user confirmation via elicitation.", toolName);
+
+                // Create the elicitation request using our custom model
+                var elicitationRequest = new ElicitationRequestParams
+                {
+                    Message = $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
+                    RequestedSchema = ElicitationSchema.CreateSecretSchema("confirmation", "Confirm Action", "Type 'yes' to confirm you want to proceed with this sensitive operation", true)
+                };
+
+                // Use our extension method to handle the elicitation
+                var elicitationResponse = await request.Server.RequestElicitationAsync(elicitationRequest, cancellationToken);
+
+                if (elicitationResponse.Action != ElicitationAction.Accept)
+                {
+                    _logger.LogInformation("User {Action} the elicitation for tool '{Tool}'. Operation not executed.",
+                        elicitationResponse.Action.ToString().ToLower(), toolName);
+                    return new CallToolResult
+                    {
+                        Content = [new TextContentBlock { Text = $"Operation cancelled by user ({elicitationResponse.Action.ToString().ToLower()})." }],
+                        IsError = true
+                    };
+                }
+
+                _logger.LogInformation("User accepted elicitation for tool '{Tool}'. Proceeding with execution.", toolName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during elicitation for tool '{Tool}': {Error}", toolName, ex.Message);
+                return new CallToolResult
+                {
+                    Content = [new TextContentBlock { Text = $"Elicitation failed for sensitive tool '{toolName}': {ex.Message}. Operation not executed for security." }],
+                    IsError = true
+                };
+            }
+        }
 
         var realCommand = command.GetCommand();
         ParseResult? commandOptions = null;
