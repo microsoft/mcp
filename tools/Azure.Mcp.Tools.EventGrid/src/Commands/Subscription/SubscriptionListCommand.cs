@@ -51,38 +51,36 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
     public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
     {
-        var result = base.Validate(commandResult, commandResponse);
+        // Skip the base validation that requires subscription and implement custom validation
+        var result = new ValidationResult { IsValid = true };
 
-        if (result.IsValid)
+        var hasSubscription = HasSubscriptionAvailable(commandResult);
+        var hasTopicOption = commandResult.HasOptionResult(_topicNameOption);
+        var hasRg = commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup);
+        var hasLocation = commandResult.HasOptionResult(_locationOption);
+
+        // Either topic or subscription is mandatory
+        if (!hasSubscription && !hasTopicOption)
         {
-            var hasSubscription = HasSubscriptionAvailable(commandResult);
-            var hasTopicOption = commandResult.HasOptionResult(_topicNameOption);
-            var hasRg = commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup);
-            var hasLocation = commandResult.HasOptionResult(_locationOption);
+            result.IsValid = false;
+            result.ErrorMessage = "Either --subscription or --topic is required.";
 
-            // Either topic or subscription is mandatory
-            if (!hasSubscription && !hasTopicOption)
+            if (commandResponse != null)
             {
-                result.IsValid = false;
-                result.ErrorMessage = "Either --subscription or --topic is required.";
-
-                if (commandResponse != null)
-                {
-                    commandResponse.Status = 400;
-                    commandResponse.Message = result.ErrorMessage;
-                }
+                commandResponse.Status = 400;
+                commandResponse.Message = result.ErrorMessage;
             }
-            // Location and resource-group can only be used with subscription or topic
-            else if ((hasRg || hasLocation) && !hasSubscription && !hasTopicOption)
-            {
-                result.IsValid = false;
-                result.ErrorMessage = "Either --subscription or --topic is required when using --resource-group or --location.";
+        }
+        // Location and resource-group can only be used with subscription or topic
+        else if ((hasRg || hasLocation) && !hasSubscription && !hasTopicOption)
+        {
+            result.IsValid = false;
+            result.ErrorMessage = "Either --subscription or --topic is required when using --resource-group or --location.";
 
-                if (commandResponse != null)
-                {
-                    commandResponse.Status = 400;
-                    commandResponse.Message = result.ErrorMessage;
-                }
+            if (commandResponse != null)
+            {
+                commandResponse.Status = 400;
+                commandResponse.Message = result.ErrorMessage;
             }
         }
 
