@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Options.Metrics;
@@ -18,10 +19,6 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
 {
     private const string CommandTitle = "List Azure Monitor Metric Definitions";
     private readonly ILogger<MetricsDefinitionsCommand> _logger = logger;
-
-    private readonly Option<string> _metricNamespaceOption = MonitorOptionDefinitions.Metrics.MetricNamespaceOptional;
-    private readonly Option<string> _searchStringOption = MonitorOptionDefinitions.Metrics.SearchString;
-    private readonly Option<int> _limitOption = MonitorOptionDefinitions.Metrics.DefinitionsLimit;
 
     public override string Name => "definitions";
 
@@ -45,17 +42,17 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_metricNamespaceOption);
-        command.Options.Add(_searchStringOption);
-        command.Options.Add(_limitOption);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.MetricNamespace.AsOptional());
+        command.Options.Add(MonitorOptionDefinitions.Metrics.SearchString);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.DefinitionsLimit);
     }
 
     protected override MetricsDefinitionsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.MetricNamespace = parseResult.GetValue(_metricNamespaceOption);
-        options.SearchString = parseResult.GetValue(_searchStringOption);
-        options.Limit = parseResult.GetValue(_limitOption);
+        options.MetricNamespace = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.MetricNamespace.Name);
+        options.SearchString = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.SearchString.Name);
+        options.Limit = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Metrics.DefinitionsLimit.Name);
         return options;
     }
 

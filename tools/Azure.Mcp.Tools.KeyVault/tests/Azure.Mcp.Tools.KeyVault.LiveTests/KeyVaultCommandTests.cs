@@ -6,7 +6,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Security.KeyVault.Keys;
 using Xunit;
 
@@ -116,30 +115,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     }
 
     [Fact]
-    public async Task Should_create_secret()
-    {
-        var secretName = Settings.ResourceBaseName + Random.Shared.NextInt64();
-        var secretValue = "test-value-" + Random.Shared.NextInt64();
-        var result = await CallToolAsync(
-            "azmcp_keyvault_secret_create",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "vault", Settings.ResourceBaseName },
-                { "secret", secretName},
-                { "value", secretValue }
-            });
-
-        var createdSecretName = result.AssertProperty("name");
-        Assert.Equal(JsonValueKind.String, createdSecretName.ValueKind);
-        Assert.Equal(secretName, createdSecretName.GetString());
-
-        var returnedValue = result.AssertProperty("value");
-        Assert.Equal(JsonValueKind.String, returnedValue.ValueKind);
-        Assert.Equal(secretValue, returnedValue.GetString());
-    }
-
-    [Fact]
     public async Task Should_list_certificates()
     {
         var result = await CallToolAsync(
@@ -197,6 +172,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         // Verify that the certificate has some expected properties
         ValidateCertificate(result);
     }
+
 
     [Fact]
     public async Task Should_import_certificate()

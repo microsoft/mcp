@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AppLens.Commands.Resource;
 using Azure.Mcp.Tools.AppLens.Models;
 using Azure.Mcp.Tools.AppLens.Services;

@@ -14,8 +14,6 @@ public abstract class BaseBlobCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
     : BaseContainerCommand<TOptions> where TOptions : BaseBlobOptions, new()
 {
-    protected readonly Option<string> _blobOption = StorageOptionDefinitions.Blob;
-
     protected BaseBlobCommand()
     {
     }
@@ -23,13 +21,13 @@ public abstract class BaseBlobCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_blobOption);
+        command.Options.Add(StorageOptionDefinitions.Blob);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Blob = parseResult.GetValueOrDefault(_blobOption);
+        options.Blob = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Blob.Name);
         return options;
     }
 }

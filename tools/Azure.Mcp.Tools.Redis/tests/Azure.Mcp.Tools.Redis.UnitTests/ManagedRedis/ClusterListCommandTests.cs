@@ -64,7 +64,7 @@ public class ClusterListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoClusters()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoClusters()
     {
         _redisService.ListClustersAsync("sub123").Returns([]);
 
@@ -74,7 +74,17 @@ public class ClusterListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<ClusterListResult>(json, new JsonSerializerOptions()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        });
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Clusters);
     }
 
     [Fact]

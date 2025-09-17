@@ -124,7 +124,7 @@ public class EntraAdminListCommandTests
             Arg.Any<string>(),
             Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SqlServerEntraAdministrator>());
+            .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
@@ -134,7 +134,7 @@ public class EntraAdminListCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
     }
 

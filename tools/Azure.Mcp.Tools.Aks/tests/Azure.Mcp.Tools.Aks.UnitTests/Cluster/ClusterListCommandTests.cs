@@ -117,11 +117,11 @@ public sealed class ClusterListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNullWhenNoClusters()
+    public async Task ExecuteAsync_ReturnsEmptyWhenNoClusters()
     {
         // Arrange
         _aksService.ListClusters(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<Models.Cluster>());
+            .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub123");
@@ -131,7 +131,13 @@ public sealed class ClusterListCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AksJsonContext.Default.ClusterListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Clusters);
     }
 
     [Fact]

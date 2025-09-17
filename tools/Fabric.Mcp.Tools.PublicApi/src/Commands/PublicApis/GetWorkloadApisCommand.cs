@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Fabric.Mcp.Tools.PublicApi.Options;
 using Fabric.Mcp.Tools.PublicApi.Options.PublicApis;
 using Fabric.Mcp.Tools.PublicApi.Services;
@@ -13,32 +14,39 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
 {
     private const string CommandTitle = "Get Workload API Specification";
     private readonly ILogger<GetWorkloadApisCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly Option<string> _workloadTypeOption = FabricOptionDefinitions.WorkloadType;
 
     public override string Name => "get";
 
     public override string Description =>
         """
         Retrieve the complete OpenAPI/Swagger specification for a specific Microsoft Fabric workload.
-        Requires the workload type (e.g., 'notebook', 'report'). Returns the full API specification 
-        in JSON format along with any supplementary definition files. Use 'discover-workloads' 
+        Requires the workload type (e.g., 'notebook', 'report'). Returns the full API specification
+        in JSON format along with any supplementary definition files. Use 'discover-workloads'
         command first to see available workload types.
         """;
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_workloadTypeOption);
+        command.Options.Add(FabricOptionDefinitions.WorkloadType);
     }
 
     protected override WorkloadCommandOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkloadType = parseResult.GetValue(_workloadTypeOption);
+        options.WorkloadType = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkloadType.Name);
         return options;
     }
 

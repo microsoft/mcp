@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Kusto.Commands;
@@ -53,14 +52,14 @@ public sealed class ClusterListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ClusterListResult>(json);
+        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.ClusterListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedClusters, result.Clusters);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoClustersExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoClustersExist()
     {
         // Arrange
         _kusto.ListClusters("sub123", null, null)
@@ -75,7 +74,13 @@ public sealed class ClusterListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.ClusterListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Clusters!);
     }
 
     [Fact]
@@ -100,11 +105,5 @@ public sealed class ClusterListCommandTests
         Assert.NotNull(response);
         Assert.Equal(500, response.Status);
         Assert.Equal(expectedError, response.Message);
-    }
-
-    private sealed class ClusterListResult
-    {
-        [JsonPropertyName("clusters")]
-        public List<string>? Clusters { get; set; }
     }
 }

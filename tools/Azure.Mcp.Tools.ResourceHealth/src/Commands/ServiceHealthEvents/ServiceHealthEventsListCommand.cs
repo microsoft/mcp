@@ -30,7 +30,15 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -104,9 +112,7 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new ServiceHealthEventsListCommandResult(events),
-                ResourceHealthJsonContext.Default.ServiceHealthEventsListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(events ?? []), ResourceHealthJsonContext.Default.ServiceHealthEventsListCommandResult);
         }
         catch (Exception ex)
         {

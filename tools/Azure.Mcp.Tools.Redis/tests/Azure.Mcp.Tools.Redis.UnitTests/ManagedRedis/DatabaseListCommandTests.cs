@@ -91,7 +91,7 @@ public class DatabaseListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoDatabases()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDatabases()
     {
         _redisService.ListDatabasesAsync(
             "cluster1",
@@ -109,7 +109,17 @@ public class DatabaseListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<DatabaseListCommandResult>(json, new JsonSerializerOptions()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        });
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Databases);
     }
 
     [Fact]

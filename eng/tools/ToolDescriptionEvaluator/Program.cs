@@ -25,39 +25,44 @@ class Program
             if (args.Contains("--help") || args.Contains("-h"))
             {
                 ShowHelp();
+
                 return;
             }
 
             // Check if we're in CI mode (skip if credentials are missing)
             var isCiMode = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_BUILDID")) ||
-                          !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")) ||
-                          args.Contains("--ci");
+                           !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")) ||
+                           args.Contains("--ci");
 
             // Check if user wants to use a custom tools file
             string? customToolsFile = null;
+
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "--tools-file" && i + 1 < args.Length)
                 {
                     customToolsFile = args[i + 1];
+
                     break;
                 }
             }
 
             // Check if user wants to use a custom prompts file
             string? customPromptsFile = null;
+
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "--prompts-file" && i + 1 < args.Length)
                 {
                     customPromptsFile = args[i + 1];
+
                     break;
                 }
             }
 
             string exeDir = AppContext.BaseDirectory;
             string repoRoot = FindRepoRoot(exeDir);
-            string toolDir = Path.GetFullPath(Path.Combine(exeDir, "..", "..", ".."));
+            string toolDir = FindToolDir(repoRoot, exeDir);
 
             // Check if user wants to validate specific tool descriptions
             var validateMode = args.Contains("--validate");
@@ -98,6 +103,7 @@ class Program
                 }
 
                 await RunValidationModeAsync(toolDir, toolDescription, prompts, isCiMode);
+
                 return;
             }
 
@@ -106,6 +112,7 @@ class Program
 
             // Get configuration values
             var endpoint = Environment.GetEnvironmentVariable("AOAI_ENDPOINT");
+
             if (string.IsNullOrEmpty(endpoint))
             {
                 if (isCiMode)
@@ -113,10 +120,12 @@ class Program
                     Console.WriteLine("⏭️  Skipping tool selection analysis in CI - AOAI_ENDPOINT not configured");
                     Environment.Exit(0);
                 }
+
                 throw new InvalidOperationException("AOAI_ENDPOINT environment variable is required");
             }
 
             var apiKey = GetApiKey(isCiMode);
+
             if (apiKey == null && isCiMode)
             {
                 Console.WriteLine("⏭️  Skipping tool selection analysis in CI - API key not available");
@@ -135,6 +144,7 @@ class Program
             if (!string.IsNullOrEmpty(customToolsFileResolved))
             {
                 listToolsResult = await LoadToolsFromJsonAsync(customToolsFileResolved, isCiMode);
+
                 if (listToolsResult == null && !isCiMode)
                 {
                     Console.WriteLine($"⚠️  Failed to load tools from {customToolsFileResolved}, falling back to dynamic loading");
@@ -157,20 +167,22 @@ class Program
             var stopwatch = Stopwatch.StartNew();
 
             await PopulateDatabaseAsync(db, listToolsResult!.Tools, embeddingService);
+
             stopwatch.Stop();
 
             var toolCount = db.Count;
             var executionTime = stopwatch.Elapsed;
 
-            // Check if output should use markdown format
-            var useMarkdown = IsMarkdownOutput();
+            // Check if output should use text format
+            var isTextOutput = IsTextOutput();
 
             // Determine output file path
-            var outputFilePath = Path.Combine(toolDir, useMarkdown ? "results.md" : "results.txt");
+            var outputFilePath = Path.Combine(toolDir, isTextOutput ? "results.txt" : "results.md");
 
             // Add console output
             Console.WriteLine("🔍 Running tool selection analysis...");
             Console.WriteLine($"✅ Loaded {toolCount} tools in {executionTime.TotalSeconds:F2}s");
+
             if (!string.IsNullOrEmpty(customToolsFile))
             {
                 Console.WriteLine($"📄 Using custom tools file: {customToolsFile}");
@@ -192,7 +204,7 @@ class Program
             // Create or overwrite the output file
             using var writer = new StreamWriter(outputFilePath, false);
 
-            if (useMarkdown)
+            if (!isTextOutput)
             {
                 await writer.WriteLineAsync("# Tool Selection Analysis Setup");
                 await writer.WriteLineAsync();
@@ -206,7 +218,6 @@ class Program
 
             // Load prompts from custom file, markdown file, or JSON file as fallback
             Dictionary<string, List<string>>? toolNameAndPrompts = null;
-
 
             string? customPromptsFileResolved = !string.IsNullOrEmpty(customPromptsFile) && !Path.IsPathRooted(customPromptsFile)
                 ? Path.Combine(toolDir, customPromptsFile)
@@ -233,7 +244,6 @@ class Program
             else
             {
                 // Use default fallback logic
-
                 var defaultPromptsPath = Path.Combine(repoRoot, "docs", "e2eTestPrompts.md");
                 toolNameAndPrompts = await LoadPromptsFromMarkdownAsync(defaultPromptsPath, isCiMode);
 
@@ -241,6 +251,7 @@ class Program
                 if (toolNameAndPrompts != null)
                 {
                     await SavePromptsToJsonAsync(toolNameAndPrompts, Path.Combine(toolDir, "prompts.json"));
+
                     Console.WriteLine($"💾 Saved prompts to prompts.json");
                 }
             }
@@ -248,8 +259,14 @@ class Program
             if (toolNameAndPrompts == null && isCiMode)
             {
                 Console.WriteLine("⏭️  Skipping prompt testing in CI - prompts data not available");
+
                 // Still write basic setup info to output file
-                if (useMarkdown)
+                if (isTextOutput)
+                {
+                    await writer.WriteLineAsync($"Loaded {toolCount} tools in {executionTime.TotalSeconds:F7}s");
+                    await writer.WriteLineAsync("Note: Prompt testing skipped in CI environment");
+                }
+                else
                 {
                     await writer.WriteLineAsync("# Tool Selection Analysis Setup");
                     await writer.WriteLineAsync();
@@ -258,11 +275,6 @@ class Program
                     await writer.WriteLineAsync($"**Database setup time:** {executionTime.TotalSeconds:F7}s  ");
                     await writer.WriteLineAsync();
                     await writer.WriteLineAsync("*Note: Prompt testing skipped in CI environment*");
-                }
-                else
-                {
-                    await writer.WriteLineAsync($"Loaded {toolCount} tools in {executionTime.TotalSeconds:F7}s");
-                    await writer.WriteLineAsync("Note: Prompt testing skipped in CI environment");
                 }
                 return;
             }
@@ -282,22 +294,17 @@ class Program
         }
     }
 
-    private static bool IsMarkdownOutput()
+    private static bool IsTextOutput()
     {
-        // Check environment variable first
-        if (string.Equals(Environment.GetEnvironmentVariable("output"), "md", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        // Check command line arguments
         var args = Environment.GetCommandLineArgs();
-        return args.Contains("--markdown", StringComparer.OrdinalIgnoreCase);
+
+        return args.Contains("--text", StringComparer.OrdinalIgnoreCase);
     }
 
     private static string? GetApiKey(bool isCiMode = false)
     {
         var apiKey = Environment.GetEnvironmentVariable("TEXT_EMBEDDING_API_KEY");
+
         if (!string.IsNullOrEmpty(apiKey))
         {
             return apiKey;
@@ -314,6 +321,7 @@ class Program
     private static async Task LoadDotEnvFile(string toolDir)
     {
         var envFilePath = Path.Combine(toolDir, ".env");
+
         if (!File.Exists(envFilePath))
         {
             Console.WriteLine("No .env file found or error loading it");
@@ -321,12 +329,14 @@ class Program
         }
 
         var lines = await File.ReadAllLinesAsync(envFilePath);
+
         foreach (var line in lines)
         {
             if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#'))
                 continue;
 
             var parts = line.Split('=', 2);
+
             if (parts.Length == 2)
             {
                 Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
@@ -338,6 +348,7 @@ class Program
     private static string FindRepoRoot(string startDir)
     {
         var dir = new DirectoryInfo(startDir);
+
         while (dir != null)
         {
             if (File.Exists(Path.Combine(dir.FullName, "AzureMcp.sln")) ||
@@ -347,30 +358,90 @@ class Program
             }
             dir = dir.Parent;
         }
+
         throw new InvalidOperationException("Could not find repo root (AzureMcp.sln or .git)");
+    }
+
+    // Resolve the ToolDescriptionEvaluator directory robustly from repo root, with fallbacks from exeDir
+    private static string FindToolDir(string repoRoot, string exeDir)
+    {
+        var candidate = Path.Combine(repoRoot, "eng", "tools", "ToolDescriptionEvaluator");
+        if (Directory.Exists(candidate))
+        {
+            return candidate;
+        }
+
+        // Fallback: traverse up from the executable directory looking for the project file
+        var dir = new DirectoryInfo(exeDir);
+        while (dir != null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "ToolDescriptionEvaluator.csproj")))
+            {
+                return dir.FullName;
+            }
+            dir = dir.Parent;
+        }
+
+        // Last resort: previous relative approach (bin/... -> project folder)
+        return Path.GetFullPath(Path.Combine(exeDir, "..", "..", ".."));
     }
 
     private static async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string toolDir, bool isCiMode = false)
     {
         try
         {
-            // Try to find the azmcp executable in the CLI folder, relative to the executable location
+            // Locate azmcp artifact across common build outputs (servers/core, Debug/Release)
             var exeDir = AppContext.BaseDirectory;
-            var azMcpPath = Path.GetFullPath(Path.Combine(FindRepoRoot(exeDir), "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net9.0"));
-            var executablePath = Path.Combine(azMcpPath, "azmcp.exe");
-
-            // Fallback to .dll if .exe doesn't exist
-            if (!File.Exists(executablePath))
+            var repoRoot = FindRepoRoot(exeDir);
+            var searchRoots = new List<string>
             {
-                executablePath = Path.Combine(azMcpPath, "azmcp.dll");
+                Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug"),
+                Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Release")
+            };
+
+            var candidateNames = new[] { "azmcp.exe", "azmcp", "azmcp.dll" };
+            FileInfo? cliArtifact = null;
+
+            foreach (var root in searchRoots.Where(Directory.Exists))
+            {
+                foreach (var name in candidateNames)
+                {
+                    var found = new DirectoryInfo(root)
+                        .EnumerateFiles(name, SearchOption.AllDirectories)
+                        .FirstOrDefault();
+                    if (found != null)
+                    {
+                        cliArtifact = found;
+                        break;
+                    }
+                }
+
+                if (cliArtifact != null)
+                {
+                    break;
+                }
             }
+
+            if (cliArtifact == null)
+            {
+                if (isCiMode)
+                {
+                    return null; // Graceful fallback in CI
+                }
+
+                throw new FileNotFoundException("Could not locate azmcp CLI artifact in Debug/Release outputs under servers.");
+            }
+
+            var isDll = string.Equals(cliArtifact.Extension, ".dll", StringComparison.OrdinalIgnoreCase);
+            var fileName = isDll ? "dotnet" : cliArtifact.FullName;
+            var arguments = isDll ? $"{cliArtifact.FullName} tools list" : "tools list";
 
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = executablePath.EndsWith(".exe") ? executablePath : "dotnet",
-                    Arguments = executablePath.EndsWith(".exe") ? "tools list" : $"{executablePath} tools list",
+                    FileName = fileName,
+                    Arguments = arguments,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -379,8 +450,10 @@ class Program
             };
 
             process.Start();
+
             var output = await process.StandardOutput.ReadToEndAsync();
             var error = await process.StandardError.ReadToEndAsync();
+
             await process.WaitForExitAsync();
 
             if (process.ExitCode != 0)
@@ -389,17 +462,20 @@ class Program
                 {
                     return null; // Graceful fallback in CI
                 }
+
                 throw new InvalidOperationException($"Failed to get tools from azmcp: {error}");
             }
 
             // Filter out non-JSON lines (like launch settings messages)
             var lines = output.Split('\n');
             var jsonStartIndex = -1;
+
             for (int i = 0; i < lines.Length; i++)
             {
                 if (lines[i].Trim().StartsWith("{"))
                 {
                     jsonStartIndex = i;
+
                     break;
                 }
             }
@@ -410,6 +486,7 @@ class Program
                 {
                     return null; // Graceful fallback in CI
                 }
+
                 throw new InvalidOperationException("No JSON output found from azmcp command");
             }
 
@@ -422,6 +499,7 @@ class Program
             if (result != null)
             {
                 await SaveToolsToJsonAsync(result, Path.Combine(toolDir, "tools.json"));
+
                 Console.WriteLine($"💾 Saved {result.Tools.Count} tools to tools.json");
             }
 
@@ -433,6 +511,7 @@ class Program
             {
                 return null; // Graceful fallback in CI
             }
+
             throw;
         }
     }
@@ -445,6 +524,7 @@ class Program
             {
                 return null; // Let caller handle this gracefully
             }
+
             throw new FileNotFoundException($"Tools file not found: {filePath}");
         }
 
@@ -492,11 +572,13 @@ class Program
                 Indented = true,
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
+
             using var stream = new MemoryStream();
             using (var jsonWriter = new Utf8JsonWriter(stream, writerOptions))
             {
                 JsonSerializer.Serialize(jsonWriter, toolsResult, SourceGenerationContext.Default.ListToolsResult);
             }
+
             await File.WriteAllBytesAsync(filePath, stream.ToArray());
         }
         catch (Exception ex)
@@ -516,6 +598,7 @@ class Program
                 {
                     return null; // Let caller handle this gracefully
                 }
+
                 throw new FileNotFoundException($"Markdown file not found: {filePath}");
             }
 
@@ -574,6 +657,7 @@ class Program
             {
                 return null; // Graceful fallback in CI
             }
+
             throw;
         }
     }
@@ -586,11 +670,13 @@ class Program
             {
                 return null; // Let caller handle this gracefully
             }
+
             throw new FileNotFoundException($"Prompts file not found: {filePath}");
         }
 
         var json = await File.ReadAllTextAsync(filePath);
         var prompts = JsonSerializer.Deserialize(json, SourceGenerationContext.Default.DictionaryStringListString);
+
         return prompts ?? throw new InvalidOperationException($"Failed to parse prompts JSON from {filePath}");
     }
 
@@ -616,11 +702,13 @@ class Program
                 Indented = true,
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
+
             using var stream = new MemoryStream();
             using (var jsonWriter = new Utf8JsonWriter(stream, writerOptions))
             {
                 JsonSerializer.Serialize(jsonWriter, prompts, SourceGenerationContext.Default.DictionaryStringListString);
             }
+
             await File.WriteAllBytesAsync(filePath, stream.ToArray());
         }
         catch (Exception ex)
@@ -648,10 +736,15 @@ class Program
 
         if (tools.Count > threshold)
         {
+            // Split work into two halves and process them concurrently.
             int half = tools.Count / 2;
-            var leftTask = Task.Run(() => PopulateDatabaseAsync(db, [.. tools.Take(half)], embeddingService));
-            await PopulateDatabaseAsync(db, [.. tools.Skip(half)], embeddingService);
-            await leftTask;
+            var left = tools.Take(half).ToList();
+            var right = tools.Skip(half).ToList();
+
+            await Task.WhenAll(
+                PopulateDatabaseAsync(db, left, embeddingService),
+                PopulateDatabaseAsync(db, right, embeddingService));
+
             return;
         }
 
@@ -661,6 +754,7 @@ class Program
 
             // Handle test tools specially
             string toolName;
+
             if (tool.Name.StartsWith(TestToolIdPrefix))
             {
                 toolName = tool.Name;
@@ -669,6 +763,7 @@ class Program
             {
                 // Convert command to tool name format (spaces to dashes)
                 toolName = tool.Command?.Replace(CommandPrefix, "")?.Replace(" ", SpaceReplacement) ?? tool.Name;
+
                 if (!string.IsNullOrEmpty(toolName) && !toolName.StartsWith($"{CommandPrefix.Trim()}-"))
                 {
                     toolName = $"azmcp{SpaceReplacement}{toolName}";
@@ -676,6 +771,7 @@ class Program
             }
 
             var vector = await embeddingService.CreateEmbeddingsAsync(input);
+
             db.Upsert(new Entry(toolName, tool, vector));
         }
     }
@@ -684,13 +780,15 @@ class Program
     {
         var stopwatch = Stopwatch.StartNew();
         int promptCount = 0;
+        var isTextOutput = IsTextOutput(); // Check if output should use text format
 
-        // Check if output should use markdown format
-        var useMarkdown = IsMarkdownOutput();
-
-        if (useMarkdown)
+        if (isTextOutput)
         {
-            // Output markdown format
+            await writer.WriteLineAsync($"Loaded {db.Count} tools in {databaseSetupTime.TotalSeconds:F7}s");
+            await writer.WriteLineAsync();
+        }
+        else
+        {
             await writer.WriteLineAsync("# Tool Selection Analysis Results");
             await writer.WriteLineAsync();
             await writer.WriteLineAsync($"**Analysis Date:** {DateTime.Now:yyyy-MM-dd HH:mm:ss}  ");
@@ -701,6 +799,7 @@ class Program
 
             // Generate TOC
             int toolIndex = 1;
+
             foreach (var (toolName, prompts) in toolNameWithPrompts)
             {
                 foreach (var _ in prompts)
@@ -709,26 +808,27 @@ class Program
                     toolIndex++;
                 }
             }
+
             await writer.WriteLineAsync();
             await writer.WriteLineAsync("---");
             await writer.WriteLineAsync();
         }
-        else
-        {
-            await writer.WriteLineAsync($"Loaded {db.Count} tools in {databaseSetupTime.TotalSeconds:F7}s");
-            await writer.WriteLineAsync();
-        }
 
         int testNumber = 1;
+
         foreach (var (toolName, prompts) in toolNameWithPrompts)
         {
             foreach (var prompt in prompts)
             {
                 promptCount++;
 
-                if (useMarkdown)
+                if (isTextOutput)
                 {
-                    // Markdown format
+                    await writer.WriteLineAsync($"\nPrompt: {prompt}");
+                    await writer.WriteLineAsync($"Expected tool: {toolName}");
+                }
+                else
+                {
                     await writer.WriteLineAsync($"## Test {testNumber}");
                     await writer.WriteLineAsync();
                     await writer.WriteLineAsync($"**Expected Tool:** `{toolName}`  ");
@@ -739,12 +839,6 @@ class Program
                     await writer.WriteLineAsync("| Rank | Score | Tool | Status |");
                     await writer.WriteLineAsync("|------|-------|------|--------|");
                 }
-                else
-                {
-                    // Original terminal format
-                    await writer.WriteLineAsync($"\nPrompt: {prompt}");
-                    await writer.WriteLineAsync($"Expected tool: {toolName}");
-                }
 
                 var vector = await embeddingService.CreateEmbeddingsAsync(prompt);
                 var queryResults = db.Query(vector, new QueryOptions(TopK: 10));
@@ -752,19 +846,20 @@ class Program
                 for (int i = 0; i < queryResults.Count; i++)
                 {
                     var qr = queryResults[i];
-                    if (useMarkdown)
-                    {
-                        var status = qr.Entry.Id == toolName ? "✅ **EXPECTED**" : "❌";
-                        await writer.WriteLineAsync($"| {i + 1} | {qr.Score:F6} | `{qr.Entry.Id}` | {status} |");
-                    }
-                    else
+
+                    if (isTextOutput)
                     {
                         var note = qr.Entry.Id == toolName ? "*** EXPECTED ***" : "";
                         await writer.WriteLineAsync($"   {qr.Score:F6}   {qr.Entry.Id,-50}     {note}");
                     }
+                    else
+                    {
+                        var status = qr.Entry.Id == toolName ? "✅ **EXPECTED**" : "❌";
+                        await writer.WriteLineAsync($"| {i + 1} | {qr.Score:F6} | `{qr.Entry.Id}` | {status} |");
+                    }
                 }
 
-                if (useMarkdown)
+                if (!isTextOutput)
                 {
                     await writer.WriteLineAsync();
                     await writer.WriteLineAsync("---");
@@ -777,7 +872,30 @@ class Program
 
         stopwatch.Stop();
 
-        if (useMarkdown)
+        if (isTextOutput)
+        {
+            // Calculate success rate metrics for regular format too
+            var metrics = await CalculateSuccessRateAsync(db, toolNameWithPrompts, embeddingService);
+
+            await writer.WriteLineAsync($"\n\nPrompt count={promptCount}, Execution time={stopwatch.Elapsed.TotalSeconds:F7}s");
+            await writer.WriteLineAsync($"Top choice success rate={metrics.TopChoicePercentage:F1}% ({metrics.TopChoiceCount}/{promptCount} tests passed)");
+            await writer.WriteLineAsync();
+            await writer.WriteLineAsync("Confidence Level Distribution:");
+            await writer.WriteLineAsync($"  Very High Confidence (≥0.8): {metrics.VeryHighConfidencePercentage:F1}% ({metrics.VeryHighConfidenceCount}/{promptCount} tests)");
+            await writer.WriteLineAsync($"  High Confidence (≥0.7): {metrics.HighConfidencePercentage:F1}% ({metrics.HighConfidenceCount}/{promptCount} tests)");
+            await writer.WriteLineAsync($"  Good Confidence (≥0.6): {metrics.GoodConfidencePercentage:F1}% ({metrics.GoodConfidenceCount}/{promptCount} tests)");
+            await writer.WriteLineAsync($"  Fair Confidence (≥0.5): {metrics.FairConfidencePercentage:F1}% ({metrics.FairConfidenceCount}/{promptCount} tests)");
+            await writer.WriteLineAsync($"  Acceptable Confidence (≥0.4): {metrics.AcceptableConfidencePercentage:F1}% ({metrics.AcceptableConfidenceCount}/{promptCount} tests)");
+            await writer.WriteLineAsync($"  Low Confidence (<0.4): {metrics.LowConfidencePercentage:F1}% ({metrics.LowConfidenceCount}/{promptCount} tests)");
+            await writer.WriteLineAsync();
+            await writer.WriteLineAsync("Top Choice + Confidence Combinations:");
+            await writer.WriteLineAsync($"  Top + Very High Confidence (≥0.8): {metrics.TopChoiceVeryHighConfidencePercentage:F1}% ({metrics.TopChoiceVeryHighConfidenceCount}/{promptCount} tests)");
+            await writer.WriteLineAsync($"  Top + High Confidence (≥0.7): {metrics.TopChoiceHighConfidencePercentage:F1}% ({metrics.TopChoiceHighConfidenceCount}/{promptCount} tests)");
+            await writer.WriteLineAsync($"  Top + Good Confidence (≥0.6): {metrics.TopChoiceGoodConfidencePercentage:F1}% ({metrics.TopChoiceGoodConfidenceCount}/{promptCount} tests)");
+            await writer.WriteLineAsync($"  Top + Fair Confidence (≥0.5): {metrics.TopChoiceFairConfidencePercentage:F1}% ({metrics.TopChoiceFairConfidenceCount}/{promptCount} tests)");
+            await writer.WriteLineAsync($"  Top + Acceptable Confidence (≥0.4): {metrics.TopChoiceAcceptableConfidencePercentage:F1}% ({metrics.TopChoiceAcceptableConfidenceCount}/{promptCount} tests)");
+        }
+        else
         {
             await writer.WriteLineAsync("## Summary");
             await writer.WriteLineAsync();
@@ -808,10 +926,11 @@ class Program
             await writer.WriteLineAsync($"**👍 Top Choice + Fair Confidence (≥0.5):** {metrics.TopChoiceFairConfidencePercentage:F1}% ({metrics.TopChoiceFairConfidenceCount}/{promptCount} tests)  ");
             await writer.WriteLineAsync($"**👌 Top Choice + Acceptable Confidence (≥0.4):** {metrics.TopChoiceAcceptableConfidencePercentage:F1}% ({metrics.TopChoiceAcceptableConfidenceCount}/{promptCount} tests)  ");
             await writer.WriteLineAsync();
-
             await writer.WriteLineAsync("### Success Rate Analysis");
             await writer.WriteLineAsync();
+
             var overallScore = metrics.TopChoiceAcceptableConfidencePercentage; // Use ≥0.4 (acceptable) as the primary metric
+
             if (overallScore >= 90)
             {
                 await writer.WriteLineAsync("🟢 **Excellent** - The tool selection system is performing very well.");
@@ -850,30 +969,8 @@ class Program
                 await writer.WriteLineAsync();
                 await writer.WriteLineAsync("🔧 **Recommendation:** Significant improvements needed in tool descriptions for better semantic matching.");
             }
-            await writer.WriteLineAsync();
-        }
-        else
-        {
-            // Calculate success rate metrics for regular format too
-            var metrics = await CalculateSuccessRateAsync(db, toolNameWithPrompts, embeddingService);
 
-            await writer.WriteLineAsync($"\n\nPrompt count={promptCount}, Execution time={stopwatch.Elapsed.TotalSeconds:F7}s");
-            await writer.WriteLineAsync($"Top choice success rate={metrics.TopChoicePercentage:F1}% ({metrics.TopChoiceCount}/{promptCount} tests passed)");
             await writer.WriteLineAsync();
-            await writer.WriteLineAsync("Confidence Level Distribution:");
-            await writer.WriteLineAsync($"  Very High Confidence (≥0.8): {metrics.VeryHighConfidencePercentage:F1}% ({metrics.VeryHighConfidenceCount}/{promptCount} tests)");
-            await writer.WriteLineAsync($"  High Confidence (≥0.7): {metrics.HighConfidencePercentage:F1}% ({metrics.HighConfidenceCount}/{promptCount} tests)");
-            await writer.WriteLineAsync($"  Good Confidence (≥0.6): {metrics.GoodConfidencePercentage:F1}% ({metrics.GoodConfidenceCount}/{promptCount} tests)");
-            await writer.WriteLineAsync($"  Fair Confidence (≥0.5): {metrics.FairConfidencePercentage:F1}% ({metrics.FairConfidenceCount}/{promptCount} tests)");
-            await writer.WriteLineAsync($"  Acceptable Confidence (≥0.4): {metrics.AcceptableConfidencePercentage:F1}% ({metrics.AcceptableConfidenceCount}/{promptCount} tests)");
-            await writer.WriteLineAsync($"  Low Confidence (<0.4): {metrics.LowConfidencePercentage:F1}% ({metrics.LowConfidenceCount}/{promptCount} tests)");
-            await writer.WriteLineAsync();
-            await writer.WriteLineAsync("Top Choice + Confidence Combinations:");
-            await writer.WriteLineAsync($"  Top + Very High Confidence (≥0.8): {metrics.TopChoiceVeryHighConfidencePercentage:F1}% ({metrics.TopChoiceVeryHighConfidenceCount}/{promptCount} tests)");
-            await writer.WriteLineAsync($"  Top + High Confidence (≥0.7): {metrics.TopChoiceHighConfidencePercentage:F1}% ({metrics.TopChoiceHighConfidenceCount}/{promptCount} tests)");
-            await writer.WriteLineAsync($"  Top + Good Confidence (≥0.6): {metrics.TopChoiceGoodConfidencePercentage:F1}% ({metrics.TopChoiceGoodConfidenceCount}/{promptCount} tests)");
-            await writer.WriteLineAsync($"  Top + Fair Confidence (≥0.5): {metrics.TopChoiceFairConfidencePercentage:F1}% ({metrics.TopChoiceFairConfidenceCount}/{promptCount} tests)");
-            await writer.WriteLineAsync($"  Top + Acceptable Confidence (≥0.4): {metrics.TopChoiceAcceptableConfidencePercentage:F1}% ({metrics.TopChoiceAcceptableConfidenceCount}/{promptCount} tests)");
         }
 
         // Calculate success rate metrics for console output
@@ -1038,6 +1135,7 @@ class Program
         {
             Console.WriteLine($"   Prompt {i + 1}: {testPrompts[i]}");
         }
+
         Console.WriteLine();
 
         try
@@ -1047,24 +1145,30 @@ class Program
 
             // Get configuration values
             var endpoint = Environment.GetEnvironmentVariable("AOAI_ENDPOINT");
+
             if (string.IsNullOrEmpty(endpoint))
             {
                 if (isCiMode)
                 {
                     Console.WriteLine("⏭️  Skipping validation in CI - AOAI_ENDPOINT not configured");
+
                     Environment.Exit(0);
                 }
+
                 Console.WriteLine("❌ Error: AOAI_ENDPOINT environment variable is required");
                 Console.WriteLine("💡 Tip: This validation requires Azure OpenAI configuration");
                 Console.WriteLine("   Set AOAI_ENDPOINT and TEXT_EMBEDDING_API_KEY environment variables");
                 Console.WriteLine("   or create a .env file with these values");
+
                 Environment.Exit(1);
             }
 
             var apiKey = GetApiKey(isCiMode);
+
             if (apiKey == null && isCiMode)
             {
                 Console.WriteLine("⏭️  Skipping validation in CI - API key not available");
+
                 Environment.Exit(0);
             }
 
@@ -1072,6 +1176,7 @@ class Program
 
             // Load existing tools for comparison
             var listToolsResult = await LoadToolsDynamicallyAsync(toolDir, isCiMode) ?? await LoadToolsFromJsonAsync("tools.json", isCiMode);
+
             if (listToolsResult == null && isCiMode)
             {
                 Console.WriteLine("⏭️  Skipping validation in CI - tools data not available");
@@ -1080,6 +1185,7 @@ class Program
 
             // Create test tools with the provided description
             var testTools = new List<Tool>();
+
             testTools.Add(new Tool
             {
                 Name = $"{TestToolIdPrefix}1",
@@ -1088,11 +1194,14 @@ class Program
 
             // Create vector database with existing tools + test tools
             var allTools = new List<Tool>(listToolsResult!.Tools);
-            allTools.AddRange(testTools);
-            var db = new VectorDB(new CosineSimilarity());
 
+            allTools.AddRange(testTools);
+
+            var db = new VectorDB(new CosineSimilarity());
             var stopwatch = Stopwatch.StartNew();
+
             await PopulateDatabaseAsync(db, allTools, embeddingService);
+
             stopwatch.Stop();
 
             Console.WriteLine($"⚡ Loaded {allTools.Count} tools ({allTools.Count - testTools.Count} existing + {testTools.Count} test) in {stopwatch.Elapsed.TotalSeconds:F2}s");
@@ -1100,6 +1209,7 @@ class Program
 
             // Test each prompt against all tools
             var testNumber = 1;
+
             foreach (var testPrompt in testPrompts)
             {
                 Console.WriteLine($"🎯 Test {testNumber}: \"{testPrompt}\"");
@@ -1114,6 +1224,7 @@ class Program
                 for (int i = 0; i < queryResults.Count; i++)
                 {
                     var result = queryResults[i];
+
                     if (result.Entry.Id.StartsWith(TestToolIdPrefix))
                     {
                         testToolResults.Add((i + 1, result.Score, $"{TestToolIdPrefix}1"));
@@ -1122,17 +1233,18 @@ class Program
 
                 // Display results for test tool
                 Console.WriteLine("📊 Test Tool Results:");
+
                 if (testToolResults.Count > 0)
                 {
                     var (rank, score, toolName) = testToolResults.First();
                     var quality = rank == 1 ? "✅ Excellent" :
-                                 rank <= 3 ? "🟡 Good" :
-                                 rank <= 10 ? "🟠 Fair" : "🔴 Poor";
+                                  rank <= 3 ? "🟡 Good" :
+                                  rank <= 10 ? "🟠 Fair" : "🔴 Poor";
                     var confidence = score >= 0.8 ? "💪 Very high confidence" :
-                                   score >= 0.7 ? "🎯 High confidence" :
-                                   score >= 0.6 ? "✅ Good confidence" :
-                                   score >= 0.5 ? "👍 Fair confidence" :
-                                   score >= 0.4 ? "👌 Acceptable confidence" : "❌ Low confidence";
+                                     score >= 0.7 ? "🎯 High confidence" :
+                                     score >= 0.6 ? "✅ Good confidence" :
+                                     score >= 0.5 ? "👍 Fair confidence" :
+                                     score >= 0.4 ? "👌 Acceptable confidence" : "❌ Low confidence";
 
                     Console.WriteLine($"   {toolName}:");
                     Console.WriteLine($"      Rank #{rank} - {quality}");
@@ -1146,6 +1258,7 @@ class Program
 
                 Console.WriteLine();
                 Console.WriteLine("📋 Top 5 competing tools:");
+
                 for (int i = 0; i < Math.Min(5, queryResults.Count); i++)
                 {
                     var result = queryResults[i];
@@ -1157,31 +1270,38 @@ class Program
 
                 // Suggestions for improvement
                 Console.WriteLine();
+
                 var bestTestTool = testToolResults.FirstOrDefault();
+
                 if (bestTestTool.rank > 1 || bestTestTool.score < 0.6)
                 {
                     Console.WriteLine("💡 Suggestions for improvement:");
+
                     if (bestTestTool.score < 0.4)
                     {
                         Console.WriteLine("   • Consider using more specific keywords from the prompt");
                         Console.WriteLine("   • Include common synonyms or alternative phrasings");
                     }
+
                     if (bestTestTool.rank > 5)
                     {
                         Console.WriteLine("   • Look at top-ranking tool descriptions for inspiration");
                         Console.WriteLine("   • Ensure the descriptions clearly match the user intent");
                     }
+
                     Console.WriteLine("   • Test with multiple different prompts users might use");
                 }
 
                 Console.WriteLine();
                 Console.WriteLine("---");
                 Console.WriteLine();
+
                 testNumber++;
             }
 
             // Summary
             Console.WriteLine("📈 Rankings Summary:");
+
             var totalTests = testPrompts.Count;
             var excellentCount = 0;
             var goodCount = 0;
@@ -1192,7 +1312,6 @@ class Program
             {
                 var vector = await embeddingService.CreateEmbeddingsAsync(testPrompt);
                 var queryResults = db.Query(vector, new QueryOptions(TopK: 10));
-
                 var testToolId = $"{TestToolIdPrefix}1";
                 var rank = queryResults.FindIndex(r => r.Entry.Id == testToolId) + 1;
 
