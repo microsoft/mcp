@@ -7,5 +7,6 @@ namespace Azure.Mcp.Tools.Extension.Services;
 
 public interface ICliGenerateService
 {
-    public Task<HttpResponseMessage> GenerateAzureCLICommandAsync(string intent);
+    public Task<HttpResponseMessage> GenerateAzureCLICommandAsync(
+        string intent);
 }

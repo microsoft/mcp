@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Extension.Models;
 using Azure.Mcp.Tools.Extension.Options;
 using Azure.Mcp.Tools.Extension.Services;
@@ -13,8 +15,6 @@ public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger) : Glo
 {
     private const string CommandTitle = "Generate CLI Command";
     private readonly ILogger<CliGenerateCommand> _logger = logger;
-    private readonly Option<string> _intentOption = ExtensionOptionDefinitions.CliGenerate.Intent;
-    private readonly Option<string> _cliTypeOption = ExtensionOptionDefinitions.CliGenerate.CliType;
     private readonly string[] _allowedCliTypeValues = ["az"];
 
     public override string Name => "generate";
@@ -26,62 +26,70 @@ This tool can generate Azure CLI commands to be used with the corresponding CLI 
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        OpenWorld = false,
+        Idempotent = true,
+        ReadOnly = true,
+        Secret = false,
+        LocalRequired = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_intentOption);
-        command.Options.Add(_cliTypeOption);
+        command.Options.Add(ExtensionOptionDefinitions.CliGenerate.Intent.AsRequired());
+        command.Options.Add(ExtensionOptionDefinitions.CliGenerate.CliType.AsRequired());
     }
 
     protected override CliGenerateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Intent = parseResult.GetValue(_intentOption);
-        options.CliType = parseResult.GetValue(_cliTypeOption);
+        options.Intent = parseResult.GetValueOrDefault<string>(ExtensionOptionDefinitions.CliGenerate.Intent.Name);
+        options.CliType = parseResult.GetValueOrDefault<string>(ExtensionOptionDefinitions.CliGenerate.CliType.Name);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        
+
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
             return context.Response;
         }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            ArgumentNullException.ThrowIfNull(options.Intent);
             var intent = options.Intent;
+            ArgumentNullException.ThrowIfNull(intent);
+
             var cliType = options.CliType?.ToLowerInvariant();
 
-            if (_allowedCliTypeValues.Contains(cliType)) {
-                // Only log the cli type when we know for sure it doesn't have private data.
-                context.Activity?.AddTag("cliType", cliType);
-
-                if (cliType == Constants.AzureCliType)
-                {
-                    ICliGenerateService cliGenerateService = context.GetService<ICliGenerateService>();
-
-                    using HttpResponseMessage responseMessage = await cliGenerateService.GenerateAzureCLICommandAsync(intent);
-                    responseMessage.EnsureSuccessStatusCode();
-
-                    var responseBody = await responseMessage.Content.ReadAsStringAsync();
-                    CliGenerateResult result = new(responseBody, cliType);
-                    context.Response.Results = ResponseResult.Create(result, ExtensionJsonContext.Default.CliGenerateResult);
-                }
-            }
-            else
+            if (!_allowedCliTypeValues.Contains(cliType))
             {
                 throw new ArgumentException($"Invalid CLI type: {options.CliType}. Supported values are: {string.Join(", ", _allowedCliTypeValues)}");
+            }
+            ICliGenerateService cliGenerateService = context.GetService<ICliGenerateService>();
+
+            // Only log the cli type when we know for sure it doesn't have private data.
+            context.Activity?.AddTag("cliType", cliType);
+
+            if (cliType == Constants.AzureCliType)
+            {
+                using HttpResponseMessage responseMessage = await cliGenerateService.GenerateAzureCLICommandAsync(intent);
+                responseMessage.EnsureSuccessStatusCode();
+
+                var responseBody = await responseMessage.Content.ReadAsStringAsync();
+                CliGenerateResult result = new(responseBody, cliType);
+                context.Response.Results = ResponseResult.Create(result, ExtensionJsonContext.Default.CliGenerateResult);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An exception occurred generating cli command. Cli type: {CliType}.", options.CliType);
+            _logger.LogError(ex, "Error in {Operation}. Options: {@Options}", Name, options);
             HandleException(context, ex);
         }
 
