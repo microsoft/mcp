@@ -16,7 +16,7 @@ public class AzureManagedLustreSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAzureManagedLustreService, AzureManagedLustreService>();
-        
+
         services.AddSingleton<FileSystemListCommand>();
         services.AddSingleton<FileSystemSubnetSizeCommand>();
         services.AddSingleton<SkuGetCommand>();

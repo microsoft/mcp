@@ -35,7 +35,7 @@ public sealed class QuotaSetup : IAreaSetup
 
         var regionGroup = new CommandGroup("region", "Region availability operations");
         var availabilityGroup = new CommandGroup("availability", "Region availability information");
-        
+
         availabilityGroup.AddCommand("list", serviceProvider.GetRequiredService<AvailabilityListCommand>());
         regionGroup.AddSubGroup(availabilityGroup);
         quota.AddSubGroup(regionGroup);

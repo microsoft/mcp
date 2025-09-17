@@ -5,7 +5,6 @@ using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.AzureTerraformBestPractices.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureTerraformBestPractices;
 
@@ -31,7 +30,7 @@ public class AzureTerraformBestPracticesSetup : IAreaSetup
             "get",
             serviceProvider.GetRequiredService<AzureTerraformBestPracticesGetCommand>()
         );
-        
+
         return azureTerraformBestPractices;
     }
 }

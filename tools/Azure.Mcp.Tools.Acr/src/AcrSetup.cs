@@ -5,7 +5,6 @@ using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Acr;
 
@@ -16,7 +15,7 @@ public class AcrSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAcrService, AcrService>();
-        
+
         services.AddSingleton<RegistryListCommand>();
         services.AddSingleton<RegistryRepositoryListCommand>();
     }
