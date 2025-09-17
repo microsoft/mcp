@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.MySql.Commands.Database;
 using Azure.Mcp.Tools.MySql.Json;
 using Azure.Mcp.Tools.MySql.Options;
@@ -14,7 +15,6 @@ namespace Azure.Mcp.Tools.MySql.Commands.Table;
 public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger) : BaseDatabaseCommand<TableSchemaGetOptions>(logger)
 {
     private const string CommandTitle = "Get MySQL Table Schema";
-    private readonly Option<string> _tableOption = MySqlOptionDefinitions.Table;
 
     public override string Name => "schema";
 
@@ -35,13 +35,13 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_tableOption);
+        command.Options.Add(MySqlOptionDefinitions.Table);
     }
 
     protected override TableSchemaGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Table = parseResult.GetValue(_tableOption);
+        options.Table = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.Table.Name);
         return options;
     }
 

@@ -1,0 +1,46 @@
+{
+    "parameters": {
+        "capacityId": "f51b705f-a409-4d40-9197-c5d5f349e2ef",
+        "tenantSettingName": "AdminApisIncludeDetailedMetadata",
+        "updateTenantSettingOverrideRequest":{
+            "enabled": true,
+            "enabledSecurityGroups": [
+                {
+                    "graphId": "f51b705f-a409-4d40-9197-c5d5f349e2f0",
+                    "name": "TestComputeCdsa"
+                }
+            ],
+            "delegateToWorkspace": true
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "overrides": [
+                    {
+                        "settingName": "TenantSettingForCapacityDelegatedSwitch",
+                        "title": "Capacity delegation test settings",
+                        "enabled": true,
+                        "canSpecifySecurityGroups": true,
+                        "enabledSecurityGroups": [
+                            {
+                                "graphId": "f51b705f-a409-4d40-9197-c5d5f349e2f0",
+                                "name": "TestComputeCdsa"
+                            }
+                        ],
+                        "tenantSettingGroup": "Delegation testing",
+                        "properties": [
+                            {
+                                "name": "testIntProp",
+                                "value": "5",
+                                "type": "Integer"
+                            }
+                        ],
+                        "delegateToWorkspace": true,
+                        "delegatedFrom": "Tenant"
+                    }
+                ]
+            }
+        }
+    }
+}

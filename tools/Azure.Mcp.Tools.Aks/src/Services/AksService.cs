@@ -184,6 +184,69 @@ public sealed class AksService(
         return nodePools;
     }
 
+    public async Task<NodePool?> GetNodePool(
+        string subscription,
+        string resourceGroup,
+        string clusterName,
+        string nodePoolName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(subscription, resourceGroup, clusterName, nodePoolName);
+
+        // Create cache key
+        var cacheKey = string.IsNullOrEmpty(tenant)
+            ? $"nodepool_{subscription}_{resourceGroup}_{clusterName}_{nodePoolName}"
+            : $"nodepool_{subscription}_{resourceGroup}_{clusterName}_{nodePoolName}_{tenant}";
+
+        // Try to get from cache first
+        var cachedNodePool = await _cacheService.GetAsync<NodePool>(CacheGroup, cacheKey, s_cacheDuration);
+        if (cachedNodePool != null)
+        {
+            return cachedNodePool;
+        }
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+        try
+        {
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            if (resourceGroupResource?.Value == null)
+            {
+                return null;
+            }
+
+            var clusterResource = await resourceGroupResource.Value
+                .GetContainerServiceManagedClusters()
+                .GetAsync(clusterName);
+
+            if (clusterResource?.Value == null)
+            {
+                return null;
+            }
+
+            var agentPoolResource = await clusterResource.Value
+                .GetContainerServiceAgentPools()
+                .GetAsync(nodePoolName);
+
+            if (agentPoolResource?.Value?.Data == null)
+            {
+                return null;
+            }
+
+            var nodePool = ConvertToNodePoolModel(agentPoolResource.Value);
+
+            // Cache the result
+            await _cacheService.SetAsync(CacheGroup, cacheKey, nodePool, s_cacheDuration);
+
+            return nodePool;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving AKS node pool '{nodePoolName}' for cluster '{clusterName}': {ex.Message}", ex);
+        }
+    }
+
     private static Cluster ConvertToClusterModel(ContainerServiceManagedClusterResource clusterResource)
     {
         var data = clusterResource.Data;

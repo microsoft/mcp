@@ -1,0 +1,141 @@
+{
+  "swagger": "2.0",
+  "info": {
+      "version": "v1",
+      "title": "Dashboard data types"
+  },
+  "paths": {},
+  "definitions": {
+      "Dashboards": {
+          "description": "A list of dashboards.",
+          "required": ["value"],
+          "type": "object",
+          "properties": {
+              "value": {
+                  "description": "A list of dashboards.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Dashboard"
+                  }
+              }
+          },
+          "allOf": [
+              {
+                  "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+              }
+          ]
+      },
+      "Dashboard": {
+          "description": "A dashboard object.",
+          "type": "object",
+          "required": ["type"],
+          "allOf": [
+              {
+                  "$ref": "../common/definitions.json#/definitions/Item"
+              }
+          ]
+      },
+      "CreateDashboardRequest": {
+          "description": "Create dashboard request payload.",
+          "required": ["displayName"],
+          "properties": {
+              "displayName": {
+                  "description": "The dashboard display name. The display name must follow naming rules according to item type.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "description": {
+                  "description": "The dashboard description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "folderId": {
+                  "description": "The folder ID. If not specified or null, the dashboard is created with the workspace as its folder.",
+                  "type": "string",
+                  "format": "uuid",
+                  "readOnly": false
+              },
+              "definition": {
+                  "description": "The dashboard public definition.",
+                  "$ref": "#/definitions/DashboardDefinition",
+                  "readOnly": false
+              }
+          }
+      },
+      "UpdateDashboardDefinitionRequest": {
+          "description": "Update dashboard public definition request payload.",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/DashboardDefinition"
+              }
+          }
+      },
+      "DashboardDefinitionResponse": {
+          "description": "Dashboard public definition response.",
+          "required": ["definition"],
+          "properties": {
+              "definition": {
+                  "$ref": "#/definitions/DashboardDefinition",
+                  "readOnly": true
+              }
+          }
+      },
+      "DashboardDefinition" : {
+          "description": "Dashboard public definition object.",
+          "type": "object",
+          "required": ["parts"],
+          "properties": {
+              "format": {
+                  "description": "The format of the item definition.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "parts": {
+                  "description": "A list of definition parts.",
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/DashboardDefinitionPart"
+                  },
+                  "readOnly": false
+              }
+          }
+      },
+      "DashboardDefinitionPart": {
+          "description": "Dashboard definition part object.",
+          "type": "object",
+          "properties": {
+              "path": {
+                  "description": "The dashboard part path.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payload": {
+                  "description": "The dashboard part payload.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "payloadType":{
+                  "description": "The payload type.",
+                  "$ref": "../common/definitions.json#/definitions/PayloadType",
+                  "readOnly": false
+              }
+          }
+      },
+      "UpdateDashboardRequest": {
+          "description": "Update dashboard request.",
+          "properties": {
+              "displayName": {
+                  "description": "The dashboard display name. The display name must follow naming rules according to item type.",
+                  "type": "string",
+                  "readOnly": false
+              },
+              "description": {
+                  "description": "The dashboard description. Maximum length is 256 characters.",
+                  "type": "string",
+                  "readOnly": false
+              }
+          }
+      }
+  }
+}

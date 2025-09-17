@@ -16,8 +16,6 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : SubscriptionCommand<BaseTopicOptions>
 {
     private const string CommandTitle = "Get Service Bus Topic Details";
-    private readonly Option<string> _topicOption = ServiceBusOptionDefinitions.Topic;
-    private readonly Option<string> _namespaceOption = ServiceBusOptionDefinitions.Namespace;
     private readonly ILogger<TopicDetailsCommand> _logger = logger;
     public override string Name => "details";
 
@@ -46,15 +44,15 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_namespaceOption);
-        command.Options.Add(_topicOption);
+        command.Options.Add(ServiceBusOptionDefinitions.Namespace);
+        command.Options.Add(ServiceBusOptionDefinitions.Topic);
     }
 
     protected override BaseTopicOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TopicName = parseResult.GetValueOrDefault(_topicOption);
-        options.Namespace = parseResult.GetValueOrDefault(_namespaceOption);
+        options.TopicName = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Topic.Name);
+        options.Namespace = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Namespace.Name);
         return options;
     }
 

@@ -46,13 +46,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_appconfig_kv_show | Show the content for the key <key_name> in App Configuration store <app_config_store_name> |
 | azmcp_appconfig_kv_unlock | Unlock the key <key_name> in App Configuration store <app_config_store_name> |
 
-## Azure CLI
+## Azure App Lens
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_extension_az | Create a Storage account with name <storage_account_name> |
-| azmcp_extension_az | List all virtual machines in my subscription |
-| azmcp_extension_az | Show me the details of the storage account <account_name> |
+| azmcp_applens_resource_diagnose | Please help me diagnose issues with my app using app lens |
+| azmcp_applens_resource_diagnose | Use app lens to check why my app is slow? |
+| azmcp_applens_resource_diagnose | What does app lens say is wrong with my service? |
 
 ## Azure Container Registry (ACR)
 
@@ -131,13 +131,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_postgres_table_list | Show me the tables in the PostgreSQL database \<database> in server \<server> |
 | azmcp_postgres_table_schema_get | Show me the schema of table \<table> in the PostgreSQL database \<database> in server \<server> |
 
-## Azure Developer CLI
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| azmcp_extension_azd | Create a To-Do list web application that uses NodeJS and MongoDB |
-| azmcp_extension_azd | Deploy my web application to Azure App Service |
-
 ## Azure Deploy
 
 | Tool Name | Test Prompt |
@@ -170,9 +163,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_functionapp_get | Show me the details for the function app <function_app_name> |
 | azmcp_functionapp_get | Show plan and region for function app <function_app_name> |
 | azmcp_functionapp_get | What is the status of function app <function_app_name>? |
-| azmcp_functionapp_list | List all function apps in my subscription |
-| azmcp_functionapp_list | Show me my Azure function apps |
-| azmcp_functionapp_list | What function apps do I have? |
+| azmcp_functionapp_get | List all function apps in my subscription |
+| azmcp_functionapp_get | Show me my Azure function apps |
+| azmcp_functionapp_get | What function apps do I have? |
 
 ## Azure Key Vault
 
@@ -203,6 +196,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_aks_cluster_list | List all AKS clusters in my subscription |
 | azmcp_aks_cluster_list | Show me my Azure Kubernetes Service clusters |
 | azmcp_aks_cluster_list | What AKS clusters do I have? |
+| azmcp_aks_nodepool_get | Get details for nodepool \<nodepool-name> in AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_get | Show me the configuration for nodepool \<nodepool-name> in AKS cluster \<cluster-name> in resource group \<resource-group> |
+| azmcp_aks_nodepool_get | What is the setup of nodepool \<nodepool-name> for AKS cluster \<cluster-name> in \<resource-group>? |
 | azmcp_aks_nodepool_list | List nodepools for AKS cluster \<cluster-name> in \<resource-group> |
 | azmcp_aks_nodepool_list | Show me the nodepool list for AKS cluster \<cluster-name> in \<resource-group> |
 | azmcp_aks_nodepool_list | What nodepools do I have for AKS cluster \<cluster-name> in \<resource-group> |
@@ -233,6 +229,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_azuremanagedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> |
 | azmcp_azuremanagedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> |
 | azmcp_azuremanagedlustre_filesystem_required-subnet-size | Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku> |
+| azmcp_azuremanagedlustre_filesystem_sku_get | List the Azure Managed Lustre SKUs available in <location> |
 
 ## Azure Marketplace
 
@@ -378,6 +375,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_sql_server_create | Create a new Azure SQL server named <server_name> in resource group <resource_group_name> |
+| azmcp_sql_server_create | Create an Azure SQL server with name <server_name> in location <location> with admin user <admin_user> |
+| azmcp_sql_server_create | Set up a new SQL server called <server_name> in my resource group <resource_group_name> |
+| azmcp_sql_server_delete | Delete the Azure SQL server <server_name> from resource group <resource_group_name> |
+| azmcp_sql_server_delete | Remove the SQL server <server_name> from my subscription |
+| azmcp_sql_server_delete | Delete SQL server <server_name> permanently |
 | azmcp_sql_server_entra-admin_list | List Microsoft Entra ID administrators for SQL server <server_name> |
 | azmcp_sql_server_entra-admin_list | Show me the Entra ID administrators configured for SQL server <server_name> |
 | azmcp_sql_server_entra-admin_list | What Microsoft Entra ID administrators are set up for my SQL server <server_name>? |
@@ -390,6 +393,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_server_firewall-rule_list | List all firewall rules for SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_list | Show me the firewall rules for SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_list | What firewall rules are configured for my SQL server <server_name>? |
+| azmcp_sql_server_show | Show me the details of Azure SQL server <server_name> in resource group <resource_group_name> |
+| azmcp_sql_server_show | Get the configuration details for SQL server <server_name> |
+| azmcp_sql_server_show | Display the properties of SQL server <server_name> |
 
 ## Azure Storage
 

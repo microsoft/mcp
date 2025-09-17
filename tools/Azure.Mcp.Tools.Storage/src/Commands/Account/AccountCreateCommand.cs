@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Account;
@@ -17,13 +18,6 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
 {
     private const string CommandTitle = "Create Storage Account";
     private readonly ILogger<AccountCreateCommand> _logger = logger;
-
-    // Define options from OptionDefinitions
-    private readonly Option<string> _accountCreateOption = StorageOptionDefinitions.AccountCreate;
-    private readonly Option<string> _locationOption = StorageOptionDefinitions.Location;
-    private readonly Option<string> _skuOption = StorageOptionDefinitions.Sku;
-    private readonly Option<string> _accessTierOption = StorageOptionDefinitions.AccessTier;
-    private readonly Option<bool> _enableHierarchicalNamespaceOption = StorageOptionDefinitions.EnableHierarchicalNamespace;
 
     public override string Name => "create";
 
@@ -48,22 +42,23 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_accountCreateOption);
-        RequireResourceGroup();
-        command.Options.Add(_locationOption);
-        command.Options.Add(_skuOption);
-        command.Options.Add(_accessTierOption);
-        command.Options.Add(_enableHierarchicalNamespaceOption);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(StorageOptionDefinitions.AccountCreate);
+        command.Options.Add(StorageOptionDefinitions.Location);
+        command.Options.Add(StorageOptionDefinitions.Sku);
+        command.Options.Add(StorageOptionDefinitions.AccessTier);
+        command.Options.Add(StorageOptionDefinitions.EnableHierarchicalNamespace);
     }
 
     protected override AccountCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault(_accountCreateOption);
-        options.Location = parseResult.GetValueOrDefault(_locationOption);
-        options.Sku = parseResult.GetValueOrDefault(_skuOption);
-        options.AccessTier = parseResult.GetValueOrDefault(_accessTierOption);
-        options.EnableHierarchicalNamespace = parseResult.GetValueOrDefault(_enableHierarchicalNamespaceOption);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Account = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.AccountCreate.Name);
+        options.Location = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Location.Name);
+        options.Sku = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Sku.Name);
+        options.AccessTier = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.AccessTier.Name);
+        options.EnableHierarchicalNamespace = parseResult.GetValueOrDefault<bool>(StorageOptionDefinitions.EnableHierarchicalNamespace.Name);
         return options;
     }
 

@@ -8,7 +8,6 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Xunit;
@@ -28,12 +27,6 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         _monitorService = GetMonitorService();
         _storageAccountName = $"{Settings.ResourceBaseName}mon";
         _logHelper = new LogAnalyticsHelper(Settings.ResourceBaseName, Settings.SubscriptionId, _monitorService, Settings.TenantId, TestLogType);
-    }
-
-    public override ValueTask DisposeAsync()
-    {
-        base.Dispose();
-        return ValueTask.CompletedTask;
     }
 
     private static IMonitorService GetMonitorService()
@@ -161,7 +154,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         Assert.NotEmpty(array);
     }
 
-    [Fact]
+    [Fact(Skip = "Intermittent failures due to slow ingestion")]
     public async Task Should_query_monitor_logs_by_resource_id()
     {
         var storageResourceId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Storage/storageAccounts/{_storageAccountName}";

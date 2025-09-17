@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AppConfig.Options;
 using Azure.Mcp.Tools.AppConfig.Options.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
@@ -12,8 +13,6 @@ namespace Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger) : BaseKeyValueCommand<KeyValueSetOptions>()
 {
     private const string CommandTitle = "Set App Configuration Key-Value Setting";
-    private readonly Option<string> _valueOption = AppConfigOptionDefinitions.Value;
-    private readonly Option<string[]> _tagsOption = AppConfigOptionDefinitions.Tags;
     private readonly ILogger<KeyValueSetCommand> _logger = logger;
 
     public override string Name => "set";
@@ -41,15 +40,15 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger) : Bas
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_valueOption);
-        command.Options.Add(_tagsOption);
+        command.Options.Add(AppConfigOptionDefinitions.Value);
+        command.Options.Add(AppConfigOptionDefinitions.Tags);
     }
 
     protected override KeyValueSetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Value = parseResult.GetValue(_valueOption);
-        options.Tags = parseResult.GetValue(_tagsOption);
+        options.Value = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.Value.Name);
+        options.Tags = parseResult.GetValueOrDefault<string[]>(AppConfigOptionDefinitions.Tags.Name);
         return options;
     }
 

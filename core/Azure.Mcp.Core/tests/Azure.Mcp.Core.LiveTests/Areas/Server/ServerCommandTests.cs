@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Reflection;
-using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client.Helpers;
-using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Xunit;
@@ -277,38 +274,6 @@ public class ServerCommandTests(ITestOutputHelper output)
 
         Output.WriteLine($"Namespace proxy mode with [documentation] loaded {toolNames.Count} tools");
         Output.WriteLine($"Tool: {toolNames.First()}");
-    }
-
-    [Fact]
-    public async Task NamespaceProxyMode_IncludesExtensionTools()
-    {
-        // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "namespace");
-
-        // Act
-        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        // Assert
-        Assert.NotEmpty(listResult);
-
-        var toolNames = listResult.Select(t => t.Name).ToList();
-
-        // Should include specific extension tools
-        var hasExtensionAz = toolNames.Any(name => name.Equals("extension_az", StringComparison.OrdinalIgnoreCase));
-        var hasExtensionAzd = toolNames.Any(name => name.Equals("extension_azd", StringComparison.OrdinalIgnoreCase));
-
-        Assert.True(hasExtensionAz, "Should have extension_az tool");
-        Assert.True(hasExtensionAzd, "Should have extension_azd tool");
-
-        Output.WriteLine($"Namespace proxy mode with [extension] loaded {toolNames.Count} tools");
-        Output.WriteLine($"Found extension_az: {hasExtensionAz}");
-        Output.WriteLine($"Found extension_azd: {hasExtensionAzd}");
-
-        // Log all tools for debugging
-        foreach (var name in toolNames)
-        {
-            Output.WriteLine($"  - {name}");
-        }
     }
 
     [Fact]

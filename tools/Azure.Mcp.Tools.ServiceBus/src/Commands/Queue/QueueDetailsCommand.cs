@@ -16,8 +16,6 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : SubscriptionCommand<BaseQueueOptions>
 {
     private const string CommandTitle = "Get Service Bus Queue Details";
-    private readonly Option<string> _queueOption = ServiceBusOptionDefinitions.Queue;
-    private readonly Option<string> _namespaceOption = ServiceBusOptionDefinitions.Namespace;
     private readonly ILogger<QueueDetailsCommand> _logger = logger;
     public override string Name => "details";
 
@@ -46,15 +44,15 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_namespaceOption);
-        command.Options.Add(_queueOption);
+        command.Options.Add(ServiceBusOptionDefinitions.Namespace);
+        command.Options.Add(ServiceBusOptionDefinitions.Queue);
     }
 
     protected override BaseQueueOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Name = parseResult.GetValueOrDefault(_queueOption);
-        options.Namespace = parseResult.GetValueOrDefault(_namespaceOption);
+        options.Name = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Queue.Name);
+        options.Namespace = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Namespace.Name);
         return options;
     }
 

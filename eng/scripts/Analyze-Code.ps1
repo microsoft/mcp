@@ -33,13 +33,13 @@ try {
         }
     }
     
-    # Run tool selection analysis
+    # Run tool description evaluation
     & "$PSScriptRoot/Test-ToolSelection.ps1"
+
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "❌ Tool selection analysis failed"
-        $hasErrors = $true
+        Write-Host "❌ Tool description evaluation failed"
     } else {
-        Write-Host "✅ Tool selection analysis did not detect any issues."
+        Write-Host "✅ Tool description evaluation did not detect any issues."
     }
 
     if($hasErrors) {

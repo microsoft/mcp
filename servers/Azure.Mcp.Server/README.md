@@ -10,19 +10,21 @@ The Azure MCP Server implements the [MCP specification](https://modelcontextprot
 
 
 ## Table of Contents
-
-- [VS Code Install Guide (Recommended)](#vs-code-install-guide-recommended)
-- [IntelliJ Install Guide](#intellij-install-guide)
-- [Quick Start](#quick-start)
-- [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
-- [Currently Supported Tools](#currently-supported-tools)
-- [Upgrading Existing Installs to the Latest Version](#upgrading-existing-installs-to-the-latest-version)
-- [Advanced Install Scenarios (Optional)](#advanced-install-scenarios-optional)
-- [Data Collection](#data-collection)
-- [Troubleshooting](#troubleshooting)
-- [Security Note](#security-note)
-- [Contributing](#contributing)
-- [Code of Conduct](#code-of-conduct)
+- Install
+    - [VS Code Install Guide (Recommended)](#vs-code-install-guide-recommended)
+    - [IntelliJ Install Guide](#intellij-install-guide)
+    - [Advanced Install Scenarios (Optional)](#advanced-install-scenarios-optional)
+    - [Upgrading](#upgrading)
+- Usage
+    - [Quick Start](#quick-start)
+    - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
+    - [Currently Supported Tools](#currently-supported-tools)
+- Support & Reference
+    - [Data Collection](#data-collection)
+    - [Troubleshooting](#troubleshooting)
+    - [Security Note](#security-note)
+    - [Contributing](#contributing)
+    - [Code of Conduct](#code-of-conduct)
 
 ## <a id="vs-code-install-guide-recommended"></a>✅ VS Code Install Guide (Recommended)
 
@@ -65,17 +67,22 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "List my App Configuration stores"
 * "Show my key-value pairs in App Config"
 
+### ⚙️ Azure App Lens
+
+* "Help me diagnose issues with my app"
+
 ### 📦 Azure Container Registry (ACR)
 
 * "List all my Azure Container Registries"
-* "Show me my container registries in the 'myproject' resource group"
+* "Show me my container registries in the 'my-resource-group' resource group"
 * "List all my Azure Container Registry repositories"
 
 ### ☸️ Azure Kubernetes Service (AKS)
 
 * "List my AKS clusters in my subscription"
 * "Show me all my Azure Kubernetes Service clusters"
-* "List the node pools for my AKS cluster 'my-aks-cluster' in the 'my-resource-group' resource group"
+* "List the node pools for my AKS cluster"
+* "Get details for the node pool 'np1' of my AKS cluster 'my-aks-cluster' in the 'my-resource-group' resource group"
 
 ### 📊 Azure Cosmos DB
 
@@ -91,11 +98,11 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * "List all Event Grid topics in subscription 'my-subscription'"
 * "Show me the Event Grid topics in my subscription"
-* "List all Event Grid topics in resource group 'my-resourcegroup' in my subscription"
+* "List all Event Grid topics in resource group 'my-resource-group' in my subscription"
 
 ### ⚡ Azure Managed Lustre
 
-* "List the Azure Managed Lustre clusters in resource group 'my-resourcegroup'"
+* "List the Azure Managed Lustre clusters in resource group 'my-resource-group'"
 * "How many IP Addresses I need to create a 128 TiB cluster of AMLFS 500?"
 
 ### 📊 Azure Monitor
@@ -117,6 +124,9 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "Delete a firewall rule from my Azure SQL server 'myserver'"
 * "List all elastic pools in my Azure SQL server 'myserver'"
 * "List Active Directory administrators for my Azure SQL server 'myserver'"
+* "Create a new Azure SQL server in my resource group 'my-resource-group'"
+* "Show me details about my Azure SQL server 'myserver'"
+* "Delete my Azure SQL server 'myserver'"
 
 ### 💾 Azure Storage
 
@@ -153,11 +163,6 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * Get secure, production-grade Azure SDK best practices for effective code generation.
 
-### 🖥️ Azure CLI Extension
-
-* Execute Azure CLI commands directly
-* Support for all Azure CLI functionality
-
 ### 📦 Azure Container Registry (ACR)
 
 * List Azure Container Registries and repositories in a subscription
@@ -192,12 +197,6 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * List and query databases.
 * List and get schema for tables.
 * List, get configuration and get/set parameters for servers.
-
-### 🛠️ Azure Developer CLI (azd) Extension
-
-* Execute Azure Developer CLI commands directly
-* Support for template discovery, template initialization, provisioning and deployment
-* Cross-platform compatibility
 
 ### 🚀 Azure Deploy
 
@@ -234,13 +233,14 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 ### ☸️ Azure Kubernetes Service (AKS)
 
 * List Azure Kubernetes Service clusters
+* List node pools in an AKS managed cluster
+* Get details of a node pool in an AKS managed cluster
 
 ### 📦 Azure Load Testing
 
 * List, create load test resources
 * List, create load tests
 * Get, list, (create) run and rerun, update load test runs
-
 
 ### 🚀 Azure Managed Grafana
 
@@ -250,6 +250,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * List Azure Managed Lustre filesystems
 * Get the number of IP addresses required for a specific SKU and size of Azure Managed Lustre filesystem
+* Get information of Azure Managed Lustre SKUs available in a specific Azure region
 
 ### 🏪 Azure Marketplace
 
@@ -318,14 +319,11 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * List SQL server firewall rules
 * Create SQL server firewall rules
 * Delete SQL server firewall rules
-
-### 🗄️ Azure SQL Elastic Pool
-
 * List elastic pools in SQL servers
-
-### 🗄️ Azure SQL Server
-
 * List Microsoft Entra ID administrators for SQL servers
+* Create new SQL servers
+* Show details and properties of SQL servers
+* Delete SQL servers
 
 ### 💾 Azure Storage
 
@@ -374,7 +372,7 @@ Agents and models can discover and learn best practices and usage guidelines for
 
 For detailed command documentation and examples, see [Azure MCP Commands](https://github.com/microsoft/mcp/blob/main/docs/azmcp-commands.md).
 
-## <a id="upgrading-existing-installs-to-the-latest-version"></a> 🔄️ Upgrading Existing Installs to the Latest Version
+## <a id="upgrading"></a> 🔄️ Upgrading
 
 <details>
 <summary>How to stay current with releases of Azure MCP Server</summary>
@@ -385,7 +383,7 @@ If you use the default package spec of `@azure/mcp@latest`, npx will look for a 
 
 #### NPM
 
-If you globally install the cli via `npm install -g @azure/mcp` it will use the installed version until you manually update it with `npm update -g @azure/mcp`.
+If you globally install the CLI via `npm install -g @azure/mcp` it will use the installed version until you manually update it with `npm update -g @azure/mcp`.
 
 #### Docker
 

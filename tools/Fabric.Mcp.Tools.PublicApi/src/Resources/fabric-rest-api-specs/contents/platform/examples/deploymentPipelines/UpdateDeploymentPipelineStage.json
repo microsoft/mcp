@@ -1,0 +1,22 @@
+{
+    "parameters": {
+        "deploymentPipelineId": "a5ded933-57b7-41f4-b072-ed4c1f9d5824",
+        "stageId": "2e6f0272-e809-410a-be63-50e1d97ba75a",
+        "updatePipelineStageRequest": {
+            "displayName": "Updated Stage Name",
+            "description": "Updated deployment pipeline stage description",
+            "isPublic": true
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "2e6f0272-e809-410a-be63-50e1d97ba75a",
+                "order": 0,
+                "displayName": "Updated Stage Name",
+                "description": "Updated deployment pipeline stage description",
+                "isPublic": true
+              }              
+        }
+    }
+}

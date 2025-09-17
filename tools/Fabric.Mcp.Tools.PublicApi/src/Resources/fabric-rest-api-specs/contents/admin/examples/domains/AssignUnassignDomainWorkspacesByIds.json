@@ -1,0 +1,15 @@
+{
+    "parameters": {
+        "domainId": "97dd1d38-a4c6-41ed-bc4f-1e383f8ddd0f",
+        "domainWorkspacesByIdsRequest": {
+            "workspacesIds": [
+                "e8de1852-7382-480a-8404-d5b1f5e1ab65",
+                "5348d3a9-c096-4074-9083-09e3ca69c8e5",
+                "ac561643-c5c5-4cf1-868e-8755a90e6fa3"
+            ]
+        }
+    },
+    "responses": {
+        "200": {}
+    }
+}

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.0.11</Version>
+    <Version>0.0.12</Version>
     <CliName>mcptmp</CliName>
     <AssemblyTitle>Template MCP Server</AssemblyTitle>
     <Description>Template MCP Server - Basic Model Context Protocol implementation</Description>

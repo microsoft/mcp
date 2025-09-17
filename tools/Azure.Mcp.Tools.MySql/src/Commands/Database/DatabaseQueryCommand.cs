@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.MySql.Json;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Options.Database;
@@ -13,7 +14,6 @@ namespace Azure.Mcp.Tools.MySql.Commands.Database;
 public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) : BaseDatabaseCommand<DatabaseQueryOptions>(logger)
 {
     private const string CommandTitle = "Query MySQL Database";
-    private readonly Option<string> _queryOption = MySqlOptionDefinitions.Query;
 
     public override string Name => "query";
 
@@ -34,13 +34,13 @@ public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) :
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_queryOption);
+        command.Options.Add(MySqlOptionDefinitions.Query);
     }
 
     protected override DatabaseQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValue(_queryOption);
+        options.Query = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.Query.Name);
         return options;
     }
 

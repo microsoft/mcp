@@ -13,8 +13,6 @@ public abstract class BaseContainerCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
     : BaseStorageCommand<TOptions> where TOptions : BaseContainerOptions, new()
 {
-    protected readonly Option<string> _containerOption = StorageOptionDefinitions.Container;
-
     protected BaseContainerCommand()
     {
     }
@@ -22,13 +20,13 @@ public abstract class BaseContainerCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_containerOption);
+        command.Options.Add(StorageOptionDefinitions.Container);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Container = parseResult.GetValueOrDefault(_containerOption);
+        options.Container = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Container.Name);
         return options;
     }
 }

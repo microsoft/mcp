@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.MySql.Json;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Options.Server;
@@ -13,7 +14,6 @@ namespace Azure.Mcp.Tools.MySql.Commands.Server;
 public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger) : BaseServerCommand<ServerParamGetOptions>(logger)
 {
     private const string CommandTitle = "Get MySQL Server Parameter";
-    private readonly Option<string> _paramOption = MySqlOptionDefinitions.Param;
 
     public override string Name => "param";
 
@@ -34,13 +34,13 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_paramOption);
+        command.Options.Add(MySqlOptionDefinitions.Param);
     }
 
     protected override ServerParamGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Param = parseResult.GetValue(_paramOption);
+        options.Param = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.Param.Name);
         return options;
     }
 

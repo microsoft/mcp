@@ -1,0 +1,36 @@
+{
+    "parameters": {},
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "workspaceId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+                        "gitProviderDetails":
+                        {
+                            "organizationName": "Test Organization",
+                            "projectName": "Test Project",
+                            "gitProviderType": "AzureDevOps",
+                            "repositoryName": "Test Repo",
+                            "branchName": "Test Branch",
+                            "directoryName": "/Test Directory"
+                        }
+                    },
+                    {
+                        "workspaceId": "17d8929d-ab32-46d1-858b-fdea74e93bf2",
+                        "gitProviderDetails":
+                        {
+                            "ownerName": "Test Owner",
+                            "gitProviderType": "GitHub",
+                            "repositoryName": "Test Repo",
+                            "branchName": "Test Branch",
+                            "directoryName": "/"
+                        }
+                    }
+                ],
+                "continuationUri": "https://api.fabric.microsoft.com/v1/admin/workspaces/discoverGitConnections?continuationToken=eyJMYXN0U2VlbkNvbm5lY3Rpb25JZCI6NX0=",
+                "continuationToken": "eyJMYXN0U2VlbkNvbm5lY3Rpb25JZCI6NX0="
+            }
+        }
+    }
+}

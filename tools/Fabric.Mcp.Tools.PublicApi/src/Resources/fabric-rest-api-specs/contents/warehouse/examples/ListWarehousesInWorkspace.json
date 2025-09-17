@@ -1,0 +1,39 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "3546052c-ae64-4526-b1a8-52af7761426f",
+                        "displayName": "Warehouse Name 1",
+                        "description": "A warehouse description.",
+                        "type": "Warehouse",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "connectionString": "qvrmbuxie7we7glrekxgy6npqu-6xgyei3x2xiejip4iime6knh5m.datawarehouse.fabric.microsoft.com",
+                            "createdDate": "2023-09-28T22:52:13.78",
+                            "lastUpdatedTime": "2023-10-04T22:56:33.283",
+                            "collationType": "Latin1_General_100_CI_AS_KS_WS_SC_UTF8"
+                        }
+                    },
+                    {
+                        "id": "6281bf94-81b9-46b2-b8d3-79bb868fc822",
+                        "displayName": "Warehouse Name 2",
+                        "description": "A warehouse description.",
+                        "type": "Warehouse",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "connectionString": "qvrmbuxie7we7glrekxgy6npqu-6xgyei3x2xiejip4iime6knh5m.datawarehouse.fabric.microsoft.com",
+                            "createdDate": "2023-11-21T13:14:30.54",
+                            "lastUpdatedTime": "2023-12-04T20:03:43.110",
+                            "collationType": "Latin1_General_100_BIN2_UTF8"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

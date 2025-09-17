@@ -9,6 +9,7 @@
     <NpmPackageKeywords>fabric,mcp,model-context-protocol</NpmPackageKeywords>
     <PackageId>Microsoft.Fabric.Mcp</PackageId>
     <ToolCommandName>$(CliName)</ToolCommandName>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -61,7 +62,7 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)\core\Microsoft.Fabric.Mcp.Core\src\Microsoft.Fabric.Mcp.Core.csproj" />
-    <ProjectReference Include="$(RepoRoot)\areas\*\src\**\Fabric.*.csproj" />
+    <ProjectReference Include="$(RepoRoot)\tools\Fabric.*\src\*.csproj" />
   </ItemGroup>
 
   <ItemGroup>

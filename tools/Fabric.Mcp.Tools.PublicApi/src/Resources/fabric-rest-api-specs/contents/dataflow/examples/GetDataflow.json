@@ -1,0 +1,17 @@
+{
+  "parameters": {
+    "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+    "dataflowId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "id": "5b218778-e7a5-4d73-8187-f10824047715",
+        "displayName": "TestDataflow",
+        "description": "A Dataflow description.",
+        "type": "Dataflow",
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+      }
+    }
+  }
+}

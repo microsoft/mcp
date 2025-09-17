@@ -36,14 +36,6 @@ public static class StorageOptionDefinitions
         Required = true
     };
 
-    public static readonly Option<string> OptionalAccount = new(
-        $"--{AccountName}"
-    )
-    {
-        Description = "The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').",
-        Required = false
-    };
-
     public static readonly Option<string> AccountCreate = new(
         $"--{AccountCreateName}"
     )
@@ -89,14 +81,6 @@ public static class StorageOptionDefinitions
     {
         Description = "The name of the container to access within the storage account.",
         Required = true
-    };
-
-    public static readonly Option<string> OptionalContainer = new(
-        $"--{ContainerName}"
-    )
-    {
-        Description = "The name of the container to access within the storage account.",
-        Required = false
     };
 
     public static readonly Option<string> Table = new(
@@ -146,14 +130,6 @@ public static class StorageOptionDefinitions
     {
         Description = "The name of the blob to access within the container. This should be the full path within the container (e.g., 'file.txt' or 'folder/file.txt').",
         Required = true
-    };
-
-    public static readonly Option<string> OptionalBlob = new(
-        $"--{BlobName}"
-    )
-    {
-        Description = "The name of the blob to access within the container. This should be the full path within the container (e.g., 'file.txt' or 'folder/file.txt').",
-        Required = false
     };
 
     public static readonly Option<string> FilterPath = new(

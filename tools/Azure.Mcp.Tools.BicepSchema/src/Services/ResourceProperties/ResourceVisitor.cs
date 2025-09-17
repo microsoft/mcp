@@ -124,45 +124,53 @@ public class ResourceVisitor
             ResourceProvider = provider,
             ApiVersion = apiVersion
         };
-
-        ResourceType resourceType = _azTypeLoader.LoadResourceType(resource);
-        FindTypesToWrite(typesToWrite, resourceType.Body);
-
-        if (WriteComplexType(resourceType) is ResourceTypeEntity resourceTypeEntity)
+        try
         {
-            result.ResourceTypeEntities.Add(resourceTypeEntity);
-        }
-        else
-        {
-            throw new InvalidDataException($"Resource type {resourceType.Name} failed to be converted to ResourceTypeEntity.");
-        }
+            ResourceType resourceType = _azTypeLoader.LoadResourceType(resource);
 
-        foreach (KeyValuePair<string, IReadOnlyDictionary<string, IReadOnlyList<CrossFileTypeReference>>> resourceFunction in selectedResourceFunctions)
-        {
-            var functions = resourceFunction.Value.Where(r => r.Key.Equals(apiVersion)).SelectMany(r => r.Value).ToList();
+            FindTypesToWrite(typesToWrite, resourceType.Body);
 
-            foreach (CrossFileTypeReference? function in functions)
+            if (WriteComplexType(resourceType) is ResourceTypeEntity resourceTypeEntity)
             {
-                ResourceFunctionType resourceFunctionType = _azTypeLoader.LoadResourceFunctionType(function);
-                if (resourceFunctionType.Input != null)
-                {
-                    typesToWrite.Add(resourceFunctionType.Input.Type);
-                    FindTypesToWrite(typesToWrite, resourceFunctionType.Input);
-                }
+                result.ResourceTypeEntities.Add(resourceTypeEntity);
+            }
+            else
+            {
+                throw new InvalidDataException($"Resource type {resourceType.Name} failed to be converted to ResourceTypeEntity.");
+            }
 
-                typesToWrite.Add(resourceFunctionType.Output.Type);
-                FindTypesToWrite(typesToWrite, resourceFunctionType.Output);
+            foreach (KeyValuePair<string, IReadOnlyDictionary<string, IReadOnlyList<CrossFileTypeReference>>> resourceFunction in selectedResourceFunctions)
+            {
+                var functions = resourceFunction.Value.Where(r => r.Key.Equals(apiVersion)).SelectMany(r => r.Value).ToList();
 
-                if (WriteComplexType(resourceFunctionType) is ResourceFunctionTypeEntity resourceFunctionTypeEntity)
+                foreach (CrossFileTypeReference? function in functions)
                 {
-                    result.ResourceFunctionTypeEntities.Add(resourceFunctionTypeEntity);
-                }
-                else
-                {
-                    throw new InvalidDataException($"Resource function type {resourceFunctionType.Name} failed to be converted to ResourceFunctionTypeEntity.");
+                    ResourceFunctionType resourceFunctionType = _azTypeLoader.LoadResourceFunctionType(function);
+                    if (resourceFunctionType.Input != null)
+                    {
+                        typesToWrite.Add(resourceFunctionType.Input.Type);
+                        FindTypesToWrite(typesToWrite, resourceFunctionType.Input);
+                    }
+
+                    typesToWrite.Add(resourceFunctionType.Output.Type);
+                    FindTypesToWrite(typesToWrite, resourceFunctionType.Output);
+
+                    if (WriteComplexType(resourceFunctionType) is ResourceFunctionTypeEntity resourceFunctionTypeEntity)
+                    {
+                        result.ResourceFunctionTypeEntities.Add(resourceFunctionTypeEntity);
+                    }
+                    else
+                    {
+                        throw new InvalidDataException($"Resource function type {resourceFunctionType.Name} failed to be converted to ResourceFunctionTypeEntity.");
+                    }
                 }
             }
         }
+        catch (Exception ex)
+        {
+            throw new InvalidDataException($"Resource type {resourceTypeName} with apiVersion {apiVersion} not supported", ex);
+        }
+
 
         // Sort by name first (e.g. listSecrets), then by resource type (e.g. Microsoft.ApiManagement/service/authorizationServers)
         result.ResourceFunctionTypeEntities.Sort((a, b) =>

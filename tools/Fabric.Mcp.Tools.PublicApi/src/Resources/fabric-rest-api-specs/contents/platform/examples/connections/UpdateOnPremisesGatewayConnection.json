@@ -1,0 +1,45 @@
+{
+    "parameters": {
+        "connectionId": "70b17680-48f1-4729-9df6-02576647dc3a",
+        "updateConnectionRequest": {
+            "connectivityType": "OnPremisesGateway",
+            "displayName": "ContosoSalesOnPremisesConnection",
+            "credentialDetails": {
+                "skipTestConnection": false,
+                "credentials": {
+                    "credentialType": "Windows",
+                    "values": [
+                        {
+                            "gatewayId": "4f8b5d6e-8e99-4817-8b9e-6b6a613be707",
+                            "encryptedCredentials": "************************************"
+                        },
+                        {   "gatewayId": "c6961028-1309-4183-9799-a0b0fa28a235",
+                            "encryptedCredentials": "************************************"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "70b17680-48f1-4729-9df6-02576647dc3a",
+                "displayName": "ContosoSalesOnPremisesConnection",
+                "gatewayId": "4f8b5d6e-8e99-4817-8b9e-6b6a613be707",
+                "connectivityType": "OnPremisesGateway",
+                "connectionDetails":{
+                    "type": "SQL",
+                    "path": "contoso.database.windows.net;sales"
+                },
+                "privacyLevel": "Organizational",
+                "credentialDetails": {
+                    "credentialType": "Windows",
+                    "singleSignOnType": "None",
+                    "connectionEncryption": "NotEncrypted",
+                    "skipTestConnection": false
+                }
+            }
+        }
+    }
+}

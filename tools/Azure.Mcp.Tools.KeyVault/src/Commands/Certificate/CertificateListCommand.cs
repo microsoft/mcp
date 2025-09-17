@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -14,7 +15,6 @@ public sealed class CertificateListCommand(ILogger<CertificateListCommand> logge
 {
     private const string _commandTitle = "List Key Vault Certificates";
     private readonly ILogger<CertificateListCommand> _logger = logger;
-    private readonly Option<string> _vaultOption = KeyVaultOptionDefinitions.VaultName;
 
     public override string Name => "list";
 
@@ -39,13 +39,13 @@ public sealed class CertificateListCommand(ILogger<CertificateListCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_vaultOption);
+        command.Options.Add(KeyVaultOptionDefinitions.VaultName);
     }
 
     protected override CertificateListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValue(_vaultOption);
+        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
         return options;
     }
 

@@ -1,0 +1,40 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "updateWorkspaceSettingsRequest": {
+            "pool": {
+                "defaultPool": {
+                    "id": "00000000-0000-0000-0000-000000000000"
+                }
+            }
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "automaticLog": {
+                    "enabled": false
+                },
+                "highConcurrency": {
+                    "notebookInteractiveRunEnabled": false
+                },
+                "pool": {
+                    "customizeComputeEnabled": false,
+                    "defaultPool": {
+                        "name": "Starter Pool",
+                        "type": "Workspace",
+                        "id": "00000000-0000-0000-0000-000000000000"
+                    },
+                    "starterPool": {
+                        "maxNodeCount": 3,
+                        "maxExecutors": 1
+                    }
+                },
+                "environment": {
+                    "name": "environment1",
+                    "runtimeVersion": "1.2"
+                }
+            }
+        }
+    }
+}

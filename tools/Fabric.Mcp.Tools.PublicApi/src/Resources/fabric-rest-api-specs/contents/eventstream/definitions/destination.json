@@ -1,0 +1,341 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Eventstream destination data types"
+    },
+    "paths": {},
+    "definitions": {
+        "DestinationType": {
+            "type": "string",
+            "description": "Represents the type of the destination. Additional destination types may be added over time.",
+            "enum": [
+                "Activator",
+                "CustomEndpoint",
+                "Eventhouse",
+                "Lakehouse"
+            ],
+            "x-ms-enum": {
+                "name": "DestinationType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Activator",
+                        "description": "The Activator destination type."
+                    },
+                    {
+                        "value": "CustomEndpoint",
+                        "description": "The CustomEndpoint destination type."
+                    },
+                    {
+                        "value": "Eventhouse",
+                        "description": "The Eventhouse destination type."
+                    },
+                    {
+                        "value": "Lakehouse",
+                        "description": "The Lakehouse destination type."
+                    }
+                ]
+            }
+        },
+        "BaseDestination": {
+            "type": "object",
+            "description": "Represents the base Eventstream destination.",
+            "required": [
+                "name",
+                "inputNodes"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "The unique identifier of the destination.",
+                    "format": "uuid"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The unique name of the destination."
+                },
+                "inputNodes": {
+                    "type": "array",
+                    "description": "A list of the references to the input nodes of the destination.",
+                    "items": {
+                        "$ref": "./common.json#/definitions/NodeReference"
+                    }
+                },
+                "inputSchemas": {
+                    "type": "array",
+                    "description": "The input schemas of the destination.",
+                    "items": {
+                        "$ref": "operatorCommon.json#/definitions/InputSchema"
+                    }
+                }
+            }
+        },
+        "DestinationResponse": {
+            "type": "object",
+            "description": "Represents an Eventstream destination response.",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "description": "The type of the destination.",
+                    "$ref": "#/definitions/DestinationType"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/BaseDestination"
+                },
+                {
+                    "$ref": "common.json#/definitions/RuntimeInformation"
+                }
+            ],
+            "discriminator": "type"
+        },
+        "DestinationConnectionResponse": {
+            "type": "object",
+            "description": "Represents the connection information for a destination custom endpoint.",
+            "required": [
+                "consumerGroupName"
+            ],
+            "properties": {
+                "consumerGroupName": {
+                    "type": "string",
+                    "description": "The consumer group name."
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "./common.json#/definitions/BaseCustomEndpointConnection"
+                }
+            ]
+        },
+        "ActivatorDestinationResponse": {
+            "type": "object",
+            "description": "Activator destination response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Activator destination.",
+                    "$ref": "#/definitions/ActivatorDestinationProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/DestinationResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "Activator"
+        },
+        "CustomEndpointDestinationResponse": {
+            "type": "object",
+            "description": "Custom endpoint events destination response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the custom endpoint destination.",
+                    "$ref": "#/definitions/CustomEndpointDestinationProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/DestinationResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "CustomEndpoint"
+        },
+        "EventhouseDestinationResponse": {
+            "type": "object",
+            "description": "Eventhouse destination response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/EventhouseDestinationProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/DestinationResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "Eventhouse"
+        },
+        "LakehouseDestinationResponse": {
+            "type": "object",
+            "description": "Lakehouse destination response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Lakehouse destination.",
+                    "$ref": "#/definitions/LakehouseDestinationProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/DestinationResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "Lakehouse"
+        },
+        "ActivatorDestinationProperties": {
+            "type": "object",
+            "description": "Activator destination properties.",
+            "required": [
+                "workspaceId",
+                "itemId"
+            ],
+            "properties": {
+                "workspaceId": {
+                    "type": "string",
+                    "description": "The Activator workspace identifier.",
+                    "format": "uuid"
+                },
+                "itemId": {
+                    "type": "string",
+                    "description": "The Activator item identifier.",
+                    "format": "uuid"
+                },
+                "inputSerialization": {
+                    "$ref": "./serialization.json#/definitions/SerializationInfo"
+                }
+            }
+        },
+        "CustomEndpointDestinationProperties": {
+            "type": "object",
+            "description": "Custom endpoint events destination properties.",
+            "properties": {}
+        },
+        "EventhouseDestinationProperties": {
+            "type": "object",
+            "description": "Eventhouse destination properties.",
+            "required": [
+                "dataIngestionMode",
+                "workspaceId",
+                "itemId"
+            ],
+            "properties": {
+                "dataIngestionMode": {
+                    "type": "string",
+                    "description": "The data ingestion mode.",
+                    "enum": [
+                        "DirectIngestion",
+                        "ProcessedIngestion"
+                    ]
+                },
+                "workspaceId": {
+                    "type": "string",
+                    "description": "The Eventhouse workspace identifier.",
+                    "format": "uuid"
+                },
+                "itemId": {
+                    "type": "string",
+                    "description": "The Eventhouse item identifier.",
+                    "format": "uuid"
+                }
+            },
+            "discriminator": "dataIngestionMode"
+        },
+        "EventhouseDirectIngestionModeDestinationProperties": {
+            "type": "object",
+            "description": "Eventhouse DirectIngestion mode destination properties.",
+            "properties": {
+                "tableName": {
+                    "type": "string",
+                    "description": "The KQL table name."
+                },
+                "connectionName": {
+                    "type": "string",
+                    "description": "The connection name."
+                },
+                "mappingRuleName": {
+                    "type": "string",
+                    "description": "The mapping rule name."
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/EventhouseDestinationProperties"
+                }
+            ],
+            "x-ms-discriminator-value": "DirectIngestion"
+        },
+        "EventhouseProcessedIngestionModeDestinationProperties": {
+            "type": "object",
+            "description": "Eventhouse ProcessedIngestion mode destination properties.",
+            "required": [
+                "databaseName",
+                "tableName"
+            ],
+            "properties": {
+                "databaseName": {
+                    "type": "string",
+                    "description": "The KQL database name."
+                },
+                "tableName": {
+                    "type": "string",
+                    "description": "The KQL table name."
+                },
+                "inputSerialization": {
+                    "$ref": "./serialization.json#/definitions/SerializationInfo"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/EventhouseDestinationProperties"
+                }
+            ],
+            "x-ms-discriminator-value": "ProcessedIngestion"
+        },
+        "LakehouseDestinationProperties": {
+            "type": "object",
+            "description": "Lakehouse destination properties.",
+            "required": [
+                "workspaceId",
+                "itemId",
+                "deltaTable"
+            ],
+            "properties": {
+                "workspaceId": {
+                    "type": "string",
+                    "description": "The Lakehouse workspace identifier.",
+                    "format": "uuid"
+                },
+                "itemId": {
+                    "type": "string",
+                    "description": "The Lakehouse item identifier.",
+                    "format": "uuid"
+                },
+                "schema": {
+                    "type": "string",
+                    "description": "The schema name."
+                },
+                "deltaTable": {
+                    "type": "string",
+                    "description": "The delta table name."
+                },
+                "minimumRows": {
+                    "type": "integer",
+                    "description": "The minimum number of rows for an output batch. Default is 100000.",
+                    "default": 100000
+                },
+                "maximumDurationInSeconds": {
+                    "type": "integer",
+                    "description": "The maximum duration in seconds for an output batch. Default is 120.",
+                    "default": 120
+                },
+                "inputSerialization": {
+                    "$ref": "./serialization.json#/definitions/SerializationInfo"
+                }
+            }
+        }
+    }
+}

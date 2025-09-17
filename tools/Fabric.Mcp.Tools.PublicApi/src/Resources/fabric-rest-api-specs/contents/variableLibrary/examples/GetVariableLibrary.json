@@ -1,0 +1,20 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "variableLibraryId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+                "displayName": "VariableLibrary 1",
+                "description": "A VariableLibrary description.",
+                "type": "VariableLibrary",
+                "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+                "properties": {
+                    "activeValueSetName": "Default value set"
+                }
+            }
+        }
+    }
+}

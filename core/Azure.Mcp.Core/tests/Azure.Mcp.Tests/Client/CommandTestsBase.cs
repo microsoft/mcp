@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -69,14 +68,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         Client = await McpClientFactory.CreateAsync(clientTransport);
 
         Output.WriteLine("MCP client initialized successfully");
-    }
-
-    public virtual async ValueTask DisposeAsync()
-    {
-        if (Client != null)
-        {
-            await Client.DisposeAsync();
-        }
     }
 
     protected Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
@@ -151,10 +142,45 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
 
     public void Dispose()
     {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore().ConfigureAwait(false);
+        Dispose(disposing: false);
+        GC.SuppressFinalize(this);
+    }
+
+    // subclasses should override this method to dispose resources
+    // overrides should still call base.Dispose(disposing)
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            // No unmanaged resources to release, but if we had, we'd release them here.
+            // _disposableResource?.Dispose();
+            // _disposableResource = null;
+
+            // Handle things normally disposed in DisposeAsyncCore
+            if (Client is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+        }
+
         // Failure output may contain request and response details that should be output for failed tests.
         if (TestContext.Current?.TestState?.Result == TestResult.Failed && FailureOutput.Length > 0)
         {
             Output.WriteLine(FailureOutput.ToString());
         }
+    }
+
+    // subclasses should override this method to dispose async resources
+    // overrides should still call base.DisposeAsyncCore()
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
+        await Client.DisposeAsync().ConfigureAwait(false);
     }
 }
