@@ -27,7 +27,14 @@ public class EventGridSetup : IAreaSetup
         var topics = new CommandGroup("topic", "Event Grid topic operations - Commands for managing Event Grid topics and their configurations.");
         eventGrid.AddSubGroup(topics);
 
+        // Subscriptions subgroup
+        var subscriptions = new CommandGroup("subscription", "Event Grid subscription operations - Commands for managing event subscriptions with filtering and endpoint configuration.");
+        eventGrid.AddSubGroup(subscriptions);
+
         // Register Topic commands
         topics.AddCommand("list", new TopicListCommand(loggerFactory.CreateLogger<TopicListCommand>()));
+
+        // Register Subscription commands
+        subscriptions.AddCommand("list", new SubscriptionListCommand(loggerFactory.CreateLogger<SubscriptionListCommand>()));
     }
 }

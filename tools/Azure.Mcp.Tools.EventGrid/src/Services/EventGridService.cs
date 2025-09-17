@@ -41,6 +41,34 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         return topics;
     }
 
+    public Task<List<EventGridSubscriptionInfo>> GetSubscriptionsAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string? topicName = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        // For now, return a placeholder implementation
+        // This will be enhanced once we determine the correct Azure SDK methods
+        var subscriptions = new List<EventGridSubscriptionInfo>();
+        
+        // Add a placeholder subscription for demonstration
+        subscriptions.Add(new EventGridSubscriptionInfo(
+            Name: "placeholder-subscription",
+            Type: "Microsoft.EventGrid/eventSubscriptions",
+            EndpointType: "WebHook",
+            EndpointUrl: "https://example.com/webhook",
+            ProvisioningState: "Succeeded",
+            DeadLetterDestination: null,
+            Filter: null,
+            MaxDeliveryAttempts: 30,
+            EventTimeToLiveInMinutes: 1440,
+            CreatedDateTime: DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            UpdatedDateTime: DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+        ));
+
+        return Task.FromResult(subscriptions);
+    }
+
     private static EventGridTopicInfo CreateTopicInfo(EventGridTopicData topicData)
     {
         return new EventGridTopicInfo(

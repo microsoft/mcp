@@ -1,0 +1,48 @@
+{
+  "servers": {
+    "Azure MCP Server - Local Development": {
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj",
+        "--",
+        "server",
+        "start"
+      ],
+      "env": {
+        "AZURE_MCP_LOG_LEVEL": "Debug",
+        "AZURE_MCP_COLLECT_TELEMETRY": "false"
+      }
+    },
+    "Azure MCP Server - Release Build": {
+      "command": "dotnet",
+      "args": [
+        "servers/Azure.Mcp.Server/src/bin/Release/net9.0/azmcp.dll",
+        "server",
+        "start"
+      ],
+      "env": {
+        "AZURE_MCP_LOG_LEVEL": "Debug",
+        "AZURE_MCP_COLLECT_TELEMETRY": "false"
+      }
+    },
+    "Azure Event Grid Tools Only": {
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj",
+        "--",
+        "server",
+        "start",
+        "--namespace",
+        "eventgrid"
+      ],
+      "env": {
+        "AZURE_MCP_LOG_LEVEL": "Debug",
+        "AZURE_MCP_COLLECT_TELEMETRY": "false"
+      }
+    }
+  }
+}

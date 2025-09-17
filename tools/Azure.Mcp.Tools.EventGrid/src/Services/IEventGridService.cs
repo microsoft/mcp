@@ -9,4 +9,10 @@ public interface IEventGridService
         string subscription,
         string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<List<EventGridSubscriptionInfo>> GetSubscriptionsAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string? topicName = null,
+        RetryPolicyOptions? retryPolicy = null);
 }
