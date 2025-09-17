@@ -40,8 +40,6 @@ public sealed class DatabaseDeleteCommand(ILogger<DatabaseDeleteCommand> logger)
         Secret = false
     };
 
-    // No extra options beyond base server/resource-group/subscription/database
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
