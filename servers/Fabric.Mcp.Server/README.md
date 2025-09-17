@@ -6,7 +6,7 @@
 A local, AI-friendly Model Context Protocol (MCP) server that packages Microsoft Fabric's OpenAPI specifications, schema definitions, examples, and curated guidance into a single context layer for AI agents and developer tools.
 
 Why this project?
-- Provide a reliable, local-first source of Fabric API context for AI asistentes and code generation tools.
+- Provide a reliable, local-first source of Fabric API context for AI assistants and code generation tools.
 - Reduce the risk of leaking production credentials while enabling rich, example-driven development.
 - Make Fabric API discovery, schema lookup, and best-practice retrieval reproducible and scriptable.
 
@@ -48,69 +48,92 @@ The Fabric MCP Server unlocks practical developer workflows by providing local a
   - If `global.json` pins a preview SDK not installed locally, either install the requested preview SDK or update `global.json` for local development.
 - An MCP-compatible client (VS Code with an MCP extension, Claude Desktop, etc.).
 
-3. **Publish the executable:**
+### Installation Steps
+
+1. **Clone the repository:**
    ```bash
-    # For Windows
-   dotnet publish -c Release -r win-x64 --self-contained
-   
-      # For Linux
-   dotnet publish -c Release -r linux-x64 --self-contained
+   git clone https://github.com/microsoft/mcp.git
+   cd mcp
+   ```
+
+2. **Build the project:**
+   ```bash
+   dotnet build servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj --configuration Release
+   ```
+
+3. **Publish the executable for your platform:**
+   ```bash
+   # For Windows
+   dotnet publish servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -c Release -r win-x64 --self-contained
+
+   # For Linux
+   dotnet publish servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -c Release -r linux-x64 --self-contained
 
    # For Apple Silicon Macs
-   dotnet publish -c Release -r osx-arm64 --self-contained
+   dotnet publish servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -c Release -r osx-arm64 --self-contained
    
    # For Intel Macs
-   dotnet publish -c Release -r osx-x64 --self-contained
-
+   dotnet publish servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -c Release -r osx-x64 --self-contained
    ```
 
-4. **Find your executable:**
+4. **Locate your executable:**
+   The executable will be created at:
    ```
-   # The executable will be in:
-   bin/Release/net9.0/{your-rid}/publish/Fabric.Mcp.Server
+   servers/Fabric.Mcp.Server/src/bin/Release/net9.0/{your-rid}/publish/Fabric.Mcp.Server
+   ```
    
-   # For example, on Apple Silicon Mac:
-   bin/Release/net9.0/osx-arm64/publish/Fabric.Mcp.Server
+   For example, on Apple Silicon Mac:
+   ```
+   servers/Fabric.Mcp.Server/src/bin/Release/net9.0/osx-arm64/publish/Fabric.Mcp.Server
    ```
 
-5. **Configure your MCP client:**
+### MCP Client Configuration
 
-Template MCP client configuration (replace placeholders):
+5. **Configure your MCP client with the published executable:**
 
+**For VS Code (.vscode/mcp.json):**
 ```json
 {
   "servers": {
-    "<SERVER_NAME>": {
-      "command": "<ABSOLUTE_PATH_TO_PUBLISHED_EXECUTABLE>",
-      "args": ["server", "start", "--mode", "all"],
-      "env": {
-        "PATH": "<PATH_WITH_DOTNET_AND_TOOLS>"
-      }
+    "Microsoft Fabric MCP": {
+      "command": "/absolute/path/to/servers/Fabric.Mcp.Server/src/bin/Release/net9.0/osx-arm64/publish/Fabric.Mcp.Server",
+      "args": ["--mode", "all"]
     }
   }
 }
 ```
 
-### For contributors — run from source
-If you're contributing or iterating quickly, run from source:
+**For Claude Desktop:**
+```json
+{
+  "servers": {
+    "Microsoft Fabric MCP": {
+      "command": "/absolute/path/to/servers/Fabric.Mcp.Server/src/bin/Release/net9.0/win-x64/publish/Fabric.Mcp.Server.exe",
+      "args": ["--mode", "all"]
+    }
+  }
+}
+```
 
+> **Note:** Replace the path with the actual absolute path to your published executable. Use the correct RID (Runtime Identifier) and file extension for your platform.
+
+### Development Configuration
+
+**For contributors working from source:**
 ```json
 {
   "servers": {
     "Fabric MCP (dev)": {
       "command": "dotnet",
-      "args": ["run", "--project", "servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj"]
+      "args": ["run", "--project", "/absolute/path/to/servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj", "--", "--mode", "all"]
     }
   }
 }
 ```
 
-**Development notes:**
-- `dotnet run` automatically builds and starts the server; convenient for iterative development.
-- Use `dotnet publish` to test the published experience.
-
-### Common issues
-- SDK mismatch: If `dotnet` outputs an SDK resolution error, inspect `global.json` and align local SDKs or update the file.
+### Common Issues
+- **SDK mismatch:** If `dotnet` outputs an SDK resolution error, inspect `global.json` and align local SDKs or update the file.
+- **Path issues:** Always use absolute paths in MCP configuration to avoid path resolution problems.
 
 ---
 
@@ -159,7 +182,3 @@ For troubleshooting steps, consult `TROUBLESHOOTING.md`.
 
 ## License
 This project is licensed under the MIT License — see the [LICENSE](https://github.com/microsoft/mcp/blob/main/LICENSE) file for details.
-
----
-
-If you'd like additional polishing (graphics, badges, screenshots, or example walkthroughs), tell me which assets and I will add them next.

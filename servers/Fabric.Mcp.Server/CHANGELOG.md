@@ -21,10 +21,10 @@ Initial release of the Microsoft Fabric MCP Server in **Public Preview**.
 
 #### Tool Categories Added
 
-**Platform API Operations**:
-- `platform list-workloads` - List all available Fabric workload types
-- `platform get-platform-apis` - Get platform-level API specifications  
-- `platform get-workload-apis` - Get workload-specific API specifications
+**Public API Operations**:
+- `publicapis list-workloads` - List all available Fabric workload types
+- `publicapis get-workload-apis` - Get workload-specific API specifications  
+- `publicapis get-platform-apis` - Get platform-level API specifications
 
 **Best Practices & Examples**:
 - `bestpractices get-best-practices` - Get embedded best practice documentation
@@ -44,4 +44,4 @@ Initial release of the Microsoft Fabric MCP Server in **Public Preview**.
 
 ---
 
-For support, contributions, and feedback, see [SUPPORT.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/SUPPORT.md).
+For support, contributions, and feedback, see [SUPPORT](SUPPORT.md).

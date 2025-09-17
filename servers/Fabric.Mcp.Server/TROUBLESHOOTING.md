@@ -72,9 +72,18 @@ VS Code Copilot has a 128-tool limit per request. The Fabric MCP Server is desig
 
 If you're hitting the limit with multiple MCP servers, prefer one of the following approaches:
 
-**Option 1: Run focused server instances (recommended)**
-- Publish the server as a self-contained executable and run multiple instances configured to expose only the subset of tools or contexts you need. Point your MCP client to the specific executable for each scenario.
-- Example (high-level): configure multiple server entries in your MCP client, each pointing to a published executable that is preconfigured for a particular workload area.
+**Option 1: Use namespace mode (recommended)**
+- Configure the server with `--mode namespace` instead of `--mode all` to group tools into areas and reduce tool count:
+```json
+{
+  "servers": {
+    "Fabric MCP (namespace mode)": {
+      "command": "/path/to/Fabric.Mcp.Server",
+      "args": ["--mode", "namespace"]
+    }
+  }
+}
+```
 
 **Option 2: Use server commands to retrieve specific context**
 - Instead of exposing all workloads at once, use the server's `publicapis` commands to fetch a workload's OpenAPI or examples on-demand (for example, use `publicapis list` to discover workloads and `publicapis get --workload-type <name>` to fetch a workload's spec).
