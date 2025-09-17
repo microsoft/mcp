@@ -294,7 +294,7 @@ public class DatabaseDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub1 --resource-group rg1 --server server1 --database invalidDb");
         var response = await _command.ExecuteAsync(_context, parseResult);
 
-        Assert.Equal(400, response.Status);
+        Assert.Equal(500, response.Status);
         Assert.Contains("Invalid database name", response.Message);
     }
 

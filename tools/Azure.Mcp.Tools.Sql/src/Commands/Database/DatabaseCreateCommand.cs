@@ -20,15 +20,6 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
 {
     private const string CommandTitle = "Create SQL Database";
 
-    private readonly Option<string> _skuNameOption = SqlOptionDefinitions.SkuNameOption;
-    private readonly Option<string> _skuTierOption = SqlOptionDefinitions.SkuTierOption;
-    private readonly Option<int> _skuCapacityOption = SqlOptionDefinitions.SkuCapacityOption;
-    private readonly Option<string> _collationOption = SqlOptionDefinitions.CollationOption;
-    private readonly Option<long> _maxSizeBytesOption = SqlOptionDefinitions.MaxSizeBytesOption;
-    private readonly Option<string> _elasticPoolNameOption = SqlOptionDefinitions.ElasticPoolNameOption;
-    private readonly Option<bool> _zoneRedundantOption = SqlOptionDefinitions.ZoneRedundantOption;
-    private readonly Option<string> _readScaleOption = SqlOptionDefinitions.ReadScaleOption;
-
     public override string Name => "create";
 
     public override string Description =>
@@ -43,7 +34,7 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        Idempotent = true,
+        Idempotent = false,
         OpenWorld = true,
         ReadOnly = false,
         LocalRequired = false,
@@ -53,27 +44,27 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_skuNameOption);
-        command.Options.Add(_skuTierOption);
-        command.Options.Add(_skuCapacityOption);
-        command.Options.Add(_collationOption);
-        command.Options.Add(_maxSizeBytesOption);
-        command.Options.Add(_elasticPoolNameOption);
-        command.Options.Add(_zoneRedundantOption);
-        command.Options.Add(_readScaleOption);
+        command.Options.Add(SqlOptionDefinitions.SkuNameOption);
+        command.Options.Add(SqlOptionDefinitions.SkuTierOption);
+        command.Options.Add(SqlOptionDefinitions.SkuCapacityOption);
+        command.Options.Add(SqlOptionDefinitions.CollationOption);
+        command.Options.Add(SqlOptionDefinitions.MaxSizeBytesOption);
+        command.Options.Add(SqlOptionDefinitions.ElasticPoolNameOption);
+        command.Options.Add(SqlOptionDefinitions.ZoneRedundantOption);
+        command.Options.Add(SqlOptionDefinitions.ReadScaleOption);
     }
 
     protected override DatabaseCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SkuName = parseResult.GetValueOrDefault(_skuNameOption);
-        options.SkuTier = parseResult.GetValueOrDefault(_skuTierOption);
-        options.SkuCapacity = parseResult.GetValueOrDefault(_skuCapacityOption);
-        options.Collation = parseResult.GetValueOrDefault(_collationOption);
-        options.MaxSizeBytes = parseResult.GetValueOrDefault(_maxSizeBytesOption);
-        options.ElasticPoolName = parseResult.GetValueOrDefault(_elasticPoolNameOption);
-        options.ZoneRedundant = parseResult.GetValueOrDefault(_zoneRedundantOption);
-        options.ReadScale = parseResult.GetValueOrDefault(_readScaleOption);
+        options.SkuName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.SkuName);
+        options.SkuTier = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.SkuTier);
+        options.SkuCapacity = parseResult.GetValueOrDefault<int?>(SqlOptionDefinitions.SkuCapacity);
+        options.Collation = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.Collation);
+        options.MaxSizeBytes = parseResult.GetValueOrDefault<long?>(SqlOptionDefinitions.MaxSizeBytes);
+        options.ElasticPoolName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.ElasticPoolName);
+        options.ZoneRedundant = parseResult.GetValueOrDefault<bool?>(SqlOptionDefinitions.ZoneRedundant);
+        options.ReadScale = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.ReadScale);
         return options;
     }
 
@@ -132,12 +123,6 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
             $"Invalid database configuration. Check your SKU, size, and other parameters. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record DatabaseCreateResult(SqlDatabase Database);

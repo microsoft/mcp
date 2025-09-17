@@ -42,12 +42,6 @@ public sealed class DatabaseDeleteCommand(ILogger<DatabaseDeleteCommand> logger)
 
     // No extra options beyond base server/resource-group/subscription/database
 
-    protected override DatabaseDeleteOptions BindOptions(ParseResult parseResult)
-    {
-        // Base binding handles all required options
-        return base.BindOptions(parseResult);
-    }
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -90,15 +84,7 @@ public sealed class DatabaseDeleteCommand(ILogger<DatabaseDeleteCommand> logger)
         RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed deleting the SQL database. Verify you have appropriate permissions. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
-        ArgumentException argEx => argEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        ArgumentException => 400,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record DatabaseDeleteResult(bool Deleted, string DatabaseName);
