@@ -16,7 +16,7 @@ public sealed class AuthorizationSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAuthorizationService, AuthorizationService>();
-        
+
         services.AddSingleton<RoleAssignmentListCommand>();
     }
 

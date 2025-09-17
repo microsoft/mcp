@@ -18,7 +18,7 @@ public class AppConfigSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAppConfigService, AppConfigService>();
-        
+
         services.AddSingleton<AccountListCommand>();
 
         services.AddSingleton<KeyValueListCommand>();
