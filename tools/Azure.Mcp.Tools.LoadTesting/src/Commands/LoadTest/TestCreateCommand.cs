@@ -22,11 +22,14 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
     private readonly Option<int> _loadTestVirtualUsersOption = OptionDefinitions.LoadTesting.VirtualUsers;
     private readonly Option<int> _loadTestDurationOption = OptionDefinitions.LoadTesting.Duration;
     private readonly Option<int> _loadTestRampUpTimeOption = OptionDefinitions.LoadTesting.RampUpTime;
+    private readonly Option<string> _loadTestKindOption = OptionDefinitions.LoadTesting.TestKind;
+
     public override string Name => "create";
     public override string Description =>
         $"""
         Creates a new Azure Load Testing test configuration for performance testing scenarios. This command creates a basic URL-based load test that can be used to evaluate the performance
         and scalability of web applications and APIs. The test configuration defines the target endpoint, load parameters, and test duration. Once we create a test configuration plan, we can use that to trigger test runs to test the endpoints set.
+        The test kind is JMX for jmeter based tests and is Locust for python based locust tests and URL for url tests.
         """;
     public override string Title => _commandTitle;
 
@@ -50,6 +53,7 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
         command.Options.Add(_loadTestVirtualUsersOption);
         command.Options.Add(_loadTestDurationOption);
         command.Options.Add(_loadTestRampUpTimeOption);
+        command.Options.Add(_loadTestKindOption);
     }
 
     protected override TestCreateOptions BindOptions(ParseResult parseResult)
@@ -62,6 +66,7 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
         options.VirtualUsers = parseResult.GetValue(_loadTestVirtualUsersOption);
         options.Duration = parseResult.GetValue(_loadTestDurationOption);
         options.RampUpTime = parseResult.GetValue(_loadTestRampUpTimeOption);
+        options.Kind = parseResult.GetValue(_loadTestKindOption) ?? "URL";
         return options;
     }
 
@@ -87,6 +92,7 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
                 options.ResourceGroup,
                 options.DisplayName,
                 options.Description,
+                options.Kind!,
                 options.Duration,
                 options.VirtualUsers,
                 options.RampUpTime,

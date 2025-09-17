@@ -239,7 +239,7 @@ public class LoadTestingService(ISubscriptionService subscriptionService) : Base
         return JsonSerializer.Deserialize(loadTest, LoadTestJsonContext.Default.Test) ?? new Test();
     }
     public async Task<Test> CreateTestAsync(string subscription, string testResourceName, string testId, string? resourceGroup = null,
-        string? displayName = null, string? description = null,
+        string? displayName = null, string? description = null, string? kind = null,
         int? duration = 20, int? virtualUsers = 50, int? rampUpTime = 1, string? endpointUrl = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters(subscription, testResourceName, testId);
@@ -274,7 +274,8 @@ public class LoadTestingService(ISubscriptionService subscriptionService) : Base
             {
                 OptionalLoadTestConfig = optionalLoadTestConfig,
                 QuickStartTest = true, // Set to true for quick start tests (URL BASIC Test)
-            }
+            },
+            Kind = kind ?? "URL",
         };
 
         var loadTestResponse = await loadTestClient.CreateOrUpdateTestAsync(testId, RequestContent.Create(JsonSerializer.Serialize(testRequestPayload, LoadTestJsonContext.Default.TestRequestPayload)));
@@ -285,5 +286,75 @@ public class LoadTestingService(ISubscriptionService subscriptionService) : Base
 
         var loadTest = loadTestResponse.Content.ToString();
         return JsonSerializer.Deserialize(loadTest, LoadTestJsonContext.Default.Test) ?? new Test();
+    }
+
+    public async Task<TestFile> UploadTestFileAsync(string subscription, string testResourceName, string testId, string fileName, string localFilePath, string? fileType = null, string? resourceGroup = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(subscription, testResourceName, testId, fileName, localFilePath);
+        
+        if (!File.Exists(localFilePath))
+        {
+            throw new FileNotFoundException($"The specified file '{localFilePath}' does not exist.");
+        }
+
+        if (string.IsNullOrEmpty(fileType))
+        {
+            throw new ArgumentException("File type is required. Supported file types are: TEST_SCRIPT, JMX_FILE, USER_PROPERTIES, ADDITIONAL_ARTIFACTS, ZIPPED_ARTIFACTS, URL_TEST_CONFIG.");
+        }
+
+        var subscriptionId = (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy)).Data.SubscriptionId;
+        var loadTestResource = await GetLoadTestResourcesAsync(subscriptionId, resourceGroup, testResourceName, tenant, retryPolicy);
+        
+        if (loadTestResource == null || !loadTestResource.Any())
+        {
+            throw new Exception($"Load Test '{testResourceName}' not found in subscription '{subscriptionId}' and resource group '{resourceGroup}'.");
+        }
+        
+        var dataPlaneUri = loadTestResource[0]?.DataPlaneUri;
+        if (string.IsNullOrEmpty(dataPlaneUri))
+        {
+            throw new Exception($"Data Plane URI for Load Test '{testResourceName}' is not available.");
+        }
+
+        var credential = await GetCredential(tenant);
+        var loadTestClient = new LoadTestAdministrationClient(new Uri($"https://{dataPlaneUri}"), credential);
+
+        try
+        {
+            using var fileStream = File.OpenRead(localFilePath);
+            var fileSize = new FileInfo(localFilePath).Length;
+            
+            // Upload the file - the Azure SDK handles the upload
+            var uploadOperation = await loadTestClient.UploadTestFileAsync(
+                waitUntil: WaitUntil.Completed,
+                testId: testId,
+                fileName: fileName,
+                content: RequestContent.Create(fileStream),
+                fileType: fileType);
+
+            if (uploadOperation == null)
+            {
+                throw new Exception($"Failed to upload file '{fileName}' to Load Test '{testId}': Upload operation returned null");
+            }
+
+            // Wait for completion and get the result
+            var uploadResult = await uploadOperation.WaitForCompletionAsync();
+            if (uploadResult == null)
+            {
+                throw new Exception($"Failed to upload file '{fileName}' to Load Test '{testId}': Upload result is null");
+            }
+
+            return new TestFile
+            {
+                FileName = fileName,
+                FileType = fileType,
+                FileSizeBytes = fileSize,
+                UploadedAt = DateTimeOffset.UtcNow,
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error uploading file '{fileName}' to Load Test '{testId}': {ex.Message}", ex);
+        }
     }
 }

@@ -122,6 +122,11 @@ public static partial class OptionDefinitions
         public const string DurationOption = "duration";
         public const string RampUpTimeOption = "ramp-up-time";
         public const string EndpointOption = "endpoint";
+        public const string FileNameOption = "file-name";
+        public const string LocalFilePathOption = "local-file-path";
+        public const string FileTypeOption = "file-type";
+        public const string TestKindOption = "test-kind";
+
         public static readonly Option<string> TestResource = new(
             $"--{TestResourceName}"
         )
@@ -191,6 +196,34 @@ public static partial class OptionDefinitions
         )
         {
             Description = "The endpoint URL to be tested. This is the URL of the HTTP endpoint that will be subjected to load testing.",
+            Required = false
+        };
+        public static readonly Option<string> FileName = new(
+            $"--{FileNameOption}"
+        )
+        {
+            Description = "The name of the file to upload. This will be the name used to identify the file in the load test.",
+            Required = true
+        };
+        public static readonly Option<string> LocalFilePath = new(
+            $"--{LocalFilePathOption}"
+        )
+        {
+            Description = "The local file path of the file to upload. Must be a valid path to an existing file.",
+            Required = true
+        };
+        public static readonly Option<string> FileType = new(
+            $"--{FileTypeOption}"
+        )
+        {
+            Description = "The type of file being uploaded. Common types: 'JMX_FILE' for JMeter scripts, 'USER_PROPERTIES' for configuration files, 'ADDITIONAL_ARTIFACTS' for supporting files. Default is 'JMX_FILE'.",
+            Required = false
+        };
+        public static readonly Option<string> TestKind = new(
+            $"--{TestKindOption}"
+        )
+        {
+            Description = "The kind of load test. Use 'JMX' for JMeter based tests and 'Locust' for Python based Locust tests and 'URL' for url based tests. Default is 'URL'.",
             Required = false
         };
     }

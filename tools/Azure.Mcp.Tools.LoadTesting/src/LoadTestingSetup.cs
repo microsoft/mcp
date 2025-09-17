@@ -53,6 +53,7 @@ public class LoadTestingSetup : IAreaSetup
         // Register commands for Load Test
         test.AddCommand("get", new TestGetCommand(loggerFactory.CreateLogger<TestGetCommand>()));
         test.AddCommand("create", new TestCreateCommand(loggerFactory.CreateLogger<TestCreateCommand>()));
+        test.AddCommand("file_upload", new TestFileUploadCommand(loggerFactory.CreateLogger<TestFileUploadCommand>()));
 
         // Register commands for Load Test Run
         testRun.AddCommand("get", new TestRunGetCommand(loggerFactory.CreateLogger<TestRunGetCommand>()));
