@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
@@ -50,7 +51,7 @@ public class RegistryListCommandTests
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Ensure environment variable fallback does not interfere with validation tests
-        Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", null);
+        EnvironmentHelpers.SetAzureSubscriptionId(null);
         // Arrange
         if (shouldSucceed)
         {

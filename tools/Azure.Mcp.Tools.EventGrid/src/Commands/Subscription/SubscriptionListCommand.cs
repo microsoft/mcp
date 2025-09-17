@@ -39,17 +39,14 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         command.Options.Add(_topicNameOption);
         command.Options.Add(_locationOption);
 
-        // Remove the default subscription validator from base class and add custom validation
+        // Use the helper method from base class to avoid duplicating AZURE_SUBSCRIPTION_ID parsing logic
         command.Validators.Clear();
-
-        // Custom validation: Either --topic or --subscription (or env var) is required
         command.Validators.Add(commandResult =>
         {
-            var hasSubscriptionOption = commandResult.HasOptionResult(_subscriptionOption);
-            var hasEnv = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID"));
+            var hasSubscription = HasSubscriptionAvailable(commandResult);
             var hasTopicOption = commandResult.HasOptionResult(_topicNameOption);
 
-            if (!hasSubscriptionOption && !hasEnv && !hasTopicOption)
+            if (!hasSubscription && !hasTopicOption)
             {
                 commandResult.AddError("Either --subscription or --topic is required.");
             }
