@@ -6,6 +6,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Enhanced AKS nodepool information with comprehensive properties. [[#454](https://github.com/microsoft/mcp/issues/454)]
+
 ### Breaking Changes
 
 ### Bugs Fixed
