@@ -61,75 +61,35 @@ The Fabric MCP Server unlocks practical developer workflows by providing local a
    dotnet build servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj --configuration Release
    ```
 
-3. **Publish the executable for your platform:**
-   ```bash
-   # For Windows
-   dotnet publish servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -c Release -r win-x64 --self-contained
-
-   # For Linux
-   dotnet publish servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -c Release -r linux-x64 --self-contained
-
-   # For Apple Silicon Macs
-   dotnet publish servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -c Release -r osx-arm64 --self-contained
-   
-   # For Intel Macs
-   dotnet publish servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj -c Release -r osx-x64 --self-contained
+3. **Locate your executable:**
+   The executable `fabmcp` will be created at:
    ```
-
-4. **Locate your executable:**
-   The executable will be created at:
-   ```
-   servers/Fabric.Mcp.Server/src/bin/Release/net9.0/{your-rid}/publish/Fabric.Mcp.Server
+   servers/Fabric.Mcp.Server/src/bin/Release/fabmcp
    ```
    
-   For example, on Apple Silicon Mac:
+   > **Platform Notes:**
+   > - **macOS/Linux**: Use the path as-is: `/path/to/repo/servers/Fabric.Mcp.Server/src/bin/Release/fabmcp`
+   > - **Windows**: Use backslashes and may need `.exe` extension: `C:\path\to\repo\servers\Fabric.Mcp.Server\src\bin\Release\fabmcp`
+   > - For published builds, executables will be in platform-specific subdirectories with `.exe` extension on Windows
+
+4. **Configure your MCP client:**
+
+   Example configuration for VS Code (.vscode/mcp.json):
+   ```json
+   {
+     "servers": {
+       "Microsoft Fabric MCP": {
+         "command": "/path/to/executable",
+         "args": ["server start", "--mode all"]
+       }
+     }
+   }
    ```
-   servers/Fabric.Mcp.Server/src/bin/Release/net9.0/osx-arm64/publish/Fabric.Mcp.Server
-   ```
 
-### MCP Client Configuration
+   > **Notes:** 
+   > - Replace `/path/to/executable` with the actual path from step 3
+   > - The `--mode all` argument enables all available tools
 
-5. **Configure your MCP client with the published executable:**
-
-**For VS Code (.vscode/mcp.json):**
-```json
-{
-  "servers": {
-    "Microsoft Fabric MCP": {
-      "command": "/absolute/path/to/servers/Fabric.Mcp.Server/src/bin/Release/net9.0/osx-arm64/publish/Fabric.Mcp.Server",
-      "args": ["--mode", "all"]
-    }
-  }
-}
-```
-
-**For Claude Desktop:**
-```json
-{
-  "servers": {
-    "Microsoft Fabric MCP": {
-      "command": "/absolute/path/to/servers/Fabric.Mcp.Server/src/bin/Release/net9.0/win-x64/publish/Fabric.Mcp.Server.exe",
-      "args": ["--mode", "all"]
-    }
-  }
-}
-```
-
-> **Note:** Replace the path with the actual absolute path to your published executable. Use the correct RID (Runtime Identifier) and file extension for your platform.
-
-### Development Configuration
-
-**For contributors working from source:**
-```json
-{
-  "servers": {
-    "Fabric MCP (dev)": {
-      "command": "dotnet",
-      "args": ["run", "--project", "/absolute/path/to/servers/Fabric.Mcp.Server/src/Fabric.Mcp.Server.csproj", "--", "--mode", "all"]
-    }
-  }
-}
-```
 
 ### Common Issues
 - **SDK mismatch:** If `dotnet` outputs an SDK resolution error, inspect `global.json` and align local SDKs or update the file.
@@ -163,7 +123,7 @@ We welcome contributions. Please follow the repository's contribution guidelines
 - Run `eng` validation scripts where applicable (spelling, linters).
 - Provide a clear PR description and link relevant issues.
 
-See [CONTRIBUTING.md](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md) for full guidance.
+See [CONTRIBUTING](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md) for full guidance.
 
 ---
 
@@ -176,7 +136,7 @@ If you encounter issues:
    - Server logs and MCP client config (redact secrets).
    - Steps to reproduce.
 
-For troubleshooting steps, consult `TROUBLESHOOTING.md`.
+For troubleshooting steps, see [TROUBLESHOOTING](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md).
 
 ---
 
