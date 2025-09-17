@@ -7,6 +7,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Enhanced AKS nodepool information with comprehensive properties. [[#454](https://github.com/microsoft/mcp/issues/454)]
+- Added `--character-limit` parameter to `azmcp_subscription_list` command to control response size. This parameter allows users to limit the number of characters returned in the response, with automatic truncation and informative status messages when the limit is exceeded. Default limit is 10,000 characters.
 
 ### Breaking Changes
 
