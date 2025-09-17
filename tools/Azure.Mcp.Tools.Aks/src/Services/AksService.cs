@@ -283,15 +283,30 @@ public sealed class AksService(
         return new NodePool
         {
             Name = data.Name,
-            NodeCount = data.Count,
-            NodeVmSize = data.VmSize?.ToString(),
-            OsType = data.OSType?.ToString(),
+            Count = data.Count,
+            VmSize = data.VmSize?.ToString(),
+            OsDiskSizeGB = data.OSDiskSizeInGB,
+            OsDiskType = data.OSDiskType?.ToString(),
+            KubeletDiskType = data.KubeletDiskType?.ToString(),
+            MaxPods = data.MaxPods,
+            Type = data.TypePropertiesType?.ToString(),
+            MaxCount = data.MaxCount,
+            MinCount = data.MinCount,
+            EnableAutoScaling = data.EnableAutoScaling,
+            ScaleDownMode = data.ScaleDownMode?.ToString(),
+            ProvisioningState = data.ProvisioningState?.ToString(),
+            PowerState = data.PowerStateCode.HasValue ? new NodePoolPowerState { Code = data.PowerStateCode.Value.ToString() } : null,
             Mode = data.Mode?.ToString(),
             OrchestratorVersion = data.OrchestratorVersion,
-            EnableAutoScaling = data.EnableAutoScaling,
-            MinCount = data.MinCount,
-            MaxCount = data.MaxCount,
-            ProvisioningState = data.ProvisioningState?.ToString()
+            CurrentOrchestratorVersion = data.CurrentOrchestratorVersion,
+            EnableNodePublicIP = data.EnableNodePublicIP,
+            ScaleSetPriority = data.ScaleSetPriority?.ToString(),
+            ScaleSetEvictionPolicy = data.ScaleSetEvictionPolicy?.ToString(),
+            NodeLabels = data.NodeLabels?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+            NodeTaints = data.NodeTaints?.ToList(),
+            OsType = data.OSType?.ToString(),
+            OsSKU = data.OSSku?.ToString(),
+            NodeImageVersion = data.NodeImageVersion
         };
     }
 }

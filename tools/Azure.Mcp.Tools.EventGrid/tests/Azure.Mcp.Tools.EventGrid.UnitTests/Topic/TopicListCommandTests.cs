@@ -3,9 +3,9 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -63,7 +63,7 @@ public class TopicListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TopicListResult>(json);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.TopicListCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result!.Topics);
@@ -72,7 +72,7 @@ public class TopicListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoTopics()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoTopics()
     {
         // Arrange
         var subscriptionId = "sub123";
@@ -155,11 +155,5 @@ public class TopicListCommandTests
             Assert.Equal(400, response.Status);
             Assert.Contains("required", response.Message?.ToLower() ?? "");
         }
-    }
-
-    private class TopicListResult
-    {
-        [JsonPropertyName("topics")]
-        public List<Models.EventGridTopicInfo>? Topics { get; set; }
     }
 }

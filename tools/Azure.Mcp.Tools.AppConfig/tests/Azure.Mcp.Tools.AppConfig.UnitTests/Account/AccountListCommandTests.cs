@@ -77,16 +77,14 @@ public class AccountListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoAccountsExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccountsExist()
     {
         // Arrange
-        var expectedAccounts = new List<AppConfigurationAccount>();
-
         _appConfigService.GetAppConfigAccounts(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedAccounts);
+            .Returns([]);
 
         var args = _commandDefinition.Parse(["--subscription", "sub123"]);
 
@@ -95,7 +93,16 @@ public class AccountListCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<AccountListCommandResult>(json, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Accounts);
     }
 
     [Fact]

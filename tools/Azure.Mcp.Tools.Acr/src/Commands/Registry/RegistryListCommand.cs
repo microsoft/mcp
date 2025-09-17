@@ -52,9 +52,7 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger) : B
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = registries?.Count > 0
-                ? ResponseResult.Create(new RegistryListCommandResult(registries), AcrJsonContext.Default.RegistryListCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(registries ?? []), AcrJsonContext.Default.RegistryListCommandResult);
         }
         catch (Exception ex)
         {

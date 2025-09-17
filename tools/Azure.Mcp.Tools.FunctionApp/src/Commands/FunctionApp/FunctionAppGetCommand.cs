@@ -79,9 +79,7 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = functionApps is { Count: > 0 }
-                ? ResponseResult.Create(new(functionApps), FunctionAppJsonContext.Default.FunctionAppGetCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(functionApps ?? []), FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
         }
         catch (Exception ex)
         {

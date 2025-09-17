@@ -71,9 +71,7 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCom
                 options.Index,
                 options.RetryPolicy);
 
-            context.Response.Results = indexes is { Count: > 0 }
-                ? ResponseResult.Create(new(indexes), SearchJsonContext.Default.IndexGetCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(indexes ?? []), SearchJsonContext.Default.IndexGetCommandResult);
         }
         catch (Exception ex)
         {

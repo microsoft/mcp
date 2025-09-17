@@ -112,11 +112,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
                 options.RetryPolicy);
 
             // Set results
-            context.Response.Results = results.Items?.Count > 0 ?
-                ResponseResult.Create(
-                    new ProductListCommandResult(results.Items, results.NextCursor),
-                    MarketplaceJsonContext.Default.ProductListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(results.Items ?? [], results.NextCursor), MarketplaceJsonContext.Default.ProductListCommandResult);
         }
         catch (Exception ex)
         {

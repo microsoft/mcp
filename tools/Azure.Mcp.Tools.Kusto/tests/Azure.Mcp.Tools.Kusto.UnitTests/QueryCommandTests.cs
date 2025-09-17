@@ -81,7 +81,7 @@ public sealed class QueryCommandTests
 
     [Theory]
     [MemberData(nameof(QueryArgumentMatrix))]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoResults(string cliArgs, bool useClusterUri)
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoResults(string cliArgs, bool useClusterUri)
     {
         if (useClusterUri)
         {
@@ -107,7 +107,11 @@ public sealed class QueryCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<QueryResult>(json);
+        Assert.NotNull(result);
+        Assert.Empty(result.Items);
     }
 
     [Theory]

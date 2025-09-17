@@ -75,7 +75,7 @@ public sealed class TableListCommandTests
 
     [Theory]
     [MemberData(nameof(TableListArgumentMatrix))]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoTables(string cliArgs, bool useClusterUri)
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoTables(string cliArgs, bool useClusterUri)
     {
         if (useClusterUri)
         {
@@ -83,14 +83,14 @@ public sealed class TableListCommandTests
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
-                .Returns(new List<string>());
+                .Returns([]);
         }
         else
         {
             _kusto.ListTables(
                 "sub1", "mycluster", "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
-                .Returns(new List<string>());
+                .Returns([]);
         }
         var command = new TableListCommand(_logger);
 
@@ -99,7 +99,13 @@ public sealed class TableListCommandTests
 
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<TablesListResult>(json);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Tables!);
     }
 
     [Theory]

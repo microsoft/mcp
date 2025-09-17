@@ -67,11 +67,7 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = assignments?.Count > 0 ?
-                ResponseResult.Create(
-                    new RoleAssignmentListCommandResult(assignments),
-                    AuthorizationJsonContext.Default.RoleAssignmentListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(assignments ?? []), AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
         }
         catch (Exception ex)
         {

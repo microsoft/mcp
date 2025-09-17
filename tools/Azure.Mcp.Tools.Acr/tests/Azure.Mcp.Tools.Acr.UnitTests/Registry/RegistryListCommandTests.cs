@@ -3,8 +3,10 @@
 
 using System.CommandLine;
 using Azure.Mcp.Core.Helpers;
+using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Acr.Commands;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,11 +58,11 @@ public class RegistryListCommandTests
         if (shouldSucceed)
         {
             _service.ListRegistries(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-                .Returns(new List<Models.AcrRegistryInfo>
-                {
+                .Returns(
+                [
                     new("registry1", "eastus", "registry1.azurecr.io", "Basic", "Basic"),
                     new("registry2", "eastus2", "registry2.azurecr.io", "Standard", "Standard")
-                });
+                ]);
         }
 
         var parseResult = _commandDefinition.Parse(args);
@@ -118,11 +120,11 @@ public class RegistryListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_EmptyList_ReturnsNullResults()
+    public async Task ExecuteAsync_EmptyList_ReturnsEmptyResults()
     {
         // Arrange
         _service.ListRegistries("sub", null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<Models.AcrRegistryInfo>());
+            .Returns([]);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
@@ -131,7 +133,13 @@ public class RegistryListCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AcrJsonContext.Default.RegistryListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Registries);
     }
 
     [Fact]
@@ -140,7 +148,7 @@ public class RegistryListCommandTests
         // Arrange
         var registry = new Models.AcrRegistryInfo("myregistry", "eastus", "myregistry.azurecr.io", "Basic", "Basic");
         _service.ListRegistries("sub", null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<Models.AcrRegistryInfo> { registry });
+            .Returns([registry]);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 

@@ -49,12 +49,7 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) :
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = tableTypes?.Count > 0 ?
-                ResponseResult.Create(
-                    new TableTypeListCommandResult(tableTypes),
-                    MonitorJsonContext.Default.TableTypeListCommandResult // Changed to match the expected type
-                ) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(tableTypes ?? []), MonitorJsonContext.Default.TableTypeListCommandResult);
         }
         catch (Exception ex)
         {

@@ -11,8 +11,8 @@ All new Azure services and their commands should use the Toolset pattern:
 
 - **Toolset code** goes in `tools/Azure.Mcp.Tools.{Toolset}/src` (e.g., `tools/Azure.Mcp.Tools.Storage/src`)
 - **Tests** go in `tools/Azure.Mcp.Tools.{Toolset}/tests`, divided into UnitTests and LiveTests:
-  -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests`
-  -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests`
+  -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.UnitTests` (e.g., `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.UnitTests`)
+  -  `tools/Azure.Mcp.Tools.{Toolset}/tests/Azure.Mcp.Tools.{Toolset}.LiveTests` (e.g., `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.LiveTests`)
 
 This keeps all code, options, models, JSON serialization contexts, and tests for a toolset together. See `tools/Azure.Mcp.Tools.Storage` for a reference implementation.
 
@@ -47,6 +47,7 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
      - `Name`: Command name for CLI display
      - `Description`: Detailed command description
      - `Title`: Human-readable command title
+     - `Metadata`: Behavioral characteristics of the command
      - `GetCommand()`: Retrieves System.CommandLine command definition
      - `ExecuteAsync()`: Executes command logic
      - `Validate()`: Validates command inputs
@@ -65,7 +66,7 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
    IMPORTANT:
    - Commands use primary constructors with ILogger injection
    - Classes are always sealed unless explicitly intended for inheritance
-   - Commands inheriting from SubscriptionCommand must handle subscription parameters
+   - Commands inheriting from `SubscriptionCommand` must handle subscription parameters
    - Service-specific base commands should add service-wide options
    - Commands return `ToolMetadata` property to define their behavioral characteristics
 
@@ -74,7 +75,7 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
    ```
    azmcp <azure service> <resource> <operation>
    ```
-   Example: `azmcp storage container list`
+   Example: `azmcp storage container get`
 
    Where:
    - `azure service`: Azure service name (lowercase, e.g., storage, cosmos, kusto)
@@ -83,23 +84,23 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
 
    Each command is:
    - In code, to avoid ambiguity between service classes and Azure services, we refer to Azure services as Toolsets
-   - Registered in the RegisterCommands method of its toolset's `tools/Azure.Mcp.Tools.{Toolset}/src/{Toolset}Setup.cs` file
+   - Registered in the `RegisterCommands` method of its toolset's `tools/Azure.Mcp.Tools.{Toolset}/src/{Toolset}Setup.cs` file
    - Organized in a hierarchy of command groups
-   - Documented with a title, description and examples
+   - Documented with a title, description, and examples
    - Validated before execution
    - Returns a standardized response format
 
-   **IMPORTANT**: Command group names cannot contain underscores. Use camelCase or concatenated names or dash separator instead:
+   **IMPORTANT**: Command group names use concatenated names or dash separated names. Do not use underscores:
    - ✅ Good: `new CommandGroup("entraadmin", "Entra admin operations")`
    - ✅ Good: `new CommandGroup("resourcegroup", "Resource group operations")`
    - ✅ Good:`new CommandGroup("entra-admin", "Entra admin operations")`
    - ❌ Bad: `new CommandGroup("entra_admin", "Entra admin operations")`
 
-   **AVOID ANTI-PATTERNS**: When designing commands, avoid mixing resource names with operations in a single command. Instead, use proper command group hierarchy:
+   **AVOID ANTI-PATTERNS**: When designing commands, keep resource names separated from operation names. Use proper command group hierarchy:
    - ✅ Good: `azmcp postgres server param set` (command groups: server → param, operation: set)
    - ❌ Bad: `azmcp postgres server setparam` (mixed operation `setparam` at same level as resource operations)
-   - ✅ Good: `azmcp storage container permission set`
-   - ❌ Bad: `azmcp storage container setpermission`
+   - ✅ Good: `azmcp storage blob upload permission set`
+   - ❌ Bad: `azmcp storage blobupload`
 
    This pattern improves discoverability, maintains consistency, and allows for better grouping of related operations.
 
@@ -158,7 +159,7 @@ Rationale:
 - Supports both CRUD and compute-style operations
 
 **IMPORTANT**: If implementing a new toolset, you must also ensure:
-- The Azure Resource Manager package is added to `Directory.Packages.props` first
+- Required packages are added to `Directory.Packages.props` first
 - Models, base commands, and option definitions follow the established patterns
 - JSON serialization context includes all new model types
 - Service registration in the toolset setup ConfigureServices method
@@ -268,7 +269,9 @@ Choose the appropriate base class for your service based on the operations neede
 
 **API Pattern Discovery:**
 - Study existing services (e.g., Sql, Postgres, Redis) to understand resource access patterns
-- Use resource collections correctly: `.GetSqlServers().GetAsync(serverName)` not `.GetSqlServerAsync(serverName, cancellationToken)`
+- Use resource collections correctly
+   - ✅ Good: `.GetSqlServers().GetAsync(serverName)`
+   - ❌ Bad: `.GetSqlServerAsync(serverName, cancellationToken)`
 - Check Azure SDK documentation for correct method signatures and property names
 
 **Common Azure Resource Manager Patterns:**
@@ -320,7 +323,7 @@ public class {Resource}{Operation}Options : Base{Toolset}Options
 
 IMPORTANT:
 - Inherit from appropriate base class (Base{Toolset}Options, GlobalOptions, etc.)
-- Never redefine properties from base classes
+- Only define properties that aren't in the base classes
 - Make properties nullable if not required
 - Use consistent parameter names across services:
   - **CRITICAL**: Always use `subscription` (never `subscriptionId`) for subscription parameters - this allows the parameter to accept both subscription IDs and subscription names, which are resolved internally by `ISubscriptionService.GetSubscription()`
@@ -547,11 +550,8 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
                 options.RetryPolicy);    // From GlobalCommand
 
             // Set results if any were returned
-            context.Response.Results = results?.Count > 0 ?
-                ResponseResult.Create(
-                    new {Operation}CommandResult(results),
-                    {Toolset}JsonContext.Default.{Operation}CommandResult) :
-                null;
+            // For enumerable returns, coalesce null into an empty enumerable.
+            context.Response.Results = ResponseResult.Create(new(results ?? []), {Toolset}JsonContext.Default.{Operation}CommandResult);
         }
         catch (Exception ex)
         {
@@ -565,7 +565,7 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
         return context.Response;
     }
 
-    // Implementation-specific error handling
+    // Implementation-specific error handling, only implement if this differs from base class behavior
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
@@ -576,6 +576,7 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
         _ => base.GetErrorMessage(ex)
     };
 
+    // Implementation-specific status code retrieval, only implement if this differs from base class behavior
     protected override int GetStatusCode(Exception ex) => ex switch
     {
         Azure.RequestFailedException reqEx => reqEx.Status,
@@ -585,6 +586,7 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     // Strongly-typed result records
     internal record {Resource}{Operation}CommandResult(List<ResultType> Results);
 }
+```
 
 ### ToolMetadata Properties
 
@@ -689,7 +691,7 @@ LocalRequired = false,  // Azure Resource Manager API calls, cloud service queri
 Guidelines:
 - Commands returning array payloads return an empty array (`[]`) if the service returned a null or empty array.
 - Fully declare `ToolMetadata` properties even if they are using the default value.
-- Only override `GetErrorMessage` and `GetStatusCode` if the logic differs from the super class definition.
+- Only override `GetErrorMessage` and `GetStatusCode` if the logic differs from the base class definition.
 
 ### 4. Service Interface and Implementation
 
@@ -825,7 +827,7 @@ public class {Resource}{Operation}CommandTests
     private readonly ILogger<{Resource}{Operation}Command> _logger;
     private readonly {Resource}{Operation}Command _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public {Resource}{Operation}CommandTests()
     {
@@ -836,7 +838,7 @@ public class {Resource}{Operation}CommandTests
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -858,11 +860,11 @@ public class {Resource}{Operation}CommandTests
         if (shouldSucceed)
         {
             _service.{Operation}(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-                .Returns(new List<ResultType>());
+                .Returns([]);
         }
 
         // Build args from a single string in tests using the test-only splitter
-        var parseResult = _parser.Parse(args);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -881,13 +883,36 @@ public class {Resource}{Operation}CommandTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_DeserializationValidation()
+    {
+        // Arrange
+        _service.{Operation}(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .Returns([]);
+
+        var parseResult = _commandDefinition.Parse({argsArray});
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult);
+
+        // Assert
+        Assert.Equal(200, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, {Toolset}JsonContext.Default.{Operation}CommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Items);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
         _service.{Operation}(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<List<ResultType>>(new Exception("Test error")));
 
-        var parseResult = _parser.Parse(["--required", "value"]);
+        var parseResult = _commandDefinition.Parse(["--required", "value"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -913,6 +938,11 @@ public class {Resource}{Operation}CommandTests
     }
 }
 ```
+
+Guidelines:
+- Use `{Toolset}JsonContext.Default.{Operation}CommandResult` when deserializing JSON to a response result model. Do not define custom models for serialization.
+   - ✅ Good: `JsonSerializer.Deserialize(json, {Toolset}JsonContext.Default.{Operation}CommandResult)`
+   - ❌ Bad: `JsonSerializer.Deserialize<TestModel>(json)`
 
 ### 7. Integration Tests
 
@@ -984,24 +1014,24 @@ private void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFacto
 }
 ```
 
-**IMPORTANT**: Command group names cannot contain underscores. Use lowercase concatenated or dash-separated names.
+**IMPORTANT**: Use lowercase concatenated or dash-separated names. Command group names cannot contain underscores.
 - ✅ Good: `"entraadmin"`, `"resourcegroup"`, `"storageaccount"`, `"entra-admin"`
 - ❌ Bad: `"entra_admin"`, `"resource_group"`, `"storage_account"`
 
 ### 9. Toolset Registration
 ```csharp
-    private static IToolsetSetup[] RegisterAreas()
-    {
-        return [
-            // Register core toolsets
-            new Azure.Mcp.Tools.AzureBestPractices.AzureBestPracticesSetup(),
-            new Azure.Mcp.Tools.Extension.ExtensionSetup(),
+private static IToolsetSetup[] RegisterAreas()
+{
+    return [
+        // Register core toolsets
+        new Azure.Mcp.Tools.AzureBestPractices.AzureBestPracticesSetup(),
+        new Azure.Mcp.Tools.Extension.ExtensionSetup(),
 
-            // Register Azure service toolsets
-            new Azure.Mcp.Tools.{Toolset}.{Toolset}Setup(),
-            new Azure.Mcp.Tools.Storage.StorageSetup(),
-        ];
-    }
+        // Register Azure service toolsets
+        new Azure.Mcp.Tools.{Toolset}.{Toolset}Setup(),
+        new Azure.Mcp.Tools.Storage.StorageSetup(),
+    ];
+}
 ```
 
 The area/toolset list in `RegisterAreas()` must remain alphabetically sorted (excluding the fixed conditional AOT exclusion block guarded by `#if !BUILD_NATIVE`).
@@ -1026,9 +1056,7 @@ internal partial class {Toolset}JsonContext : JsonSerializerContext;
 Usage inside a command when assigning results:
 
 ```csharp
-context.Response.Results = ResponseResult.Create(
-    new {Resource}{Operation}CommandResult(results),
-    {Toolset}JsonContext.Default.{Resource}{Operation}CommandResult);
+context.Response.Results = ResponseResult.Create(new(results), {Toolset}JsonContext.Default.{Resource}{Operation}CommandResult);
 ```
 
 Guidelines:
@@ -1453,7 +1481,7 @@ Failure to call `base.Dispose()` will prevent request and response data from `Ca
 
 ### Preventing Unused Using Statements
 
-Unused using statements are a common issue that clutters code and can lead to unnecessary dependencies. Here are strategies to prevent and detect them:
+Unused `using` statements are a common issue that clutters code and can lead to unnecessary dependencies. Here are strategies to prevent and detect them:
 
 #### 1. **Use Minimal Using Statements When Creating Files**
 
@@ -1500,18 +1528,6 @@ dotnet build --verbosity normal | Select-String "warning"
 
 #### 4. **Common Unused Using Patterns to Avoid**
 
-❌ **Don't copy using blocks from other files:**
-```csharp
-// Copied from another file but not all are needed
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using Azure.Mcp.Tools.Acr.Commands;         // ← May not be needed
-using Azure.Mcp.Tools.Acr.Options;          // ← May not be needed
-using Azure.Mcp.Tools.Acr.Options.Registry; // ← May not be needed
-using Azure.Mcp.Tools.Acr.Services;
-// ... 15 more using statements
-```
-
 ✅ **Start minimal and add as needed:**
 ```csharp
 // Only what's actually used in this file
@@ -1528,6 +1544,18 @@ public ContainerRegistryResource Resource { get; set; }
 
 // This is much better than:
 // public Azure.ResourceManager.ContainerRegistry.Models.ContainerRegistryResource Resource { get; set; }
+```
+
+❌ **Don't copy using blocks from other files:**
+```csharp
+// Copied from another file but not all are needed
+using System.CommandLine;
+using System.CommandLine.Parsing;
+using Azure.Mcp.Tools.Acr.Commands;         // ← May not be needed
+using Azure.Mcp.Tools.Acr.Options;          // ← May not be needed
+using Azure.Mcp.Tools.Acr.Options.Registry; // ← May not be needed
+using Azure.Mcp.Tools.Acr.Services;
+// ... 15 more using statements
 ```
 
 #### 6. **Integration with Build Process**
@@ -1811,7 +1839,7 @@ catch (Exception ex)
    - Use dashes in command group names
 
 2. Always:
-   - Create a static {Toolset}OptionDefinitions class for the toolset
+   - Create a static `{Toolset}OptionDefinitions` class for the toolset
    - **For option handling**: Use extension methods like `.AsRequired()` or `.AsOptional()` to control option requirements per command. Register explicitly in `RegisterOptions` and bind explicitly in `BindOptions`
    - **For option binding**: Use `parseResult.GetValueOrDefault<T>(optionDefinition.Name)` pattern for all options
    - **For Azure service commands**: Create test infrastructure (`test-resources.bicep`) before implementing live tests
@@ -1878,12 +1906,12 @@ catch (Exception ex)
 - **Fix**: Replace manual subscription resource creation with service call
 - **Pattern**:
 ```csharp
+// Correct - use service
+var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+
 // Wrong - manual creation
 var armClient = await CreateArmClientAsync(null, retryPolicy);
 var subscriptionResource = armClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{subscription}"));
-
-// Correct - use service
-var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
 ```
 
 **Issue: `cannot convert from 'System.Threading.CancellationToken' to 'string'`**
@@ -2073,7 +2101,7 @@ Before submitting:
 - [ ] **Resource outputs defined** in Bicep template for test consumption
 - [ ] **Cost optimization verified** (use Basic/Standard SKUs, minimal configurations)
 
-**Skip this section ONLY if your command does not interact with Azure resources (e.g., CLI wrappers, best practices tools).**
+**This section is ONLY needed if your command interacts with Azure resources (e.g., Storage, KeyVault).**
 
 ### Package and Project Setup
 - [ ] Azure Resource Manager package added to both `Directory.Packages.props` and `Azure.Mcp.Tools.{Toolset}.csproj`

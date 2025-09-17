@@ -107,5 +107,5 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
         return context.Response;
     }
 
-    internal record FileSystemSubnetSizeResult(int numberOfRequiredIPs);
+    internal record FileSystemSubnetSizeResult(int NumberOfRequiredIPs);
 }
