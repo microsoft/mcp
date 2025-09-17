@@ -1,6 +1,14 @@
 
 # Release History
 
+## 0.7.1 (Unreleased)
+
+### Added
+
+### Changed
+
+### Fixed
+
 ## 0.7.0 (2025-09-16)
 
 ### Added
