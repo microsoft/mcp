@@ -44,4 +44,4 @@ Initial release of the Microsoft Fabric MCP Server in **Public Preview**.
 
 ---
 
-For support, contributions, and feedback, see [SUPPORT](SUPPORT.md).
+For support, contributions, and feedback, see [SUPPORT](https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/SUPPORT.md).
