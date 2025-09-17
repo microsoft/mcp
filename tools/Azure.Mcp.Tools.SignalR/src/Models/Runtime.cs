@@ -8,30 +8,27 @@ namespace Azure.Mcp.Tools.SignalR.Models;
 /// </summary>
 public class Runtime
 {
-    /// <summary> The name of the SignalR service. </summary>
-    public string? Name { get; set; }
+    /// <summary> The resource id. </summary>
+    public string? Id { get; set; }
 
-    /// <summary> The resource group name containing the SignalR service. </summary>
-    public string? ResourceGroupName { get; set; }
+    /// <summary> The identity configuration. </summary>
+    public Identity? Identity { get; set; }
 
-    /// <summary> The Azure region location of the SignalR service. </summary>
+    /// <summary> The runtime kind. </summary>
+    public string? Kind { get; set; }
+
+    /// <summary> The Azure region. </summary>
     public string? Location { get; set; }
 
-    /// <summary> The SKU name of the SignalR service. </summary>
-    public string? SkuName { get; set; }
+    /// <summary> The SignalR service name. </summary>
+    public string? Name { get; set; }
 
-    /// <summary> The SKU tier of the SignalR service. </summary>
-    public string? SkuTier { get; set; }
+    /// <summary> The service properties. </summary>
+    public RuntimeProperties? Properties { get; set; }
 
-    /// <summary> The provisioning state of the SignalR service. </summary>
-    public string? ProvisioningState { get; set; }
+    /// <summary> The SKU information. </summary>
+    public Sku? Sku { get; set; }
 
-    /// <summary> The hostname of the SignalR service. </summary>
-    public string? HostName { get; set; }
-
-    /// <summary> The public port of the SignalR service. </summary>
-    public int? PublicPort { get; set; }
-
-    /// <summary> The server port of the SignalR service. </summary>
-    public int? ServerPort { get; set; }
+    /// <summary> Resource tags. </summary>
+    public IDictionary<string, string>? Tags { get; set; }
 }

@@ -3,9 +3,6 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.SignalR.Commands.Identity;
-using Azure.Mcp.Tools.SignalR.Commands.Key;
-using Azure.Mcp.Tools.SignalR.Commands.NetworkRule;
 using Azure.Mcp.Tools.SignalR.Commands.Runtime;
 using Azure.Mcp.Tools.SignalR.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,39 +17,22 @@ public class SignalRSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ISignalRService, SignalRService>();
+
+        services.AddSingleton<RuntimeGetCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var signalr = new CommandGroup("signalr",
-            "Azure SignalR operations - Commands for managing Azure SignalR Service resources. Includes operations for listing SignalR services, managing hubs, configuring access keys, and scaling SignalR instances.");
-        rootGroup.AddSubGroup(signalr);
+        var signalr = new CommandGroup(Name,
+            "Azure SignalR operations - Commands for managing Azure SignalR Service resources. Includes operations for listing SignalR services.");
 
-        var service = new CommandGroup("runtime",
-            "SignalR service operations - Commands for managing Azure SignalR Service resources.");
-        signalr.AddSubGroup(service);
+        var runtime = new CommandGroup("runtime",
+            "Runtime operations - Commands for managing Azure SignalR Service resources.");
+        signalr.AddSubGroup(runtime);
 
-        service.AddCommand("list", new RuntimeListCommand(loggerFactory.CreateLogger<RuntimeListCommand>()));
-        service.AddCommand("show", new RuntimeShowCommand(loggerFactory.CreateLogger<RuntimeShowCommand>()));
+        var runtimeGet = serviceProvider.GetRequiredService<RuntimeGetCommand>();
+        runtime.AddCommand(runtimeGet.Name, runtimeGet);
 
-        var key = new CommandGroup("key",
-            "SignalR key operations - Commands for managing access keys in Azure SignalR Service resources.");
-        signalr.AddSubGroup(key);
-
-        key.AddCommand("list", new KeyListCommand(loggerFactory.CreateLogger<KeyListCommand>()));
-
-        var identity = new CommandGroup("identity",
-            "SignalR identity operations - Commands for managing managed identity configuration in Azure SignalR Service resources.");
-        signalr.AddSubGroup(identity);
-
-        identity.AddCommand("list", new IdentityListCommand(loggerFactory.CreateLogger<IdentityListCommand>()));
-
-        // Network rule commands
-        var networkRule = new CommandGroup(
-            "network-rule",
-            "SignalR network rule operations");
-        signalr.AddSubGroup(networkRule);
-
-        networkRule.AddCommand("list", new NetworkRuleListCommand(loggerFactory.CreateLogger<NetworkRuleListCommand>()));
+        return signalr;
     }
 }

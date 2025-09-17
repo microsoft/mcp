@@ -453,13 +453,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 ## Azure SignalR
 
-| Tool Name                       | Test Prompt |
-|:--------------------------------|:----------|
-| azmcp_signalr_runtime_show | Show me the details of signalr <signalr_name> |
-| azmcp_signalr_runtime_list | List all signalr runtime in my subscription |
-| azmcp_signalr_identity_list | List me the assigned identity details of signalr <signalr_name> |
-| azmcp_signalr_key_list | List keys of signalr <signalr_name> |
-| azmcp_signalr_network-rule_list | List the network rule details of signalr <signalr_name> |
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_signalr_runtime_get | Show me the details of SignalR <signalr_name> |
+| azmcp_signalr_runtime_get | Show me the network information of SignalR runtime <signalr_name> |
+| azmcp_signalr_runtime_get | Describe the SignalR runtime <signalr_name> in resource group <resource_group_name> |
+| azmcp_signalr_runtime_get | Get information about my SignalR runtime <signalr_name> in <resource_group_name> |
+| azmcp_signalr_runtime_get | Show all the SignalRs information in <resource_group_name> |
+| azmcp_signalr_runtime_get | List all SignalRs in my subscription |
 
 ## Azure SQL Database
 
