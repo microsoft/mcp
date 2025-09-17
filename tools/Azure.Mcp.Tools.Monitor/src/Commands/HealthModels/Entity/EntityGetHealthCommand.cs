@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Monitor.Options;
-using Azure.Mcp.Tools.Monitor.Options.HealthModels.Entity;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 

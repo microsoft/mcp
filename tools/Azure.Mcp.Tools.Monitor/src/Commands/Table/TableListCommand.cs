@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Table;
 
-public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseMonitorCommand<TableListOptions>()
+public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseWorkspaceMonitorCommand<TableListOptions>()
 {
     private const string CommandTitle = "List Log Analytics Tables";
     private readonly ILogger<TableListCommand> _logger = logger;

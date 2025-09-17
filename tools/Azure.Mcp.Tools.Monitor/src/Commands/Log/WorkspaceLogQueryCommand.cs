@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Log;
 
-public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> logger) : BaseMonitorCommand<WorkspaceLogQueryOptions>()
+public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> logger) : BaseWorkspaceMonitorCommand<WorkspaceLogQueryOptions>()
 {
     private const string CommandTitle = "Query Log Analytics Workspace";
     private readonly ILogger<WorkspaceLogQueryCommand> _logger = logger;

@@ -56,6 +56,7 @@ public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeployment
     protected override ModelDeploymentOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.DeploymentName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.DeploymentNameOption.Name);
         options.ModelName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.ModelNameOption.Name);
         options.ModelFormat = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.ModelFormatOption.Name);

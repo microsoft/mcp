@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace Azure.Mcp.Tools.Monitor.Options.HealthModels.Entity;
+namespace Azure.Mcp.Tools.Monitor.Options;
 
 public class BaseMonitorHealthModelsOptions : BaseMonitorOptions
 {

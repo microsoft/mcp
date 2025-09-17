@@ -22,17 +22,17 @@ public abstract class BaseMetricsCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(MonitorOptionDefinitions.Metrics.ResourceType);
         command.Options.Add(MonitorOptionDefinitions.Metrics.ResourceName);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.ResourceType = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.ResourceType.Name);
         options.ResourceName = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.ResourceName.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
 }

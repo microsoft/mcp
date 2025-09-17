@@ -33,21 +33,6 @@ public static class OptionExtensions
     }
 
     /// <summary>
-    /// Creates an option with a custom description.
-    /// </summary>
-    /// <typeparam name="T">The type of the option value.</typeparam>
-    /// <param name="definition">The option definition.</param>
-    /// <param name="description">The custom description.</param>
-    /// <param name="required">Whether the option is required.</param>
-    /// <returns>A new Option instance with the custom description.</returns>
-    public static Option<T> WithDescription<T>(this OptionDefinition<T> definition, string description, bool required = false) where T : notnull
-    {
-        definition.Description = description;
-        definition.Required = required;
-        return definition.ToOption();
-    }
-
-    /// <summary>
     /// Creates a required version of an existing Option.
     /// </summary>
     /// <typeparam name="T">The type of the option value.</typeparam>

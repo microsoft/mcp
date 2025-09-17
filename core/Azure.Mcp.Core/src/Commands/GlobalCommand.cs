@@ -4,7 +4,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Azure.Core;
 using Azure.Identity;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 
