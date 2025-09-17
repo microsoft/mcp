@@ -22,7 +22,7 @@ public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger) : Glo
     private readonly Option<string> _cliTypeOption = ExtensionOptionDefinitions.CliGenerate.CliType;
     private readonly string[] _allowedCliTypeValues = ["az"];
 
-    public override string Name => "cligenerate";
+    public override string Name => "generate";
 
     public override string Description =>
         """
@@ -71,29 +71,8 @@ This tool can generate Azure CLI commands to be used with the corresponding CLI 
                 if (cliType == Constants.AzureCliType)
                 {
                     ICliGenerateService cliGenerateService = context.GetService<ICliGenerateService>();
-                    var accessToken = await cliGenerateService.GetAzCliGenerateTokenAsync();
 
-                    // GHCP4A Prod app
-                    const string url = "https://aiservice.ghcpaz-prod.azure.com/api/azurecli/generate";
-
-                    var requestBody = new AzureCliGenerateRequest() {
-                        Question = intent,
-                        History = [],
-                        EnableParameterInjection = true
-                    };
-                    var content = new StringContent(
-                            JsonSerializer.Serialize(requestBody, ExtensionJsonContext.Default.AzureCliGenerateRequest),
-                            Encoding.UTF8,
-                            "application/json");
-
-                    using HttpRequestMessage requestMessage = new()
-                    {
-                        Method = HttpMethod.Post,
-                        RequestUri = new Uri(url),
-                        Content = content
-                    };
-                    requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken.Token);
-                    using HttpResponseMessage responseMessage = await cliGenerateService.SendHttpRequestAsync(requestMessage);
+                    using HttpResponseMessage responseMessage = await cliGenerateService.GenerateAzureCLICommandAsync(intent);
                     responseMessage.EnsureSuccessStatusCode();
 
                     var responseBody = await responseMessage.Content.ReadAsStringAsync();

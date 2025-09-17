@@ -44,8 +44,7 @@ public sealed class CliGenerateCommandTests
         var command = new CliGenerateCommand(_logger);
 
         const string mockResponseBody = "mock response body";
-        _cliGenerateService.GetAzCliGenerateTokenAsync().Returns(new AccessToken());
-        _cliGenerateService.SendHttpRequestAsync(Arg.Any<HttpRequestMessage>())
+        _cliGenerateService.GenerateAzureCLICommandAsync(Arg.Any<string>())
             .Returns(
                 new HttpResponseMessage(HttpStatusCode.OK)
                 {

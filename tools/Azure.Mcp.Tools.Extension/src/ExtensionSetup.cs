@@ -30,7 +30,12 @@ public sealed class ExtensionSetup : IAreaSetup
         // Azure CLI and Azure Developer CLI tools are hidden
         // extension.AddCommand("az", new AzCommand(loggerFactory.CreateLogger<AzCommand>()));
         // extension.AddCommand("azd", new AzdCommand(loggerFactory.CreateLogger<AzdCommand>()));
-        extension.AddCommand("azqr", new AzqrCommand(loggerFactory.CreateLogger<AzqrCommand>()));
-        extension.AddCommand("cligenerate", new CliGenerateCommand(loggerFactory.CreateLogger<CliGenerateCommand>()));
+        AzqrCommand azqrCommand = new(loggerFactory.CreateLogger<AzqrCommand>());
+        extension.AddCommand(azqrCommand.Name, azqrCommand);
+
+        var cli = new CommandGroup("cli", "Commands for helping users to use CLI tools for Azure services operations. Includes operations for generating Azure CLI commands.");
+        extension.AddSubGroup(cli);
+        CliGenerateCommand cliGenerateCommand = new(loggerFactory.CreateLogger<CliGenerateCommand>());
+        cli.AddCommand(cliGenerateCommand.Name, cliGenerateCommand);
     }
 }
