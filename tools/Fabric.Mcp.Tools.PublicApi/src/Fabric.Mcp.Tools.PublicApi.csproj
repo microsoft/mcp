@@ -20,6 +20,5 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
-    <PackageReference Include="System.Text.Json" />
   </ItemGroup>
 </Project>

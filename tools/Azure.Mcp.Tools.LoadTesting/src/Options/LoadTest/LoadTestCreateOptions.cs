@@ -39,4 +39,10 @@ public class TestCreateOptions : BaseLoadTestingOptions
     /// The ramp-up time for the load test.
     /// </summary>
     public int? RampUpTime { get; set; }
+
+    /// <summary>
+    /// The kind of load test. Default is "URL".
+    /// JMX for jmeter based tests and is Locust for python based locust tests and URL for url tests.
+    /// </summary>
+    public string Kind { get; set; } = "URL";
 }

@@ -16,6 +16,7 @@ public interface ILoadTestingService
     Task<List<TestRun>> GetLoadTestRunsFromTestIdAsync(string subscription, string testResourceName, string testId, string? resourceGroup = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null);
     Task<Test> GetTestAsync(string subscription, string testResourceName, string testId, string? resourceGroup = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null);
     Task<Test> CreateTestAsync(string subscription, string testResourceName, string testId, string? resourceGroup = null,
-        string? displayName = null, string? description = null,
+        string? displayName = null, string? description = null, string? kind = null,
         int? duration = 20, int? virtualUsers = 50, int? rampUpTime = 1, string? endpointUrl = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null);
+    Task<TestFile> UploadTestFileAsync(string subscription, string testResourceName, string testId, string fileName, string localFilePath, string? fileType = null, string? resourceGroup = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null);
 }
