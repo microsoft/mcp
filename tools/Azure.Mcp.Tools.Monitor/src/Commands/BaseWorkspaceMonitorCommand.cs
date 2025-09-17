@@ -3,26 +3,27 @@
 
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Tools.Storage.Options;
-using Azure.Mcp.Tools.Storage.Options.DataLake;
+using Azure.Mcp.Core.Models.Option;
+using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Monitor.Options;
 
-namespace Azure.Mcp.Tools.Storage.Commands.DataLake.FileSystem;
+namespace Azure.Mcp.Tools.Monitor.Commands;
 
-public abstract class BaseFileSystemCommand<
+public abstract class BaseWorkspaceMonitorCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : BaseStorageCommand<TOptions> where TOptions : BaseFileSystemOptions, new()
+    : BaseMonitorCommand<TOptions>
+    where TOptions : SubscriptionOptions, IWorkspaceOptions, new()
 {
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(StorageOptionDefinitions.FileSystem);
+        command.Options.Add(WorkspaceOptionDefinitions.Workspace);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.FileSystem = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.FileSystem.Name);
+        options.Workspace = parseResult.GetValueOrDefault<string>(WorkspaceOptionDefinitions.Workspace.Name);
         return options;
     }
 }

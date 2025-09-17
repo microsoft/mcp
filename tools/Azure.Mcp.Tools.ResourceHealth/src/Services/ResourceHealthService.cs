@@ -44,7 +44,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
-            var apiResponse = JsonSerializer.Deserialize<AvailabilityStatusResponse>(content, ResourceHealthJsonContext.Default.AvailabilityStatusResponse);
+            var apiResponse = JsonSerializer.Deserialize(content, ResourceHealthJsonContext.Default.AvailabilityStatusResponse);
 
             if (apiResponse == null)
             {
@@ -92,7 +92,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
-            var apiResponse = JsonSerializer.Deserialize<AvailabilityStatusListResponse>(content, ResourceHealthJsonContext.Default.AvailabilityStatusListResponse);
+            var apiResponse = JsonSerializer.Deserialize(content, ResourceHealthJsonContext.Default.AvailabilityStatusListResponse);
 
             if (apiResponse?.Value == null)
             {
@@ -188,7 +188,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
 
-            var apiResponse = JsonSerializer.Deserialize<ServiceHealthEventListResponse>(content, ResourceHealthJsonContext.Default.ServiceHealthEventListResponse);
+            var apiResponse = JsonSerializer.Deserialize(content, ResourceHealthJsonContext.Default.ServiceHealthEventListResponse);
 
             if (apiResponse?.Value == null)
             {

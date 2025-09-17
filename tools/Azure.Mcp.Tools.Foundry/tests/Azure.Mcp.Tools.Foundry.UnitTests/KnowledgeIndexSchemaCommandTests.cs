@@ -4,7 +4,6 @@
 using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.Tests;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,7 +53,7 @@ public class KnowledgeIndexSchemaCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            var mockSchema = new Azure.Mcp.Tools.Foundry.Models.KnowledgeIndexSchema
+            var mockSchema = new Models.KnowledgeIndexSchema
             {
                 Name = "test-index",
                 Type = "AzureAISearchIndex",
@@ -89,7 +88,7 @@ public class KnowledgeIndexSchemaCommandTests
     {
         // Arrange
         _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromException<Azure.Mcp.Tools.Foundry.Models.KnowledgeIndexSchema>(new Exception("Test error")));
+            .Returns(Task.FromException<Models.KnowledgeIndexSchema>(new Exception("Test error")));
 
         var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com", "--index", "test-index"]);
 
@@ -106,7 +105,7 @@ public class KnowledgeIndexSchemaCommandTests
     public async Task ExecuteAsync_ReturnsExpectedResults()
     {
         // Arrange
-        var expectedSchema = new Azure.Mcp.Tools.Foundry.Models.KnowledgeIndexSchema
+        var expectedSchema = new Models.KnowledgeIndexSchema
         {
             Name = "test-index",
             Type = "AzureAISearchIndex",

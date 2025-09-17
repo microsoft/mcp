@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -14,10 +15,6 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
 {
     private const string CommandTitle = "Import Key Vault Certificate";
     private readonly ILogger<CertificateImportCommand> _logger = logger;
-    private readonly Option<string> _vaultOption = KeyVaultOptionDefinitions.VaultName;
-    private readonly Option<string> _certificateOption = KeyVaultOptionDefinitions.CertificateName;
-    private readonly Option<string> _certificateDataOption = KeyVaultOptionDefinitions.CertificateData;
-    private readonly Option<string> _passwordOption = KeyVaultOptionDefinitions.CertificatePassword;
 
     public override string Name => "import";
 
@@ -45,19 +42,19 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_vaultOption);
-        command.Options.Add(_certificateOption);
-        command.Options.Add(_certificateDataOption);
-        command.Options.Add(_passwordOption);
+        command.Options.Add(KeyVaultOptionDefinitions.VaultName);
+        command.Options.Add(KeyVaultOptionDefinitions.CertificateName);
+        command.Options.Add(KeyVaultOptionDefinitions.CertificateData);
+        command.Options.Add(KeyVaultOptionDefinitions.CertificatePassword);
     }
 
     protected override CertificateImportOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValue(_vaultOption);
-        options.CertificateName = parseResult.GetValue(_certificateOption);
-        options.CertificateData = parseResult.GetValue(_certificateDataOption);
-        options.Password = parseResult.GetValue(_passwordOption);
+        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
+        options.CertificateName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.CertificateName.Name);
+        options.CertificateData = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.CertificateData.Name);
+        options.Password = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.CertificatePassword.Name);
         return options;
     }
 

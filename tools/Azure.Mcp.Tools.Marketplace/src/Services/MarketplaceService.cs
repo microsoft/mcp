@@ -141,7 +141,7 @@ public class MarketplaceService(ITenantService tenantService)
 
     private async Task<ProductListResponseWithNextCursor> GetMarketplaceListProductsResponseAsync(string url, string? tenant, RetryPolicyOptions? retryPolicy = null)
     {
-        var productsListResponse = await ExecuteMarketplaceRequestAsync<ProductsListResponse>(
+        var productsListResponse = await ExecuteMarketplaceRequestAsync(
             url, MarketplaceJsonContext.Default.ProductsListResponse, retryPolicy, tenant);
 
         var result = new ProductListResponseWithNextCursor
@@ -196,7 +196,7 @@ public class MarketplaceService(ITenantService tenantService)
 
     private async Task<ProductDetails> GetMarketplaceSingleProductResponseAsync(string url, string? tenant, RetryPolicyOptions? retryPolicy = null)
     {
-        var productDetails = await ExecuteMarketplaceRequestAsync<ProductDetails>(
+        var productDetails = await ExecuteMarketplaceRequestAsync(
             url,
             MarketplaceJsonContext.Default.ProductDetails,
             retryPolicy,

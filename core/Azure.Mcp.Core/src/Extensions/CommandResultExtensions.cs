@@ -42,6 +42,21 @@ public static class CommandResultExtensions
     public static bool HasOptionResult<T>(this CommandResult commandResult, Option<T> option)
         => HasOptionResult(commandResult, (Option)option);
 
+    /// <summary>
+    /// Checks if an option with the specified name has a result in the command result.
+    /// </summary>
+    /// <param name="commandResult">The command result to check.</param>
+    /// <param name="optionName">The name of the option to check for (including -- prefix).</param>
+    /// <returns>True if the option has a result, false otherwise.</returns>
+    public static bool HasOptionResult(this CommandResult commandResult, string optionName)
+    {
+        // Find the option by name in the command
+        var option = commandResult.Command.Options
+            .FirstOrDefault(o => o.Name == optionName || o.Aliases.Contains(optionName));
+
+        return option != null && HasOptionResult(commandResult, option);
+    }
+
     public static bool TryGetValue<T>(this CommandResult commandResult, Option<T> option, out T? value)
     {
         // If the option has any result (explicit or implicit), attempt to read its value.

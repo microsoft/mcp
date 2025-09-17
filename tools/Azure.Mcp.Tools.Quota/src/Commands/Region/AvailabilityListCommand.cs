@@ -16,11 +16,6 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
     private const string CommandTitle = "Get available regions for Azure resource types";
     private readonly ILogger<AvailabilityListCommand> _logger = logger;
 
-    private readonly Option<string> _resourceTypesOption = QuotaOptionDefinitions.RegionCheck.ResourceTypes;
-    private readonly Option<string> _cognitiveServiceModelNameOption = QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelName;
-    private readonly Option<string> _cognitiveServiceModelVersionOption = QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelVersion;
-    private readonly Option<string> _cognitiveServiceDeploymentSkuNameOption = QuotaOptionDefinitions.RegionCheck.CognitiveServiceDeploymentSkuName;
-
     public override string Name => "list";
 
     public override string Description =>
@@ -42,19 +37,19 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_resourceTypesOption);
-        command.Options.Add(_cognitiveServiceModelNameOption);
-        command.Options.Add(_cognitiveServiceModelVersionOption);
-        command.Options.Add(_cognitiveServiceDeploymentSkuNameOption);
+        command.Options.Add(QuotaOptionDefinitions.RegionCheck.ResourceTypes);
+        command.Options.Add(QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelName);
+        command.Options.Add(QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelVersion);
+        command.Options.Add(QuotaOptionDefinitions.RegionCheck.CognitiveServiceDeploymentSkuName);
     }
 
     protected override AvailabilityListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceTypes = parseResult.GetValue(_resourceTypesOption) ?? string.Empty;
-        options.CognitiveServiceModelName = parseResult.GetValue(_cognitiveServiceModelNameOption);
-        options.CognitiveServiceModelVersion = parseResult.GetValue(_cognitiveServiceModelVersionOption);
-        options.CognitiveServiceDeploymentSkuName = parseResult.GetValue(_cognitiveServiceDeploymentSkuNameOption);
+        options.ResourceTypes = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.RegionCheck.ResourceTypes.Name) ?? string.Empty;
+        options.CognitiveServiceModelName = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelName.Name);
+        options.CognitiveServiceModelVersion = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelVersion.Name);
+        options.CognitiveServiceDeploymentSkuName = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.RegionCheck.CognitiveServiceDeploymentSkuName.Name);
         return options;
     }
 

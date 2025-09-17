@@ -4,6 +4,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Microsoft.Azure.Cosmos;
 
@@ -13,18 +14,16 @@ public abstract class BaseCosmosCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
     : SubscriptionCommand<TOptions> where TOptions : BaseCosmosOptions, new()
 {
-    protected readonly Option<string> _accountOption = CosmosOptionDefinitions.Account;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_accountOption);
+        command.Options.Add(CosmosOptionDefinitions.Account);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValue(_accountOption);
+        options.Account = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.Account.Name);
         return options;
     }
 

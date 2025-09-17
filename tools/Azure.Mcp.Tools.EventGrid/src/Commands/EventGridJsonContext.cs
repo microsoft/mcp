@@ -3,7 +3,6 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.EventGrid.Commands.Topic;
-using Azure.Mcp.Tools.EventGrid.Models;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands;
 

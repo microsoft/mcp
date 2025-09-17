@@ -73,7 +73,7 @@
     <PackageVersion Include="MySqlConnector" Version="2.4.0" />
     <PackageVersion Include="Npgsql" Version="9.0.3" />
     <PackageVersion Include="YamlDotNet" Version="16.3.0" />
-    <PackageVersion Include="System.CommandLine" Version="2.0.0-beta7.25380.108" />
+    <PackageVersion Include="System.CommandLine" Version="2.0.0-rc.1.25451.107" />
     <PackageVersion Include="System.Formats.Asn1" Version="9.0.6" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.11.0" />
     <PackageVersion Include="System.Linq.Async" Version="6.0.1" />

@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.Mcp.Tools.FunctionApp.Options;
 using Azure.Mcp.Tools.FunctionApp.Options.FunctionApp;
@@ -16,8 +17,6 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
 {
     private const string CommandTitle = "Get Azure Function App Details";
     private readonly ILogger<FunctionAppGetCommand> _logger = logger;
-
-    private readonly Option<string> _optionalFunctionAppNameOption = FunctionAppOptionDefinitions.OptionalFunctionApp;
 
     public override string Name => "get";
 
@@ -43,13 +42,14 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        UseResourceGroup();
-        command.Options.Add(_optionalFunctionAppNameOption);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(FunctionAppOptionDefinitions.FunctionApp);
+
         command.Validators.Add(result =>
         {
-            if (result.HasOptionResult(_optionalFunctionAppNameOption) && !result.HasOptionResult(_resourceGroupOption))
+            if (result.HasOptionResult(FunctionAppOptionDefinitions.FunctionApp.Name) && !result.HasOptionResult(OptionDefinitions.Common.ResourceGroup.Name))
             {
-                result.AddError($"--{_optionalFunctionAppNameOption.Name} option requires --{_resourceGroupOption.Name} option to be specified.");
+                result.AddError($"--{FunctionAppOptionDefinitions.FunctionApp.Name} option requires --{OptionDefinitions.Common.ResourceGroup.Name} option to be specified.");
             }
         });
     }
@@ -57,7 +57,8 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
     protected override FunctionAppGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.FunctionAppName = parseResult.GetValue(_optionalFunctionAppNameOption);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.FunctionAppName = parseResult.GetValueOrDefault<string>(FunctionAppOptionDefinitions.FunctionApp.Name);
         return options;
     }
 

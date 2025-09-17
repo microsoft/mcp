@@ -16,7 +16,7 @@ public static class FunctionAppOptionDefinitions
     public const string StorageAccountName = "storage-account";
     public const string ContainerAppsEnvironmentName = "container-apps-environment";
 
-    public static readonly Option<string> OptionalFunctionApp = new(
+    public static readonly Option<string> FunctionApp = new(
         $"--{FunctionAppName}"
     )
     {

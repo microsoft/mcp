@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Services;
@@ -62,7 +61,7 @@ public class ServerDeleteCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+                Arg.Any<Core.Options.RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(true);
         }
@@ -107,7 +106,7 @@ public class ServerDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -119,7 +118,7 @@ public class ServerDeleteCommandTests
         // Assert
         Assert.Equal(200, response.Status);
         Assert.NotNull(response.Results);
-        await _service.Received(1).DeleteServerAsync("testserver", "rg", "sub", Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await _service.Received(1).DeleteServerAsync("testserver", "rg", "sub", Arg.Any<Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -130,7 +129,7 @@ public class ServerDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(false);
 
@@ -152,7 +151,7 @@ public class ServerDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(new Exception("Test error")));
 
@@ -170,13 +169,13 @@ public class ServerDeleteCommandTests
     public async Task ExecuteAsync_WhenServerNotFoundFromAzure_Returns404StatusCode()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(404, "Not Found: Server not found");
+        var requestException = new RequestFailedException(404, "Not Found: Server not found");
 
         _service.DeleteServerAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(requestException));
 
@@ -194,13 +193,13 @@ public class ServerDeleteCommandTests
     public async Task ExecuteAsync_WhenUnauthorized_Returns403StatusCode()
     {
         // Arrange
-        var requestException = new Azure.RequestFailedException(403, "Forbidden: Insufficient permissions");
+        var requestException = new RequestFailedException(403, "Forbidden: Insufficient permissions");
 
         _service.DeleteServerAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<Core.Options.RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(requestException));
 
