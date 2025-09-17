@@ -54,7 +54,7 @@ public class ServerListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoServers()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoServers()
     {
         _postgresService.ListServersAsync("sub123", "rg1", "user1").Returns([]);
 
@@ -65,7 +65,12 @@ public class ServerListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<ServerListResult>(json);
+        Assert.NotNull(result);
+        Assert.Empty(result.Servers);
     }
 
     [Fact]
@@ -111,6 +116,6 @@ public class ServerListCommandTests
     private class ServerListResult
     {
         [JsonPropertyName("Servers")]
-        public List<string> Servers { get; set; } = new List<string>();
+        public List<string> Servers { get; set; } = [];
     }
 }

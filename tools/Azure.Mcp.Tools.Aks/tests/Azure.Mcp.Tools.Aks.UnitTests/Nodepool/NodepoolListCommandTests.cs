@@ -118,11 +118,11 @@ public sealed class NodepoolListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNullWhenNoNodePools()
+    public async Task ExecuteAsync_ReturnsEmptyWhenNoNodePools()
     {
         // Arrange
         _aksService.ListNodePools(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<Models.NodePool>());
+            .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --cluster c1");
@@ -132,7 +132,13 @@ public sealed class NodepoolListCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AksJsonContext.Default.NodepoolListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.NodePools);
     }
 
     [Fact]

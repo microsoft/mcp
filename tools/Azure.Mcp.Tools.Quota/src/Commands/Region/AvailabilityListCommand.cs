@@ -86,11 +86,7 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
 
             _logger.LogInformation("Region check result: {ToolResult}", toolResult);
 
-            context.Response.Results = toolResult?.Count > 0 ?
-                ResponseResult.Create(
-                    new RegionCheckCommandResult(toolResult),
-                    QuotaJsonContext.Default.RegionCheckCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(toolResult ?? []), QuotaJsonContext.Default.RegionCheckCommandResult);
         }
         catch (Exception ex)
         {

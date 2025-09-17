@@ -78,9 +78,7 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
                 options.RetryPolicy,
                 options.Tenant);
 
-            context.Response.Results = workbooks?.Count > 0
-                ? ResponseResult.Create(new ListWorkbooksCommandResult(workbooks), WorkbooksJsonContext.Default.ListWorkbooksCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(workbooks ?? []), WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
         }
         catch (Exception ex)
         {

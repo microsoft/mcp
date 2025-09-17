@@ -66,9 +66,7 @@ public sealed class FileSystemListCommand(ILogger<FileSystemListCommand> logger)
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = fileSystems.Count > 0 ? ResponseResult.Create(
-                new FileSystemListResult(fileSystems),
-                AzureManagedLustreJsonContext.Default.FileSystemListResult) : null;
+            context.Response.Results = ResponseResult.Create(new(fileSystems ?? []), AzureManagedLustreJsonContext.Default.FileSystemListResult);
         }
         catch (Exception ex)
         {
@@ -80,12 +78,6 @@ public sealed class FileSystemListCommand(ILogger<FileSystemListCommand> logger)
 
         return context.Response;
     }
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
 
     internal record FileSystemListResult(List<Models.LustreFileSystem> FileSystems);
 }

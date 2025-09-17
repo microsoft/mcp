@@ -53,10 +53,10 @@ public class KnowledgeIndexListCommandTests
         if (shouldSucceed)
         {
             _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-                .Returns(new List<KnowledgeIndexInformation>
-                {
+                .Returns(
+                [
                     new() { Name = "test-index", Type = "aisearch", Version = "1.0", Description = "Test index" }
-                });
+                ]);
         }
 
         var parseResult = _commandDefinition.Parse(args);

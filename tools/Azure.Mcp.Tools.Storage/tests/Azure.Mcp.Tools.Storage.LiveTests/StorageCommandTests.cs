@@ -524,7 +524,9 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
 
             // When using a prefix that does not match any files, we should still return a valid response
             // with no result.
-            Assert.Null(result);
+            var files = result.AssertProperty("files");
+            Assert.Equal(JsonValueKind.Array, files.ValueKind);
+            Assert.Equal(0, files.GetArrayLength());
         }
 
         [Fact]

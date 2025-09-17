@@ -59,7 +59,7 @@ public class ServiceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoServices()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoServices()
     {
         // Arrange
         _searchService.ListServices(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
@@ -75,7 +75,13 @@ public class ServiceListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<ServiceListCommand.ServiceListCommandResult>(json);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Services);
     }
 
     [Fact]

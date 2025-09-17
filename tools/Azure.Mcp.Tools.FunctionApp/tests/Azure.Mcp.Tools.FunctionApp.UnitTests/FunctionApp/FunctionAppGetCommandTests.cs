@@ -126,7 +126,7 @@ public sealed class FunctionAppGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNullWhenNoFunctionApp()
+    public async Task ExecuteAsync_ReturnsEmptyWhenNoFunctionApp()
     {
         // Arrange
         _service.GetFunctionApp(
@@ -145,7 +145,13 @@ public sealed class FunctionAppGetCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.FunctionApps);
     }
 
     [Fact]
@@ -219,7 +225,7 @@ public sealed class FunctionAppGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNullWhenNotFound()
+    public async Task ExecuteAsync_ReturnsEmptyWhenNotFound()
     {
         _service.GetFunctionApp(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns((List<FunctionAppInfo>?)null);
@@ -230,6 +236,12 @@ public sealed class FunctionAppGetCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.FunctionApps);
     }
 }

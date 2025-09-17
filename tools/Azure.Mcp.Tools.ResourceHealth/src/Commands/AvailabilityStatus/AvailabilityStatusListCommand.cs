@@ -74,11 +74,7 @@ public sealed class AvailabilityStatusListCommand(ILogger<AvailabilityStatusList
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = statuses?.Count > 0
-                ? ResponseResult.Create(
-                    new AvailabilityStatusListCommandResult(statuses),
-                    ResourceHealthJsonContext.Default.AvailabilityStatusListCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(statuses ?? []), ResourceHealthJsonContext.Default.AvailabilityStatusListCommandResult);
         }
         catch (Exception ex)
         {

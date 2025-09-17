@@ -70,9 +70,7 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : B
                 options.RetryPolicy
             );
 
-            context.Response.Results = containers is { Count: > 0 }
-                ? ResponseResult.Create(new ContainerGetCommandResult(containers), StorageJsonContext.Default.ContainerGetCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(containers ?? []), StorageJsonContext.Default.ContainerGetCommandResult);
             return context.Response;
         }
         catch (Exception ex)
