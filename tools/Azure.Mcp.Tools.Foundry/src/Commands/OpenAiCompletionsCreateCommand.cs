@@ -55,14 +55,14 @@ public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiC
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        var options = BindOptions(parseResult);
-
         try
         {
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
             {
                 return context.Response;
             }
+
+            var options = BindOptions(parseResult);
 
             var foundryService = context.GetService<IFoundryService>();
             var result = await foundryService.CreateCompletionAsync(
@@ -77,7 +77,7 @@ public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiC
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create<OpenAiCompletionsCreateCommandResult>(
-                new OpenAiCompletionsCreateCommandResult(result.CompletionText, result.UsageInfo), 
+                new OpenAiCompletionsCreateCommandResult(result.CompletionText, result.UsageInfo),
                 FoundryJsonContext.Default.OpenAiCompletionsCreateCommandResult);
         }
         catch (Exception ex)

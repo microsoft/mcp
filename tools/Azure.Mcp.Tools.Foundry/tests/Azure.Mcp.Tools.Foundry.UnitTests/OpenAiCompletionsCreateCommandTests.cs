@@ -80,7 +80,7 @@ public class OpenAiCompletionsCreateCommandTests
         // Assert
         Assert.Equal(200, response.Status);
         Assert.NotNull(response.Results);
-        
+
         var json = JsonSerializer.Serialize(response.Results);
         Assert.Contains("Azure is a cloud computing platform", json);
         Assert.Contains("promptTokens", json);

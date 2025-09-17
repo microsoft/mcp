@@ -344,15 +344,15 @@ public class FoundryService(IHttpClientService httpClientService, ISubscriptionS
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
-        
+
         // Get the Cognitive Services account
         var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
         var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName);
-        
+
         // Get the endpoint and key
         var accountData = cognitiveServicesAccount.Value.Data;
         var endpoint = accountData.Properties.Endpoint;
-        
+
         if (string.IsNullOrEmpty(endpoint))
         {
             throw new InvalidOperationException($"Endpoint not found for resource '{resourceName}'");
@@ -373,7 +373,7 @@ public class FoundryService(IHttpClientService httpClientService, ISubscriptionS
 
         // Set up completion options
         var chatOptions = new ChatCompletionOptions();
-        
+
         // Set max tokens with a default value if not provided
         var effectiveMaxTokens = maxTokens ?? 100;
         if (effectiveMaxTokens <= 0)
@@ -381,7 +381,7 @@ public class FoundryService(IHttpClientService httpClientService, ISubscriptionS
             effectiveMaxTokens = 100; // Ensure we always have a positive value
         }
         chatOptions.MaxOutputTokenCount = effectiveMaxTokens;
-        
+
         if (temperature.HasValue)
         {
             chatOptions.Temperature = (float)temperature.Value;
@@ -394,10 +394,10 @@ public class FoundryService(IHttpClientService httpClientService, ISubscriptionS
         };
 
         var completion = await chatClient.CompleteChatAsync(messages, chatOptions);
-        
+
         var result = completion.Value;
         var completionText = result.Content[0].Text;
-        
+
         var usageInfo = new CompletionUsageInfo(
             result.Usage.InputTokenCount,
             result.Usage.OutputTokenCount,
