@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.AI.Agents.Persistent;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Services;
@@ -11,7 +12,6 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
 {
     private const string CommandTitle = "List Evaluation Agents";
-    private readonly Option<string> _endpointOption = FoundryOptionDefinitions.EndpointOption;
 
     public override string Name => "list";
 
@@ -35,13 +35,13 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_endpointOption);
+        command.Options.Add(FoundryOptionDefinitions.EndpointOption);
     }
 
     protected override AgentsListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValue(_endpointOption);
+        options.Endpoint = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.EndpointOption);
         return options;
     }
 

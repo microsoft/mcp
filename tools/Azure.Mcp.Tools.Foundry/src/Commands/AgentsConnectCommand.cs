@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Services;
@@ -11,9 +12,6 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
 {
     private const string CommandTitle = "Connect to AI Agent and Run a Query";
-    private readonly Option<string> _agentIdOption = FoundryOptionDefinitions.AgentIdOption;
-    private readonly Option<string> _queryOption = FoundryOptionDefinitions.QueryOption;
-    private readonly Option<string> _endpointOption = FoundryOptionDefinitions.EndpointOption;
 
     public override string Name => "connect";
 
@@ -36,17 +34,17 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_agentIdOption);
-        command.Options.Add(_queryOption);
-        command.Options.Add(_endpointOption);
+        command.Options.Add(FoundryOptionDefinitions.AgentIdOption);
+        command.Options.Add(FoundryOptionDefinitions.QueryOption);
+        command.Options.Add(FoundryOptionDefinitions.EndpointOption);
     }
 
     protected override AgentsConnectOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.AgentId = parseResult.GetValue(_agentIdOption);
-        options.Query = parseResult.GetValue(_queryOption);
-        options.Endpoint = parseResult.GetValue(_endpointOption);
+        options.AgentId = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.AgentIdOption);
+        options.Query = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.QueryOption);
+        options.Endpoint = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.EndpointOption);
         return options;
     }
 

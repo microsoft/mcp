@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Services;
@@ -11,12 +12,6 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class AgentsQueryAndEvaluateCommand : GlobalCommand<AgentsQueryAndEvaluateOptions>
 {
     private const string CommandTitle = "Query and Evaluate Agent";
-    private readonly Option<string> _agentIdOption = FoundryOptionDefinitions.AgentIdOption;
-    private readonly Option<string> _queryOption = FoundryOptionDefinitions.QueryOption;
-    private readonly Option<string> _endpointOption = FoundryOptionDefinitions.EndpointOption;
-    private readonly Option<string> _evaluators = FoundryOptionDefinitions.EvaluatorsOption;
-    private readonly Option<string> _azureOpenAIEndpointOption = FoundryOptionDefinitions.AzureOpenAIEndpointOption;
-    private readonly Option<string> _azureOpenAIDeploymentOption = FoundryOptionDefinitions.AzureOpenAIDeploymentOption;
 
     public override string Name => "query-and-evaluate";
 
@@ -41,23 +36,23 @@ public sealed class AgentsQueryAndEvaluateCommand : GlobalCommand<AgentsQueryAnd
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_agentIdOption);
-        command.Options.Add(_queryOption);
-        command.Options.Add(_endpointOption);
-        command.Options.Add(_evaluators);
-        command.Options.Add(_azureOpenAIEndpointOption);
-        command.Options.Add(_azureOpenAIDeploymentOption);
+        command.Options.Add(FoundryOptionDefinitions.AgentIdOption);
+        command.Options.Add(FoundryOptionDefinitions.QueryOption);
+        command.Options.Add(FoundryOptionDefinitions.EndpointOption);
+        command.Options.Add(FoundryOptionDefinitions.EvaluatorsOption);
+        command.Options.Add(FoundryOptionDefinitions.AzureOpenAIEndpointOption);
+        command.Options.Add(FoundryOptionDefinitions.AzureOpenAIDeploymentOption);
     }
 
     protected override AgentsQueryAndEvaluateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValue(_endpointOption);
-        options.AgentId = parseResult.GetValue(_agentIdOption);
-        options.Query = parseResult.GetValue(_queryOption);
-        options.Evaluators = parseResult.GetValue(_evaluators);
-        options.AzureOpenAIEndpoint = parseResult.GetValue(_azureOpenAIEndpointOption);
-        options.AzureOpenAIDeployment = parseResult.GetValue(_azureOpenAIDeploymentOption);
+        options.Endpoint = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.EndpointOption);
+        options.AgentId = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.AgentIdOption);
+        options.Query = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.QueryOption);
+        options.Evaluators = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.EvaluatorsOption);
+        options.AzureOpenAIEndpoint = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.AzureOpenAIEndpointOption);
+        options.AzureOpenAIDeployment = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.AzureOpenAIDeploymentOption);
         return options;
     }
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Services;
@@ -11,12 +12,6 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
 {
     private const string CommandTitle = "Evaluate Agent";
-    private readonly Option<string> _queryOption = FoundryOptionDefinitions.QueryOption;
-    private readonly Option<string> _evaluatorNameOption = FoundryOptionDefinitions.EvaluatorNameOption;
-    private readonly Option<string> _responseOption = FoundryOptionDefinitions.ResponseOption;
-    private readonly Option<string> _toolDefinitionsOption = FoundryOptionDefinitions.ToolDefinitionsOption;
-    private readonly Option<string> _azureOpenAIEndpointOption = FoundryOptionDefinitions.AzureOpenAIEndpointOption;
-    private readonly Option<string> _azureOpenAIDeploymentOption = FoundryOptionDefinitions.AzureOpenAIDeploymentOption;
 
     public override string Name => "evaluate";
 
@@ -40,23 +35,23 @@ public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_queryOption);
-        command.Options.Add(_evaluatorNameOption);
-        command.Options.Add(_responseOption);
-        command.Options.Add(_toolDefinitionsOption);
-        command.Options.Add(_azureOpenAIEndpointOption);
-        command.Options.Add(_azureOpenAIDeploymentOption);
+        command.Options.Add(FoundryOptionDefinitions.QueryOption);
+        command.Options.Add(FoundryOptionDefinitions.EvaluatorNameOption);
+        command.Options.Add(FoundryOptionDefinitions.ResponseOption);
+        command.Options.Add(FoundryOptionDefinitions.ToolDefinitionsOption);
+        command.Options.Add(FoundryOptionDefinitions.AzureOpenAIEndpointOption);
+        command.Options.Add(FoundryOptionDefinitions.AzureOpenAIDeploymentOption);
     }
 
     protected override AgentsEvaluateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValue(_queryOption);
-        options.EvaluatorName = parseResult.GetValue(_evaluatorNameOption);
-        options.Response = parseResult.GetValue(_responseOption);
-        options.ToolDefinitions = parseResult.GetValue(_toolDefinitionsOption);
-        options.AzureOpenAIEndpoint = parseResult.GetValue(_azureOpenAIEndpointOption);
-        options.AzureOpenAIDeployment = parseResult.GetValue(_azureOpenAIDeploymentOption);
+        options.Query = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.QueryOption);
+        options.EvaluatorName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.EvaluatorNameOption);
+        options.Response = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.ResponseOption);
+        options.ToolDefinitions = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.ToolDefinitionsOption);
+        options.AzureOpenAIEndpoint = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.AzureOpenAIEndpointOption);
+        options.AzureOpenAIDeployment = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.AzureOpenAIDeploymentOption);
         return options;
     }
 
