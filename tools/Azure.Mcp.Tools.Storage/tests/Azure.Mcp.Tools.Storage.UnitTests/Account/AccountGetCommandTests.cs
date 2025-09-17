@@ -74,7 +74,7 @@ public class AccountGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoAccounts()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccounts()
     {
         // Arrange
         var subscription = "sub123";
@@ -84,7 +84,7 @@ public class AccountGetCommandTests
             Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromResult(new List<Models.AccountInfo>()));
+            .Returns([]);
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
@@ -93,7 +93,13 @@ public class AccountGetCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<AccountGetCommand.AccountGetCommandResult>(json);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Accounts);
     }
 
     [Fact]

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTest;
@@ -14,7 +15,6 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
 {
     private const string _commandTitle = "Test Get";
     private readonly ILogger<TestGetCommand> _logger = logger;
-    private readonly Option<string> _loadTestIdOption = OptionDefinitions.LoadTesting.Test;
 
     public override string Name => "get";
     public override string Description =>
@@ -37,13 +37,13 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_loadTestIdOption);
+        command.Options.Add(OptionDefinitions.LoadTesting.Test);
     }
 
     protected override TestGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestId = parseResult.GetValue(_loadTestIdOption);
+        options.TestId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Test.Name);
         return options;
     }
 

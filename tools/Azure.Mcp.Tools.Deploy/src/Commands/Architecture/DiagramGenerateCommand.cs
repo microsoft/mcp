@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
 using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Options;
@@ -17,8 +18,6 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
     private readonly ILogger<DiagramGenerateCommand> _logger = logger;
 
     public override string Name => "generate";
-
-    private readonly Option<string> _rawMcpToolInputOption = DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption;
 
     public override string Description =>
         "Generates an azure service architecture diagram for the application based on the provided app topology."
@@ -41,13 +40,13 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_rawMcpToolInputOption);
+        command.Options.Add(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption);
     }
 
     private DiagramGenerateOptions BindOptions(ParseResult parseResult)
     {
         var options = new DiagramGenerateOptions();
-        options.RawMcpToolInput = parseResult.GetValue(_rawMcpToolInputOption);
+        options.RawMcpToolInput = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption.Name);
         return options;
     }
 

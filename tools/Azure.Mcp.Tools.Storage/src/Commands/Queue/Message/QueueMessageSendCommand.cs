@@ -18,11 +18,6 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
     private const string CommandTitle = "Send message to Azure Storage queue";
     private readonly ILogger<QueueMessageSendCommand> _logger = logger;
 
-    // Define options from OptionDefinitions
-    private readonly Option<string> _messageOption = StorageOptionDefinitions.Message;
-    private readonly Option<int?> _timeToLiveOption = StorageOptionDefinitions.TimeToLiveInSeconds;
-    private readonly Option<int?> _visibilityTimeoutOption = StorageOptionDefinitions.VisibilityTimeoutInSeconds;
-
     public override string Name => "send";
 
     public override string Description =>
@@ -48,17 +43,17 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_messageOption);
-        command.Options.Add(_timeToLiveOption);
-        command.Options.Add(_visibilityTimeoutOption);
+        command.Options.Add(StorageOptionDefinitions.Message);
+        command.Options.Add(StorageOptionDefinitions.TimeToLiveInSeconds);
+        command.Options.Add(StorageOptionDefinitions.VisibilityTimeoutInSeconds);
     }
 
     protected override QueueMessageSendOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Message = parseResult.GetValueOrDefault(_messageOption);
-        options.TimeToLiveInSeconds = parseResult.GetValueOrDefault(_timeToLiveOption);
-        options.VisibilityTimeoutInSeconds = parseResult.GetValueOrDefault(_visibilityTimeoutOption);
+        options.Message = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Message.Name);
+        options.TimeToLiveInSeconds = parseResult.GetValueOrDefault<int?>(StorageOptionDefinitions.TimeToLiveInSeconds.Name);
+        options.VisibilityTimeoutInSeconds = parseResult.GetValueOrDefault<int?>(StorageOptionDefinitions.VisibilityTimeoutInSeconds.Name);
         return options;
     }
 

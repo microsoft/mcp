@@ -25,14 +25,6 @@ public static class SearchOptionDefinitions
         Required = true
     };
 
-    public static readonly Option<string> OptionalIndex = new(
-        $"--{IndexName}"
-    )
-    {
-        Description = "The name of the search index within the Azure AI Search service.",
-        Required = false
-    };
-
     public static readonly Option<string> Query = new(
         $"--{QueryName}"
     )

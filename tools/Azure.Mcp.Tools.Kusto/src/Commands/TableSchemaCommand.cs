@@ -69,7 +69,7 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger) : Bas
                     options.RetryPolicy);
             }
 
-            context.Response.Results = ResponseResult.Create(new TableSchemaCommandResult(tableSchema), KustoJsonContext.Default.TableSchemaCommandResult);
+            context.Response.Results = ResponseResult.Create(new(tableSchema), KustoJsonContext.Default.TableSchemaCommandResult);
         }
         catch (Exception ex)
         {

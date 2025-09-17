@@ -18,6 +18,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 | MCP Server           |  README              | Source Code             |    CHANGELOG          | Releases             | Documentation             | Troubleshooting             | Support             |
 |:---------------------|:--------------------:|:-----------------------:|:---------------------:|:--------------------:|:-------------------------:|:---------------------------:|:-------------------:|
 | Azure MCP            | [Azure MCP README]   | [Azure MCP Source Code] | [Azure MCP CHANGELOG] | [Azure MCP Releases] | [Azure MCP Documentation] | [Azure MCP Troubleshooting] | [Azure MCP Support] |
+| Microsoft Fabric MCP | [Fabric MCP README]  | [Fabric MCP Source Code] | [Fabric MCP CHANGELOG] | [Fabric MCP Releases] | [Fabric Documentation] | [Fabric MCP Troubleshooting] | [Fabric MCP Support] |
 
 [Azure MCP README]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md
 [Azure MCP CHANGELOG]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/CHANGELOG.md
@@ -27,6 +28,14 @@ This repository contains core libraries, test frameworks, engineering systems, p
 [Azure MCP Troubleshooting]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md
 [Azure MCP Support]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/SUPPORT.md
 
+[Fabric MCP README]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/README.md
+[Fabric MCP CHANGELOG]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/CHANGELOG.md
+[Fabric MCP Source Code]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server
+[Fabric MCP Releases]: https://github.com/microsoft/mcp/releases?q=Fabric.Mcp.Server-0
+[Fabric Documentation]: https://learn.microsoft.com/fabric/
+[Fabric MCP Troubleshooting]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md
+[Fabric MCP Support]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/SUPPORT.md
+
 
 ## 📚 Which MCP Servers are available from Microsoft?
 
@@ -34,6 +43,12 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **REPOSITORY**: [microsoft/mcp](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server#readme)
 - **DESCRIPTION**: All Azure MCP tools in a single server.  The Azure MCP Server implements the MCP specification to create a seamless connection between AI agents and Azure services.  Azure MCP Server can be used alone or with the GitHub Copilot for Azure extension in VS Code.
 - **CATEGORY**: `CLOUD AND INFRASTRUCTURE`
+- **TYPE**: `Local`
+
+### <img height="18" width="18" src="https://learn.microsoft.com/fabric/media/fabric-icon.png" alt="Microsoft Fabric Logo" /> Microsoft Fabric (Public Preview)
+- **REPOSITORY**: [microsoft/mcp](https://github.com/microsoft/mcp/tree/main/servers/Fabric.Mcp.Server#readme)
+- **DESCRIPTION**: A local-first MCP server providing AI agents with comprehensive access to Microsoft Fabric's public APIs, item definitions, and best practices. Enables AI-assisted development for all Fabric workloads without connecting to live environments.
+- **CATEGORY**: `DATA AND ANALYTICS`
 - **TYPE**: `Local`
 
 ### ✨ Azure AI Foundry
@@ -59,6 +74,12 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **DESCRIPTION**: Access GitHub repositories, issues, and pull requests through secure API integration.
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `REMOTE` - `https://api.githubcopilot.com/mcp`
+
+### <img height="18" width="18" src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" alt="GitHub Logo" /> GitHub Awesome-Copilot
+- **REPOSITORY**: [github/awesome-copilot](https://github.com/github/awesome-copilot)
+- **DESCRIPTION**: Community-contributed instructions, prompts, and configurations to help you make the most of GitHub Copilot.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `Local`
 
 ### 📝 Markitdown
 - **REPOSITORY**: [microsoft/markitdown](https://github.com/microsoft/markitdown)
@@ -90,16 +111,16 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
 
-### 📁 Microsoft Files
-- **REPOSITORY**: [microsoft/files-mcp-server](https://github.com/microsoft/files-mcp-server)
-- **DESCRIPTION**: Provides a declarative control plane for managing file-based resources, supporting AI workflows that involve static files and documentation synchronization.
-- **CATEGORY**: `DEVELOPER TOOLS`
-- **TYPE**: `Local`
-
 ### 🛢️ Microsoft Fabric Real-Time Intelligence
 - **REPOSITORY**: [RTI MCP Server](https://aka.ms/rti.mcp.repo)
 - **DESCRIPTION**: This server enables AI agents to interact with Fabric RTI services by providing tools through the MCP interface, allowing for seamless data querying and analysis capabilities.
 - **CATEGORY**: `DATA AND ANALYTICS`
+- **TYPE**: `Local`
+
+### 📁 Microsoft Files
+- **REPOSITORY**: [microsoft/files-mcp-server](https://github.com/microsoft/files-mcp-server)
+- **DESCRIPTION**: Provides a declarative control plane for managing file-based resources, supporting AI workflows that involve static files and documentation synchronization.
+- **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
 
 ### 📚 Microsoft Learn

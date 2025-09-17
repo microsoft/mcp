@@ -23,7 +23,7 @@ public interface IBaseCommand
     string Description { get; }
 
     /// <summary>
-    /// Gets the name of the command
+    /// Gets the title of the command
     /// </summary>
     string Title { get; }
 

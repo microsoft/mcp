@@ -5,7 +5,6 @@ using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Acr.LiveTests;
@@ -97,7 +96,7 @@ public class AcrCommandTests(ITestOutputHelper output)
         }
 
         var map = result.AssertProperty("repositoriesByRegistry");
-        Assert.True(map.ValueKind == JsonValueKind.Object);
+        Assert.Equal(JsonValueKind.Object, map.ValueKind);
 
         // Validate we have entries for the test registry and the seeded 'testrepo'
         Assert.True(map.TryGetProperty(Settings.ResourceBaseName, out var repoArray));

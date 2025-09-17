@@ -67,9 +67,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
                     options.RetryPolicy);
             }
 
-            context.Response.Results = databasesNames?.Count > 0 ?
-                ResponseResult.Create(new DatabaseListCommandResult(databasesNames), KustoJsonContext.Default.DatabaseListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(databasesNames ?? []), KustoJsonContext.Default.DatabaseListCommandResult);
         }
         catch (Exception ex)
         {

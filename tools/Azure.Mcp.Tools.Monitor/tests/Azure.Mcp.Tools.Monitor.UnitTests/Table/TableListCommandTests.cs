@@ -175,7 +175,7 @@ public sealed class TableListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNullWhenNoTables()
+    public async Task ExecuteAsync_ReturnsEmptyWhenNoTables()
     {
         // Arrange
         _monitorService.ListTables(
@@ -185,7 +185,7 @@ public sealed class TableListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<string>());
+            .Returns([]);
 
         var args = _commandDefinition.Parse([
             "--subscription", _knownSubscription,
@@ -198,7 +198,13 @@ public sealed class TableListCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, MonitorJsonContext.Default.TableListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Tables);
     }
 
     [Fact]

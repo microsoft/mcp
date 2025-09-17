@@ -58,7 +58,7 @@ public class DatabaseListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsMessage_WhenNoDatabasesExist()
     {
-        _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns(new List<string>());
+        _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns([]);
 
         var command = new DatabaseListCommand(_logger);
         var args = command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --user user1 --server server1");
@@ -69,7 +69,12 @@ public class DatabaseListCommandTests
         Assert.NotNull(response);
         Assert.Equal(200, response.Status);
         Assert.Equal("Success", response.Message);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<DatabaseListResult>(json);
+        Assert.NotNull(result);
+        Assert.Empty(result.Databases);
     }
 
     [Fact]
@@ -114,6 +119,6 @@ public class DatabaseListCommandTests
     private class DatabaseListResult
     {
         [JsonPropertyName("Databases")]
-        public List<string> Databases { get; set; } = new List<string>();
+        public List<string> Databases { get; set; } = [];
     }
 }

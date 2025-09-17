@@ -1,6 +1,16 @@
 
 # Release History
 
+## 0.7.1 (Unreleased)
+
+### Added
+
+### Breaking Changes
+
+- Redesigned how conditionally required options are handled. Commands now use explicit option registration via extension methods (`.AsRequired()`, `.AsOptional()`) instead of legacy patterns (`UseResourceGroup()`, `RequireResourceGroup()`). [[#452](https://github.com/microsoft/mcp/pull/452)]
+
+### Fixed
+
 ## 0.7.0 (2025-09-16)
 
 ### Added

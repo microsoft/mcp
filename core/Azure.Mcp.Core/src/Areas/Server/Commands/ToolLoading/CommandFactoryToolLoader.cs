@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Elicitation;
 using Azure.Mcp.Core.Services.Telemetry;

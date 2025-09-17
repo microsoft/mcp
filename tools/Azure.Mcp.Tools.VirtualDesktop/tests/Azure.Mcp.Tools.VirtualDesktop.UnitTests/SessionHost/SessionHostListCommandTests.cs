@@ -108,7 +108,7 @@ public class SessionHostListCommandTests
         }
         else
         {
-            Assert.True(response.Message.ToLower().Contains("required") ||
+            Assert.True(response.Message.Contains("required", StringComparison.CurrentCultureIgnoreCase) ||
                        response.Message.Contains("hostpool") ||
                        response.Message.Contains("hostpool-resource-id"));
         }
@@ -255,14 +255,14 @@ public class SessionHostListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<SessionHostModel>());
+            .Returns([]);
 
         _virtualDesktopService.ListSessionHostsByResourceIdAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<SessionHostModel>());
+            .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _commandDefinition.Parse("--subscription sub123 --hostpool pool1");
@@ -273,7 +273,7 @@ public class SessionHostListCommandTests
         // Assert
         Assert.Equal(200, response.Status);
         Assert.Equal("Success", response.Message);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
     }
 
     [Fact]

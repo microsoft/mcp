@@ -15,9 +15,6 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
 {
     private const string CommandTitle = "Update Workbook";
     private readonly ILogger<UpdateWorkbooksCommand> _logger = logger;
-    private readonly Option<string> _workbookIdOption = WorkbooksOptionDefinitions.WorkbookId;
-    private readonly Option<string> _displayNameOption = WorkbooksOptionDefinitions.DisplayName;
-    private readonly Option<string> _serializedContentOption = WorkbooksOptionDefinitions.SerializedContent;
 
     public override string Name => "update";
 
@@ -43,17 +40,17 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_workbookIdOption);
-        command.Options.Add(_displayNameOption);
-        command.Options.Add(_serializedContentOption);
+        command.Options.Add(WorkbooksOptionDefinitions.WorkbookId);
+        command.Options.Add(WorkbooksOptionDefinitions.DisplayName);
+        command.Options.Add(WorkbooksOptionDefinitions.SerializedContent);
     }
 
     protected override UpdateWorkbooksOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkbookId = parseResult.GetValueOrDefault(_workbookIdOption);
-        options.DisplayName = parseResult.GetValueOrDefault(_displayNameOption);
-        options.SerializedContent = parseResult.GetValueOrDefault(_serializedContentOption);
+        options.WorkbookId = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.WorkbookId.Name);
+        options.DisplayName = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.DisplayName.Name);
+        options.SerializedContent = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.SerializedContent.Name);
         return options;
     }
 

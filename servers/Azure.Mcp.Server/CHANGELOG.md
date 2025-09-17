@@ -2,6 +2,20 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
+## 0.7.1 (Unreleased)
+
+### Features Added
+
+- Enhanced AKS nodepool information with comprehensive properties. [[#454](https://github.com/microsoft/mcp/issues/454)]
+
+### Breaking Changes
+
+- Redesigned how conditionally required options are handled. Commands now use explicit option registration via extension methods (`.AsRequired()`, `.AsOptional()`) instead of legacy patterns (`UseResourceGroup()`, `RequireResourceGroup()`). [[#452](https://github.com/microsoft/mcp/pull/452)]
+
+### Bugs Fixed
+
+### Other Changes
+
 ## 0.7.0 (2025-09-16)
 
 ### Features Added
@@ -24,6 +38,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Marked the `secret` hint of `azmcp_keyvault_secret_create` tool to "true". [[#430](https://github.com/microsoft/mcp/pull/430)]
 
 ### Other Changes
+
+- Replaced bicep tool dependency on Azure.Bicep.Types.Az package with Microsoft.Azure.Mcp.AzTypes.Internal.Compact package. [[#472](https://github.com/microsoft/mcp/pull/472)]
 
 ## 0.6.0 (2025-09-11)
 
