@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.Account;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Azure.Mcp.Tools.AppConfig.Services;
@@ -13,7 +14,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using static Azure.Mcp.Tools.AppConfig.Commands.Account.AccountListCommand;
 
 namespace Azure.Mcp.Tools.AppConfig.UnitTests.Account;
 
@@ -65,10 +65,7 @@ public class AccountListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccountListCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.AccountListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(2, result.Accounts.Count);
@@ -96,10 +93,7 @@ public class AccountListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccountListCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.AccountListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Accounts);

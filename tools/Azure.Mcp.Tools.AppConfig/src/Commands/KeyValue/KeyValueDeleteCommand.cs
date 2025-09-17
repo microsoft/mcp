@@ -54,8 +54,7 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger)
                 options.RetryPolicy,
                 options.Label);
 
-            var result = new KeyValueDeleteCommandResult(options.Key, options.Label);
-            context.Response.Results = ResponseResult.Create(result, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
+            context.Response.Results = ResponseResult.Create(new(options.Key, options.Label), AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
         }
         catch (Exception ex)
         {
