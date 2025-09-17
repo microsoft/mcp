@@ -17,6 +17,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
     private const string CommandTitle = "List Event Grid Subscriptions";
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
     private readonly Option<string> _topicNameOption = EventGridOptionDefinitions.TopicName;
+    private readonly Option<string> _locationOption = EventGridOptionDefinitions.Location;
 
     public override string Name => "list";
 
@@ -36,12 +37,14 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         base.RegisterOptions(command);
         UseResourceGroup(); // Optional resource group filtering
         command.Options.Add(_topicNameOption);
+        command.Options.Add(_locationOption);
     }
 
     protected override SubscriptionListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.TopicName = parseResult.GetValue(_topicNameOption);
+        options.Location = parseResult.GetValue(_locationOption);
         return options;
     }
 
@@ -61,17 +64,18 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                 options.Subscription!,
                 options.ResourceGroup,
                 options.TopicName,
+                options.Location,
                 options.RetryPolicy);
 
-            context.Response.Results = subscriptions?.Count > 0
-                ? ResponseResult.Create<SubscriptionListCommandResult>(new SubscriptionListCommandResult(subscriptions), EventGridJsonContext.Default.SubscriptionListCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create<SubscriptionListCommandResult>(
+                new SubscriptionListCommandResult(subscriptions ?? []), 
+                EventGridJsonContext.Default.SubscriptionListCommandResult);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing Event Grid subscriptions. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, TopicName: {TopicName}, Options: {@Options}",
-                options.Subscription, options.ResourceGroup, options.TopicName, options);
+                "Error listing Event Grid subscriptions. Subscription: {Subscription}, ResourceGroup: {ResourceGroup}, TopicName: {TopicName}, Location: {Location}, Options: {@Options}",
+                options.Subscription, options.ResourceGroup, options.TopicName, options.Location, options);
             HandleException(context, ex);
         }
 

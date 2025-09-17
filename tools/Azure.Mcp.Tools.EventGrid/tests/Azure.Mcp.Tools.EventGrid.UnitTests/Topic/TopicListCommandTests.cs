@@ -87,7 +87,14 @@ public class TopicListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+        
+        var json = JsonSerializer.Serialize(response.Results);
+        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var result = JsonSerializer.Deserialize<TopicListResult>(json, options);
+        Assert.NotNull(result);
+        Assert.NotNull(result.Topics);
+        Assert.Empty(result.Topics);
     }
 
     [Fact]

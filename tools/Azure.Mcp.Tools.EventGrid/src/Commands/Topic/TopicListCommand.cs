@@ -64,9 +64,9 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
                 options.ResourceGroup,
                 options.RetryPolicy);
 
-            context.Response.Results = topics?.Count > 0
-                ? ResponseResult.Create(new TopicListCommandResult(topics), EventGridJsonContext.Default.TopicListCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create<TopicListCommandResult>(
+                new TopicListCommandResult(topics ?? []), 
+                EventGridJsonContext.Default.TopicListCommandResult);
         }
         catch (Exception ex)
         {

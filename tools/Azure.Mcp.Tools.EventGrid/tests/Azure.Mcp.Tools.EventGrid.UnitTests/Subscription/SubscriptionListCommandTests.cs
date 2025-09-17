@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 using Azure.Mcp.Tools.EventGrid.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,7 +52,7 @@ public class SubscriptionListCommandTests
             new("subscription2", "Microsoft.EventGrid/eventSubscriptions", "StorageQueue", "https://storage.queue.core.windows.net/myqueue", "Succeeded", null, null, 10, 720, "2023-01-03T00:00:00Z", "2023-01-04T00:00:00Z")
         };
 
-        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromResult(expectedSubscriptions));
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
@@ -85,7 +86,7 @@ public class SubscriptionListCommandTests
             new("filtered-subscription", "Microsoft.EventGrid/eventSubscriptions", "WebHook", "https://example.com/webhook", "Succeeded", null, null, 30, 1440, "2023-01-01T00:00:00Z", "2023-01-02T00:00:00Z")
         };
 
-        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Is(topicName), Arg.Any<RetryPolicyOptions?>())
+        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Is(topicName), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromResult(expectedSubscriptions));
 
         var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--topic-name", topicName]);
@@ -113,7 +114,7 @@ public class SubscriptionListCommandTests
         // Arrange
         var subscription = "sub123";
 
-        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromResult(new List<Models.EventGridSubscriptionInfo>()));
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
@@ -123,7 +124,47 @@ public class SubscriptionListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+        
+        var json = JsonSerializer.Serialize(response.Results);
+        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var result = JsonSerializer.Deserialize<SubscriptionListResult>(json, options);
+        Assert.NotNull(result);
+        Assert.NotNull(result.Subscriptions);
+        Assert.Empty(result.Subscriptions);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithLocationFilter_FiltersCorrectly()
+    {
+        // Arrange
+        var subscription = "sub123";
+        var location = "eastus";
+        var expectedSubscriptions = new List<Models.EventGridSubscriptionInfo>
+        {
+            new("location-filtered-subscription", "Microsoft.EventGrid/eventSubscriptions", "WebHook", "https://example.com/webhook", "Succeeded", null, null, 30, 1440, "2023-01-01T00:00:00Z", "2023-01-02T00:00:00Z")
+        };
+
+        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(location), Arg.Any<RetryPolicyOptions?>())
+            .Returns(Task.FromResult(expectedSubscriptions));
+
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--location", location]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var result = JsonSerializer.Deserialize<SubscriptionListResult>(json, options);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result!.Subscriptions);
+        Assert.Single(result.Subscriptions);
+        Assert.Equal("location-filtered-subscription", result.Subscriptions.First().Name);
     }
 
     [Fact]
@@ -133,7 +174,7 @@ public class SubscriptionListCommandTests
         var expectedError = "Test error";
         var subscription = "sub123";
 
-        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);

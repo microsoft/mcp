@@ -14,5 +14,6 @@ public interface IEventGridService
         string subscription,
         string? resourceGroup = null,
         string? topicName = null,
+        string? location = null,
         RetryPolicyOptions? retryPolicy = null);
 }

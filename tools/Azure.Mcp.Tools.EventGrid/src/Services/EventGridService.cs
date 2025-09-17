@@ -11,6 +11,7 @@ using Azure.Mcp.Tools.EventGrid.Models;
 >>>>>>> 6f127f56 (AzureMcp Merge Conflicts resolved)
 using Azure.ResourceManager.EventGrid;
 using Azure.ResourceManager.Resources;
+using Azure.ResourceManager;
 
 namespace Azure.Mcp.Tools.EventGrid.Services;
 
@@ -54,76 +55,255 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         string subscription,
         string? resourceGroup = null,
         string? topicName = null,
+        string? location = null,
         RetryPolicyOptions? retryPolicy = null)
     {
         var subscriptions = new List<EventGridSubscriptionInfo>();
 
         try
         {
-            // Get all topics first, then get subscriptions for each
-            var topics = await GetTopicsAsync(subscription, resourceGroup, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
 
-            // Filter to specific topic if requested
+            // If specific topic is requested, get subscriptions for that topic only
             if (!string.IsNullOrEmpty(topicName))
             {
-                topics = topics.Where(t => t.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase)).ToList();
+                await GetSubscriptionsForSpecificTopic(subscriptionResource, resourceGroup, topicName, location, subscriptions);
             }
-
-            // For each topic, use Azure CLI to get its event subscriptions
-            foreach (var topic in topics)
+            else
             {
-                try
-                {
-                    await GetSubscriptionsForTopicUsingCli(subscription, topic, subscriptions);
-                }
-                catch
-                {
-                    // Continue with other topics if one fails
-                    continue;
-                }
+                // Get subscriptions from all topics in the subscription or resource group
+                await GetSubscriptionsFromAllTopics(subscriptionResource, resourceGroup, location, subscriptions);
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Return partial results on error
+            // Log the actual error instead of swallowing it
+            throw new InvalidOperationException($"Failed to retrieve EventGrid subscriptions: {ex.Message}", ex);
         }
 
         return subscriptions;
     }
 
-    private Task GetSubscriptionsForTopicUsingCli(
-        string subscription, 
-        EventGridTopicInfo topic, 
+    private async Task GetSubscriptionsForSpecificTopic(
+        SubscriptionResource subscriptionResource,
+        string? resourceGroup,
+        string topicName,
+        string? location,
         List<EventGridSubscriptionInfo> subscriptions)
     {
         try
         {
-            // For demonstration purposes, create a sample subscription for each topic
-            // In the full implementation, this would use the actual Azure API to get real subscriptions
-            subscriptions.Add(new EventGridSubscriptionInfo(
-                Name: $"{topic.Name}-demo-subscription",
-                Type: "Microsoft.EventGrid/eventSubscriptions",
-                EndpointType: "WebHook",
-                EndpointUrl: "https://example.com/webhook",
-                ProvisioningState: "Succeeded",
-                DeadLetterDestination: null,
-                Filter: null,
-                MaxDeliveryAttempts: 30,
-                EventTimeToLiveInMinutes: 1440,
-                CreatedDateTime: DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
-                UpdatedDateTime: DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
-            ));
-        }
-        catch
-        {
-            // Skip this topic on error
-        }
+            // Find the specific custom topic first
+            var topic = await FindTopic(subscriptionResource, resourceGroup, topicName);
+            if (topic != null)
+            {
+                // Check if location filter applies
+                if (string.IsNullOrEmpty(location) || string.Equals(topic.Data.Location.ToString(), location, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Get event subscriptions for the specific topic using the correct ARM SDK pattern
+                    await foreach (var subscription in topic.GetTopicEventSubscriptions().GetAllAsync())
+                    {
+                        subscriptions.Add(CreateSubscriptionInfo(subscription.Data));
+                    }
+                }
+                return; // Found custom topic, no need to check system topics
+            }
 
-        return Task.CompletedTask;
+            // If not found in custom topics, check system topics
+            var systemTopic = await FindSystemTopic(subscriptionResource, resourceGroup, topicName);
+            if (systemTopic != null)
+            {
+                // Check if location filter applies
+                if (string.IsNullOrEmpty(location) || string.Equals(systemTopic.Data.Location.ToString(), location, StringComparison.OrdinalIgnoreCase))
+                {
+                    await foreach (var subscription in systemTopic.GetSystemTopicEventSubscriptions().GetAllAsync())
+                    {
+                        subscriptions.Add(CreateSubscriptionInfo(subscription.Data));
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log and re-throw to preserve error information
+            throw new InvalidOperationException($"Failed to get subscriptions for topic '{topicName}': {ex.Message}", ex);
+        }
     }
 
-    // Remove the helper methods that were causing compilation issues
-    // In the full implementation, these would be replaced with working Azure SDK calls
+    private async Task GetSubscriptionsFromAllTopics(
+        SubscriptionResource subscriptionResource,
+        string? resourceGroup,
+        string? location,
+        List<EventGridSubscriptionInfo> subscriptions)
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(resourceGroup))
+            {
+                // Get topics from specific resource group and their subscriptions
+                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+                
+                // Check custom topics
+                await foreach (var topic in resourceGroupResource.Value.GetEventGridTopics().GetAllAsync())
+                {
+                    try
+                    {
+                        // Check if location filter applies
+                        if (string.IsNullOrEmpty(location) || string.Equals(topic.Data.Location.ToString(), location, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Get event subscriptions for each topic using the correct ARM SDK pattern
+                            await foreach (var subscription in topic.GetTopicEventSubscriptions().GetAllAsync())
+                            {
+                                subscriptions.Add(CreateSubscriptionInfo(subscription.Data));
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Continue with other topics if one fails
+                        continue;
+                    }
+                }
+
+                // Also check system topics in the resource group
+                await foreach (var systemTopic in resourceGroupResource.Value.GetSystemTopics().GetAllAsync())
+                {
+                    try
+                    {
+                        // Check if location filter applies
+                        if (string.IsNullOrEmpty(location) || string.Equals(systemTopic.Data.Location.ToString(), location, StringComparison.OrdinalIgnoreCase))
+                        {
+                            await foreach (var subscription in systemTopic.GetSystemTopicEventSubscriptions().GetAllAsync())
+                            {
+                                subscriptions.Add(CreateSubscriptionInfo(subscription.Data));
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Continue with other system topics if one fails
+                        continue;
+                    }
+                }
+            }
+            else
+            {
+                // Get topics from all resource groups and their subscriptions
+                await foreach (var topic in subscriptionResource.GetEventGridTopicsAsync())
+                {
+                    try
+                    {
+                        // Check if location filter applies
+                        if (string.IsNullOrEmpty(location) || string.Equals(topic.Data.Location.ToString(), location, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Get event subscriptions for each topic using the correct ARM SDK pattern
+                            await foreach (var subscription in topic.GetTopicEventSubscriptions().GetAllAsync())
+                            {
+                                subscriptions.Add(CreateSubscriptionInfo(subscription.Data));
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Continue with other topics if one fails
+                        continue;
+                    }
+                }
+
+                // Also check system topics across all resource groups
+                await foreach (var systemTopic in subscriptionResource.GetSystemTopicsAsync())
+                {
+                    try
+                    {
+                        // Check if location filter applies
+                        if (string.IsNullOrEmpty(location) || string.Equals(systemTopic.Data.Location.ToString(), location, StringComparison.OrdinalIgnoreCase))
+                        {
+                            await foreach (var subscription in systemTopic.GetSystemTopicEventSubscriptions().GetAllAsync())
+                            {
+                                subscriptions.Add(CreateSubscriptionInfo(subscription.Data));
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Continue with other system topics if one fails
+                        continue;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log and re-throw to preserve error information
+            throw new InvalidOperationException($"Failed to get subscriptions from all topics in resource group '{resourceGroup}': {ex.Message}", ex);
+        }
+    }
+
+    private async Task<EventGridTopicResource?> FindTopic(
+        SubscriptionResource subscriptionResource,
+        string? resourceGroup,
+        string topicName)
+    {
+        if (!string.IsNullOrEmpty(resourceGroup))
+        {
+            // Search in specific resource group
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            
+            await foreach (var topic in resourceGroupResource.Value.GetEventGridTopics().GetAllAsync())
+            {
+                if (topic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return topic;
+                }
+            }
+        }
+        else
+        {
+            // Search in all resource groups
+            await foreach (var topic in subscriptionResource.GetEventGridTopicsAsync())
+            {
+                if (topic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return topic;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<SystemTopicResource?> FindSystemTopic(
+        SubscriptionResource subscriptionResource,
+        string? resourceGroup,
+        string topicName)
+    {
+        if (!string.IsNullOrEmpty(resourceGroup))
+        {
+            // Search in specific resource group
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            
+            await foreach (var systemTopic in resourceGroupResource.Value.GetSystemTopics().GetAllAsync())
+            {
+                if (systemTopic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return systemTopic;
+                }
+            }
+        }
+        else
+        {
+            // Search in all resource groups
+            await foreach (var systemTopic in subscriptionResource.GetSystemTopicsAsync())
+            {
+                if (systemTopic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return systemTopic;
+                }
+            }
+        }
+
+        return null;
+    }
 
     private static EventGridTopicInfo CreateTopicInfo(EventGridTopicData topicData)
     {
