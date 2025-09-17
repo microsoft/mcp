@@ -60,6 +60,12 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `REMOTE` - `https://api.githubcopilot.com/mcp`
 
+### <img height="18" width="18" src="https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png" alt="GitHub Logo" /> GitHub Awesome-Copilot
+- **REPOSITORY**: [github/awesome-copilot](https://github.com/github/awesome-copilot)
+- **DESCRIPTION**: Community-contributed instructions, prompts, and configurations to help you make the most of GitHub Copilot.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `Local`
+
 ### 📝 Markitdown
 - **REPOSITORY**: [microsoft/markitdown](https://github.com/microsoft/markitdown)
 - **DESCRIPTION**: A specialized MCP server for Markdown processing and manipulation. Enables AI models to read, write, and transform Markdown content with robust parsing and formatting capabilities.
@@ -90,16 +96,16 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
 
-### 📁 Microsoft Files
-- **REPOSITORY**: [microsoft/files-mcp-server](https://github.com/microsoft/files-mcp-server)
-- **DESCRIPTION**: Provides a declarative control plane for managing file-based resources, supporting AI workflows that involve static files and documentation synchronization.
-- **CATEGORY**: `DEVELOPER TOOLS`
-- **TYPE**: `Local`
-
 ### 🛢️ Microsoft Fabric Real-Time Intelligence
 - **REPOSITORY**: [RTI MCP Server](https://aka.ms/rti.mcp.repo)
 - **DESCRIPTION**: This server enables AI agents to interact with Fabric RTI services by providing tools through the MCP interface, allowing for seamless data querying and analysis capabilities.
 - **CATEGORY**: `DATA AND ANALYTICS`
+- **TYPE**: `Local`
+
+### 📁 Microsoft Files
+- **REPOSITORY**: [microsoft/files-mcp-server](https://github.com/microsoft/files-mcp-server)
+- **DESCRIPTION**: Provides a declarative control plane for managing file-based resources, supporting AI workflows that involve static files and documentation synchronization.
+- **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
 
 ### 📚 Microsoft Learn
