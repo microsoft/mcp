@@ -445,7 +445,7 @@ The Azure MCP Server provides tools for interacting with **30+ Azure service are
 ## Contributing
 
 Want to contribute?
-Check out our [contribution guide](https://github.com/microsoft/mcp/blob/main/eng/npm/CONTRIBUTING.md) to get started.
+Check out our [contribution guide](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md) to get started.
 
 ## License
 
