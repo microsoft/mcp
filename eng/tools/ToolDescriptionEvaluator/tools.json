@@ -7665,6 +7665,176 @@
       ]
     },
     {
+      "name": "create",
+      "description": "Creates a new Azure SQL server in the specified resource group and location. \r\nThe server will be created with the specified administrator credentials and \r\noptional configuration settings. Returns the created server with its properties \r\nincluding the fully qualified domain name.",
+      "command": "azmcp sql server create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--server",
+          "description": "The Azure SQL Server name.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--administrator-login",
+          "description": "The administrator login name for the SQL server.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--administrator-password",
+          "description": "The administrator password for the SQL server.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--location",
+          "description": "The Azure region location where the SQL server will be created.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--version",
+          "description": "The version of SQL Server to create (e.g., '12.0').",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--public-network-access",
+          "description": "Whether public network access is enabled for the SQL server ('Enabled' or 'Disabled').",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "description": "Deletes an Azure SQL server and all of its databases from the specified resource group. \r\nThis operation is irreversible and will permanently remove the server and all its data. \r\nUse the --force flag to skip confirmation prompts.",
+      "command": "azmcp sql server delete",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--server",
+          "description": "The Azure SQL Server name.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--force",
+          "description": "Force delete the server without confirmation prompts.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
       "name": "list",
       "description": "Gets a list of Microsoft Entra ID administrators for a SQL server. This command retrieves all\r\nEntra ID administrators configured for the specified SQL server, including their display names, object IDs,\r\nand tenant information. Returns an array of Entra ID administrator objects with their properties.",
       "command": "azmcp sql server entra-admin list",
@@ -7893,6 +8063,73 @@
       "name": "list",
       "description": "Gets a list of firewall rules for a SQL server. This command retrieves all\r\nfirewall rules configured for the specified SQL server, including their IP address ranges\r\nand rule names. Returns an array of firewall rule objects with their properties.",
       "command": "azmcp sql server firewall-rule list",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--server",
+          "description": "The Azure SQL Server name.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "show",
+      "description": "Retrieves detailed information about an Azure SQL server including its configuration, \r\nstatus, and properties such as the fully qualified domain name, version, \r\nadministrator login, and network access settings.",
+      "command": "azmcp sql server show",
       "option": [
         {
           "name": "--tenant",
@@ -9442,5 +9679,5 @@
       ]
     }
   ],
-  "duration": 23
+  "duration": 63
 }
