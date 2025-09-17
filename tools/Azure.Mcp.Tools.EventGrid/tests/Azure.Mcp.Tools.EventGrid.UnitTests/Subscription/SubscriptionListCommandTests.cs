@@ -88,7 +88,7 @@ public class SubscriptionListCommandTests
         _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Is(topicName), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromResult(expectedSubscriptions));
 
-        var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--topic-name", topicName]);
+        var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--topic", topicName]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);

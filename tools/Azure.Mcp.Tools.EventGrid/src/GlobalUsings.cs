@@ -2,6 +2,10 @@
 // Licensed under the MIT License.
 
 global using System.CommandLine;
+<<<<<<< HEAD
+=======
+global using System.CommandLine.Parsing;
+>>>>>>> 216a9350 (Addressed review comments)
 global using Azure.Mcp.Core.Commands;
 global using Azure.Mcp.Core.Models.Command;
 global using Azure.Mcp.Core.Options;
