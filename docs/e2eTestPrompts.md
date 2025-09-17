@@ -51,13 +51,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applens_resource_diagnose | Use app lens to check why my app is slow? |
 | azmcp_applens_resource_diagnose | What does app lens say is wrong with my service? |
 
-## Azure Cli Generate
+## Azure CLI Generate
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_extension_cli_generate | Get Azure Cli command to create a Storage account with name <storage_account_name> |
-| azmcp_extension_cli_generate | Show me how to use Azure Cli to list all virtual machines in my subscription |
-| azmcp_extension_cli_generate | Show me the details of the storage account <account_name> with Azure Cli commands |
+| azmcp_extension_cli_generate | Get Azure CLI command to create a Storage account with name <storage_account_name> |
+| azmcp_extension_cli_generate | Show me how to use Azure CLI to list all virtual machines in my subscription |
+| azmcp_extension_cli_generate | Show me the details of the storage account <account_name> with Azure CLI commands |
 
 ## Azure Container Registry (ACR)
 
