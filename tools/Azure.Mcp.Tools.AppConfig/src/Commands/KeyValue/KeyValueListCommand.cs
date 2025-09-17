@@ -47,8 +47,8 @@ public sealed class KeyValueListCommand(ILogger<KeyValueListCommand> logger) : B
     protected override KeyValueListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Key = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.Key.Name);
-        options.Label = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.Label.Name);
+        options.Key = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.KeyValueList.Key.Name);
+        options.Label = parseResult.GetValueOrDefault<string>(AppConfigOptionDefinitions.KeyValueList.Label.Name);
         return options;
     }
 
