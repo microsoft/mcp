@@ -41,6 +41,7 @@
     <PackageVersion Include="Azure.ResourceManager.LoadTesting" Version="1.1.2" />
     <PackageVersion Include="Azure.ResourceManager.Network" Version="1.11.2" />
     <PackageVersion Include="Azure.ResourceManager.MachineLearning" Version="1.2.3" />
+    <PackageVersion Include="Azure.ResourceManager.Playwright" Version="1.0.0" />
     <PackageVersion Include="Azure.Security.KeyVault.Keys" Version="4.7.0" />
     <PackageVersion Include="Azure.Security.KeyVault.Secrets" Version="4.7.0" />
     <PackageVersion Include="Azure.Security.KeyVault.Certificates" Version="4.7.0" />
