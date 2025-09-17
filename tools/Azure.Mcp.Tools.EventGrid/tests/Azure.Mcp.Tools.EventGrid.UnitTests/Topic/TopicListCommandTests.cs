@@ -90,10 +90,9 @@ public class TopicListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-        var result = JsonSerializer.Deserialize<TopicListResult>(json, options);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.TopicListCommandResult);
         Assert.NotNull(result);
-        Assert.NotNull(result.Topics);
+        Assert.NotNull(result!.Topics);
         Assert.Empty(result.Topics);
     }
 

@@ -7,11 +7,11 @@ using Azure.Mcp.Tools.EventGrid.Commands.Topic;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands;
 
-[JsonSerializable(typeof(TopicListCommand.TopicListCommandResult))]
 [JsonSerializable(typeof(SubscriptionListCommand.SubscriptionListCommandResult))]
-[JsonSerializable(typeof(EventGridTopicInfo))]
+[JsonSerializable(typeof(TopicListCommand.TopicListCommandResult))]
 [JsonSerializable(typeof(EventGridSubscriptionInfo))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSerializable(typeof(EventGridTopicInfo))]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal sealed partial class EventGridJsonContext : JsonSerializerContext
 {
 }

@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
+using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Mcp.Tools.EventGrid.Options.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
 
@@ -65,9 +66,9 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = topics?.Count > 0
-            ? ResponseResult.Create(new TopicListCommandResult(topics), EventGridJsonContext.Default.TopicListCommandResult)
-
+            context.Response.Results = ResponseResult.Create(
+                new TopicListCommandResult(topics ?? []),
+                EventGridJsonContext.Default.TopicListCommandResult);
         }
         catch (Exception ex)
         {
