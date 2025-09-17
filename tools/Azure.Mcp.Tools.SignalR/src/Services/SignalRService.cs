@@ -1,487 +1,249 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
-using Azure.Core;
-using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Models.Identity;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Tools.SignalR.Commands;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.SignalR.Models;
-using Azure.ResourceManager;
-using Microsoft.Extensions.Logging;
+using Azure.ResourceManager.Models;
+using Azure.ResourceManager.SignalR;
+using Azure.ResourceManager.SignalR.Models;
 
 namespace Azure.Mcp.Tools.SignalR.Services;
 
 /// <summary>
 /// Service for Azure SignalR operations using Resource Graph API.
 /// </summary>
-public class SignalRService(
+public sealed class SignalRService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ILoggerFactory? loggerFactory = null)
-    : BaseAzureResourceService(subscriptionService, tenantService, loggerFactory), ISignalRService
+    ICacheService cacheService) : BaseAzureService(tenantService), ISignalRService
 {
-    private readonly ILogger<SignalRService>? _logger = loggerFactory?.CreateLogger<SignalRService>();
-    private const int TokenExpirationBuffer = 300;
-    private const string ManagementApiBaseUrl = "https://management.azure.com";
-    private const string SignalRResourceType = "Microsoft.SignalRService/SignalR";
-    private const string ApiVersion = "2024-03-01";
+    private readonly ISubscriptionService _subscriptionService =
+        subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
 
-    private string? _cachedAccessToken;
-    private DateTimeOffset _tokenExpiryTime;
-    private readonly ISubscriptionService _subscriptionService = subscriptionService;
+    private readonly ICacheService
+        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
 
-    public async Task<IEnumerable<Runtime>> ListRuntimesAsync(
+    private const string CacheGroup = "signalr";
+    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
+
+    public async Task<IEnumerable<Runtime>> GetRuntimeAsync(
         string subscription,
+        string? resourceGroup,
+        string? signalRName,
         string? tenant = null,
         AuthMethod? authMethod = null,
         RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters(subscription);
-        try
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var runtimes = new List<Runtime>();
+        if (string.IsNullOrEmpty(signalRName))
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy)
-                                       ?? throw new Exception($"Subscription '{subscription}' not found");
-
-            var clientOptions = AddDefaultPolicies(new ArmClientOptions());
-            clientOptions = ConfigureRetryPolicy(clientOptions, retryPolicy);
-
-            var pipeline = HttpPipelineBuilder.Build(clientOptions);
-            var token = await GetAccessTokenAsync(tenant);
-
-            var runtimes = new List<Runtime>();
-            string? nextLink = BuildListSignalrUrl(subscriptionResource.Data.SubscriptionId);
-
-            while (!string.IsNullOrEmpty(nextLink))
+            var cacheKey = string.IsNullOrEmpty(tenant) ? subscription : $"{subscription}_{tenant}";
+            cacheKey = string.IsNullOrEmpty(resourceGroup) ? cacheKey : $"{cacheKey}_{resourceGroup}";
+            var cachedResults = await _cacheService.GetAsync<List<Runtime>>(CacheGroup, cacheKey, s_cacheDuration);
+            if (cachedResults != null)
             {
-                var request = pipeline.CreateRequest();
-                request.Method = RequestMethod.Get;
-                request.Uri.Reset(new Uri(nextLink));
-                request.Headers.Add("Authorization", $"Bearer {token}");
+                return cachedResults;
+            }
 
-                var response = await pipeline.SendRequestAsync(request, CancellationToken.None);
-                if (response.IsError)
+            try
+            {
+                if (string.IsNullOrEmpty(resourceGroup))
                 {
-                    throw new HttpRequestException($"Request failed with status {response.Status}: {response.ReasonPhrase}");
-                }
-
-                using var doc = await JsonDocument.ParseAsync(response.Content.ToStream());
-                var root = doc.RootElement;
-
-                if (root.TryGetProperty("value", out var valueElement) && valueElement.ValueKind == JsonValueKind.Array)
-                {
-                    foreach (var item in valueElement.EnumerateArray())
+                    var signalRResources = subscriptionResource.GetSignalRsAsync();
+                    await foreach (var runtime in signalRResources)
                     {
-                        runtimes.Add(ConvertToRuntimeModel(item));
+                        runtimes.Add(ConvertToRuntimeModel(runtime));
                     }
-                }
-
-                if (root.TryGetProperty("nextLink", out var nextLinkElement) &&
-                    nextLinkElement.ValueKind == JsonValueKind.String)
-                {
-                    nextLink = nextLinkElement.GetString();
                 }
                 else
                 {
-                    nextLink = null;
+                    var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+                    if (!resourceGroupResource.HasValue)
+                    {
+                        throw new Exception(
+                            $"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
+                    }
+
+                    var signalRResources = resourceGroupResource.Value.GetSignalRs().GetAllAsync();
+                    await foreach (var runtime in signalRResources)
+                    {
+                        runtimes.Add(ConvertToRuntimeModel(runtime));
+                    }
+
+                    await _cacheService.SetAsync(CacheGroup, cacheKey, signalRName, s_cacheDuration);
                 }
             }
-
-            return runtimes;
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex, "Failed to list SignalR services for subscription {Subscription}", subscription);
-            throw new Exception($"Failed to list SignalR services: {ex.Message}", ex);
-        }
-    }
-
-    public async Task<Runtime?> GetRuntimeAsync(
-        string subscription,
-        string resourceGroup,
-        string signalRName,
-        string? tenant = null,
-        AuthMethod? authMethod = null,
-        RetryPolicyOptions? retryPolicy = null)
-    {
-        ValidateRequiredParameters(subscription, resourceGroup, signalRName);
-
-        try
-        {
-            var result = await ExecuteSingleResourceQueryAsync(
-                "Microsoft.SignalRService/SignalR",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToRuntimeModel,
-                $"name =~ '{EscapeKqlString(signalRName)}'");
-
-            if (result == null)
+            catch (Exception ex)
             {
-                throw new KeyNotFoundException(
-                    $"SignalR service '{signalRName}' not found in resource group '{resourceGroup}' for subscription '{subscription}'.");
+                throw new Exception($"Error get SignalR Runtimes: {ex.Message}", ex);
+            }
+        }
+        else
+        {
+            ValidateRequiredParameters(signalRName, resourceGroup);
+            var cacheKey = string.IsNullOrEmpty(tenant)
+                ? $"{subscription}_{resourceGroup}_{signalRName}"
+                : $"{subscription}_{tenant}_{resourceGroup}_{signalRName}";
+
+            var cachedResults = await _cacheService.GetAsync<List<Runtime>>(CacheGroup, cacheKey, s_cacheDuration);
+            if (cachedResults != null)
+            {
+                return cachedResults;
             }
 
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex,
-                "Failed to get SignalR service {SignalR} in resource group {ResourceGroup} for subscription {Subscription}",
-                signalRName, resourceGroup, subscription);
-            throw new Exception($"Failed to get SignalR service '{signalRName}': {ex.Message}", ex);
-        }
-    }
-
-    public async Task<Key?> ListKeysAsync(
-        string subscription,
-        string resourceGroup,
-        string signalRName,
-        string? tenant = null,
-        AuthMethod? authMethod = null,
-        RetryPolicyOptions? retryPolicy = null)
-    {
-        ValidateRequiredParameters(subscription, resourceGroup, signalRName);
-
-        try
-        {
-            var localAuth = await ExecuteSingleResourceQueryAsync(
-                "Microsoft.SignalRService/SignalR",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                r =>
+            try
+            {
+                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+                if (!resourceGroupResource.HasValue)
                 {
-                    bool? disableLocalAuth = null;
-                    if (r.TryGetProperty("properties", out var props) &&
-                        props.TryGetProperty("disableLocalAuth", out var d) &&
-                        (d.ValueKind == JsonValueKind.True || d.ValueKind == JsonValueKind.False))
-                    {
-                        disableLocalAuth = d.GetBoolean();
-                    }
-                    return new { DisableLocalAuth = disableLocalAuth };
-                },
-                $"name =~ '{EscapeKqlString(signalRName)}'");
-            if (localAuth?.DisableLocalAuth == true)
-            {
-                throw new RequestFailedException(403, "Access keys are disabled for this SignalR service.");
+                    throw new Exception(
+                        $"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
+                }
+
+                var signalRResource = await resourceGroupResource.Value.GetSignalRs().GetAsync(signalRName);
+                if (!signalRResource.HasValue)
+                {
+                    throw new Exception(
+                        $"SignalR '{signalRName}' not found in resource group '{resourceGroup}'");
+                }
+
+                runtimes.Add(ConvertToRuntimeModel(signalRResource.Value));
+                await _cacheService.SetAsync(CacheGroup, cacheKey, signalRName, s_cacheDuration);
             }
-
-            var clientOptions = AddDefaultPolicies(new ArmClientOptions());
-            clientOptions = ConfigureRetryPolicy(clientOptions, retryPolicy);
-
-            if (retryPolicy != null)
+            catch (Exception ex)
             {
-                clientOptions.Retry.MaxRetries = retryPolicy.MaxRetries;
-                clientOptions.Retry.Mode = retryPolicy.Mode;
-                clientOptions.Retry.Delay = TimeSpan.FromSeconds(retryPolicy.DelaySeconds);
-                clientOptions.Retry.MaxDelay = TimeSpan.FromSeconds(retryPolicy.MaxDelaySeconds);
-                clientOptions.Retry.NetworkTimeout = TimeSpan.FromSeconds(retryPolicy.NetworkTimeoutSeconds);
+                throw new Exception($"Error get SignalR Runtime: {ex.Message}", ex);
             }
-
-            var pipeline = HttpPipelineBuilder.Build(clientOptions);
-            var signalrUrl = BuildPostSignalrUrl(subscription, resourceGroup, signalRName, "listKeys");
-            var token = await GetAccessTokenAsync(tenant);
-
-            var request = pipeline.CreateRequest();
-            request.Method = RequestMethod.Post;
-            request.Uri.Reset(new Uri(signalrUrl));
-
-            request.Headers.Add("Authorization", $"Bearer {token}");
-
-            var response = await pipeline.SendRequestAsync(request, CancellationToken.None);
-            if (!response.IsError)
-            {
-                var keys = JsonSerializer.Deserialize(response.Content.ToStream(), SignalRJsonContext.Default.Key);
-                return keys ?? throw new JsonException("Failed to deserialize SignalR keys response.");
-            }
-
-            throw new HttpRequestException($"Request failed with status {response.Status}: {response.ReasonPhrase}");
         }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex,
-                "Failed to list keys for SignalR service {SignalR} in resource group {ResourceGroup} for subscription {Subscription}",
-                signalRName, resourceGroup, subscription);
-            throw new Exception($"Failed to list keys for SignalR service '{signalRName}': {ex.Message}", ex);
-        }
+
+        return runtimes;
     }
 
-    public async Task<Models.Identity?> GetSignalRIdentityAsync(
-        string subscription,
-        string resourceGroup,
-        string signalRName,
-        string? tenant = null,
-        AuthMethod? authMethod = null,
-        RetryPolicyOptions? retryPolicy = null)
+    private static Runtime ConvertToRuntimeModel(SignalRResource resource)
     {
-        ValidateRequiredParameters(subscription, resourceGroup, signalRName);
-
-        try
+        var runtime = new Runtime
         {
-            var result = await ExecuteSingleResourceQueryAsync(
-                "Microsoft.SignalRService/SignalR",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToIdentityModel,
-                $"name =~ '{EscapeKqlString(signalRName)}'");
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex,
-                "Failed to get identity for SignalR service {SignalR} in resource group {ResourceGroup} for subscription {Subscription}",
-                signalRName, resourceGroup, subscription);
-            throw new Exception($"Failed to get SignalR service identity: {ex.Message}", ex);
-        }
+            Id = resource.Id.ToString(),
+            Identity = ConvertToIdentityModel(resource.Data.Identity),
+            Kind = resource.Data.Kind?.ToString(),
+            Location = resource.Data.Location,
+            Name = resource.Data.Name,
+            Properties = new RuntimeProperties
+            {
+                ExternalIP = resource.Data?.ExternalIP,
+                HostName = resource.Data?.HostName,
+                NetworkAcls = ConvertToNetworkAclsModel(resource.Data?.NetworkACLs),
+                ProvisioningState = resource.Data?.ProvisioningState.ToString(),
+                PublicNetworkAccess = resource.Data?.PublicNetworkAccess,
+                PublicPort = resource.Data?.PublicPort,
+                ServerPort = resource.Data?.ServerPort,
+                UpstreamTemplates = ConvertToUpstreamTemplatesModel(resource.Data?.UpstreamTemplates)
+            },
+            Sku = new Sku
+            {
+                Capacity = resource.Data?.Sku?.Capacity,
+                Name = resource.Data?.Sku?.Name,
+                Size = resource.Data?.Sku?.Size,
+                Tier = resource.Data?.Sku?.Tier.ToString(),
+            },
+            Tags = resource.Data?.Tags.ToDictionary(kv => kv.Key, kv => kv.Value)
+        };
+        return runtime ?? throw new InvalidOperationException("Failed to parse SignalR runtime data");
     }
 
-    public async Task<NetworkRule?> GetNetworkRulesAsync(
-        string subscription,
-        string resourceGroup,
-        string signalRName,
-        string? tenant = null,
-        AuthMethod? authMethod = null,
-        RetryPolicyOptions? retryPolicy = null)
+    private static NetworkAcls? ConvertToNetworkAclsModel(SignalRNetworkAcls? networkAcls)
     {
-        ValidateRequiredParameters(subscription, resourceGroup, signalRName);
-
-        try
+        if (networkAcls is null)
         {
-            var result = await ExecuteSingleResourceQueryAsync(
-                "Microsoft.SignalRService/SignalR",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToNetworkRuleModel,
-                $"name =~ '{EscapeKqlString(signalRName)}'");
-
-            return result;
+            return null;
         }
-        catch (Exception ex)
-        {
-            _logger?.LogError(ex,
-                "Failed to get network rules for SignalR service {SignalR} in resource group {ResourceGroup} for subscription {Subscription}",
-                signalRName, resourceGroup, subscription);
-            throw new Exception($"Failed to get SignalR service network rules: {ex.Message}", ex);
-        }
-    }
 
-    private static Runtime ConvertToRuntimeModel(JsonElement resource)
-    {
-        return new Runtime
+        PublicNetwork? publicNetwork = null;
+        if (networkAcls.PublicNetwork is not null)
         {
-            Name = resource.TryGetProperty("name", out var name) ? name.GetString() : null,
-            ResourceGroupName = resource.TryGetProperty("resourceGroup", out var rg) ? rg.GetString() : null,
-            Location = resource.TryGetProperty("location", out var location) ? location.GetString() : null,
-            SkuName =
-                resource.TryGetProperty("sku", out var sku) && sku.TryGetProperty("name", out var skuName)
-                    ? skuName.GetString()
-                    : null,
-            SkuTier =
-                resource.TryGetProperty("sku", out var skuTier) && skuTier.TryGetProperty("tier", out var tier)
-                    ? tier.GetString()
-                    : null,
-            ProvisioningState =
-                resource.TryGetProperty("properties", out var props) &&
-                props.TryGetProperty("provisioningState", out var state)
-                    ? state.GetString()
-                    : null,
-            HostName =
-                resource.TryGetProperty("properties", out var hostProps) &&
-                hostProps.TryGetProperty("hostName", out var hostName)
-                    ? hostName.GetString()
-                    : null,
-            PublicPort =
-                resource.TryGetProperty("properties", out var portProps) &&
-                portProps.TryGetProperty("publicPort", out var publicPort) && publicPort.TryGetInt32(out var pPort)
-                    ? pPort
-                    : null,
-            ServerPort =
-                resource.TryGetProperty("properties", out var serverProps) &&
-                serverProps.TryGetProperty("serverPort", out var serverPort) &&
-                serverPort.TryGetInt32(out var sPort)
-                    ? sPort
-                    : null
+            var allow = networkAcls.PublicNetwork.Allow?.Select(a => a.ToString());
+            var deny = networkAcls.PublicNetwork.Deny?.Select(d => d.ToString());
+            if (allow != null || deny != null)
+            {
+                publicNetwork = new PublicNetwork { Allow = allow, Deny = deny };
+            }
+        }
+
+        var privateEndpoints = networkAcls.PrivateEndpoints?.Select(pe => new PrivateEndpoint
+        {
+            Name = pe.Name,
+            Allow = pe.Allow?.Select(a => a.ToString()),
+            Deny = pe.Deny?.Select(d => d.ToString())
+        }).ToList();
+
+        return new NetworkAcls
+        {
+            DefaultAction = networkAcls.DefaultAction?.ToString(),
+            PublicNetwork = publicNetwork,
+            PrivateEndpoints = privateEndpoints
         };
     }
 
-    private static Models.Identity ConvertToIdentityModel(JsonElement resource)
+    private static Models.Identity? ConvertToIdentityModel(ManagedServiceIdentity? identity)
     {
-        var identity = new Models.Identity { ManagedIdentityInfo = new ManagedIdentityInfo() };
-
-        if (resource.TryGetProperty("identity", out var identityElement))
+        if (identity is null)
         {
-            if (identityElement.TryGetProperty("type", out var identityType))
-            {
-                identity.Type = identityType.GetString();
-            }
-
-            if (identityElement.TryGetProperty("principalId", out var principalId))
-            {
-                identity.ManagedIdentityInfo.SystemAssignedIdentity = new SystemAssignedIdentityInfo
-                {
-                    Enabled = true,
-                    PrincipalId = principalId.GetString()
-                };
-                if (identityElement.TryGetProperty("tenantId", out var tenantId))
-                {
-                    identity.ManagedIdentityInfo.SystemAssignedIdentity.TenantId = tenantId.GetString();
-                }
-            }
-
-            if (identityElement.TryGetProperty("userAssignedIdentities", out var userAssignedIdentities) &&
-                userAssignedIdentities.ValueKind == JsonValueKind.Object)
-            {
-                var userAssignedIdentityList = new List<UserAssignedIdentityInfo>();
-
-                foreach (var property in userAssignedIdentities.EnumerateObject())
-                {
-                    var userIdentity = new UserAssignedIdentityInfo();
-
-                    if (property.Value.TryGetProperty("principalId", out var userPrincipalId))
-                    {
-                        userIdentity.PrincipalId = userPrincipalId.GetString();
-                    }
-
-                    if (property.Value.TryGetProperty("clientId", out var clientId))
-                    {
-                        userIdentity.ClientId = clientId.GetString();
-                    }
-                    userAssignedIdentityList.Add(userIdentity);
-                }
-
-                identity.ManagedIdentityInfo.UserAssignedIdentities = userAssignedIdentityList.ToArray();
-            }
+            return null;
         }
 
-        return identity;
-    }
+        SystemAssignedIdentityInfo? systemAssigned =
+            identity.ManagedServiceIdentityType == ManagedServiceIdentityType.SystemAssigned
+                ? new SystemAssignedIdentityInfo
+                {
+                    PrincipalId = identity.PrincipalId.ToString(),
+                    TenantId = identity.TenantId.ToString()
+                }
+                : null;
 
-    private static NetworkRule ConvertToNetworkRuleModel(JsonElement resource)
-    {
-        var networkRule = new NetworkRule();
+        UserAssignedIdentityInfo[]? userAssigned =
+            identity.ManagedServiceIdentityType == ManagedServiceIdentityType.UserAssigned
+            && identity.UserAssignedIdentities is not null
+                ? identity.UserAssignedIdentities.Select(kv => new UserAssignedIdentityInfo
+                {
+                    ClientId = kv.Key.ToString(),
+                    PrincipalId = kv.Value.PrincipalId.ToString()
+                }).ToArray()
+                : null;
 
-        if (resource.TryGetProperty("properties", out var properties) &&
-            properties.TryGetProperty("networkACLs", out var networkAcls))
+        var managedIdentityInfo = new ManagedIdentityInfo
         {
-            if (networkAcls.TryGetProperty("defaultAction", out var defaultAction))
-            {
-                networkRule.DefaultAction = defaultAction.GetString();
-            }
+            SystemAssignedIdentity = systemAssigned,
+            UserAssignedIdentities = userAssigned
+        };
 
-            if (networkAcls.TryGetProperty("privateEndpoints", out var privateEndpoints) &&
-                privateEndpoints.ValueKind == JsonValueKind.Array)
-            {
-                var endpoints = new List<PrivateEndpointNetworkAcl>();
-
-                foreach (var endpoint in privateEndpoints.EnumerateArray())
-                {
-                    var endpointAcl = new PrivateEndpointNetworkAcl();
-
-                    if (endpoint.TryGetProperty("name", out var endpointName))
-                    {
-                        endpointAcl.Name = endpointName.GetString();
-                    }
-
-                    if (endpoint.TryGetProperty("allow", out var allow) && allow.ValueKind == JsonValueKind.Array)
-                    {
-                        endpointAcl.Allow = allow
-                            .EnumerateArray()
-                            .Select(x => x.GetString())
-                            .Where(x => x != null)
-                            .Select(x => x!)
-                            .ToList();
-                    }
-
-                    if (endpoint.TryGetProperty("deny", out var deny) && deny.ValueKind == JsonValueKind.Array)
-                    {
-                        endpointAcl.Deny = deny
-                            .EnumerateArray()
-                            .Select(x => x.GetString())
-                            .Where(x => x != null)
-                            .Select(x => x!)
-                            .ToList();
-                    }
-
-                    endpoints.Add(endpointAcl);
-                }
-
-                networkRule.PrivateEndpoints = endpoints;
-            }
-
-            if (networkAcls.TryGetProperty("publicNetwork", out var publicNetwork))
-            {
-                var publicAcl = new NetworkAcl();
-
-                if (publicNetwork.TryGetProperty("allow", out var publicAllow) &&
-                    publicAllow.ValueKind == JsonValueKind.Array)
-                {
-                    publicAcl.Allow = publicAllow
-                        .EnumerateArray()
-                        .Select(x => x.GetString())
-                        .Where(x => x != null)
-                        .Select(x => x!)
-                        .ToList();
-                }
-
-                if (publicNetwork.TryGetProperty("deny", out var publicDeny) &&
-                    publicDeny.ValueKind == JsonValueKind.Array)
-                {
-                    publicAcl.Deny = publicDeny
-                        .EnumerateArray()
-                        .Select(x => x.GetString())
-                        .Where(x => x != null)
-                        .Select(x => x!)
-                        .ToList();
-                }
-
-                networkRule.PublicNetwork = publicAcl;
-            }
-        }
-
-        return networkRule;
-    }
-
-    private static string BuildPostSignalrUrl(string subscription, string resourceGroup, string signalRName,
-        string action)
-    {
-        var queryParams = new List<string> { $"api-version={ApiVersion}" };
-        string queryString = string.Join("&", queryParams);
-        return
-            $"{ManagementApiBaseUrl}/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/{SignalRResourceType}/{signalRName}/{action}?{queryString}";
-    }
-
-    private static string BuildListSignalrUrl(string subscription)
-    {
-        return $"{ManagementApiBaseUrl}/subscriptions/{subscription}/providers/{SignalRResourceType}?api-version={ApiVersion}";
-    }
-
-    private async Task<string> GetAccessTokenAsync(string? tenant = null)
-    {
-        if (_cachedAccessToken != null && DateTimeOffset.UtcNow < _tokenExpiryTime)
+        return new Models.Identity
         {
-            return _cachedAccessToken;
-        }
-
-        AccessToken accessToken = await GetEntraIdAccessTokenAsync(ManagementApiBaseUrl, tenant);
-        _cachedAccessToken = accessToken.Token;
-        _tokenExpiryTime = accessToken.ExpiresOn.AddSeconds(-TokenExpirationBuffer);
-
-        return _cachedAccessToken;
+            Type = identity.ManagedServiceIdentityType.ToString(),
+            ManagedIdentityInfo = managedIdentityInfo
+        };
     }
 
-    private async Task<AccessToken> GetEntraIdAccessTokenAsync(string resource, string? tenant = null)
+    private static List<UpstreamTemplate>? ConvertToUpstreamTemplatesModel(
+        IList<SignalRUpstreamTemplate>? upstreamTemplates)
     {
-        var tokenRequestContext = new TokenRequestContext([$"{resource}/.default"]);
-        var tokenCredential = await GetCredential(tenant);
-        return await tokenCredential
-            .GetTokenAsync(tokenRequestContext, CancellationToken.None);
+        return upstreamTemplates?.Select(ut => new UpstreamTemplate
+        {
+            Auth = new AuthSettings
+            {
+                Type = ut.Auth?.AuthType?.ToString(),
+                Resource = ut.Auth?.ManagedIdentityResource
+            },
+            CategoryPattern = ut.CategoryPattern,
+            EventPattern = ut.EventPattern,
+            HubPattern = ut.HubPattern,
+            UrlTemplate = ut.UrlTemplate
+        }).ToList();
     }
 }

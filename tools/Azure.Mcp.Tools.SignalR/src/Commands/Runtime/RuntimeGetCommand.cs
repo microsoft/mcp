@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.SignalR.Options;
 using Azure.Mcp.Tools.SignalR.Options.Runtime;
 using Azure.Mcp.Tools.SignalR.Services;
@@ -12,15 +13,15 @@ namespace Azure.Mcp.Tools.SignalR.Commands.Runtime;
 /// <summary>
 /// Shows details of an Azure SignalR Service.
 /// </summary>
-public sealed class RuntimeShowCommand(ILogger<RuntimeShowCommand> logger)
-    : BaseSignalRCommand<SignalRShowOptions>
+public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger)
+    : BaseSignalRCommand<RuntimeGetOptions>
 {
     private const string CommandTitle = "Show Service Details";
-    private readonly ILogger<RuntimeShowCommand> _logger = logger;
+    private readonly ILogger<RuntimeGetCommand> _logger = logger;
 
     private static readonly Option<string> _signalRNameOption = SignalROptionDefinitions.SignalR;
 
-    public override string Name => "show";
+    public override string Name => "get";
 
     public override string Description =>
         """
@@ -35,14 +36,13 @@ public sealed class RuntimeShowCommand(ILogger<RuntimeShowCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        RequireResourceGroup();
         command.Options.Add(_signalRNameOption);
     }
 
-    protected override SignalRShowOptions BindOptions(ParseResult parseResult)
+    protected override RuntimeGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SignalR = parseResult.GetValue(_signalRNameOption);
+        options.SignalR ??= parseResult.GetValueOrDefault<string>(SignalROptionDefinitions.SignalR.Name);
         return options;
     }
 
@@ -58,19 +58,22 @@ public sealed class RuntimeShowCommand(ILogger<RuntimeShowCommand> logger)
         try
         {
             var signalRService = context.GetService<ISignalRService>();
-            var runtime = await signalRService.GetRuntimeAsync(
+            var runtimes = await signalRService.GetRuntimeAsync(
                 options.Subscription!,
-                options.ResourceGroup!,
-                options.SignalR!,
+                options.ResourceGroup,
+                options.SignalR,
                 options.Tenant,
                 options.AuthMethod,
                 options.RetryPolicy);
 
-            context.Response.Results = runtime is null
-                ? null
-                : ResponseResult.Create(
-                    new RuntimeShowCommandResult(runtime),
-                    SignalRJsonContext.Default.RuntimeShowCommandResult);
+            _logger.LogInformation("Found {Count} SignalR service(s) in subscription {SubscriptionId}",
+                runtimes.Count(), options.Subscription);
+
+            context.Response.Results = runtimes.Any()
+                ? ResponseResult.Create(
+                    new RuntimeGetCommandResult(runtimes),
+                    SignalRJsonContext.Default.RuntimeGetCommandResult)
+                : null;
         }
         catch (Exception ex)
         {
@@ -81,5 +84,5 @@ public sealed class RuntimeShowCommand(ILogger<RuntimeShowCommand> logger)
         return context.Response;
     }
 
-    internal record RuntimeShowCommandResult(Azure.Mcp.Tools.SignalR.Models.Runtime Runtime);
+    internal record RuntimeGetCommandResult(IEnumerable<Azure.Mcp.Tools.SignalR.Models.Runtime> Runtimes);
 }

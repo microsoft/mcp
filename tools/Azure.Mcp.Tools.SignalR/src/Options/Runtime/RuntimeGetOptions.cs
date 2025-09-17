@@ -6,4 +6,4 @@ namespace Azure.Mcp.Tools.SignalR.Options.Runtime;
 /// <summary>
 /// Options for showing SignalR service details.
 /// </summary>
-public class SignalRShowOptions : BaseSignalROptions;
+public class RuntimeGetOptions : BaseSignalROptions;

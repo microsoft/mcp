@@ -15,22 +15,58 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
         }
 
         [Fact]
-        public async Task Should_list_signalr_runtimes_by_subscription_id()
+        public async Task Should_get_signalr_runtimes_by_subscription_id()
         {
             var result = await CallToolAsync(
-                "azmcp_signalr_runtime_list",
+                "azmcp_signalr_runtime_get",
                 new() { { "subscription", Settings.SubscriptionId } });
 
             var runtimes = result.AssertProperty("runtimes");
             Assert.Equal(JsonValueKind.Array, runtimes.ValueKind);
-            // Note: Array might be empty if no SignalR runtimes exist in subscription
+            foreach (var runtime in runtimes.EnumerateArray())
+            {
+                Assert.Equal(JsonValueKind.Object, runtime.ValueKind);
+
+                // Verify required properties exist
+                var nameProperty = runtime.AssertProperty("name");
+                Assert.False(string.IsNullOrEmpty(nameProperty.GetString()));
+                var kindProperty = runtime.AssertProperty("kind");
+                Assert.Equal("SignalR", kindProperty.GetString(), ignoreCase: true);
+            }
         }
 
         [Fact]
-        public async Task Should_list_signalr_runtimes_by_subscription_name()
+        public async Task Should_handle_empty_subscription_gracefully()
+        {
+            // Empty subscription should trigger validation failure (400) -> null results
+            var result = await CallToolAsync(
+                "azmcp_signalr_runtime_get",
+                new() { { "subscription", "" } });
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task Should_handle_invalid_subscription_gracefully()
+        {
+            // Invalid identifier should reach execution and return structured error details (HasValue)
+            var result = await CallToolAsync(
+                "azmcp_signalr_runtime_get",
+                new()
+                {
+                    { "subscription", "invalid-subscription" }
+                });
+
+            Assert.NotNull(result);
+            var message = result.AssertProperty("message");
+            Assert.Contains("invalid-subscription", message.GetString(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task Should_get_signalr_runtimes_by_subscription_name()
         {
             var result = await CallToolAsync(
-                "azmcp_signalr_runtime_list",
+                "azmcp_signalr_runtime_get",
                 new() { { "subscription", Settings.SubscriptionName } });
 
             var runtimes = result.AssertProperty("runtimes");
@@ -39,10 +75,10 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
         }
 
         [Fact]
-        public async Task Should_list_signalr_runtimes_by_subscription_name_with_tenant_id()
+        public async Task Should_get_signalr_runtimes_by_subscription_name_with_tenant_id()
         {
             var result = await CallToolAsync(
-                "azmcp_signalr_runtime_list",
+                "azmcp_signalr_runtime_get",
                 new() { { "subscription", Settings.SubscriptionName }, { "tenant", Settings.TenantId } });
 
             var runtimes = result.AssertProperty("runtimes");
@@ -51,12 +87,12 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
         }
 
         [Fact]
-        public async Task Should_list_signalr_runtimes_by_subscription_name_with_tenant_name()
+        public async Task Should_get_signalr_runtimes_by_subscription_name_with_tenant_name()
         {
             Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
             var result = await CallToolAsync(
-                "azmcp_signalr_runtime_list",
+                "azmcp_signalr_runtime_get",
                 new() { { "subscription", Settings.SubscriptionName }, { "tenant", Settings.TenantName } });
 
             var runtimes = result.AssertProperty("runtimes");
@@ -65,208 +101,41 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
         }
 
         [Fact]
-        public async Task Should_show_signalr_runtime_details()
-        {
-            // First get the list of runtimes to find one to test with
-            var getResult = await CallToolAsync(
-                "azmcp_signalr_runtime_show",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "signalr", Settings.ResourceBaseName }
-                });
-
-            var runtime = getResult.AssertProperty("runtime");
-            Assert.Equal(JsonValueKind.Object, runtime.ValueKind);
-
-            // Verify essential properties exist
-            runtime.AssertProperty("name");
-            runtime.AssertProperty("location");
-            runtime.AssertProperty("resourceGroupName");
-            runtime.AssertProperty("skuTier");
-            runtime.AssertProperty("provisioningState");
-        }
-
-        [Fact]
-        public async Task Should_list_signalr_access_keys()
-        {
-            var result = await CallToolAsync(
-                "azmcp_signalr_key_list",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "signalr", Settings.ResourceBaseName }
-                });
-
-            var keys = result.AssertProperty("keys");
-            Assert.Equal(JsonValueKind.Object, keys.ValueKind);
-
-            // Verify essential key properties exist
-            keys.AssertProperty("primaryKey");
-            keys.AssertProperty("secondaryKey");
-            keys.AssertProperty("primaryConnectionString");
-            keys.AssertProperty("secondaryConnectionString");
-        }
-
-        [Fact]
-        public async Task Should_list_signalr_access_keys_with_tenant_id()
-        {
-            var result = await CallToolAsync(
-                "azmcp_signalr_key_list",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "signalr", Settings.ResourceBaseName },
-                    { "tenant", Settings.TenantId }
-                });
-
-            var keys = result.AssertProperty("keys");
-            Assert.Equal(JsonValueKind.Object, keys.ValueKind);
-
-            // Verify essential key properties exist
-            keys.AssertProperty("primaryKey");
-            keys.AssertProperty("secondaryKey");
-        }
-
-        [Fact]
-        public async Task Should_list_signalr_network_rules()
-        {
-            var result = await CallToolAsync(
-                "azmcp_signalr_network-rule_list",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "signalr", Settings.ResourceBaseName }
-                });
-
-            var networkRules = result.AssertProperty("networkRules");
-            Assert.Equal(JsonValueKind.Object, networkRules.ValueKind);
-
-            // Verify network rules properties exist
-            if (networkRules.TryGetProperty("publicNetwork", out var publicNetwork))
-            {
-                Assert.Equal(JsonValueKind.Object, publicNetwork.ValueKind);
-            }
-
-            if (networkRules.TryGetProperty("privateEndpoints", out var privateEndpoints))
-            {
-                Assert.Equal(JsonValueKind.Array, privateEndpoints.ValueKind);
-            }
-        }
-
-        [Fact]
-        public async Task Should_list_signalr_network_rules_with_subscription_name()
-        {
-            var result = await CallToolAsync(
-                "azmcp_signalr_network-rule_list",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionName },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "signalr", Settings.ResourceBaseName }
-                });
-
-            var networkRules = result.AssertProperty("networkRules");
-            Assert.Equal(JsonValueKind.Object, networkRules.ValueKind);
-        }
-
-        [Fact]
-        public async Task Should_list_signalr_identity_configuration()
-        {
-            var result = await CallToolAsync(
-                "azmcp_signalr_identity_list",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "signalr", Settings.ResourceBaseName }
-                });
-
-            var identity = result.AssertProperty("identity");
-            Assert.Equal(JsonValueKind.Object, identity.ValueKind);
-
-            // Verify identity properties exist
-            identity.AssertProperty("type");
-
-            // Optional properties that may exist based on identity configuration
-            if (identity.TryGetProperty("managedIdentityInfo", out var principalId))
-            {
-                Assert.Equal(JsonValueKind.Object, principalId.ValueKind);
-            }
-        }
-
-        [Fact]
-        public async Task Should_list_signalr_identity_with_tenant_name()
+        public async Task Should_get_signalr_runtimes_by_subscription_with_resource_group()
         {
             Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
             var result = await CallToolAsync(
-                "azmcp_signalr_identity_list",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionName },
-                    { "resource-group", Settings.ResourceGroupName },
-                    { "signalr", Settings.ResourceBaseName },
-                    { "tenant", Settings.TenantName }
-                });
+                "azmcp_signalr_runtime_get",
+                new() { { "subscription", Settings.SubscriptionName }, { "resource-group", Settings.ResourceGroupName } });
 
-            var identity = result.AssertProperty("identity");
-            Assert.Equal(JsonValueKind.Object, identity.ValueKind);
-            identity.AssertProperty("type");
+            var runtimes = result.AssertProperty("runtimes");
+            Assert.Equal(JsonValueKind.Array, runtimes.ValueKind);
+            // Note: Array might be empty if no SignalR runtimes exist in subscription
         }
 
         [Fact]
-        public async Task Should_handle_invalid_signalr_name_gracefully()
+        public async Task Should_get_signalr_runtime_detail()
         {
-            var result = await CallToolAsync(
-                "azmcp_signalr_runtime_show",
+            var getResult = await CallToolAsync(
+                "azmcp_signalr_runtime_get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "signalr", "non-existent-signalr-service" }
+                    { "signalr", Settings.ResourceBaseName }
                 });
 
-            // Should return runtime error response with error details
-            Assert.True(result.HasValue);
-            var errorDetails = result.Value;
-            Assert.True(errorDetails.TryGetProperty("message", out _));
-            Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
-            Assert.Equal("Exception", typeProperty.GetString());
-        }
+            var runtimes = getResult.AssertProperty("runtimes");
+            var runtime = runtimes[0];
+            Assert.Equal(JsonValueKind.Object, runtime.ValueKind);
 
-        [Fact]
-        public async Task Should_validate_required_parameters_for_show_command()
-        {
-            var result = await CallToolAsync(
-                "azmcp_signalr_runtime_show",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId }
-                    // Missing resource-group and signalr
-                });
+            // Verify essential properties exist
+            var nameProperty = runtime.AssertProperty("name");
+            Assert.Equal(Settings.ResourceBaseName, nameProperty.GetString());
 
-            // Should return validation error (no results)
-            Assert.False(result.HasValue);
-        }
-
-        [Fact]
-        public async Task Should_validate_required_parameters_for_key_list()
-        {
-            var result = await CallToolAsync(
-                "azmcp_signalr_key_list",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId }, { "resource-group", Settings.ResourceGroupName }
-                    // Missing signalr
-                });
-
-            // Should return validation error (no results)
-            Assert.False(result.HasValue);
+            var kindProperty = runtime.AssertProperty("kind");
+            Assert.Equal("SignalR", kindProperty.GetString(), ignoreCase: true);
         }
     }
 }
