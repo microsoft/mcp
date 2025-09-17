@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Mcp.Tools.EventGrid.Options;
 using Azure.Mcp.Tools.EventGrid.Options.Subscription;
@@ -38,19 +39,6 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         UseResourceGroup(); // Optional resource group filtering
         command.Options.Add(_topicNameOption);
         command.Options.Add(_locationOption);
-
-        // Use the helper method from base class to avoid duplicating AZURE_SUBSCRIPTION_ID parsing logic
-        command.Validators.Clear();
-        command.Validators.Add(commandResult =>
-        {
-            var hasSubscription = HasSubscriptionAvailable(commandResult);
-            var hasTopicOption = commandResult.HasOptionResult(_topicNameOption);
-
-            if (!hasSubscription && !hasTopicOption)
-            {
-                commandResult.AddError("Either --subscription or --topic is required.");
-            }
-        });
     }
 
     protected override SubscriptionListOptions BindOptions(ParseResult parseResult)
@@ -59,6 +47,46 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         options.TopicName = parseResult.GetValue(_topicNameOption);
         options.Location = parseResult.GetValue(_locationOption);
         return options;
+    }
+
+    public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
+    {
+        var result = base.Validate(commandResult, commandResponse);
+
+        if (result.IsValid)
+        {
+            var hasSubscription = HasSubscriptionAvailable(commandResult);
+            var hasTopicOption = commandResult.HasOptionResult(_topicNameOption);
+            var hasRg = commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup);
+            var hasLocation = commandResult.HasOptionResult(_locationOption);
+
+            // Either topic or subscription is mandatory
+            if (!hasSubscription && !hasTopicOption)
+            {
+                result.IsValid = false;
+                result.ErrorMessage = "Either --subscription or --topic is required.";
+
+                if (commandResponse != null)
+                {
+                    commandResponse.Status = 400;
+                    commandResponse.Message = result.ErrorMessage;
+                }
+            }
+            // Location and resource-group can only be used with subscription or topic
+            else if ((hasRg || hasLocation) && !hasSubscription && !hasTopicOption)
+            {
+                result.IsValid = false;
+                result.ErrorMessage = "Either --subscription or --topic is required when using --resource-group or --location.";
+
+                if (commandResponse != null)
+                {
+                    commandResponse.Status = 400;
+                    commandResponse.Message = result.ErrorMessage;
+                }
+            }
+        }
+
+        return result;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
@@ -70,34 +98,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
         var options = BindOptions(parseResult);
 
-        // Validation rules / behaviors:
-        // 1. Either --topic (bare topic name) or --subscription is mandatory.
-        // 2. --resource-group and --location are optional but cannot be provided alone (must accompany --topic or --subscription).
-        // 3. If only --topic (bare name) is provided (no --subscription) perform a cross-subscription search
-        //    across all accessible subscriptions for a topic with that name and aggregate results.
-        // 4. If only --subscription is provided (no --topic) list all event subscriptions from every custom and system
-        //    topic in that subscription (optionally filtered by --resource-group / --location).
-
         var hasSubscription = !string.IsNullOrWhiteSpace(options.Subscription);
         var hasTopic = !string.IsNullOrWhiteSpace(options.TopicName);
-        var hasRg = !string.IsNullOrWhiteSpace(options.ResourceGroup);
-        var hasLocation = !string.IsNullOrWhiteSpace(options.Location);
-
-        // Either topic or subscription is mandatory
-        if (!hasSubscription && !hasTopic)
-        {
-            context.Response.Status = 400;
-            context.Response.Message = "Either --subscription or --topic is required.";
-            return context.Response;
-        }
-
-        // Location and resource-group can only be used with subscription or topic
-        if ((hasRg || hasLocation) && !hasSubscription && !hasTopic)
-        {
-            context.Response.Status = 400;
-            context.Response.Message = "Either --subscription or --topic is required when using --resource-group or --location.";
-            return context.Response;
-        }
 
         // Bare topic name without subscription triggers cross-subscription search
         bool crossSubscriptionSearch = !hasSubscription && hasTopic;

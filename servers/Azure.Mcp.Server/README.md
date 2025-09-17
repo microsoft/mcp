@@ -99,9 +99,10 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "List all Event Grid topics in subscription 'my-subscription'"
 * "Show me the Event Grid topics in my subscription"
 * "List all Event Grid topics in resource group 'my-resourcegroup' in my subscription"
-* "Show me all Event Grid subscriptions for topic 'my-topic'"
 * "List Event Grid subscriptions for topic 'my-topic' in resource group 'my-resourcegroup'"
+* "List Event Grid subscriptions for topic 'my-topic' in subscription 'my-subscription'"
 * "List Event Grid Subscriptions in subscription 'my-subscription'"
+* "List Event Grid subscriptions for topic 'my-topic' in location 'my-location'"
 
 ### ⚡ Azure Managed Lustre
 
