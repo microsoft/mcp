@@ -1,0 +1,74 @@
+parameters:
+- name: DependsOn
+  type: object
+
+jobs:
+- job: PackNuget
+  displayName: "Pack Nuget"
+  dependsOn: ${{ parameters.DependsOn }}
+  timeoutInMinutes: 120
+  steps:
+  - checkout: self
+
+  - download: current
+    displayName: Download $(PipelineArtifactName)_signed
+    artifact: $(PipelineArtifactName)_signed
+
+  - script: |
+      brew update
+      brew install mono
+      curl -o /usr/local/bin/nuget.exe https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
+      echo '#!/bin/bash' > /usr/local/bin/nuget
+      echo 'mono /usr/local/bin/nuget.exe "$@"' >> /usr/local/bin/nuget
+      chmod +x /usr/local/bin/nuget
+    displayName: 'Install Mono and Setup NuGet Command'
+
+  - task: Powershell@2
+    displayName: "Pack modules for Nuget"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Nuget.ps1
+      arguments: >
+        -ArtifactsPath '$(Pipeline.Workspace)/$(PipelineArtifactName)_signed'
+        -OutputPath '$(Build.ArtifactStagingDirectory)/packed'
+        -VersionSuffix '$(VersionSuffix)'
+        -RepoUrl '$(Build.Repository.Uri)'
+        -CommitSha '$(Build.SourceVersion)'
+        -Branch '$(Build.SourceBranch)'
+
+  - task: EsrpCodeSigning@5
+    displayName: 'CodeSign Nuget Packages'
+    inputs:
+      ConnectedServiceName: 'Azure SDK PME Managed Identity'
+      UseMSIAuthentication: true
+      AppRegistrationClientId: '4fa2001b-ad7a-4a1e-9185-d6ea881f8712'
+      AppRegistrationTenantId: '975f013f-7f24-47e8-a7d3-abc4752bf346'
+      EsrpClientId: "5e796b8d-3c4d-4e28-93f6-12a44f4368a0"
+      AuthAKVName: 'kv-azuresdk-codesign'
+      AuthSignCertName: 'azure-sdk-esrp-signing-certificate'
+      FolderPath: '$(Build.ArtifactStagingDirectory)/packed/nuget'
+      Pattern: '*.nupkg'
+      signConfigType: inlineSignParams
+      inlineOperation: |
+        [
+            {
+                "keyCode": "CP-401405",
+                "operationSetCode": "NuGetSign",
+                "parameters": [ ],
+                "toolName": "sign",
+                "toolVersion": "1.0"
+            },
+            {
+                "keyCode": "CP-401405",
+                "operationSetCode": "NuGetVerify",
+                "parameters": [ ],
+                "toolName": "sign",
+                "toolVersion": "1.0"
+            }
+        ]
+
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactPath: $(Build.ArtifactStagingDirectory)/packed/nuget
+      ArtifactName: nuget_$(PipelineArtifactName)_packed
+      SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}

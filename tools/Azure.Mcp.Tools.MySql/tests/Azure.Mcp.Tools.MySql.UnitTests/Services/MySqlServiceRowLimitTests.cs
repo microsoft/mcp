@@ -35,7 +35,7 @@ public class MySqlServiceRowLimitTests
         var query = "SELECT * FROM users";
 
         // Act & Assert - Should not throw any exception
-        validateMethod.Invoke(null, new object[] { query });
+        validateMethod.Invoke(null, [query]);
     }
 
     [Theory]
@@ -47,7 +47,7 @@ public class MySqlServiceRowLimitTests
         var validateMethod = GetValidateQuerySafetyMethod();
 
         // Act & Assert - Should not throw any exception
-        validateMethod.Invoke(null, new object[] { query });
+        validateMethod.Invoke(null, [query]);
     }
 
     private static MethodInfo GetValidateQuerySafetyMethod()

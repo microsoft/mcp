@@ -32,7 +32,7 @@ public class MySqlServiceExecutionTests
     {
         var validateMethod = GetValidateQuerySafetyMethod();
         var exception = Assert.Throws<TargetInvocationException>(() =>
-            validateMethod.Invoke(null, new object[] { null! }));
+            validateMethod.Invoke(null, [null!]));
 
         Assert.IsType<ArgumentException>(exception.InnerException);
         Assert.Contains("Query cannot be null or empty", exception.InnerException!.Message);
@@ -45,7 +45,7 @@ public class MySqlServiceExecutionTests
     {
         var validateMethod = GetValidateQuerySafetyMethod();
         var exception = Assert.Throws<TargetInvocationException>(() =>
-            validateMethod.Invoke(null, new object[] { query }));
+            validateMethod.Invoke(null, [query]));
 
         Assert.IsType<ArgumentException>(exception.InnerException);
     }
@@ -55,7 +55,7 @@ public class MySqlServiceExecutionTests
     {
         var validateMethod = GetValidateQuerySafetyMethod();
         var query = "SELECT * FROM users WHERE id = @id";
-        validateMethod.Invoke(null, new object[] { query });
+        validateMethod.Invoke(null, [query]);
     }
 
     [Theory]
@@ -65,7 +65,7 @@ public class MySqlServiceExecutionTests
     {
         var validateMethod = GetValidateQuerySafetyMethod();
         var exception = Assert.Throws<TargetInvocationException>(() =>
-            validateMethod.Invoke(null, new object[] { query }));
+            validateMethod.Invoke(null, [query]));
 
         Assert.IsType<InvalidOperationException>(exception.InnerException);
     }
@@ -77,7 +77,7 @@ public class MySqlServiceExecutionTests
         var longQuery = "SELECT * FROM users WHERE " + new string('X', 10000);
 
         var exception = Assert.Throws<TargetInvocationException>(() =>
-            validateMethod.Invoke(null, new object[] { longQuery }));
+            validateMethod.Invoke(null, [longQuery]));
 
         Assert.IsType<InvalidOperationException>(exception.InnerException);
         Assert.Contains("Query length exceeds", exception.InnerException!.Message);

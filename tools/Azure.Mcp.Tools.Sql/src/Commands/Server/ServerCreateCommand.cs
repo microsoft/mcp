@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Server;
@@ -17,19 +16,13 @@ public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
 {
     private const string CommandTitle = "Create SQL Server";
 
-    private readonly Option<string> _administratorLoginOption = SqlOptionDefinitions.AdministratorLoginOption;
-    private readonly Option<string> _administratorPasswordOption = SqlOptionDefinitions.AdministratorPasswordOption;
-    private readonly Option<string> _locationOption = SqlOptionDefinitions.LocationOption;
-    private readonly Option<string> _versionOption = SqlOptionDefinitions.VersionOption;
-    private readonly Option<string> _publicNetworkAccessOption = SqlOptionDefinitions.PublicNetworkAccessOption;
-
     public override string Name => "create";
 
     public override string Description =>
         """
-        Creates a new Azure SQL server in the specified resource group and location. 
-        The server will be created with the specified administrator credentials and 
-        optional configuration settings. Returns the created server with its properties 
+        Creates a new Azure SQL server in the specified resource group and location.
+        The server will be created with the specified administrator credentials and
+        optional configuration settings. Returns the created server with its properties
         including the fully qualified domain name.
         """;
 
@@ -48,21 +41,21 @@ public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_administratorLoginOption);
-        command.Options.Add(_administratorPasswordOption);
-        command.Options.Add(_locationOption);
-        command.Options.Add(_versionOption);
-        command.Options.Add(_publicNetworkAccessOption);
+        command.Options.Add(SqlOptionDefinitions.AdministratorLoginOption);
+        command.Options.Add(SqlOptionDefinitions.AdministratorPasswordOption);
+        command.Options.Add(SqlOptionDefinitions.LocationOption);
+        command.Options.Add(SqlOptionDefinitions.VersionOption);
+        command.Options.Add(SqlOptionDefinitions.PublicNetworkAccessOption);
     }
 
     protected override ServerCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.AdministratorLogin = parseResult.GetValueOrDefault(_administratorLoginOption);
-        options.AdministratorPassword = parseResult.GetValueOrDefault(_administratorPasswordOption);
-        options.Location = parseResult.GetValueOrDefault(_locationOption);
-        options.Version = parseResult.GetValueOrDefault(_versionOption);
-        options.PublicNetworkAccess = parseResult.GetValueOrDefault(_publicNetworkAccessOption);
+        options.AdministratorLogin = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.AdministratorLoginOption.Name);
+        options.AdministratorPassword = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.AdministratorPasswordOption.Name);
+        options.Location = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.LocationOption.Name);
+        options.Version = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.VersionOption.Name);
+        options.PublicNetworkAccess = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.PublicNetworkAccessOption.Name);
         return options;
     }
 
@@ -107,20 +100,20 @@ public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 409 =>
+        RequestFailedException reqEx when reqEx.Status == 409 =>
             "A SQL server with this name already exists. Choose a different server name.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             $"Authorization failed creating the SQL server. Verify you have appropriate permissions. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx when reqEx.Status == 400 =>
+        RequestFailedException reqEx when reqEx.Status == 400 =>
             $"Invalid request parameters for SQL server creation: {reqEx.Message}",
-        Azure.RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException reqEx => reqEx.Message,
         ArgumentException argEx => $"Invalid parameter: {argEx.Message}",
         _ => base.GetErrorMessage(ex)
     };
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => reqEx.Status,
+        RequestFailedException reqEx => reqEx.Status,
         ArgumentException => 400,
         _ => base.GetStatusCode(ex)
     };

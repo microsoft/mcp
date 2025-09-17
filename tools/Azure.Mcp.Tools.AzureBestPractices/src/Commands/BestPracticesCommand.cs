@@ -18,9 +18,6 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
     private readonly ILogger<BestPracticesCommand> _logger = logger;
     private static readonly Dictionary<string, string> s_bestPracticesCache = new();
 
-    private readonly Option<string> _resourceOption = BestPracticesOptionDefinitions.Resource;
-    private readonly Option<string> _actionOption = BestPracticesOptionDefinitions.Action;
-
     public override string Name => "get";
 
     public override string Description =>
@@ -46,16 +43,16 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
 
     protected override void RegisterOptions(Command command)
     {
-        command.Options.Add(_resourceOption);
-        command.Options.Add(_actionOption);
+        command.Options.Add(BestPracticesOptionDefinitions.Resource);
+        command.Options.Add(BestPracticesOptionDefinitions.Action);
     }
 
     private BestPracticesOptions BindOptions(ParseResult parseResult)
     {
         return new BestPracticesOptions
         {
-            Resource = parseResult.CommandResult.GetValue(BestPracticesOptionDefinitions.Resource),
-            Action = parseResult.CommandResult.GetValue(BestPracticesOptionDefinitions.Action)
+            Resource = parseResult.GetValueOrDefault<string>(BestPracticesOptionDefinitions.Resource.Name),
+            Action = parseResult.GetValueOrDefault<string>(BestPracticesOptionDefinitions.Action.Name)
         };
     }
 

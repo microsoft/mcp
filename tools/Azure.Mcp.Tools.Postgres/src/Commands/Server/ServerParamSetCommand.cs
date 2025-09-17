@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Server;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -12,8 +13,6 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger) : BaseServerCommand<ServerParamSetOptions>(logger)
 {
     private const string CommandTitle = "Set PostgreSQL Server Parameter";
-    private readonly Option<string> _paramOption = PostgresOptionDefinitions.Param;
-    private readonly Option<string> _valueOption = PostgresOptionDefinitions.Value;
     public override string Name => "set";
 
     public override string Description =>
@@ -34,15 +33,15 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_paramOption);
-        command.Options.Add(_valueOption);
+        command.Options.Add(PostgresOptionDefinitions.Param);
+        command.Options.Add(PostgresOptionDefinitions.Value);
     }
 
     protected override ServerParamSetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Param = parseResult.GetValue(_paramOption);
-        options.Value = parseResult.GetValue(_valueOption);
+        options.Param = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Param.Name);
+        options.Value = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Value.Name);
         return options;
     }
 

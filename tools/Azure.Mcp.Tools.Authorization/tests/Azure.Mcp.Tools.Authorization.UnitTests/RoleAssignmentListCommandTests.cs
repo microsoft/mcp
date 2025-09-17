@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Authorization.Commands;
@@ -88,14 +87,14 @@ public class RoleAssignmentListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<RoleAssignmentListResult>(json);
+        var result = JsonSerializer.Deserialize<RoleAssignmentListCommand.RoleAssignmentListCommandResult>(json);
 
         Assert.NotNull(result);
         Assert.Equal(expectedRoleAssignments, result.Assignments);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoRoleAssignments()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoRoleAssignments()
     {
         // Arrange
         var subscriptionId = "00000000-0000-0000-0000-000000000001";
@@ -115,7 +114,13 @@ public class RoleAssignmentListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<RoleAssignmentListCommand.RoleAssignmentListCommandResult>(json);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Assignments);
     }
 
     [Fact]
@@ -143,11 +148,5 @@ public class RoleAssignmentListCommandTests
         Assert.NotNull(response);
         Assert.Equal(500, response.Status);
         Assert.StartsWith(expectedError, response.Message);
-    }
-
-    private class RoleAssignmentListResult
-    {
-        [JsonPropertyName("Assignments")]
-        public List<RoleAssignment> Assignments { get; set; } = [];
     }
 }

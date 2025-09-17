@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.AppLens.Models;
 using Azure.Mcp.Tools.AppLens.Options;
 using Azure.Mcp.Tools.AppLens.Options.Resource;
@@ -19,10 +20,6 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
 {
     private const string CommandTitle = "Diagnose Azure Resource Issues";
     private readonly ILogger<ResourceDiagnoseCommand> _logger = logger;
-
-    private readonly Option<string> _questionOption = AppLensOptionDefinitions.Question;
-    private readonly Option<string> _resourceOption = AppLensOptionDefinitions.Resource;
-    private readonly Option<string?> _resourceTypeOption = AppLensOptionDefinitions.ResourceType;
 
     public override string Name => "diagnose";
 
@@ -56,18 +53,19 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_questionOption);
-        command.Options.Add(_resourceOption);
-        command.Options.Add(_resourceTypeOption);
-        RequireResourceGroup();
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(AppLensOptionDefinitions.Question);
+        command.Options.Add(AppLensOptionDefinitions.Resource);
+        command.Options.Add(AppLensOptionDefinitions.ResourceType);
     }
 
     protected override ResourceDiagnoseOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Question = parseResult.GetValueOrDefault(_questionOption) ?? string.Empty;
-        options.Resource = parseResult.GetValueOrDefault(_resourceOption) ?? string.Empty;
-        options.ResourceType = parseResult.GetValueOrDefault(_resourceTypeOption) ?? string.Empty;
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Question = parseResult.GetValueOrDefault<string>(AppLensOptionDefinitions.Question.Name) ?? string.Empty;
+        options.Resource = parseResult.GetValueOrDefault<string>(AppLensOptionDefinitions.Resource.Name) ?? string.Empty;
+        options.ResourceType ??= parseResult.GetValueOrDefault<string>(AppLensOptionDefinitions.ResourceType.Name);
         return options;
     }
 

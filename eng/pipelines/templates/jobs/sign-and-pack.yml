@@ -6,8 +6,7 @@ parameters:
   default: 120
 
 jobs:
-- job: SignAndPack
-  displayName: "Sign and Pack"
+- job: Sign
   timeoutInMinutes: ${{ parameters.TimeoutInMinutes }}
   pool: # Binary signing of mac bits needs to happen on mac see https://github.com/Azure/azure-mcp/blob/4ff032fafc77bc618738879b7028665c0de2e632/eng/scripts/Compress-ForSigning.ps1#L40
     name: $(MACPOOL)
@@ -20,7 +19,7 @@ jobs:
     displayName: Download artifacts
 
   - task: Powershell@2
-    displayName: "Compress packages"
+    displayName: "Stage files for signing"
     inputs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Compress-ForSigning.ps1
@@ -58,7 +57,7 @@ jobs:
       MacPattern: "**/*.zip"
 
   - task: Powershell@2
-    displayName: "Expand packages"
+    displayName: "Expand Mac executables after signing"
     inputs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Expand-AfterSigning.ps1
@@ -71,76 +70,51 @@ jobs:
       ArtifactName: $(PipelineArtifactName)_signed
       SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
 
-  - script: |
-      brew update
-      brew install mono
-      curl -o /usr/local/bin/nuget.exe https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
-      echo '#!/bin/bash' > /usr/local/bin/nuget
-      echo 'mono /usr/local/bin/nuget.exe "$@"' >> /usr/local/bin/nuget
-      chmod +x /usr/local/bin/nuget
-    displayName: 'Install Mono and Setup NuGet Command'
-    
-  - task: Powershell@2
-    displayName: "Pack modules for Npm"
-    inputs:
-      pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Modules.ps1
-      arguments: >
-        -ArtifactsPath '$(Build.ArtifactStagingDirectory)/signed'
-        -OutputPath '$(Build.ArtifactStagingDirectory)/packed'
+- job: Verify_Signing
+  displayName: "Verify Signing"
+  dependsOn: Sign
+  pool:
+    name: $(WINDOWSPOOL) # Signing verification must happen on windows
+    image: $(WINDOWSVMIMAGE)
+    os: windows
+  variables:
+  - template: /eng/pipelines/templates/variables/image.yml
+  - template: /eng/pipelines/templates/variables/globals.yml
+  steps:
+  - checkout: none
 
-  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
-    parameters:
-      ArtifactPath: $(Build.ArtifactStagingDirectory)/packed/npm
-      ArtifactName: npm_$(PipelineArtifactName)_packed
-      SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
+  - download: current
+    artifact: $(PipelineArtifactName)_signed
+    displayName: "Download signed MCP server binaries"
 
-  - task: Powershell@2
-    displayName: "Pack modules for Nuget"
-    inputs:
-      pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Nuget.ps1
-      arguments: >
-        -ArtifactsPath '$(Build.ArtifactStagingDirectory)/signed'
-        -OutputPath '$(Build.ArtifactStagingDirectory)/packed'
-        -VersionSuffix '$(VersionSuffix)'
-        -RepoUrl '$(Build.Repository.Uri)'
-        -CommitSha '$(Build.SourceVersion)'
-        -Branch '$(Build.SourceBranch)'
+  - pwsh: |
+      Write-Host "Verifying binary signing for win-x64 and win-arm64 binaries..."
+      $allSigned = $true
+      $signedBinaries = Get-ChildItem -Path '$(Pipeline.Workspace)/$(PipelineArtifactName)_signed/**/win-*' -Recurse -Include @("*.dll", "*.exe")
+      foreach ($binary in $signedBinaries) {
+          if ((Get-AuthenticodeSignature -FilePath $binary.FullName).Status -ne 'Valid') {
+              Write-Host "Binary $($binary.FullName) is NOT signed correctly."
+              $allSigned = $false
+          }
+          else {
+              Write-Host "Binary $($binary.FullName) is signed correctly."
+          }
+      }
+      if (-not $allSigned) {
+          Write-Error "One or more binaries are not signed correctly."
+          exit 1
+      }
+    displayName: "Verify Binary Signing"
 
-  - task: EsrpCodeSigning@5
-    displayName: 'CodeSign Nuget Packages'
-    inputs:
-      ConnectedServiceName: 'Azure SDK PME Managed Identity'
-      UseMSIAuthentication: true
-      AppRegistrationClientId: '4fa2001b-ad7a-4a1e-9185-d6ea881f8712'
-      AppRegistrationTenantId: '975f013f-7f24-47e8-a7d3-abc4752bf346'
-      EsrpClientId: "5e796b8d-3c4d-4e28-93f6-12a44f4368a0"
-      AuthAKVName: 'kv-azuresdk-codesign'
-      AuthSignCertName: 'azure-sdk-esrp-signing-certificate'
-      FolderPath: '$(Build.ArtifactStagingDirectory)/packed/nuget'
-      Pattern: '*.nupkg'
-      signConfigType: inlineSignParams
-      inlineOperation: |
-        [
-            {
-                "keyCode": "CP-401405",
-                "operationSetCode": "NuGetSign",
-                "parameters": [ ],
-                "toolName": "sign",
-                "toolVersion": "1.0"
-            },
-            {
-                "keyCode": "CP-401405",
-                "operationSetCode": "NuGetVerify",
-                "parameters": [ ],
-                "toolName": "sign",
-                "toolVersion": "1.0"
-            }
-        ]
+- template: /eng/pipelines/templates/jobs/npm/pack-npm.yml
+  parameters:
+    DependsOn: Sign
 
-  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
-    parameters:
-      ArtifactPath: $(Build.ArtifactStagingDirectory)/packed/nuget
-      ArtifactName: nuget_$(PipelineArtifactName)_packed
-      SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
+- template: /eng/pipelines/templates/jobs/nuget/pack-and-sign-nuget.yml
+  parameters:
+    DependsOn: Sign
+
+- template: /eng/pipelines/templates/jobs/vsix/pack-and-sign-vsix.yml
+  parameters:
+    DependsOn: Sign
+    ServerName: ${{ parameters.ServerName }}

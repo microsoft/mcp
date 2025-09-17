@@ -51,14 +51,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applens_resource_diagnose | Use app lens to check why my app is slow? |
 | azmcp_applens_resource_diagnose | What does app lens say is wrong with my service? |
 
-## Azure CLI
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| azmcp_extension_az | Create a Storage account with name <storage_account_name> |
-| azmcp_extension_az | List all virtual machines in my subscription |
-| azmcp_extension_az | Show me the details of the storage account <account_name> |
-
 ## Azure Container Registry (ACR)
 
 | Tool Name | Test Prompt |
@@ -136,13 +128,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_postgres_table_list | Show me the tables in the PostgreSQL database \<database> in server \<server> |
 | azmcp_postgres_table_schema_get | Show me the schema of table \<table> in the PostgreSQL database \<database> in server \<server> |
 
-## Azure Developer CLI
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| azmcp_extension_azd | Create a To-Do list web application that uses NodeJS and MongoDB |
-| azmcp_extension_azd | Deploy my web application to Azure App Service |
-
 ## Azure Deploy
 
 | Tool Name | Test Prompt |
@@ -208,12 +193,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_aks_cluster_list | List all AKS clusters in my subscription |
 | azmcp_aks_cluster_list | Show me my Azure Kubernetes Service clusters |
 | azmcp_aks_cluster_list | What AKS clusters do I have? |
-| azmcp_aks_nodepool_list | List nodepools for AKS cluster \<cluster-name> in \<resource-group> |
-| azmcp_aks_nodepool_list | Show me the nodepool list for AKS cluster \<cluster-name> in \<resource-group> |
-| azmcp_aks_nodepool_list | What nodepools do I have for AKS cluster \<cluster-name> in \<resource-group> |
 | azmcp_aks_nodepool_get | Get details for nodepool \<nodepool-name> in AKS cluster \<cluster-name> in \<resource-group> |
 | azmcp_aks_nodepool_get | Show me the configuration for nodepool \<nodepool-name> in AKS cluster \<cluster-name> in resource group \<resource-group> |
 | azmcp_aks_nodepool_get | What is the setup of nodepool \<nodepool-name> for AKS cluster \<cluster-name> in \<resource-group>? |
+| azmcp_aks_nodepool_list | List nodepools for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_list | Show me the nodepool list for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_list | What nodepools do I have for AKS cluster \<cluster-name> in \<resource-group> |
 
 ## Azure Load Testing
 

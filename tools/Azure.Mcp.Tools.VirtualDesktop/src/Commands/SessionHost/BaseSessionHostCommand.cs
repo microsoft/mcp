@@ -11,18 +11,17 @@ namespace Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 public abstract class BaseSessionHostCommand
     : BaseHostPoolCommand<SessionHostUserSessionListOptions>
 {
-    protected readonly Option<string> _sessionHostOption = VirtualDesktopOptionDefinitions.SessionHost;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_sessionHostOption);
+        command.Options.Add(VirtualDesktopOptionDefinitions.SessionHost);
     }
 
     protected override SessionHostUserSessionListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SessionHostName = parseResult.GetValueOrDefault(_sessionHostOption);
+        options.SessionHostName = parseResult.GetValueOrDefault<string>(VirtualDesktopOptionDefinitions.SessionHost.Name);
         return options;
     }
 }

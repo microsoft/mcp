@@ -15,27 +15,18 @@ public abstract class GlobalCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : BaseCommand
     where TOptions : GlobalOptions, new()
 {
-    protected readonly Option<string> _tenantOption = OptionDefinitions.Common.Tenant;
-    protected readonly Option<AuthMethod> _authMethodOption = OptionDefinitions.Common.AuthMethod;
-    protected readonly Option<string> _resourceGroupOption = OptionDefinitions.Common.ResourceGroup;
-    protected readonly Option<int> _retryMaxRetries = OptionDefinitions.RetryPolicy.MaxRetries;
-    protected readonly Option<double> _retryDelayOption = OptionDefinitions.RetryPolicy.Delay;
-    protected readonly Option<double> _retryMaxDelayOption = OptionDefinitions.RetryPolicy.MaxDelay;
-    protected readonly Option<RetryMode> _retryModeOption = OptionDefinitions.RetryPolicy.Mode;
-    protected readonly Option<double> _retryNetworkTimeoutOption = OptionDefinitions.RetryPolicy.NetworkTimeout;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
 
         // Add global options
-        command.Options.Add(_tenantOption);
-        command.Options.Add(_authMethodOption);
-        command.Options.Add(_retryDelayOption);
-        command.Options.Add(_retryMaxDelayOption);
-        command.Options.Add(_retryMaxRetries);
-        command.Options.Add(_retryModeOption);
-        command.Options.Add(_retryNetworkTimeoutOption);
+        command.Options.Add(OptionDefinitions.Common.Tenant);
+        command.Options.Add(OptionDefinitions.Common.AuthMethod);
+        command.Options.Add(OptionDefinitions.RetryPolicy.Delay);
+        command.Options.Add(OptionDefinitions.RetryPolicy.MaxDelay);
+        command.Options.Add(OptionDefinitions.RetryPolicy.MaxRetries);
+        command.Options.Add(OptionDefinitions.RetryPolicy.Mode);
+        command.Options.Add(OptionDefinitions.RetryPolicy.NetworkTimeout);
     }
 
     // Helper to get the command path for examples
@@ -80,14 +71,9 @@ public abstract class GlobalCommand<
     {
         var options = new TOptions
         {
-            Tenant = parseResult.GetValue(_tenantOption),
-            AuthMethod = parseResult.GetValue(_authMethodOption)
+            Tenant = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Tenant.Name),
+            AuthMethod = parseResult.GetValueOrDefault<AuthMethod>(OptionDefinitions.Common.AuthMethod.Name)
         };
-
-        if (UsesResourceGroup)
-        {
-            options.ResourceGroup = parseResult.GetValue(_resourceGroupOption);
-        }
 
         // Create a RetryPolicyOptions capturing only explicitly provided values so unspecified settings remain SDK defaults
         var hasAnyRetry = Azure.Mcp.Core.Options.ParseResultExtensions.HasAnyRetryOptions(parseResult);
@@ -95,30 +81,30 @@ public abstract class GlobalCommand<
         {
             var policy = new RetryPolicyOptions();
 
-            if (parseResult.GetResult(_retryMaxRetries) != null)
+            if (parseResult.GetResult(OptionDefinitions.RetryPolicy.MaxRetries) != null)
             {
                 policy.HasMaxRetries = true;
-                policy.MaxRetries = parseResult.GetValue(_retryMaxRetries);
+                policy.MaxRetries = parseResult.GetValueOrDefault<int>(OptionDefinitions.RetryPolicy.MaxRetries.Name);
             }
-            if (parseResult.GetResult(_retryDelayOption) != null)
+            if (parseResult.GetResult(OptionDefinitions.RetryPolicy.Delay) != null)
             {
                 policy.HasDelaySeconds = true;
-                policy.DelaySeconds = parseResult.GetValue(_retryDelayOption);
+                policy.DelaySeconds = parseResult.GetValueOrDefault<double>(OptionDefinitions.RetryPolicy.Delay.Name);
             }
-            if (parseResult.GetResult(_retryMaxDelayOption) != null)
+            if (parseResult.GetResult(OptionDefinitions.RetryPolicy.MaxDelay) != null)
             {
                 policy.HasMaxDelaySeconds = true;
-                policy.MaxDelaySeconds = parseResult.GetValue(_retryMaxDelayOption);
+                policy.MaxDelaySeconds = parseResult.GetValueOrDefault<double>(OptionDefinitions.RetryPolicy.MaxDelay.Name);
             }
-            if (parseResult.GetResult(_retryModeOption) != null)
+            if (parseResult.GetResult(OptionDefinitions.RetryPolicy.Mode) != null)
             {
                 policy.HasMode = true;
-                policy.Mode = parseResult.GetValue(_retryModeOption);
+                policy.Mode = parseResult.GetValueOrDefault<RetryMode>(OptionDefinitions.RetryPolicy.Mode.Name);
             }
-            if (parseResult.GetResult(_retryNetworkTimeoutOption) != null)
+            if (parseResult.GetResult(OptionDefinitions.RetryPolicy.NetworkTimeout) != null)
             {
                 policy.HasNetworkTimeoutSeconds = true;
-                policy.NetworkTimeoutSeconds = parseResult.GetValue(_retryNetworkTimeoutOption);
+                policy.NetworkTimeoutSeconds = parseResult.GetValueOrDefault<double>(OptionDefinitions.RetryPolicy.NetworkTimeout.Name);
             }
 
             // Only assign if at least one flag set (defensive)

@@ -7,7 +7,7 @@ using Azure.Mcp.Tools.MySql.Commands.Server;
 using Azure.Mcp.Tools.MySql.Commands.Table;
 using Azure.Mcp.Tools.MySql.Services;
 
-namespace Azure.Mcp.Tools.MySql.Json;
+namespace Azure.Mcp.Tools.MySql.Commands;
 
 [JsonSerializable(typeof(DatabaseListCommand.DatabaseListCommandResult))]
 [JsonSerializable(typeof(DatabaseQueryCommand.DatabaseQueryCommandResult))]

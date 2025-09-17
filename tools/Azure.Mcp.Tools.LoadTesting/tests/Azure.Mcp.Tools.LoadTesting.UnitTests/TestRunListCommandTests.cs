@@ -47,8 +47,8 @@ public class TestRunListCommandTests
     {
         var expected = new List<TestRun>
         {
-            new TestRun { TestId = "testId1", TestRunId = "testRunId1" },
-            new TestRun { TestId = "testId2", TestRunId = "testRunId2" }
+            new() { TestId = "testId1", TestRunId = "testRunId1" },
+            new() { TestId = "testId2", TestRunId = "testRunId2" }
         };
         _service.GetLoadTestRunsFromTestIdAsync(
             Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId"), Arg.Is("resourceGroup123"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
