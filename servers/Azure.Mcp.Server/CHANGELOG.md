@@ -2,38 +2,34 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.7.0 (Unreleased)
+## 0.7.0 (2025-09-16)
 
 ### Features Added
 
-- Added elicitation support. An elicitation request is sent if the tool annotation secret hint is true. [[#404](https://github.com/microsoft/mcp/pull/404)]
-- Added `azmcp sql server create`, `azmcp sql server delete`, `azmcp sql server show` to support SQL server create, delete, and show commands. [[#312](https://github.com/microsoft/mcp/pull/312)]
-- Added the following Azure Managed Lustre commands: [[#100](https://github.com/microsoft/mcp/issues/100)]
-  - `azmcp_azuremanagedlustre_filesystem_get_sku_info`: Get information about Azure Managed Lustre SKU.
-- `azmcp_functionapp_get` can now list Function Apps on a resource group level.
-
-### Features Removed
-
-- Removed Azure CLI (`az`) and Azure Developer CLI (`azd`) extension tools from the MCP server to reduce complexity and focus on native Azure service operations.
+- Added support for getting a node pool in an AKS managed cluster via the command `azmcp_aks_nodepool_get`. [[#394](https://github.com/microsoft/mcp/pull/394)]
+- Added support for diagnosing Azure Resources using the App Lens API via the command `azmcp_applens_resource_diagnose`. [[#356](https://github.com/microsoft/mcp/pull/356)]
+- Added elicitation support. An elicitation request is sent if the tool annotation `secret` hint is true. [[#404](https://github.com/microsoft/mcp/pull/404)]
+- Added `azmcp_sql_server_create`, `azmcp_sql_server_delete`, `azmcp_sql_server_show` to support SQL server create, delete, and show commands. [[#312](https://github.com/microsoft/mcp/pull/312)]
+- Added the support for getting information about Azure Managed Lustre SKUs via the following command `azmcp_azuremanagedlustre_filesystem_get_sku_info`. [[#100](https://github.com/microsoft/mcp/issues/100)]
+- `azmcp_functionapp_get` can now list Function Apps on a resource group level. [[#427](https://github.com/microsoft/mcp/pull/427)]
 
 ### Breaking Changes
 
 - Merged `azmcp_functionapp_list` into `azmcp_functionapp_get`, which can perform both operations based on whether `--function-app` is passed. [[#427](https://github.com/microsoft/mcp/pull/427)]
+- Removed Azure CLI (`az`) and Azure Developer CLI (`azd`) extension tools to reduce complexity and focus on native Azure service operations. [[#404](https://github.com/microsoft/mcp/pull/404)].
 
 ### Bugs Fixed
 
-- Marked the secret hint of 'secret_create' tool to true. [[#430](https://github.com/microsoft/mcp/pull/430)]
+- Marked the `secret` hint of `azmcp_keyvault_secret_create` tool to "true". [[#430](https://github.com/microsoft/mcp/pull/430)]
 
 ### Other Changes
 
 ## 0.6.0 (2025-09-11)
 
 ### Features Added
-- Added support for diagnosing Azure Resources using the App Lens API via the command `azmcp_applens_resource_diagnose`. [[#356](https://github.com/microsoft/mcp/pull/356)]
 
 - **The Azure MCP Server is now also available on NuGet.org** [[#368](https://github.com/microsoft/mcp/pull/368)]
-- Added support for listing node pools in an AKS managed cluster. [[#360](https://github.com/microsoft/mcp/pull/360)]
-- Added support for getting node pool in an AKS managed cluster. [[#394](https://github.com/microsoft/mcp/pull/394)]
+- Added support for listing node pools in an AKS managed cluster via the command `azmcp_aks_nodepool_list`. [[#360](https://github.com/microsoft/mcp/pull/360)]
 
 ### Breaking Changes
 

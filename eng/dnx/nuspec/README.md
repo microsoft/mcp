@@ -1,6 +1,6 @@
-# Azure MCP Server Extension for Visual Studio Code
+# Azure MCP Server .NET Tool
 
-Easily bring the power of Model Context Protocol (MCP) to your Azure projects in VS Code.
+- Install the Azure MCP Server .NET tool from NuGet to add Model Context Protocol (MCP) capabilities to your Azure projects and enable integration with VS Code.
 
 ## Table of Contents
 - [Overview](#overview)
@@ -18,57 +18,57 @@ Easily bring the power of Model Context Protocol (MCP) to your Azure projects in
 
 ## Getting Started
 
-Follow these simple steps to start using Azure MCP in VS Code:
+### Requirements
+To run the Azure MCP server, you must have [.NET 10 Preview 6 or later](https://dotnet.microsoft.com/download/dotnet/10.0) installed. This version of .NET adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
 
-1. **Install the Extension**
-   - Get it from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server).
+To verify your .NET version, run the following command in your terminal:
 
-2. **Start (or Auto-Start) the MCP Server**
+```
+dotnet --info
+```
 
-   > **VS Code (version 1.103 or above):** You can now configure MCP servers to start automatically using the `chat.mcp.autostart` setting, instead of manually restarting them after configuration changes.
-
-   #### **Enable Autostart**
-      1. Open **Settings** in VS Code.
-      2. Search for `chat.mcp.autostart`.
-      3. Select **newAndOutdated** to automatically start MCP servers without manual refresh.
-      4. You can also set this from the **refresh icon tooltip** in the Chat view, which also shows which servers will auto-start.
-
-         ![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ToolTip.png)
-
-   #### **Manual Start (if autostart is off)**
-      1. Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
-      2. Run `MCP: List Servers`.
-
-         ![List Servers](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ListServers.png)
-
-      3. Select `Azure MCP Server ext`, then click **Start Server**.
-
-         ![Select Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/SelectServer.png)
-         ![Start Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/StartServer.png)
-
-      4. **Check That It's Running**
-         - Go to the **Output** tab in VS Code.
-         - Look for log messages confirming the server started successfully.
-
-         ![Output](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/Output.png)
-
-3. (Optional) Configure tools and behavior
-    - Full options: control how tools are exposed and whether mutations are allowed:
-
-       ```json
-      // Server Mode: collapse per service (default), single tool, or expose every tool
-      "azureMcp.serverMode": "namespace", // one of: "single" | "namespace" (default) | "all"
-
-       // Filter which namespaces to expose
-       "azureMcp.enabledServices": ["storage", "keyvault"],
-
-       // Run the server in read-only mode (prevents write operations)
-       "azureMcp.readOnly": false
-       ```
-
-   - Changes take effect after restarting the Azure MCP server from the MCP: List Servers view. (Step 2)
-
-You’re all set! Azure MCP Server is now ready to help you work smarter with Azure resources in VS Code.
+### Configuration
+To configure the MCP server for use with VS Code, use the following snippet and include it in your `mcp.json`
+```
+"servers": {
+	"Azure MCP Server": {
+		"command": "dnx",
+		"args": [
+			"Azure.Mcp",
+			"--source",
+			"https://api.nuget.org/v3/index.json",
+            "--yes",
+			"--",
+			"azmcp",
+			"server",
+			"start"
+		],
+		"type": "stdio"
+	}
+}
+```
+If you'd like to use a specific version of the Azure MCP server, you can specify it with the --version argument, like so:
+```
+"servers": {
+	"Azure MCP Server": {
+		"command": "dnx",
+		"args": [
+			"Azure.Mcp",
+			"--source",
+			"https://api.nuget.org/v3/index.json",
+			"--version",
+			"0.7.0",
+			"--yes",
+			"--",
+			"azmcp",
+			"server",
+			"start"
+		],
+		"type": "stdio"
+	}
+}
+```
+When configured this way, you will need to update the version as new release become available.
 
 ## What can you do with the Azure MCP Server?
 
@@ -390,7 +390,7 @@ For detailed command documentation and examples, see [Azure MCP Commands](https:
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **30+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **26 Azure service areas**:
 
 - 🔎 **Azure AI Search** - Search engine/vector database operations
 - ⚙️ **Azure App Configuration** - Configuration management
@@ -444,7 +444,7 @@ The Azure MCP Server provides tools for interacting with **30+ Azure service are
 ## Contributing
 
 Want to contribute?
-Check out our [contribution guide](https://github.com/microsoft/mcp/blob/main/eng/vscode/CONTRIBUTING.md) to get started.
+Check out our [contribution guide](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md) to get started.
 
 ## License
 

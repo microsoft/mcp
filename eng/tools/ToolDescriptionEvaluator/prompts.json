@@ -436,6 +436,16 @@
     "Show me the elastic pools configured for SQL server <server_name>",
     "What elastic pools are available in my SQL server <server_name>?"
   ],
+  "azmcp_sql_server_create": [
+    "Create a new Azure SQL server named <server_name> in resource group <resource_group_name>",
+    "Create an Azure SQL server with name <server_name> in location <location> with admin user <admin_user>",
+    "Set up a new SQL server called <server_name> in my resource group <resource_group_name>"
+  ],
+  "azmcp_sql_server_delete": [
+    "Delete the Azure SQL server <server_name> from resource group <resource_group_name>",
+    "Remove the SQL server <server_name> from my subscription",
+    "Delete SQL server <server_name> permanently"
+  ],
   "azmcp_sql_server_entra-admin_list": [
     "List Microsoft Entra ID administrators for SQL server <server_name>",
     "Show me the Entra ID administrators configured for SQL server <server_name>",
@@ -455,6 +465,11 @@
     "List all firewall rules for SQL server <server_name>",
     "Show me the firewall rules for SQL server <server_name>",
     "What firewall rules are configured for my SQL server <server_name>?"
+  ],
+  "azmcp_sql_server_show": [
+    "Show me the details of Azure SQL server <server_name> in resource group <resource_group_name>",
+    "Get the configuration details for SQL server <server_name>",
+    "Display the properties of SQL server <server_name>"
   ],
   "azmcp_storage_account_create": [
     "Create a new storage account called testaccount123 in East US region",
