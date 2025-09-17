@@ -2,9 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Text;
+using Azure;
+using Azure.AI.OpenAI;
 using Azure.AI.Projects;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Foundry.Commands;
@@ -13,12 +16,14 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.CognitiveServices;
 using Azure.ResourceManager.CognitiveServices.Models;
 using Azure.ResourceManager.Resources;
+using OpenAI.Chat;
 
 namespace Azure.Mcp.Tools.Foundry.Services;
 
-public class FoundryService(IHttpClientService httpClientService, ITenantService? tenantService = null) : BaseAzureService(tenantService), IFoundryService
+public class FoundryService(IHttpClientService httpClientService, ISubscriptionService subscriptionService, ITenantService? tenantService = null) : BaseAzureService(tenantService), IFoundryService
 {
     private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
+    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     public async Task<List<ModelInformation>> ListModels(
         bool searchForFreePlayground = false,
         string publisherName = "",
@@ -322,5 +327,82 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
         {
             throw new Exception($"Failed to get knowledge index schema: {ex.Message}", ex);
         }
+    }
+
+    public async Task<CompletionResult> CreateCompletionAsync(
+        string resourceName,
+        string deploymentName,
+        string promptText,
+        string subscription,
+        string resourceGroup,
+        int? maxTokens = null,
+        double? temperature = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(resourceName, deploymentName, promptText, subscription, resourceGroup);
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+        
+        // Get the Cognitive Services account
+        var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
+        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName);
+        
+        // Get the endpoint and key
+        var accountData = cognitiveServicesAccount.Value.Data;
+        var endpoint = accountData.Properties.Endpoint;
+        
+        if (string.IsNullOrEmpty(endpoint))
+        {
+            throw new InvalidOperationException($"Endpoint not found for resource '{resourceName}'");
+        }
+
+        // Get the access key
+        var keys = await cognitiveServicesAccount.Value.GetKeysAsync();
+        var key = keys.Value.Key1;
+
+        if (string.IsNullOrEmpty(key))
+        {
+            throw new InvalidOperationException($"Access key not found for resource '{resourceName}'");
+        }
+
+        // Create Azure OpenAI client
+        var client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(key));
+        var chatClient = client.GetChatClient(deploymentName);
+
+        // Set up completion options
+        var chatOptions = new ChatCompletionOptions();
+        
+        // Set max tokens with a default value if not provided
+        var effectiveMaxTokens = maxTokens ?? 100;
+        if (effectiveMaxTokens <= 0)
+        {
+            effectiveMaxTokens = 100; // Ensure we always have a positive value
+        }
+        chatOptions.MaxOutputTokenCount = effectiveMaxTokens;
+        
+        if (temperature.HasValue)
+        {
+            chatOptions.Temperature = (float)temperature.Value;
+        }
+
+        // Create the completion request
+        var messages = new List<ChatMessage>
+        {
+            new UserChatMessage(promptText)
+        };
+
+        var completion = await chatClient.CompleteChatAsync(messages, chatOptions);
+        
+        var result = completion.Value;
+        var completionText = result.Content[0].Text;
+        
+        var usageInfo = new CompletionUsageInfo(
+            result.Usage.InputTokenCount,
+            result.Usage.OutputTokenCount,
+            result.Usage.TotalTokenCount);
+
+        return new CompletionResult(completionText, usageInfo);
     }
 }

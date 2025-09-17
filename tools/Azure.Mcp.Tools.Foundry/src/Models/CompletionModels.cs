@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace AzureMcp.Ai.Models;
+namespace Azure.Mcp.Tools.Foundry.Models;
 
 public sealed record CompletionResult(
     [property: JsonPropertyName("completionText")] string CompletionText,

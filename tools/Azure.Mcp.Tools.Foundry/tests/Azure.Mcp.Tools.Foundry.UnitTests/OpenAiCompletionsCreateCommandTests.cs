@@ -1,42 +1,40 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
-using AzureMcp.Ai.Commands.OpenAi;
-using AzureMcp.Ai.Models;
-using AzureMcp.Ai.Services;
+using Azure.Mcp.Tools.Foundry.Commands;
+using Azure.Mcp.Tools.Foundry.Models;
+using Azure.Mcp.Tools.Foundry.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace AzureMcp.Ai.UnitTests.Commands.OpenAi;
+namespace Azure.Mcp.Tools.Foundry.UnitTests;
 
-[Trait("Area", "Ai")]
+[Trait("Area", "Foundry")]
 public class OpenAiCompletionsCreateCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly IAiService _aiService;
-    private readonly ILogger<OpenAiCompletionsCreateCommand> _logger;
+    private readonly IFoundryService _foundryService;
     private readonly OpenAiCompletionsCreateCommand _command;
     private readonly CommandContext _context;
-    private readonly Parser _parser;
+    private readonly Command _commandDefinition;
 
     public OpenAiCompletionsCreateCommandTests()
     {
-        _aiService = Substitute.For<IAiService>();
-        _logger = Substitute.For<ILogger<OpenAiCompletionsCreateCommand>>();
+        _foundryService = Substitute.For<IFoundryService>();
 
-        var collection = new ServiceCollection().AddSingleton(_aiService);
+        var collection = new ServiceCollection().AddSingleton(_foundryService);
 
         _serviceProvider = collection.BuildServiceProvider();
-        _command = new(_logger);
-        _context = new(_serviceProvider);
-        _parser = new(_command.GetCommand());
+        _command = new();
+        _context = new CommandContext(_serviceProvider);
+        _commandDefinition = _command.GetCommand();
     }
 
     [Fact]
@@ -54,7 +52,7 @@ public class OpenAiCompletionsCreateCommandTests
         var expectedUsage = new CompletionUsageInfo(10, 50, 60);
         var expectedResult = new CompletionResult("Azure is a cloud computing platform...", expectedUsage);
 
-        _aiService.CreateCompletionAsync(
+        _foundryService.CreateCompletionAsync(
             Arg.Is(resourceName),
             Arg.Is(deploymentName),
             Arg.Is(promptText),
@@ -66,7 +64,7 @@ public class OpenAiCompletionsCreateCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedResult));
 
-        var args = _parser.Parse([
+        var parseResult = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
             "--resource-name", resourceName,
@@ -77,7 +75,7 @@ public class OpenAiCompletionsCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
         Assert.Equal(200, response.Status);
@@ -94,10 +92,10 @@ public class OpenAiCompletionsCreateCommandTests
     public async Task ExecuteAsync_WithMissingRequiredParameters_ReturnsValidationError()
     {
         // Arrange
-        var args = _parser.Parse(["--subscription", "sub123"]);
+        var parseResult = _commandDefinition.Parse(["--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
         Assert.Equal(400, response.Status);
@@ -114,7 +112,7 @@ public class OpenAiCompletionsCreateCommandTests
         var deploymentName = "gpt-35-turbo";
         var promptText = "What is Azure?";
 
-        _aiService.CreateCompletionAsync(
+        _foundryService.CreateCompletionAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -126,7 +124,7 @@ public class OpenAiCompletionsCreateCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new InvalidOperationException("Resource not found"));
 
-        var args = _parser.Parse([
+        var parseResult = _commandDefinition.Parse([
             "--subscription", subscriptionId,
             "--resource-group", resourceGroup,
             "--resource-name", resourceName,
@@ -135,7 +133,7 @@ public class OpenAiCompletionsCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
         Assert.Equal(500, response.Status);
@@ -157,7 +155,7 @@ public class OpenAiCompletionsCreateCommandTests
         var expectedUsage = new CompletionUsageInfo(10, 50, 60);
         var expectedResult = new CompletionResult("Test response", expectedUsage);
 
-        _aiService.CreateCompletionAsync(
+        _foundryService.CreateCompletionAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -179,14 +177,14 @@ public class OpenAiCompletionsCreateCommandTests
             paramName, paramValue
         };
 
-        var args = _parser.Parse(argsList.ToArray());
+        var parseResult = _commandDefinition.Parse(argsList.ToArray());
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
         Assert.Equal(200, response.Status);
-        await _aiService.Received(1).CreateCompletionAsync(
+        await _foundryService.Received(1).CreateCompletionAsync(
             Arg.Is(resourceName),
             Arg.Is(deploymentName),
             Arg.Is(promptText),

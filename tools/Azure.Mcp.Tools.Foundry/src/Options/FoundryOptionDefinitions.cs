@@ -20,6 +20,10 @@ public static class FoundryOptionDefinitions
     public const string ScaleType = "scale-type";
     public const string ScaleCapacity = "scale-capacity";
     public const string IndexName = "index";
+    public const string PromptText = "prompt-text";
+    public const string MaxTokens = "max-tokens";
+    public const string Temperature = "temperature";
+    public const string ResourceName = "resource-name";
 
     public static readonly Option<string> EndpointOption = new(
         $"--{Endpoint}"
@@ -130,5 +134,35 @@ public static class FoundryOptionDefinitions
     {
         Description = "The name of the knowledge index.",
         Required = true
+    };
+
+    public static readonly Option<string> PromptTextOption = new(
+        $"--{PromptText}"
+    )
+    {
+        Description = "The prompt text to send to the completion model.",
+        Required = true
+    };
+
+    public static readonly Option<string> ResourceNameOption = new(
+        $"--{ResourceName}"
+    )
+    {
+        Description = "The name of the Azure OpenAI resource.",
+        Required = true
+    };
+
+    public static readonly Option<int> MaxTokensOption = new(
+        $"--{MaxTokens}"
+    )
+    {
+        Description = "The maximum number of tokens to generate in the completion."
+    };
+
+    public static readonly Option<double> TemperatureOption = new(
+        $"--{Temperature}"
+    )
+    {
+        Description = "Controls randomness in the output. Lower values make it more deterministic."
     };
 }

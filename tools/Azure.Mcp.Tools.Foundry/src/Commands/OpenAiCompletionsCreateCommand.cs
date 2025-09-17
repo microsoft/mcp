@@ -1,25 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
-using AzureMcp.Ai.Options;
-using AzureMcp.Ai.Options.OpenAi;
-using AzureMcp.Ai.Services;
-using AzureMcp.Ai.Models;
+using Azure.Mcp.Tools.Foundry.Models;
+using Azure.Mcp.Tools.Foundry.Options;
+using Azure.Mcp.Tools.Foundry.Options.Models;
+using Azure.Mcp.Tools.Foundry.Services;
 using Microsoft.Extensions.Logging;
 
-namespace AzureMcp.Ai.Commands.OpenAi;
+namespace Azure.Mcp.Tools.Foundry.Commands;
 
-public sealed class OpenAiCompletionsCreateCommand(ILogger<OpenAiCompletionsCreateCommand> logger) : BaseAiCommand<OpenAiCompletionsCreateOptions>()
+public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiCompletionsCreateOptions>
 {
     private const string CommandTitle = "Create OpenAI Completion";
-    private readonly ILogger<OpenAiCompletionsCreateCommand> _logger = logger;
 
-    public override string Name => "create";
+    public override string Name => "create-completion";
 
     public override string Description =>
         $"""
-        Generate text completions using deployed Azure OpenAI models. This tool sends prompts to Azure OpenAI 
+        Generate text completions using deployed Azure OpenAI models in AI Foundry. This tool sends prompts to Azure OpenAI 
         completion models and returns generated text with configurable parameters like temperature and max tokens. 
         Returns completion text as JSON. Requires resource-name, deployment-name, and prompt-text.
         """;
@@ -31,19 +33,23 @@ public sealed class OpenAiCompletionsCreateCommand(ILogger<OpenAiCompletionsCrea
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(AiOptionDefinitions.DeploymentName);
-        command.AddOption(AiOptionDefinitions.PromptText);
-        command.AddOption(AiOptionDefinitions.MaxTokens);
-        command.AddOption(AiOptionDefinitions.Temperature);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(FoundryOptionDefinitions.ResourceNameOption);
+        command.Options.Add(FoundryOptionDefinitions.DeploymentNameOption);
+        command.Options.Add(FoundryOptionDefinitions.PromptTextOption);
+        command.Options.Add(FoundryOptionDefinitions.MaxTokensOption);
+        command.Options.Add(FoundryOptionDefinitions.TemperatureOption);
     }
 
     protected override OpenAiCompletionsCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DeploymentName = parseResult.GetValueForOption(AiOptionDefinitions.DeploymentName);
-        options.PromptText = parseResult.GetValueForOption(AiOptionDefinitions.PromptText);
-        options.MaxTokens = parseResult.GetValueForOption(AiOptionDefinitions.MaxTokens);
-        options.Temperature = parseResult.GetValueForOption(AiOptionDefinitions.Temperature);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.ResourceName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.ResourceNameOption.Name);
+        options.DeploymentName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.DeploymentNameOption.Name);
+        options.PromptText = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.PromptTextOption.Name);
+        options.MaxTokens = parseResult.GetValueOrDefault<int?>(FoundryOptionDefinitions.MaxTokensOption.Name);
+        options.Temperature = parseResult.GetValueOrDefault<double?>(FoundryOptionDefinitions.TemperatureOption.Name);
         return options;
     }
 
@@ -58,8 +64,8 @@ public sealed class OpenAiCompletionsCreateCommand(ILogger<OpenAiCompletionsCrea
                 return context.Response;
             }
 
-            var aiService = context.GetService<IAiService>();
-            var result = await aiService.CreateCompletionAsync(
+            var foundryService = context.GetService<IFoundryService>();
+            var result = await foundryService.CreateCompletionAsync(
                 options.ResourceName!,
                 options.DeploymentName!,
                 options.PromptText!,
@@ -72,12 +78,10 @@ public sealed class OpenAiCompletionsCreateCommand(ILogger<OpenAiCompletionsCrea
 
             context.Response.Results = ResponseResult.Create<OpenAiCompletionsCreateCommandResult>(
                 new OpenAiCompletionsCreateCommandResult(result.CompletionText, result.UsageInfo), 
-                AiJsonContext.Default.OpenAiCompletionsCreateCommandResult);
+                FoundryJsonContext.Default.OpenAiCompletionsCreateCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating OpenAI completion for resource '{ResourceName}', deployment '{DeploymentName}'", 
-                options.ResourceName, options.DeploymentName);
             HandleException(context, ex);
         }
 
