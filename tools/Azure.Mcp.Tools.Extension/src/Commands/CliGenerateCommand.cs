@@ -1,16 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text;
-using Azure.Core;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Azure.Authentication;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Extension.Models;
 using Azure.Mcp.Tools.Extension.Options;
 using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.Logging;
-using static System.Net.WebRequestMethods;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
@@ -55,7 +50,6 @@ This tool can generate Azure CLI commands to be used with the corresponding CLI 
         {
             return context.Response;
         }
-
         var options = BindOptions(parseResult);
 
         try

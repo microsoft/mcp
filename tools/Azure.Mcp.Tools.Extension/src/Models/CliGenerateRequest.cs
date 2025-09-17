@@ -14,11 +14,14 @@ public sealed class AzureCliGenerateRequest
     public required AzureCliCopilotHistory[] History { get; set; }
 
     [JsonPropertyName("enable_parameter_injection")]
-    public bool? EnableParameterInjection;
+    public bool? EnableParameterInjection { get; set; }
 }
 
 public sealed class AzureCliCopilotHistory
 {
-    public required string Content;
-    public required string Role;
+    [JsonPropertyName("content")]
+    public required string Content { get; set; }
+
+    [JsonPropertyName("role")]
+    public required string Role { get; set; }
 }
