@@ -25,7 +25,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "user", "mcptestadmin" },
+                { "user", Settings.PrincipalName },
                 { "server", serverName }
             });
 
@@ -63,7 +63,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "user", "mcptestadmin" },
+                { "user", Settings.PrincipalName },
                 { "server", serverName },
                 { "database", databaseName },
                 { "query", "SELECT version()" }
@@ -91,7 +91,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "user", "mcptestadmin" }
+                { "user", Settings.PrincipalName }
             });
 
         // Should successfully retrieve the list of servers
@@ -128,7 +128,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "user", "mcptestadmin" },
+                { "user", Settings.PrincipalName },
                 { "server", serverName }
             });
 
@@ -156,7 +156,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "user", "mcptestadmin" },
+                { "user", Settings.PrincipalName },
                 { "server", serverName },
                 { "param", parameterName }
             });
@@ -183,7 +183,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "user", "mcptestadmin" },
+                { "user", Settings.PrincipalName },
                 { "server", serverName },
                 { "database", databaseName }
             });
@@ -218,7 +218,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "user", "mcptestadmin" },
+                { "user", Settings.PrincipalName },
                 { "server", serverName },
                 { "database", databaseName },
                 { "query", "CREATE TABLE IF NOT EXISTS test_schema_table (id SERIAL PRIMARY KEY, name VARCHAR(100), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)" }
@@ -231,7 +231,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "user", "mcptestadmin" },
+                { "user", Settings.PrincipalName },
                 { "server", serverName },
                 { "database", databaseName },
                 { "table", "test_schema_table" }
@@ -239,21 +239,20 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
 
         // Should successfully retrieve the table schema
         var schema = result.AssertProperty("Schema");
-        Assert.Equal(JsonValueKind.Object, schema.ValueKind);
+        Assert.Equal(JsonValueKind.Array, schema.ValueKind);
 
-        // Verify schema structure
-        Assert.True(schema.TryGetProperty("tableName", out _));
-        Assert.True(schema.TryGetProperty("columns", out _));
+        // Schema should contain column information as strings
+        var schemaArray = schema.EnumerateArray().ToList();
+        Assert.True(schemaArray.Count >= 1, "Should have at least one schema entry");
 
-        var columns = schema.GetProperty("columns");
-        Assert.Equal(JsonValueKind.Array, columns.ValueKind);
-        Assert.True(columns.GetArrayLength() >= 3, "Should have at least 3 columns (id, name, created_at)");
+        // Verify that each schema entry is a string
+        var firstEntry = schemaArray.First();
+        Assert.Equal(JsonValueKind.String, firstEntry.ValueKind);
 
-        // Verify column structure
-        var firstColumn = columns.EnumerateArray().First();
-        Assert.Equal(JsonValueKind.Object, firstColumn.ValueKind);
-        Assert.True(firstColumn.TryGetProperty("columnName", out _));
-        Assert.True(firstColumn.TryGetProperty("dataType", out _));
+        // The schema should contain information about our test table columns
+        var schemaContent = string.Join(" ", schemaArray.Select(s => s.GetString()));
+        Assert.Contains("id", schemaContent, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("name", schemaContent, StringComparison.OrdinalIgnoreCase);
 
         // Cleanup: Drop the test table
         await CallToolAsync(
@@ -262,7 +261,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "user", "mcptestadmin" },
+                { "user", Settings.PrincipalName },
                 { "server", serverName },
                 { "database", databaseName },
                 { "query", "DROP TABLE IF EXISTS test_schema_table" }

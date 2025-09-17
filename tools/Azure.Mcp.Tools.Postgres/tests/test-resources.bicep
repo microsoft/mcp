@@ -45,6 +45,22 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-pr
     highAvailability: {
       mode: 'Disabled'
     }
+    authConfig: {
+      activeDirectoryAuth: 'Enabled'
+      passwordAuth: 'Disabled'
+      tenantId: tenant().tenantId
+    }
+  }
+}
+
+// Configure Entra ID administrator for PostgreSQL server
+resource postgresAdministrator 'Microsoft.DBforPostgreSQL/flexibleServers/administrators@2023-12-01-preview' = {
+  parent: postgresServer
+  name: testApplicationOid
+  properties: {
+    principalType: 'ServicePrincipal'
+    principalName: testApplicationOid
+    tenantId: tenant().tenantId
   }
 }
 
@@ -103,3 +119,4 @@ output postgresServerName string = postgresServer.name
 output postgresServerFqdn string = postgresServer.properties.fullyQualifiedDomainName
 output testDatabaseName string = testDatabase.name
 output adminLogin string = postgresAdminLogin
+output entraIdAdminObjectId string = testApplicationOid
