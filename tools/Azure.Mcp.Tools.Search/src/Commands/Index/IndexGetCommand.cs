@@ -4,6 +4,7 @@
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.Mcp.Tools.Search.Options;
 using Azure.Mcp.Tools.Search.Options.Index;
@@ -16,8 +17,6 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCom
 {
     private const string CommandTitle = "Get Azure AI Search (formerly known as \"Azure Cognitive Search\") Index Details";
     private readonly ILogger<IndexGetCommand> _logger = logger;
-    private readonly Option<string> _serviceOption = SearchOptionDefinitions.Service;
-    private readonly Option<string> _optionalIndexOption = SearchOptionDefinitions.OptionalIndex;
 
     public override string Name => "describe";
 
@@ -42,15 +41,15 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCom
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_serviceOption);
-        command.Options.Add(_optionalIndexOption);
+        command.Options.Add(SearchOptionDefinitions.Service);
+        command.Options.Add(SearchOptionDefinitions.Index.AsOptional());
     }
 
     protected override IndexGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Service = parseResult.GetValueOrDefault(_serviceOption);
-        options.Index = parseResult.GetValueOrDefault(_optionalIndexOption);
+        options.Service = parseResult.GetValueOrDefault<string>(SearchOptionDefinitions.Service.Name);
+        options.Index = parseResult.GetValueOrDefault<string>(SearchOptionDefinitions.Index.Name);
         return options;
     }
 

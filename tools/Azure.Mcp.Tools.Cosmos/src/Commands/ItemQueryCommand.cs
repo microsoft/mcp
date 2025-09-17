@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Extensions.Logging;
@@ -13,8 +14,6 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
     private const string CommandTitle = "Query Cosmos DB Container";
     private readonly ILogger<ItemQueryCommand> _logger = logger;
     private const string DefaultQuery = "SELECT * FROM c";
-
-    private readonly Option<string> _queryOption = CosmosOptionDefinitions.Query;
 
     public override string Name => "query";
 
@@ -41,13 +40,13 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_queryOption);
+        command.Options.Add(CosmosOptionDefinitions.Query);
     }
 
     protected override ItemQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValue(_queryOption);
+        options.Query = parseResult.GetValueOrDefault<string>(CosmosOptionDefinitions.Query.Name);
         return options;
     }
 

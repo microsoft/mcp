@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Http;
 using Fabric.Mcp.Tools.PublicApi.Services;
 using Microsoft.Extensions.DependencyInjection;

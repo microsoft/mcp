@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Table;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -12,7 +13,6 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Table;
 public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger) : BaseDatabaseCommand<TableSchemaGetOptions>(logger)
 {
     private const string CommandTitle = "Get PostgreSQL Table Schema";
-    private readonly Option<string> _tableOption = PostgresOptionDefinitions.Table;
 
     public override string Name => "schema";
     public override string Description => "Retrieves the schema of a specified table in a PostgreSQL database.";
@@ -31,13 +31,13 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_tableOption);
+        command.Options.Add(PostgresOptionDefinitions.Table);
     }
 
     protected override TableSchemaGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Table = parseResult.GetValue(_tableOption);
+        options.Table = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Table.Name);
         return options;
     }
 

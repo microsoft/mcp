@@ -330,65 +330,146 @@ IMPORTANT:
   - Keep parameter names consistent with Azure SDK parameters when possible
   - If services share similar operations (e.g., ListDatabases), use the same parameter order and names
 
-### Resource Group Usage Pattern
+### Option Handling Pattern
 
-The `resource-group` option is defined globally once and is always parser-optional. Commands declare their logical need for it using helper methods instead of redefining or manually binding the option.
+Commands explicitly register options as required or optional using extension methods. This pattern provides explicit, per-command control over option requirements.
 
-Helpers (available in `BaseCommand`):
+**Extension Methods (available on any `OptionDefinition<T>` or `Option<T>`):**
 
 ```csharp
-protected void UseResourceGroup();      // Optional filter – user may include it
-protected void RequireResourceGroup();  // Logically required – validation enforces presence
-protected string? GetResourceGroup();   // Convenience accessor with validation side-effects handled centrally
+.AsRequired()    // Makes the option required for this command
+.AsOptional()    // Makes the option optional for this command
 ```
 
-Key rules:
-- Do NOT create toolset-specific optional resource group options.
-- Do NOT override `_resourceGroupOption` or manually add `OptionDefinitions.Common.ResourceGroup` to commands.
-- Do NOT manually assign `options.ResourceGroup` in `BindOptions` – central binding in `GlobalCommand` handles this when a command calls either helper.
-- Validation for required resource group happens centrally (logical requirement), not at parser level.
+**Key principles:**
+- Commands explicitly register options when needed using extension methods
+- Each command controls whether each option is required or optional
+- Binding is explicit using `parseResult.GetValueOrDefault<T>()`
+- No shared state between commands - each gets its own option instance
 
-Usage examples inside `RegisterOptions`:
+**Usage patterns:**
 
+**For commands that require specific options:**
 ```csharp
 protected override void RegisterOptions(Command command)
 {
     base.RegisterOptions(command);
-    RequireResourceGroup();   // Command cannot run without a resource group
-    command.Options.Add(_clusterNameOption);
+    // Make commonly optional options required for this command
+    command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+    command.Options.Add(ServiceOptionDefinitions.Account.AsRequired());
+    // Use default requirement from definition
+    command.Options.Add(ServiceOptionDefinitions.Database);
 }
 
-protected override void RegisterOptions(Command command)
-{
-    base.RegisterOptions(command);
-    UseResourceGroup();       // Optional narrowing filter
-}
-```
-
-Binding example (no manual resource group assignment):
-
-```csharp
-protected override ListServersOptions BindOptions(ParseResult parseResult)
+protected override MyCommandOptions BindOptions(ParseResult parseResult)
 {
     var options = base.BindOptions(parseResult);
-    options.Server = parseResult.GetValueOrDefault(_serverOption);
-    return options; // options.ResourceGroup already populated (or null)
+    // Use ??= for options that might be set by base classes
+    options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+    // Direct assignment for command-specific options
+    options.Account = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Account.Name);
+    options.Database = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Database.Name);
+    return options;
 }
 ```
 
-Accessing during execution:
-
+**For commands that use options optionally:**
 ```csharp
-var rg = options.ResourceGroup;          // direct
-// or
-var rg2 = GetResourceGroup();            // helper (throws validation earlier if required & missing)
+protected override void RegisterOptions(Command command)
+{
+    base.RegisterOptions(command);
+    // Make typically required options optional for this command
+    command.Options.Add(ServiceOptionDefinitions.Account.AsOptional());
+    command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+}
+
+protected override MyCommandOptions BindOptions(ParseResult parseResult)
+{
+    var options = base.BindOptions(parseResult);
+    options.Account = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Account.Name);
+    options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+    return options;
+}
 ```
 
-Rationale:
-- Eliminates duplicated option definitions.
-- Clear, declarative intent (Require vs Use) with minimal boilerplate.
-- Keeps parser surface stable while allowing logical enforcement.
-- Simplifies future extension if other global options adopt the same pattern.
+**Important binding patterns:**
+- Use `??=` assignment for options that might be set by base classes (like global options)
+- Use direct assignment for command-specific options
+- Use `parseResult.GetValueOrDefault<T>(optionName)` instead of holding Option<T> references
+- The extension methods handle the required/optional logic at the parser level
+
+**Benefits of the new pattern:**
+- **Explicit**: Clear what options each command uses
+- **Flexible**: Each command controls option requirements independently
+- **No shared state**: Extension methods create new option instances
+- **Consistent**: Same pattern works for all options
+- **Maintainable**: Easy to see option dependencies in RegisterOptions method
+
+### Option Extension Methods Pattern
+
+The option pattern is built on extension methods that provide flexible, per-command control over option requirements. This eliminates shared state issues and makes option dependencies explicit.
+
+**Available Extension Methods:**
+
+```csharp
+// For OptionDefinition<T> instances
+.AsRequired()              // Creates a required option instance
+.AsOptional()              // Creates an optional option instance
+
+// For existing Option<T> instances
+.AsRequired()              // Creates a new required version
+.AsOptional()              // Creates a new optional version
+```
+
+**Usage Examples:**
+
+```csharp
+// Using OptionDefinitions with extension methods
+protected override void RegisterOptions(Command command)
+{
+    base.RegisterOptions(command);
+
+    // Global option - required for this command
+    command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+
+    // Service account - optional for this command
+    command.Options.Add(ServiceOptionDefinitions.Account.AsOptional());
+
+    // Database - required (override default from definition)
+    command.Options.Add(ServiceOptionDefinitions.Database.AsRequired());
+
+    // Filter - use default requirement from definition
+    command.Options.Add(ServiceOptionDefinitions.Filter);
+}
+```
+
+**Name-Based Binding Pattern:**
+
+With the new pattern, option binding uses the name-based `GetValueOrDefault<T>()` method:
+
+```csharp
+protected override MyCommandOptions BindOptions(ParseResult parseResult)
+{
+    var options = base.BindOptions(parseResult);
+
+    // Use ??= for options that might be set by base classes
+    options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+
+    // Use direct assignment for command-specific options
+    options.Account = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Account.Name);
+    options.Database = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Database.Name);
+    options.Filter = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Filter.Name);
+
+    return options;
+}
+```
+
+**Key Benefits:**
+- **Type Safety**: Generic `GetValueOrDefault<T>()` provides compile-time type checking
+- **No Field References**: Eliminates need for readonly option fields in commands
+- **Flexible Requirements**: Each command controls which options are required/optional
+- **Clear Dependencies**: All option usage visible in `RegisterOptions` method
+- **No Shared State**: Extension methods create new option instances per command
 
 ### 3. Command Class
 
@@ -398,9 +479,6 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
 {
     private const string CommandTitle = "Human Readable Title";
     private readonly ILogger<{Resource}{Operation}Command> _logger = logger;
-
-    // Define options from OptionDefinitions
-    private readonly Option<string> _newOption = {Toolset}OptionDefinitions.NewOption;
 
     public override string Name => "operation";
 
@@ -427,13 +505,20 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-    command.Options.Add(_newOption);
+        // Add options as needed (use AsRequired() or AsOptional() to override defaults)
+        command.Options.Add({Toolset}OptionDefinitions.RequiredOption.AsRequired());
+        command.Options.Add({Toolset}OptionDefinitions.OptionalOption.AsOptional());
+        // Use default requirement from OptionDefinitions
+        command.Options.Add({Toolset}OptionDefinitions.StandardOption);
     }
 
     protected override {Resource}{Operation}Options BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.NewOption = parseResult.GetValueOrDefault(_newOption);
+        // Bind options using GetValueOrDefault<T>(optionName)
+        options.RequiredOption = parseResult.GetValueOrDefault<string>({Toolset}OptionDefinitions.RequiredOption.Name);
+        options.OptionalOption = parseResult.GetValueOrDefault<string>({Toolset}OptionDefinitions.OptionalOption.Name);
+        options.StandardOption = parseResult.GetValueOrDefault<string>({Toolset}OptionDefinitions.StandardOption.Name);
         return options;
     }
 
@@ -517,7 +602,7 @@ The `ToolMetadata` class provides behavioral characteristics that help MCP clien
 // Open world - Azure resource queries
 OpenWorld = true,    // Storage account list, database queries, resource discovery
 
-// Closed world - Static/predictable content  
+// Closed world - Static/predictable content
 OpenWorld = false,   // Bicep schemas, best practices, design patterns, predefined samples
 ```
 
@@ -549,7 +634,7 @@ Destructive = false,    // List resources, show configuration, query data, get s
 // Idempotent operations
 Idempotent = true,      // Set configuration value, create named resource (with proper handling), list resources
 
-// Non-idempotent operations  
+// Non-idempotent operations
 Idempotent = false,     // Generate new keys, create resources with auto-generated names, append logs
 ```
 
@@ -655,6 +740,8 @@ Each toolset has its own hierarchy of base command classes that inherit from `Gl
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.{Toolset}.Options;
 
 namespace Azure.Mcp.Tools.{Toolset}.Commands;
@@ -669,18 +756,41 @@ public abstract class Base{Toolset}Command<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
     : SubscriptionCommand<TOptions> where TOptions : Base{Toolset}Options, new()
 {
-    protected readonly Option<string> _commonOption = {Toolset}OptionDefinitions.CommonOption;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_commonOption);
+        // Register common options for all toolset commands
+        command.Options.Add({Toolset}OptionDefinitions.CommonOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.CommonOption = parseResult.GetValue(_commonOption);
+        // Bind common options using GetValueOrDefault<T>()
+        options.CommonOption = parseResult.GetValueOrDefault<string>({Toolset}OptionDefinitions.CommonOption.Name);
+        return options;
+    }
+}
+
+// Example: Resource-specific base command with common options
+public abstract class Base{Resource}Command<
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
+    : Base{Toolset}Command<TOptions> where TOptions : Base{Resource}Options, new()
+{
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        // Add resource-specific options that all resource commands need
+        command.Options.Add({Toolset}OptionDefinitions.{Resource}Name);
+        command.Options.Add({Toolset}OptionDefinitions.{Resource}Type.AsOptional());
+    }
+
+    protected override TOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        // Bind resource-specific options
+        options.{Resource}Name = parseResult.GetValueOrDefault<string>({Toolset}OptionDefinitions.{Resource}Name.Name);
+        options.{Resource}Type = parseResult.GetValueOrDefault<string>({Toolset}OptionDefinitions.{Resource}Type.Name);
         return options;
     }
 }
@@ -751,8 +861,8 @@ public class {Resource}{Operation}CommandTests
                 .Returns(new List<ResultType>());
         }
 
-    // Build args from a single string in tests using the test-only splitter
-    var parseResult = _parser.Parse(args);
+        // Build args from a single string in tests using the test-only splitter
+        var parseResult = _parser.Parse(args);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
@@ -786,6 +896,20 @@ public class {Resource}{Operation}CommandTests
         Assert.Equal(500, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
+    }
+
+    [Fact]
+    public void BindOptions_BindsOptionsCorrectly()
+    {
+        // Arrange
+        var parseResult = _parser.Parse(["--subscription", "test-sub", "--required", "value"]);
+
+        // Act
+        var options = _command.BindOptions(parseResult);
+
+        // Assert
+        Assert.Equal("test-sub", options.Subscription);
+        Assert.Equal("value", options.RequiredParam);
     }
 }
 ```
@@ -1507,22 +1631,25 @@ var subscriptionResource = await _subscriptionService.GetSubscription(subscripti
 
 ### Command Option Patterns
 
-**Issue: Manual resource group option duplication or binding**
-- **Problem**: Command redefines a resource group option or manually assigns `options.ResourceGroup`.
-- **Solution**: Remove duplicate definitions; call `UseResourceGroup()` or `RequireResourceGroup()` only; let central binding populate `options.ResourceGroup`.
+**Issue: Using readonly option fields in commands**
+- **Problem**: Commands define readonly `Option<T>` fields and use `parseResult.GetValue()` without type parameters.
+- **Solution**: Remove readonly fields; use `OptionDefinitions` directly in `RegisterOptions` and name-based binding in `BindOptions`.
 - **Pattern**:
 ```csharp
 protected override void RegisterOptions(Command command)
 {
     base.RegisterOptions(command);
-    UseResourceGroup(); // or RequireResourceGroup();
-    command.Options.Add(_otherOption);
+    // Use extension methods for flexible requirements
+    command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+    command.Options.Add(ServiceOptionDefinitions.ServiceOption);
 }
 
 protected override MyOptions BindOptions(ParseResult parseResult)
 {
-    var options = base.BindOptions(parseResult); // ResourceGroup already set if declared
-    options.Other = parseResult.GetValueOrDefault(_otherOption);
+    var options = base.BindOptions(parseResult);
+    // Use name-based binding with generic type parameters
+    options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+    options.ServiceOption = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.ServiceOption.Name);
     return options;
 }
 ```
@@ -1666,8 +1793,10 @@ catch (Exception ex)
 
 1. Do not:
    - **CRITICAL**: Use `subscriptionId` as parameter name - Always use `subscription` to support both IDs and names
-    - **CRITICAL**: Re-defining the global `resource-group` option. Use `UseResourceGroup()` / `RequireResourceGroup()` instead.
+   - **CRITICAL**: Define readonly option fields in commands - Use `OptionDefinitions` directly in `RegisterOptions` and `BindOptions`
+   - **CRITICAL**: Use the old `UseResourceGroup()` or `RequireResourceGroup()` pattern - These methods no longer exist. Use extension methods like `.AsRequired()` or `.AsOptional()` instead
    - **CRITICAL**: Skip live test infrastructure for Azure service commands - Create `test-resources.bicep` template early in development
+   - **CRITICAL**: Use `parseResult.GetValue()` without the generic type parameter - Use `parseResult.GetValueOrDefault<T>(optionName)` instead
    - Redefine base class properties in Options classes
    - Skip base.RegisterOptions() call
    - Skip base.Dispose() call
@@ -1683,7 +1812,8 @@ catch (Exception ex)
 
 2. Always:
    - Create a static {Toolset}OptionDefinitions class for the toolset
-    - **For resource group handling**: Call `UseResourceGroup()` (optional) or `RequireResourceGroup()` (required). Never redefine the option or assign it manually.
+   - **For option handling**: Use extension methods like `.AsRequired()` or `.AsOptional()` to control option requirements per command. Register explicitly in `RegisterOptions` and bind explicitly in `BindOptions`
+   - **For option binding**: Use `parseResult.GetValueOrDefault<T>(optionDefinition.Name)` pattern for all options
    - **For Azure service commands**: Create test infrastructure (`test-resources.bicep`) before implementing live tests
    - Use OptionDefinitions for options
    - Follow exact file structure

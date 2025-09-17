@@ -4,10 +4,10 @@
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
-using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Storage.Commands.Blob.Container;
@@ -16,8 +16,6 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : B
 {
     private const string CommandTitle = "Get Storage Container Details";
     private readonly ILogger<ContainerGetCommand> _logger = logger;
-
-    private readonly Option<string> _optionalContainerOption = StorageOptionDefinitions.OptionalContainer;
 
     public override string Name => "get";
 
@@ -42,13 +40,13 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : B
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_optionalContainerOption);
+        command.Options.Add(StorageOptionDefinitions.Container.AsOptional());
     }
 
     protected override ContainerGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Container = parseResult.GetValueOrDefault(_optionalContainerOption);
+        options.Container = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Container.Name);
         return options;
     }
 

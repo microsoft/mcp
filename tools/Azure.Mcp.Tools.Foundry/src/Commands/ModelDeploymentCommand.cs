@@ -3,6 +3,8 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Models;
@@ -13,16 +15,6 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeploymentOptions>
 {
     private const string CommandTitle = "Deploy Model to Azure AI Services";
-    private readonly Option<string> _deploymentNameOption = FoundryOptionDefinitions.DeploymentNameOption;
-    private readonly Option<string> _modelNameOption = FoundryOptionDefinitions.ModelNameOption;
-    private readonly Option<string> _modelFormatOption = FoundryOptionDefinitions.ModelFormatOption;
-    private readonly Option<string> _azureAiServicesNameOption = FoundryOptionDefinitions.AzureAiServicesNameOption;
-    private readonly Option<string> _modelVersionOption = FoundryOptionDefinitions.ModelVersionOption;
-    private readonly Option<string> _modelSourceOption = FoundryOptionDefinitions.ModelSourceOption;
-    private readonly Option<string> _skuNameOption = FoundryOptionDefinitions.SkuNameOption;
-    private readonly Option<int> _skuCapacityOption = FoundryOptionDefinitions.SkuCapacityOption;
-    private readonly Option<string> _scaleTypeOption = FoundryOptionDefinitions.ScaleTypeOption;
-    private readonly Option<int> _scaleCapacityOption = FoundryOptionDefinitions.ScaleCapacityOption;
 
     public override string Name => "deploy";
 
@@ -48,33 +40,33 @@ public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeployment
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_deploymentNameOption);
-        command.Options.Add(_modelNameOption);
-        command.Options.Add(_modelFormatOption);
-        command.Options.Add(_azureAiServicesNameOption);
-        RequireResourceGroup();
-        command.Options.Add(_modelVersionOption);
-        command.Options.Add(_modelSourceOption);
-        command.Options.Add(_skuNameOption);
-        command.Options.Add(_skuCapacityOption);
-        command.Options.Add(_scaleTypeOption);
-        command.Options.Add(_scaleCapacityOption);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(FoundryOptionDefinitions.DeploymentNameOption);
+        command.Options.Add(FoundryOptionDefinitions.ModelNameOption);
+        command.Options.Add(FoundryOptionDefinitions.ModelFormatOption);
+        command.Options.Add(FoundryOptionDefinitions.AzureAiServicesNameOption);
+        command.Options.Add(FoundryOptionDefinitions.ModelVersionOption);
+        command.Options.Add(FoundryOptionDefinitions.ModelSourceOption);
+        command.Options.Add(FoundryOptionDefinitions.SkuNameOption);
+        command.Options.Add(FoundryOptionDefinitions.SkuCapacityOption);
+        command.Options.Add(FoundryOptionDefinitions.ScaleTypeOption);
+        command.Options.Add(FoundryOptionDefinitions.ScaleCapacityOption);
     }
 
     protected override ModelDeploymentOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DeploymentName = parseResult.GetValue(_deploymentNameOption);
-        options.ModelName = parseResult.GetValue(_modelNameOption);
-        options.ModelFormat = parseResult.GetValue(_modelFormatOption);
-        options.AzureAiServicesName = parseResult.GetValue(_azureAiServicesNameOption);
-        options.ModelVersion = parseResult.GetValue(_modelVersionOption);
-        options.ModelSource = parseResult.GetValue(_modelSourceOption);
-        options.SkuName = parseResult.GetValue(_skuNameOption);
-        options.SkuCapacity = parseResult.GetValue(_skuCapacityOption);
-        options.ScaleType = parseResult.GetValue(_scaleTypeOption);
-        options.ScaleCapacity = parseResult.GetValue(_scaleCapacityOption);
-
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.DeploymentName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.DeploymentNameOption.Name);
+        options.ModelName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.ModelNameOption.Name);
+        options.ModelFormat = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.ModelFormatOption.Name);
+        options.AzureAiServicesName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.AzureAiServicesNameOption.Name);
+        options.ModelVersion = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.ModelVersionOption.Name);
+        options.ModelSource = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.ModelSourceOption.Name);
+        options.SkuName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.SkuNameOption.Name);
+        options.SkuCapacity = parseResult.GetValueOrDefault<int>(FoundryOptionDefinitions.SkuCapacityOption.Name);
+        options.ScaleType = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.ScaleTypeOption.Name);
+        options.ScaleCapacity = parseResult.GetValueOrDefault<int>(FoundryOptionDefinitions.ScaleCapacityOption.Name);
         return options;
     }
 

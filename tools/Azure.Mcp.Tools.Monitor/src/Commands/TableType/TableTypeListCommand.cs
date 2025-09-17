@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.TableType;
 
-public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) : BaseMonitorCommand<TableTypeListOptions>()
+public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) : BaseWorkspaceMonitorCommand<TableTypeListOptions>()
 {
     private const string CommandTitle = "List Log Analytics Table Types";
     private readonly ILogger<TableTypeListCommand> _logger = logger;
@@ -29,13 +29,6 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) :
         LocalRequired = false,
         Secret = false
     };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        RequireResourceGroup();
-    }
-
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {

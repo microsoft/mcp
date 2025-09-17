@@ -8,11 +8,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Table;
 
-public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseMonitorCommand<TableListOptions>()
+public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseWorkspaceMonitorCommand<TableListOptions>()
 {
     private const string CommandTitle = "List Log Analytics Tables";
     private readonly ILogger<TableListCommand> _logger = logger;
-    private readonly Option<string> _tableTypeOption = MonitorOptionDefinitions.TableType;
 
     public override string Name => "list";
 
@@ -37,14 +36,13 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseMon
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_tableTypeOption);
-        RequireResourceGroup();
+        command.Options.Add(MonitorOptionDefinitions.TableType);
     }
 
     protected override TableListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TableType = parseResult.GetValue(_tableTypeOption);
+        options.TableType = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.TableType.Name);
         return options;
     }
 

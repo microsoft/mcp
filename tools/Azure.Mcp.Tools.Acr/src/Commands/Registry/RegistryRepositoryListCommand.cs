@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Acr.Options;
 using Azure.Mcp.Tools.Acr.Options.Registry;
@@ -38,8 +39,14 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        UseResourceGroup();
         command.Options.Add(AcrOptionDefinitions.Registry);
+    }
+
+    protected override RegistryRepositoryListOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.Registry ??= parseResult.GetValueOrDefault<string>(AcrOptionDefinitions.Registry.Name);
+        return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)

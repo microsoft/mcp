@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Models.Command;
 using Fabric.Mcp.Tools.PublicApi.Commands.BestPractices;
 using Fabric.Mcp.Tools.PublicApi.Services;

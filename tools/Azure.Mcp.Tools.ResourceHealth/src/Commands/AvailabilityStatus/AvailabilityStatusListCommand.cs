@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ResourceHealth.Options.AvailabilityStatus;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Extensions.Logging;
@@ -42,12 +44,13 @@ public sealed class AvailabilityStatusListCommand(ILogger<AvailabilityStatusList
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        UseResourceGroup(); // Optional filter for better performance
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
     }
 
     protected override AvailabilityStatusListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
 

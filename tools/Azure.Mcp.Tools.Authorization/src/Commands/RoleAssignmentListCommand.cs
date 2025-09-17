@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Authorization.Models;
 using Azure.Mcp.Tools.Authorization.Options;
@@ -36,18 +37,16 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
         Secret = false
     };
 
-    private readonly Option<string> _scopeOption = OptionDefinitions.Authorization.Scope;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_scopeOption);
+        command.Options.Add(OptionDefinitions.Authorization.Scope);
     }
 
     protected override RoleAssignmentListOptions BindOptions(ParseResult parseResult)
     {
         var args = base.BindOptions(parseResult);
-        args.Scope = parseResult.GetValue(_scopeOption);
+        args.Scope = parseResult.GetValueOrDefault<string>(OptionDefinitions.Authorization.Scope.Name);
         return args;
     }
 

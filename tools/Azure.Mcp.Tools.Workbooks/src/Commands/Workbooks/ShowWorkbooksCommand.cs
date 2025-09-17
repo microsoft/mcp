@@ -15,7 +15,6 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
 {
     private const string CommandTitle = "Get Workbook";
     private readonly ILogger<ShowWorkbooksCommand> _logger = logger;
-    private readonly Option<string> _workbookIdOption = WorkbooksOptionDefinitions.WorkbookId;
 
     public override string Name => "show";
 
@@ -41,13 +40,13 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_workbookIdOption);
+        command.Options.Add(WorkbooksOptionDefinitions.WorkbookId);
     }
 
     protected override ShowWorkbooksOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkbookId = parseResult.GetValueOrDefault(_workbookIdOption);
+        options.WorkbookId = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.WorkbookId.Name);
         return options;
     }
 

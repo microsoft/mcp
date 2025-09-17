@@ -4,6 +4,7 @@
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Blob;
@@ -16,8 +17,6 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger) : BaseContain
 {
     private const string CommandTitle = "Get Storage Blob Details";
     private readonly ILogger<BlobGetCommand> _logger = logger;
-
-    private readonly Option<string> _optionalBlobOption = StorageOptionDefinitions.OptionalBlob;
 
     public override string Name => "get";
 
@@ -42,13 +41,13 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger) : BaseContain
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_optionalBlobOption);
+        command.Options.Add(StorageOptionDefinitions.Blob.AsOptional());
     }
 
     protected override BlobGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Blob = parseResult.GetValueOrDefault(_optionalBlobOption);
+        options.Blob = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Blob.Name);
         return options;
     }
 

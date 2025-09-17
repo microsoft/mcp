@@ -17,9 +17,6 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
     private const string CommandTitle = "Check Azure resources usage and quota in a region";
     private readonly ILogger<CheckCommand> _logger = logger;
 
-    private readonly Option<string> _regionOption = QuotaOptionDefinitions.QuotaCheck.Region;
-    private readonly Option<string> _resourceTypesOption = QuotaOptionDefinitions.QuotaCheck.ResourceTypes;
-
     public override string Name => "check";
 
     public override string Description =>
@@ -41,15 +38,15 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_regionOption);
-        command.Options.Add(_resourceTypesOption);
+        command.Options.Add(QuotaOptionDefinitions.QuotaCheck.Region);
+        command.Options.Add(QuotaOptionDefinitions.QuotaCheck.ResourceTypes);
     }
 
     protected override CheckOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Region = parseResult.GetValue(_regionOption) ?? string.Empty;
-        options.ResourceTypes = parseResult.GetValue(_resourceTypesOption) ?? string.Empty;
+        options.Region = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.QuotaCheck.Region.Name) ?? string.Empty;
+        options.ResourceTypes = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.QuotaCheck.ResourceTypes.Name) ?? string.Empty;
         return options;
     }
 

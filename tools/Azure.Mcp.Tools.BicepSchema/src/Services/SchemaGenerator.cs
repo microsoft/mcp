@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 using Azure.Bicep.Types;
-using Azure.Bicep.Types.Az;
 using Azure.Mcp.Tools.BicepSchema.Services.ResourceProperties;
 using Azure.Mcp.Tools.BicepSchema.Services.ResourceProperties.Entities;
 using Azure.Mcp.Tools.BicepSchema.Services.Support;
+using Microsoft.Azure.Mcp.AzTypes.Internal.Compact;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Azure.Mcp.Tools.BicepSchema.Services;

@@ -2,10 +2,13 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.AzureManagedLustre.Options;
 using Azure.Mcp.Tools.AzureManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.AzureManagedLustre.Services;
 using Microsoft.Extensions.Logging;
+
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.Commands.FileSystem;
 
@@ -33,18 +36,16 @@ public sealed class SkuGetCommand(ILogger<SkuGetCommand> logger)
         Secret = false
     };
 
-    private static readonly Option<string> _optionalLocationOption = AzureManagedLustreOptionDefinitions.OptionalLocationOption;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_optionalLocationOption);
+        command.Options.Add(AzureManagedLustreOptionDefinitions.LocationOption.AsOptional());
     }
 
     protected override SkuGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Location = parseResult.GetValue(_optionalLocationOption);
+        options.Location = parseResult.GetValueOrDefault<string>(AzureManagedLustreOptionDefinitions.LocationOption.Name);
         return options;
     }
 

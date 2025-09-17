@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Account;
@@ -17,8 +18,6 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
 {
     private const string CommandTitle = "Get Storage Account Details";
     private readonly ILogger<AccountGetCommand> _logger = logger;
-
-    private readonly Option<string> _optionalAccountOption = StorageOptionDefinitions.OptionalAccount;
 
     public override string Name => "get";
 
@@ -44,13 +43,13 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_optionalAccountOption);
+        command.Options.Add(StorageOptionDefinitions.Account.AsOptional());
     }
 
     protected override AccountGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault(_optionalAccountOption);
+        options.Account = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Account.Name);
         return options;
     }
 

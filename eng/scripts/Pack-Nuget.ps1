@@ -95,6 +95,8 @@ try {
             -replace "__TargetFramework__", $sharedProjectProperties.TargetFramework |
             Set-Content -Path $wrapperToolNuspec
         Copy-Item -Path "$nuspecSourcePath/README.md" -Destination $tempNugetWrapperDir -Force
+		Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempNugetWrapperDir -Force
+		Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempNugetWrapperDir -Force
 		Copy-Item -Path $azureIconPath -Destination $tempNugetWrapperDir -Force
 
 		# Build the project
@@ -108,6 +110,8 @@ try {
 
 			Copy-Item -Path "$platformDirectory/dist/*" -Destination $platformToolDir -Recurse -Force
 			Copy-Item -Path $azureIconPath -Destination $tempPlatformDir -Force
+			Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempPlatformDir -Force
+			Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempPlatformDir -Force
 			$platformToolEntryPoint = (
 				Get-ChildItem -Path $platformToolDir -Filter "$($serverProjectProperties.CliName)*" -Recurse |
 				Where-Object { $_.PSIsContainer -eq $false -and ($_.Extension -eq ".exe" -or $_.Extension -eq "") } |
