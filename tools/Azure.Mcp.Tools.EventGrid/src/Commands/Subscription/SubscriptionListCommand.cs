@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
@@ -15,8 +16,6 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 {
     private const string CommandTitle = "List Event Grid Subscriptions";
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
-    private readonly Option<string> _topicNameOption = EventGridOptionDefinitions.TopicName;
-    private readonly Option<string> _locationOption = EventGridOptionDefinitions.Location;
 
     public override string Name => "list";
 
@@ -36,16 +35,17 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        UseResourceGroup(); // Optional resource group filtering
-        command.Options.Add(_topicNameOption);
-        command.Options.Add(_locationOption);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(EventGridOptionDefinitions.TopicName.AsOptional());
+        command.Options.Add(EventGridOptionDefinitions.Location.AsOptional());
     }
 
     protected override SubscriptionListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TopicName = parseResult.GetValue(_topicNameOption);
-        options.Location = parseResult.GetValue(_locationOption);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.TopicName = parseResult.GetValueOrDefault<string>(EventGridOptionDefinitions.TopicName.Name);
+        options.Location = parseResult.GetValueOrDefault<string>(EventGridOptionDefinitions.Location.Name);
         return options;
     }
 
@@ -55,9 +55,9 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         var result = new ValidationResult { IsValid = true };
 
         var hasSubscription = HasSubscriptionAvailable(commandResult);
-        var hasTopicOption = commandResult.HasOptionResult(_topicNameOption);
+        var hasTopicOption = commandResult.HasOptionResult(EventGridOptionDefinitions.TopicName);
         var hasRg = commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup);
-        var hasLocation = commandResult.HasOptionResult(_locationOption);
+        var hasLocation = commandResult.HasOptionResult(EventGridOptionDefinitions.Location);
 
         // Either topic or subscription is mandatory
         if (!hasSubscription && !hasTopicOption)

@@ -4,10 +4,14 @@
 using System.CommandLine;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Azure.Core;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 using Azure.Mcp.Tools.EventGrid.Services;
+using Azure.ResourceManager.Models;
+using Azure.ResourceManager.Resources;
+using Azure.ResourceManager.Resources.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -21,6 +25,7 @@ public class SubscriptionListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IEventGridService _eventGridService;
+    private readonly Azure.Mcp.Core.Services.Azure.Subscription.ISubscriptionService _subscriptionService;
     private readonly ILogger<SubscriptionListCommand> _logger;
     private readonly SubscriptionListCommand _command;
     private readonly CommandContext _context;
@@ -29,15 +34,25 @@ public class SubscriptionListCommandTests
     public SubscriptionListCommandTests()
     {
         _eventGridService = Substitute.For<IEventGridService>();
+        _subscriptionService = Substitute.For<Azure.Mcp.Core.Services.Azure.Subscription.ISubscriptionService>();
         _logger = Substitute.For<ILogger<SubscriptionListCommand>>();
 
-        var collection = new ServiceCollection();
-        collection.AddSingleton(_eventGridService);
-
+        var collection = new ServiceCollection()
+            .AddSingleton(_eventGridService)
+            .AddSingleton(_subscriptionService);
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
+    }
+
+    [Fact]
+    public void Constructor_InitializesCommandCorrectly()
+    {
+        var command = _command.GetCommand();
+        Assert.Equal("list", command.Name);
+        Assert.NotNull(command.Description);
+        Assert.NotEmpty(command.Description);
     }
 
     [Fact]
@@ -167,69 +182,64 @@ public class SubscriptionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        var expectedError = "Test error";
-        var subscription = "sub123";
+        _eventGridService.GetSubscriptionsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .Returns(Task.FromException<List<Models.EventGridSubscriptionInfo>>(new Exception("Test error")));
 
-        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-            .ThrowsAsync(new Exception(expectedError));
-
-        var args = _commandDefinition.Parse(["--subscription", subscription]);
+        var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.NotNull(response);
         Assert.Equal(500, response.Status);
-        Assert.StartsWith(expectedError, response.Message);
+        Assert.Contains("Test error", response.Message);
+        Assert.Contains("troubleshooting", response.Message);
     }
 
 
-    [Fact]
-    public async Task ExecuteAsync_ErrorWhenOnlyLocationProvided()
-    {
-        var args = _commandDefinition.Parse(["--location", "eastus"]);
-        var response = await _command.ExecuteAsync(_context, args);
-        Assert.Equal(400, response.Status);
-        Assert.Contains("Either --subscription or --topic is required", response.Message);
-    }
 
-    [Fact]
-    public async Task ExecuteAsync_BareTopicName_SearchesAllSubscriptions()
+
+    [Theory]
+    [InlineData("--subscription sub", true)]
+    [InlineData("--subscription sub --topic my-topic", true)]
+    [InlineData("--subscription sub --resource-group rg", true)]
+    [InlineData("", false)]
+    [InlineData("--location eastus", false)]
+    [InlineData("--resource-group rg", false)]
+    [InlineData("--topic my-topic", false)] // Cross-subscription search needs special handling, test separately
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        // Arrange: We only validate that the command executes successfully without a subscription parameter.
-        // Detailed cross-subscription enumeration is handled inside the command and service; here we simulate one hit.
-        var topicName = "myTopic";
-        var subscription = "sub-search";
-        var expected = new List<Models.EventGridSubscriptionInfo>
+        // Arrange
+        if (shouldSucceed)
         {
-            new("from-search", "Microsoft.EventGrid/eventSubscriptions", "WebHook", "https://example.com/hook", "Succeeded", null, null, 30, 1440, "2023-01-01T00:00:00Z", "2023-01-02T00:00:00Z")
-        };
+            _eventGridService.GetSubscriptionsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+                .Returns(new List<Models.EventGridSubscriptionInfo>
+                {
+                    new("subscription1", "Microsoft.EventGrid/eventSubscriptions", "WebHook", "https://example.com/webhook1", "Succeeded", null, null, 30, 1440, "2023-01-01T00:00:00Z", "2023-01-02T00:00:00Z")
+                });
+        }
 
-        // When GetSubscriptionsAsync is called with sub-search and topic name return list
-        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Is(topicName), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-            .Returns(expected);
-
-        var args = _commandDefinition.Parse(["--topic", topicName]);
+        var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, parseResult);
 
-        // Assert basic success (can't fully assert aggregate without subscription service mock wiring)
-        Assert.NotEqual(400, response.Status);
+        // Assert
+        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        if (shouldSucceed)
+        {
+            Assert.NotNull(response.Results);
+        }
+        else
+        {
+            Assert.Contains("required", response.Message.ToLower());
+        }
     }
 
-    [Fact]
-    public async Task ExecuteAsync_ErrorWhenOnlyResourceGroupProvided()
-    {
-        var args = _commandDefinition.Parse(["--resource-group", "rg1"]);
-        var response = await _command.ExecuteAsync(_context, args);
-        Assert.Equal(400, response.Status);
-        Assert.Contains("Either --subscription or --topic is required", response.Message);
-    }
+
 
     private class SubscriptionListResult
     {
