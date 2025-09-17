@@ -12,7 +12,7 @@
   <ItemGroup />
   <ItemGroup>
     <PackageReference Include="Azure.Bicep.Types" />
-    <PackageReference Include="Azure.Bicep.Types.Az" />
+    <PackageReference Include="Microsoft.Azure.Mcp.AzTypes.Internal.Compact" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />

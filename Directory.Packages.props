@@ -6,7 +6,6 @@
     <PackageVersion Include="Azure.Containers.ContainerRegistry" Version="1.2.0" />
     <PackageVersion Include="Azure.AI.Projects" Version="1.0.0-beta.9" />
     <PackageVersion Include="Azure.Bicep.Types" Version="0.6.1" />
-    <PackageVersion Include="Azure.Bicep.Types.Az" Version="0.2.792" />
     <PackageVersion Include="Azure.Core" Version="1.48.0" />
     <PackageVersion Include="Azure.Data.AppConfiguration" Version="1.6.1" />
     <PackageVersion Include="Azure.Identity" Version="1.16.0" />
@@ -68,6 +67,7 @@
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="9.0.6" />
     <PackageVersion Include="Microsoft.HybridRow" Version="1.1.0-preview3" />
     <PackageVersion Include="Microsoft.Azure.Cosmos.Aot" Version="0.1.2-preview.2" />
+    <PackageVersion Include="Microsoft.Azure.Mcp.AzTypes.Internal.Compact" Version="0.2.802" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.6" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
     <PackageVersion Include="MySqlConnector" Version="2.4.0" />
