@@ -62,6 +62,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
             var topics = await eventGridService.GetTopicsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
+                options.Tenant,
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create<TopicListCommandResult>(

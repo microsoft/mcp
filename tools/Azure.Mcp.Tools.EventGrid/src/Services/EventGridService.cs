@@ -19,9 +19,10 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
     public async Task<List<EventGridTopicInfo>> GetTopicsAsync(
         string subscription,
         string? resourceGroup = null,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var topics = new List<EventGridTopicInfo>();
 
         if (!string.IsNullOrEmpty(resourceGroup))
@@ -52,13 +53,14 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         string? resourceGroup = null,
         string? topicName = null,
         string? location = null,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
         var subscriptions = new List<EventGridSubscriptionInfo>();
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
 
             // If specific topic is requested, get subscriptions for that topic only
             if (!string.IsNullOrEmpty(topicName))

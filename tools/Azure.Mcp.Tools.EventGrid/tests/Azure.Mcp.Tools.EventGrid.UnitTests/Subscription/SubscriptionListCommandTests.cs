@@ -51,7 +51,7 @@ public class SubscriptionListCommandTests
             new("subscription2", "Microsoft.EventGrid/eventSubscriptions", "StorageQueue", "https://storage.queue.core.windows.net/myqueue", "Succeeded", null, null, 10, 720, "2023-01-03T00:00:00Z", "2023-01-04T00:00:00Z")
         };
 
-        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromResult(expectedSubscriptions));
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
@@ -85,7 +85,7 @@ public class SubscriptionListCommandTests
             new("filtered-subscription", "Microsoft.EventGrid/eventSubscriptions", "WebHook", "https://example.com/webhook", "Succeeded", null, null, 30, 1440, "2023-01-01T00:00:00Z", "2023-01-02T00:00:00Z")
         };
 
-        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Is(topicName), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Is(resourceGroup), Arg.Is(topicName), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromResult(expectedSubscriptions));
 
         var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--topic", topicName]);
@@ -113,7 +113,7 @@ public class SubscriptionListCommandTests
         // Arrange
         var subscription = "sub123";
 
-        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromResult(new List<Models.EventGridSubscriptionInfo>()));
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
@@ -144,7 +144,7 @@ public class SubscriptionListCommandTests
             new("location-filtered-subscription", "Microsoft.EventGrid/eventSubscriptions", "WebHook", "https://example.com/webhook", "Succeeded", null, null, 30, 1440, "2023-01-01T00:00:00Z", "2023-01-02T00:00:00Z")
         };
 
-        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(location), Arg.Any<RetryPolicyOptions?>())
+        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Is(location), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromResult(expectedSubscriptions));
 
         var args = _commandDefinition.Parse(["--subscription", subscription, "--location", location]);
@@ -173,7 +173,7 @@ public class SubscriptionListCommandTests
         var expectedError = "Test error";
         var subscription = "sub123";
 
-        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
@@ -210,7 +210,7 @@ public class SubscriptionListCommandTests
         };
 
         // When GetSubscriptionsAsync is called with sub-search and topic name return list
-        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Is(topicName), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Is(topicName), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(expected);
 
         var args = _commandDefinition.Parse(["--topic", topicName]);

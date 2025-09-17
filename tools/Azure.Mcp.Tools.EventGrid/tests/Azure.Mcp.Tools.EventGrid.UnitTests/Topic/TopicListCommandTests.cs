@@ -50,7 +50,7 @@ public class TopicListCommandTests
             new("topic2", "westus", "https://topic2.westus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema")
         };
 
-        _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedTopics));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
@@ -77,8 +77,8 @@ public class TopicListCommandTests
         // Arrange
         var subscriptionId = "sub123";
 
-        _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromResult(new List<Models.EventGridTopicInfo>()));
+        _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .Returns(Task.FromResult(new List<Azure.Mcp.Tools.EventGrid.Models.EventGridTopicInfo>()));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
@@ -104,7 +104,7 @@ public class TopicListCommandTests
         var expectedError = "Test error";
         var subscriptionId = "sub123";
 
-        _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), null, Arg.Any<RetryPolicyOptions>())
+        _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
@@ -134,7 +134,7 @@ public class TopicListCommandTests
                 new("topic1", "eastus", "https://topic1.eastus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema"),
                 new("topic2", "westus", "https://topic2.westus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema")
             };
-            _eventGridService.GetTopicsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            _eventGridService.GetTopicsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(Task.FromResult(expectedTopics));
         }
 

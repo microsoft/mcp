@@ -124,6 +124,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                             options.ResourceGroup,
                             options.TopicName, // bare name
                             options.Location,
+                            options.Tenant,
                             options.RetryPolicy);
                         if (found?.Count > 0)
                         {
@@ -147,6 +148,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                     options.ResourceGroup,
                     options.TopicName,
                     options.Location,
+                    options.Tenant,
                     options.RetryPolicy);
 
                 context.Response.Results = ResponseResult.Create<SubscriptionListCommandResult>(

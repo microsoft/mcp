@@ -483,7 +483,7 @@ azmcp eventgrid topic list --subscription <subscription> \
 # List all Event Grid subscriptions in a subscription, resource group, or topic
 azmcp eventgrid subscription list --subscription <subscription> \
                                   [--resource-group <resource-group>] \
-                                  [--topic-name <topic-name>]
+                                  [--topic <topic>]
                                   [--location <location>]
 ```
 
