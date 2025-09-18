@@ -82,13 +82,13 @@ Alternatively, you can also install a targeted version of the @azure/mcp package
       2. Search for `chat.mcp.autostart`.
       3. Select **newAndOutdated** to automatically start MCP servers without manual refresh.
       4. You can also set this from the **refresh icon tooltip** in the Chat view, which also shows which servers will auto-start.
-         ![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/eng/npm/resources/Walkthrough/ToolTip.png)
+![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/eng/npm/resources/Walkthrough/ToolTip.png)
 
 3. **Check Output for MCP server**
          - Go to the **Output** tab in VS Code.
          - Look for log messages confirming the server started successfully.
 
-         ![Output](https://raw.githubusercontent.com/microsoft/mcp/main/eng/npm/resources/Walkthrough/McpJsonOutput.png)
+![Output](https://raw.githubusercontent.com/microsoft/mcp/main/eng/npm/resources/Walkthrough/McpJsonOutput.png)
 
 You’re all set! Azure MCP Server is now ready to help you work smarter with Azure resources in VS Code.
 
