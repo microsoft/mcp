@@ -4,6 +4,8 @@
 using System.CommandLine;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Areas.Server.Options;
+using Azure.Mcp.Core.Models.Command;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
@@ -85,6 +87,42 @@ public class ServiceStartCommandTests
         Assert.True(hasInsecureDisableElicitationOption, "InsecureDisableElicitation option should be registered");
     }
 
+    [Theory]
+    [InlineData("sse")]
+    [InlineData("websocket")]
+    [InlineData("http")]
+    [InlineData("invalid")]
+    public async Task ExecuteAsync_InvalidTransport_ThrowsArgumentException(string invalidTransport)
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithTransport(invalidTransport);
+        var serviceProvider = new ServiceCollection().BuildServiceProvider();
+        var context = new CommandContext(serviceProvider);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => _command.ExecuteAsync(context, parseResult));
+
+        Assert.Contains($"Invalid transport '{invalidTransport}'", exception.Message);
+        Assert.Contains("Valid transports are: stdio", exception.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ValidTransport_DoesNotThrow()
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithTransport("stdio");
+        var serviceProvider = new ServiceCollection().BuildServiceProvider();
+        var context = new CommandContext(serviceProvider);
+
+        // Act & Assert - This will throw because the server can't actually start in a unit test,
+        // but it should not throw an ArgumentException about invalid transport
+        var exception = await Assert.ThrowsAnyAsync<Exception>(
+            () => _command.ExecuteAsync(context, parseResult));
+
+        Assert.IsNotType<ArgumentException>(exception);
+    }
+
     private static ParseResult CreateParseResult(string? serviceValue)
     {
         var root = new RootCommand
@@ -123,6 +161,30 @@ public class ServiceStartCommandTests
         {
             args.Add("--insecure-disable-elicitation");
         }
+
+        return root.Parse([.. args]);
+    }
+
+    private static ParseResult CreateParseResultWithTransport(string transport)
+    {
+        var root = new RootCommand
+        {
+            ServiceOptionDefinitions.Namespace,
+            ServiceOptionDefinitions.Transport,
+            ServiceOptionDefinitions.Mode,
+            ServiceOptionDefinitions.ReadOnly,
+            ServiceOptionDefinitions.Debug,
+            ServiceOptionDefinitions.EnableInsecureTransports,
+            ServiceOptionDefinitions.InsecureDisableElicitation
+        };
+        var args = new List<string>
+        {
+            "--transport",
+            transport,
+            "--mode",
+            "all",
+            "--read-only"
+        };
 
         return root.Parse([.. args]);
     }

@@ -13,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using static Azure.Mcp.Tools.Search.Commands.Index.IndexGetCommand;
 
 namespace Azure.Mcp.Tools.Search.UnitTests.Index;
 

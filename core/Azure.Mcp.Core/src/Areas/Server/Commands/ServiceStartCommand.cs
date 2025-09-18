@@ -74,12 +74,18 @@ public sealed class ServiceStartCommand : BaseCommand
         string[]? namespaces = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name);
         string? mode = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Mode.Name);
         bool? readOnly = parseResult.GetValueOrDefault<bool?>(ServiceOptionDefinitions.ReadOnly.Name);
+        string? transport = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name);
 
         var debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name);
 
         if (!IsValidMode(mode))
         {
             throw new ArgumentException($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}.");
+        }
+
+        if (!IsValidTransport(transport))
+        {
+            throw new ArgumentException($"Invalid transport '{transport}'. Valid transports are: {TransportTypes.StdIo}.");
         }
 
         var enableInsecureTransports = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports.Name);
@@ -95,7 +101,7 @@ public sealed class ServiceStartCommand : BaseCommand
 
         var serverOptions = new ServiceStartOptions
         {
-            Transport = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo,
+            Transport = transport ?? TransportTypes.StdIo,
             Namespace = namespaces,
             Mode = mode,
             ReadOnly = readOnly,
@@ -121,6 +127,16 @@ public sealed class ServiceStartCommand : BaseCommand
         return mode == ModeTypes.SingleToolProxy ||
                mode == ModeTypes.NamespaceProxy ||
                mode == ModeTypes.All;
+    }
+
+    /// <summary>
+    /// Validates if the provided transport is a valid transport type.
+    /// </summary>
+    /// <param name="transport">The transport to validate.</param>
+    /// <returns>True if the transport is valid, otherwise false.</returns>
+    private static bool IsValidTransport(string? transport)
+    {
+        return transport == TransportTypes.StdIo;
     }
 
     /// <summary>
