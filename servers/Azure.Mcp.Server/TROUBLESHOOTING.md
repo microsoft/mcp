@@ -295,6 +295,60 @@ This error indicates that the access token doesn't have sufficient permissions t
 
     This will prompt you to select your desired account for authentication.
 
+### Controlling Authentication Methods with AZURE_TOKEN_CREDENTIALS
+
+The Azure Identity SDK supports fine-grained control over which authentication methods are attempted through the `AZURE_TOKEN_CREDENTIALS` environment variable. This can help resolve authentication issues by excluding problematic credential types or focusing on specific authentication methods.
+
+#### Exclude Credential Categories
+
+To use only **production credentials** (Environment, Workload Identity, Managed Identity), set:
+```bash
+AZURE_TOKEN_CREDENTIALS=prod
+```
+
+To use only **development credentials** (Visual Studio, Visual Studio Code, Azure CLI, Azure PowerShell, Azure Developer CLI), set:
+```bash
+AZURE_TOKEN_CREDENTIALS=dev
+```
+
+When `prod` is used, the credential chain becomes:
+```
+Environment → Workload Identity → Managed Identity
+```
+
+When `dev` is used, the credential chain becomes:
+```
+Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI
+```
+
+#### Use Specific Credentials Only
+
+To use only a specific credential type, set `AZURE_TOKEN_CREDENTIALS` to the name of a single credential:
+
+```bash
+# Use only Azure CLI credential
+AZURE_TOKEN_CREDENTIALS=AzureCliCredential
+
+# Use only Visual Studio Code credential  
+AZURE_TOKEN_CREDENTIALS=VisualStudioCodeCredential
+
+# Use only Environment credential (for CI/CD scenarios)
+AZURE_TOKEN_CREDENTIALS=EnvironmentCredential
+
+# Use only Interactive Browser credential
+AZURE_TOKEN_CREDENTIALS=InteractiveBrowserCredential
+```
+
+**Available credential names:**
+- `AzureCliCredential`
+- `AzureDeveloperCliCredential` 
+- `AzurePowerShellCredential`
+- `EnvironmentCredential`
+- `InteractiveBrowserCredential`
+- `ManagedIdentityCredential`
+- `VisualStudioCodeCredential`
+- `VisualStudioCredential`
+- `WorkloadIdentityCredential`
 
 ### Primary Access Token from Wrong Issuer
 
