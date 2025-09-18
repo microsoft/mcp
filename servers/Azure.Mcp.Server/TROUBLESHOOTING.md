@@ -597,7 +597,7 @@ If you're behind a corporate firewall, you may need to:
 
 ### Streamable HTTP Transport
 
-The Azure MCP Server currently only supports local/STDIO transport.  Remote/StreamableHTTP support is currently underway.  Follow along here: [https://github.com/microsoft/mcp/issues?q=is%3Aissue%20label%3Aremote-mcp](https://github.com/microsoft/mcp/issues?q=is%3Aissue%20label%3Aremote-mcp).
+The Azure MCP Server supports local/STDIO transport mode.  Remote/StreamableHTTP transport mode support is currently being designed and implemented.  For more details, follow along here: [https://github.com/microsoft/mcp/issues?q=is%3Aissue%20label%3Aremote-mcp](https://github.com/microsoft/mcp/issues?q=is%3Aissue%20label%3Aremote-mcp).
 
 ## Logging and Diagnostics
 
