@@ -76,13 +76,84 @@ try {
             }
         } while ($currentServer.State -ne "Ready")
 
-        # Prepare test data
-        Write-Host "Preparing test data..." -ForegroundColor Yellow
-        
-        # The connection string and data preparation would typically be done here
-        # However, since we're using MCP tools for testing, the actual data preparation
-        # will be done as part of the live tests themselves
-        
+        # Prepare test data (create sample table & rows if possible)
+        Write-Host "Preparing PostgreSQL test data..." -ForegroundColor Yellow
+
+        $psqlExists = Get-Command psql -ErrorAction SilentlyContinue
+        if (-not $psqlExists) {
+            Write-Warning "psql is not available on this agent. Skipping data seed step. (Install PostgreSQL client to enable)"
+        }
+        else {
+            try {
+                # Acquire an access token for AAD auth to PostgreSQL Flexible Server (oss-rdbms resource)
+                $token = (az account get-access-token --resource-type oss-rdbms --query accessToken -o tsv 2>$null)
+                if (-not $token) {
+                    Write-Warning "Failed to obtain access token for PostgreSQL. Skipping data seed."
+                }
+                else {
+                    $dbName = "testdb"
+                    $aadUser = $postgresServer.properties.administratorLogin
+                    if (-not $aadUser) { $aadUser = 'mcp_admin' }
+                    $fqdn = $postgresServer.FullyQualifiedDomainName
+
+                    # Use access token as password (AAD auth). Token can be large; set env var for psql.
+                    $env:PGPASSWORD = $token
+
+                    $psqlBaseArgs = @('-h', $fqdn, '-d', $dbName, '-U', $aadUser, '-v', 'ON_ERROR_STOP=1', '-w')
+
+                    # Detect table existence
+                    $tableExists = $false
+                    try {
+                        $checkSql = "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='todos';"
+                        $checkResult = & psql @psqlBaseArgs -t -c $checkSql 2>$null
+                        if ($LASTEXITCODE -eq 0 -and ($checkResult.Trim() -eq '1')) { $tableExists = $true }
+                    } catch { }
+
+                    if (-not $tableExists) {
+                        Write-Host "Creating sample table 'todos'..." -ForegroundColor Gray
+                        $createSql = @'
+CREATE TABLE IF NOT EXISTS public.todos (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS ix_todos_completed ON public.todos(is_completed);
+'@
+                        & psql @psqlBaseArgs -c $createSql
+                        if ($LASTEXITCODE -ne 0) { throw "Failed to create table" }
+
+                        Write-Host "Inserting seed rows into 'todos'..." -ForegroundColor Gray
+                        $insertSql = @'
+INSERT INTO public.todos (title, is_completed) VALUES
+ ('Learn MCP Postgres commands', false),
+ ('Create sample data', true),
+ ('Verify list & query tests', false)
+ON CONFLICT DO NOTHING;
+'@
+                        & psql @psqlBaseArgs -c $insertSql
+                        if ($LASTEXITCODE -ne 0) { throw "Failed to insert seed data" }
+                    }
+                    else {
+                        Write-Host "Table 'todos' already exists; skipping creation." -ForegroundColor Gray
+                    }
+
+                    # Provide row count for logging
+                    try {
+                        $countSql = "SELECT COUNT(*) FROM public.todos;"
+                        $rowCount = & psql @psqlBaseArgs -t -c $countSql 2>$null
+                        if ($LASTEXITCODE -eq 0) { Write-Host "Seed verification: todos row count = $($rowCount.Trim())" -ForegroundColor Gray }
+                    } catch { }
+                }
+            }
+            catch {
+                Write-Warning "PostgreSQL data seed step failed: $($_.Exception.Message)"
+            }
+            finally {
+                Remove-Item Env:PGPASSWORD -ErrorAction SilentlyContinue | Out-Null
+            }
+        }
+
         Write-Host "PostgreSQL test resources setup completed successfully!" -ForegroundColor Green
     } else {
         Write-Error "PostgreSQL Server '$postgresServerName' not found"
