@@ -58,8 +58,8 @@ public sealed class NodepoolGetCommandTests
             var testNodePool = new Models.NodePool
             {
                 Name = "np1",
-                NodeCount = 3,
-                NodeVmSize = "Standard_DS2_v2",
+                Count = 3,
+                VmSize = "Standard_DS2_v2",
                 Mode = "System"
             };
             _aksService.GetNodePool(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
@@ -91,9 +91,30 @@ public sealed class NodepoolGetCommandTests
         var expectedNodePool = new Models.NodePool
         {
             Name = "userpool",
-            NodeCount = 5,
-            NodeVmSize = "Standard_D4s_v5",
-            Mode = "User"
+            Count = 1,
+            VmSize = "Standard_NC24ads_A100_v4",
+            OsDiskSizeGB = 256,
+            OsDiskType = "Ephemeral",
+            KubeletDiskType = "OS",
+            MaxPods = 110,
+            Type = "VirtualMachineScaleSets",
+            MaxCount = 5,
+            MinCount = 1,
+            EnableAutoScaling = true,
+            ScaleDownMode = "Delete",
+            ProvisioningState = "Succeeded",
+            PowerState = new Models.NodePoolPowerState { Code = "Running" },
+            OrchestratorVersion = "1.33.2",
+            CurrentOrchestratorVersion = "1.33.2",
+            EnableNodePublicIP = false,
+            ScaleSetPriority = "Spot",
+            ScaleSetEvictionPolicy = "Delete",
+            NodeLabels = new Dictionary<string, string> { { "kubernetes.azure.com/scalesetpriority", "spot" } },
+            NodeTaints = new List<string> { "kubernetes.azure.com/scalesetpriority=spot:NoSchedule" },
+            Mode = "User",
+            OsType = "Linux",
+            OsSKU = "Ubuntu",
+            NodeImageVersion = "AKSUbuntu-2204gen2containerd-202508.20.1"
         };
         _aksService.GetNodePool(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedNodePool);
@@ -115,8 +136,30 @@ public sealed class NodepoolGetCommandTests
 
         Assert.NotNull(result);
         Assert.Equal(expectedNodePool.Name, result.NodePool.Name);
-        Assert.Equal(expectedNodePool.NodeCount, result.NodePool.NodeCount);
-        Assert.Equal(expectedNodePool.NodeVmSize, result.NodePool.NodeVmSize);
+        Assert.Equal(expectedNodePool.Count, result.NodePool.Count);
+        Assert.Equal(expectedNodePool.VmSize, result.NodePool.VmSize);
+        Assert.Equal(expectedNodePool.OsDiskSizeGB, result.NodePool.OsDiskSizeGB);
+        Assert.Equal(expectedNodePool.OsDiskType, result.NodePool.OsDiskType);
+        Assert.Equal(expectedNodePool.KubeletDiskType, result.NodePool.KubeletDiskType);
+        Assert.Equal(expectedNodePool.MaxPods, result.NodePool.MaxPods);
+        Assert.Equal(expectedNodePool.Type, result.NodePool.Type);
+        Assert.Equal(expectedNodePool.MaxCount, result.NodePool.MaxCount);
+        Assert.Equal(expectedNodePool.MinCount, result.NodePool.MinCount);
+        Assert.Equal(expectedNodePool.EnableAutoScaling, result.NodePool.EnableAutoScaling);
+        Assert.Equal(expectedNodePool.ScaleDownMode, result.NodePool.ScaleDownMode);
+        Assert.Equal(expectedNodePool.ProvisioningState, result.NodePool.ProvisioningState);
+        Assert.Equal(expectedNodePool.PowerState?.Code, result.NodePool.PowerState?.Code);
+        Assert.Equal(expectedNodePool.OrchestratorVersion, result.NodePool.OrchestratorVersion);
+        Assert.Equal(expectedNodePool.CurrentOrchestratorVersion, result.NodePool.CurrentOrchestratorVersion);
+        Assert.Equal(expectedNodePool.EnableNodePublicIP, result.NodePool.EnableNodePublicIP);
+        Assert.Equal(expectedNodePool.ScaleSetPriority, result.NodePool.ScaleSetPriority);
+        Assert.Equal(expectedNodePool.ScaleSetEvictionPolicy, result.NodePool.ScaleSetEvictionPolicy);
+        Assert.Equal(expectedNodePool.NodeLabels!["kubernetes.azure.com/scalesetpriority"], result.NodePool.NodeLabels!["kubernetes.azure.com/scalesetpriority"]);
+        Assert.Equal(expectedNodePool.NodeTaints![0], result.NodePool.NodeTaints![0]);
+        Assert.Equal(expectedNodePool.Mode, result.NodePool.Mode);
+        Assert.Equal(expectedNodePool.OsType, result.NodePool.OsType);
+        Assert.Equal(expectedNodePool.OsSKU, result.NodePool.OsSKU);
+        Assert.Equal(expectedNodePool.NodeImageVersion, result.NodePool.NodeImageVersion);
     }
 
     [Fact]
@@ -156,4 +199,3 @@ public sealed class NodepoolGetCommandTests
         Assert.Contains("troubleshooting", response.Message);
     }
 }
-

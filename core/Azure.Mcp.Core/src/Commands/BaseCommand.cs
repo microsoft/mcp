@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 using System.CommandLine.Parsing;
 using System.Diagnostics;
 using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Models.Option;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Commands;
@@ -18,8 +16,6 @@ public abstract class BaseCommand : IBaseCommand
     private const string TroubleshootingUrl = "https://aka.ms/azmcp/troubleshooting";
 
     private readonly Command _command;
-    private bool _usesResourceGroup;
-    private bool _requiresResourceGroup;
 
     protected BaseCommand()
     {
@@ -116,17 +112,6 @@ public abstract class BaseCommand : IBaseCommand
             return result;
         }
 
-        // Enforce logical requirements (e.g., resource group required by this command)
-        if (result.IsValid && _requiresResourceGroup)
-        {
-            if (!commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup))
-            {
-                result.IsValid = false;
-                result.ErrorMessage = $"{MissingRequiredOptionsPrefix}--resource-group";
-                SetValidationError(commandResponse, result.ErrorMessage);
-            }
-        }
-
         return result;
 
         static void SetValidationError(CommandResponse? response, string errorMessage)
@@ -138,33 +123,4 @@ public abstract class BaseCommand : IBaseCommand
             }
         }
     }
-
-
-    // TODO(jongio): Consider a stronger, declarative model for option requirements.
-
-    protected void UseResourceGroup()
-    {
-        if (_usesResourceGroup)
-            return;
-        _usesResourceGroup = true;
-        _command.Options.Add(OptionDefinitions.Common.ResourceGroup);
-    }
-
-    protected void RequireResourceGroup()
-    {
-        UseResourceGroup();
-        _requiresResourceGroup = true;
-    }
-
-    protected string? GetResourceGroup(ParseResult parseResult)
-    {
-        if (!UsesResourceGroup)
-            return null;
-
-        return parseResult.CommandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup)
-                ? parseResult.CommandResult.GetValue(OptionDefinitions.Common.ResourceGroup)
-                : null;
-    }
-
-    protected bool UsesResourceGroup => _usesResourceGroup;
 }

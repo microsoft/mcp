@@ -79,14 +79,6 @@ public static class MonitorOptionDefinitions
         public const string MaxBucketsName = "max-buckets";
 
         // Metrics options
-        public static readonly Option<string> MetricNamespaceOptional = new(
-            $"--{MetricNamespaceName}"
-        )
-        {
-            Description = "The metric namespace to query. Obtain this value from the azmcp-monitor-metrics-definitions command.",
-            Required = false
-        };
-
         public static readonly Option<string> MetricNamespace = new(
             $"--{MetricNamespaceName}"
         )

@@ -13,18 +13,16 @@ public abstract class BaseShareCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
     : BaseStorageCommand<TOptions> where TOptions : BaseShareOptions, new()
 {
-    protected readonly Option<string> _shareOption = StorageOptionDefinitions.Share;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_shareOption);
+        command.Options.Add(StorageOptionDefinitions.Share);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Share = parseResult.GetValueOrDefault(_shareOption);
+        options.Share = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Share.Name);
         return options;
     }
 }

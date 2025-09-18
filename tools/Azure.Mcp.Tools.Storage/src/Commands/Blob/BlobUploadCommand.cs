@@ -15,9 +15,6 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
     private const string CommandTitle = "Upload Local File to Blob";
     private readonly ILogger<BlobUploadCommand> _logger = logger;
 
-    // Define options from OptionDefinitions
-    private readonly Option<string> _localFilePathOption = StorageOptionDefinitions.LocalFilePath;
-
     public override string Name => "upload";
 
     public override string Description =>
@@ -41,13 +38,13 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_localFilePathOption);
+        command.Options.Add(StorageOptionDefinitions.LocalFilePath);
     }
 
     protected override BlobUploadOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.LocalFilePath = parseResult.GetValueOrDefault(_localFilePathOption);
+        options.LocalFilePath = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.LocalFilePath.Name);
         return options;
     }
 

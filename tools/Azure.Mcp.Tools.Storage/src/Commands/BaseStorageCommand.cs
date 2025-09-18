@@ -14,18 +14,16 @@ public abstract class BaseStorageCommand<
     : SubscriptionCommand<T>
     where T : BaseStorageOptions, new()
 {
-    protected readonly Option<string> _accountOption = StorageOptionDefinitions.Account;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_accountOption);
+        command.Options.Add(StorageOptionDefinitions.Account);
     }
 
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault(_accountOption);
+        options.Account = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Account.Name);
         return options;
     }
 }

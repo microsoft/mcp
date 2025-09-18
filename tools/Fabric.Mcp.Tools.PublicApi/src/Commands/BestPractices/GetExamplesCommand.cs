@@ -15,15 +15,14 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
     private const string CommandTitle = "Get API Examples";
 
     private readonly ILogger<GetExamplesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly Option<string> _workloadTypeOption = FabricOptionDefinitions.WorkloadType;
 
     public override string Name => "get";
 
     public override string Description =>
         """
         Retrieve all example API request/response files for a specific Microsoft Fabric workload.
-        Requires the workload type (e.g., 'notebook', 'report'). Returns a dictionary mapping 
-        file paths to their contents, containing sample API calls, responses, and implementation 
+        Requires the workload type (e.g., 'notebook', 'report'). Returns a dictionary mapping
+        file paths to their contents, containing sample API calls, responses, and implementation
         examples to help with API integration and development.
         """;
 
@@ -42,13 +41,13 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_workloadTypeOption);
+        command.Options.Add(FabricOptionDefinitions.WorkloadType);
     }
 
     protected override WorkloadCommandOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkloadType = parseResult.GetValueOrDefault(_workloadTypeOption);
+        options.WorkloadType = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkloadType.Name);
         return options;
     }
 

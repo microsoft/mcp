@@ -57,9 +57,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger)
                 options.Subscription!,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new DatabaseListResult(databases),
-                SqlJsonContext.Default.DatabaseListResult);
+            context.Response.Results = ResponseResult.Create(new(databases ?? []), SqlJsonContext.Default.DatabaseListResult);
         }
         catch (Exception ex)
         {
@@ -80,12 +78,6 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger)
             $"Authorization failed accessing the SQL server. Verify you have appropriate permissions. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record DatabaseListResult(List<SqlDatabase> Databases);

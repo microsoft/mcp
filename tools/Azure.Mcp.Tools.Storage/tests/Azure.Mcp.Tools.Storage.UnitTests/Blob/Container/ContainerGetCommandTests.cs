@@ -82,7 +82,7 @@ public class ContainerGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoContainers()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoContainers()
     {
         // Arrange
         _storageService.GetContainerDetails(
@@ -103,7 +103,11 @@ public class ContainerGetCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<ContainerGetCommand.ContainerGetCommandResult>(json);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Containers);
     }
 
     [Fact]
