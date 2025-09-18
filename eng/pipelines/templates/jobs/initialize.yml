@@ -38,9 +38,12 @@ jobs:
       $sourceBranch = $env:BUILD_SOURCEBRANCH
       $setDevVersion = $env:SETDEVVERSION -eq 'true'
       $dynamicPrereleaseVersion = $env:DYNAMIC -eq 'true'
+
       $shouldSetSuffix = $setDevVersion -or $dynamicPrereleaseVersion
+
       $label = $buildReason -eq 'IndividualCI' -and $sourceBranch -eq 'refs/heads/main' ? 'beta' : 'alpha'
       $suffix = $shouldSetSuffix ? "-$label.$buildId" : ''
+
       Write-Host "Setting version suffix to '$suffix'"
       Write-Host "##vso[task.setvariable variable=VersionSuffix;isOutput=true]$suffix"
     name: GetVersion
