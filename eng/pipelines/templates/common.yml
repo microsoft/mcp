@@ -53,6 +53,8 @@ extends:
       variables:
       - template: /eng/pipelines/templates/variables/image.yml
       - template: /eng/pipelines/templates/variables/globals.yml
+      - name: VersionSuffix
+        value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
       jobs:
       - template: /eng/pipelines/templates/jobs/analyze.yml
       - template: /eng/common/pipelines/templates/jobs/generate-job-matrix.yml
@@ -87,6 +89,7 @@ extends:
       - stage: SignAndPack
         displayName: 'Sign and Pack'
         dependsOn:
+        - Initialize
         - Build
         pool:
           name: $(LINUXPOOL)
@@ -95,6 +98,8 @@ extends:
         variables:
         - template: /eng/pipelines/templates/variables/image.yml
         - template: /eng/pipelines/templates/variables/globals.yml
+        - name: VersionSuffix
+          value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
         jobs:
         - template: /eng/pipelines/templates/jobs/sign-and-pack.yml
           parameters:
@@ -103,6 +108,7 @@ extends:
       - ${{ if eq(parameters.ReleaseRun, 'true') }}:
         - stage: Release
           dependsOn:
+          - Initialize
           - SignAndPack
           pool:
             name: $(LINUXPOOL)
@@ -111,6 +117,8 @@ extends:
           variables:
           - template: /eng/pipelines/templates/variables/image.yml
           - template: /eng/pipelines/templates/variables/globals.yml
+          - name: VersionSuffix
+            value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
           jobs:
           - template: /eng/pipelines/templates/jobs/release.yml
             parameters:
@@ -121,6 +129,7 @@ extends:
       - ${{ else }}:
         - stage: Integration
           dependsOn:
+          - Initialize
           - SignAndPack
           pool:
             name: $(LINUXPOOL)
@@ -129,6 +138,8 @@ extends:
           variables:
           - template: /eng/pipelines/templates/variables/image.yml
           - template: /eng/pipelines/templates/variables/globals.yml
+          - name: VersionSuffix
+            value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
           jobs:
           - template: /eng/pipelines/templates/jobs/integration.yml
             parameters:
