@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Models.Option;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,10 @@ namespace Azure.Mcp.Core.Areas.Tools.Commands;
 public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCommand()
 {
     private const string CommandTitle = "List Available Tools";
+    private static readonly Option<bool> NamespacesOption = new("--namespaces")
+    {
+        Description = "If specified, returns a list of top-level service namespaces instead of individual commands.",
+    };
 
     public override string Name => "list";
 
@@ -33,11 +38,59 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         Secret = false
     };
 
+    protected override void RegisterOptions(Command command)
+    {
+        command.Options.Add(NamespacesOption);
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         try
         {
             var factory = context.GetService<CommandFactory>();
+
+            // If the --namespaces flag set, return distinct top-level namespaces (area group names beneath root 'azmcp')
+            var namespacesOnly = parseResult.CommandResult.HasOptionResult(NamespacesOption);
+            if (namespacesOnly)
+            {
+                var ignored = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "extension", "server", "tools" };
+                var rootGroup = factory.RootGroup; // azmcp
+
+                // Build a map of visible commands once to reuse for option resolution
+                var visible = CommandFactory.GetVisibleCommands(factory.AllCommands);
+
+                var namespaceCommands = rootGroup.SubGroup
+                    .Where(g => !ignored.Contains(g.Name))
+                    .GroupBy(g => g.Name, StringComparer.OrdinalIgnoreCase)
+                    .Select(grp =>
+                    {
+                        var first = grp.First();
+
+                        // Collect all descendant command token keys for this namespace (prefix match "<ns>.")
+                        // Commands in the map are tokenized starting with root (e.g., azmcp_storage_account_get)
+                        var nsPrefix = string.Concat(rootGroup.Name, CommandFactory.Separator, first.Name, CommandFactory.Separator);
+                        var subcommandInfos = visible
+                            .Where(kvp => kvp.Key.StartsWith(nsPrefix, StringComparison.OrdinalIgnoreCase))
+                            .Select(kvp => CreateCommand(kvp.Key, kvp.Value))
+                            .OrderBy(ci => ci.Command, StringComparer.OrdinalIgnoreCase)
+                            .ToList();
+
+                        return new CommandInfo
+                        {
+                            Name = first.Name,
+                            Description = first.Description,
+                            Command = $"azmcp {first.Name}",
+                            Subcommands = subcommandInfos,
+                            Options = null
+                        };
+                    })
+                    .OrderBy(ci => ci.Name, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                context.Response.Results = ResponseResult.Create(namespaceCommands, ModelsJsonContext.Default.ListCommandInfo);
+                return context.Response;
+            }
+
             var tools = await Task.Run(() => CommandFactory.GetVisibleCommands(factory.AllCommands)
                 .Select(kvp => CreateCommand(kvp.Key, kvp.Value))
                 .ToList());
@@ -47,7 +100,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An exception occurred processing tool.");
+            logger.LogError(ex, "An exception occurred processing listing tools.");
             HandleException(context, ex);
 
             return context.Response;

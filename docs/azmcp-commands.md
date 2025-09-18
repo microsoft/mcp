@@ -693,6 +693,9 @@ azmcp bestpractices get --resource <resource> --action <action>
 ```bash
 # List all available tools in the Azure MCP server
 azmcp tools list
+
+# List only the available top-level service namespaces
+azmcp tools list --namespaces
 ```
 
 ### Azure Monitor Operations

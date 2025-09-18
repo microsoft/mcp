@@ -313,6 +313,69 @@ public class ToolsListCommandTests
     }
 
     /// <summary>
+    /// Verifies that the --namespaces switch returns only distinct top-level namespaces.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_WithNamespaceSwitch_ReturnsNamespacesOnly()
+    {
+        // Arrange
+        var args = _commandDefinition.Parse(new[] { "--namespaces" });
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(SuccessStatusCode, response.Status);
+        Assert.NotNull(response.Results);
+
+        // Serialize then deserialize as list of CommandInfo
+        var json = JsonSerializer.Serialize(response.Results);
+        var namespaces = JsonSerializer.Deserialize<List<CommandInfo>>(json);
+
+        Assert.NotNull(namespaces);
+        Assert.NotEmpty(namespaces);
+
+        // Should include some well-known namespaces (matching Name property)
+        Assert.Contains(namespaces, ci => ci.Name.Equals("subscription", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(namespaces, ci => ci.Name.Equals("storage", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(namespaces, ci => ci.Name.Equals("keyvault", StringComparison.OrdinalIgnoreCase));
+
+        bool foundNamespaceWithSubcommands = false;
+        bool foundSubcommandWithOptions = false;
+
+        foreach (var ns in namespaces!)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(ns.Name));
+            Assert.False(string.IsNullOrWhiteSpace(ns.Command));
+            Assert.StartsWith("azmcp ", ns.Command, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(ns.Name, ns.Name.Trim());
+            Assert.DoesNotContain(" ", ns.Name);
+            // Namespace should not itself have options
+            Assert.Null(ns.Options);
+
+            if (ns.Subcommands is { Count: > 0 })
+            {
+                foundNamespaceWithSubcommands = true;
+                // Validate a few subcommands
+                foreach (var sub in ns.Subcommands.Take(5))
+                {
+                    Assert.False(string.IsNullOrWhiteSpace(sub.Name));
+                    Assert.False(string.IsNullOrWhiteSpace(sub.Command));
+                    Assert.StartsWith($"azmcp {ns.Name} ", sub.Command, StringComparison.OrdinalIgnoreCase);
+                    if (sub.Options != null && sub.Options.Count > 0)
+                    {
+                        foundSubcommandWithOptions = true;
+                    }
+                }
+            }
+        }
+
+        Assert.True(foundNamespaceWithSubcommands, "Expected at least one namespace to contain subcommands.");
+        Assert.True(foundSubcommandWithOptions, "Expected at least one subcommand to include options.");
+    }
+
+    /// <summary>
     /// Verifies that the command handles empty command factory gracefully
     /// and returns empty results when no commands are available.
     /// </summary>
