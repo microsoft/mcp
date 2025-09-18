@@ -15,9 +15,6 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : SubscriptionCommand<QueuePeekOptions>
 {
     private const string CommandTitle = "Peek Messages from Service Bus Queue";
-    private readonly Option<string> _queueOption = ServiceBusOptionDefinitions.Queue;
-    private readonly Option<int> _maxMessagesOption = ServiceBusOptionDefinitions.MaxMessages;
-    private readonly Option<string> _namespaceOption = ServiceBusOptionDefinitions.Namespace;
     private readonly ILogger<QueuePeekCommand> _logger = logger;
     public override string Name => "peek";
 
@@ -49,17 +46,17 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_namespaceOption);
-        command.Options.Add(_queueOption);
-        command.Options.Add(_maxMessagesOption);
+        command.Options.Add(ServiceBusOptionDefinitions.Namespace);
+        command.Options.Add(ServiceBusOptionDefinitions.Queue);
+        command.Options.Add(ServiceBusOptionDefinitions.MaxMessages);
     }
 
     protected override QueuePeekOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Name = parseResult.GetValueOrDefault(_queueOption);
-        options.Namespace = parseResult.GetValueOrDefault(_namespaceOption);
-        options.MaxMessages = parseResult.GetValueOrDefault(_maxMessagesOption);
+        options.Name = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Queue.Name);
+        options.Namespace = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Namespace.Name);
+        options.MaxMessages = parseResult.GetValueOrDefault<int>(ServiceBusOptionDefinitions.MaxMessages.Name);
         return options;
     }
 

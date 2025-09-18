@@ -98,6 +98,6 @@ public class TableListCommandTests
     private class TableListResult
     {
         [JsonPropertyName("Tables")]
-        public List<string> Tables { get; set; } = new List<string>();
+        public List<string> Tables { get; set; } = [];
     }
 }

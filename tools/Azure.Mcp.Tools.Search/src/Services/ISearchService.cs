@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Search.Models;
-using static Azure.Mcp.Tools.Search.Commands.Index.IndexGetCommand;
 
 namespace Azure.Mcp.Tools.Search.Services;
 

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Search.Documents.Indexes.Models;
 
 namespace Azure.Mcp.Tools.Search.Models;
 

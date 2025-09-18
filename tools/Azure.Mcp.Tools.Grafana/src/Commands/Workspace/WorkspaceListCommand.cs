@@ -54,11 +54,7 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = workspaces.Any() ?
-                ResponseResult.Create(
-                    new WorkspaceListCommandResult(workspaces),
-                    GrafanaJsonContext.Default.WorkspaceListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(workspaces ?? []), GrafanaJsonContext.Default.WorkspaceListCommandResult);
         }
         catch (Exception ex)
         {

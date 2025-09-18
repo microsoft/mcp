@@ -1,11 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Models.Elicitation;
-using ModelContextProtocol.Protocol;
-using ModelContextProtocol.Server;
 using static ModelContextProtocol.Protocol.ElicitRequestParams;
 
 namespace Azure.Mcp.Core.Extensions;
@@ -88,7 +85,7 @@ public static class McpServerElicitationExtensions
         {
             return jsonMetadata.TryGetPropertyValue("Secret", out var secretValue) &&
                    secretValue is JsonValue jsonValue &&
-                   jsonValue.TryGetValue<bool>(out bool isSecret) &&
+                   jsonValue.TryGetValue(out bool isSecret) &&
                    isSecret;
         }
 

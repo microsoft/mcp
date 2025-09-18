@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Aks.Options;
 using Azure.Mcp.Tools.Aks.Options.Nodepool;
 using Azure.Mcp.Tools.Aks.Services;
@@ -13,8 +15,6 @@ public sealed class NodepoolListCommand(ILogger<NodepoolListCommand> logger) : B
 {
     private const string CommandTitle = "List AKS Node Pools";
     private readonly ILogger<NodepoolListCommand> _logger = logger;
-
-    private readonly Option<string> _clusterNameOption = AksOptionDefinitions.Cluster;
 
     public override string Name => "list";
 
@@ -39,14 +39,15 @@ public sealed class NodepoolListCommand(ILogger<NodepoolListCommand> logger) : B
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        RequireResourceGroup();
-        command.Options.Add(_clusterNameOption);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(AksOptionDefinitions.Cluster);
     }
 
     protected override NodepoolListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ClusterName = parseResult.GetValue(_clusterNameOption);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.ClusterName = parseResult.GetValueOrDefault<string>(AksOptionDefinitions.Cluster.Name);
         return options;
     }
 
@@ -69,11 +70,7 @@ public sealed class NodepoolListCommand(ILogger<NodepoolListCommand> logger) : B
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = nodePools?.Count > 0 ?
-                ResponseResult.Create(
-                    new NodepoolListCommandResult(nodePools),
-                    AksJsonContext.Default.NodepoolListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(nodePools ?? []), AksJsonContext.Default.NodepoolListCommandResult);
         }
         catch (Exception ex)
         {
@@ -94,12 +91,6 @@ public sealed class NodepoolListCommand(ILogger<NodepoolListCommand> logger) : B
             $"Authorization failed accessing AKS node pools. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record NodepoolListCommandResult(List<Models.NodePool> NodePools);

@@ -3,13 +3,12 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Monitor.Options;
-using Azure.Mcp.Tools.Monitor.Options.HealthModels.Entity;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 
-public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logger) : BaseMonitorHealthModelsCommand<EntityGetHealthOptions>
+public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logger) : BaseMonitorHealthModelsCommand<BaseMonitorHealthModelsOptions>
 {
     private const string CommandTitle = "Get the health of an entity in a health model";
     private const string CommandName = "gethealth";
@@ -38,22 +37,6 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
     };
 
     private readonly ILogger<EntityGetHealthCommand> _logger = logger;
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(_entityOption);
-        command.Options.Add(_healthModelOption);
-        RequireResourceGroup();
-    }
-
-    protected override EntityGetHealthOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Entity = parseResult.GetValue(_entityOption);
-        options.HealthModelName = parseResult.GetValue(_healthModelOption);
-        return options;
-    }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {

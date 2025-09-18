@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.MySql.Json;
 using Azure.Mcp.Tools.MySql.Options.Server;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
@@ -42,11 +41,7 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger) : BaseM
         {
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
             List<string> servers = await mysqlService.ListServersAsync(options.Subscription!, options.ResourceGroup!, options.User!);
-            context.Response.Results = servers?.Count > 0 ?
-                ResponseResult.Create(
-                    new ServerListCommandResult(servers),
-                    MySqlJsonContext.Default.ServerListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(servers ?? []), MySqlJsonContext.Default.ServerListCommandResult);
         }
         catch (Exception ex)
         {

@@ -4,6 +4,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.ProcessExecution;
@@ -17,10 +18,6 @@ public sealed class AzdCommand(ILogger<AzdCommand> logger, int processTimeoutSec
     private const string CommandTitle = "Azure Developer CLI Command";
     private readonly ILogger<AzdCommand> _logger = logger;
     private readonly int _processTimeoutSeconds = processTimeoutSeconds;
-    private readonly Option<string> _commandOption = ExtensionOptionDefinitions.Azd.Command;
-    private readonly Option<string> _cwdOption = ExtensionOptionDefinitions.Azd.Cwd;
-    private readonly Option<string> _environmentOption = ExtensionOptionDefinitions.Azd.Environment;
-    private readonly Option<bool> _learnOption = ExtensionOptionDefinitions.Azd.Learn;
     private static string? _cachedAzdPath;
 
     private readonly IEnumerable<string> longRunningCommands =
@@ -89,19 +86,19 @@ public sealed class AzdCommand(ILogger<AzdCommand> logger, int processTimeoutSec
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_commandOption);
-        command.Options.Add(_cwdOption);
-        command.Options.Add(_environmentOption);
-        command.Options.Add(_learnOption);
+        command.Options.Add(ExtensionOptionDefinitions.Azd.Command);
+        command.Options.Add(ExtensionOptionDefinitions.Azd.Cwd);
+        command.Options.Add(ExtensionOptionDefinitions.Azd.Environment);
+        command.Options.Add(ExtensionOptionDefinitions.Azd.Learn);
     }
 
     protected override AzdOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Command = parseResult.GetValue(_commandOption);
-        options.Cwd = parseResult.GetValue(_cwdOption);
-        options.Environment = parseResult.GetValue(_environmentOption);
-        options.Learn = parseResult.GetValue(_learnOption);
+        options.Command = parseResult.GetValueOrDefault<string>(ExtensionOptionDefinitions.Azd.Command.Name);
+        options.Cwd = parseResult.GetValueOrDefault<string>(ExtensionOptionDefinitions.Azd.Cwd.Name);
+        options.Environment = parseResult.GetValueOrDefault<string>(ExtensionOptionDefinitions.Azd.Environment.Name);
+        options.Learn = parseResult.GetValueOrDefault<bool>(ExtensionOptionDefinitions.Azd.Learn.Name);
 
         return options;
     }

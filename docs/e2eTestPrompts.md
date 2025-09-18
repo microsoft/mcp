@@ -146,6 +146,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_eventgrid_topic_list | Show me the Event Grid topics in my subscription |
 | azmcp_eventgrid_topic_list | List all Event Grid topics in subscription <subscription> |
 | azmcp_eventgrid_topic_list | List all Event Grid topics in resource group <resource_group_name> in subscription <subscription> |
+| azmcp_eventgrid_subscription_list | Show me all Event Grid subscriptions for topic <topic_name> |
+| azmcp_eventgrid_subscription_list | List Event Grid subscriptions for topic <topic_name> in subscription <subscription> |
+| azmcp_eventgrid_subscription_list | List Event Grid subscriptions for topic <topic_name> in resource group <resource_group_name> |
+| azmcp_eventgrid_subscription_list | Show all Event Grid subscriptions in my subscription |
+| azmcp_eventgrid_subscription_list | List all Event Grid subscriptions in subscription <subscription> |
+| azmcp_eventgrid_subscription_list | Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription> |
+| azmcp_eventgrid_subscription_list | List Event Grid subscriptions for subscription <subscription> in location <location> |
 
 ## Azure Function App
 
@@ -355,6 +362,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_sql_db_create | Create a new SQL database named <database_name> in server <server_name> |
+| azmcp_sql_db_create | Create a SQL database <database_name> with Basic tier in server <server_name> |
+| azmcp_sql_db_create | Create a new database called <database_name> on SQL server <server_name> in resource group <resource_group_name> |
+| azmcp_sql_db_delete | Delete the SQL database <database_name> from server <server_name> |
+| azmcp_sql_db_delete | Remove database <database_name> from SQL server <server_name> in resource group <resource_group_name> |
+| azmcp_sql_db_delete | Delete the database called <database_name> on server <server_name> |
 | azmcp_sql_db_list | List all databases in the Azure SQL server <server_name> |
 | azmcp_sql_db_list | Show me all the databases configuration details in the Azure SQL server <server_name> |
 | azmcp_sql_db_show | Get the configuration details for the SQL database <database_name> on server <server_name> |

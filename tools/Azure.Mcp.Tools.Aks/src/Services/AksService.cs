@@ -254,15 +254,30 @@ public sealed class AksService(
             .Select(node => new NodePool
             {
                 Name = node.Name ?? "Unknown",
-                NodeCount = node.Count,
-                NodeVmSize = node.VmSize,
-                OsType = node.OSType,
-                Mode = node.Mode,
-                OrchestratorVersion = node.OrchestratorVersion,
-                EnableAutoScaling = node.EnableAutoScaling,
+                Count = node.Count,
+                VmSize = node.VmSize,
+                OsDiskSizeGB = node.OSDiskSizeInGB,
+                OsDiskType = node.OSDiskType,
+                KubeletDiskType = node.KubeletDiskType,
+                MaxPods = node.MaxPods,
+                Type = node.AgentPoolType,
                 MinCount = node.MinCount,
                 MaxCount = node.MaxCount,
-                ProvisioningState = node.ProvisioningState
+                EnableAutoScaling = node.EnableAutoScaling,
+                ScaleDownMode = node.ScaleDownMode,
+                ProvisioningState = node.ProvisioningState,
+                PowerState = node.PowerState?.Code,
+                Mode = node.Mode,
+                OrchestratorVersion = node.OrchestratorVersion,
+                CurrentOrchestratorVersion = node.CurrentOrchestratorVersion,
+                EnableNodePublicIP = node.EnableNodePublicIP,
+                ScaleSetPriority = node.ScaleSetPriority,
+                ScaleSetEvictionPolicy = node.ScaleSetEvictionPolicy,
+                NodeLabels = node.NodeLabels?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+                NodeTaints = node.NodeTaints?.ToList(),
+                OsType = node.OSType,
+                OsSKU = node.OSSku,
+                NodeImageVersion = node.NodeImageVersion
             })
             .ToList()
             ?? new List<NodePool>();

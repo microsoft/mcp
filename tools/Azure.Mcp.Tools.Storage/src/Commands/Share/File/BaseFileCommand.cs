@@ -13,18 +13,16 @@ public abstract class BaseFileCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
     : BaseShareCommand<TOptions> where TOptions : BaseFileOptions, new()
 {
-    protected readonly Option<string> _directoryPathOption = StorageOptionDefinitions.DirectoryPath;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_directoryPathOption);
+        command.Options.Add(StorageOptionDefinitions.DirectoryPath);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DirectoryPath = parseResult.GetValueOrDefault(_directoryPathOption);
+        options.DirectoryPath = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.DirectoryPath.Name);
         return options;
     }
 }

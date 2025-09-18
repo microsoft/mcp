@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Deploy.Options;
 using Azure.Mcp.Tools.Deploy.Options.App;
 using Azure.Mcp.Tools.Deploy.Services;
@@ -14,10 +15,6 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
 {
     private const string CommandTitle = "Get AZD deployed App Logs";
     private readonly ILogger<LogsGetCommand> _logger = logger;
-
-    private readonly Option<string> _workspaceFolderOption = DeployOptionDefinitions.AzdAppLogOptions.WorkspaceFolder;
-    private readonly Option<string> _azdEnvNameOption = DeployOptionDefinitions.AzdAppLogOptions.AzdEnvName;
-    private readonly Option<int> _limitOption = DeployOptionDefinitions.AzdAppLogOptions.Limit;
 
     public override string Name => "get";
     public override string Title => CommandTitle;
@@ -39,17 +36,17 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_workspaceFolderOption);
-        command.Options.Add(_azdEnvNameOption);
-        command.Options.Add(_limitOption);
+        command.Options.Add(DeployOptionDefinitions.AzdAppLogOptions.WorkspaceFolder);
+        command.Options.Add(DeployOptionDefinitions.AzdAppLogOptions.AzdEnvName);
+        command.Options.Add(DeployOptionDefinitions.AzdAppLogOptions.Limit);
     }
 
     protected override LogsGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceFolder = parseResult.GetValue(_workspaceFolderOption)!;
-        options.AzdEnvName = parseResult.GetValue(_azdEnvNameOption)!;
-        options.Limit = parseResult.GetValue(_limitOption);
+        options.WorkspaceFolder = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.AzdAppLogOptions.WorkspaceFolder.Name)!;
+        options.AzdEnvName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.AzdAppLogOptions.AzdEnvName.Name)!;
+        options.Limit = parseResult.GetValueOrDefault<int>(DeployOptionDefinitions.AzdAppLogOptions.Limit.Name);
         return options;
     }
 

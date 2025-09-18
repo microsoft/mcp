@@ -69,6 +69,13 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
         {
             Assert.False(string.IsNullOrEmpty(stateProperty.GetString()));
         }
+
+        Assert.True(nodePool.TryGetProperty("orchestratorVersion", out _));
+        Assert.True(nodePool.TryGetProperty("currentOrchestratorVersion", out _));
+        Assert.True(nodePool.TryGetProperty("enableAutoScaling", out _));
+        Assert.True(nodePool.TryGetProperty("maxPods", out _));
+        Assert.True(nodePool.TryGetProperty("osSKU", out _));
+        Assert.True(nodePool.TryGetProperty("nodeImageVersion", out _));
     }
 
     [Fact]
@@ -177,4 +184,3 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
         Assert.False(result.HasValue);
     }
 }
-

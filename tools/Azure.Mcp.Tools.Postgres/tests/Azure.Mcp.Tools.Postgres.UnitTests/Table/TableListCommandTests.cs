@@ -66,7 +66,12 @@ public class TableListCommandTests
         Assert.NotNull(response);
         Assert.Equal(200, response.Status);
         Assert.Equal("Success", response.Message);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<TableListResult>(json);
+        Assert.NotNull(result);
+        Assert.Empty(result.Tables);
     }
 
     [Theory]
