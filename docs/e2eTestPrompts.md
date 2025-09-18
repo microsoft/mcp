@@ -51,6 +51,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applens_resource_diagnose | Use app lens to check why my app is slow? |
 | azmcp_applens_resource_diagnose | What does app lens say is wrong with my service? |
 
+## Azure Application Insights
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_applicationinsights_recommendation_list | List code optimization recommendations across my Application Insights components |
+| azmcp_applicationinsights_recommendation_list | Show me code optimization recommendations for all Application Insights resources in my subscription |
+| azmcp_applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> |
+| azmcp_applicationinsights_recommendation_list | Show me performance improvement recommendations from Application Insights |
+
 ## Azure Container Registry (ACR)
 
 | Tool Name | Test Prompt |

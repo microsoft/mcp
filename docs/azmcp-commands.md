@@ -245,6 +245,19 @@ azmcp applens resource diagnose --subscription <subscription> \
                                 --resource <resource>
 ```
 
+### Azure Application Insights Operations
+
+#### Code Optimization Recommendations
+
+```bash
+# List code optimization recommendations across all Application Insights components in a subscription
+azmcp applicationinsights recommendation list --subscription <subscription>
+
+# Scope to a specific resource group
+azmcp applicationinsights recommendation list --subscription <subscription> \
+                                              --resource-group <resource-group>
+```
+
 ### Azure Container Registry (ACR) Operations
 
 ```bash
