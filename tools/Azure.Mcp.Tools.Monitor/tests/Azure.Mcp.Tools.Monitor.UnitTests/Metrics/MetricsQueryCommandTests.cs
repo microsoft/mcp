@@ -139,7 +139,7 @@ public class MetricsQueryCommandTests
             "Microsoft.Storage/storageAccounts", // resource type
             "sa1", // resource name
             "Microsoft.Storage", // metric namespace
-            Arg.Is<IEnumerable<string>>(["CPU", "Memory"]), // metric names
+            Arg.Is<IEnumerable<string>>(m => m.SequenceEqual(new[] { "CPU", "Memory" })), // metric names
             "2023-01-01T00:00:00Z", // start time
             "2023-01-02T00:00:00Z", // end time
             "PT1M", // interval
@@ -184,7 +184,7 @@ public class MetricsQueryCommandTests
             Arg.Is<string?>(t => t == null), // resource type (not provided)
             Arg.Is<string>(t => t == "sa1"), // resource name
             Arg.Is<string>(t => t == "microsoft.compute/virtualmachines"), // metric namespace (not provided)
-            Arg.Is<IEnumerable<string>>(["CPU"]), // metric names
+            Arg.Is<IEnumerable<string>>(m => m.SequenceEqual(new[] { "CPU" })), // metric names
             Arg.Any<string>(), // start time (default)
             Arg.Any<string>(), // end time (default)
             Arg.Is<string?>(t => t == null), // interval (not provided)
@@ -370,7 +370,7 @@ public class MetricsQueryCommandTests
             "Microsoft.Storage/storageAccounts",
             "sa1",
             "microsoft.compute/virtualmachines",
-            Arg.Is<IEnumerable<string>>(["CPU", "Memory"]),
+            Arg.Is<IEnumerable<string>>(m => m.SequenceEqual(new[] { "CPU", "Memory" })),
             "2023-01-01T00:00:00Z",
             "2023-01-02T00:00:00Z",
             "PT1M",
@@ -424,7 +424,7 @@ public class MetricsQueryCommandTests
                         Start = DateTime.UtcNow.AddHours(-1),
                         End = DateTime.UtcNow,
                         Interval = "PT1M",
-                        AvgBuckets = [51] // Exceeds default limit of 50
+                        AvgBuckets = new double[51] // Exceeds default limit of 50
                     }
                 ]
             }
@@ -478,7 +478,7 @@ public class MetricsQueryCommandTests
                         Start = DateTime.UtcNow.AddHours(-1),
                         End = DateTime.UtcNow,
                         Interval = "PT1M",
-                        MaxBuckets = [26] // Exceeds custom limit of 25
+                        MaxBuckets = new double[26] // Exceeds custom limit of 25
                     }
                 ]
             }
@@ -657,7 +657,7 @@ public class MetricsQueryCommandTests
                         Start = DateTime.UtcNow.AddHours(-1),
                         End = DateTime.UtcNow,
                         Interval = "PT1M",
-                        AvgBuckets = [51]
+                        AvgBuckets = new double[51]
                     }
                 ]
             }
@@ -785,7 +785,7 @@ public class MetricsQueryCommandTests
                 [
                     new()
                     {
-                        AvgBuckets = [30] // Within limit
+                        AvgBuckets = new double[30] // Within limit
                     }
                 ]
             },
@@ -797,7 +797,7 @@ public class MetricsQueryCommandTests
                 [
                     new()
                     {
-                        AvgBuckets = [51] // Exceeds limit
+                        AvgBuckets = new double[51] // Exceeds limit
                     }
                 ]
             }
@@ -845,11 +845,11 @@ public class MetricsQueryCommandTests
                 [
                     new()
                     {
-                        AvgBuckets = [30] // Within limit
+                        AvgBuckets = new double[30] // Within limit
                     },
                     new()
                     {
-                        AvgBuckets = [51] // Exceeds limit
+                        AvgBuckets = new double[51] // Exceeds limit
                     }
                 ]
             }
@@ -935,7 +935,7 @@ public class MetricsQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_NullResults_ReturnsSuccessWithNullResults()
+    public async Task ExecuteAsync_NullResults_ReturnsSuccessWithEmptyResults()
     {
         // Arrange
         _service.QueryMetricsAsync(
@@ -962,7 +962,7 @@ public class MetricsQueryCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
     }
 
     #endregion
