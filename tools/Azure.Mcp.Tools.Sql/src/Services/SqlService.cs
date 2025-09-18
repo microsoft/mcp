@@ -928,7 +928,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             Version: data.Version,
             State: data.State?.ToString(),
             PublicNetworkAccess: data.PublicNetworkAccess?.ToString(),
-            Tags: tags.Count == 0 ? null : tags);
+            Tags: tags.Count > 0 ? tags : null);
     }
 
     private static SqlServerEntraAdministrator ConvertToSqlServerEntraAdministratorModel(JsonElement item)
