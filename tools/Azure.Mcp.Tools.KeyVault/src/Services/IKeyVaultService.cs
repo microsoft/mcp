@@ -179,12 +179,12 @@ public interface IKeyVaultService
     /// </summary>
     /// <param name="vaultName">The name of the Key Vault.</param>
     /// <param name="subscription">The subscription ID or name.</param>
-    /// <param name="tenantId">Optional tenant ID for cross-tenant operations.</param>
+    /// <param name="tenant">Optional tenant ID for cross-tenant operations.</param>
     /// <param name="retryPolicy">Optional retry policy for the operation.</param>
     /// <returns>Structured vault settings.</returns>
     Task<GetSettingsResult> GetVaultSettings(
         string vaultName,
         string subscription,
-        string? tenantId = null,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 }
