@@ -429,7 +429,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             var elasticPools = new List<SqlElasticPool>();
             await foreach (var pool in sqlServerResource.Value.GetElasticPools().GetAllAsync(null, cancellationToken))
             {
-                elasticPools.Add(ConvertToSqlElasticPoolModel(pool.Data));
+                elasticPools.Add(ConvertToSqlElasticPoolModel(pool));
             }
 
             return elasticPools;
@@ -912,75 +912,9 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             );
     }
 
-    private static SqlServerEntraAdministrator ConvertToSqlServerEntraAdministratorModel(JsonElement item)
+    private static SqlElasticPool ConvertToSqlElasticPoolModel(ElasticPoolResource elasticPoolResource)
     {
-        SqlServerAadAdministratorData? admin = SqlServerAadAdministratorData.FromJson(item);
-        if (admin == null)
-            throw new InvalidOperationException("Failed to parse SQL server AAD administrator data");
-
-        return new SqlServerEntraAdministrator(
-                    Name: admin.ResourceName ?? "Unknown",
-                    Id: admin.ResourceId ?? "Unknown",
-                    Type: admin.ResourceType ?? "Unknown",
-                    AdministratorType: admin.Properties?.AdministratorType,
-                    Login: admin.Properties?.Login,
-                    Sid: admin.Properties?.Sid?.ToString(),
-                    TenantId: admin.Properties?.TenantId?.ToString(),
-                    AzureADOnlyAuthentication: admin.Properties?.IsAzureADOnlyAuthenticationEnabled
-                );
-    }
-
-    private static SqlElasticPool ConvertToSqlElasticPoolModel(JsonElement item)
-    {
-        SqlElasticPoolData? elasticPool = SqlElasticPoolData.FromJson(item);
-        if (elasticPool == null)
-            throw new InvalidOperationException("Failed to parse SQL elastic pool data");
-
-        return new SqlElasticPool(
-                    Name: elasticPool.ResourceName ?? "Unknown",
-                    Id: elasticPool.ResourceId ?? "Unknown",
-                    Type: elasticPool.ResourceType ?? "Unknown",
-                    Location: elasticPool.Location,
-                    Sku: elasticPool.Sku != null ? new ElasticPoolSku(
-                        Name: elasticPool.Sku.Name,
-                        Tier: elasticPool.Sku.Tier,
-                        Capacity: elasticPool.Sku.Capacity,
-                        Family: elasticPool.Sku.Family,
-                        Size: elasticPool.Sku.Size
-                    ) : null,
-                    State: elasticPool.Properties?.State,
-                    CreationDate: elasticPool.Properties?.CreatedOn,
-                    MaxSizeBytes: elasticPool.Properties?.MaxSizeBytes,
-                    PerDatabaseSettings: elasticPool.Properties?.PerDatabaseSettings != null ? new Sql.Models.ElasticPoolPerDatabaseSettings(
-                        MinCapacity: elasticPool.Properties.PerDatabaseSettings.MinCapacity,
-                        MaxCapacity: elasticPool.Properties.PerDatabaseSettings.MaxCapacity
-                    ) : null,
-                    ZoneRedundant: elasticPool.Properties?.IsZoneRedundant,
-                    LicenseType: elasticPool.Properties?.LicenseType,
-                    DatabaseDtuMin: null, // DTU properties not available in current SDK
-                    DatabaseDtuMax: null,
-                    Dtu: null,
-                    StorageMB: null
-                );
-    }
-
-    private static SqlServerFirewallRule ConvertToSqlFirewallRuleModel(JsonElement item)
-    {
-        Models.SqlFirewallRuleData? firewallRule = Azure.Mcp.Tools.Sql.Services.Models.SqlFirewallRuleData.FromJson(item);
-        if (firewallRule == null)
-            throw new InvalidOperationException("Failed to parse SQL firewall rule data");
-
-        return new SqlServerFirewallRule(
-            Name: firewallRule.ResourceName ?? "Unknown",
-            Id: firewallRule.ResourceId ?? "Unknown",
-            Type: firewallRule.ResourceType ?? "Unknown",
-            StartIpAddress: firewallRule.Properties?.StartIPAddress,
-            EndIpAddress: firewallRule.Properties?.EndIPAddress
-        );
-    }
-
-    private static SqlElasticPool ConvertToSqlElasticPoolModel(ElasticPoolData elasticPoolData)
-    {
+        var elasticPoolData = elasticPoolResource.Data;
         return new SqlElasticPool(
             Name: elasticPoolData.Name,
             Id: elasticPoolData.Id.ToString(),
