@@ -228,6 +228,9 @@ public class DatabaseUpdateCommandTests
     [InlineData("--subscription sub --resource-group rg", false, "Missing required options")]
     [InlineData("--subscription sub --resource-group rg --server server1", false, "Missing required options")]
     [InlineData("--subscription sub --resource-group rg --server server1 --database testdb", true, null)]
+    [InlineData("--resource-group rg --server server1 --database testdb", false, "Missing required options")] // Missing subscription
+    [InlineData("--subscription sub --server server1 --database testdb", false, "Missing required options")] // Missing resource-group
+    [InlineData("--subscription sub --resource-group rg --database testdb", false, "Missing required options")] // Missing server
     public async Task ExecuteAsync_ValidatesRequiredParameters(string commandArgs, bool shouldSucceed, string? expectedError)
     {
         // Arrange
@@ -287,5 +290,234 @@ public class DatabaseUpdateCommandTests
                 Assert.Contains(expectedError, response.Message, StringComparison.OrdinalIgnoreCase);
             }
         }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithMinimumRequiredParameters_Succeeds()
+    {
+        // Arrange - Test minimum scope with only required parameters
+        var mockDatabase = new SqlDatabase(
+            Name: "testdb",
+            Id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Sql/servers/server1/databases/testdb",
+            Type: "Microsoft.Sql/servers/databases",
+            Location: "East US",
+            Sku: null,
+            Status: "Online",
+            Collation: "SQL_Latin1_General_CP1_CI_AS",
+            CreationDate: DateTimeOffset.UtcNow,
+            MaxSizeBytes: 1073741824,
+            ServiceLevelObjective: "Basic",
+            Edition: "Basic",
+            ElasticPoolName: null,
+            EarliestRestoreDate: DateTimeOffset.UtcNow,
+            ReadScale: "Disabled",
+            ZoneRedundant: false
+        );
+
+        _sqlService.UpdateDatabaseAsync(
+            Arg.Is("server1"),
+            Arg.Is("testdb"),
+            Arg.Is("rg"),
+            Arg.Is("sub"),
+            Arg.Is((string?)null), // SkuName
+            Arg.Is((string?)null), // SkuTier
+            Arg.Is((int?)null),    // SkuCapacity
+            Arg.Is((string?)null), // Collation
+            Arg.Is((long?)null),   // MaxSizeBytes
+            Arg.Is((string?)null), // ElasticPoolName
+            Arg.Is((bool?)null),   // ZoneRedundant
+            Arg.Is((string?)null), // ReadScale
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDatabase);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "testdb"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(200, response.Status);
+        Assert.NotNull(response.Results);
+        Assert.Equal("Success", response.Message);
+
+        // Verify the service was called with null for optional parameters
+        await _sqlService.Received(1).UpdateDatabaseAsync(
+            "server1",
+            "testdb",
+            "rg",
+            "sub",
+            (string?)null, // SkuName
+            (string?)null, // SkuTier
+            (int?)null, // SkuCapacity
+            (string?)null, // Collation
+            (long?)null, // MaxSizeBytes
+            (string?)null, // ElasticPoolName
+            (bool?)null, // ZoneRedundant
+            (string?)null, // ReadScale
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("--subscription sub --resource-group rg --server server1 --database testdb --sku-name S1")]
+    [InlineData("--subscription sub --resource-group rg --server server1 --database testdb --sku-tier Standard")]
+    [InlineData("--subscription sub --resource-group rg --server server1 --database testdb --sku-capacity 10")]
+    [InlineData("--subscription sub --resource-group rg --server server1 --database testdb --collation SQL_Latin1_General_CP1_CI_AS")]
+    [InlineData("--subscription sub --resource-group rg --server server1 --database testdb --max-size-bytes 2147483648")]
+    public async Task ExecuteAsync_WithOptionalParameters_Succeeds(string commandArgs)
+    {
+        // Arrange - Test that optional parameters work correctly
+        var mockDatabase = new SqlDatabase(
+            Name: "testdb",
+            Id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Sql/servers/server1/databases/testdb",
+            Type: "Microsoft.Sql/servers/databases",
+            Location: "East US",
+            Sku: new DatabaseSku("S1", "Standard", 10, null, null),
+            Status: "Online",
+            Collation: "SQL_Latin1_General_CP1_CI_AS",
+            CreationDate: DateTimeOffset.UtcNow,
+            MaxSizeBytes: 2147483648,
+            ServiceLevelObjective: "S1",
+            Edition: "Standard",
+            ElasticPoolName: null,
+            EarliestRestoreDate: DateTimeOffset.UtcNow,
+            ReadScale: "Disabled",
+            ZoneRedundant: false
+        );
+
+        _sqlService.UpdateDatabaseAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDatabase);
+
+        var args = _commandDefinition.Parse(commandArgs.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(200, response.Status);
+        Assert.NotNull(response.Results);
+        Assert.Equal("Success", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithSubscriptionFromEnvironment_Succeeds()
+    {
+        // Arrange - Test minimum scope when subscription comes from environment variable
+        Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", "env-sub-id");
+
+        var mockDatabase = new SqlDatabase(
+            Name: "testdb",
+            Id: "/subscriptions/env-sub-id/resourceGroups/rg/providers/Microsoft.Sql/servers/server1/databases/testdb",
+            Type: "Microsoft.Sql/servers/databases",
+            Location: "East US",
+            Sku: null,
+            Status: "Online",
+            Collation: "SQL_Latin1_General_CP1_CI_AS",
+            CreationDate: DateTimeOffset.UtcNow,
+            MaxSizeBytes: 1073741824,
+            ServiceLevelObjective: "Basic",
+            Edition: "Basic",
+            ElasticPoolName: null,
+            EarliestRestoreDate: DateTimeOffset.UtcNow,
+            ReadScale: "Disabled",
+            ZoneRedundant: false
+        );
+
+        _sqlService.UpdateDatabaseAsync(
+            Arg.Is("server1"),
+            Arg.Is("testdb"),
+            Arg.Is("rg"),
+            Arg.Is("env-sub-id"),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDatabase);
+
+        try
+        {
+            var args = _commandDefinition.Parse([
+                "--resource-group", "rg",
+                "--server", "server1",
+                "--database", "testdb"
+            ]);
+
+            // Act
+            var response = await _command.ExecuteAsync(_context, args);
+
+            // Assert
+            Assert.NotNull(response);
+            Assert.Equal(200, response.Status);
+            Assert.NotNull(response.Results);
+            Assert.Equal("Success", response.Message);
+        }
+        finally
+        {
+            // Clean up environment variable
+            Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", null);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithInvalidServerName_HandlesServiceError()
+    {
+        // Arrange - Test edge case where service throws exception due to invalid input
+        _sqlService.UpdateDatabaseAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new ArgumentException("Invalid server name"));
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "invalid-server-name!@#",
+            "--database", "testdb"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(500, response.Status);
+        Assert.Contains("Invalid server name", response.Message);
     }
 }
