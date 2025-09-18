@@ -201,7 +201,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_eventhubs_namespace_list | List all Event Hubs namespaces in my subscription |
+| azmcp_eventhubs_namespace_get | List all Event Hubs namespaces in my subscription |
 
 ## Azure Function App
 
