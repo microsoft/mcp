@@ -34,7 +34,7 @@ foreach ($line in $readMeText) {
         continue
     }
 
-    if ($line -match "<!--\s*REMOVESECTIONSTART-([^>]+?)\s*-->") {
+    if ($line -match "(?i)<!--\s*remove-section:\s*start\s+([^>]+?)\s*-->") {
         $pkgTypeInfo = $matches[1]
         $pkgTypes = $pkgTypeInfo -split ';'
         foreach ($pt in $pkgTypes) {
@@ -46,7 +46,7 @@ foreach ($line in $readMeText) {
         continue
     }
 
-    if ($line -match "<!--\s*REMOVESECTIONEND\s*-->") {
+    if ($line -match "(?i)<!--\s*remove-section:\s*end\s*-->") {
         $appendLine = $true
         continue
     }
@@ -55,7 +55,7 @@ foreach ($line in $readMeText) {
         continue
     }
 
-    if ($line -match "<!--\s*INSERTCHUNK-([^{}]+?)\s*\{\{([\s\S]*?)\}\}\s*-->") {
+    if ($line -match "(?i)<!--\s*insert-chunk\s+([^{}]+?)\s*\{\{([\s\S]*?)\}\}\s*-->") {
         $pkgTypeInfo = $matches[1]
         $content = $matches[2]
         $pkgTypes = $pkgTypeInfo -split ';'
@@ -70,13 +70,13 @@ foreach ($line in $readMeText) {
     }
 
     $tempLine = ''
-    $processRemoveChuck = $false
-    if ($line -match "<!--\s*REMOVECHUNKSTART-([^>]+?)\s*-->") {
+    $processRemovedChunk = $false
+    if ($line -match "(?i)<!--\s*remove-chunk:\s*start\s+([^>\s]+(?:\s*;\s*[^>\s]+)*)(?:\s+[^>]*?)?\s*-->") {
         $pkgTypeInfo = $matches[1]
         $pkgTypes = $pkgTypeInfo -split ';'
         foreach ($pt in $pkgTypes) {
             if ($pt -eq $PackageType) {
-                $processRemoveChuck = $true
+                $processRemovedChunk = $true
                 $idx = $line.IndexOf($matches[0])
                 $tempLine = $line.Substring(0, $idx)
                 break
@@ -85,8 +85,8 @@ foreach ($line in $readMeText) {
         $line = $line -replace [regex]::Escape($matches[0]), ''
     }
 
-    if ($line -match "<!--\s*REMOVECHUNKEND\s*-->") {
-        if ($processRemoveChuck) {
+    if ($line -match "(?i)<!--\s*remove-chunk:\s*end\s*-->") {
+        if ($processRemovedChunk) {
             $idx = $line.IndexOf($matches[0])
             $tempLine += $line.Substring($idx + $matches[0].Length)
             $line = $tempLine

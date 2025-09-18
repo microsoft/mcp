@@ -50,10 +50,10 @@ try {
 		$serverProjectProperties = & "$projectPropertiesScript" -ProjectName "$serverName.csproj"
 		$platformOutputPath = "$OutputPath/nuget/$($serverDirectory.Name)/platform"
 		$wrapperOutputPath = "$OutputPath/nuget/$($serverDirectory.Name)/wrapper"
-		$packageIconPath = if ($serverProjectProperties.PackageId.StartsWith("Microsoft."))
-		{"$RepoRoot/eng/images/microsofticon.png"}
-		else if ($serverProjectProperties.PackageId.StartsWith("Azure."))
-		{"$RepoRoot/eng/images/azureicon.png"}
+		$packageIconPath = $serverProjectProperties.PackageIconPath
+		if (!$packageIconPath) {
+			$packageIconPath = "$RepoRoot/eng/images/microsofticon.png"
+		}
 
 		New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
 		New-Item -ItemType Directory -Force -Path $wrapperOutputPath | Out-Null

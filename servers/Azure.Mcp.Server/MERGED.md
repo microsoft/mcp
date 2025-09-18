@@ -1,45 +1,52 @@
 <!--
 This readme is used to generate output readme for different package repositories.
-Minor changes to the markdown is required for each package repository as such comment annotations are used to mark parts of the readme that will be updated besed on the targer package type. Use the eng\scripts\Process-PackageReadMe.ps1 to precess the readme
+Minor changes to the markdown is required for each package repository as such comment annotations are used to mark parts of the readme that will be updated based on the target package type. Use the eng\scripts\Process-PackageReadMe.ps1 to process the readme
 
 e.g. eng\scripts\Process-PackageReadMe.ps1 -InputReadMePath "this readme path" -OutputDirectory "output readme directory" -PackageType "nuget, npm, or vsix"
 
 Here are the allowed comment annotations
 
-REMOVESECTIONSTART and REMOVESECTIONEND is used to remove various lines of markdown for a specified package type
+remove-section: start and remove-section: end is used to remove various lines of markdown for a specified package type
 e.g.
-REMOVESECTIONSTART-Nuget;VSIX;Npm
+remove-section: start nuget;vsix;npm
 various markdown lines
 .....
-REMOVESECTIONEND
+remove-section: end
 
-REMOVECHUNKSTART and REMOVECHUNKEND is used to remove part of the text in a line for a specific package type. Should be used only once on a line
+remove-chunk: start and remove-chunk: end is used to remove part of the text in a line for a specific package type. Should be used only once on a line
 e.g.
-REMOVECHUNKSTART-Nuget;VSIX chunk of text ... REMOVECHUNKEND
+remove-chunk: start nuget;vsix chunk of text ... remove-chunk: end
 
-INSERTCHUNK is used to insert a chunk of text for a specified package type. Use this only once on a line.
+insert-chunk is used to insert a chunk of text for a specified package type. Use this only once on a line.
 e.g.
-INSERTCHUNK-Nuget;VSIX;Npm{{Text to be inserted}}
+insert-chunk nuget;vsix;npm {{Text to be inserted}}
 
 Remember to wrap each annotation in markdown comments
 -->
 
-# <!--REMOVECHUNKSTART-Nuget;VSIX--><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!--REMOVECHUNKEND-->Azure MCP Server<!--INSERTCHUNK-Nuget;VSIX;Npm{{ToolTitle}}-->
+# <!-- remove-chunk: start nuget;vsix --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-chunk: end -->Azure MCP Server<!-- insert-chunk nuget;vsix;npm {{ToolTitle}} -->
 
 The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with GitHub Copilot Extension for VSCode or InteliJ IDEA.  This project is in Public Preview and implementation may significantly change prior to our General Availability.
 
-<!--REMOVESECTIONSTART-Nuget;VSIX;Npm-->
+<!-- remove-section: start nuget;vsix;npm -->
 >[!WARNING]
 >**Deprecation Notice: SSE transport mode has been removed in version [0.4.0 (2025-07-15)](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/CHANGELOG.md#040-2025-07-15).**
 >
 > SSE was deprecated in MCP `2025-03-26` due to [security vulnerabilities and architectural limitations](https://blog.fka.dev/blog/2025-06-06-why-mcp-deprecated-sse-and-go-with-streamable-http/). Users must discontinue use of SSE transport mode and upgrade to version `0.4.0` or newer to maintain compatibility with current MCP clients.
-<!--REMOVESECTIONEND-->
+<!-- remove-section: end -->
 
 ## Table of Contents
 - [Overview](#overview)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Configuration](#configuration)
+- [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
+- [Currently Supported Tools](#currently-supported-tools)
+- [Data Collection](#data-collection)
+- [Troubleshooting](#troubleshooting)
+- [Security Note](#security-note)
+- [Contributing](#contributing)
+- [Code of Conduct](#code-of-conduct)
 
 ## Overview
 
@@ -51,40 +58,40 @@ The Azure MCP Server implements the [MCP specification](https://modelcontextprot
 
 - You will need a supported IDE (Visual Studio Code or IntelliJ IDEA) with the GitHub Copilot extension/plugin installed.
 
-    >|| Visual Studio Code | IntelliJ IDEA |
-    >|-------|-----|-----|
-    >|1| Install either the [Stable](https://code.visualstudio.com/download) or [Insiders](https://code.visualstudio.com/insiders) release of VS Code | Install either the [IntelliJ IDEA Ultimate](https://www.jetbrains.com/idea/download) or [IntelliJ IDEA Community](https://www.jetbrains.com/idea/download) edition. |
-    >|2| Install the [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions | Install the [GitHub Copilot](https://plugins.jetbrains.com/plugin/17718-github-copilot) plugin. |
+    || Visual Studio Code | IntelliJ IDEA |
+    |-------|-----|-----|
+    |1| Install either the [Stable](https://code.visualstudio.com/download) or [Insiders](https://code.visualstudio.com/insiders) release of VS Code | Install either the [IntelliJ IDEA Ultimate](https://www.jetbrains.com/idea/download) or [IntelliJ IDEA Community](https://www.jetbrains.com/idea/download) edition. |
+    |2| Install the [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions | Install the [GitHub Copilot](https://plugins.jetbrains.com/plugin/17718-github-copilot) plugin. |
 
-<!--REMOVESECTIONSTART-Npm;VSIX-->
+<!-- remove-section: start npm;vsix -->
 - To use Azure MCP server from .NET, you must have [.NET 10 Preview 6 or later](https://dotnet.microsoft.com/download/dotnet/10.0) installed. This version of .NET adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
 To verify your .NET version, run the following command in your terminal: `dotnet --info`
-<!--REMOVESECTIONEND-->
-<!--REMOVESECTIONSTART-Nuget;VSIX-->
+<!-- remove-section: end -->
+<!-- remove-section: start nuget;vsix -->
 - To use Azure MCP server from node you must have Node.js (LTS) installed — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
-<!--REMOVESECTIONEND-->
+<!-- remove-section: end -->
 
 ### Configuration
 
 You can configure the Azure MCP Server either by installing the [Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server) (recommended for interactive configuration on vs code) or by updating the `mcp.json` configuration file directly in your IDE.
 
-<!--REMOVESECTIONSTART-VSIX-->
-<!--REMOVECHUNKSTART-Nuget;Npm--><details><!--REMOVECHUNKEND-->
-<!--REMOVECHUNKSTART-Nuget;Npm--><summary><b>Find mcp.json file for your IDE</b></summary><!--REMOVECHUNKEND-->
-<!--INSERTCHUNK-Nuget;Npm{{#### Find mcp.json file for your IDE}}-->
+<!-- remove-section: start vsix -->
+<!-- remove-chunk: start nuget;npm --><details><!-- remove-chunk: end -->
+<!-- remove-chunk: start nuget;npm --><summary><b>Find mcp.json file for your IDE</b></summary><!-- remove-chunk: end -->
+<!-- insert-chunk nuget;npm {{#### Find mcp.json file for your IDE}} -->
 
->||| Find mcp.json in Visual Studio Code | Find mcp.json in IntelliJ IDEA |
->|-------|-----|-----|-----|
->|1| Open GitHub Copilot in your IDE | View > Chat  | Tools > GitHub Copilot > Open Chat  |
->|2| Switch to Agent Mode then click on the Tools Configuration button  |  ![VSCode](../../eng/images/VisualStudioCodeUI.png) | ![IntelliJ](../../eng/images/IntelliJIDEAUI.png)  |
->|2| Click on the button for configuring or adding tools  | Gear icon button if a previous `mcp.json` tool has been configured. Otherwise you can create a new `mcp.json` in your project | + Add More Tools |
+||| Find mcp.json in Visual Studio Code | Find mcp.json in IntelliJ IDEA |
+|-------|-----|-----|-----|
+|1| Open GitHub Copilot in your IDE | View > Chat  | Tools > GitHub Copilot > Open Chat  |
+|2| Switch to Agent Mode then click on the Tools Configuration button  |  ![VSCode](../../eng/images/VisualStudioCodeUI.png) | ![IntelliJ](../../eng/images/IntelliJIDEAUI.png)  |
+|2| Click on the button for configuring or adding tools  | Gear icon button if a previous `mcp.json` tool has been configured. Otherwise you can create a new `mcp.json` in your project | + Add More Tools |
 </details>
-<!--REMOVESECTIONEND-->
+<!-- remove-section: end -->
 
-<!--REMOVESECTIONSTART-VSIX;Npm-->
-<!--REMOVECHUNKSTART-Nuget--><details><!--REMOVECHUNKEND-->
-<!--REMOVECHUNKSTART-Nuget--><summary><b>Configure Azure MCP Server using .NET Tool</b></summary><!--REMOVECHUNKEND-->
-<!--INSERTCHUNK-Nuget{{#### Configure Azure MCP Server in mcp.json}}-->
+<!-- remove-section: start vsix;npm -->
+<!-- remove-chunk: start nuget --><details><!-- remove-chunk: end -->
+<!-- remove-chunk: start nuget --><summary><b>Configure Azure MCP Server using .NET Tool</b></summary><!-- remove-chunk: end -->
+<!-- insert-chunk nuget {{#### Configure Azure MCP Server in mcp.json}} -->
 
 To use the latest version enter the following snippet in your `mcp.json`
 ```json
@@ -129,12 +136,12 @@ You can also specific a version using the --version argument, like so:
 }
 ```
 </details>
-<!--REMOVESECTIONEND-->
+<!-- remove-section: end -->
 
-<!--REMOVESECTIONSTART-VSIX;Nuget-->
-<!--REMOVECHUNKSTART-Npm--><details><!--REMOVECHUNKEND-->
-<!--REMOVECHUNKSTART-Npm--><summary><b>Configure Azure MCP Server using node tool</b></summary><!--REMOVECHUNKEND-->
-<!--INSERTCHUNK-Npm{{#### Configure Azure MCP Server in mcp.json}}-->
+<!-- remove-section: start vsix;nuget -->
+<!-- remove-chunk: start npm --><details><!-- remove-chunk: end -->
+<!-- remove-chunk: start npm --><summary><b>Configure Azure MCP Server using node tool</b></summary><!-- remove-chunk: end -->
+<!-- insert-chunk npm {{#### Configure Azure MCP Server in mcp.json}} -->
 
 To use the latest version enter the following snippet in your mcp.json
 
@@ -168,15 +175,23 @@ You can also install a targeted version
 }
 ```
 </details>
-<!--REMOVESECTIONEND-->
+<!-- remove-section: end -->
 
-<!--REMOVECHUNKSTART-Npm;Nuget;VSIX--><details><!--REMOVECHUNKEND-->
-<!--REMOVECHUNKSTART-Npm;Nuget;VSIX--><summary><b>Start (or Auto-Start) the MCP Server</b></summary><!--REMOVECHUNKEND-->
-<!--INSERTCHUNK-Npm;Nuget;VSIX{{#### Start (or Auto-Start) the MCP Server}}-->
+<!-- remove-chunk: start npm;nuget;vsix --><details><!-- remove-chunk: end -->
+<!-- remove-chunk: start npm;nuget;vsix --><summary><b>Start (or Auto-Start) the MCP Server</b></summary><!-- remove-chunk: end -->
+<!-- insert-chunk npm;nuget;vsix {{#### Start (or Auto-Start) the MCP Server}} -->
+
+| | Enable Auto-Start | | Manual Start (if autostart is off) |
+| -- | -- | -- | -- |
+| 1| Open Settings in VS Code | 1| Open Command Palette (Ctrl+Shift+P / Cmd+Shift+P). |
+| 2| Search for `chat.mcp.autostart` | 2| Run MCP: List Servers.![List Servers](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ListServers.png) |
+| 3| Select **newAndOutdated** to automatically start MCP servers without manual refresh. | 3| Select Azure MCP Server ext, then click Start Server.![Select Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/SelectServer.png)![Start Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/StartServer.png) |
+| 4| You can also set this from the refresh icon tooltip in the Chat view, which also shows which servers will auto-start.![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ToolTip.png) | 4| Check That It's Running |
+
 </details>
 
 
-## <!--REMOVECHUNKSTART-Nuget;VSIX--><a id="what-can-you-do-with-the-azure-mcp-server"></a> ✨<!--REMOVECHUNKEND--> What can you do with the Azure MCP Server?
+## <!-- remove-chunk: start nuget;vsix --><a id="what-can-you-do-with-the-azure-mcp-server"></a> ✨<!-- remove-chunk: end --> What can you do with the Azure MCP Server?
 
 The Azure MCP Server supercharges your agents with Azure context. Here are some cool prompts you can try:
 
@@ -264,11 +279,11 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "Send a message to my storage queue"
 
 
-## <!--REMOVECHUNKSTART-Nuget;VSIX--><a id="currently-supported-tools"></a> 🛠️<!--REMOVECHUNKEND--> Currently Supported Tools
+## <!-- remove-chunk: start nuget;vsix --><a id="currently-supported-tools"></a> 🛠️<!-- remove-chunk: end --> Currently Supported Tools
 
-<!--REMOVECHUNKSTART-Nuget--><details><!--REMOVECHUNKEND-->
-<!--REMOVECHUNKSTART-Nuget--><summary>The Azure MCP Server provides tools for interacting with the following Azure services</summary><!--REMOVECHUNKEND-->
-<!--INSERTCHUNK-Nuget{{The Azure MCP Server provides tools for interacting with the following Azure services}}-->
+<!-- remove-chunk: start nuget --><details><!-- remove-chunk: end -->
+<!-- remove-chunk: start nuget --><summary>The Azure MCP Server provides tools for interacting with the following Azure services</summary><!-- remove-chunk: end -->
+<!-- insert-chunk nuget {{The Azure MCP Server provides tools for interacting with the following Azure services}} -->
 
 ### 🔎 Azure AI Search (search engine/vector database)
 
@@ -497,16 +512,17 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 Agents and models can discover and learn best practices and usage guidelines for the `azd` MCP tool. For more information, see [AZD Best Practices](https://github.com/microsoft/mcp/tree/main/tools/Azure.Mcp.Tools.Extension/src/Resources/azd-best-practices.txt).
 
-<!--REMOVECHUNKSTART-Nuget--></details><!--REMOVECHUNKEND-->
+<!-- remove-chunk: start nuget --></details><!-- remove-chunk: end -->
 
 For detailed command documentation and examples, see [Azure MCP Commands](https://github.com/microsoft/mcp/blob/main/docs/azmcp-commands.md).
 
-## <!--REMOVECHUNKSTART-Nuget--><a id="upgrading"></a> 🔄️<!--REMOVECHUNKEND--> Upgrading
+## <!-- remove-chunk: start nuget --><a id="upgrading"></a> 🔄️<!-- remove-chunk: end --> Upgrading
 
-<!--REMOVECHUNKSTART-Nuget--><details><!--REMOVECHUNKEND-->
-<!--REMOVECHUNKSTART-Nuget--><summary>How to stay current with releases of Azure MCP Server</summary><!--REMOVECHUNKEND-->
-<!--INSERTCHUNK-Nuget{{How to stay current with releases of Azure MCP Serve}}-->
+<!-- remove-chunk: start nuget --><details><!-- remove-chunk: end -->
+<!-- remove-chunk: start nuget --><summary>How to stay current with releases of Azure MCP Server</summary><!-- remove-chunk: end -->
+<!-- insert-chunk nuget {{How to stay current with releases of Azure MCP Serve}} -->
 
+<!-- remove-section: start vsix;nuget -->
 #### NPX
 
 If you use the default package spec of `@azure/mcp@latest`, npx will look for a new version on each server start. If you use just `@azure/mcp`, npx will continue to use its cached version until its cache is cleared.
@@ -514,27 +530,31 @@ If you use the default package spec of `@azure/mcp@latest`, npx will look for a 
 #### NPM
 
 If you globally install the cli via `npm install -g @azure/mcp` it will use the installed version until you manually update it with `npm update -g @azure/mcp`.
-
+<!-- remove-section: end -->
+<!-- remove-section: start vsix;nuget;npm -->
 #### Docker
 
 There is no version update built into the docker image.  To update, just pull the latest from the repo and repeat the [docker installation instructions](#docker-install).
+<!-- remove-section: end -->
 
+<!-- remove-section: start vsix -->
 #### VS Code
 
 Installation in VS Code should be in one of the previous forms and the update instructions are the same. If you installed the mcp server with the `npx` command and  `-y @azure/mcp@latest` args, npx will check for package updates each time VS Code starts the server. Using a docker container in VS Code has the same no-update limitation described above.
+<!-- remove-section: end -->
 
 #### IntelliJ
 
 If the Azure MCP server is configured by Azure Toolkit for IntelliJ plugin, the version is automatically updated to the latest version when the IntelliJ project starts. If the Azure MCP server is manually configured with `npx` command and `-y @azure/mcp@latest` args, npx will check for package updates each time IntelliJ starts the server. Using a docker container in IntelliJ has the same no-update limitation described above.
 
-<!--REMOVECHUNKSTART-Nuget--></details><!--REMOVECHUNKEND-->
+<!-- remove-chunk: start nuget --></details><!-- remove-chunk: end -->
 
+<!-- remove-section: start npm;vsix;nuget -->
+## <!-- remove-chunk: start nuget --><a id="advanced-install-scenarios-optional"></a> ⚙️<!-- remove-chunk: end --> Advanced Install Scenarios (Optional)
 
-## <!--REMOVECHUNKSTART-Nuget--><a id="advanced-install-scenarios-optional"></a> ⚙️<!--REMOVECHUNKEND--> Advanced Install Scenarios (Optional)
-
-<!--REMOVECHUNKSTART-Nuget--><details><!--REMOVECHUNKEND-->
-<!--REMOVECHUNKSTART-Nuget--><summary>Docker containers, custom MCP clients, and manual install options</summary><!--REMOVECHUNKEND-->
-<!--INSERTCHUNK-Nuget{{Docker containers, custom MCP clients, and manual install options}}-->
+<!-- remove-chunk: start nuget --><details><!-- remove-chunk: end -->
+<!-- remove-chunk: start nuget --><summary>Docker containers, custom MCP clients, and manual install options</summary><!-- remove-chunk: end -->
+<!-- insert-chunk nuget {{Docker containers, custom MCP clients, and manual install options}} -->
 
 ### 🐋 Docker Install Steps (Optional)
 
@@ -625,10 +645,11 @@ For a step-by-step installation, follow these instructions:
     ```
 
 More end-to-end MCP client/agent guides are coming soon!
-<!--REMOVECHUNKSTART-Nuget--></details><!--REMOVECHUNKEND-->
+<!-- remove-chunk: start nuget --></details><!-- remove-chunk: end -->
+<!-- remove-section: end -->
 
 
-## <!--REMOVECHUNKSTART-Nuget--><a id="data-collection"></a><!--REMOVECHUNKEND--> Data Collection
+## <!-- remove-chunk: start nuget --><a id="data-collection"></a><!-- remove-chunk: end --> Data Collection
 
 The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft's [privacy statement](https://www.microsoft.com/privacy/privacystatement). You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
 
@@ -639,24 +660,24 @@ Telemetry collection is on by default.
 To opt out, set the environment variable `AZURE_MCP_COLLECT_TELEMETRY` to `false` in your environment.
 
 
-## <!--REMOVECHUNKSTART-Nuget--><a id="troubleshooting"></a> 📝<!--REMOVECHUNKEND--> Troubleshooting
+## <!-- remove-chunk: start nuget --><a id="troubleshooting"></a> 📝<!-- remove-chunk: end --> Troubleshooting
 
 See [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md) for help with common issues and logging.
 
 ### 🔑 Authentication
 
-<!--REMOVECHUNKSTART-Nuget--><details><!--REMOVECHUNKEND-->
-<!--REMOVECHUNKSTART-Nuget--><summary>Authentication options including DefaultAzureCredential flow, RBAC permissions, troubleshooting, and production credentials</summary><!--REMOVECHUNKEND-->
-<!--INSERTCHUNK-Nuget{{Authentication options including DefaultAzureCredential flow, RBAC permissions, troubleshooting, and production credentials}}-->
+<!-- remove-chunk: start nuget --><details><!-- remove-chunk: end -->
+<!-- remove-chunk: start nuget --><summary>Authentication options including DefaultAzureCredential flow, RBAC permissions, troubleshooting, and production credentials</summary><!-- remove-chunk: end -->
+<!-- insert-chunk nuget {{Authentication options including DefaultAzureCredential flow, RBAC permissions, troubleshooting, and production credentials}} -->
 
 The Azure MCP Server uses the Azure Identity library for .NET to authenticate to Microsoft Entra ID. For detailed information, see [Authentication Fundamentals](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md#authentication-fundamentals).
 
 If you're running into any issues with authentication, visit our [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#authentication).
 
 For enterprise authentication scenarios, including network restrictions, security policies, and protected resources, see [Authentication Scenarios in Enterprise Environments](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md#authentication-scenarios-in-enterprise-environments).
-<!--REMOVECHUNKSTART-Nuget--></details><!--REMOVECHUNKEND-->
+<!-- remove-chunk: start nuget --></details><!-- remove-chunk: end -->
 
-## <!--REMOVECHUNKSTART-Nuget--><a id="security-note"></a> 🛡️<!--REMOVECHUNKEND--> Security Note
+## <!-- remove-chunk: start nuget --><a id="security-note"></a> 🛡️<!-- remove-chunk: end --> Security Note
 
 Your credentials are always handled securely through the official [Azure Identity SDK](https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/identity/Azure.Identity/README.md) - **we never store or manage tokens directly**.
 
@@ -664,7 +685,7 @@ MCP as a phenomenon is very novel and cutting-edge. As with all new technology s
 
 
 
-## <!--REMOVECHUNKSTART-Nuget--><a id="contributing"></a> 👥<!--REMOVECHUNKEND--> Contributing
+## <!-- remove-chunk: start nuget --><a id="contributing"></a> 👥<!-- remove-chunk: end --> Contributing
 
 We welcome contributions to the Azure MCP Server! Whether you're fixing bugs, adding new features, or improving documentation, your contributions are welcome.
 
@@ -676,7 +697,7 @@ Please read our [Contributing Guide](https://github.com/microsoft/mcp/blob/main/
 * 🔄 Making pull requests
 
 
-## <!--REMOVECHUNKSTART-Nuget--><a id="code-of-conduct"></a> 🤝<!--REMOVECHUNKEND--> Code of Conduct
+## <!-- remove-chunk: start nuget --><a id="code-of-conduct"></a> 🤝<!-- remove-chunk: end --> Code of Conduct
 
 This project has adopted the
 [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
