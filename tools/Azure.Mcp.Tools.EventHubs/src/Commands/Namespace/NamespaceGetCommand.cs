@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using Azure;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Command;
@@ -55,7 +56,6 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
             return context.Response;
@@ -65,7 +65,6 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
 
         try
         {
-
             var eventHubsService = context.GetService<IEventHubsService>();
             var namespaces = await eventHubsService.GetNamespacesAsync(
                 options.ResourceGroup!,
@@ -88,19 +87,19 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => reqEx.Status,
-        Azure.Identity.AuthenticationFailedException => 401,
+        RequestFailedException reqEx => reqEx.Status,
+        Identity.AuthenticationFailedException => 401,
         ArgumentException => 400,
         _ => base.GetStatusCode(ex)
     };
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.Identity.AuthenticationFailedException authEx =>
+        Identity.AuthenticationFailedException authEx =>
             "Authentication failed. Please ensure your Azure credentials are properly configured and have not expired.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == 403 =>
             "Access denied. Please ensure you have sufficient permissions to get EventHubs namespaces in the specified resource group.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == 404 =>
             "The specified resource group or subscription was not found. Please verify the resource group name and subscription.",
         ArgumentException argEx when argEx.ParamName == "resourceGroup" =>
             "Invalid resource group name. Please provide a valid resource group name.",
