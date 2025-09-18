@@ -18,7 +18,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     public async Task Should_ListNamespaces_Successfully()
     {
         var result = await CallToolAsync(
-            "azmcp_eventhubs_namespace_list",
+            "azmcp_eventhubs_namespace_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -62,7 +62,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         var emptyResourceGroupName = $"empty-rg-{Guid.NewGuid():N}[..10]";
 
         var result = await CallToolAsync(
-            "azmcp_eventhubs_namespace_list",
+            "azmcp_eventhubs_namespace_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
