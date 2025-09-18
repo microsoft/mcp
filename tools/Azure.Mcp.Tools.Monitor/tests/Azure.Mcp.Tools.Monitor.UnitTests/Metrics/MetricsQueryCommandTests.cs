@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Services;
@@ -123,7 +124,7 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
-            .Returns(new List<MetricResult>());
+            .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse(args);
@@ -138,7 +139,7 @@ public class MetricsQueryCommandTests
             "Microsoft.Storage/storageAccounts", // resource type
             "sa1", // resource name
             "Microsoft.Storage", // metric namespace
-            Arg.Is<IEnumerable<string>>(m => m.SequenceEqual(new[] { "CPU", "Memory" })), // metric names
+            Arg.Is<IEnumerable<string>>(["CPU", "Memory"]), // metric names
             "2023-01-01T00:00:00Z", // start time
             "2023-01-02T00:00:00Z", // end time
             "PT1M", // interval
@@ -168,7 +169,7 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
-            .Returns(new List<MetricResult>());
+            .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse(args);
@@ -183,7 +184,7 @@ public class MetricsQueryCommandTests
             Arg.Is<string?>(t => t == null), // resource type (not provided)
             Arg.Is<string>(t => t == "sa1"), // resource name
             Arg.Is<string>(t => t == "microsoft.compute/virtualmachines"), // metric namespace (not provided)
-            Arg.Is<IEnumerable<string>>(m => m.SequenceEqual(new[] { "CPU" })), // metric names
+            Arg.Is<IEnumerable<string>>(["CPU"]), // metric names
             Arg.Any<string>(), // start time (default)
             Arg.Any<string>(), // end time (default)
             Arg.Is<string?>(t => t == null), // interval (not provided)
@@ -247,17 +248,17 @@ public class MetricsQueryCommandTests
             {
                 Name = "CPU",
                 Unit = "Percent",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
-                        Metadata = new Dictionary<string, string>(),
+                        Metadata = [],
                         Start = DateTime.UtcNow.AddHours(-1),
                         End = DateTime.UtcNow,
                         Interval = "PT1M",
-                        AvgBuckets = new double[] { 45.5, 50.2, 48.1 }
+                        AvgBuckets = [45.5, 50.2, 48.1]
                     }
-                }
+                ]
             }
         };
 
@@ -295,11 +296,11 @@ public class MetricsQueryCommandTests
         Assert.Equal("CPU", results[0].Name);
         Assert.Equal("Percent", results[0].Unit);
         Assert.Single(results[0].TimeSeries);
-        Assert.Equal(new double[] { 45.5, 50.2, 48.1 }, results[0].TimeSeries[0].AvgBuckets);
+        Assert.Equal([45.5, 50.2, 48.1], results[0].TimeSeries[0].AvgBuckets!);
     }
 
     [Fact]
-    public async Task ExecuteAsync_EmptyResults_ReturnsSuccessWithNullResults()
+    public async Task ExecuteAsync_EmptyResults_ReturnsSuccessWithEmptyResults()
     {
         // Arrange
         _service.QueryMetricsAsync(
@@ -316,7 +317,7 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
-            .Returns(new List<MetricResult>());
+            .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub1 --resource sa1 --metric-names CPU --metric-namespace microsoft.compute/virtualmachines");
@@ -326,7 +327,11 @@ public class MetricsQueryCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var results = GetResult(response.Results);
+        Assert.NotNull(results);
+        Assert.Empty(results);
     }
 
     [Fact]
@@ -365,7 +370,7 @@ public class MetricsQueryCommandTests
             "Microsoft.Storage/storageAccounts",
             "sa1",
             "microsoft.compute/virtualmachines",
-            Arg.Is<IEnumerable<string>>(m => m.SequenceEqual(new[] { "CPU", "Memory" })),
+            Arg.Is<IEnumerable<string>>(["CPU", "Memory"]),
             "2023-01-01T00:00:00Z",
             "2023-01-02T00:00:00Z",
             "PT1M",
@@ -411,17 +416,17 @@ public class MetricsQueryCommandTests
             {
                 Name = "CPU",
                 Unit = "Percent",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
-                        Metadata = new Dictionary<string, string>(),
+                        Metadata = [],
                         Start = DateTime.UtcNow.AddHours(-1),
                         End = DateTime.UtcNow,
                         Interval = "PT1M",
-                        AvgBuckets = new double[51] // Exceeds default limit of 50
+                        AvgBuckets = [51] // Exceeds default limit of 50
                     }
-                }
+                ]
             }
         };
 
@@ -465,17 +470,17 @@ public class MetricsQueryCommandTests
             {
                 Name = "Memory",
                 Unit = "Bytes",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
-                        Metadata = new Dictionary<string, string>(),
+                        Metadata = [],
                         Start = DateTime.UtcNow.AddHours(-1),
                         End = DateTime.UtcNow,
                         Interval = "PT1M",
-                        MaxBuckets = new double[26] // Exceeds custom limit of 25
+                        MaxBuckets = [26] // Exceeds custom limit of 25
                     }
-                }
+                ]
             }
         };
 
@@ -519,7 +524,7 @@ public class MetricsQueryCommandTests
         // Arrange
         var timeSeries = new MetricTimeSeries
         {
-            Metadata = new Dictionary<string, string>(),
+            Metadata = [],
             Start = DateTime.UtcNow.AddHours(-1),
             End = DateTime.UtcNow,
             Interval = "PT1M"
@@ -552,7 +557,7 @@ public class MetricsQueryCommandTests
             {
                 Name = "TestMetric",
                 Unit = "Count",
-                TimeSeries = new List<MetricTimeSeries> { timeSeries }
+                TimeSeries = [timeSeries]
             }
         };
 
@@ -593,17 +598,17 @@ public class MetricsQueryCommandTests
             {
                 Name = "CPU",
                 Unit = "Percent",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
-                        Metadata = new Dictionary<string, string>(),
+                        Metadata = [],
                         Start = DateTime.UtcNow.AddHours(-1),
                         End = DateTime.UtcNow,
                         Interval = "PT1M",
-                        AvgBuckets = new double[50] // Exactly at the limit
+                        AvgBuckets = [50] // Exactly at the limit
                     }
-                }
+                ]
             }
         };
 
@@ -644,17 +649,17 @@ public class MetricsQueryCommandTests
             {
                 Name = "CPU",
                 Unit = "Percent",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
-                        Metadata = new Dictionary<string, string>(),
+                        Metadata = [],
                         Start = DateTime.UtcNow.AddHours(-1),
                         End = DateTime.UtcNow,
                         Interval = "PT1M",
-                        AvgBuckets = new double[51]
+                        AvgBuckets = [51]
                     }
-                }
+                ]
             }
         };
 
@@ -776,25 +781,25 @@ public class MetricsQueryCommandTests
             {
                 Name = "CPU",
                 Unit = "Percent",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
-                        AvgBuckets = new double[30] // Within limit
+                        AvgBuckets = [30] // Within limit
                     }
-                }
+                ]
             },
             new()
             {
                 Name = "Memory",
                 Unit = "Bytes",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
-                        AvgBuckets = new double[51] // Exceeds limit
+                        AvgBuckets = [51] // Exceeds limit
                     }
-                }
+                ]
             }
         };
 
@@ -836,17 +841,17 @@ public class MetricsQueryCommandTests
             {
                 Name = "CPU",
                 Unit = "Percent",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
-                        AvgBuckets = new double[30] // Within limit
+                        AvgBuckets = [30] // Within limit
                     },
                     new()
                     {
-                        AvgBuckets = new double[51] // Exceeds limit
+                        AvgBuckets = [51] // Exceeds limit
                     }
-                }
+                ]
             }
         };
 
@@ -888,8 +893,8 @@ public class MetricsQueryCommandTests
             {
                 Name = "CPU",
                 Unit = "Percent",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
                         AvgBuckets = null,
@@ -898,7 +903,7 @@ public class MetricsQueryCommandTests
                         TotalBuckets = null,
                         CountBuckets = null
                     }
-                }
+                ]
             }
         };
 
@@ -969,8 +974,6 @@ public class MetricsQueryCommandTests
             return null;
         }
         var json = JsonSerializer.Serialize(result);
-        return JsonSerializer.Deserialize<MetricsQueryCommandResult>(json)?.results;
+        return JsonSerializer.Deserialize(json, MonitorJsonContext.Default.MetricsQueryCommandResult)?.Results;
     }
-
-    private record MetricsQueryCommandResult(List<MetricResult> results) { }
 }

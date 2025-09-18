@@ -70,9 +70,7 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
                 options.ResourceId!,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new AvailabilityStatusGetCommandResult(status),
-                ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new(status), ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
         }
         catch (Exception ex)
         {

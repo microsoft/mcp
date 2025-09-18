@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Commands.Blob;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
@@ -61,7 +62,7 @@ public class BlobUploadCommandTests
             _knownLocalFilePath,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>())
             .Returns(uploadResult);
 
         var args = _commandDefinition.Parse([
@@ -92,7 +93,7 @@ public class BlobUploadCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new FileNotFoundException($"Local file not found: {_knownLocalFilePath}"));
 
         var args = _commandDefinition.Parse([
@@ -122,7 +123,7 @@ public class BlobUploadCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new InvalidOperationException("Blob 'test-blob.txt' already exists in container 'container123'."));
 
         var args = _commandDefinition.Parse([
@@ -173,7 +174,7 @@ public class BlobUploadCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(requestFailedException);
 
         var args = _commandDefinition.Parse([

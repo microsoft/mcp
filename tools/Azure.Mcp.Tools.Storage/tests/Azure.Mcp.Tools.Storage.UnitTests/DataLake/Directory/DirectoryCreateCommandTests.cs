@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.DataLake.Directory;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
@@ -75,7 +76,7 @@ public class DirectoryCreateCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DirectoryCreateCommand.DirectoryCreateCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.DirectoryCreateCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Directory);

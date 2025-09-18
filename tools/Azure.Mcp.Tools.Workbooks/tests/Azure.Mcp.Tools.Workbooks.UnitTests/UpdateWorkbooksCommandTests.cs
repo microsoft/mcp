@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Workbooks.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Services;
@@ -111,7 +112,7 @@ public class UpdateWorkbooksCommandTests
         Assert.Equal(200, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<UpdateWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("Updated Test Workbook", result.Workbook.DisplayName);
@@ -162,7 +163,7 @@ public class UpdateWorkbooksCommandTests
         Assert.Equal(200, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<UpdateWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("New Display Name Only", result.Workbook.DisplayName);
@@ -212,7 +213,7 @@ public class UpdateWorkbooksCommandTests
         Assert.Equal(200, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<UpdateWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.Contains("Notebook/2.0", result.Workbook.SerializedData);
@@ -421,7 +422,7 @@ public class UpdateWorkbooksCommandTests
         Assert.Equal(200, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<UpdateWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("Updated Complex Workbook", result.Workbook.DisplayName);
@@ -608,10 +609,5 @@ public class UpdateWorkbooksCommandTests
         // Assert
         Assert.Equal(500, response.Status);
         Assert.Contains("Test exception", response.Message);
-    }
-
-    private class UpdateWorkbooksCommandResult
-    {
-        public WorkbookInfo Workbook { get; set; } = null!;
     }
 }

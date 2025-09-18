@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Table;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,7 +55,7 @@ public class TableListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TableListResult>(json);
+        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.TableListCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedTables, result.Tables);
     }
@@ -93,11 +93,5 @@ public class TableListCommandTests
         Assert.Equal("List MySQL Tables", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
-    }
-
-    private class TableListResult
-    {
-        [JsonPropertyName("Tables")]
-        public List<string> Tables { get; set; } = [];
     }
 }

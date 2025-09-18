@@ -178,11 +178,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
             }
 
             // Set results
-            context.Response.Results = results?.Count > 0 ?
-                ResponseResult.Create(
-                    new MetricsQueryCommandResult(results),
-                    MonitorJsonContext.Default.MetricsQueryCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(results ?? []), MonitorJsonContext.Default.MetricsQueryCommandResult);
         }
         catch (Exception ex)
         {            // Log error with all relevant context

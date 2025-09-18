@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.ServiceBus.Commands;
 using Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Mcp.Tools.ServiceBus.Services;
@@ -14,7 +15,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using static Azure.Mcp.Tools.ServiceBus.Commands.Topic.SubscriptionDetailsCommand;
 
 namespace Azure.Mcp.Tools.ServiceBus.UnitTests.Topic;
 
@@ -84,12 +84,10 @@ public class SubscriptionDetailsCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-        var json = JsonSerializer.Serialize(response.Results, options);
-        var result = JsonSerializer.Deserialize<SubscriptionDetailsCommandResult>(json, options);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, ServiceBusJsonContext.Default.SubscriptionDetailsCommandResult);
+
         Assert.NotNull(result);
         Assert.Equal(SubscriptionName, result.SubscriptionDetails.SubscriptionName);
         Assert.Equal(TopicName, result.SubscriptionDetails.TopicName);

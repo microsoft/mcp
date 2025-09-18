@@ -84,9 +84,7 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
 
             // Set results
             context.Response.Results = result != null ?
-                ResponseResult.Create(
-                    new QueueMessageSendCommandResult(result),
-                    StorageJsonContext.Default.QueueMessageSendCommandResult) :
+                ResponseResult.Create(new(result), StorageJsonContext.Default.QueueMessageSendCommandResult) :
                 null;
         }
         catch (Exception ex)

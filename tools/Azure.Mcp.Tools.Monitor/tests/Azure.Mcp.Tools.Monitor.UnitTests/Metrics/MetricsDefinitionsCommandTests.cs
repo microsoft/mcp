@@ -97,19 +97,19 @@ public class MetricsDefinitionsCommandTests
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>())
-                .Returns(new List<MetricDefinition>
-                {
+                .Returns(
+                [
                     new()
                     {
                         Name = "CPU",
                         Description = "CPU Percentage",
                         Category = "Performance",
                         Unit = "Percent",
-                        SupportedAggregationTypes = new List<string> { "Average", "Maximum", "Minimum" },
+                        SupportedAggregationTypes = ["Average", "Maximum", "Minimum"],
                         IsDimensionRequired = true,
-                        Dimensions = new List<string> { "Instance" }
+                        Dimensions = ["Instance"]
                     }
-                });
+                ]);
         }
 
         var context = new CommandContext(_serviceProvider);
@@ -146,9 +146,9 @@ public class MetricsDefinitionsCommandTests
                 Description = "Average CPU usage",
                 Category = "Performance",
                 Unit = "Percent",
-                SupportedAggregationTypes = new List<string> { "Average" },
+                SupportedAggregationTypes = ["Average"],
                 IsDimensionRequired = false,
-                Dimensions = new List<string>()
+                Dimensions = []
             }
         };
 
@@ -198,8 +198,8 @@ public class MetricsDefinitionsCommandTests
             "cpu",
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
-            .Returns(new List<MetricDefinition>
-            {
+            .Returns(
+            [
                 new()
                 {
                     Name = "CPU Percentage",
@@ -207,7 +207,7 @@ public class MetricsDefinitionsCommandTests
                     Category = "Performance",
                     Unit = "Percent"
                 }
-            });
+            ]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --search-string cpu");
@@ -358,9 +358,9 @@ public class MetricsDefinitionsCommandTests
                 Description = "Average CPU usage",
                 Category = "Performance",
                 Unit = "Percent",
-                SupportedAggregationTypes = new List<string> { "Average", "Maximum" },
+                SupportedAggregationTypes = ["Average", "Maximum"],
                 IsDimensionRequired = false,
-                Dimensions = new List<string>()
+                Dimensions = []
             },
             new()
             {
@@ -368,9 +368,9 @@ public class MetricsDefinitionsCommandTests
                 Description = "Memory usage in bytes",
                 Category = "Memory",
                 Unit = "Bytes",
-                SupportedAggregationTypes = new List<string> { "Average", "Maximum", "Total" },
+                SupportedAggregationTypes = ["Average", "Maximum", "Total"],
                 IsDimensionRequired = true,
-                Dimensions = new List<string> { "Instance", "Role" }
+                Dimensions = ["Instance", "Role"]
             }
         };
 
@@ -410,7 +410,7 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
-            .Returns(new List<MetricDefinition>());
+            .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
@@ -651,9 +651,9 @@ public class MetricsDefinitionsCommandTests
                 Description = $"Description for metric {i}",
                 Category = "Performance",
                 Unit = "Count",
-                SupportedAggregationTypes = new List<string> { "Average" },
+                SupportedAggregationTypes = ["Average"],
                 IsDimensionRequired = false,
-                Dimensions = new List<string>()
+                Dimensions = []
             });
         }
         return definitions;
