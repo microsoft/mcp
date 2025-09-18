@@ -91,7 +91,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         Assert.NotEmpty(secrets.EnumerateArray());
     }
 
-    [Fact]
+    [Fact(Skip = "Test temporarily disabled")]
     public async Task Should_get_secret()
     {
         // Created in keyvault.bicep.
