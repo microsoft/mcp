@@ -41,6 +41,7 @@ extends:
       jobs:
       - template: /eng/pipelines/templates/jobs/initialize.yml
         parameters:
+          DynamicPrereleaseVersion: ${{ not(parameters.ReleaseRun) }}
           ServerName: ${{ parameters.ServerName }}
 
     - stage: Build
