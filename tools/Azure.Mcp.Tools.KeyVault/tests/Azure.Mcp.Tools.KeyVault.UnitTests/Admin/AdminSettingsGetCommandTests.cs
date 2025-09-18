@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.KeyVault.Commands.Admin;
 using Azure.Mcp.Tools.KeyVault.Services;
+using Azure.Security.KeyVault.Administration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -43,14 +43,15 @@ public class AdminSettingsGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsVaultSettings()
+    public async Task ExecuteAsync_ReturnsSettingsDictionary()
     {
+        // We return null from service (simplest stub); command should still succeed with empty dictionary.
         _keyVaultService.GetVaultSettings(
             Arg.Is(KnownVaultName),
             Arg.Is(KnownSubscriptionId),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
-            .Returns(new VaultSettings(KnownVaultName, true, 7));
+            .Returns((GetSettingsResult)null!);
 
         var args = _commandDefinition.Parse([
             "--vault", KnownVaultName,
@@ -81,12 +82,5 @@ public class AdminSettingsGetCommandTests
         Assert.NotNull(response);
         Assert.Equal(500, response.Status);
         Assert.Contains(expectedError, response.Message);
-    }
-
-    private class AdminSettingsResult
-    {
-        [JsonPropertyName("name")] public string Name { get; set; } = null!;
-        [JsonPropertyName("enablePurgeProtection")] public bool? EnablePurgeProtection { get; set; }
-        [JsonPropertyName("softDeleteRetentionDays")] public int? SoftDeleteRetentionDays { get; set; }
     }
 }

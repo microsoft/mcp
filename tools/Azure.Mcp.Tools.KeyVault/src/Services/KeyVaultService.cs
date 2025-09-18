@@ -291,7 +291,7 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
         }
     }
 
-    public async Task<VaultSettings> GetVaultSettings(
+    public async Task<GetSettingsResult> GetVaultSettings(
         string vaultName,
         string subscription,
         string? tenantId = null,
@@ -307,30 +307,8 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
         {
             var settingsClient = new KeyVaultSettingsClient(vaultUri, credential);
 
-            bool? enablePurgeProtection = null;
-            int? softDeleteRetentionDays = null;
-
             var settingsResponse = await settingsClient.GetSettingsAsync();
-            foreach (var setting in settingsResponse.Value.Settings)
-            {
-                var settingValue = setting.Value.ToString();
-                if (string.Equals(setting.Name, "PurgeProtection", StringComparison.OrdinalIgnoreCase))
-                {
-                    enablePurgeProtection = string.Equals(settingValue, "Enabled", StringComparison.OrdinalIgnoreCase);
-                }
-                else if (string.Equals(setting.Name, "SoftDeleteRetentionInDays", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (int.TryParse(settingValue, out int days))
-                    {
-                        softDeleteRetentionDays = days;
-                    }
-                }
-            }
-
-            return new VaultSettings(
-                Name: vaultName,
-                EnablePurgeProtection: enablePurgeProtection,
-                SoftDeleteRetentionDays: softDeleteRetentionDays);
+            return settingsResponse.Value;
         }
         catch (Exception ex)
         {

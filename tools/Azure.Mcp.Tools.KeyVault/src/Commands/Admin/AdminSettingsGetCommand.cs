@@ -47,9 +47,20 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
         try
         {
             var service = context.GetService<IKeyVaultService>();
-            var settings = await service.GetVaultSettings(options.VaultName!, options.Subscription!, options.Tenant, options.RetryPolicy);
+            var settingsResult = await service.GetVaultSettings(options.VaultName!, options.Subscription!, options.Tenant, options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(settings, KeyVaultJsonContext.Default.VaultSettings);
+            // Convert settings to a dictionary of strings for easier serialization in case the service adds new settings in the future.
+            Dictionary<string, string> settings = new(StringComparer.OrdinalIgnoreCase);
+            if (settingsResult?.Settings != null)
+            {
+                foreach (var setting in settingsResult.Settings)
+                {
+                    settings[setting.Name] = setting.Value.ToString();
+                }
+            }
+
+            var result = new AdminSettingsGetCommandResult(options.VaultName!, settings);
+            context.Response.Results = ResponseResult.Create(result, KeyVaultJsonContext.Default.AdminSettingsGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -59,4 +70,6 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
 
         return context.Response;
     }
+
+    internal record AdminSettingsGetCommandResult(string Name, Dictionary<string, string> Settings);
 }
