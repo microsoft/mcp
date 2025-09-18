@@ -62,7 +62,7 @@ public sealed class NodepoolGetCommandTests
                 VmSize = "Standard_DS2_v2",
                 Mode = "System"
             };
-            _aksService.GetNodePool(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            _aksService.GetNodePoolAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(testNodePool);
         }
 
@@ -103,7 +103,7 @@ public sealed class NodepoolGetCommandTests
             EnableAutoScaling = true,
             ScaleDownMode = "Delete",
             ProvisioningState = "Succeeded",
-            PowerState = new Models.NodePoolPowerState { Code = "Running" },
+            PowerState = "Running",
             OrchestratorVersion = "1.33.2",
             CurrentOrchestratorVersion = "1.33.2",
             EnableNodePublicIP = false,
@@ -116,7 +116,7 @@ public sealed class NodepoolGetCommandTests
             OsSKU = "Ubuntu",
             NodeImageVersion = "AKSUbuntu-2204gen2containerd-202508.20.1"
         };
-        _aksService.GetNodePool(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _aksService.GetNodePoolAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedNodePool);
 
         var context = new CommandContext(_serviceProvider);
@@ -129,7 +129,7 @@ public sealed class NodepoolGetCommandTests
         Assert.Equal(200, response.Status);
         Assert.NotNull(response.Results);
 
-        await _aksService.Received(1).GetNodePool(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
+        await _aksService.Received(1).GetNodePoolAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AksJsonContext.Default.NodepoolGetCommandResult);
@@ -148,7 +148,7 @@ public sealed class NodepoolGetCommandTests
         Assert.Equal(expectedNodePool.EnableAutoScaling, result.NodePool.EnableAutoScaling);
         Assert.Equal(expectedNodePool.ScaleDownMode, result.NodePool.ScaleDownMode);
         Assert.Equal(expectedNodePool.ProvisioningState, result.NodePool.ProvisioningState);
-        Assert.Equal(expectedNodePool.PowerState?.Code, result.NodePool.PowerState?.Code);
+        Assert.Equal(expectedNodePool.PowerState, result.NodePool.PowerState);
         Assert.Equal(expectedNodePool.OrchestratorVersion, result.NodePool.OrchestratorVersion);
         Assert.Equal(expectedNodePool.CurrentOrchestratorVersion, result.NodePool.CurrentOrchestratorVersion);
         Assert.Equal(expectedNodePool.EnableNodePublicIP, result.NodePool.EnableNodePublicIP);
@@ -166,7 +166,7 @@ public sealed class NodepoolGetCommandTests
     public async Task ExecuteAsync_ReturnsNullWhenNodePoolNotFound()
     {
         // Arrange
-        _aksService.GetNodePool(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _aksService.GetNodePoolAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns((Models.NodePool?)null);
 
         var context = new CommandContext(_serviceProvider);
@@ -184,7 +184,7 @@ public sealed class NodepoolGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _aksService.GetNodePool(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _aksService.GetNodePoolAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<Models.NodePool?>(new Exception("Test error")));
 
         var context = new CommandContext(_serviceProvider);

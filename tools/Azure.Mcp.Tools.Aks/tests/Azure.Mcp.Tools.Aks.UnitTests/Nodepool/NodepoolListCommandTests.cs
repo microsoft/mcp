@@ -59,7 +59,7 @@ public sealed class NodepoolListCommandTests
                 new() { Name = "np1", Count = 3, VmSize = "Standard_DS2_v2" },
                 new() { Name = "np2", Count = 5, VmSize = "Standard_D4s_v5" }
             };
-            _aksService.ListNodePools(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            _aksService.ListNodePoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(testNodePools);
         }
 
@@ -103,7 +103,7 @@ public sealed class NodepoolListCommandTests
                 EnableAutoScaling = true,
                 ScaleDownMode = "Delete",
                 ProvisioningState = "Succeeded",
-                PowerState = new Models.NodePoolPowerState { Code = "Running" },
+                PowerState = "Running",
                 OrchestratorVersion = "1.33.1",
                 CurrentOrchestratorVersion = "1.33.1",
                 EnableNodePublicIP = false,
@@ -131,7 +131,7 @@ public sealed class NodepoolListCommandTests
                 EnableAutoScaling = true,
                 ScaleDownMode = "Delete",
                 ProvisioningState = "Succeeded",
-                PowerState = new Models.NodePoolPowerState { Code = "Running" },
+                PowerState = "Running",
                 OrchestratorVersion = "1.33.2",
                 CurrentOrchestratorVersion = "1.33.2",
                 EnableNodePublicIP = false,
@@ -145,7 +145,7 @@ public sealed class NodepoolListCommandTests
                 NodeImageVersion = "AKSUbuntu-2204gen2containerd-202508.20.1"
             }
         };
-        _aksService.ListNodePools(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _aksService.ListNodePoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedNodePools);
 
         var context = new CommandContext(_serviceProvider);
@@ -159,7 +159,7 @@ public sealed class NodepoolListCommandTests
         Assert.NotNull(response.Results);
 
         // Verify the mock was called
-        await _aksService.Received(1).ListNodePools(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
+        await _aksService.Received(1).ListNodePoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AksJsonContext.Default.NodepoolListCommandResult);
@@ -181,7 +181,7 @@ public sealed class NodepoolListCommandTests
         Assert.Equal(expectedNodePools[0].EnableAutoScaling, result.NodePools[0].EnableAutoScaling);
         Assert.Equal(expectedNodePools[0].ScaleDownMode, result.NodePools[0].ScaleDownMode);
         Assert.Equal(expectedNodePools[0].ProvisioningState, result.NodePools[0].ProvisioningState);
-        Assert.Equal(expectedNodePools[0].PowerState?.Code, result.NodePools[0].PowerState?.Code);
+        Assert.Equal(expectedNodePools[0].PowerState, result.NodePools[0].PowerState);
         Assert.Equal(expectedNodePools[0].OrchestratorVersion, result.NodePools[0].OrchestratorVersion);
         Assert.Equal(expectedNodePools[0].CurrentOrchestratorVersion, result.NodePools[0].CurrentOrchestratorVersion);
         Assert.Equal(expectedNodePools[0].EnableNodePublicIP, result.NodePools[0].EnableNodePublicIP);
@@ -199,7 +199,7 @@ public sealed class NodepoolListCommandTests
     public async Task ExecuteAsync_ReturnsEmptyWhenNoNodePools()
     {
         // Arrange
-        _aksService.ListNodePools(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _aksService.ListNodePoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
@@ -223,7 +223,7 @@ public sealed class NodepoolListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _aksService.ListNodePools(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _aksService.ListNodePoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<List<Models.NodePool>>(new Exception("Test error")));
 
         var context = new CommandContext(_serviceProvider);

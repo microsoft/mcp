@@ -1,30 +1,34 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
+using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Aks.Models;
-using Azure.ResourceManager.ContainerService;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Aks.Services;
 
 public sealed class AksService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ICacheService cacheService) : BaseAzureService(tenantService), IAksService
+    ICacheService cacheService,
+    ILogger<AksService> logger) : BaseAzureResourceService(subscriptionService, tenantService), IAksService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+    private readonly ILogger<AksService> _logger = logger;
 
     private const string CacheGroup = "aks";
     private const string AksClustersCacheKey = "clusters";
     private const string AksNodePoolsCacheKey = "nodepools";
     private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
 
-    public async Task<List<Cluster>> ListClusters(
+    public async Task<List<Cluster>> ListClustersAsync(
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
@@ -43,31 +47,27 @@ public sealed class AksService(
             return cachedClusters;
         }
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-        var clusters = new List<Cluster>();
-
         try
         {
-            await foreach (var cluster in subscriptionResource.GetContainerServiceManagedClustersAsync())
-            {
-                if (cluster?.Data != null)
-                {
-                    clusters.Add(ConvertToClusterModel(cluster));
-                }
-            }
+            var clusters = await ExecuteResourceQueryAsync(
+                "Microsoft.ContainerService/managedClusters",
+                resourceGroup: null, // all resource groups
+                subscription,
+                retryPolicy,
+                ConvertToClusterModel,
+                cancellationToken: default);
 
             // Cache the results
             await _cacheService.SetAsync(CacheGroup, cacheKey, clusters, s_cacheDuration);
+            return clusters;
         }
         catch (Exception ex)
         {
             throw new Exception($"Error retrieving AKS clusters: {ex.Message}", ex);
         }
-
-        return clusters;
     }
 
-    public async Task<Cluster?> GetCluster(
+    public async Task<Cluster?> GetClusterAsync(
         string subscription,
         string clusterName,
         string resourceGroup,
@@ -88,28 +88,20 @@ public sealed class AksService(
             return cachedCluster;
         }
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-
         try
         {
-            var resourceGroupResource = await subscriptionResource
-                .GetResourceGroupAsync(resourceGroup);
+            var cluster = await ExecuteSingleResourceQueryAsync(
+                "Microsoft.ContainerService/managedClusters",
+                resourceGroup,
+                subscription,
+                retryPolicy,
+                ConvertToClusterModel,
+                $"name =~ '{EscapeKqlString(clusterName)}'");
 
-            if (resourceGroupResource?.Value == null)
+            if (cluster == null)
             {
-                return null;
+                throw new KeyNotFoundException($"AKS cluster '{clusterName}' not found in resource group '{resourceGroup}' for subscription '{subscription}'.");
             }
-
-            var clusterResource = await resourceGroupResource.Value
-                .GetContainerServiceManagedClusters()
-                .GetAsync(clusterName);
-
-            if (clusterResource?.Value?.Data == null)
-            {
-                return null;
-            }
-
-            var cluster = ConvertToClusterModel(clusterResource.Value);
 
             // Cache the result
             await _cacheService.SetAsync(CacheGroup, cacheKey, cluster, s_cacheDuration);
@@ -118,11 +110,14 @@ public sealed class AksService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving AKS cluster '{clusterName}': {ex.Message}", ex);
+            _logger.LogError(ex,
+                "Error retrieving AKS cluster '{ClusterName}' in resource group '{ResourceGroup}' for subscription '{Subscription}'",
+                clusterName, resourceGroup, subscription);
+            throw;
         }
     }
 
-    public async Task<List<NodePool>> ListNodePools(
+    public async Task<List<NodePool>> ListNodePoolsAsync(
         string subscription,
         string resourceGroup,
         string clusterName,
@@ -143,48 +138,30 @@ public sealed class AksService(
             return cachedNodePools;
         }
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-        var nodePools = new List<NodePool>();
-
         try
         {
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
-            if (resourceGroupResource?.Value == null)
+            var nodePools = await ExecuteSingleResourceQueryAsync(
+                "Microsoft.ContainerService/managedClusters",
+                resourceGroup,
+                subscription,
+                retryPolicy,
+                ConvertToClusterNodePoolModel,
+                $"name =~ '{EscapeKqlString(clusterName)}'");
+            if (nodePools == null)
             {
-                return nodePools;
+                throw new KeyNotFoundException($"No node pools found for cluster '{clusterName}' in resource group '{resourceGroup}' for subscription '{subscription}'");
             }
-
-            var clusterResource = await resourceGroupResource.Value
-                .GetContainerServiceManagedClusters()
-                .GetAsync(clusterName);
-
-            if (clusterResource?.Value == null)
-            {
-                return nodePools;
-            }
-
-            await foreach (var agentPool in clusterResource.Value
-                               .GetContainerServiceAgentPools()
-                               .GetAllAsync())
-            {
-                if (agentPool?.Data != null)
-                {
-                    nodePools.Add(ConvertToNodePoolModel(agentPool));
-                }
-            }
-
             // Cache the results
             await _cacheService.SetAsync(CacheGroup, cacheKey, nodePools, s_cacheDuration);
+            return nodePools;
         }
         catch (Exception ex)
         {
             throw new Exception($"Error retrieving AKS node pools for cluster '{clusterName}': {ex.Message}", ex);
         }
-
-        return nodePools;
     }
 
-    public async Task<NodePool?> GetNodePool(
+    public async Task<NodePool?> GetNodePoolAsync(
         string subscription,
         string resourceGroup,
         string clusterName,
@@ -206,107 +183,103 @@ public sealed class AksService(
             return cachedNodePool;
         }
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-
         try
         {
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
-            if (resourceGroupResource?.Value == null)
+            var nodePools = await ExecuteSingleResourceQueryAsync(
+                "Microsoft.ContainerService/managedClusters",
+                resourceGroup,
+                subscription,
+                retryPolicy,
+                ConvertToClusterNodePoolModel,
+                $"name =~ '{EscapeKqlString(clusterName)}'") ?? new List<NodePool>();
+
+            var nodePool = nodePools.FirstOrDefault(np => np.Name == nodePoolName);
+            if (nodePool != null)
             {
-                return null;
+                // Cache the result
+                await _cacheService.SetAsync(CacheGroup, cacheKey, nodePool, s_cacheDuration);
+                return nodePool;
             }
 
-            var clusterResource = await resourceGroupResource.Value
-                .GetContainerServiceManagedClusters()
-                .GetAsync(clusterName);
-
-            if (clusterResource?.Value == null)
-            {
-                return null;
-            }
-
-            var agentPoolResource = await clusterResource.Value
-                .GetContainerServiceAgentPools()
-                .GetAsync(nodePoolName);
-
-            if (agentPoolResource?.Value?.Data == null)
-            {
-                return null;
-            }
-
-            var nodePool = ConvertToNodePoolModel(agentPoolResource.Value);
-
-            // Cache the result
-            await _cacheService.SetAsync(CacheGroup, cacheKey, nodePool, s_cacheDuration);
-
-            return nodePool;
+            throw new KeyNotFoundException($"AKS node pool '{nodePoolName}' not found in cluster '{clusterName}' in resource group '{resourceGroup}' for subscription '{subscription}'.");
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving AKS node pool '{nodePoolName}' for cluster '{clusterName}': {ex.Message}", ex);
+            _logger.LogError(ex,
+                "Error retrieving AKS node pool '{NodePoolName}' for cluster '{ClusterName}' in resource group '{ResourceGroup}' for subscription '{Subscription}'",
+                nodePoolName, clusterName, resourceGroup, subscription);
+            throw;
         }
     }
 
-    private static Cluster ConvertToClusterModel(ContainerServiceManagedClusterResource clusterResource)
+    private static Cluster ConvertToClusterModel(JsonElement item)
     {
-        var data = clusterResource.Data;
-        var agentPool = data.AgentPoolProfiles?.FirstOrDefault();
+        var data = Models.AksClusterData.FromJson(item) ?? throw new InvalidOperationException("Failed to parse AKS cluster data");
 
+        // Resource identity
+        if (string.IsNullOrEmpty(data.ResourceId))
+            throw new InvalidOperationException("Resource ID is missing");
+        var id = new ResourceIdentifier(data.ResourceId);
+
+        var agentPool = data.Properties?.AgentPoolProfiles?.FirstOrDefault();
         return new Cluster
         {
-            Name = data.Name,
-            SubscriptionId = clusterResource.Id.SubscriptionId,
-            ResourceGroupName = clusterResource.Id.ResourceGroupName,
-            Location = data.Location.ToString(),
-            KubernetesVersion = data.KubernetesVersion,
-            ProvisioningState = data.ProvisioningState?.ToString(),
-            PowerState = data.PowerStateCode?.ToString(),
-            DnsPrefix = data.DnsPrefix,
-            Fqdn = data.Fqdn,
+            Name = data.ResourceName ?? "Unknown",
+            SubscriptionId = id.SubscriptionId ?? "Unknown",
+            ResourceGroupName = id.ResourceGroupName ?? "Unknown",
+            Location = data.Location ?? "Unknown",
+            KubernetesVersion = data.Properties?.KubernetesVersion,
+            ProvisioningState = data.Properties?.ProvisioningState,
+            PowerState = data.Properties?.PowerState?.Code,
+            DnsPrefix = data.Properties?.DnsPrefix,
+            Fqdn = data.Properties?.Fqdn,
             NodeCount = agentPool?.Count,
             NodeVmSize = agentPool?.VmSize,
-            IdentityType = data.Identity?.ManagedServiceIdentityType.ToString(),
-            EnableRbac = data.EnableRbac,
-            NetworkPlugin = data.NetworkProfile?.NetworkPlugin?.ToString(),
-            NetworkPolicy = data.NetworkProfile?.NetworkPolicy?.ToString(),
-            ServiceCidr = data.NetworkProfile?.ServiceCidr,
-            DnsServiceIP = data.NetworkProfile?.DnsServiceIP?.ToString(),
-            SkuTier = data.Sku?.Tier?.ToString(),
-            Tags = data.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+            IdentityType = data.IdentityType,
+            EnableRbac = data.Properties?.EnableRbac,
+            NetworkPlugin = data.Properties?.NetworkProfile?.NetworkPlugin,
+            NetworkPolicy = data.Properties?.NetworkProfile?.NetworkPolicy,
+            ServiceCidr = data.Properties?.NetworkProfile?.ServiceCidr,
+            DnsServiceIP = data.Properties?.NetworkProfile?.DnsServiceIP,
+            SkuTier = data.Sku?.Tier,
+            Tags = data.Tags != null ? new Dictionary<string, string>(data.Tags) : null
         };
     }
 
-    private static NodePool ConvertToNodePoolModel(ContainerServiceAgentPoolResource agentPoolResource)
+    private static List<NodePool> ConvertToClusterNodePoolModel(JsonElement item)
     {
-        var data = agentPoolResource.Data;
+        var data = Models.AksClusterData.FromJson(item) ?? throw new InvalidOperationException("Failed to parse AKS cluster data");
 
-        return new NodePool
-        {
-            Name = data.Name,
-            Count = data.Count,
-            VmSize = data.VmSize?.ToString(),
-            OsDiskSizeGB = data.OSDiskSizeInGB,
-            OsDiskType = data.OSDiskType?.ToString(),
-            KubeletDiskType = data.KubeletDiskType?.ToString(),
-            MaxPods = data.MaxPods,
-            Type = data.TypePropertiesType?.ToString(),
-            MaxCount = data.MaxCount,
-            MinCount = data.MinCount,
-            EnableAutoScaling = data.EnableAutoScaling,
-            ScaleDownMode = data.ScaleDownMode?.ToString(),
-            ProvisioningState = data.ProvisioningState?.ToString(),
-            PowerState = data.PowerStateCode.HasValue ? new NodePoolPowerState { Code = data.PowerStateCode.Value.ToString() } : null,
-            Mode = data.Mode?.ToString(),
-            OrchestratorVersion = data.OrchestratorVersion,
-            CurrentOrchestratorVersion = data.CurrentOrchestratorVersion,
-            EnableNodePublicIP = data.EnableNodePublicIP,
-            ScaleSetPriority = data.ScaleSetPriority?.ToString(),
-            ScaleSetEvictionPolicy = data.ScaleSetEvictionPolicy?.ToString(),
-            NodeLabels = data.NodeLabels?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-            NodeTaints = data.NodeTaints?.ToList(),
-            OsType = data.OSType?.ToString(),
-            OsSKU = data.OSSku?.ToString(),
-            NodeImageVersion = data.NodeImageVersion
-        };
+        return data.Properties?.AgentPoolProfiles?
+            .Select(node => new NodePool
+            {
+                Name = node.Name ?? "Unknown",
+                Count = node.Count,
+                VmSize = node.VmSize,
+                OsDiskSizeGB = node.OSDiskSizeInGB,
+                OsDiskType = node.OSDiskType,
+                KubeletDiskType = node.KubeletDiskType,
+                MaxPods = node.MaxPods,
+                Type = node.AgentPoolType,
+                MinCount = node.MinCount,
+                MaxCount = node.MaxCount,
+                EnableAutoScaling = node.EnableAutoScaling,
+                ScaleDownMode = node.ScaleDownMode,
+                ProvisioningState = node.ProvisioningState,
+                PowerState = node.PowerState?.Code,
+                Mode = node.Mode,
+                OrchestratorVersion = node.OrchestratorVersion,
+                CurrentOrchestratorVersion = node.CurrentOrchestratorVersion,
+                EnableNodePublicIP = node.EnableNodePublicIP,
+                ScaleSetPriority = node.ScaleSetPriority,
+                ScaleSetEvictionPolicy = node.ScaleSetEvictionPolicy,
+                NodeLabels = node.NodeLabels?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+                NodeTaints = node.NodeTaints?.ToList(),
+                OsType = node.OSType,
+                OsSKU = node.OSSku,
+                NodeImageVersion = node.NodeImageVersion
+            })
+            .ToList()
+            ?? new List<NodePool>();
     }
 }

@@ -45,7 +45,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Bas
         try
         {
             var aksService = context.GetService<IAksService>();
-            var clusters = await aksService.ListClusters(
+            var clusters = await aksService.ListClustersAsync(
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy);

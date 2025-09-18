@@ -8,26 +8,26 @@ namespace Azure.Mcp.Tools.Aks.Services;
 
 public interface IAksService
 {
-    Task<List<Cluster>> ListClusters(
+    Task<List<Cluster>> ListClustersAsync(
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<Cluster?> GetCluster(
+    Task<Cluster?> GetClusterAsync(
         string subscription,
         string clusterName,
         string resourceGroup,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<NodePool>> ListNodePools(
+    Task<List<NodePool>> ListNodePoolsAsync(
         string subscription,
         string resourceGroup,
         string clusterName,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<NodePool?> GetNodePool(
+    Task<NodePool?> GetNodePoolAsync(
         string subscription,
         string resourceGroup,
         string clusterName,

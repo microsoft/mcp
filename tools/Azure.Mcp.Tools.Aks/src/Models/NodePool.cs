@@ -45,7 +45,7 @@ public class NodePool
     public string? ProvisioningState { get; set; }
 
     /// <summary> Power state of the node pool. </summary>
-    public NodePoolPowerState? PowerState { get; set; }
+    public string? PowerState { get; set; }
 
     /// <summary> Target orchestrator (Kubernetes) version. </summary>
     public string? OrchestratorVersion { get; set; }
@@ -80,10 +80,4 @@ public class NodePool
 
     /// <summary> Node image version. </summary>
     public string? NodeImageVersion { get; set; }
-}
-
-public sealed class NodePoolPowerState
-{
-    /// <summary> Power state code (e.g., Running, Stopped). </summary>
-    public string? Code { get; set; }
 }
