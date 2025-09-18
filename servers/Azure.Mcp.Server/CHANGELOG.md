@@ -7,7 +7,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Enhanced AKS nodepool information with comprehensive properties. [[#454](https://github.com/microsoft/mcp/issues/454)]
-- Added support for updating Azure SQL databases via the command `azmcp_sql_db_update`. [#488](https://github.com/microsoft/mcp/issues/488)
+- Added support for `azmcp sql server list` command to list SQL servers in a subscription and resource group. [[#503](https://github.com/microsoft/mcp/issues/503)]
+- Added support for updating Azure SQL databases via the command `azmcp_sql_db_update`. [[#488](https://github.com/microsoft/mcp/issues/488)]
 
 ### Breaking Changes
 
