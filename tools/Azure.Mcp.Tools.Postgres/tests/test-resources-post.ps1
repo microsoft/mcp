@@ -116,10 +116,20 @@ try {
                 Write-Warning "  az CLI not available; cannot configure Entra ID administrator. AAD auth may fail."
             } else {
                 $retries = 0; $maxRetries = 5
+                # Determine object id: if $TestApplicationId looks like a GUID assume object id; otherwise attempt to resolve
+                $objectId = $null
+                if ($TestApplicationId -match '^[0-9a-fA-F-]{36}$') { $objectId = $TestApplicationId }
+                if (-not $objectId) {
+                    try {
+                        $spLookup = az ad sp list --display-name $TestApplicationId --query "[0].id" -o tsv 2>$null
+                        if ($spLookup) { $objectId = $spLookup }
+                    } catch { }
+                }
+                if (-not $objectId) { $objectId = $TestApplicationId }
                 while (-not $aadConfigured -and $retries -lt $maxRetries) {
                     try {
                         Write-Host "  Attempting to set AAD admin via az CLI (try $($retries+1)/$maxRetries)..." -ForegroundColor Gray
-                        az postgres flexible-server ad-admin create --resource-group $ResourceGroupName --server-name $postgresServerName --object-id $TestApplicationId --principal-name $TestApplicationId --principal-type ServicePrincipal --tenant $TenantId 1>$null 2>$null
+                        az postgres flexible-server ad-admin create --resource-group $ResourceGroupName --server-name $postgresServerName --object-id $objectId --principal-name $TestApplicationId --principal-type ServicePrincipal --tenant $TenantId 1>$null 2>$null
                         if ($LASTEXITCODE -eq 0) {
                             Write-Host "  Entra ID administrator configured (az CLI)." -ForegroundColor Green
                             $aadConfigured = $true
