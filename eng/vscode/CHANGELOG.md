@@ -5,8 +5,12 @@
 
 ### Added
 
-### Breaking Changes
+- Added toast notification to guide users when Azure MCP settings are changed but MCP Autostart is not configured
+  - Notification includes clear instructions: "Command Palette → MCP: List Servers → Azure MCP → Start/Restart"
+  - Provides "Open Command Palette" button for quick access to MCP server management
+  - Only shows when MCP Autostart is disabled to avoid unnecessary notifications
 
+### Changed
 - Redesigned how conditionally required options are handled. Commands now use explicit option registration via extension methods (`.AsRequired()`, `.AsOptional()`) instead of legacy patterns (`UseResourceGroup()`, `RequireResourceGroup()`). [[#452](https://github.com/microsoft/mcp/pull/452)]
 
 ### Fixed

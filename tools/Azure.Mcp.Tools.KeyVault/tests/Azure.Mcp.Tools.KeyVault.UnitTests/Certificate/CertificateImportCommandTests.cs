@@ -53,7 +53,8 @@ public class CertificateImportCommandTests
             null,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception("Test error")); // force exception to avoid building return object
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Exception("Test error")); // force exception to avoid building return object
 
         var args = _commandDefinition.Parse([
             "--vault", _knownVault,
@@ -170,7 +171,8 @@ public class CertificateImportCommandTests
             null,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception("Test error"));
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Exception("Test error"));
 
         var args = _commandDefinition.Parse([
             "--vault", _knownVault,
@@ -206,7 +208,8 @@ public class CertificateImportCommandTests
             password,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception("Test error"));
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Exception("Test error"));
 
         var args = _commandDefinition.Parse([
             "--vault", _knownVault,
@@ -236,7 +239,7 @@ public class CertificateImportCommandTests
         var tempPath = Path.GetTempFileName();
         try
         {
-            await File.WriteAllBytesAsync(tempPath, new byte[] { 1, 2, 3, 4 }, TestContext.Current.CancellationToken);
+            await File.WriteAllBytesAsync(tempPath, [1, 2, 3, 4], TestContext.Current.CancellationToken);
             _keyVaultService.ImportCertificate(
                 _knownVault,
                 _knownCertName,
@@ -244,7 +247,8 @@ public class CertificateImportCommandTests
                 null,
                 _knownSubscription,
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception("Test error"));
+                Arg.Any<RetryPolicyOptions>())
+                .ThrowsAsync(new Exception("Test error"));
             var args = _commandDefinition.Parse([
                 "--vault", _knownVault,
                 "--certificate", _knownCertName,
@@ -287,7 +291,8 @@ public class CertificateImportCommandTests
             null,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception(errorMessage));
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Exception(errorMessage));
 
         var args = _commandDefinition.Parse([
             "--vault", _knownVault,
@@ -316,7 +321,8 @@ public class CertificateImportCommandTests
             password,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception(mismatchMessage));
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Exception(mismatchMessage));
 
         var args = _commandDefinition.Parse([
             "--vault", _knownVault,

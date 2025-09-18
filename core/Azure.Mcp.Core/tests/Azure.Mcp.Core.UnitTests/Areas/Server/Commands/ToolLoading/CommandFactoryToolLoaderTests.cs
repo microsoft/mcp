@@ -571,5 +571,112 @@ public class CommandFactoryToolLoaderTests
         Assert.False(result.IsError);
     }
 
+    [Fact]
+    public async Task CallToolHandler_WithSecretTool_WhenInsecureDisableElicitationEnabled_BypassesElicitation()
+    {
+        // Create tool loader with insecure disable elicitation enabled
+        var options = new ToolLoaderOptions(InsecureDisableElicitation: true);
+        var (toolLoader, commandFactory) = CreateToolLoader(options);
+
+        // Add the fake secret command to the command factory
+        var fakeCommand = Substitute.For<IBaseCommand>();
+        var fakeSystemCommand = new Command("fake-secret-get", "A fake secret command for testing");
+        fakeCommand.GetCommand().Returns(fakeSystemCommand);
+        fakeCommand.Title.Returns("Fake Secret Get");
+        fakeCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>())
+                   .Returns(new CommandResponse { Status = 200, Message = "Secret test response" });
+
+        // Add our fake command to the internal command map using reflection
+        var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
+        commandMap["fake-secret-get"] = fakeCommand;
+
+        // Create mock server - elicitation support doesn't matter when bypassed
+        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        mockServer.ClientCapabilities.Returns((ClientCapabilities?)null);
+
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = "fake-secret-get",
+                Arguments = new Dictionary<string, JsonElement>()
+            }
+        };
+
+        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+
+        // Should execute successfully despite being a secret tool and client not supporting elicitation
+        Assert.NotNull(result);
+        Assert.False(result.IsError);
+        var responseText = ((TextContentBlock)result.Content.First()).Text;
+        var response = JsonSerializer.Deserialize<CommandResponse>(responseText);
+        Assert.Equal(200, response!.Status);
+        Assert.Equal("Secret test response", response.Message);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithSecretTool_WhenInsecureDisableElicitationDisabled_StillRequiresElicitation()
+    {
+        // Create tool loader with insecure disable elicitation disabled (default)
+        var options = new ToolLoaderOptions(InsecureDisableElicitation: false);
+        var (toolLoader, commandFactory) = CreateToolLoader(options);
+
+        // Add the fake secret command to the command factory
+        var fakeCommand = Substitute.For<IBaseCommand>();
+        var fakeSystemCommand = new Command("fake-secret-get", "A fake secret command for testing");
+        fakeCommand.GetCommand().Returns(fakeSystemCommand);
+        fakeCommand.Title.Returns("Fake Secret Get");
+        fakeCommand.Metadata.Returns(new ToolMetadata { Secret = true });
+        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>())
+                   .Returns(new CommandResponse { Status = 200, Message = "Secret test response" });
+
+        // Add our fake command to the internal command map using reflection
+        var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var commandMap = (Dictionary<string, IBaseCommand>)commandMapField!.GetValue(commandFactory)!;
+        commandMap["fake-secret-get"] = fakeCommand;
+
+        // Create mock server without elicitation capabilities
+        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        mockServer.ClientCapabilities.Returns((ClientCapabilities?)null);
+
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = "fake-secret-get",
+                Arguments = new Dictionary<string, JsonElement>()
+            }
+        };
+
+        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+
+        // Should still reject execution when insecure option is disabled
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        Assert.Contains("does not support elicitation", ((TextContentBlock)result.Content.First()).Text);
+    }
+
+    [Fact]
+    public void ToolLoaderOptions_DefaultInsecureDisableElicitation_IsFalse()
+    {
+        // Arrange & Act
+        var options = new ToolLoaderOptions();
+
+        // Assert
+        Assert.False(options.InsecureDisableElicitation);
+    }
+
+    [Fact]
+    public void ToolLoaderOptions_WithInsecureDisableElicitationTrue_IsSetCorrectly()
+    {
+        // Arrange & Act
+        var options = new ToolLoaderOptions(InsecureDisableElicitation: true);
+
+        // Assert
+        Assert.True(options.InsecureDisableElicitation);
+    }
+
     #endregion
 }

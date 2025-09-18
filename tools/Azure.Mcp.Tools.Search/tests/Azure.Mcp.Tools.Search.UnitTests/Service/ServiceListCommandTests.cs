@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Commands.Service;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,7 +53,7 @@ public class ServiceListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ServiceListCommand.ServiceListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, SearchJsonContext.Default.ServiceListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedServices, result.Services);
@@ -63,7 +64,7 @@ public class ServiceListCommandTests
     {
         // Arrange
         _searchService.ListServices(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<string>());
+            .Returns([]);
 
         var command = new ServiceListCommand(_logger);
 
@@ -78,7 +79,7 @@ public class ServiceListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ServiceListCommand.ServiceListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, SearchJsonContext.Default.ServiceListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Services);

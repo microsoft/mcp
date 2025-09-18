@@ -85,9 +85,4 @@ public class TestRunUpdateCommandTests
         var response = await command.ExecuteAsync(context, args);
         Assert.Equal(400, response.Status);
     }
-
-    private class TestRunUpdateCommandResult
-    {
-        public TestRun TestRun { get; set; } = new();
-    }
 }

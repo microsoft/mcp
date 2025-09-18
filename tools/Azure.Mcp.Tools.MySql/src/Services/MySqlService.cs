@@ -108,7 +108,7 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         return $"Server={host};Database={database};User ID={user};Password={entraIdAccessToken};SSL Mode=Required;";
     }
 
-    private static void ValidateQuerySafety(string query)
+    internal static void ValidateQuerySafety(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
         {

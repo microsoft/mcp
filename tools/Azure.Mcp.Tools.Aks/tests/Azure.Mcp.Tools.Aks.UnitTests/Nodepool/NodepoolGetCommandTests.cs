@@ -110,7 +110,7 @@ public sealed class NodepoolGetCommandTests
             ScaleSetPriority = "Spot",
             ScaleSetEvictionPolicy = "Delete",
             NodeLabels = new Dictionary<string, string> { { "kubernetes.azure.com/scalesetpriority", "spot" } },
-            NodeTaints = new List<string> { "kubernetes.azure.com/scalesetpriority=spot:NoSchedule" },
+            NodeTaints = ["kubernetes.azure.com/scalesetpriority=spot:NoSchedule"],
             Mode = "User",
             OsType = "Linux",
             OsSKU = "Ubuntu",

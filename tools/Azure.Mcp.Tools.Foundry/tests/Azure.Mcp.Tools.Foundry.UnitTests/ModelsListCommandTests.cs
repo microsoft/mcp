@@ -39,12 +39,12 @@ public class ModelsListCommandTests
         };
 
         _foundryService.ListModels(
-                Arg.Any<bool>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Any<bool>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<RetryPolicyOptions>())
             .Returns(expectedModels);
 
         var command = new ModelsListCommand();
@@ -76,12 +76,12 @@ public class ModelsListCommandTests
         };
 
         _foundryService.ListModels(
-                Arg.Any<bool>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Any<bool>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<RetryPolicyOptions>())
             .Returns(expectedModels);
 
         var command = new ModelsListCommand();
@@ -104,12 +104,12 @@ public class ModelsListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoModels()
     {
         _foundryService.ListModels(
-                Arg.Any<bool>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Any<bool>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<RetryPolicyOptions>())
             .Returns([]);
 
         var command = new ModelsListCommand();
@@ -133,12 +133,12 @@ public class ModelsListCommandTests
         var expectedError = "Test error";
 
         _foundryService.ListModels(
-                Arg.Any<bool>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Any<bool>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new ModelsListCommand();

@@ -61,7 +61,7 @@ public class AcrCommandTests(ITestOutputHelper output)
         {
             // Enforce new object shape { name, location?, loginServer?, skuName?, skuTier? }
             Assert.Equal(JsonValueKind.Object, item.ValueKind);
-            Assert.True(item.TryGetProperty("name", out var nameProp));
+            var nameProp = item.AssertProperty("name");
             var objName = nameProp.GetString();
             Assert.False(string.IsNullOrWhiteSpace(objName));
             Assert.Matches("^[a-zA-Z0-9]{5,50}$", objName!); // Basic ACR naming pattern (alphanumeric, 5-50 chars)
@@ -99,7 +99,7 @@ public class AcrCommandTests(ITestOutputHelper output)
         Assert.Equal(JsonValueKind.Object, map.ValueKind);
 
         // Validate we have entries for the test registry and the seeded 'testrepo'
-        Assert.True(map.TryGetProperty(Settings.ResourceBaseName, out var repoArray));
+        var repoArray = map.AssertProperty(Settings.ResourceBaseName);
         Assert.Equal(JsonValueKind.Array, repoArray.ValueKind);
         var repos = repoArray.EnumerateArray().Select(e => e.GetString()).Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
         Assert.Contains("testrepo", repos);
@@ -139,9 +139,7 @@ public class AcrCommandTests(ITestOutputHelper output)
     public async Task Should_validate_required_subscription_parameter()
     {
         // Missing subscription option entirely should behave like other areas (validation -> null)
-        var result = await CallToolAsync(
-            "azmcp_acr_registry_list",
-            new Dictionary<string, object?>());
+        var result = await CallToolAsync("azmcp_acr_registry_list", []);
 
         Assert.Null(result);
     }

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Reflection;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.MySql.Services;
@@ -31,11 +30,10 @@ public class MySqlServiceRowLimitTests
     public void ValidateQuerySafety_WithValidQuery_ShouldPassValidation()
     {
         // Arrange
-        var validateMethod = GetValidateQuerySafetyMethod();
         var query = "SELECT * FROM users";
 
         // Act & Assert - Should not throw any exception
-        validateMethod.Invoke(null, [query]);
+        MySqlService.ValidateQuerySafety(query);
     }
 
     [Theory]
@@ -43,19 +41,7 @@ public class MySqlServiceRowLimitTests
     [InlineData("SELECT * FROM users LIMIT 10000")]
     public void ValidateQuerySafety_WithLimitClause_ShouldPassValidation(string query)
     {
-        // Arrange
-        var validateMethod = GetValidateQuerySafetyMethod();
-
         // Act & Assert - Should not throw any exception
-        validateMethod.Invoke(null, [query]);
-    }
-
-    private static MethodInfo GetValidateQuerySafetyMethod()
-    {
-        var method = typeof(MySqlService).GetMethod("ValidateQuerySafety",
-            BindingFlags.NonPublic | BindingFlags.Static);
-
-        Assert.NotNull(method);
-        return method;
+        MySqlService.ValidateQuerySafety(query);
     }
 }

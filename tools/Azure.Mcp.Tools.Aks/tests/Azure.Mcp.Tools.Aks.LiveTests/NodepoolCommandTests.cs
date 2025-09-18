@@ -47,7 +47,7 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output)
         foreach (var pool in nodePools.EnumerateArray())
         {
             Assert.Equal(JsonValueKind.Object, pool.ValueKind);
-            Assert.True(pool.TryGetProperty("name", out var nameProperty));
+            var nameProperty = pool.AssertProperty("name");
             Assert.False(string.IsNullOrEmpty(nameProperty.GetString()));
 
             if (pool.TryGetProperty("mode", out var modeProperty))
@@ -137,8 +137,8 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output)
         // Should return runtime error details in results
         Assert.True(result.HasValue);
         var errorDetails = result.Value;
-        Assert.True(errorDetails.TryGetProperty("message", out _));
-        Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
+        errorDetails.AssertProperty("message");
+        var typeProperty = errorDetails.AssertProperty("type");
         Assert.Equal("Exception", typeProperty.GetString());
     }
 
@@ -191,8 +191,8 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output)
 
         Assert.True(result.HasValue);
         var errorDetails = result.Value;
-        Assert.True(errorDetails.TryGetProperty("message", out _));
-        Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
+        errorDetails.AssertProperty("message");
+        var typeProperty = errorDetails.AssertProperty("type");
         Assert.Equal("Exception", typeProperty.GetString());
     }
 

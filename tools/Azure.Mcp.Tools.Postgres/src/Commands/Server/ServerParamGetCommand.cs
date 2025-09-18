@@ -57,9 +57,7 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger)
             IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
             var parameterValue = await pgService.GetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!);
             context.Response.Results = parameterValue?.Length > 0 ?
-                ResponseResult.Create(
-                    new ServerParamGetCommandResult(parameterValue),
-                    PostgresJsonContext.Default.ServerParamGetCommandResult) :
+                ResponseResult.Create(new(parameterValue), PostgresJsonContext.Default.ServerParamGetCommandResult) :
                 null;
         }
         catch (Exception ex)
