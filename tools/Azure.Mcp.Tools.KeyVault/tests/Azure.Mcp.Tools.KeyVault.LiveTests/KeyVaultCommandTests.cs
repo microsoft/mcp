@@ -29,7 +29,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         Assert.NotEmpty(keys.EnumerateArray());
     }
 
-    [Fact(Skip = "Test temporarily disabled")]
+    [Fact]
     public async Task Should_get_key()
     {
         // Created in keyvault.bicep.
@@ -91,7 +91,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         Assert.NotEmpty(secrets.EnumerateArray());
     }
 
-    [Fact(Skip = "Test temporarily disabled")]
+    [Fact]
     public async Task Should_get_secret()
     {
         // Created in keyvault.bicep.

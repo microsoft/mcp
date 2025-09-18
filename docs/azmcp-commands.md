@@ -554,6 +554,11 @@ azmcp keyvault key create --subscription <subscription> \
                           --key <key-name> \
                           --key-type <key-type>
 
+# Get a key in a key vault
+azmcp keyvault key get --subscription <subscription> \
+                       --vault <vault-name> \
+                       --key <key-name>
+
 # Lists keys in a key vault
 azmcp keyvault key list --subscription <subscription> \
                         --vault <vault-name> \
@@ -562,12 +567,12 @@ azmcp keyvault key list --subscription <subscription> \
 
 #### Secrets
 
-Tools that handle sensitive data such as secrets, credentials, or keys require user consent before execution through a security mechanism called **elicitation**. When you run commands that access sensitive information, the MCP client will prompt you to confirm the operation before proceeding.
+Tools that handle sensitive data such as secrets require user consent before execution through a security mechanism called **elicitation**. When you run commands that access sensitive information, the MCP client will prompt you to confirm the operation before proceeding.
 
 > **🛡️ Elicitation (user confirmation) Security Feature:**
 > 
 > Elicitation prompts appear when tools may expose sensitive information like:
-> - Key Vault secrets and keys
+> - Key Vault secrets
 > - Connection strings and passwords
 > - Certificate private keys
 > - Other confidential data
@@ -580,6 +585,11 @@ azmcp keyvault secret create --subscription <subscription> \
                              --vault <vault-name> \
                              --name <secret-name> \
                              --value <secret-value>
+
+# Get a secret in a key vault (will prompt for user consent)
+azmcp keyvault secret get --subscription <subscription> \
+                          --vault <vault-name> \
+                          --secret <secret-name>
 
 # Lists secrets in a key vault
 azmcp keyvault secret list --subscription <subscription> \
