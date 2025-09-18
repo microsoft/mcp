@@ -16,4 +16,3 @@ $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 # Create EventHub namespace and EventHub
 $eventHubNamespaceName = $BaseName
 $eventHubName = "test-hub"
-Write-TestSettings -TestSettings $testSettings -OutputPath $PSScriptRoot
