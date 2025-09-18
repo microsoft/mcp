@@ -60,7 +60,7 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act
         var result = await CallToolAsync(
-            "azmcp_appconfig_kv_list",
+            "azmcp_appconfig_kv_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -91,13 +91,13 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act
         var result = await CallToolAsync(
-            "azmcp_appconfig_kv_list",
+            "azmcp_appconfig_kv_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "account", Settings.ResourceBaseName },
-                { "key", key },
-                { "label", label }
+                { "key-filter", key },
+                { "label-filter", label }
             });
 
         // assert
@@ -273,7 +273,7 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act
         var result = await CallToolAsync(
-            "azmcp_appconfig_kv_show",
+            "azmcp_appconfig_kv_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -355,7 +355,7 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act - get the key-value to verify content type was stored
         var getResult = await CallToolAsync(
-            "azmcp_appconfig_kv_show",
+            "azmcp_appconfig_kv_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -364,7 +364,11 @@ public class AppConfigCommandTests : CommandTestsBase
             });
 
         // assert - verify the get result
-        var setting = getResult.AssertProperty("setting");
+        var settings = getResult.AssertProperty("settings");
+        Assert.Equal(JsonValueKind.Array, settings.ValueKind);
+        Assert.Single(settings.EnumerateArray());
+
+        var setting = settings.EnumerateArray().First();
         Assert.Equal(JsonValueKind.Object, setting.ValueKind);
 
         valueRead = setting.AssertProperty("value");
@@ -394,15 +398,15 @@ public class AppConfigCommandTests : CommandTestsBase
            contentType: contentType);
 
         // act - get key-value to verify content type was preserved
-        var setting = await _appConfigService.GetKeyValue(
+        var setting = await _appConfigService.GetKeyValues(
             Settings.ResourceBaseName,
             key,
             Settings.SubscriptionId);
 
         // assert - verify content type was properly set and retrieved
-        Assert.Equal(key, setting.Key);
-        Assert.Equal(value, setting.Value);
-        Assert.Equal(contentType, setting.ContentType);
+        Assert.Equal(key, setting[0].Key);
+        Assert.Equal(value, setting[0].Value);
+        Assert.Equal(contentType, setting[0].ContentType);
 
     }
 

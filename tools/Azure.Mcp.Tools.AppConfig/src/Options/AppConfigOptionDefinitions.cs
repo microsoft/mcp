@@ -12,6 +12,8 @@ public static class AppConfigOptionDefinitions
     public const string ContentTypeName = "content-type";
     public const string TagsName = "tags";
     public const string LockName = "lock";
+    public const string KeyFilterName = "key-filter";
+    public const string LabelFilterName = "label-filter";
 
     public static readonly Option<string> Account = new(
         $"--{AccountName}"
@@ -67,23 +69,20 @@ public static class AppConfigOptionDefinitions
         Description = "Whether a key-value will be locked (set to read-only) or unlocked (read-only removed).",
         Required = false
     };
-
-    public static class KeyValueList
+    
+        public static readonly Option<string> KeyFilter = new(
+        $"--{KeyFilterName}"
+    )
     {
-        public static readonly Option<string> Key = new(
-            $"--{KeyName}"
-        )
-        {
-            Description = "Specifies the key filter, if any, to be used when retrieving key-values. The filter can be an exact match, for example a filter of 'foo' would get all key-values with a key of 'foo', or the filter can include a '*' character at the end of the string for wildcard searches (e.g., 'App*'). If omitted all keys will be retrieved.",
-            Required = false
-        };
+        Description = "Specifies the key filter, if any, to be used when retrieving key-values. The filter can be an exact match, for example a filter of 'foo' would get all key-values with a key of 'foo', or the filter can include a '*' character at the end of the string for wildcard searches (e.g., 'App*'). If omitted all keys will be retrieved.",
+        Required = false
+    };
 
-        public static readonly Option<string> Label = new(
-            $"--{LabelName}"
-        )
-        {
-            Description = "Specifies the label filter, if any, to be used when retrieving key-values. The filter can be an exact match, for example a filter of 'foo' would get all key-values with a label of 'foo', or the filter can include a '*' character at the end of the string for wildcard searches (e.g., 'Prod*'). This filter is case-sensitive. If omitted, all labels will be retrieved.",
-            Required = false
-        };
-    }
+    public static readonly Option<string> LabelFilter = new(
+        $"--{LabelFilterName}"
+    )
+    {
+        Description = "Specifies the label filter, if any, to be used when retrieving key-values. The filter can be an exact match, for example a filter of 'foo' would get all key-values with a label of 'foo', or the filter can include a '*' character at the end of the string for wildcard searches (e.g., 'Prod*'). This filter is case-sensitive. If omitted, all labels will be retrieved.",
+        Required = false
+    };
 }

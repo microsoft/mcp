@@ -43,9 +43,8 @@ public class AppConfigSetup : IAreaSetup
             loggerFactory.CreateLogger<AccountListCommand>()));
 
         keyValue.AddCommand("delete", new KeyValueDeleteCommand(loggerFactory.CreateLogger<KeyValueDeleteCommand>()));
-        keyValue.AddCommand("list", new KeyValueListCommand(loggerFactory.CreateLogger<KeyValueListCommand>()));
+        keyValue.AddCommand("get", new KeyValueGetCommand(loggerFactory.CreateLogger<KeyValueGetCommand>()));
         keyValue.AddCommand("set", new KeyValueSetCommand(loggerFactory.CreateLogger<KeyValueSetCommand>()));
-        keyValue.AddCommand("show", new KeyValueShowCommand(loggerFactory.CreateLogger<KeyValueShowCommand>()));
 
         lockGroup.AddCommand("set", new KeyValueLockSetCommand(loggerFactory.CreateLogger<KeyValueLockSetCommand>()));
     }
