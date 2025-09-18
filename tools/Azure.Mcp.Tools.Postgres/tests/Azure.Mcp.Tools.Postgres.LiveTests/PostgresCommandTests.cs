@@ -43,7 +43,9 @@ public class PostgresCommandTests : CommandTestsBase
             "azmcp_postgres_server_list",
             new()
             {
-                { "subscription", Settings.SubscriptionId }
+                { "subscription", Settings.SubscriptionId },
+                { "resourceGroup", Settings.ResourceBaseName },
+                { "user", "testuser" }
             });
 
         // assert
