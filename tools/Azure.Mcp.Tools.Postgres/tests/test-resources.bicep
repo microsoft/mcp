@@ -1,24 +1,23 @@
 targetScope = 'resourceGroup'
 
 @minLength(3)
-@maxLength(17)
-@description('The base resource name. PostgreSQL Server names have a max length restriction.')
+@maxLength(50)
+@description('The base resource name.')
 param baseName string = resourceGroup().name
 
 @description('The location of the resource. By default, this is the same as the resource group.')
-param location string = 'westus3'
+param location string = resourceGroup().location
+
+@description('The tenant ID to which the application and resources belong.')
+param tenantId string = '72f988bf-86f1-41af-91ab-2d7cd011db47'
 
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
-@description('PostgreSQL Server administrator login name.')
-param postgresAdminLogin string = 'mcptestadmin'
+@description('The admin username for the PostgreSQL server.')
+param adminUsername string = 'mcp_admin'
 
-@description('PostgreSQL Server administrator password.')
-@secure()
-param postgresAdminPassword string = newGuid()
-
-// PostgreSQL Flexible Server resource
+// Create a PostgreSQL Flexible Server with Entra ID authentication
 resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview' = {
   name: '${baseName}-postgres'
   location: location
@@ -27,12 +26,17 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-pr
     tier: 'Burstable'
   }
   properties: {
-    administratorLogin: postgresAdminLogin
-    administratorLoginPassword: postgresAdminPassword
     version: '15'
+    administratorLogin: adminUsername
+    administratorLoginPassword: null // No password when using Entra ID only
+    authConfig: {
+      activeDirectoryAuth: 'Enabled'
+      passwordAuth: 'Disabled' // Disable local auth, use Entra ID only
+      tenantId: tenantId
+    }
     storage: {
+      autoGrow: 'Enabled'
       storageSizeGB: 32
-      iops: 120
       tier: 'P4'
     }
     backup: {
@@ -45,36 +49,36 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-pr
     highAvailability: {
       mode: 'Disabled'
     }
-    authConfig: {
-      activeDirectoryAuth: 'Enabled'
-      passwordAuth: 'Disabled'
-      tenantId: tenant().tenantId
+    maintenanceWindow: {
+      customWindow: 'Disabled'
+      dayOfWeek: 0
+      startHour: 0
+      startMinute: 0
     }
   }
 }
 
-// Configure Entra ID administrator for PostgreSQL server
-resource postgresAdministrator 'Microsoft.DBforPostgreSQL/flexibleServers/administrators@2023-12-01-preview' = {
+// Create a test database
+resource testDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-12-01-preview' = {
   parent: postgresServer
-  name: testApplicationOid
+  name: 'testdb'
   properties: {
-    principalType: 'ServicePrincipal'
-    principalName: testApplicationOid
-    tenantId: tenant().tenantId
+    charset: 'UTF8'
+    collation: 'en_US.utf8'
   }
 }
 
-// Firewall rule to allow all Azure services
-resource allowAllAzureServicesRule 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2023-12-01-preview' = {
+// Allow Azure services to access the server
+resource allowAzureServicesRule 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2023-12-01-preview' = {
   parent: postgresServer
-  name: 'AllowAllAzureServicesAndResourcesWithinAzureIps'
+  name: 'AllowAzureServices'
   properties: {
     startIpAddress: '0.0.0.0'
     endIpAddress: '0.0.0.0'
   }
 }
 
-// Firewall rule to allow all IPs (for testing purposes)
+// Allow all IPs for testing (adjust as needed for security)
 resource allowAllIpsRule 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2023-12-01-preview' = {
   parent: postgresServer
   name: 'AllowAllIps'
@@ -84,39 +88,19 @@ resource allowAllIpsRule 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRule
   }
 }
 
-// Test database
-resource testDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-12-01-preview' = {
+// Create Entra ID administrator for the PostgreSQL server
+resource postgresAdministrator 'Microsoft.DBforPostgreSQL/flexibleServers/administrators@2023-12-01-preview' = {
   parent: postgresServer
-  name: 'testdb'
+  name: testApplicationOid
   properties: {
-    charset: 'utf8'
-    collation: 'en_US.utf8'
+    principalType: 'ServicePrincipal'
+    principalName: testApplicationOid
+    tenantId: tenantId
   }
 }
 
-// PostgreSQL Contributor role definition
-resource postgresContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
-  scope: subscription()
-  // This is the PostgreSQL Contributor role
-  // Lets you manage PostgreSQL servers, but not access to them
-  // See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#postgresql-contributor
-  name: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
-}
-
-// Role assignment for test application
-resource appPostgresRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(postgresContributorRoleDefinition.id, testApplicationOid, postgresServer.id)
-  scope: postgresServer
-  properties: {
-    principalId: testApplicationOid
-    roleDefinitionId: postgresContributorRoleDefinition.id
-    description: 'PostgreSQL Contributor for testApplicationOid'
-  }
-}
-
-// Output values for tests
+// Outputs for tests to use
 output postgresServerName string = postgresServer.name
 output postgresServerFqdn string = postgresServer.properties.fullyQualifiedDomainName
 output testDatabaseName string = testDatabase.name
-output adminLogin string = postgresAdminLogin
-output entraIdAdminObjectId string = testApplicationOid
+output tenantId string = tenantId

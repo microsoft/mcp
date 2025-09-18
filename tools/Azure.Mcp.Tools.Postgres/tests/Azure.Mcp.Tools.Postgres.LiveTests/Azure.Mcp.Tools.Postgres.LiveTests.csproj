@@ -13,5 +13,7 @@
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Azure.Identity" />
+    <PackageReference Include="Npgsql" />
   </ItemGroup>
 </Project>
