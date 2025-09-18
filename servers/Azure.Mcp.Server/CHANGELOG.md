@@ -21,6 +21,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Redesigned how conditionally required options are handled. Commands now use explicit option registration via extension methods (`.AsRequired()`, `.AsOptional()`) instead of legacy patterns (`UseResourceGroup()`, `RequireResourceGroup()`). [[#452](https://github.com/microsoft/mcp/pull/452)]
 - Removed support for `AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS` environment variable. Use `AZURE_TOKEN_CREDENTIALS` instead for more flexible credential selection. For migration details, see [Controlling Authentication Methods with AZURE_TOKEN_CREDENTIALS](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#controlling-authentication-methods-with-azure_token_credentials).
 - Merged `azmcp_appconfig_kv_lock` and `azmcp_appconfig_kv_unlock` into `azmcp_appconfig_kv_lock_set` which can handle locking or unlocking a key-value based on the `--lock` parameter.
+- Removed the following Storage tools:
+  - `azmcp_storage_blob_batch_set-tier`
+  - `azmcp_storage_datalake_directory_create`
+  - `azmcp_storage_datalake_file-system_list-paths`
+  - `azmcp_storage_queue_message_send`
+  - `azmcp_storage_share_file_list`
+  - `azmcp_storage_table_list`
 
 ### Bugs Fixed
 
