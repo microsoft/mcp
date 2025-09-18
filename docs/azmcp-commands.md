@@ -567,6 +567,11 @@ azmcp keyvault key create --subscription <subscription> \
                           --key <key-name> \
                           --key-type <key-type>
 
+# Get a key in a key vault
+azmcp keyvault key get --subscription <subscription> \
+                       --vault <vault-name> \
+                       --key <key-name>
+
 # Lists keys in a key vault
 azmcp keyvault key list --subscription <subscription> \
                         --vault <vault-name> \
@@ -575,12 +580,12 @@ azmcp keyvault key list --subscription <subscription> \
 
 #### Secrets
 
-Tools that handle sensitive data such as secrets, credentials, or keys require user consent before execution through a security mechanism called **elicitation**. When you run commands that access sensitive information, the MCP client will prompt you to confirm the operation before proceeding.
+Tools that handle sensitive data such as secrets require user consent before execution through a security mechanism called **elicitation**. When you run commands that access sensitive information, the MCP client will prompt you to confirm the operation before proceeding.
 
 > **🛡️ Elicitation (user confirmation) Security Feature:**
 > 
 > Elicitation prompts appear when tools may expose sensitive information like:
-> - Key Vault secrets and keys
+> - Key Vault secrets
 > - Connection strings and passwords
 > - Certificate private keys
 > - Other confidential data
@@ -593,6 +598,11 @@ azmcp keyvault secret create --subscription <subscription> \
                              --vault <vault-name> \
                              --name <secret-name> \
                              --value <secret-value>
+
+# Get a secret in a key vault (will prompt for user consent)
+azmcp keyvault secret get --subscription <subscription> \
+                          --vault <vault-name> \
+                          --secret <secret-name>
 
 # Lists secrets in a key vault
 azmcp keyvault secret list --subscription <subscription> \
@@ -969,6 +979,26 @@ azmcp servicebus topic subscription details --subscription <subscription> \
 #### Database
 
 ```bash
+# Create a SQL database (supports optional performance and configuration parameters)
+azmcp sql db create --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name> \
+                    [--sku-name <sku-name>] \
+                    [--sku-tier <sku-tier>] \
+                    [--sku-capacity <capacity>] \
+                    [--collation <collation>] \
+                    [--max-size-bytes <bytes>] \
+                    [--elastic-pool-name <elastic-pool-name>] \
+                    [--zone-redundant <true/false>] \
+                    [--read-scale <Enabled|Disabled>]
+
+# Delete a SQL database (idempotent – succeeds even if the database does not exist)
+azmcp sql db delete --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name>
+
 # Gets a list of all databases in a SQL server
 azmcp sql db list --subscription <subscription> \
                   --resource-group <resource-group> \
@@ -979,6 +1009,20 @@ azmcp sql db show --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name> \
                   --database <database>
+
+# Update an existing SQL database (applies only the provided configuration changes)
+azmcp sql db update --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name> \
+                    [--sku-name <sku-name>] \
+                    [--sku-tier <sku-tier>] \
+                    [--sku-capacity <capacity>] \
+                    [--collation <collation>] \
+                    [--max-size-bytes <bytes>] \
+                    [--elastic-pool-name <elastic-pool-name>] \
+                    [--zone-redundant <true/false>] \
+                    [--read-scale <Enabled|Disabled>]
 ```
 
 #### Elastic Pool
@@ -1007,40 +1051,6 @@ azmcp sql server create --subscription <subscription> \
 azmcp sql server entra-admin list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
-
-# Create a SQL database (supports optional performance and configuration parameters)
-azmcp sql db create --subscription <subscription> \
-                    --resource-group <resource-group> \
-                    --server <server-name> \
-                    --database <database-name> \
-                    [--sku-name <sku-name>] \
-                    [--sku-tier <sku-tier>] \
-                    [--sku-capacity <capacity>] \
-                    [--collation <collation>] \
-                    [--max-size-bytes <bytes>] \
-                    [--elastic-pool-name <elastic-pool-name>] \
-                    [--zone-redundant <true/false>] \
-                    [--read-scale <Enabled|Disabled>]
-
-# Update an existing SQL database (applies only the provided configuration changes)
-azmcp sql db update --subscription <subscription> \
-                    --resource-group <resource-group> \
-                    --server <server-name> \
-                    --database <database-name> \
-                    [--sku-name <sku-name>] \
-                    [--sku-tier <sku-tier>] \
-                    [--sku-capacity <capacity>] \
-                    [--collation <collation>] \
-                    [--max-size-bytes <bytes>] \
-                    [--elastic-pool-name <elastic-pool-name>] \
-                    [--zone-redundant <true/false>] \
-                    [--read-scale <Enabled|Disabled>]
-
-# Delete a SQL database (idempotent – succeeds even if the database does not exist)
-azmcp sql db delete --subscription <subscription> \
-                    --resource-group <resource-group> \
-                    --server <server-name> \
-                    --database <database-name>
 
 # Create a firewall rule for a SQL server
 azmcp sql server firewall-rule create --subscription <subscription> \
