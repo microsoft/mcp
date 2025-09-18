@@ -585,14 +585,12 @@
         {
           "name": "--content-type",
           "description": "The content type of the configuration value. This is used to indicate how the value should be interpreted or parsed.",
-          "type": "string",
-          "required": null
+          "type": "string"
         },
         {
           "name": "--lock",
           "description": "Whether a key-value will be locked (set to read-only) or unlocked (read-only removed).",
-          "type": "string",
-          "required": null
+          "type": "string"
         }
       ]
     },
@@ -1035,7 +1033,7 @@
     },
     {
       "name": "design",
-      "description": "Azure architecture design tool that gathers requirements through guided questions and recommends optimal solutions.\r\n\r\nKey parameters: question, questionNumber, confidenceScore (0.0-1.0, present architecture when ï¿½0.7), totalQuestions, answer, nextQuestionNeeded, architectureComponent, architectureTier, state.\r\n\r\nProcess:\r\n1. Ask about user role, business goals (1-2 questions at a time)\r\n2. Track confidence and update requirements (explicit/implicit/assumed)\r\n3. When confident enough, present architecture with table format, visual organization, ASCII diagrams\r\n4. Follow Azure Well-Architected Framework principles\r\n5. Cover all tiers: infrastructure, platform, application, data, security, operations\r\n6. Provide actionable advice and high-level overview\r\n\r\nState tracks components, requirements by category, and confidence factors. Be conservative with suggestions.",
+      "description": "Azure architecture design tool that gathers requirements through guided questions and recommends optimal solutions.\r\n\r\nKey parameters: question, questionNumber, confidenceScore (0.0-1.0, present architecture when ò0.7), totalQuestions, answer, nextQuestionNeeded, architectureComponent, architectureTier, state.\r\n\r\nProcess:\r\n1. Ask about user role, business goals (1-2 questions at a time)\r\n2. Track confidence and update requirements (explicit/implicit/assumed)\r\n3. When confident enough, present architecture with table format, visual organization, ASCII diagrams\r\n4. Follow Azure Well-Architected Framework principles\r\n5. Cover all tiers: infrastructure, platform, application, data, security, operations\r\n6. Provide actionable advice and high-level overview\r\n\r\nState tracks components, requirements by category, and confidence factors. Be conservative with suggestions.",
       "command": "azmcp cloudarchitect design",
       "option": [
         {
@@ -1494,8 +1492,7 @@
         {
           "name": "--resource-types",
           "description": "Specifies the Azure resource types to retrieve IaC rules for. It should be comma-separated. Supported values are: 'appservice', 'containerapp', 'function', 'aks', 'storage'. If none of these services are used, this parameter can be left empty.",
-          "type": "string",
-          "required": null
+          "type": "string"
         }
       ]
     },
@@ -1598,6 +1595,68 @@
         {
           "name": "--azd-iac-options",
           "description": "The Infrastructure as Code option for azd. Valid values: bicep, terraform. Leave empty if Deployment tool is AzCli.",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "description": "List event subscriptions for topics with filtering and endpoint configuration. This tool shows all active \r\nsubscriptions including webhook endpoints, event filters, and delivery retry policies. Returns subscription \r\ndetails as JSON array. Requires either --topic (bare topic name) OR --subscription. If only --topic is provided\r\nthe tool searches all accessible subscriptions for a topic with that name. Optional --resource-group/--location\r\nmay only be used alongside --subscription or --topic.",
+      "command": "azmcp eventgrid subscription list",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string"
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string"
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string"
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string"
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string"
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string"
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string"
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string"
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string"
+        },
+        {
+          "name": "--topic",
+          "description": "The name of the Event Grid topic.",
+          "type": "string"
+        },
+        {
+          "name": "--location",
+          "description": "The Azure region to filter resources by (e.g., 'eastus', 'westus2').",
           "type": "string"
         }
       ]
@@ -1857,12 +1916,6 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
           "required": true
         },
         {
@@ -2027,8 +2080,7 @@
         {
           "name": "--model-name",
           "description": "The name of the model to deploy.",
-          "type": "string",
-          "required": null
+          "type": "string"
         }
       ]
     },
@@ -3901,12 +3953,6 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
           "required": true
         },
         {
@@ -3966,14 +4012,12 @@
         {
           "name": "--subscription",
           "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
+          "type": "string"
         },
         {
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": null
+          "type": "string"
         },
         {
           "name": "--resource-type",
@@ -4046,14 +4090,12 @@
         {
           "name": "--subscription",
           "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
+          "type": "string"
         },
         {
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": null
+          "type": "string"
         },
         {
           "name": "--resource-type",
@@ -6773,6 +6815,111 @@
       ]
     },
     {
+      "name": "update",
+      "description": "Update configuration settings for an existing Azure SQL Database. This command modifies an existing database's\r\ncompute tier, performance characteristics, redundancy, or other settings. Equivalent to 'az sql db update'.\r\nReturns the updated database information including applied configuration changes.",
+      "command": "azmcp sql db update",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string"
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string"
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string"
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string"
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string"
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string"
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string"
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string"
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--server",
+          "description": "The Azure SQL Server name.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--database",
+          "description": "The Azure SQL Database name.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--sku-name",
+          "description": "The SKU name for the database (e.g., Basic, S0, P1, GP_Gen5_2).",
+          "type": "string"
+        },
+        {
+          "name": "--sku-tier",
+          "description": "The SKU tier for the database (e.g., Basic, Standard, Premium, GeneralPurpose).",
+          "type": "string"
+        },
+        {
+          "name": "--sku-capacity",
+          "description": "The SKU capacity (DTU or vCore count) for the database.",
+          "type": "string"
+        },
+        {
+          "name": "--collation",
+          "description": "The collation for the database (e.g., SQL_Latin1_General_CP1_CI_AS).",
+          "type": "string"
+        },
+        {
+          "name": "--max-size-bytes",
+          "description": "The maximum size of the database in bytes.",
+          "type": "string"
+        },
+        {
+          "name": "--elastic-pool-name",
+          "description": "The name of the elastic pool to assign the database to.",
+          "type": "string"
+        },
+        {
+          "name": "--zone-redundant",
+          "description": "Whether the database should be zone redundant.",
+          "type": "string"
+        },
+        {
+          "name": "--read-scale",
+          "description": "Read scale option for the database (Enabled or Disabled).",
+          "type": "string"
+        }
+      ]
+    },
+    {
       "name": "list",
       "description": "Lists all SQL elastic pools in an Azure SQL Server with their SKU, capacity, state, and database limits.\r\nUse when you need to: view elastic pool inventory, check pool utilization, compare pool configurations,\r\nor find available pools for database placement.\r\nRequires: subscription ID, resource group name, server name.\r\nReturns: JSON array of elastic pools with complete configuration details.\r\nEquivalent to 'az sql elastic-pool list'.",
       "command": "azmcp sql elastic-pool list",
@@ -7345,12 +7492,6 @@
           "name": "--subscription",
           "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
           "type": "string"
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": true
         },
         {
           "name": "--resource-group",
@@ -8605,5 +8746,6 @@
       ]
     }
   ],
-  "duration": 23
+  "duration": 105,
+  "resultsCount": 140
 }
