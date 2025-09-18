@@ -186,11 +186,12 @@ azmcp appconfig kv list --subscription <subscription> \
                         [--key <key>] \
                         [--label <label>]
 
-# Lock a key-value setting (make it read-only)
-azmcp appconfig kv lock --subscription <subscription> \
-                        --account <account> \
-                        --key <key> \
-                        [--label <label>]
+# Lock (make it read-only) or unlock (remove read-only) a key-value setting 
+azmcp appconfig kv lock set --subscription <subscription> \
+                            --account <account> \
+                            --key <key> \
+                            [--label <label>] \
+                            [--lock]
 
 # Set a key-value setting
 azmcp appconfig kv set --subscription <subscription> \
@@ -204,12 +205,6 @@ azmcp appconfig kv show --subscription <subscription> \
                         --account <account> \
                         --key <key> \
                         [--label <label>]
-
-# Unlock a key-value setting (make it editable)
-azmcp appconfig kv unlock --subscription <subscription> \
-                          --account <account> \
-                          --key <key> \
-                          [--label <label>]
 ```
 
 ### Azure App Lens Operations
