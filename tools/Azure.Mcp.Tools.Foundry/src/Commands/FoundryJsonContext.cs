@@ -3,9 +3,9 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Foundry.Models;
+using Azure.Mcp.Tools.Foundry.Services.Models;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.AI.Evaluation;
-using Azure.Mcp.Tools.Foundry.Services.Models;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
