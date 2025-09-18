@@ -17,7 +17,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Enhanced AKS nodepool information with comprehensive properties. [[#454](https://github.com/microsoft/mcp/pull/454)]
 - Added support for updating Azure SQL databases via the command `azmcp_sql_db_update`. [[#488](https://github.com/microsoft/mcp/pull/488)]
 - Added support for listing Event Grid subscriptions via the command `azmcp_eventgrid_subscription_list`. [[#364](https://github.com/microsoft/mcp/pull/364)]
-- Added support for listing Application Insights code optimization recommendations across components via the command `azmcp_applicationinsights_recommendation_list` (returns up to 20 recommendations aggregated across resource groups). [#387](https://github.com/microsoft/mcp/pull/387)
+- Added support for listing Application Insights code optimization recommendations across components via the command `azmcp_applicationinsights_recommendation_list`. [#387](https://github.com/microsoft/mcp/pull/387)
 - **Errata**: The following was announced as part of release `0.7.0, but was not actually included then.
   - Added support for creating and deleting SQL databases via the commands `azmcp_sql_db_create` and `azmcp_sql_db_delete`. [[#434](https://github.com/microsoft/mcp/pull/434)]
 - Restored support for the following Key Vault commands: [[#506](https://github.com/microsoft/mcp/pull/506)]
