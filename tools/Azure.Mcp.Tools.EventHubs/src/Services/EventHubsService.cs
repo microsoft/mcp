@@ -17,7 +17,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 {
     private readonly ILogger<EventHubsService> _logger = logger;
 
-    public async Task<List<EventHubsNamespaceInfo>> ListNamespacesAsync(
+    public async Task<List<EventHubsNamespaceInfo>> GetNamespacesAsync(
         string resourceGroup,
         string subscription,
         string? tenant = null,
@@ -35,7 +35,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error listing EventHubs namespaces. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                "Error getting EventHubs namespaces. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
                 resourceGroup, subscription);
             throw;
         }
