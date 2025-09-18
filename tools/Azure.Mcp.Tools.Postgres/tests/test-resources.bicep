@@ -95,3 +95,14 @@ output postgresServerFqdn string = postgresServer.properties.fullyQualifiedDomai
 output testDatabaseName string = testDatabase.name
 output tenantId string = tenantId
 output testApplicationOid string = testApplicationOid
+
+// Create Entra ID administrator for the PostgreSQL server
+resource postgresAdministrator 'Microsoft.DBforPostgreSQL/flexibleServers/administrators@2023-12-01-preview' = {
+  parent: postgresServer
+  name: testApplicationOid
+  properties: {
+    principalType: 'ServicePrincipal'
+    principalName: testApplicationOid
+    tenantId: tenantId
+  }
+}
