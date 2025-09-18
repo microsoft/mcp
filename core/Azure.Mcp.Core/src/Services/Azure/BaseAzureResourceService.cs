@@ -4,6 +4,7 @@
 using System.ClientModel.Primitives;
 using System.Text.Json.Serialization.Metadata;
 using Azure.Core;
+using Azure.Mcp.Core.Attributes;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -65,6 +66,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="limit">Maximum number of results to return (default: 50)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of resources converted to the specified type</returns>
+    [ResourceGraphOnly("Use ArmClient and SDK methods for direct resource operations")]
     protected async Task<List<T>> ExecuteResourceQueryAsync<T>(
         string resourceType,
         string resourceGroup,

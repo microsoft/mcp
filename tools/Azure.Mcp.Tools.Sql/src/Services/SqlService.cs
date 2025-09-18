@@ -306,15 +306,22 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
+        ValidateRequiredParameters(serverName, resourceGroup, subscription);
+
         try
         {
-            return await ExecuteResourceQueryAsync(
-                "Microsoft.Sql/servers/databases",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToSqlDatabaseModel,
-                cancellationToken: cancellationToken);
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName, null, cancellationToken);
+
+            var databases = new List<SqlDatabase>();
+            await foreach (var database in sqlServerResource.Value.GetSqlDatabases().GetAllAsync(null, cancellationToken))
+            {
+                databases.Add(ConvertToSqlDatabaseModel(database));
+            }
+
+            return databases;
         }
         catch (Exception ex)
         {
@@ -343,17 +350,45 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
+        ValidateRequiredParameters(serverName, resourceGroup, subscription);
+
         try
         {
-            return await ExecuteResourceQueryAsync(
-                "Microsoft.Sql/servers/administrators",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToSqlServerEntraAdministratorModel,
-                $"id contains '/servers/{EscapeKqlString(serverName)}/'",
-                50,
-                cancellationToken);
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName, null, cancellationToken);
+
+            var administrators = new List<SqlServerEntraAdministrator>();
+
+            // Try to get the Active Directory administrator
+            try
+            {
+                var activeDirectoryAdminCollection = sqlServerResource.Value.GetSqlServerAzureADAdministrators();
+                var activeDirectoryAdmin = await activeDirectoryAdminCollection.GetAsync("ActiveDirectory", cancellationToken);
+
+                if (activeDirectoryAdmin != null && activeDirectoryAdmin.HasValue)
+                {
+                    var adminData = activeDirectoryAdmin.Value.Data;
+                    administrators.Add(new SqlServerEntraAdministrator(
+                        Name: adminData.Name,
+                        Id: adminData.Id.ToString(),
+                        Type: adminData.ResourceType.ToString(),
+                        AdministratorType: adminData.AdministratorType?.ToString(),
+                        Login: adminData.Login,
+                        Sid: adminData.Sid?.ToString(),
+                        TenantId: adminData.TenantId?.ToString(),
+                        AzureADOnlyAuthentication: adminData.IsAzureADOnlyAuthenticationEnabled
+                    ));
+                }
+            }
+            catch (Azure.RequestFailedException ex) when (ex.Status == 404)
+            {
+                // No administrator configured, which is fine
+                _logger.LogDebug("No Entra ID administrator configured for server {ServerName}", serverName);
+            }
+
+            return administrators;
         }
         catch (Exception ex)
         {
@@ -382,15 +417,22 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
+        ValidateRequiredParameters(serverName, resourceGroup, subscription);
+
         try
         {
-            return await ExecuteResourceQueryAsync(
-                "Microsoft.Sql/servers/elasticPools",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToSqlElasticPoolModel,
-                cancellationToken: cancellationToken);
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName, null, cancellationToken);
+
+            var elasticPools = new List<SqlElasticPool>();
+            await foreach (var pool in sqlServerResource.Value.GetElasticPools().GetAllAsync(null, cancellationToken))
+            {
+                elasticPools.Add(ConvertToSqlElasticPoolModel(pool.Data));
+            }
+
+            return elasticPools;
         }
         catch (Exception ex)
         {
@@ -419,15 +461,28 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
+        ValidateRequiredParameters(serverName, resourceGroup, subscription);
+
         try
         {
-            return await ExecuteResourceQueryAsync(
-                "Microsoft.Sql/servers/firewallRules",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToSqlFirewallRuleModel,
-                cancellationToken: cancellationToken);
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName, null, cancellationToken);
+
+            var firewallRules = new List<SqlServerFirewallRule>();
+            await foreach (var rule in sqlServerResource.Value.GetSqlFirewallRules().GetAllAsync(cancellationToken))
+            {
+                firewallRules.Add(new SqlServerFirewallRule(
+                    Name: rule.Data.Name,
+                    Id: rule.Data.Id.ToString(),
+                    Type: rule.Data.ResourceType?.ToString() ?? "Unknown",
+                    StartIpAddress: rule.Data.StartIPAddress,
+                    EndIpAddress: rule.Data.EndIPAddress
+                ));
+            }
+
+            return firewallRules;
         }
         catch (Exception ex)
         {
@@ -921,6 +976,36 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             Type: firewallRule.ResourceType ?? "Unknown",
             StartIpAddress: firewallRule.Properties?.StartIPAddress,
             EndIpAddress: firewallRule.Properties?.EndIPAddress
+        );
+    }
+
+    private static SqlElasticPool ConvertToSqlElasticPoolModel(ElasticPoolData elasticPoolData)
+    {
+        return new SqlElasticPool(
+            Name: elasticPoolData.Name,
+            Id: elasticPoolData.Id.ToString(),
+            Type: elasticPoolData.ResourceType.ToString(),
+            Location: elasticPoolData.Location.ToString(),
+            Sku: elasticPoolData.Sku != null ? new ElasticPoolSku(
+                Name: elasticPoolData.Sku.Name,
+                Tier: elasticPoolData.Sku.Tier,
+                Capacity: elasticPoolData.Sku.Capacity,
+                Family: elasticPoolData.Sku.Family,
+                Size: elasticPoolData.Sku.Size
+            ) : null,
+            State: elasticPoolData.State?.ToString(),
+            CreationDate: elasticPoolData.CreatedOn,
+            MaxSizeBytes: elasticPoolData.MaxSizeBytes,
+            PerDatabaseSettings: elasticPoolData.PerDatabaseSettings != null ? new Azure.Mcp.Tools.Sql.Models.ElasticPoolPerDatabaseSettings(
+                MinCapacity: elasticPoolData.PerDatabaseSettings.MinCapacity,
+                MaxCapacity: elasticPoolData.PerDatabaseSettings.MaxCapacity
+            ) : null,
+            ZoneRedundant: elasticPoolData.IsZoneRedundant,
+            LicenseType: elasticPoolData.LicenseType?.ToString(),
+            DatabaseDtuMin: (int?)elasticPoolData.PerDatabaseSettings?.MinCapacity,
+            DatabaseDtuMax: (int?)elasticPoolData.PerDatabaseSettings?.MaxCapacity,
+            Dtu: elasticPoolData.Sku?.Capacity,
+            StorageMB: elasticPoolData.MaxSizeBytes.HasValue ? (int?)(elasticPoolData.MaxSizeBytes.Value / (1024 * 1024)) : null
         );
     }
 }
