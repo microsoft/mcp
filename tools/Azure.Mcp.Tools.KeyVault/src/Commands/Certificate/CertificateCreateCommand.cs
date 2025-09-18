@@ -75,7 +75,7 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
             var certificate = completedOperation.Value;
 
             context.Response.Results = ResponseResult.Create(
-                new CertificateCreateCommandResult(
+                new(
                     certificate.Name,
                     certificate.Id,
                     certificate.KeyId,

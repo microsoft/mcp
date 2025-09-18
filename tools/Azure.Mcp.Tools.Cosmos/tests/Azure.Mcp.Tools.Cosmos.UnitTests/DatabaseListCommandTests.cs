@@ -13,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using static Azure.Mcp.Tools.Cosmos.Commands.DatabaseListCommand;
 
 namespace Azure.Mcp.Tools.Cosmos.UnitTests;
 
@@ -63,10 +62,7 @@ public class DatabaseListCommandTests
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DatabaseListCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.DatabaseListCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedDatabases.Count, result.Databases.Count);
         Assert.Equal(expectedDatabases, result.Databases);
@@ -96,10 +92,7 @@ public class DatabaseListCommandTests
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DatabaseListCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.DatabaseListCommandResult);
         Assert.NotNull(result);
         Assert.Empty(result.Databases);
     }

@@ -39,9 +39,9 @@ public class DeploymentsListCommandTests
         };
 
         _foundryService.ListDeployments(
-                Arg.Is<string>(s => s == endpoint),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Is(endpoint),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
             .Returns(expectedDeployments);
 
         var command = new DeploymentsListCommand();
@@ -59,9 +59,9 @@ public class DeploymentsListCommandTests
         var endpoint = "https://test-endpoint.com";
 
         _foundryService.ListDeployments(
-                Arg.Is<string>(s => s == endpoint),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Is(endpoint),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
             .Returns([]);
 
         var command = new DeploymentsListCommand();
@@ -80,9 +80,9 @@ public class DeploymentsListCommandTests
         var expectedError = "Test error";
 
         _foundryService.ListDeployments(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new DeploymentsListCommand();
@@ -102,9 +102,9 @@ public class DeploymentsListCommandTests
         var expectedError = "Test error";
 
         _foundryService.ListDeployments(
-                Arg.Is<string>(s => s == endpoint),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Is(endpoint),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new DeploymentsListCommand();

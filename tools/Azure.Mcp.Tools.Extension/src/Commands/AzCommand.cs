@@ -114,7 +114,7 @@ Your job is to answer questions about an Azure environment by executing Azure CL
     {
         if (_isAuthenticated)
         {
-            Console.WriteLine("Already authenticated with Azure CLI.1");
+            Console.WriteLine("Already authenticated with Azure CLI.");
             return true;
         }
 

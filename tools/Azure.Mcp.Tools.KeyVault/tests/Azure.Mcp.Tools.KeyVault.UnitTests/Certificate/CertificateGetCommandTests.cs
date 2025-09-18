@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
@@ -125,41 +124,5 @@ public class CertificateGetCommandTests
         Assert.NotNull(response);
         Assert.Equal(500, response.Status);
         Assert.StartsWith(expectedError, response.Message);
-    }
-
-    private class CertificateGetResult
-    {
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = null!;
-
-        [JsonPropertyName("id")]
-        public Uri Id { get; set; } = new Uri("about:blank");
-
-        [JsonPropertyName("keyId")]
-        public Uri KeyId { get; set; } = new Uri("about:blank");
-
-        [JsonPropertyName("secretId")]
-        public Uri SecretId { get; set; } = new Uri("about:blank");
-
-        [JsonPropertyName("enabled")]
-        public bool? Enabled { get; set; }
-
-        [JsonPropertyName("notBefore")]
-        public DateTimeOffset? NotBefore { get; set; }
-
-        [JsonPropertyName("expiresOn")]
-        public DateTimeOffset? ExpiresOn { get; set; }
-
-        [JsonPropertyName("createdOn")]
-        public DateTimeOffset? CreatedOn { get; set; }
-
-        [JsonPropertyName("updatedOn")]
-        public DateTimeOffset? UpdatedOn { get; set; }
-
-        [JsonPropertyName("subject")]
-        public string Subject { get; set; } = null!;
-
-        [JsonPropertyName("issuerName")]
-        public string IssuerName { get; set; } = null!;
     }
 }

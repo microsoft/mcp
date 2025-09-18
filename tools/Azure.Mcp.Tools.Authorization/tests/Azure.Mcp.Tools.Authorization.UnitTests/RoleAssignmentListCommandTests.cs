@@ -42,8 +42,7 @@ public class RoleAssignmentListCommandTests
         var id2 = "00000000-0000-0000-0000-000000000002";
         var expectedRoleAssignments = new List<RoleAssignment>
         {
-            new RoleAssignment
-            {
+            new() {
                 Id = $"/subscriptions/{subscriptionId}/resourcegroups/azure-mcp/providers/Microsoft.Authorization/roleAssignments/{id1}",
                 Name = "Test role definition 1",
                 PrincipalId = new Guid(id1),
@@ -54,8 +53,7 @@ public class RoleAssignmentListCommandTests
                 DelegatedManagedIdentityResourceId = string.Empty,
                 Condition = string.Empty
             },
-            new RoleAssignment
-            {
+            new() {
                 Id = $"/subscriptions/{subscriptionId}/resourcegroups/azure-mcp/providers/Microsoft.Authorization/roleAssignments/{id2}",
                 Name = "Test role definition 2",
                 PrincipalId = new Guid(id2),
@@ -87,7 +85,7 @@ public class RoleAssignmentListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<RoleAssignmentListCommand.RoleAssignmentListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedRoleAssignments, result.Assignments);
@@ -117,7 +115,7 @@ public class RoleAssignmentListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<RoleAssignmentListCommand.RoleAssignmentListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, AuthorizationJsonContext.Default.RoleAssignmentListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Assignments);
