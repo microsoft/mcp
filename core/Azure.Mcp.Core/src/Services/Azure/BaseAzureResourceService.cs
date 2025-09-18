@@ -1,9 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ClientModel.Primitives;
+using System.Text.Json.Serialization.Metadata;
+using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.ResourceManager;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
@@ -161,5 +165,74 @@ public abstract class BaseAzureResourceService(
             }
         }
         return null;
+    }
+
+    /// <summary>
+    /// Create an <see cref="ArmClient"/> with the specified API version set for the given resource type.
+    /// This wraps <see cref="BaseAzureService.CreateArmClientAsync"/> and configures the <see cref="ArmClientOptions"/> appropriately.
+    /// </summary>
+    /// <param name="resourceTypeForApiVersion">The resource type token used by the SDK to set a specific API version, e.g. "Microsoft.CognitiveServices/accounts/deployments".</param>
+    /// <param name="apiVersion">The API version to set for the specified resource type.</param>
+    /// <param name="tenant">Optional tenant to use when creating the client.</param>
+    /// <param name="retryPolicy">Optional retry policy used by token acquisition.</param>
+    /// <returns>An initialized <see cref="ArmClient"/> configured with the requested API version.</returns>
+    protected async Task<ArmClient> CreateArmClientWithApiVersionAsync(string resourceTypeForApiVersion, string apiVersion, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    {
+        var options = new ArmClientOptions();
+        options.SetApiVersion(resourceTypeForApiVersion, apiVersion);
+        return await CreateArmClientAsync(tenant, retryPolicy, options).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Retrieve a GenericResource by its <see cref="ResourceIdentifier"/> using the provided <see cref="ArmClient"/>.
+    /// This method centralizes the call to GenericResources.GetAsync and validates that the resource contains data.
+    /// </summary>
+    /// <param name="armClient">The ArmClient to use for the call.</param>
+    /// <param name="resourceIdentifier">The resource identifier of the resource to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The <see cref="GenericResource"/> instance for the requested resource.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when a required parameter is null.</exception>
+    protected async Task<GenericResource> GetGenericResourceAsync(ArmClient armClient, ResourceIdentifier resourceIdentifier, CancellationToken cancellationToken = default)
+    {
+        if (armClient == null)
+            throw new ArgumentNullException(nameof(armClient));
+
+        var genericResources = armClient.GetGenericResources();
+        var response = await genericResources.GetAsync(resourceIdentifier, cancellationToken).ConfigureAwait(false);
+        var resource = response.Value;
+        if (!resource.HasData)
+        {
+            throw new InvalidOperationException($"Resource '{resourceIdentifier}' not found or not accessible.");
+        }
+
+        return resource;
+    }
+
+    /// <summary>
+    /// Creates or updates a GenericResource with the specified content of type T.
+    /// </summary>
+    /// <typeparam name="T">Type of the content.</typeparam>
+    /// <param name="armClient">The ArmClient instance to use for the operation.</param>
+    /// <param name="resourceIdentifier">The resource identifier of the resource to create or update.</param>
+    /// <param name="azureLocation">The Azure location for the resource.</param>
+    /// <param name="content">The content to create or update the resource with.</param>
+    /// <param name="jsonTypeInfo">The JSON type information for serialization.</param>
+    /// <returns>The <see cref="GenericResource"/> instance for the requested resource.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when a required parameter is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the content is invalid.</exception>
+    protected async Task<GenericResource> CreateOrUpdateGenericResourceAsync<T>(ArmClient armClient, ResourceIdentifier resourceIdentifier, AzureLocation azureLocation, T content, JsonTypeInfo<T> jsonTypeInfo)
+    {
+        if (armClient == null)
+            throw new ArgumentNullException(nameof(armClient));
+
+        // Convert from T to GenericResourceData
+        byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(content, jsonTypeInfo);
+        var reader = new Utf8JsonReader(jsonBytes);
+        var dataModel = (IJsonModel<GenericResourceData>)new GenericResourceData(azureLocation);
+        GenericResourceData data = dataModel.Create(ref reader, new ModelReaderWriterOptions("W"))
+            ?? throw new InvalidOperationException("Failed to create deployment data");
+        // Create the resource
+        var result = await armClient.GetGenericResources().CreateOrUpdateAsync(WaitUntil.Completed, resourceIdentifier, data);
+        return result.Value;
     }
 }

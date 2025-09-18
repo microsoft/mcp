@@ -57,9 +57,7 @@ public sealed class KeyValueShowCommand(ILogger<KeyValueShowCommand> logger) : B
                 options.Label,
                 options.ContentType);
 
-            context.Response.Results = ResponseResult.Create(
-                new KeyValueShowResult(setting),
-                AppConfigJsonContext.Default.KeyValueShowResult);
+            context.Response.Results = ResponseResult.Create(new(setting), AppConfigJsonContext.Default.KeyValueShowResult);
         }
         catch (Exception ex)
         {

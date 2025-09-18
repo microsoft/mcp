@@ -521,9 +521,9 @@
       ]
     },
     {
-      "name": "lock",
-      "description": "Lock a key-value in an App Configuration store. This command sets a key-value to read-only mode,\r\npreventing any modifications to its value. You must specify an account name and key. Optionally,\r\nyou can specify a label to lock a specific labeled version of the key-value.",
-      "command": "azmcp appconfig kv lock",
+      "name": "set",
+      "description": "Sets the lock state of a key-value in an App Configuration store. This command can lock and unlock key-values.\r\nLocking sets a key-value to read-only mode, preventing any modifications to its value. Unlocking removes the\r\nread-only mode from a key-value setting, allowing modifications to its value. You must specify an account name\r\nand key. Optionally, you can specify a label to lock or unlock a specific labeled version of the key-value.\r\nDefault is unlocking the key-value.",
+      "command": "azmcp appconfig kv lock set",
       "option": [
         {
           "name": "--tenant",
@@ -585,7 +585,14 @@
         {
           "name": "--content-type",
           "description": "The content type of the configuration value. This is used to indicate how the value should be interpreted or parsed.",
-          "type": "string"
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--lock",
+          "description": "Whether a key-value will be locked (set to read-only) or unlocked (read-only removed).",
+          "type": "string",
+          "required": null
         }
       ]
     },
@@ -673,75 +680,6 @@
       "name": "show",
       "description": "Show a specific key-value setting in an App Configuration store. This command retrieves and displays the value,\r\nlabel, content type, ETag, last modified time, and lock status for a specific setting. You must specify an\r\naccount name and key. Optionally, you can specify a label otherwise the setting with default label will be retrieved.\r\nYou can also specify a content type to indicate how the value should be interpreted.",
       "command": "azmcp appconfig kv show",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string"
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string"
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string"
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string"
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string"
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string"
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string"
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string"
-        },
-        {
-          "name": "--account",
-          "description": "The name of the App Configuration store (e.g., my-appconfig).",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--key",
-          "description": "The name of the key to access within the App Configuration store.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--label",
-          "description": "The label to apply to the configuration key. Labels are used to group and organize settings.",
-          "type": "string"
-        },
-        {
-          "name": "--content-type",
-          "description": "The content type of the configuration value. This is used to indicate how the value should be interpreted or parsed.",
-          "type": "string"
-        }
-      ]
-    },
-    {
-      "name": "unlock",
-      "description": "Unlock a key-value setting in an App Configuration store. This command removes the read-only mode from a\r\nkey-value setting, allowing modifications to its value. You must specify an account name and key. Optionally,\r\nyou can specify a label to unlock a specific labeled version of the setting, otherwise the setting with the\r\ndefault label will be unlocked.",
-      "command": "azmcp appconfig kv unlock",
       "option": [
         {
           "name": "--tenant",
@@ -1097,7 +1035,7 @@
     },
     {
       "name": "design",
-      "description": "Azure architecture design tool that gathers requirements through guided questions and recommends optimal solutions.\r\n\r\nKey parameters: question, questionNumber, confidenceScore (0.0-1.0, present architecture when ò0.7), totalQuestions, answer, nextQuestionNeeded, architectureComponent, architectureTier, state.\r\n\r\nProcess:\r\n1. Ask about user role, business goals (1-2 questions at a time)\r\n2. Track confidence and update requirements (explicit/implicit/assumed)\r\n3. When confident enough, present architecture with table format, visual organization, ASCII diagrams\r\n4. Follow Azure Well-Architected Framework principles\r\n5. Cover all tiers: infrastructure, platform, application, data, security, operations\r\n6. Provide actionable advice and high-level overview\r\n\r\nState tracks components, requirements by category, and confidence factors. Be conservative with suggestions.",
+      "description": "Azure architecture design tool that gathers requirements through guided questions and recommends optimal solutions.\r\n\r\nKey parameters: question, questionNumber, confidenceScore (0.0-1.0, present architecture when ï¿½0.7), totalQuestions, answer, nextQuestionNeeded, architectureComponent, architectureTier, state.\r\n\r\nProcess:\r\n1. Ask about user role, business goals (1-2 questions at a time)\r\n2. Track confidence and update requirements (explicit/implicit/assumed)\r\n3. When confident enough, present architecture with table format, visual organization, ASCII diagrams\r\n4. Follow Azure Well-Architected Framework principles\r\n5. Cover all tiers: infrastructure, platform, application, data, security, operations\r\n6. Provide actionable advice and high-level overview\r\n\r\nState tracks components, requirements by category, and confidence factors. Be conservative with suggestions.",
       "command": "azmcp cloudarchitect design",
       "option": [
         {
@@ -1556,7 +1494,8 @@
         {
           "name": "--resource-types",
           "description": "Specifies the Azure resource types to retrieve IaC rules for. It should be comma-separated. Supported values are: 'appservice', 'containerapp', 'function', 'aks', 'storage'. If none of these services are used, this parameter can be left empty.",
-          "type": "string"
+          "type": "string",
+          "required": null
         }
       ]
     },
@@ -1659,68 +1598,6 @@
         {
           "name": "--azd-iac-options",
           "description": "The Infrastructure as Code option for azd. Valid values: bicep, terraform. Leave empty if Deployment tool is AzCli.",
-          "type": "string"
-        }
-      ]
-    },
-    {
-      "name": "list",
-      "description": "List event subscriptions for topics with filtering and endpoint configuration. This tool shows all active \r\nsubscriptions including webhook endpoints, event filters, and delivery retry policies. Returns subscription \r\ndetails as JSON array. Requires either --topic (bare topic name) OR --subscription. If only --topic is provided\r\nthe tool searches all accessible subscriptions for a topic with that name. Optional --resource-group/--location\r\nmay only be used alongside --subscription or --topic.",
-      "command": "azmcp eventgrid subscription list",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string"
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string"
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string"
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string"
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string"
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string"
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string"
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string"
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string"
-        },
-        {
-          "name": "--topic",
-          "description": "The name of the Event Grid topic.",
-          "type": "string"
-        },
-        {
-          "name": "--location",
-          "description": "The Azure region to filter resources by (e.g., 'eastus', 'westus2').",
           "type": "string"
         }
       ]
@@ -1980,6 +1857,12 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
           "required": true
         },
         {
@@ -2144,7 +2027,8 @@
         {
           "name": "--model-name",
           "description": "The name of the model to deploy.",
-          "type": "string"
+          "type": "string",
+          "required": null
         }
       ]
     },
@@ -4017,6 +3901,12 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
           "required": true
         },
         {
@@ -4076,12 +3966,14 @@
         {
           "name": "--subscription",
           "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string"
+          "type": "string",
+          "required": null
         },
         {
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string"
+          "type": "string",
+          "required": null
         },
         {
           "name": "--resource-type",
@@ -4154,12 +4046,14 @@
         {
           "name": "--subscription",
           "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string"
+          "type": "string",
+          "required": null
         },
         {
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string"
+          "type": "string",
+          "required": null
         },
         {
           "name": "--resource-type",
@@ -7459,6 +7353,12 @@
           "required": true
         },
         {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
           "name": "--account",
           "description": "The name of the Azure Storage account to create. Must be globally unique, 3-24 characters, lowercase letters and numbers only.",
           "type": "string",
@@ -8705,6 +8605,5 @@
       ]
     }
   ],
-  "duration": 44,
-  "resultsCount": 140
+  "duration": 23
 }

@@ -117,6 +117,33 @@ azmcp server start \
 > - Multiple `--namespace` parameters can be used together to expose tools for multiple specific namespaces.
 > - The `--namespace` and `--mode` parameters can also be combined to provide a unique running mode based on the desired scenario.
 
+#### Server Start Command Options
+
+The `azmcp server start` command supports the following options:
+
+| Option | Required | Default | Description |
+|--------|----------|---------|-------------|
+| `--transport` | No | `stdio` | Transport mechanism to use (currently only `stdio` is supported) |
+| `--mode` | No | `namespace` | Server mode: `namespace` (default), `all`, or `single` |
+| `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated) |
+| `--read-only` | No | `false` | Only expose read-only operations |
+| `--debug` | No | `false` | Enable verbose debug logging to stderr |
+| `--insecure-disable-elicitation` | No | `false` | **⚠️ INSECURE**: Disable user consent prompts for sensitive operations |
+
+> **⚠️ Security Warning for `--insecure-disable-elicitation`:**
+>
+> This option disables user confirmations (elicitations) before running tools that read sensitive data. When enabled:
+> - Tools that handle secrets, credentials, or sensitive data will execute without user confirmation
+> - This removes an important security layer designed to prevent unauthorized access to sensitive information
+> - Only use this option in trusted, automated environments where user interaction is not possible
+> - Never use this option in production environments or when handling untrusted input
+>
+> **Example usage (use with caution):**
+> ```bash
+> # For automated scenarios only - bypasses security prompts
+> azmcp server start --insecure-disable-elicitation
+> ```
+
 ### Azure AI Foundry Operations
 
 ```bash
@@ -186,11 +213,12 @@ azmcp appconfig kv list --subscription <subscription> \
                         [--key <key>] \
                         [--label <label>]
 
-# Lock a key-value setting (make it read-only)
-azmcp appconfig kv lock --subscription <subscription> \
-                        --account <account> \
-                        --key <key> \
-                        [--label <label>]
+# Lock (make it read-only) or unlock (remove read-only) a key-value setting 
+azmcp appconfig kv lock set --subscription <subscription> \
+                            --account <account> \
+                            --key <key> \
+                            [--label <label>] \
+                            [--lock]
 
 # Set a key-value setting
 azmcp appconfig kv set --subscription <subscription> \
@@ -204,12 +232,6 @@ azmcp appconfig kv show --subscription <subscription> \
                         --account <account> \
                         --key <key> \
                         [--label <label>]
-
-# Unlock a key-value setting (make it editable)
-azmcp appconfig kv unlock --subscription <subscription> \
-                          --account <account> \
-                          --key <key> \
-                          [--label <label>]
 ```
 
 ### Azure App Lens Operations
@@ -540,8 +562,20 @@ azmcp keyvault key list --subscription <subscription> \
 
 #### Secrets
 
+Tools that handle sensitive data such as secrets, credentials, or keys require user consent before execution through a security mechanism called **elicitation**. When you run commands that access sensitive information, the MCP client will prompt you to confirm the operation before proceeding.
+
+> **🛡️ Elicitation (user confirmation) Security Feature:**
+> 
+> Elicitation prompts appear when tools may expose sensitive information like:
+> - Key Vault secrets and keys
+> - Connection strings and passwords
+> - Certificate private keys
+> - Other confidential data
+>
+> These prompts protect against unauthorized access to sensitive information. You can bypass elicitation in automated scenarios using the `--insecure-disable-elicitation` server start option, but this should only be used in trusted environments.
+
 ```bash
-# Creates a secret in a key vault
+# Creates a secret in a key vault (will prompt for user consent)
 azmcp keyvault secret create --subscription <subscription> \
                              --vault <vault-name> \
                              --name <secret-name> \
@@ -966,6 +1000,20 @@ azmcp sql server entra-admin list --subscription <subscription> \
 
 # Create a SQL database (supports optional performance and configuration parameters)
 azmcp sql db create --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name> \
+                    [--sku-name <sku-name>] \
+                    [--sku-tier <sku-tier>] \
+                    [--sku-capacity <capacity>] \
+                    [--collation <collation>] \
+                    [--max-size-bytes <bytes>] \
+                    [--elastic-pool-name <elastic-pool-name>] \
+                    [--zone-redundant <true/false>] \
+                    [--read-scale <Enabled|Disabled>]
+
+# Update an existing SQL database (applies only the provided configuration changes)
+azmcp sql db update --subscription <subscription> \
                     --resource-group <resource-group> \
                     --server <server-name> \
                     --database <database-name> \
