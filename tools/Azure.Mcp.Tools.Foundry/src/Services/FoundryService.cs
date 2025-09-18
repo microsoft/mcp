@@ -3,20 +3,23 @@
 
 using System.Text;
 using Azure.AI.Projects;
+using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
+using Azure.Mcp.Tools.Foundry.Services.Models;
 using Azure.ResourceManager;
-using Azure.ResourceManager.CognitiveServices;
-using Azure.ResourceManager.CognitiveServices.Models;
-using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.Foundry.Services;
 
-public class FoundryService(IHttpClientService httpClientService, ITenantService? tenantService = null) : BaseAzureService(tenantService), IFoundryService
+public class FoundryService(
+    IHttpClientService httpClientService,
+    ISubscriptionService subscriptionService,
+    ITenantService tenantService) : BaseAzureResourceService(subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService)), tenantService ?? throw new ArgumentNullException(nameof(tenantService))), IFoundryService
 {
     private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
     public async Task<List<ModelInformation>> ListModels(
@@ -163,15 +166,16 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
 
         try
         {
-            ArmClient armClient = await CreateArmClientAsync(null, retryPolicy);
+            // Create ArmClient for deployments
+            ArmClient armClient = await CreateArmClientWithApiVersionAsync("Microsoft.CognitiveServices/accounts/deployments", "2025-06-01", null, retryPolicy);
 
-            var subscription =
-                armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscriptionId));
-            var resourceGroupResource = await subscription.GetResourceGroupAsync(resourceGroup);
+            // Retrieve the Cognitive Services account
+            var cognitiveServicesAccount = await GetGenericResourceAsync(
+                armClient,
+                new ResourceIdentifier($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.CognitiveServices/accounts/{azureAiServicesName}"));
 
-            var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
-            var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(azureAiServicesName);
-
+            // Prepare data for the deployment
+            ResourceIdentifier deploymentId = new ResourceIdentifier($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.CognitiveServices/accounts/{azureAiServicesName}/deployments/{deploymentName}");
             var deploymentData = new CognitiveServicesAccountDeploymentData
             {
                 Properties = new CognitiveServicesAccountDeploymentProperties
@@ -180,57 +184,48 @@ public class FoundryService(IHttpClientService httpClientService, ITenantService
                     {
                         Format = modelFormat,
                         Name = modelName,
-                        Version = modelVersion
+                        Version = modelVersion,
+                        Source = string.IsNullOrEmpty(modelSource) ? null : modelSource
+                    },
+                    ScaleSettings = string.IsNullOrEmpty(scaleType) ? null : new CognitiveServicesAccountDeploymentScaleSettings
+                    {
+                        ScaleType = scaleType,
+                        Capacity = scaleCapacity
                     }
+                },
+                Sku = string.IsNullOrEmpty(skuName) ? null : new CognitiveServicesSku
+                {
+                    Name = skuName,
+                    Capacity = skuCapacity
                 }
             };
 
-            if (!string.IsNullOrEmpty(modelSource))
-            {
-                deploymentData.Properties.Model.Source = modelSource;
-            }
-
-            if (!string.IsNullOrEmpty(skuName))
-            {
-                deploymentData.Sku = new CognitiveServicesSku(skuName);
-                if (skuCapacity.HasValue)
-                {
-                    deploymentData.Sku.Capacity = skuCapacity;
-                }
-            }
-
-            if (!string.IsNullOrEmpty(scaleType))
-            {
-                deploymentData.Properties.ScaleSettings = new CognitiveServicesAccountDeploymentScaleSettings
-                {
-                    ScaleType = scaleType,
-                    Capacity = scaleCapacity
-                };
-            }
-
-            var deploymentOperation = await cognitiveServicesAccount.Value.GetCognitiveServicesAccountDeployments()
-                .CreateOrUpdateAsync(waitUntil: WaitUntil.Completed, deploymentName, deploymentData);
-
-            CognitiveServicesAccountDeploymentResource deployment = deploymentOperation.Value;
-
-            if (!deployment.HasData)
+            var result = await CreateOrUpdateGenericResourceAsync(
+                armClient,
+                deploymentId,
+                cognitiveServicesAccount.Data.Location,
+                deploymentData,
+                FoundryJsonContext.Default.CognitiveServicesAccountDeploymentData);
+            if (!result.HasData)
             {
                 return new ModelDeploymentResult
                 {
                     HasData = false
                 };
             }
-
-            return new ModelDeploymentResult
+            else
             {
-                HasData = true,
-                Id = deployment.Data.Id.ToString(),
-                Name = deployment.Data.Name,
-                Type = deployment.Data.ResourceType.ToString(),
-                Sku = deployment.Data.Sku,
-                Tags = deployment.Data.Tags,
-                Properties = deployment.Data.Properties
-            };
+                return new ModelDeploymentResult
+                {
+                    HasData = true,
+                    Id = result.Data.Id.ToString(),
+                    Name = result.Data.Name,
+                    Type = result.Data.ResourceType.ToString(),
+                    Sku = result.Data.Sku,
+                    Tags = result.Data.Tags,
+                    Properties = result.Data.Properties?.ToObjectFromJson(FoundryJsonContext.Default.IDictionaryStringObject)
+                };
+            }
         }
         catch (Exception ex)
         {

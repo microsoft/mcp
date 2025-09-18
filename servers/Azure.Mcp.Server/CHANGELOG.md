@@ -16,6 +16,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Update the Foundry tool to use GenericResource for deploying models to Azure AI Services. [[#456](https://github.com/microsoft/mcp/pull/456)]
+
 ## 0.7.0 (2025-09-16)
 
 ### Features Added
