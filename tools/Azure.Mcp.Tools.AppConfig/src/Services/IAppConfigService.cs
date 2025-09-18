@@ -26,16 +26,10 @@ public interface IAppConfigService
         RetryPolicyOptions? retryPolicy = null,
         string? label = null,
         string? contentType = null);
-    Task LockKeyValue(
+    Task SetKeyValueLockState(
         string accountName,
         string key,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        string? label = null);
-    Task UnlockKeyValue(
-        string accountName,
-        string key,
+        bool locked,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,

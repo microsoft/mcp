@@ -6,7 +6,7 @@ using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AppConfig.Commands;
-using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
+using Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -14,22 +14,22 @@ using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue;
+namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue.Lock;
 
 [Trait("Area", "AppConfig")]
-public class KeyValueSetCommandTests
+public class KeyValueLockSetCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IAppConfigService _appConfigService;
-    private readonly ILogger<KeyValueSetCommand> _logger;
-    private readonly KeyValueSetCommand _command;
+    private readonly ILogger<KeyValueLockSetCommand> _logger;
+    private readonly KeyValueLockSetCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
 
-    public KeyValueSetCommandTests()
+    public KeyValueLockSetCommandTests()
     {
         _appConfigService = Substitute.For<IAppConfigService>();
-        _logger = Substitute.For<ILogger<KeyValueSetCommand>>();
+        _logger = Substitute.For<ILogger<KeyValueLockSetCommand>>();
 
         _command = new(_logger);
         _commandDefinition = _command.GetCommand();
@@ -40,14 +40,14 @@ public class KeyValueSetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_SetsKeyValue_WhenValidParametersProvided()
+    public async Task ExecuteAsync_LocksKeyValue_WhenValidParametersProvided()
     {
         // Arrange
         var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key",
-            "--value", "my-value"
+            "--lock"
         ]);
 
         // Act
@@ -55,34 +55,97 @@ public class KeyValueSetCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        await _appConfigService.Received(1).SetKeyValue(
+        await _appConfigService.Received(1).SetKeyValueLockState(
             "account1",
             "my-key",
-            "my-value",
+            true,
             "sub123",
             null,
             Arg.Any<RetryPolicyOptions>(),
-            null,
-            Arg.Any<string>(),
-            Arg.Any<string[]>());
+            null);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueSetCommandResult);
+        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
-        Assert.Equal("my-value", result.Value);
+        Assert.True(result.Locked);
     }
 
     [Fact]
-    public async Task ExecuteAsync_SetsKeyValueWithLabel_WhenLabelProvided()
+    public async Task ExecuteAsync_LocksKeyValueWithLabel_WhenLabelProvided()
     {
         // Arrange
         var args = _commandDefinition.Parse([
             "--subscription", "sub123",
             "--account", "account1",
             "--key", "my-key",
-            "--value", "my-value",
+            "--label", "prod",
+            "--lock"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(200, response.Status);
+        await _appConfigService.Received(1).SetKeyValueLockState(
+            "account1",
+            "my-key",
+            true,
+            "sub123",
+            null,
+            Arg.Any<RetryPolicyOptions>(),
+            "prod");
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Equal("my-key", result.Key);
+        Assert.Equal("prod", result.Label);
+        Assert.True(result.Locked);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UnlocksKeyValue_WhenValidParametersProvided()
+    {
+        // Arrange
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub123",
+            "--account", "account1",
+            "--key", "my-key"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(200, response.Status);
+        await _appConfigService.Received(1).SetKeyValueLockState(
+            "account1",
+            "my-key",
+            false,
+            "sub123",
+            null,
+            Arg.Any<RetryPolicyOptions>(),
+            null);
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Equal("my-key", result.Key);
+        Assert.False(result.Locked);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UnlocksKeyValueWithLabel_WhenLabelProvided()
+    {
+        // Arrange
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub123",
+            "--account", "account1",
+            "--key", "my-key",
             "--label", "prod"
         ]);
 
@@ -91,103 +154,57 @@ public class KeyValueSetCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        await _appConfigService.Received(1).SetKeyValue(
+        await _appConfigService.Received(1).SetKeyValueLockState(
             "account1",
             "my-key",
-            "my-value",
+            false,
             "sub123",
             null,
             Arg.Any<RetryPolicyOptions>(),
-            "prod",
-            Arg.Any<string>(),
-            Arg.Any<string[]>());
-
+            "prod");
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueSetCommandResult);
+        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
-        Assert.Equal("my-value", result.Value);
         Assert.Equal("prod", result.Label);
     }
 
-    [Fact]
-    public async Task ExecuteAsync_SetsKeyValueWithContentTypeAndTagsProvided()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ExecuteAsync_Returns500_WhenServiceThrowsException(bool locked)
     {
         // Arrange
-        var args = _commandDefinition.Parse([
-            "--subscription", "sub123",
-            "--account", "account1",
-            "--key", "my-key",
-            "--value", "my-value",
-            "--content-type", "application/json",
-            "--tags", "environment=prod", "team=backend"
-        ]);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, args);
-
-        // Assert
-        Assert.Equal(200, response.Status);
-        await _appConfigService.Received(1).SetKeyValue(
-            "account1",
-            "my-key",
-            "my-value",
-            "sub123",
-            null,
-            Arg.Any<RetryPolicyOptions>(),
-            null,
-            "application/json",
-            Arg.Is<string[]>(tags => tags.Contains("environment=prod") && tags.Contains("team=backend")));
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueSetCommandResult);
-
-        Assert.NotNull(result);
-        Assert.Equal("my-key", result.Key);
-        Assert.Equal("my-value", result.Value);
-        Assert.Equal("application/json", result.ContentType);
-        Assert.NotNull(result.Tags);
-        Assert.Contains("environment=prod", result.Tags);
-        Assert.Contains("team=backend", result.Tags);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_Returns500_WhenServiceThrowsException()
-    {
-        // Arrange
-        _appConfigService.SetKeyValue(
+        _appConfigService.SetKeyValueLockState(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
+            Arg.Any<bool>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string[]>())
-            .ThrowsAsync(new Exception("Failed to set key-value"));
+            Arg.Any<string>())
+            .ThrowsAsync(new Exception("Failed to lock key-value"));
 
-        var args = _commandDefinition.Parse([
-            "--subscription", "sub123",
-            "--account", "account1",
-            "--key", "my-key",
-            "--value", "my-value"
-        ]);
+        var argsToParse = locked
+            ? new List<string> { "--subscription", "sub123", "--account", "account1", "--key", "my-key", "--lock" }
+            : new List<string> { "--subscription", "sub123", "--account", "account1", "--key", "my-key" };
+        var args = _commandDefinition.Parse(argsToParse);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
         Assert.Equal(500, response.Status);
-        Assert.Contains("Failed to set key-value", response.Message);
+        Assert.Contains("Failed to lock key-value", response.Message);
     }
 
     [Theory]
-    [InlineData("")]
-    [InlineData("--subscription sub123")]
-    [InlineData("--subscription sub123 --account account1")]
-    [InlineData("--subscription sub123 --account account1 --key my-key")]
+    [InlineData("")] // No parameters
+    [InlineData("--subscription sub123")] // Missing account and key
+    [InlineData("--subscription sub123 --account account1")] // Missing key
+    [InlineData("--account account1 --key my-key")] // Missing subscription
+    [InlineData("--subscription sub123 --key my-key")] // Missing account
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(string args)
     {
         // Arrange

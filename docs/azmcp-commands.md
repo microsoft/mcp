@@ -186,11 +186,12 @@ azmcp appconfig kv list --subscription <subscription> \
                         [--key <key>] \
                         [--label <label>]
 
-# Lock a key-value setting (make it read-only)
-azmcp appconfig kv lock --subscription <subscription> \
-                        --account <account> \
-                        --key <key> \
-                        [--label <label>]
+# Lock (make it read-only) or unlock (remove read-only) a key-value setting 
+azmcp appconfig kv lock set --subscription <subscription> \
+                            --account <account> \
+                            --key <key> \
+                            [--label <label>] \
+                            [--lock]
 
 # Set a key-value setting
 azmcp appconfig kv set --subscription <subscription> \
@@ -204,12 +205,6 @@ azmcp appconfig kv show --subscription <subscription> \
                         --account <account> \
                         --key <key> \
                         [--label <label>]
-
-# Unlock a key-value setting (make it editable)
-azmcp appconfig kv unlock --subscription <subscription> \
-                          --account <account> \
-                          --key <key> \
-                          [--label <label>]
 ```
 
 ### Azure App Lens Operations
@@ -963,6 +958,20 @@ azmcp sql server entra-admin list --subscription <subscription> \
 
 # Create a SQL database (supports optional performance and configuration parameters)
 azmcp sql db create --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name> \
+                    [--sku-name <sku-name>] \
+                    [--sku-tier <sku-tier>] \
+                    [--sku-capacity <capacity>] \
+                    [--collation <collation>] \
+                    [--max-size-bytes <bytes>] \
+                    [--elastic-pool-name <elastic-pool-name>] \
+                    [--zone-redundant <true/false>] \
+                    [--read-scale <Enabled|Disabled>]
+
+# Update an existing SQL database (applies only the provided configuration changes)
+azmcp sql db update --subscription <subscription> \
                     --resource-group <resource-group> \
                     --server <server-name> \
                     --database <database-name> \

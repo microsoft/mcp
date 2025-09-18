@@ -38,10 +38,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_appconfig_kv_delete | Delete the key <key_name> in App Configuration store <app_config_store_name> |
 | azmcp_appconfig_kv_list | List all key-value settings in App Configuration store <app_config_store_name> |
 | azmcp_appconfig_kv_list | Show me the key-value settings in App Configuration store <app_config_store_name> |
-| azmcp_appconfig_kv_lock | Lock the key <key_name> in App Configuration store <app_config_store_name> |
+| azmcp_appconfig_kv_lock_set | Lock the key <key_name> in App Configuration store <app_config_store_name> |
+| azmcp_appconfig_kv_lock_set | Unlock the key <key_name> in App Configuration store <app_config_store_name> |
 | azmcp_appconfig_kv_set | Set the key <key_name> in App Configuration store <app_config_store_name> to \<value> |
 | azmcp_appconfig_kv_show | Show the content for the key <key_name> in App Configuration store <app_config_store_name> |
-| azmcp_appconfig_kv_unlock | Unlock the key <key_name> in App Configuration store <app_config_store_name> |
 
 ## Azure App Lens
 
@@ -372,6 +372,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_db_list | Show me all the databases configuration details in the Azure SQL server <server_name> |
 | azmcp_sql_db_show | Get the configuration details for the SQL database <database_name> on server <server_name> |
 | azmcp_sql_db_show | Show me the details of SQL database <database_name> in server <server_name> |
+| azmcp_sql_db_update | Update the performance tier of SQL database <database_name> on server <server_name> |
+| azmcp_sql_db_update | Scale SQL database <database_name> on server <server_name> to use <sku_name> SKU |
 
 ## Azure SQL Elastic Pool Operations
 

@@ -5,6 +5,7 @@ using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.Account;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
+using Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -33,21 +34,19 @@ public class AppConfigSetup : IAreaSetup
         var keyValue = new CommandGroup("kv", "App Configuration key-value setting operations - Commands for managing complete configuration settings including values, labels, and metadata");
         appConfig.AddSubGroup(keyValue);
 
+        // Create Lock subgroup under KeyValue
+        var lockGroup = new CommandGroup("lock", "App Configuration key-value lock operations - Commands for locking and unlocking key-value settings to prevent or allow modifications");
+        keyValue.AddSubGroup(lockGroup);
+
         // Register AppConfig commands
         accounts.AddCommand("list", new AccountListCommand(
             loggerFactory.CreateLogger<AccountListCommand>()));
 
-        keyValue.AddCommand("list", new KeyValueListCommand(
-            loggerFactory.CreateLogger<KeyValueListCommand>()));
-        keyValue.AddCommand("lock", new KeyValueLockCommand(
-            loggerFactory.CreateLogger<KeyValueLockCommand>()));
-        keyValue.AddCommand("unlock", new KeyValueUnlockCommand(
-            loggerFactory.CreateLogger<KeyValueUnlockCommand>()));
-        keyValue.AddCommand("set", new KeyValueSetCommand(
-            loggerFactory.CreateLogger<KeyValueSetCommand>()));
-        keyValue.AddCommand("show", new KeyValueShowCommand(
-            loggerFactory.CreateLogger<KeyValueShowCommand>()));
-        keyValue.AddCommand("delete", new KeyValueDeleteCommand(
-            loggerFactory.CreateLogger<KeyValueDeleteCommand>()));
+        keyValue.AddCommand("delete", new KeyValueDeleteCommand(loggerFactory.CreateLogger<KeyValueDeleteCommand>()));
+        keyValue.AddCommand("list", new KeyValueListCommand(loggerFactory.CreateLogger<KeyValueListCommand>()));
+        keyValue.AddCommand("set", new KeyValueSetCommand(loggerFactory.CreateLogger<KeyValueSetCommand>()));
+        keyValue.AddCommand("show", new KeyValueShowCommand(loggerFactory.CreateLogger<KeyValueShowCommand>()));
+
+        lockGroup.AddCommand("set", new KeyValueLockSetCommand(loggerFactory.CreateLogger<KeyValueLockSetCommand>()));
     }
 }
