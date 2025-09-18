@@ -38,23 +38,22 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
+        ValidateRequiredParameters(serverName, databaseName, resourceGroup, subscription);
+
         try
         {
-            var result = await ExecuteSingleResourceQueryAsync(
-                "Microsoft.Sql/servers/databases",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToSqlDatabaseModel,
-                $"name =~ '{EscapeKqlString(databaseName)}'",
-                cancellationToken);
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName, null, cancellationToken);
 
-            if (result == null)
-            {
-                throw new KeyNotFoundException($"SQL database '{databaseName}' not found in resource group '{resourceGroup}' for subscription '{subscription}'.");
-            }
+            var databaseResource = await sqlServerResource.Value.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
 
-            return result;
+            return ConvertToSqlDatabaseModel(databaseResource.Value);
+        }
+        catch (Azure.RequestFailedException ex) when (ex.Status == 404)
+        {
+            throw new KeyNotFoundException($"SQL database '{databaseName}' not found in resource group '{resourceGroup}' for subscription '{subscription}'.");
         }
         catch (Exception ex)
         {
