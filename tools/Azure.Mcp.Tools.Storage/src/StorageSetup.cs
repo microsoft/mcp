@@ -49,7 +49,7 @@ public class StorageSetup : IAreaSetup
         // Register Storage commands
         storageAccount.AddCommand("create", new AccountCreateCommand(loggerFactory.CreateLogger<AccountCreateCommand>()));
         storageAccount.AddCommand("get", new AccountGetCommand(loggerFactory.CreateLogger<AccountGetCommand>()));
-        
+
         blobs.AddCommand("get", new BlobGetCommand(loggerFactory.CreateLogger<BlobGetCommand>()));
         blobs.AddCommand("upload", new BlobUploadCommand(loggerFactory.CreateLogger<BlobUploadCommand>()));
 
