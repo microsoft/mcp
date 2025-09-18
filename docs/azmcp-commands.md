@@ -966,6 +966,26 @@ azmcp servicebus topic subscription details --subscription <subscription> \
 #### Database
 
 ```bash
+# Create a SQL database (supports optional performance and configuration parameters)
+azmcp sql db create --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name> \
+                    [--sku-name <sku-name>] \
+                    [--sku-tier <sku-tier>] \
+                    [--sku-capacity <capacity>] \
+                    [--collation <collation>] \
+                    [--max-size-bytes <bytes>] \
+                    [--elastic-pool-name <elastic-pool-name>] \
+                    [--zone-redundant <true/false>] \
+                    [--read-scale <Enabled|Disabled>]
+
+# Delete a SQL database (idempotent – succeeds even if the database does not exist)
+azmcp sql db delete --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name>
+
 # Gets a list of all databases in a SQL server
 azmcp sql db list --subscription <subscription> \
                   --resource-group <resource-group> \
@@ -976,6 +996,20 @@ azmcp sql db show --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name> \
                   --database <database>
+
+# Update an existing SQL database (applies only the provided configuration changes)
+azmcp sql db update --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name> \
+                    [--sku-name <sku-name>] \
+                    [--sku-tier <sku-tier>] \
+                    [--sku-capacity <capacity>] \
+                    [--collation <collation>] \
+                    [--max-size-bytes <bytes>] \
+                    [--elastic-pool-name <elastic-pool-name>] \
+                    [--zone-redundant <true/false>] \
+                    [--read-scale <Enabled|Disabled>]
 ```
 
 #### Elastic Pool
@@ -1004,40 +1038,6 @@ azmcp sql server create --subscription <subscription> \
 azmcp sql server entra-admin list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
-
-# Create a SQL database (supports optional performance and configuration parameters)
-azmcp sql db create --subscription <subscription> \
-                    --resource-group <resource-group> \
-                    --server <server-name> \
-                    --database <database-name> \
-                    [--sku-name <sku-name>] \
-                    [--sku-tier <sku-tier>] \
-                    [--sku-capacity <capacity>] \
-                    [--collation <collation>] \
-                    [--max-size-bytes <bytes>] \
-                    [--elastic-pool-name <elastic-pool-name>] \
-                    [--zone-redundant <true/false>] \
-                    [--read-scale <Enabled|Disabled>]
-
-# Update an existing SQL database (applies only the provided configuration changes)
-azmcp sql db update --subscription <subscription> \
-                    --resource-group <resource-group> \
-                    --server <server-name> \
-                    --database <database-name> \
-                    [--sku-name <sku-name>] \
-                    [--sku-tier <sku-tier>] \
-                    [--sku-capacity <capacity>] \
-                    [--collation <collation>] \
-                    [--max-size-bytes <bytes>] \
-                    [--elastic-pool-name <elastic-pool-name>] \
-                    [--zone-redundant <true/false>] \
-                    [--read-scale <Enabled|Disabled>]
-
-# Delete a SQL database (idempotent – succeeds even if the database does not exist)
-azmcp sql db delete --subscription <subscription> \
-                    --resource-group <resource-group> \
-                    --server <server-name> \
-                    --database <database-name>
 
 # Create a firewall rule for a SQL server
 azmcp sql server firewall-rule create --subscription <subscription> \
