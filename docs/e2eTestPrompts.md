@@ -372,6 +372,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_db_list | Show me all the databases configuration details in the Azure SQL server <server_name> |
 | azmcp_sql_db_show | Get the configuration details for the SQL database <database_name> on server <server_name> |
 | azmcp_sql_db_show | Show me the details of SQL database <database_name> in server <server_name> |
+| azmcp_sql_db_update | Update the performance tier of SQL database <database_name> on server <server_name> |
+| azmcp_sql_db_update | Scale SQL database <database_name> on server <server_name> to use <sku_name> SKU |
 
 ## Azure SQL Elastic Pool Operations
 

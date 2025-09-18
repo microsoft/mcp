@@ -168,34 +168,122 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 "Successfully created SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",
                 serverName, databaseName, resourceGroup);
 
-            return new SqlDatabase(
-                Name: database.Data.Name,
-                Id: database.Data.Id.ToString(),
-                Type: database.Data.ResourceType.ToString(),
-                Location: database.Data.Location.ToString(),
-                Sku: database.Data.Sku != null ? new DatabaseSku(
-                    Name: database.Data.Sku.Name,
-                    Tier: database.Data.Sku.Tier,
-                    Capacity: database.Data.Sku.Capacity,
-                    Family: database.Data.Sku.Family,
-                    Size: database.Data.Sku.Size
-                ) : null,
-                Status: database.Data.Status?.ToString(),
-                Collation: database.Data.Collation,
-                CreationDate: database.Data.CreatedOn,
-                MaxSizeBytes: database.Data.MaxSizeBytes,
-                ServiceLevelObjective: database.Data.CurrentServiceObjectiveName,
-                Edition: database.Data.CurrentSku?.Name,
-                ElasticPoolName: database.Data.ElasticPoolId?.ToString().Split('/').LastOrDefault(),
-                EarliestRestoreDate: database.Data.EarliestRestoreOn,
-                ReadScale: database.Data.ReadScale?.ToString(),
-                ZoneRedundant: database.Data.IsZoneRedundant
-            );
+            return ConvertToSqlDatabaseModel(database);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
                 "Error creating SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                serverName, databaseName, resourceGroup, subscription);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Updates configuration settings for an existing SQL database in an Azure SQL Server.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server containing the database</param>
+    /// <param name="databaseName">The name of the database to update</param>
+    /// <param name="resourceGroup">The name of the resource group containing the server</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="skuName">Optional SKU name for the database</param>
+    /// <param name="skuTier">Optional SKU tier for the database</param>
+    /// <param name="skuCapacity">Optional SKU capacity for the database</param>
+    /// <param name="collation">Optional collation for the database</param>
+    /// <param name="maxSizeBytes">Optional maximum size in bytes for the database</param>
+    /// <param name="elasticPoolName">Optional elastic pool name to assign the database to</param>
+    /// <param name="zoneRedundant">Optional zone redundancy setting</param>
+    /// <param name="readScale">Optional read scale setting</param>
+    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>The updated SQL database information</returns>
+    /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
+    public async Task<SqlDatabase> UpdateDatabaseAsync(
+        string serverName,
+        string databaseName,
+        string resourceGroup,
+        string subscription,
+        string? skuName = null,
+        string? skuTier = null,
+        int? skuCapacity = null,
+        string? collation = null,
+        long? maxSizeBytes = null,
+        string? elasticPoolName = null,
+        bool? zoneRedundant = null,
+        string? readScale = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(serverName, resourceGroup, subscription, databaseName);
+
+        try
+        {
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
+
+            var databaseResource = await sqlServerResource.Value.GetSqlDatabases().GetAsync(databaseName);
+            var databaseData = databaseResource.Value.Data;
+
+            if (!string.IsNullOrEmpty(skuName) || !string.IsNullOrEmpty(skuTier) || skuCapacity.HasValue)
+            {
+                var sku = new ResourceManager.Sql.Models.SqlSku(skuName ?? databaseData.Sku?.Name ?? "Basic")
+                {
+                    Tier = skuTier ?? databaseData.Sku?.Tier,
+                    Capacity = skuCapacity ?? databaseData.Sku?.Capacity,
+                    Family = databaseData.Sku?.Family,
+                    Size = databaseData.Sku?.Size
+                };
+
+                databaseData.Sku = sku;
+            }
+
+            if (!string.IsNullOrEmpty(collation))
+            {
+                databaseData.Collation = collation;
+            }
+
+            if (maxSizeBytes.HasValue)
+            {
+                databaseData.MaxSizeBytes = maxSizeBytes.Value;
+            }
+
+            if (!string.IsNullOrEmpty(elasticPoolName))
+            {
+                databaseData.ElasticPoolId = Azure.Core.ResourceIdentifier.Parse(
+                    $"{sqlServerResource.Value.Id}/elasticPools/{elasticPoolName}");
+            }
+
+            if (zoneRedundant.HasValue)
+            {
+                databaseData.IsZoneRedundant = zoneRedundant.Value;
+            }
+
+            if (!string.IsNullOrEmpty(readScale) &&
+                Enum.TryParse<ResourceManager.Sql.Models.DatabaseReadScale>(readScale, true, out var readScaleEnum))
+            {
+                databaseData.ReadScale = readScaleEnum;
+            }
+
+            var operation = await sqlServerResource.Value.GetSqlDatabases().CreateOrUpdateAsync(
+                Azure.WaitUntil.Completed,
+                databaseName,
+                databaseData,
+                cancellationToken);
+
+            var updatedDatabase = operation.Value;
+
+            _logger.LogInformation(
+                "Successfully updated SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",
+                serverName, databaseName, resourceGroup);
+
+            return ConvertToSqlDatabaseModel(updatedDatabase);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error updating SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
                 serverName, databaseName, resourceGroup, subscription);
             throw;
         }
@@ -707,6 +795,35 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 serverName, databaseName, resourceGroup, subscription);
             throw;
         }
+    }
+
+    private static SqlDatabase ConvertToSqlDatabaseModel(SqlDatabaseResource databaseResource)
+    {
+        var data = databaseResource.Data;
+
+        return new SqlDatabase(
+            Name: data.Name,
+            Id: data.Id.ToString(),
+            Type: data.ResourceType.ToString(),
+            Location: data.Location.ToString(),
+            Sku: data.Sku != null ? new DatabaseSku(
+                Name: data.Sku.Name,
+                Tier: data.Sku.Tier,
+                Capacity: data.Sku.Capacity,
+                Family: data.Sku.Family,
+                Size: data.Sku.Size
+            ) : null,
+            Status: data.Status?.ToString(),
+            Collation: data.Collation,
+            CreationDate: data.CreatedOn,
+            MaxSizeBytes: data.MaxSizeBytes,
+            ServiceLevelObjective: data.CurrentServiceObjectiveName,
+            Edition: data.CurrentSku?.Name,
+            ElasticPoolName: data.ElasticPoolId?.ToString().Split('/').LastOrDefault(),
+            EarliestRestoreDate: data.EarliestRestoreOn,
+            ReadScale: data.ReadScale?.ToString(),
+            ZoneRedundant: data.IsZoneRedundant
+        );
     }
 
     private static SqlDatabase ConvertToSqlDatabaseModel(JsonElement item)
