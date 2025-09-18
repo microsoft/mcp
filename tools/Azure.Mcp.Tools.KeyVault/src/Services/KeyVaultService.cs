@@ -319,7 +319,23 @@ public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
         var proxyUrl = Environment.GetEnvironmentVariable("TEST_PROXY_URL");
         if (!string.IsNullOrWhiteSpace(proxyUrl) && Uri.TryCreate(proxyUrl, UriKind.Absolute, out var proxyUri))
         {
-            options.AddPolicy(new RecordingRedirectPolicy(proxyUri), HttpPipelinePosition.PerCall);
+            options.AddPolicy(new RecordingRedirectPolicy(proxyUri), HttpPipelinePosition.PerRetry);
+
+            // When rewriting the request host to a proxy (e.g. localhost), the Key Vault challenge validation
+            // (ensuring the challenged resource matches the original host *.vault.azure.net) will fail unless disabled.
+            // Disable only under proxy rewrite conditions.
+            if (options is KeyClientOptions kco)
+            {
+                kco.DisableChallengeResourceVerification = true;
+            }
+            else if (options is SecretClientOptions sco)
+            {
+                sco.DisableChallengeResourceVerification = true;
+            }
+            else if (options is CertificateClientOptions cco)
+            {
+                cco.DisableChallengeResourceVerification = true;
+            }
         }
 
         return options;
