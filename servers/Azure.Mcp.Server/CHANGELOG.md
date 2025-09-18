@@ -19,7 +19,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added support for listing Event Grid subscriptions via the command `azmcp_eventgrid_subscription_list`. [[#364](https://github.com/microsoft/mcp/pull/364)]
 - **Errata**: The following was announced as part of release `0.7.0, but was not actually included then.
   - Added support for creating and deleting SQL databases via the commands `azmcp_sql_db_create` and `azmcp_sql_db_delete`. [[#434](https://github.com/microsoft/mcp/pull/434)]
-- Restored support for the following Key Vault commands:
+- Restored support for the following Key Vault commands: [[#506](https://github.com/microsoft/mcp/pull/506)]
   - `azmcp_keyvault_key_get`
   - `azmcp_keyvault_secret_get`
 
