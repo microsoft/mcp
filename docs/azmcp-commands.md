@@ -132,7 +132,7 @@ The `azmcp server start` command supports the following options:
 
 > **⚠️ Security Warning for `--insecure-disable-elicitation`:**
 >
-> This option bypasses security prompts that normally protect sensitive operations. When enabled:
+> This option disables user confirmations (elicitations) before running tools that read sensitive data. When enabled:
 > - Tools that handle secrets, credentials, or sensitive data will execute without user confirmation
 > - This removes an important security layer designed to prevent unauthorized access to sensitive information
 > - Only use this option in trusted, automated environments where user interaction is not possible
@@ -562,7 +562,7 @@ azmcp keyvault key list --subscription <subscription> \
 
 Tools that handle sensitive data such as secrets, credentials, or keys require user consent before execution through a security mechanism called **elicitation**. When you run commands that access sensitive information, the MCP client will prompt you to confirm the operation before proceeding.
 
-> **🛡️ Elicitation Security Feature:**
+> **🛡️ Elicitation (user confirmation) Security Feature:**
 > 
 > Elicitation prompts appear when tools may expose sensitive information like:
 > - Key Vault secrets and keys

@@ -68,8 +68,7 @@ public static class ServiceOptionDefinitions
         $"--{InsecureDisableElicitationName}")
     {
         Required = false,
-        Hidden = true,
-        Description = "Disable elicitation and always treat it as accepted (insecure)",
+        Description = "Disable elicitation (user confirmation) before allowing high risk commands to run, such as returning Secrets (passwords) from KeyVault.",
         DefaultValueFactory = _ => false
     };
 }
