@@ -7,7 +7,7 @@ using Azure.Mcp.Tools.EventHubs.Models;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands;
 
-[JsonSerializable(typeof(NamespaceListCommand.NamespaceListCommandResult))]
+[JsonSerializable(typeof(NamespaceGetCommand.NamespaceGetCommandResult))]
 [JsonSerializable(typeof(EventHubsNamespaceInfo))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,

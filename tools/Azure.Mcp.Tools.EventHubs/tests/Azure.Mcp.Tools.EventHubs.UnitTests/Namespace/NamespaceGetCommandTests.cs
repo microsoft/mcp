@@ -19,18 +19,18 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.UnitTests.Namespace;
 
-public class NamespaceListCommandTests
+public class NamespaceGetCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IEventHubsService _eventHubsService;
-    private readonly ILogger<NamespaceListCommand> _logger;
-    private readonly NamespaceListCommand _command;
+    private readonly ILogger<NamespaceGetCommand> _logger;
+    private readonly NamespaceGetCommand _command;
     private readonly CommandContext _context;
 
-    public NamespaceListCommandTests()
+    public NamespaceGetCommandTests()
     {
         _eventHubsService = Substitute.For<IEventHubsService>();
-        _logger = Substitute.For<ILogger<NamespaceListCommand>>();
+        _logger = Substitute.For<ILogger<NamespaceGetCommand>>();
 
         var collection = new ServiceCollection();
         collection.AddSingleton(_eventHubsService);
@@ -64,7 +64,7 @@ public class NamespaceListCommandTests
                     "rg-eventhubs-prod")
             };
 
-            _eventHubsService.ListNamespacesAsync(
+            _eventHubsService.GetNamespacesAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
@@ -94,7 +94,7 @@ public class NamespaceListCommandTests
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription 12345678-1234-1234-1234-123456789012 --resource-group rg-eventhubs-test");
 
-        _eventHubsService.ListNamespacesAsync(
+        _eventHubsService.GetNamespacesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -114,7 +114,7 @@ public class NamespaceListCommandTests
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription unauthorized-sub --resource-group rg-eventhubs-prod");
-        _eventHubsService.ListNamespacesAsync(
+        _eventHubsService.GetNamespacesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -134,7 +134,7 @@ public class NamespaceListCommandTests
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription 12345678-1234-1234-1234-123456789012 --resource-group rg-empty");
-        _eventHubsService.ListNamespacesAsync("rg-empty", "12345678-1234-1234-1234-123456789012", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _eventHubsService.GetNamespacesAsync("rg-empty", "12345678-1234-1234-1234-123456789012", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(new List<EventHubsNamespaceInfo>());
 
         // Act
@@ -144,7 +144,7 @@ public class NamespaceListCommandTests
         Assert.Equal(200, response.Status);
         Assert.Null(response.Results); // Should be null when no namespaces found
 
-        await _eventHubsService.Received(1).ListNamespacesAsync("rg-empty", "12345678-1234-1234-1234-123456789012", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>());
+        await _eventHubsService.Received(1).GetNamespacesAsync("rg-empty", "12345678-1234-1234-1234-123456789012", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>());
     }
 
     [Fact]
@@ -165,7 +165,7 @@ public class NamespaceListCommandTests
                 resourceGroup)
         };
 
-        _eventHubsService.ListNamespacesAsync(resourceGroup, subscriptionId, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _eventHubsService.GetNamespacesAsync(resourceGroup, subscriptionId, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(expectedNamespaces);
 
         // Act
@@ -179,6 +179,6 @@ public class NamespaceListCommandTests
         Assert.NotNull(response.Results);
 
         // Verify service was called correctly
-        await _eventHubsService.Received(1).ListNamespacesAsync(resourceGroup, subscriptionId, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>());
+        await _eventHubsService.Received(1).GetNamespacesAsync(resourceGroup, subscriptionId, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>());
     }
 }
