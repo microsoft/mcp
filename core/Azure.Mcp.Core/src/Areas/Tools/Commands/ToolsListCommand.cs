@@ -69,11 +69,13 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                     var key = kvp.Key; // Tokenized e.g. azmcp_storage_account_get
                     var firstSeparatorIndex = key.IndexOf(CommandFactory.Separator); // Expect at least root + namespace + verb
 
-                    if (firstSeparatorIndex < 0) continue; // Malformed, skip
+                    if (firstSeparatorIndex < 0)
+                        continue; // Malformed, skip
 
                     var secondSeparatorIndex = key.IndexOf(CommandFactory.Separator, firstSeparatorIndex + 1);
 
-                    if (secondSeparatorIndex < 0) continue; // Not enough tokens
+                    if (secondSeparatorIndex < 0)
+                        continue; // Not enough tokens
 
                     var namespaceToken = key.Substring(firstSeparatorIndex + 1, secondSeparatorIndex - firstSeparatorIndex - 1);
 

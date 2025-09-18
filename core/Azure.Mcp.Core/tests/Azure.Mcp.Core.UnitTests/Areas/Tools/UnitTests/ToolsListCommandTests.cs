@@ -124,7 +124,7 @@ public class ToolsListCommandTests
         // Verify JSON round-trip preserves all data
         var serializedJson = JsonSerializer.Serialize(result);
         Assert.Equal(json, serializedJson);
-    Assert.Equal(result.Count, response.ResultsCount);
+        Assert.Equal(result.Count, response.ResultsCount);
     }
 
     /// <summary>
@@ -152,7 +152,7 @@ public class ToolsListCommandTests
 
         Assert.Contains(result, cmd => !string.IsNullOrEmpty(cmd.Name));
 
-    Assert.Equal(result.Count, response.ResultsCount);
+        Assert.Equal(result.Count, response.ResultsCount);
 
     }
 
@@ -253,7 +253,7 @@ public class ToolsListCommandTests
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-    Assert.Equal(result.Count, response.ResultsCount);
+        Assert.Equal(result.Count, response.ResultsCount);
 
         Assert.True(result.Count >= MinimumExpectedCommands, $"Expected at least {MinimumExpectedCommands} commands, got {result.Count}");
 
@@ -311,7 +311,7 @@ public class ToolsListCommandTests
 
         Assert.NotNull(result);
 
-    Assert.Equal(result.Count, response.ResultsCount);
+        Assert.Equal(result.Count, response.ResultsCount);
 
         foreach (var command in result)
         {
@@ -348,7 +348,7 @@ public class ToolsListCommandTests
         Assert.NotNull(namespaces);
         Assert.NotEmpty(namespaces);
 
-    Assert.Equal(namespaces!.Count, response.ResultsCount);
+        Assert.Equal(namespaces!.Count, response.ResultsCount);
 
         // Should include some well-known namespaces (matching Name property)
         Assert.Contains(namespaces, ci => ci.Name.Equals("subscription", StringComparison.OrdinalIgnoreCase));
@@ -408,7 +408,7 @@ public class ToolsListCommandTests
         var namespaces = DeserializeResults(response.Results);
 
         Assert.NotEmpty(namespaces);
-    Assert.Equal(namespaces.Count, response.ResultsCount);
+        Assert.Equal(namespaces.Count, response.ResultsCount);
 
         foreach (var ns in namespaces.Take(10))
         {
@@ -462,7 +462,7 @@ public class ToolsListCommandTests
 
         Assert.NotNull(result);
         Assert.Empty(result); // Should be empty when no commands are available
-    Assert.Equal(result.Count, response.ResultsCount);
+        Assert.Equal(result.Count, response.ResultsCount);
     }
 
     /// <summary>
