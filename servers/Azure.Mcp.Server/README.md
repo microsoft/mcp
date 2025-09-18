@@ -74,7 +74,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 ### 📦 Azure Container Registry (ACR)
 
 * "List all my Azure Container Registries"
-* "Show me my container registries in the 'myproject' resource group"
+* "Show me my container registries in the 'my-resource-group' resource group"
 * "List all my Azure Container Registry repositories"
 
 ### ☸️ Azure Kubernetes Service (AKS)
@@ -82,7 +82,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "List my AKS clusters in my subscription"
 * "Show me all my Azure Kubernetes Service clusters"
 * "List the node pools for my AKS cluster"
-* "Get details for the node pool 'np1' of my AKS cluster 'my-aks-cluster' in 'my-resource-group' resource group"
+* "Get details for the node pool 'np1' of my AKS cluster 'my-aks-cluster' in the 'my-resource-group' resource group"
 
 ### 📊 Azure Cosmos DB
 
@@ -99,10 +99,14 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "List all Event Grid topics in subscription 'my-subscription'"
 * "Show me the Event Grid topics in my subscription"
 * "List all Event Grid topics in resource group 'my-resourcegroup' in my subscription"
+* "List Event Grid subscriptions for topic 'my-topic' in resource group 'my-resourcegroup'"
+* "List Event Grid subscriptions for topic 'my-topic' in subscription 'my-subscription'"
+* "List Event Grid Subscriptions in subscription 'my-subscription'"
+* "List Event Grid subscriptions for topic 'my-topic' in location 'my-location'"
 
 ### ⚡ Azure Managed Lustre
 
-* "List the Azure Managed Lustre clusters in resource group 'my-resourcegroup'"
+* "List the Azure Managed Lustre clusters in resource group 'my-resource-group'"
 * "How many IP Addresses I need to create a 128 TiB cluster of AMLFS 500?"
 
 ### 📊 Azure Monitor
@@ -124,7 +128,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "Delete a firewall rule from my Azure SQL server 'myserver'"
 * "List all elastic pools in my Azure SQL server 'myserver'"
 * "List Active Directory administrators for my Azure SQL server 'myserver'"
-* "Create a new Azure SQL server in my resource group"
+* "Create a new Azure SQL server in my resource group 'my-resource-group'"
 * "Show me details about my Azure SQL server 'myserver'"
 * "Delete my Azure SQL server 'myserver'"
 
@@ -211,6 +215,8 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * List Event Grid topics in subscription or resource group
 * View topic configuration and status information
 * Access endpoint and key details for event publishing
+* List Event Grid subscriptions with filtering by topic name, resource group, and location
+* View subscription details including destination endpoints and retry policies
 
 ### 🧮 Azure Foundry
 
@@ -233,13 +239,14 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 ### ☸️ Azure Kubernetes Service (AKS)
 
 * List Azure Kubernetes Service clusters
+* List node pools in an AKS managed cluster
+* Get details of a node pool in an AKS managed cluster
 
 ### 📦 Azure Load Testing
 
 * List, create load test resources
 * List, create load tests
 * Get, list, (create) run and rerun, update load test runs
-
 
 ### 🚀 Azure Managed Grafana
 
@@ -315,16 +322,12 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * Show database details and properties
 * List the details and properties of all databases
+* Create a SQL database
+* Delete a SQL database
 * List SQL server firewall rules
 * Create SQL server firewall rules
 * Delete SQL server firewall rules
-
-### 🗄️ Azure SQL Elastic Pool
-
 * List elastic pools in SQL servers
-
-### 🗄️ Azure SQL Server
-
 * List Microsoft Entra ID administrators for SQL servers
 * Create new SQL servers
 * Show details and properties of SQL servers
@@ -388,7 +391,7 @@ If you use the default package spec of `@azure/mcp@latest`, npx will look for a 
 
 #### NPM
 
-If you globally install the cli via `npm install -g @azure/mcp` it will use the installed version until you manually update it with `npm update -g @azure/mcp`.
+If you globally install the CLI via `npm install -g @azure/mcp` it will use the installed version until you manually update it with `npm update -g @azure/mcp`.
 
 #### Docker
 

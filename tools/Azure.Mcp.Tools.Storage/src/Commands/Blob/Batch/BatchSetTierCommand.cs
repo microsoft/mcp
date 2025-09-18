@@ -17,9 +17,6 @@ public sealed class BatchSetTierCommand(ILogger<BatchSetTierCommand> logger) : B
     private const string CommandTitle = "Set Access Tier for Multiple Blobs";
     private readonly ILogger<BatchSetTierCommand> _logger = logger;
 
-    private readonly Option<string> _tierOption = StorageOptionDefinitions.Tier;
-    private readonly Option<string[]> _blobsOption = StorageOptionDefinitions.Blobs;
-
     public override string Name => "set-tier";
 
     public override string Description =>
@@ -43,15 +40,15 @@ public sealed class BatchSetTierCommand(ILogger<BatchSetTierCommand> logger) : B
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_tierOption);
-        command.Options.Add(_blobsOption);
+        command.Options.Add(StorageOptionDefinitions.Tier);
+        command.Options.Add(StorageOptionDefinitions.Blobs);
     }
 
     protected override BatchSetTierOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Tier = parseResult.GetValueOrDefault(_tierOption);
-        options.BlobNames = parseResult.GetValueOrDefault(_blobsOption);
+        options.Tier = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Tier.Name);
+        options.BlobNames = parseResult.GetValueOrDefault<string[]>(StorageOptionDefinitions.Blobs.Name);
         return options;
     }
 

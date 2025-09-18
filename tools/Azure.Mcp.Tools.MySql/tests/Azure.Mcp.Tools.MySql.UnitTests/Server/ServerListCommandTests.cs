@@ -94,6 +94,6 @@ public class ServerListCommandTests
     private class ServerListResult
     {
         [JsonPropertyName("Servers")]
-        public List<string> Servers { get; set; } = new List<string>();
+        public List<string> Servers { get; set; } = [];
     }
 }

@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
@@ -16,10 +17,6 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
 {
     private const string CommandTitle = "Create Workbook";
     private readonly ILogger<CreateWorkbooksCommand> _logger = logger;
-
-    private readonly Option<string> _displayNameOption = WorkbooksOptionDefinitions.DisplayNameRequired;
-    private readonly Option<string> _serializedContentOption = WorkbooksOptionDefinitions.SerializedContentRequired;
-    private readonly Option<string> _sourceIdOption = WorkbooksOptionDefinitions.SourceId;
 
     public override string Name => "create";
 
@@ -45,18 +42,19 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        RequireResourceGroup();
-        command.Options.Add(_displayNameOption);
-        command.Options.Add(_serializedContentOption);
-        command.Options.Add(_sourceIdOption);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(WorkbooksOptionDefinitions.DisplayNameRequired);
+        command.Options.Add(WorkbooksOptionDefinitions.SerializedContentRequired);
+        command.Options.Add(WorkbooksOptionDefinitions.SourceId);
     }
 
     protected override CreateWorkbookOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DisplayName = parseResult.GetValueOrDefault(_displayNameOption);
-        options.SerializedContent = parseResult.GetValueOrDefault(_serializedContentOption);
-        options.SourceId = parseResult.GetValueOrDefault(_sourceIdOption);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.DisplayName = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.DisplayNameRequired.Name);
+        options.SerializedContent = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.SerializedContentRequired.Name);
+        options.SourceId = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.SourceId.Name);
         return options;
     }
 

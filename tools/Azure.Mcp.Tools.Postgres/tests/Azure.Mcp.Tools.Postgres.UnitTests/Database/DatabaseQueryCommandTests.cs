@@ -61,10 +61,8 @@ public class DatabaseQueryCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenQueryFails()
     {
-        var expectedResults = new List<string>();
-
         _postgresService.ExecuteQueryAsync("sub123", "rg1", "user1", "server1", "db123", "SELECT * FROM test;")
-            .Returns(expectedResults);
+            .Returns([]);
 
         var command = new DatabaseQueryCommand(_logger);
 
@@ -74,7 +72,12 @@ public class DatabaseQueryCommandTests
 
         Assert.NotNull(response);
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<DatabaseQueryResult>(json);
+        Assert.NotNull(result);
+        Assert.Empty(result.QueryResult);
     }
 
     [Theory]
@@ -107,7 +110,7 @@ public class DatabaseQueryCommandTests
     private class DatabaseQueryResult
     {
         [JsonPropertyName("QueryResult")]
-        public List<string> QueryResult { get; set; } = new List<string>();
+        public List<string> QueryResult { get; set; } = [];
 
     }
 

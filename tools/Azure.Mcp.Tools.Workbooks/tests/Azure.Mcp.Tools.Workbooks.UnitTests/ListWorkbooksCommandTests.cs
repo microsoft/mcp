@@ -72,7 +72,7 @@ public class ListWorkbooksCommandTests
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>
         {
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1",
                 DisplayName: "Test Workbook 1",
                 Description: "Test Description 1",
@@ -86,7 +86,7 @@ public class ListWorkbooksCommandTests
                 UserId: "user1",
                 SourceId: "azure monitor"
             ),
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook2",
                 DisplayName: "Test Workbook 2",
                 Description: "Test Description 2",
@@ -111,10 +111,10 @@ public class ListWorkbooksCommandTests
             .Returns(expectedWorkbooks);
 
         var args = _command.GetCommand().Parse([
-                    "--subscription", "sub123",
+            "--subscription", "sub123",
             "--resource-group", "rg123",
             "--tenant", "tenant123"
-                ]);
+        ]);
 
         var context = new CommandContext(_serviceProvider);
 
@@ -145,7 +145,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNullResults_WhenNoWorkbooksExist()
+    public async Task ExecuteAsync_ReturnsEmptyResults_WhenNoWorkbooksExist()
     {
         // Arrange
         _service.ListWorkbooks(
@@ -154,7 +154,7 @@ public class ListWorkbooksCommandTests
             Arg.Any<WorkbookFilters?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>())
-            .Returns(new List<WorkbookInfo>());
+            .Returns([]);
 
         var args = _command.GetCommand().Parse([
             "--subscription", "sub123",
@@ -169,12 +169,18 @@ public class ListWorkbooksCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
         Assert.Equal(200, response.Status);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<ListWorkbooksCommandResult>(json);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Workbooks);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNullResults_WhenServiceReturnsNull()
+    public async Task ExecuteAsync_ReturnsEmptyResults_WhenServiceReturnsNull()
     {
         // Arrange
         _service.ListWorkbooks(
@@ -198,8 +204,14 @@ public class ListWorkbooksCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
         Assert.Equal(200, response.Status);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<ListWorkbooksCommandResult>(json);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Workbooks);
     }
 
     [Fact]
@@ -368,7 +380,7 @@ public class ListWorkbooksCommandTests
 
         var expectedWorkbooks = new List<WorkbookInfo>
         {
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/complex",
                 DisplayName: "Complex Test Workbook",
                 Description: "A workbook with complex data",
@@ -425,7 +437,7 @@ public class ListWorkbooksCommandTests
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>
         {
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1",
                 DisplayName: "Shared Workbook",
                 Description: "A shared workbook",
@@ -478,7 +490,7 @@ public class ListWorkbooksCommandTests
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>
         {
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1",
                 DisplayName: "Sentinel Workbook",
                 Description: "A sentinel workbook",
@@ -532,7 +544,7 @@ public class ListWorkbooksCommandTests
         var sourceId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/components/myapp";
         var expectedWorkbooks = new List<WorkbookInfo>
         {
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1",
                 DisplayName: "App Insights Workbook",
                 Description: "A workbook linked to App Insights",
@@ -586,7 +598,7 @@ public class ListWorkbooksCommandTests
         var sourceId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/components/myapp";
         var expectedWorkbooks = new List<WorkbookInfo>
         {
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1",
                 DisplayName: "Filtered Workbook",
                 Description: "A workbook with multiple filters",
@@ -642,7 +654,7 @@ public class ListWorkbooksCommandTests
         var sourceId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/components/myapp";
         var expectedWorkbooks = new List<WorkbookInfo>
         {
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1",
                 DisplayName: "Filtered Workbook",
                 Description: "A workbook with multiple filters",
@@ -697,7 +709,7 @@ public class ListWorkbooksCommandTests
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>
         {
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1",
                 DisplayName: "Unfiltered Workbook",
                 Description: "A workbook without filters",

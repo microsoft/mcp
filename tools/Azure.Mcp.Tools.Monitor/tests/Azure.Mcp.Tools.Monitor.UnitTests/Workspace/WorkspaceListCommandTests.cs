@@ -112,18 +112,24 @@ public sealed class WorkspaceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNullWhenNoWorkspaces()
+    public async Task ExecuteAsync_ReturnsEmptyWhenNoWorkspaces()
     {
         // Arrange
         _monitorService.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<WorkspaceInfo>());
+            .Returns([]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription}"));
 
         // Assert
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, MonitorJsonContext.Default.WorkspaceListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Workspaces);
     }
 
     [Fact]

@@ -53,11 +53,7 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = workspaces?.Count > 0 ?
-                ResponseResult.Create(
-                    new WorkspaceListCommandResult(workspaces),
-                    MonitorJsonContext.Default.WorkspaceListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(workspaces ?? []), MonitorJsonContext.Default.WorkspaceListCommandResult);
         }
         catch (Exception ex)
         {

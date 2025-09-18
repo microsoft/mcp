@@ -138,7 +138,7 @@ public class BlobGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoBlobs()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoBlobs()
     {
         // Arrange
         _storageService.GetBlobDetails(
@@ -161,7 +161,13 @@ public class BlobGetCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<BlobGetCommand.BlobGetCommandResult>(json);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Blobs);
     }
 
     [Fact]

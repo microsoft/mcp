@@ -28,6 +28,40 @@ public interface ISqlService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Creates a new SQL database in Azure SQL Server.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server</param>
+    /// <param name="databaseName">The name of the database to create</param>
+    /// <param name="resourceGroup">The resource group name</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="skuName">Optional SKU name for the database</param>
+    /// <param name="skuTier">Optional SKU tier for the database</param>
+    /// <param name="skuCapacity">Optional SKU capacity for the database</param>
+    /// <param name="collation">Optional collation for the database</param>
+    /// <param name="maxSizeBytes">Optional maximum size in bytes for the database</param>
+    /// <param name="elasticPoolName">Optional elastic pool name to assign the database to</param>
+    /// <param name="zoneRedundant">Optional zone redundancy setting</param>
+    /// <param name="readScale">Optional read scale setting</param>
+    /// <param name="retryPolicy">Optional retry policy options</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The created SQL database information</returns>
+    Task<SqlDatabase> CreateDatabaseAsync(
+        string serverName,
+        string databaseName,
+        string resourceGroup,
+        string subscription,
+        string? skuName = null,
+        string? skuTier = null,
+        int? skuCapacity = null,
+        string? collation = null,
+        long? maxSizeBytes = null,
+        string? elasticPoolName = null,
+        bool? zoneRedundant = null,
+        string? readScale = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets a list of databases for a SQL server.
     /// </summary>
     /// <param name="serverName">The name of the SQL server</param>
@@ -129,6 +163,24 @@ public interface ISqlService
         string subscription,
         string firewallRuleName,
         RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes a SQL database from Azure SQL Server.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server</param>
+    /// <param name="databaseName">The name of the database to delete</param>
+    /// <param name="resourceGroup">The resource group name</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="retryPolicy">Optional retry policy options</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>True if the database was successfully deleted</returns>
+    Task<bool> DeleteDatabaseAsync(
+        string serverName,
+        string databaseName,
+        string resourceGroup,
+        string subscription,
+        RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

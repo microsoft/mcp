@@ -6,7 +6,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Security.KeyVault.Keys;
 using Xunit;
 
@@ -152,6 +151,28 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         // Verify that the certificate has some expected properties
         ValidateCertificate(result);
     }
+
+    [Fact]
+    public async Task Should_create_certificate()
+    {
+        var certificateName = Settings.ResourceBaseName + Random.Shared.NextInt64();
+        var result = await CallToolAsync(
+            "azmcp_keyvault_certificate_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "vault", Settings.ResourceBaseName },
+                { "certificate", certificateName}
+            });
+
+        var createdCertificateName = result.AssertProperty("name");
+        Assert.Equal(JsonValueKind.String, createdCertificateName.ValueKind);
+        Assert.Equal(certificateName, createdCertificateName.GetString());
+
+        // Verify that the certificate has some expected properties
+        ValidateCertificate(result);
+    }
+
 
     [Fact]
     public async Task Should_import_certificate()

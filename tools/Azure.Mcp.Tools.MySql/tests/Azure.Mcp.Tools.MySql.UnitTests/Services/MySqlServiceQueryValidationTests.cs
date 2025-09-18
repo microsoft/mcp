@@ -38,7 +38,7 @@ public class MySqlServiceQueryValidationTests
         var validateMethod = GetValidateQuerySafetyMethod();
 
         // Act & Assert - Should not throw any exception
-        validateMethod.Invoke(null, new object[] { query });
+        validateMethod.Invoke(null, [query]);
     }
 
     [Theory]
@@ -57,7 +57,7 @@ public class MySqlServiceQueryValidationTests
 
         // Act & Assert
         var exception = Assert.Throws<TargetInvocationException>(() =>
-            validateMethod.Invoke(null, new object[] { query }));
+            validateMethod.Invoke(null, [query]));
 
         Assert.IsType<InvalidOperationException>(exception.InnerException);
         Assert.True(
@@ -77,7 +77,7 @@ public class MySqlServiceQueryValidationTests
 
         // Act & Assert
         var exception = Assert.Throws<TargetInvocationException>(() =>
-            validateMethod.Invoke(null, new object[] { query }));
+            validateMethod.Invoke(null, [query]));
 
         Assert.IsType<InvalidOperationException>(exception.InnerException);
         Assert.Contains("Only SELECT statements are allowed", exception.InnerException!.Message);
@@ -93,7 +93,7 @@ public class MySqlServiceQueryValidationTests
 
         // Act & Assert
         var exception = Assert.Throws<TargetInvocationException>(() =>
-            validateMethod.Invoke(null, new object[] { query }));
+            validateMethod.Invoke(null, [query]));
 
         Assert.IsType<ArgumentException>(exception.InnerException);
         Assert.Contains("Query cannot be null or empty", exception.InnerException!.Message);
@@ -107,7 +107,7 @@ public class MySqlServiceQueryValidationTests
 
         // Act & Assert
         var exception = Assert.Throws<TargetInvocationException>(() =>
-            validateMethod.Invoke(null, new object[] { null! }));
+            validateMethod.Invoke(null, [null!]));
 
         Assert.IsType<ArgumentException>(exception.InnerException);
         Assert.Contains("Query cannot be null or empty", exception.InnerException!.Message);
@@ -122,7 +122,7 @@ public class MySqlServiceQueryValidationTests
 
         // Act & Assert
         var exception = Assert.Throws<TargetInvocationException>(() =>
-            validateMethod.Invoke(null, new object[] { longQuery }));
+            validateMethod.Invoke(null, [longQuery]));
 
         Assert.IsType<InvalidOperationException>(exception.InnerException);
         Assert.Contains("Query length exceeds the maximum allowed limit of 10,000 characters", exception.InnerException!.Message);
@@ -140,7 +140,7 @@ public class MySqlServiceQueryValidationTests
 
         // Act & Assert
         var exception = Assert.Throws<TargetInvocationException>(() =>
-            validateMethod.Invoke(null, new object[] { query }));
+            validateMethod.Invoke(null, [query]));
 
         Assert.IsType<InvalidOperationException>(exception.InnerException);
         Assert.Contains("Multiple SQL statements are not allowed. Use only a single SELECT statement.", exception.InnerException!.Message);
@@ -157,7 +157,7 @@ public class MySqlServiceQueryValidationTests
 
         // Act & Assert
         var exception = Assert.Throws<TargetInvocationException>(() =>
-            validateMethod.Invoke(null, new object[] { query }));
+            validateMethod.Invoke(null, [query]));
 
         Assert.IsType<InvalidOperationException>(exception.InnerException);
         Assert.True(

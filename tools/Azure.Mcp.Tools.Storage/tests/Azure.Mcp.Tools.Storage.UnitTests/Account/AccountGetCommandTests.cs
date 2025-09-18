@@ -3,6 +3,8 @@
 
 using System.CommandLine;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Commands.Account;
@@ -74,7 +76,7 @@ public class AccountGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoAccounts()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccounts()
     {
         // Arrange
         var subscription = "sub123";
@@ -84,7 +86,7 @@ public class AccountGetCommandTests
             Arg.Is(subscription),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromResult(new List<Models.AccountInfo>()));
+            .Returns([]);
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
@@ -93,7 +95,13 @@ public class AccountGetCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<AccountGetCommand.AccountGetCommandResult>(json);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Accounts);
     }
 
     [Fact]
@@ -138,14 +146,14 @@ public class AccountGetCommandTests
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Arrange
-        var originalSubscriptionEnv = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
+        var originalSubscriptionEnv = EnvironmentHelpers.GetAzureSubscriptionId();
 
         try
         {
             // Clear environment variable for failing test cases to ensure proper validation
             if (!shouldSucceed && !args.Contains("--subscription"))
             {
-                Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", null);
+                EnvironmentHelpers.SetAzureSubscriptionId(null);
             }
 
             if (shouldSucceed)
@@ -179,7 +187,7 @@ public class AccountGetCommandTests
         finally
         {
             // Restore original environment variable
-            Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", originalSubscriptionEnv);
+            EnvironmentHelpers.SetAzureSubscriptionId(originalSubscriptionEnv);
         }
     }
 

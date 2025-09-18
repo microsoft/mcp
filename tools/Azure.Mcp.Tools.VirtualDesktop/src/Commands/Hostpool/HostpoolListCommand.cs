@@ -66,9 +66,7 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger) : B
                     options.RetryPolicy);
             }
 
-            context.Response.Results = hostpools.Count > 0
-                ? ResponseResult.Create(new HostPoolListCommandResult([.. hostpools]), VirtualDesktopJsonContext.Default.HostPoolListCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new([.. hostpools ?? []]), VirtualDesktopJsonContext.Default.HostPoolListCommandResult);
         }
         catch (Exception ex)
         {
