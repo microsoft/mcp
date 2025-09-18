@@ -22,7 +22,7 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

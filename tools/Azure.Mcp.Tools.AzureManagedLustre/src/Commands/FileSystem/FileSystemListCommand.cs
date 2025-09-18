@@ -28,7 +28,7 @@ public sealed class FileSystemListCommand(ILogger<FileSystemListCommand> logger)
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

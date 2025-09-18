@@ -34,7 +34,7 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
     {
         Destructive = false,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false

@@ -34,7 +34,7 @@ public sealed class DatabaseDeleteCommand(ILogger<DatabaseDeleteCommand> logger)
     {
         Destructive = true,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
