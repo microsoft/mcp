@@ -20,6 +20,12 @@ public class CommandResponse
 
     [JsonPropertyName("duration")]
     public long Duration { get; set; }
+
+    // Number of top-level result items (length of the deserialized results collection if a collection is returned).
+    // Set explicitly by commands that know the concrete collection size.
+    [JsonPropertyName("resultsCount")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public int ResultsCount { get; set; }
 }
 
 [JsonConverter(typeof(ResultConverter))]

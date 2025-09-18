@@ -116,7 +116,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 2
     },
     {
       "name": "aks",
@@ -353,7 +354,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 4
     },
     {
       "name": "appconfig",
@@ -826,7 +828,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 7
     },
     {
       "name": "applens",
@@ -904,7 +907,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 1
     },
     {
       "name": "azuremanagedlustre",
@@ -1074,7 +1078,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 3
     },
     {
       "name": "azureterraformbestpractices",
@@ -1087,7 +1092,8 @@
           "command": "azmcp azureterraformbestpractices get",
           "option": []
         }
-      ]
+      ],
+      "subcommandsCount": 1
     },
     {
       "name": "bicepschema",
@@ -1142,7 +1148,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 1
     },
     {
       "name": "cloudarchitect",
@@ -1226,7 +1233,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 1
     },
     {
       "name": "cosmos",
@@ -1462,7 +1470,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 4
     },
     {
       "name": "datadog",
@@ -1528,7 +1537,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 1
     },
     {
       "name": "deploy",
@@ -1738,7 +1748,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 5
     },
     {
       "name": "eventgrid",
@@ -1859,7 +1870,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 2
     },
     {
       "name": "foundry",
@@ -2185,7 +2197,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 5
     },
     {
       "name": "functionapp",
@@ -2249,7 +2262,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 1
     },
     {
       "name": "get_bestpractices",
@@ -2275,7 +2289,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 1
     },
     {
       "name": "grafana",
@@ -2329,7 +2344,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 1
     },
     {
       "name": "group",
@@ -2383,7 +2399,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 1
     },
     {
       "name": "keyvault",
@@ -2872,7 +2889,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 8
     },
     {
       "name": "kusto",
@@ -3316,7 +3334,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 7
     },
     {
       "name": "loadtesting",
@@ -3879,7 +3898,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 8
     },
     {
       "name": "marketplace",
@@ -4061,7 +4081,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 2
     },
     {
       "name": "monitor",
@@ -4643,7 +4664,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 8
     },
     {
       "name": "mysql",
@@ -5212,7 +5234,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 8
     },
     {
       "name": "postgres",
@@ -5781,7 +5804,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 8
     },
     {
       "name": "quota",
@@ -5915,7 +5939,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 2
     },
     {
       "name": "redis",
@@ -6134,7 +6159,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 4
     },
     {
       "name": "resourcehealth",
@@ -6323,7 +6349,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 3
     },
     {
       "name": "role",
@@ -6383,7 +6410,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 1
     },
     {
       "name": "search",
@@ -6550,7 +6578,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 3
     },
     {
       "name": "servicebus",
@@ -6740,7 +6769,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 3
     },
     {
       "name": "sql",
@@ -7570,7 +7600,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 12
     },
     {
       "name": "storage",
@@ -8358,7 +8389,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 12
     },
     {
       "name": "subscription",
@@ -8407,7 +8439,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 1
     },
     {
       "name": "virtualdesktop",
@@ -8596,7 +8629,8 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 3
     },
     {
       "name": "workbooks",
@@ -8895,8 +8929,10 @@
             }
           ]
         }
-      ]
+      ],
+      "subcommandsCount": 5
     }
   ],
-  "duration": 95
+  "duration": 67,
+  "resultsCount": 35
 }

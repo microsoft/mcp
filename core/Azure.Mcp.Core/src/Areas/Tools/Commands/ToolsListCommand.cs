@@ -81,13 +81,15 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                             Description = first.Description,
                             Command = $"azmcp {first.Name}",
                             Subcommands = subcommandInfos,
-                            Options = null
+                            Options = null,
+                            SubcommandsCount = subcommandInfos.Count
                         };
                     })
                     .OrderBy(ci => ci.Name, StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
                 context.Response.Results = ResponseResult.Create(namespaceCommands, ModelsJsonContext.Default.ListCommandInfo);
+                context.Response.ResultsCount = namespaceCommands.Count;
                 return context.Response;
             }
 
@@ -96,6 +98,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                 .ToList());
 
             context.Response.Results = ResponseResult.Create(tools, ModelsJsonContext.Default.ListCommandInfo);
+            context.Response.ResultsCount = tools.Count;
             return context.Response;
         }
         catch (Exception ex)
@@ -124,6 +127,8 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             Description = commandDetails.Description ?? string.Empty,
             Command = tokenizedName.Replace(CommandFactory.Separator, ' '),
             Options = optionInfos,
+            // Leaf commands have no subcommands.
+            SubcommandsCount = 0,
         };
     }
 }

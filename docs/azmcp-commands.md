@@ -1248,10 +1248,25 @@ All responses follow a consistent JSON format:
   "status": "200|403|500, etc",
   "message": "",
   "options": [],
-  "results": [],
+    "results": [],
   "duration": 123
 }
 ```
+
+### Tool & Namespace Result Objects
+
+When invoking `azmcp tools list` (with or without `--namespaces`), each returned object now includes a `count` field:
+
+| Field | Description |
+|-------|-------------|
+| `name` | Command or namespace name |
+| `description` | Human-readable description |
+| `command` | Fully qualified CLI invocation path |
+| `subcommands` | (Namespaces only) Array of leaf command objects |
+| `option` | (Leaf commands only) Array of options supported by the command |
+| `count` | Namespaces: number of subcommands; Leaf commands: always 0 (options not counted) |
+
+This quantitative field enables quick sizing of a namespace without traversing nested arrays. Leaf command complexity should be inferred from its option list, not the `count` field.
 
 ## Error Handling
 
