@@ -17,6 +17,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Refactored AKS service implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[#424](https://github.com/microsoft/mcp/pull/424)]
+- Update the Foundry tool to use GenericResource for deploying models to Azure AI Services. [[#456](https://github.com/microsoft/mcp/pull/456)]
 
 #### Dependency Updates
 
