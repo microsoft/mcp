@@ -12,7 +12,7 @@ param(
     [string] $PackageType
 )
 
-$readMeText = Get-Content $InputReadMePath
+$readMeText = Get-Content $InputReadMePath | Select-Object -Skip 26 # Skip initial comment lines
 $processedReadMe = @()
 $appendLine = $true
 
@@ -55,13 +55,21 @@ foreach ($line in $readMeText) {
         continue
     }
 
-    if ($line -match "<!--\s*INSERTCHUNK\{\{([^}]+)\}\}\s*-->") {
-        $content = $matches[1]
-        $contentToDisplay = if ($PackageMap[$PackageType].ContainsKey($content)) { $PackageMap[$PackageType][$content] } else { $content }
-        $line = $line -replace [regex]::Escape($matches[0]), $contentToDisplay
+    if ($line -match "<!--\s*INSERTCHUNK-([^{}]+?)\s*\{\{([\s\S]*?)\}\}\s*-->") {
+        $pkgTypeInfo = $matches[1]
+        $content = $matches[2]
+        $pkgTypes = $pkgTypeInfo -split ';'
+        foreach ($pt in $pkgTypes) {
+            if ($pt -eq $PackageType) {
+                $contentToDisplay = if ($PackageMap[$PackageType].ContainsKey($content)) { $PackageMap[$PackageType][$content] } else { $content }
+                $line = $line -replace [regex]::Escape($matches[0]), $contentToDisplay
+                break
+            }
+        }
+        $line = $line -replace [regex]::Escape($matches[0]), ''
     }
 
-    $tempLine
+    $tempLine = ''
     $processRemoveChuck = $false
     if ($line -match "<!--\s*REMOVECHUNKSTART-([^>]+?)\s*-->") {
         $pkgTypeInfo = $matches[1]
