@@ -33,7 +33,7 @@ public sealed class DatabaseUpdateCommand(ILogger<DatabaseUpdateCommand> logger)
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = true,
         OpenWorld = true,
         ReadOnly = false,
