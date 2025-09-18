@@ -103,7 +103,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "An exception occurred processing listing tools.");
+            logger.LogError(ex, "An exception occurred while processing tool listing.");
             HandleException(context, ex);
 
             return context.Response;
