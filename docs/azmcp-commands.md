@@ -1248,7 +1248,7 @@ All responses follow a consistent JSON format:
   "status": "200|403|500, etc",
   "message": "",
   "options": [],
-    "results": [],
+  "results": [],
   "duration": 123
 }
 ```

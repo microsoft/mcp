@@ -75,7 +75,7 @@ public class ToolsListCommandTests
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-    Assert.Equal(result.Count, response.ResultsCount);
+        Assert.Equal(result.Count, response.ResultsCount);
 
         foreach (var command in result)
         {

@@ -53,39 +53,87 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             var namespacesOnly = parseResult.CommandResult.HasOptionResult(NamespacesOption);
             if (namespacesOnly)
             {
-                var ignored = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "extension", "server", "tools" };
+                // Exclude internal or special namespaces. 'extension' is flattened as top-level leaf commands.
+                var ignored = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "server", "tools" };
                 var rootGroup = factory.RootGroup; // azmcp
 
-                // Build a map of visible commands once to reuse for option resolution
-                var visible = CommandFactory.GetVisibleCommands(factory.AllCommands);
+                // Build lookup for namespace descriptions from the existing registered groups
+                var namespaceDescriptionMap = rootGroup.SubGroup.ToDictionary(commandGroup => commandGroup.Name, g => g.Description, StringComparer.OrdinalIgnoreCase);
 
-                var namespaceCommands = rootGroup.SubGroup
-                    .Where(g => !ignored.Contains(g.Name))
-                    .GroupBy(g => g.Name, StringComparer.OrdinalIgnoreCase)
-                    .Select(grp =>
+                // Single pass over all visible commands to bucket by namespace
+                var namespaceBuckets = new Dictionary<string, List<CommandInfo>>(StringComparer.OrdinalIgnoreCase);
+                var extensionLeafCommands = new List<CommandInfo>();
+
+                foreach (var kvp in CommandFactory.GetVisibleCommands(factory.AllCommands))
+                {
+                    var key = kvp.Key; // Tokenized e.g. azmcp_storage_account_get
+                    var firstSeparatorIndex = key.IndexOf(CommandFactory.Separator); // Expect at least root + namespace + verb
+
+                    if (firstSeparatorIndex < 0) continue; // Malformed, skip
+
+                    var secondSeparatorIndex = key.IndexOf(CommandFactory.Separator, firstSeparatorIndex + 1);
+
+                    if (secondSeparatorIndex < 0) continue; // Not enough tokens
+
+                    var namespaceToken = key.Substring(firstSeparatorIndex + 1, secondSeparatorIndex - firstSeparatorIndex - 1);
+
+                    if (ignored.Contains(namespaceToken))
                     {
-                        var first = grp.First();
+                        // Skip internal groups entirely
+                        continue;
+                    }
 
-                        // Collect all descendant command token keys for this namespace (prefix match "<ns>.")
-                        // Commands in the map are tokenized starting with root (e.g., azmcp_storage_account_get)
-                        var nsPrefix = string.Concat(rootGroup.Name, CommandFactory.Separator, first.Name, CommandFactory.Separator);
-                        var subcommandInfos = visible
-                            .Where(kvp => kvp.Key.StartsWith(nsPrefix, StringComparison.OrdinalIgnoreCase))
-                            .Select(kvp => CreateCommand(kvp.Key, kvp.Value))
+                    var cmdInfo = CreateCommand(key, kvp.Value);
+
+                    if (namespaceToken.Equals("extension", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Flatten: treat each extension command as top-level leaf
+                        extensionLeafCommands.Add(cmdInfo);
+
+                        continue;
+                    }
+
+                    if (!namespaceBuckets.TryGetValue(namespaceToken, out var list))
+                    {
+                        list = new List<CommandInfo>();
+                        namespaceBuckets[namespaceToken] = list;
+                    }
+
+                    list.Add(cmdInfo);
+                }
+
+                // Build namespace CommandInfo objects
+                var namespaceCommands = namespaceBuckets
+                    .Select(kvp =>
+                    {
+                        var namespaceName = kvp.Key;
+                        var subcommands = kvp.Value
                             .OrderBy(ci => ci.Command, StringComparer.OrdinalIgnoreCase)
                             .ToList();
-
+                        namespaceDescriptionMap.TryGetValue(namespaceName, out var desc);
                         return new CommandInfo
                         {
-                            Name = first.Name,
-                            Description = first.Description,
-                            Command = $"azmcp {first.Name}",
-                            Subcommands = subcommandInfos,
+                            Name = namespaceName,
+                            Description = desc ?? string.Empty,
+                            Command = $"azmcp {namespaceName}",
+                            Subcommands = subcommands,
                             Options = null,
-                            SubcommandsCount = subcommandInfos.Count
+                            SubcommandsCount = subcommands.Count
                         };
                     })
                     .OrderBy(ci => ci.Name, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                // Order extension leaf commands
+                extensionLeafCommands = extensionLeafCommands
+                    .OrderBy(ci => ci.Command, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                // Combine and sort: namespaces first, then extension leaves by Name
+                namespaceCommands.AddRange(extensionLeafCommands);
+                namespaceCommands = namespaceCommands
+                    .OrderByDescending(ci => ci.SubcommandsCount > 0)
+                    .ThenBy(ci => ci.Name, StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
                 context.Response.Results = ResponseResult.Create(namespaceCommands, ModelsJsonContext.Default.ListCommandInfo);
