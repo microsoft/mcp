@@ -44,7 +44,7 @@ public class PostgresCommandTests : CommandTestsBase
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceBaseName },
+                { "resource-group", Settings.ResourceBaseName },
                 { "user", "testuser" }
             });
 
@@ -70,7 +70,7 @@ public class PostgresCommandTests : CommandTestsBase
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceBaseName },
+                { "resource-group", Settings.ResourceBaseName },
                 { "server", serverName }
             });
 
@@ -95,7 +95,7 @@ public class PostgresCommandTests : CommandTestsBase
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceBaseName },
+                { "resource-group", Settings.ResourceBaseName },
                 { "server", serverName }
             });
 
@@ -120,7 +120,7 @@ public class PostgresCommandTests : CommandTestsBase
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceBaseName },
+                { "resource-group", Settings.ResourceBaseName },
                 { "server", serverName },
                 { "database", databaseName },
                 { "query", "SELECT version();" }
@@ -149,7 +149,7 @@ public class PostgresCommandTests : CommandTestsBase
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceBaseName },
+                { "resource-group", Settings.ResourceBaseName },
                 { "server", serverName },
                 { "database", databaseName },
                 { "query", "CREATE TABLE IF NOT EXISTS test_table (id SERIAL PRIMARY KEY, name VARCHAR(100));" }
@@ -161,7 +161,7 @@ public class PostgresCommandTests : CommandTestsBase
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceBaseName },
+                { "resource-group", Settings.ResourceBaseName },
                 { "server", serverName },
                 { "database", databaseName }
             });
@@ -188,7 +188,7 @@ public class PostgresCommandTests : CommandTestsBase
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceBaseName },
+                { "resource-group", Settings.ResourceBaseName },
                 { "server", serverName },
                 { "database", databaseName },
                 { "query", "CREATE TABLE IF NOT EXISTS test_table (id SERIAL PRIMARY KEY, name VARCHAR(100));" }
@@ -200,7 +200,7 @@ public class PostgresCommandTests : CommandTestsBase
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceBaseName },
+                { "resource-group", Settings.ResourceBaseName },
                 { "server", serverName },
                 { "database", databaseName },
                 { "table", tableName }
@@ -233,7 +233,7 @@ public class PostgresCommandTests : CommandTestsBase
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceBaseName },
+                { "resource-group", Settings.ResourceBaseName },
                 { "server", serverName },
                 { "database", databaseName },
                 { "query", "CREATE TABLE IF NOT EXISTS live_test_data (id SERIAL PRIMARY KEY, test_name VARCHAR(100), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);" }
@@ -246,7 +246,7 @@ public class PostgresCommandTests : CommandTestsBase
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceBaseName },
+                { "resource-group", Settings.ResourceBaseName },
                 { "server", serverName },
                 { "database", databaseName },
                 { "query", $"INSERT INTO live_test_data (test_name) VALUES ('test_{testId}');" }
@@ -258,7 +258,7 @@ public class PostgresCommandTests : CommandTestsBase
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceBaseName },
+                { "resource-group", Settings.ResourceBaseName },
                 { "server", serverName },
                 { "database", databaseName },
                 { "query", $"SELECT * FROM live_test_data WHERE test_name = 'test_{testId}';" }
@@ -279,7 +279,7 @@ public class PostgresCommandTests : CommandTestsBase
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resourceGroup", Settings.ResourceBaseName },
+                { "resource-group", Settings.ResourceBaseName },
                 { "server", serverName },
                 { "database", databaseName },
                 { "query", $"DELETE FROM live_test_data WHERE test_name = 'test_{testId}';" }
