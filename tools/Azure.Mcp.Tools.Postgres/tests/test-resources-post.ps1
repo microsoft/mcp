@@ -76,6 +76,72 @@ try {
             }
         } while ($currentServer.State -ne "Ready")
 
+        # Configure Entra ID administrator (moved from template to avoid early provisioning race)
+        Write-Host "Configuring Entra ID administrator (if needed)..." -ForegroundColor Yellow
+        $aadConfigured = $false
+        try {
+            # Try PowerShell cmdlet first (if available in current Az module version)
+            $getAdminCmd = Get-Command -Name Get-AzPostgreSqlFlexibleServerActiveDirectoryAdministrator -ErrorAction SilentlyContinue
+            $setAdminCmd = Get-Command -Name Set-AzPostgreSqlFlexibleServerActiveDirectoryAdministrator -ErrorAction SilentlyContinue
+            if ($getAdminCmd -and $setAdminCmd) {
+                $existingAdmin = Get-AzPostgreSqlFlexibleServerActiveDirectoryAdministrator -Name $postgresServerName -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue
+                if ($existingAdmin) {
+                    Write-Host "  Entra ID administrator already configured: $($existingAdmin.PrincipalName)" -ForegroundColor Gray
+                    $aadConfigured = $true
+                } else {
+                    $retries = 0; $maxRetries = 5
+                    while (-not $aadConfigured -and $retries -lt $maxRetries) {
+                        try {
+                            Write-Host "  Attempting to set AAD admin via Az module (try $($retries+1)/$maxRetries)..." -ForegroundColor Gray
+                            Set-AzPostgreSqlFlexibleServerActiveDirectoryAdministrator -Name $postgresServerName -ResourceGroupName $ResourceGroupName -PrincipalType ServicePrincipal -PrincipalName $TestApplicationId -TenantId $TenantId -ErrorAction Stop | Out-Null
+                            Write-Host "  Entra ID administrator configured (Az module)." -ForegroundColor Green
+                            $aadConfigured = $true
+                        } catch {
+                            $retries++
+                            if ($retries -ge $maxRetries) {
+                                Write-Warning "  Failed to configure AAD admin via Az module after $maxRetries attempts: $($_.Exception.Message)"
+                            } else {
+                                Start-Sleep -Seconds 15
+                            }
+                        }
+                    }
+                }
+            }
+        } catch { }
+
+        if (-not $aadConfigured) {
+            # Fallback to az CLI
+            $azExists = Get-Command az -ErrorAction SilentlyContinue
+            if (-not $azExists) {
+                Write-Warning "  az CLI not available; cannot configure Entra ID administrator. AAD auth may fail."
+            } else {
+                $retries = 0; $maxRetries = 5
+                while (-not $aadConfigured -and $retries -lt $maxRetries) {
+                    try {
+                        Write-Host "  Attempting to set AAD admin via az CLI (try $($retries+1)/$maxRetries)..." -ForegroundColor Gray
+                        az postgres flexible-server ad-admin create --resource-group $ResourceGroupName --server-name $postgresServerName --object-id $TestApplicationId --principal-name $TestApplicationId --principal-type ServicePrincipal --tenant $TenantId 1>$null 2>$null
+                        if ($LASTEXITCODE -eq 0) {
+                            Write-Host "  Entra ID administrator configured (az CLI)." -ForegroundColor Green
+                            $aadConfigured = $true
+                        } else {
+                            throw "az CLI returned exit code $LASTEXITCODE"
+                        }
+                    } catch {
+                        $retries++
+                        if ($retries -ge $maxRetries) {
+                            Write-Warning "  Failed to configure AAD admin via az CLI after $maxRetries attempts: $($_.Exception.Message)"
+                        } else {
+                            Start-Sleep -Seconds 15
+                        }
+                    }
+                }
+            }
+        }
+
+        if (-not $aadConfigured) {
+            Write-Warning "Proceeding without confirmed Entra ID administrator. Data seeding using AAD may fail."
+        }
+
         # Prepare test data (create sample table & rows if possible)
         Write-Host "Preparing PostgreSQL test data..." -ForegroundColor Yellow
 
@@ -92,8 +158,9 @@ try {
                 }
                 else {
                     $dbName = "testdb"
-                    $aadUser = $postgresServer.properties.administratorLogin
-                    if (-not $aadUser) { $aadUser = 'mcp_admin' }
+                    # Derive AAD user for token-based auth. For service principal connections to PostgreSQL Flexible Server,
+                    # the principal name is the object id / app id we configured as admin. Use TestApplicationId.
+                    $aadUser = $TestApplicationId
                     $fqdn = $postgresServer.FullyQualifiedDomainName
 
                     # Use access token as password (AAD auth). Token can be large; set env var for psql.
