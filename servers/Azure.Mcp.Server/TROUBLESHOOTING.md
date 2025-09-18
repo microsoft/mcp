@@ -4,47 +4,22 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
 
 ## Table of Contents
 
-- [Troubleshooting](#troubleshooting)
-  - [Table of Contents](#table-of-contents)
   - [Common Issues](#common-issues)
+    - [Platform Package Installation Issues](#platform-package-installation-issues)
     - [Console window is empty when running Azure MCP Server](#console-window-is-empty-when-running-azure-mcp-server)
     - [Can I select what tools to load in the MCP server?](#can-i-select-what-tools-to-load-in-the-mcp-server)
+  - [Development in VS Code](#development-in-vs-code)
+    - [Bring your own language model key](#bring-your-own-language-model-key)
+    - [Locating MCP Server Binaries in VS Code](#locating-mcp-server-binaries-in-vs-code)
   - [VS Code Limitations](#tool-limitations)
     - [128-Tool Limit Issue](#128-tool-limit-issue)
-      - [Problem](#problem)
-      - [Root Cause](#root-cause)
-      - [Workarounds](#workarounds)
       - [How to Check Your Tool Count](#how-to-check-your-tool-count)
     - [VS Code only shows a subset of tools available](#vs-code-only-shows-a-subset-of-tools-available)
     - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
     - [VS Code Cache Problems](#vs-code-cache-problems)
-  - [Authentication](#authentication)
-    - [401 Unauthorized: Local authorization is disabled](#401-unauthorized-local-authorization-is-disabled)
-      - [Root Cause](#root-cause-1)
-      - [Working with Resource Administrators](#working-with-resource-administrators)
-    - [403 Forbidden: Authorization Failure](#403-forbidden-authorization-failure)
-      - [Possible Causes and Resolutions](#possible-causes-and-resolutions)
-    - [Primary Access Token from Wrong Issuer](#primary-access-token-from-wrong-issuer)
-      - [Why This Happens](#why-this-happens)
-      - [Resolution](#resolution)
-    - [Network and Firewall Restrictions](#network-and-firewall-restrictions)
-      - [Common Network Issues](#common-network-issues)
-      - [Working with Network Administrators](#working-with-network-administrators)
-      - [Troubleshooting Network Connectivity](#troubleshooting-network-connectivity)
-      - [Questions to Ask Your Network Administrator](#questions-to-ask-your-network-administrator)
-    - [Enterprise Environment Scenarios](#enterprise-environment-scenarios)
-      - [Service Principal Authentication for Restricted Environments](#service-principal-authentication-for-restricted-environments)
-      - [Conditional Access Policy Compliance](#conditional-access-policy-compliance)
-      - [Resource Access in Locked-Down Environments](#resource-access-in-locked-down-environments)
-    - [AADSTS500200 error: User account is a personal Microsoft account](#aadsts500200-error-user-account-is-a-personal-microsoft-account)
-      - [Why This Happens](#why-this-happens-1)
-      - [Resolution Options](#resolution-options)
-      - [Next Steps](#next-steps)
-    - [Platform Package Installation Issues](#platform-package-installation-issues)
-      - [Error Examples:](#error-examples)
-      - [Resolution Steps:](#resolution-steps)
-      - [Common Causes of Auto-Installation Failure:](#common-causes-of-auto-installation-failure)
-      - [For Enterprise Users:](#for-enterprise-users)
+  - [Remote MCP Server](#remote-mcp-server)
+      - [SSE Transport](#sse-transport)
+      - [Streamable HTTP Transport](#streamable-http-transport)
   - [Logging and Diagnostics](#logging-and-diagnostics)
     - [Logging](#logging)
       - [Collecting logs with dotnet-trace](#collecting-logs-with-dotnet-trace)
@@ -52,10 +27,13 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
       - [Collecting logs with PerfView](#collecting-logs-with-perfview)
       - [Visualizing EventSource logs in PerfView](#visualizing-eventsource-logs-in-perfview)
     - [Observability with OpenTelemetry](#observability-with-opentelemetry)
-  - [Development Environment](#development-environment)
-    - [Development in VS Code](#development-in-vs-code)
-      - [Bring your own language model key](#bring-your-own-language-model-key)
-    - [Locating MCP Server Binaries in VS Code](#locating-mcp-server-binaries-in-vs-code)
+  - [Authentication](#authentication)
+    - [401 Unauthorized: Local authorization is disabled](#401-unauthorized-local-authorization-is-disabled)
+    - [403 Forbidden: Authorization Failure](#403-forbidden-authorization-failure)
+    - [Primary Access Token from Wrong Issuer](#primary-access-token-from-wrong-issuer)
+    - [Network and Firewall Restrictions](#network-and-firewall-restrictions)
+    - [Enterprise Environment Scenarios](#enterprise-environment-scenarios)
+    - [AADSTS500200 error: User account is a personal Microsoft account](#aadsts500200-error-user-account-is-a-personal-microsoft-account)
 
 ## Common Issues
 
@@ -661,6 +639,19 @@ If you're behind a corporate firewall, you may need to:
 - Configure npm proxy settings
 - Whitelist npm registry domains (`*.npmjs.org`, `registry.npmjs.org`)
 - Work with IT to ensure npm can download packages
+
+## Remote MCP Server
+
+### SSE Transport
+
+>[!WARNING]
+>**Deprecation Notice: SSE transport mode has been removed in version [0.4.0 (2025-07-15)](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/CHANGELOG.md#breaking-changes-11).**
+>
+> SSE was deprecated in MCP `2025-03-26` due to [security vulnerabilities and architectural limitations](https://blog.fka.dev/blog/2025-06-06-why-mcp-deprecated-sse-and-go-with-streamable-http/). Users must discontinue use of SSE transport mode and upgrade to version `0.4.0` or newer to maintain compatibility with current MCP clients.
+
+### Streamable HTTP Transport
+
+The Azure MCP Server supports local/STDIO transport mode.  Remote/StreamableHTTP transport mode support is currently being designed and implemented.  For more details, follow along here: [https://github.com/microsoft/mcp/issues?q=is%3Aissue%20label%3Aremote-mcp](https://github.com/microsoft/mcp/issues?q=is%3Aissue%20label%3Aremote-mcp).
 
 ## Logging and Diagnostics
 
