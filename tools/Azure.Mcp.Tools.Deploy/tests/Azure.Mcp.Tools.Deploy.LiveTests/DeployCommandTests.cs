@@ -41,14 +41,6 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     [Fact]
     public async Task Should_get_infrastructure_code_rules()
     {
-        // arrange
-        var parameters = new
-        {
-            deploymentTool = "azd",
-            iacType = "bicep",
-            resourceTypes = new[] { "appservice", "azurestorage" }
-        };
-
         // act
         var result = await CallToolMessageAsync(
             "azmcp_deploy_iac_rules_get",
@@ -59,7 +51,7 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                 { "resource-types", "appservice, azurestorage" }
             });
 
-        Assert.Contains("Deployment Tool azd rules", result ?? String.Empty, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Deployment Tool azd rules", result ?? string.Empty, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -76,7 +68,7 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             });
 
         // assert
-        Assert.Contains("IaC Type: terraform rules", result ?? String.Empty, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("IaC Type: terraform rules", result ?? string.Empty, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -111,7 +103,7 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             });
 
         // assert
-        Assert.StartsWith("Help the user to set up a CI/CD pipeline", result ?? String.Empty);
+        Assert.StartsWith("Help the user to set up a CI/CD pipeline", result ?? string.Empty);
     }
 
     // skip as this test need local files

@@ -64,9 +64,7 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
             var workbooksService = context.GetService<IWorkbooksService>();
             var workbook = await workbooksService.GetWorkbook(options.WorkbookId!, options.RetryPolicy, options.Tenant) ?? throw new InvalidOperationException("Failed to retrieve workbook");
 
-            context.Response.Results = ResponseResult.Create(
-                new ShowWorkbooksCommandResult(workbook),
-                WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
+            context.Response.Results = ResponseResult.Create(new(workbook), WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
         }
         catch (Exception ex)
         {

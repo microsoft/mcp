@@ -71,9 +71,8 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
                 options.Subscription!,
                 options.DatadogResource!);
             context.Response.Results = results?.Count > 0
-                ? ResponseResult.Create(new MonitoredResourcesListResult(results), DatadogJsonContext.Default.MonitoredResourcesListResult)
-                : ResponseResult.Create(new MonitoredResourcesListResult([
-                    "No monitored resources found for the specified Datadog resource."]), DatadogJsonContext.Default.MonitoredResourcesListResult);
+                ? ResponseResult.Create(new(results), DatadogJsonContext.Default.MonitoredResourcesListResult)
+                : ResponseResult.Create(new(["No monitored resources found for the specified Datadog resource."]), DatadogJsonContext.Default.MonitoredResourcesListResult);
         }
         catch (Exception ex)
         {

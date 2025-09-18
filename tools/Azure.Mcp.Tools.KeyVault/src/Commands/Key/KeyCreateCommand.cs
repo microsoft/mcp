@@ -74,7 +74,7 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : Subscri
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new KeyCreateCommandResult(
+                new(
                     key.Name,
                     key.KeyType.ToString(),
                     key.Properties.Enabled,

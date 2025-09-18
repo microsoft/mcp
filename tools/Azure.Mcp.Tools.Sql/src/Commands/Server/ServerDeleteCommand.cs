@@ -81,9 +81,7 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
 
             if (deleted)
             {
-                context.Response.Results = ResponseResult.Create(
-                    new ServerDeleteResult($"SQL server '{options.Server}' was successfully deleted.", true),
-                    SqlJsonContext.Default.ServerDeleteResult);
+                context.Response.Results = ResponseResult.Create(new($"SQL server '{options.Server}' was successfully deleted.", true), SqlJsonContext.Default.ServerDeleteResult);
             }
             else
             {

@@ -74,9 +74,7 @@ public sealed class BatchSetTierCommand(ILogger<BatchSetTierCommand> logger) : B
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new BatchSetTierCommandResult(result.SuccessfulBlobs, result.FailedBlobs),
-                StorageJsonContext.Default.BatchSetTierCommandResult);
+            context.Response.Results = ResponseResult.Create(new(result.SuccessfulBlobs, result.FailedBlobs), StorageJsonContext.Default.BatchSetTierCommandResult);
         }
         catch (Exception ex)
         {

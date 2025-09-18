@@ -99,9 +99,7 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
 
             // Set results
             context.Response.Results = result != null ?
-                ResponseResult.Create(
-                    new ProductGetCommandResult(result),
-                    MarketplaceJsonContext.Default.ProductGetCommandResult) :
+                ResponseResult.Create(new(result), MarketplaceJsonContext.Default.ProductGetCommandResult) :
                 null;
         }
         catch (Exception ex)

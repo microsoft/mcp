@@ -93,8 +93,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
                 options.ResourceType,
                 options.Tenant);
 
-            var commandResult = new ResourceDiagnoseCommandResult(result);
-            context.Response.Results = ResponseResult.Create(commandResult, AppLensJsonContext.Default.ResourceDiagnoseCommandResult);
+            context.Response.Results = ResponseResult.Create(new(result), AppLensJsonContext.Default.ResourceDiagnoseCommandResult);
         }
         catch (Exception ex)
         {

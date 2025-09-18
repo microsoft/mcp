@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.TestUtilities;
+using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Server;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,7 +48,7 @@ public class ServerListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ServerListResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.ServerListCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedServers, result.Servers);
     }
@@ -68,7 +68,7 @@ public class ServerListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ServerListResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.ServerListCommandResult);
         Assert.NotNull(result);
         Assert.Empty(result.Servers);
     }
@@ -111,11 +111,5 @@ public class ServerListCommandTests
         Assert.NotNull(response);
         Assert.Equal(400, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
-    }
-
-    private class ServerListResult
-    {
-        [JsonPropertyName("Servers")]
-        public List<string> Servers { get; set; } = [];
     }
 }

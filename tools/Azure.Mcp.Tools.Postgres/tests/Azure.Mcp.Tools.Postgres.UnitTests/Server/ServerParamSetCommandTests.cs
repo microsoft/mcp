@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.TestUtilities;
+using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Server;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,7 +48,7 @@ public class ServerParamSetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ServerParamSetResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.ServerParamSetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedMessage, result.Message);
@@ -111,17 +111,5 @@ public class ServerParamSetCommandTests
         await command.ExecuteAsync(context, args);
 
         await _postgresService.Received(1).SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200");
-    }
-
-    private class ServerParamSetResult
-    {
-        [JsonPropertyName("Message")]
-        public string Message { get; set; } = string.Empty;
-
-        [JsonPropertyName("Parameter")]
-        public string Parameter { get; set; } = string.Empty;
-
-        [JsonPropertyName("Value")]
-        public string Value { get; set; } = string.Empty;
     }
 }

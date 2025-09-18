@@ -1,12 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Tools.Sql.Commands;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Database;
@@ -96,9 +92,7 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
                 options.ReadScale,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new DatabaseCreateResult(database),
-                SqlJsonContext.Default.DatabaseCreateResult);
+            context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseCreateResult);
         }
         catch (Exception ex)
         {

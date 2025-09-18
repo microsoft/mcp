@@ -82,7 +82,7 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
                 options.RetryPolicy);
             // Set results if any were returned
             context.Response.Results = results != null ?
-                ResponseResult.Create(new TestRunUpdateCommandResult(results), LoadTestJsonContext.Default.TestRunUpdateCommandResult) :
+                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestRunUpdateCommandResult) :
                 null;
         }
         catch (Exception ex)

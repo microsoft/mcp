@@ -71,7 +71,7 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new SecretGetCommandResult(
+                new(
                     secret.Name,
                     secret.Value,
                     secret.Properties.Enabled,

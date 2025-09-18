@@ -95,9 +95,9 @@ public class HostpoolListCommandTests
     {
         // Arrange
         _virtualDesktopService.ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<HostPool>().AsReadOnly());
+            .Returns([]);
         _virtualDesktopService.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<HostPool>().AsReadOnly());
+            .Returns([]);
 
         var parseResult = _commandDefinition.Parse("--subscription test-sub");
 
@@ -206,7 +206,7 @@ public class HostpoolListCommandTests
     {
         // Arrange
         _virtualDesktopService.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<HostPool>().AsReadOnly());
+            .Returns([]);
 
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg");
 

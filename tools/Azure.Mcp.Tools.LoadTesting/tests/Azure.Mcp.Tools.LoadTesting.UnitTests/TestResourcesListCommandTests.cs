@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Services;
@@ -61,7 +62,7 @@ public class TestResourceListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TestResourceListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, LoadTestJsonContext.Default.TestResourceListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedLoadTests.Count, result.LoadTest.Count);
@@ -91,7 +92,7 @@ public class TestResourceListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TestResourceListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, LoadTestJsonContext.Default.TestResourceListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedLoadTests.Count, result.LoadTest.Count);
@@ -117,7 +118,7 @@ public class TestResourceListCommandTests
         Assert.NotNull(response);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TestResourceListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, LoadTestJsonContext.Default.TestResourceListCommandResult);
 
         Assert.Empty(result!.LoadTest);
     }
@@ -139,10 +140,5 @@ public class TestResourceListCommandTests
         Assert.Equal(500, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
-    }
-
-    private class TestResourceListCommandResult
-    {
-        public List<TestResource> LoadTest { get; set; } = [];
     }
 }

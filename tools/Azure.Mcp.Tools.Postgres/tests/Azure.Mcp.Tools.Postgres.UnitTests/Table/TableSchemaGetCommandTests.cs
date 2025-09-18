@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.TestUtilities;
+using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Table;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,13 +46,13 @@ public class TableSchemaGetCommandTests
         Assert.Equal(200, response.Status);
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<GetSchemaResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.TableSchemaGetCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedSchema, result.Schema);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenSchemaDoesNotExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenSchemaDoesNotExist()
     {
         _postgresService.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db123", "table123").Returns([]);
 
@@ -65,7 +65,11 @@ public class TableSchemaGetCommandTests
         Assert.NotNull(response);
         Assert.Equal(200, response.Status);
         Assert.Equal("Success", response.Message);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.TableSchemaGetCommandResult);
+        Assert.NotNull(result);
+        Assert.Empty(result.Schema);
     }
 
     [Theory]
@@ -93,11 +97,5 @@ public class TableSchemaGetCommandTests
         Assert.NotNull(response);
         Assert.Equal(400, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
-    }
-
-    private class GetSchemaResult
-    {
-        [JsonPropertyName("Schema")]
-        public List<string> Schema { get; set; } = new List<string>();
     }
 }

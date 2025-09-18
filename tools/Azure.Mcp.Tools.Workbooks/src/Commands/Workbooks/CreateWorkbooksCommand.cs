@@ -84,9 +84,7 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
                 options.RetryPolicy,
                 options.Tenant) ?? throw new InvalidOperationException("Failed to create workbook");
 
-            context.Response.Results = ResponseResult.Create(
-                new CreateWorkbooksCommandResult(createdWorkbook),
-                WorkbooksJsonContext.Default.CreateWorkbooksCommandResult);
+            context.Response.Results = ResponseResult.Create(new(createdWorkbook), WorkbooksJsonContext.Default.CreateWorkbooksCommandResult);
         }
         catch (Exception ex)
         {

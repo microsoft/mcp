@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.TestUtilities;
+using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Server;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,10 +48,10 @@ public class ServerParamGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<GetParamResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.ServerParamGetCommandResult);
 
         Assert.NotNull(result);
-        Assert.Equal(expectedValue, result.Param);
+        Assert.Equal(expectedValue, result.ParameterValue);
     }
 
     [Fact]
@@ -92,11 +92,5 @@ public class ServerParamGetCommandTests
         Assert.NotNull(response);
         Assert.Equal(400, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
-    }
-
-    private class GetParamResult
-    {
-        [JsonPropertyName("ParameterValue")]
-        public string Param { get; set; } = string.Empty;
     }
 }

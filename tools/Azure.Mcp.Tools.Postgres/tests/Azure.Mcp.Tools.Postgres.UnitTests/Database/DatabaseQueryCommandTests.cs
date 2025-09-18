@@ -3,9 +3,9 @@
 
 using System.Diagnostics;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.TestUtilities;
+using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Database;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,7 +53,7 @@ public class DatabaseQueryCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DatabaseQueryResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.DatabaseQueryCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedResults, result.QueryResult);
     }
@@ -75,7 +75,7 @@ public class DatabaseQueryCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DatabaseQueryResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.DatabaseQueryCommandResult);
         Assert.NotNull(result);
         Assert.Empty(result.QueryResult);
     }
@@ -106,12 +106,4 @@ public class DatabaseQueryCommandTests
         Assert.Equal(400, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
     }
-
-    private class DatabaseQueryResult
-    {
-        [JsonPropertyName("QueryResult")]
-        public List<string> QueryResult { get; set; } = [];
-
-    }
-
 }

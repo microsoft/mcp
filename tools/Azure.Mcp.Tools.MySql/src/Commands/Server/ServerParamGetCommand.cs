@@ -57,9 +57,7 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger)
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
             string paramValue = await mysqlService.GetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!);
             context.Response.Results = !string.IsNullOrEmpty(paramValue) ?
-                ResponseResult.Create(
-                    new ServerParamGetCommandResult(options.Param!, paramValue),
-                    MySqlJsonContext.Default.ServerParamGetCommandResult) :
+                ResponseResult.Create(new(options.Param!, paramValue), MySqlJsonContext.Default.ServerParamGetCommandResult) :
                 null;
         }
         catch (Exception ex)

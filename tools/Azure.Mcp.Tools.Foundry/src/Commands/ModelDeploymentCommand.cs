@@ -98,10 +98,7 @@ public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeployment
                 options.ScaleCapacity,
                 options.RetryPolicy);
 
-            context.Response.Results =
-                ResponseResult.Create(
-                    new ModelDeploymentCommandResult(deploymentResource),
-                    FoundryJsonContext.Default.ModelDeploymentCommandResult);
+            context.Response.Results = ResponseResult.Create(new(deploymentResource), FoundryJsonContext.Default.ModelDeploymentCommandResult);
         }
         catch (Exception ex)
         {

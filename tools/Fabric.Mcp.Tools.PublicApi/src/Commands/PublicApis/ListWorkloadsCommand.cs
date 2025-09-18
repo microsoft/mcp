@@ -47,7 +47,7 @@ public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) :
             var fabricService = context.GetService<IFabricPublicApiService>();
             var workloads = await fabricService.ListWorkloadsAsync();
 
-            context.Response.Results = ResponseResult.Create(new ItemListCommandResult(workloads), FabricJsonContext.Default.ItemListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(workloads), FabricJsonContext.Default.ItemListCommandResult);
         }
         catch (Exception ex)
         {
