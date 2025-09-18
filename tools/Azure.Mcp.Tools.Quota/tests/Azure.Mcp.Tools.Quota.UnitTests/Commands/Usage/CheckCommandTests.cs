@@ -139,7 +139,7 @@ public sealed class CheckCommandTests
                 Arg.Any<List<string>>(),
                 subscriptionId,
                 region)
-            .Returns(new Dictionary<string, List<UsageInfo>>());
+            .Returns([]);
 
         var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
@@ -241,7 +241,7 @@ public sealed class CheckCommandTests
     }
 
     [Fact]
-    public async Task Should_return_null_results_when_no_quotas_found()
+    public async Task Should_return_empty_results_when_no_quotas_found()
     {
         // Arrange
         var subscriptionId = "test-subscription-id";
@@ -252,7 +252,7 @@ public sealed class CheckCommandTests
                 Arg.Any<List<string>>(),
                 subscriptionId,
                 region)
-            .Returns(new Dictionary<string, List<UsageInfo>>());
+            .Returns([]);
 
         var args = _commandDefinition.Parse([
             "--subscription", subscriptionId,
@@ -268,7 +268,18 @@ public sealed class CheckCommandTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(200, result.Status);
-        Assert.Null(result.Results); // Should be null when no quotas are found
+        Assert.NotNull(result.Results); // Should be empty when no quotas are found
+
+        var json = JsonSerializer.Serialize(result.Results);
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        };
+
+        var response = JsonSerializer.Deserialize<CheckCommand.UsageCheckCommandResult>(json, options);
+        Assert.NotNull(response);
+        Assert.Empty(response.UsageInfo);
     }
 
     [Fact]

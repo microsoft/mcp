@@ -98,6 +98,6 @@ public class TableSchemaGetCommandTests
     private class TableSchemaGetResult
     {
         [JsonPropertyName("Schema")]
-        public List<string> Schema { get; set; } = new List<string>();
+        public List<string> Schema { get; set; } = [];
     }
 }

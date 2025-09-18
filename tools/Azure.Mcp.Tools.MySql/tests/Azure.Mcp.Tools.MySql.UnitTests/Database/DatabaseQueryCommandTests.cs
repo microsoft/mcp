@@ -98,6 +98,6 @@ public class DatabaseQueryCommandTests
     private class DatabaseQueryResult
     {
         [JsonPropertyName("Results")]
-        public List<string> Results { get; set; } = new List<string>();
+        public List<string> Results { get; set; } = [];
     }
 }

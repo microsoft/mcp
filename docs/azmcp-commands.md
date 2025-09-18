@@ -209,11 +209,12 @@ azmcp appconfig kv list --subscription <subscription> \
                         [--key <key>] \
                         [--label <label>]
 
-# Lock a key-value setting (make it read-only)
-azmcp appconfig kv lock --subscription <subscription> \
-                        --account <account> \
-                        --key <key> \
-                        [--label <label>]
+# Lock (make it read-only) or unlock (remove read-only) a key-value setting 
+azmcp appconfig kv lock set --subscription <subscription> \
+                            --account <account> \
+                            --key <key> \
+                            [--label <label>] \
+                            [--lock]
 
 # Set a key-value setting
 azmcp appconfig kv set --subscription <subscription> \
@@ -227,12 +228,6 @@ azmcp appconfig kv show --subscription <subscription> \
                         --account <account> \
                         --key <key> \
                         [--label <label>]
-
-# Unlock a key-value setting (make it editable)
-azmcp appconfig kv unlock --subscription <subscription> \
-                          --account <account> \
-                          --key <key> \
-                          [--label <label>]
 ```
 
 ### Azure App Lens Operations
@@ -501,6 +496,13 @@ azmcp deploy plan get --workspace-folder <workspace-folder> \
 # List all Event Grid topics in a subscription or resource group
 azmcp eventgrid topic list --subscription <subscription> \
                            [--resource-group <resource-group>]
+
+
+# List all Event Grid subscriptions in a subscription, resource group, or topic
+azmcp eventgrid subscription list --subscription <subscription> \
+                                  [--resource-group <resource-group>] \
+                                  [--topic <topic>]
+                                  [--location <location>]
 ```
 
 ### Azure Function App Operations
@@ -976,6 +978,40 @@ azmcp sql server create --subscription <subscription> \
 azmcp sql server entra-admin list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
+
+# Create a SQL database (supports optional performance and configuration parameters)
+azmcp sql db create --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name> \
+                    [--sku-name <sku-name>] \
+                    [--sku-tier <sku-tier>] \
+                    [--sku-capacity <capacity>] \
+                    [--collation <collation>] \
+                    [--max-size-bytes <bytes>] \
+                    [--elastic-pool-name <elastic-pool-name>] \
+                    [--zone-redundant <true/false>] \
+                    [--read-scale <Enabled|Disabled>]
+
+# Update an existing SQL database (applies only the provided configuration changes)
+azmcp sql db update --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name> \
+                    [--sku-name <sku-name>] \
+                    [--sku-tier <sku-tier>] \
+                    [--sku-capacity <capacity>] \
+                    [--collation <collation>] \
+                    [--max-size-bytes <bytes>] \
+                    [--elastic-pool-name <elastic-pool-name>] \
+                    [--zone-redundant <true/false>] \
+                    [--read-scale <Enabled|Disabled>]
+
+# Delete a SQL database (idempotent – succeeds even if the database does not exist)
+azmcp sql db delete --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name>
 
 # Create a firewall rule for a SQL server
 azmcp sql server firewall-rule create --subscription <subscription> \

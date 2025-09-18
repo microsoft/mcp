@@ -6,13 +6,19 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Enhanced AKS nodepool information with comprehensive properties. [[#454](https://github.com/microsoft/mcp/issues/454)]
+- Added support for updating Azure SQL databases via the command `azmcp_sql_db_update`. [#488](https://github.com/microsoft/mcp/issues/488)
+
 ### Breaking Changes
 
 - Redesigned how conditionally required options are handled. Commands now use explicit option registration via extension methods (`.AsRequired()`, `.AsOptional()`) instead of legacy patterns (`UseResourceGroup()`, `RequireResourceGroup()`). [[#452](https://github.com/microsoft/mcp/pull/452)]
+- Merged `azmcp_appconfig_kv_lock` and `azmcp_appconfig_kv_unlock` into `azmcp_appconfig_kv_lock_set` which can handle locking or unlocking a key-value based on the `--lock` parameter.
 
 ### Bugs Fixed
 
 ### Other Changes
+
+- Update the Foundry tool to use GenericResource for deploying models to Azure AI Services. [[#456](https://github.com/microsoft/mcp/pull/456)]
 
 ## 0.7.0 (2025-09-16)
 
@@ -23,6 +29,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added elicitation support. An elicitation request is sent if the tool annotation `secret` hint is true. [[#404](https://github.com/microsoft/mcp/pull/404)]
 - Added `azmcp_sql_server_create`, `azmcp_sql_server_delete`, `azmcp_sql_server_show` to support SQL server create, delete, and show commands. [[#312](https://github.com/microsoft/mcp/pull/312)]
 - Added the support for getting information about Azure Managed Lustre SKUs via the following command `azmcp_azuremanagedlustre_filesystem_get_sku_info`. [[#100](https://github.com/microsoft/mcp/issues/100)]
+- Added support for creating and deleting SQL databases via the commands `azmcp_sql_db_create` and `azmcp_sql_db_delete`. [[#434](https://github.com/microsoft/mcp/pull/434)]
 - `azmcp_functionapp_get` can now list Function Apps on a resource group level. [[#427](https://github.com/microsoft/mcp/pull/427)]
 
 ### Breaking Changes

@@ -43,4 +43,35 @@ public class EventGridCommandTests(ITestOutputHelper output)
         Assert.Equal(JsonValueKind.Array, topics.ValueKind);
         // Note: topics array might be empty if no Event Grid topics exist in the resource group
     }
+
+    [Fact]
+    public async Task Should_list_eventgrid_subscriptions_by_subscription()
+    {
+        var result = await CallToolAsync(
+            "azmcp_eventgrid_subscription_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId }
+            });
+
+        var subscriptions = result.AssertProperty("subscriptions");
+        Assert.Equal(JsonValueKind.Array, subscriptions.ValueKind);
+        // Note: subscriptions array might be empty if no Event Grid subscriptions exist in the subscription
+    }
+
+    [Fact]
+    public async Task Should_list_eventgrid_subscriptions_by_subscription_and_resource_group()
+    {
+        var result = await CallToolAsync(
+            "azmcp_eventgrid_subscription_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName }
+            });
+
+        var subscriptions = result.AssertProperty("subscriptions");
+        Assert.Equal(JsonValueKind.Array, subscriptions.ValueKind);
+        // Note: subscriptions array might be empty if no Event Grid subscriptions exist in the resource group
+    }
 }

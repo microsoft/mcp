@@ -172,7 +172,9 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
                 { "resource-group", "non-existent-resource-group-12345" }
             });
 
-        Assert.False(result.Value.TryGetProperty("hostpools", out var property), $"Property 'hostpools' not found.");
+        var hostpools = result.AssertProperty("hostpools");
+        Assert.Equal(JsonValueKind.Array, hostpools.ValueKind);
+        Assert.Equal(0, hostpools.GetArrayLength());
     }
 
     [Fact]

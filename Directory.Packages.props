@@ -63,14 +63,12 @@
     <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="9.8.0" />
     <PackageVersion Include="Microsoft.Extensions.AI.Evaluation" Version="9.8.0" />
     <PackageVersion Include="Microsoft.Extensions.AI.Evaluation.Quality" Version="9.8.0" />
-    <PackageVersion Include="Microsoft.Extensions.AI.Evaluation.Safety" Version="9.8.0-preview.1.25412.6" />
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="9.8.0-preview.1.25412.6" />
     <PackageVersion Include="ModelContextProtocol" Version="0.3.0-preview.4" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.4" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.6" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="9.0.6" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables"
-      Version="9.0.6" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.6" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="9.0.6" />
     <PackageVersion Include="Microsoft.HybridRow" Version="1.1.0-preview3" />
     <PackageVersion Include="Microsoft.Azure.Cosmos.Aot" Version="0.1.2-preview.2" />

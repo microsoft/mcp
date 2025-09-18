@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using static Azure.Mcp.Tools.AppConfig.Commands.KeyValue.KeyValueDeleteCommand;
 
 namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue;
 
@@ -63,10 +63,7 @@ public class KeyValueDeleteCommandTests
             null);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<KeyValueDeleteCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
@@ -96,10 +93,7 @@ public class KeyValueDeleteCommandTests
             "prod");
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<KeyValueDeleteCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);

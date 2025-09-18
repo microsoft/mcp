@@ -3,9 +3,9 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Foundry.Models;
-using Azure.ResourceManager.CognitiveServices.Models;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.AI.Evaluation;
+using Azure.Mcp.Tools.Foundry.Services.Models;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
@@ -25,7 +25,7 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 [JsonSerializable(typeof(ModelDeploymentResult))]
 [JsonSerializable(typeof(KnowledgeIndexInformation))]
 [JsonSerializable(typeof(KnowledgeIndexSchema))]
-[JsonSerializable(typeof(CognitiveServicesAccountSku))]
+[JsonSerializable(typeof(CognitiveServicesSku))]
 [JsonSerializable(typeof(CognitiveServicesAccountDeploymentProperties))]
 [JsonSerializable(typeof(AgentsQueryAndEvaluateCommand.AgentsQueryAndEvaluateCommandResult))]
 [JsonSerializable(typeof(List<ChatMessage>))]
@@ -34,5 +34,6 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 [JsonSerializable(typeof(AgentsConnectResult))]
 [JsonSerializable(typeof(AgentsQueryAndEvaluateResult))]
 [JsonSerializable(typeof(AgentsEvaluateResult))]
+[JsonSerializable(typeof(CognitiveServicesAccountDeploymentData))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
 internal sealed partial class FoundryJsonContext : JsonSerializerContext;

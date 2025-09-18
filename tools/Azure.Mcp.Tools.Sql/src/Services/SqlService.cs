@@ -66,6 +66,230 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     }
 
     /// <summary>
+    /// Creates a new SQL database in an Azure SQL Server.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server to create the database in</param>
+    /// <param name="databaseName">The name of the database to create</param>
+    /// <param name="resourceGroup">The name of the resource group containing the server</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="skuName">Optional SKU name for the database</param>
+    /// <param name="skuTier">Optional SKU tier for the database</param>
+    /// <param name="skuCapacity">Optional SKU capacity for the database</param>
+    /// <param name="collation">Optional collation for the database</param>
+    /// <param name="maxSizeBytes">Optional maximum size in bytes for the database</param>
+    /// <param name="elasticPoolName">Optional elastic pool name to assign the database to</param>
+    /// <param name="zoneRedundant">Optional zone redundancy setting</param>
+    /// <param name="readScale">Optional read scale setting</param>
+    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>The created SQL database information</returns>
+    /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
+    public async Task<SqlDatabase> CreateDatabaseAsync(
+        string serverName,
+        string databaseName,
+        string resourceGroup,
+        string subscription,
+        string? skuName = null,
+        string? skuTier = null,
+        int? skuCapacity = null,
+        string? collation = null,
+        long? maxSizeBytes = null,
+        string? elasticPoolName = null,
+        bool? zoneRedundant = null,
+        string? readScale = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(serverName, resourceGroup, subscription, databaseName);
+
+        try
+        {
+            // Use ARM client directly for create operations
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
+
+            var databaseData = new ResourceManager.Sql.SqlDatabaseData(sqlServerResource.Value.Data.Location);
+
+            // Configure SKU if provided
+            if (!string.IsNullOrEmpty(skuName) || !string.IsNullOrEmpty(skuTier) || skuCapacity.HasValue)
+            {
+                databaseData.Sku = new ResourceManager.Sql.Models.SqlSku(skuName ?? "Basic")
+                {
+                    Tier = skuTier,
+                    Capacity = skuCapacity
+                };
+            }
+
+            // Configure collation if provided
+            if (!string.IsNullOrEmpty(collation))
+            {
+                databaseData.Collation = collation;
+            }
+
+            // Configure max size if provided
+            if (maxSizeBytes.HasValue)
+            {
+                databaseData.MaxSizeBytes = maxSizeBytes.Value;
+            }
+
+            // Configure elastic pool if provided
+            if (!string.IsNullOrEmpty(elasticPoolName))
+            {
+                databaseData.ElasticPoolId = Azure.Core.ResourceIdentifier.Parse(
+                    $"{sqlServerResource.Value.Id}/elasticPools/{elasticPoolName}");
+            }
+
+            // Configure zone redundancy if provided
+            if (zoneRedundant.HasValue)
+            {
+                databaseData.IsZoneRedundant = zoneRedundant.Value;
+            }
+
+            // Configure read scale if provided
+            if (!string.IsNullOrEmpty(readScale))
+            {
+                if (Enum.TryParse<ResourceManager.Sql.Models.DatabaseReadScale>(readScale, true, out var readScaleEnum))
+                {
+                    databaseData.ReadScale = readScaleEnum;
+                }
+            }
+
+            var operation = await sqlServerResource.Value.GetSqlDatabases().CreateOrUpdateAsync(
+                Azure.WaitUntil.Completed,
+                databaseName,
+                databaseData,
+                cancellationToken);
+
+            var database = operation.Value;
+
+            _logger.LogInformation(
+                "Successfully created SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",
+                serverName, databaseName, resourceGroup);
+
+            return ConvertToSqlDatabaseModel(database);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error creating SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                serverName, databaseName, resourceGroup, subscription);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Updates configuration settings for an existing SQL database in an Azure SQL Server.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server containing the database</param>
+    /// <param name="databaseName">The name of the database to update</param>
+    /// <param name="resourceGroup">The name of the resource group containing the server</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="skuName">Optional SKU name for the database</param>
+    /// <param name="skuTier">Optional SKU tier for the database</param>
+    /// <param name="skuCapacity">Optional SKU capacity for the database</param>
+    /// <param name="collation">Optional collation for the database</param>
+    /// <param name="maxSizeBytes">Optional maximum size in bytes for the database</param>
+    /// <param name="elasticPoolName">Optional elastic pool name to assign the database to</param>
+    /// <param name="zoneRedundant">Optional zone redundancy setting</param>
+    /// <param name="readScale">Optional read scale setting</param>
+    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>The updated SQL database information</returns>
+    /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
+    public async Task<SqlDatabase> UpdateDatabaseAsync(
+        string serverName,
+        string databaseName,
+        string resourceGroup,
+        string subscription,
+        string? skuName = null,
+        string? skuTier = null,
+        int? skuCapacity = null,
+        string? collation = null,
+        long? maxSizeBytes = null,
+        string? elasticPoolName = null,
+        bool? zoneRedundant = null,
+        string? readScale = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(serverName, resourceGroup, subscription, databaseName);
+
+        try
+        {
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
+
+            var databaseResource = await sqlServerResource.Value.GetSqlDatabases().GetAsync(databaseName);
+            var databaseData = databaseResource.Value.Data;
+
+            if (!string.IsNullOrEmpty(skuName) || !string.IsNullOrEmpty(skuTier) || skuCapacity.HasValue)
+            {
+                var sku = new ResourceManager.Sql.Models.SqlSku(skuName ?? databaseData.Sku?.Name ?? "Basic")
+                {
+                    Tier = skuTier ?? databaseData.Sku?.Tier,
+                    Capacity = skuCapacity ?? databaseData.Sku?.Capacity,
+                    Family = databaseData.Sku?.Family,
+                    Size = databaseData.Sku?.Size
+                };
+
+                databaseData.Sku = sku;
+            }
+
+            if (!string.IsNullOrEmpty(collation))
+            {
+                databaseData.Collation = collation;
+            }
+
+            if (maxSizeBytes.HasValue)
+            {
+                databaseData.MaxSizeBytes = maxSizeBytes.Value;
+            }
+
+            if (!string.IsNullOrEmpty(elasticPoolName))
+            {
+                databaseData.ElasticPoolId = Azure.Core.ResourceIdentifier.Parse(
+                    $"{sqlServerResource.Value.Id}/elasticPools/{elasticPoolName}");
+            }
+
+            if (zoneRedundant.HasValue)
+            {
+                databaseData.IsZoneRedundant = zoneRedundant.Value;
+            }
+
+            if (!string.IsNullOrEmpty(readScale) &&
+                Enum.TryParse<ResourceManager.Sql.Models.DatabaseReadScale>(readScale, true, out var readScaleEnum))
+            {
+                databaseData.ReadScale = readScaleEnum;
+            }
+
+            var operation = await sqlServerResource.Value.GetSqlDatabases().CreateOrUpdateAsync(
+                Azure.WaitUntil.Completed,
+                databaseName,
+                databaseData,
+                cancellationToken);
+
+            var updatedDatabase = operation.Value;
+
+            _logger.LogInformation(
+                "Successfully updated SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",
+                serverName, databaseName, resourceGroup);
+
+            return ConvertToSqlDatabaseModel(updatedDatabase);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error updating SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                serverName, databaseName, resourceGroup, subscription);
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Retrieves a list of all SQL databases from an Azure SQL Server.
     /// </summary>
     /// <param name="serverName">The name of the SQL server to list databases from</param>
@@ -514,6 +738,92 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 serverName, resourceGroup, subscription);
             throw;
         }
+    }
+
+    /// <summary>
+    /// Deletes a SQL database from an Azure SQL Server.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server</param>
+    /// <param name="databaseName">The name of the database to delete</param>
+    /// <param name="resourceGroup">The name of the resource group containing the server</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>True if the database was successfully deleted</returns>
+    /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
+    public async Task<bool> DeleteDatabaseAsync(
+        string serverName,
+        string databaseName,
+        string resourceGroup,
+        string subscription,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(serverName, databaseName, resourceGroup, subscription);
+
+        try
+        {
+            // Use ARM client directly for delete operations
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
+
+            var databaseResource = await sqlServerResource.Value.GetSqlDatabases().GetAsync(databaseName);
+
+            await databaseResource.Value.DeleteAsync(Azure.WaitUntil.Completed, cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully deleted SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",
+                serverName, databaseName, resourceGroup);
+
+            return true;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            _logger.LogWarning(
+                "Database not found during delete operation. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",
+                serverName, databaseName, resourceGroup);
+
+            // Return false to indicate the database was not found (idempotent delete)
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error deleting SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                serverName, databaseName, resourceGroup, subscription);
+            throw;
+        }
+    }
+
+    private static SqlDatabase ConvertToSqlDatabaseModel(SqlDatabaseResource databaseResource)
+    {
+        var data = databaseResource.Data;
+
+        return new SqlDatabase(
+            Name: data.Name,
+            Id: data.Id.ToString(),
+            Type: data.ResourceType.ToString(),
+            Location: data.Location.ToString(),
+            Sku: data.Sku != null ? new DatabaseSku(
+                Name: data.Sku.Name,
+                Tier: data.Sku.Tier,
+                Capacity: data.Sku.Capacity,
+                Family: data.Sku.Family,
+                Size: data.Sku.Size
+            ) : null,
+            Status: data.Status?.ToString(),
+            Collation: data.Collation,
+            CreationDate: data.CreatedOn,
+            MaxSizeBytes: data.MaxSizeBytes,
+            ServiceLevelObjective: data.CurrentServiceObjectiveName,
+            Edition: data.CurrentSku?.Name,
+            ElasticPoolName: data.ElasticPoolId?.ToString().Split('/').LastOrDefault(),
+            EarliestRestoreDate: data.EarliestRestoreOn,
+            ReadScale: data.ReadScale?.ToString(),
+            ZoneRedundant: data.IsZoneRedundant
+        );
     }
 
     private static SqlDatabase ConvertToSqlDatabaseModel(JsonElement item)

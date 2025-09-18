@@ -74,11 +74,7 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = deployments?.Count > 0 ?
-                ResponseResult.Create(
-                    new DeploymentsListCommandResult(deployments),
-                    FoundryJsonContext.Default.DeploymentsListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(deployments ?? []), FoundryJsonContext.Default.DeploymentsListCommandResult);
         }
         catch (Exception ex)
         {

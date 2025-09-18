@@ -76,12 +76,7 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger) : Bas
                 options.ContentType,
                 options.Tags);
             context.Response.Results = ResponseResult.Create(
-                new KeyValueSetCommandResult(
-                    options.Key,
-                    options.Value,
-                    options.Label,
-                    options.ContentType,
-                    options.Tags),
+                new(options.Key, options.Value, options.Label, options.ContentType, options.Tags),
                 AppConfigJsonContext.Default.KeyValueSetCommandResult
             );
         }

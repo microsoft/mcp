@@ -3,9 +3,9 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Key;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -70,14 +70,14 @@ public class KeyListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<KeyListResult>(json);
+        var result = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.KeyListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedKeys, result.Keys);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoKeys()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoKeys()
     {
         // Arrange
         _keyVaultService.ListKeys(
@@ -98,7 +98,13 @@ public class KeyListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.KeyListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Keys);
     }
 
     [Fact]
@@ -127,11 +133,5 @@ public class KeyListCommandTests
         Assert.NotNull(response);
         Assert.Equal(500, response.Status);
         Assert.StartsWith(expectedError, response.Message);
-    }
-
-    private class KeyListResult
-    {
-        [JsonPropertyName("keys")]
-        public List<string> Keys { get; set; } = [];
     }
 }
