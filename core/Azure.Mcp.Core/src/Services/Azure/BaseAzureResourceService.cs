@@ -126,6 +126,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="additionalFilter">Optional additional KQL filter conditions</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Single resource converted to the specified type, or null if not found</returns>
+    [ResourceGraphOnly("Use ArmClient and SDK methods for direct resource operations")]
     protected async Task<T?> ExecuteSingleResourceQueryAsync<T>(
         string resourceType,
         string resourceGroup,
