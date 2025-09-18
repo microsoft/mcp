@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
@@ -70,7 +71,7 @@ public class ServerCreateCommandTests
                 Version: "12.0",
                 State: "Ready",
                 PublicNetworkAccess: "Enabled",
-                Tags: new Dictionary<string, string>()
+                Tags: []
             );
 
             _service.CreateServerAsync(
@@ -82,7 +83,7 @@ public class ServerCreateCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<Core.Options.RetryPolicyOptions?>(),
+                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(expectedServer);
         }
@@ -119,7 +120,7 @@ public class ServerCreateCommandTests
             Version: "12.0",
             State: "Ready",
             PublicNetworkAccess: "Enabled",
-            Tags: new Dictionary<string, string>()
+            Tags: []
         );
 
         _service.CreateServerAsync(
@@ -131,7 +132,7 @@ public class ServerCreateCommandTests
             "Password123!",
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedServer);
 
@@ -155,7 +156,7 @@ public class ServerCreateCommandTests
             "Password123!",
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -173,7 +174,7 @@ public class ServerCreateCommandTests
             Version: "12.0",
             State: "Ready",
             PublicNetworkAccess: "Disabled",
-            Tags: new Dictionary<string, string>()
+            Tags: []
         );
 
         _service.CreateServerAsync(
@@ -185,7 +186,7 @@ public class ServerCreateCommandTests
             "Password123!",
             "12.0",
             "Disabled",
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedServer);
 
@@ -208,7 +209,7 @@ public class ServerCreateCommandTests
             "Password123!",
             "12.0",
             "Disabled",
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -225,7 +226,7 @@ public class ServerCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServer>(new Exception("Test error")));
 
@@ -255,7 +256,7 @@ public class ServerCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServer>(requestException));
 

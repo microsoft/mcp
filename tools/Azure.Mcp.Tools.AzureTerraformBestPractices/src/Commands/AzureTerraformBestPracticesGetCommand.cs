@@ -46,7 +46,7 @@ public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraform
     {
         var bestPractices = GetBestPracticesText();
         context.Response.Status = 200;
-        context.Response.Results = ResponseResult.Create(new List<string> { bestPractices }, AzureTerraformBestPracticesJsonContext.Default.ListString);
+        context.Response.Results = ResponseResult.Create([bestPractices], AzureTerraformBestPracticesJsonContext.Default.ListString);
         context.Response.Message = string.Empty;
         return Task.FromResult(context.Response);
     }

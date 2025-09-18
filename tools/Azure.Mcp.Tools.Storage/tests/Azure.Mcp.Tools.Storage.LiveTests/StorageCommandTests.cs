@@ -553,7 +553,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             message.AssertProperty("expirationTime");
             message.AssertProperty("popReceipt");
             message.AssertProperty("nextVisibleTime");
-            Assert.True(message.TryGetProperty("message", out var messageElement));
+            var messageElement = message.AssertProperty("message");
             Assert.Equal("Test message from integration test", messageElement.GetString());
         }
 
@@ -576,7 +576,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             // Assert
             var message = result.AssertProperty("message");
             Assert.Equal(JsonValueKind.Object, message.ValueKind);
-            Assert.True(message.TryGetProperty("message", out var messageElement));
+            var messageElement = message.AssertProperty("message");
             Assert.Equal("Test message with TTL", messageElement.GetString());
         }
 

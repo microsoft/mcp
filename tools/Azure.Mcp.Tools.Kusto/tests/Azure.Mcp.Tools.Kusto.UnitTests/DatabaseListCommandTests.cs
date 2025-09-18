@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -67,7 +66,7 @@ public sealed class DatabaseListCommandTests
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DatabaseListResult>(json);
+        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.DatabaseListCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedDatabases, result.Databases);
     }
@@ -102,7 +101,7 @@ public sealed class DatabaseListCommandTests
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DatabaseListResult>(json);
+        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.DatabaseListCommandResult);
         Assert.NotNull(result);
         Assert.Empty(result.Databases!);
     }
@@ -168,11 +167,5 @@ public sealed class DatabaseListCommandTests
         Assert.NotNull(response);
         Assert.Equal(400, response.Status);
         Assert.Contains("Either --cluster-uri must be provided", response.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private sealed class DatabaseListResult
-    {
-        [JsonPropertyName("databases")]
-        public List<string>? Databases { get; set; }
     }
 }

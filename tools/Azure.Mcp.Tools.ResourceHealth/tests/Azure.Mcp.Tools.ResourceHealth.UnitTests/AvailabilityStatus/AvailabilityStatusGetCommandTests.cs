@@ -59,11 +59,7 @@ public class AvailabilityStatusGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AvailabilityStatusGetResult>(json, new JsonSerializerOptions()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(resourceId, result.Status.ResourceId);
@@ -121,6 +117,4 @@ public class AvailabilityStatusGetCommandTests
         Assert.Equal(400, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
     }
-
-    private record AvailabilityStatusGetResult(AvailabilityStatusModel Status);
 }

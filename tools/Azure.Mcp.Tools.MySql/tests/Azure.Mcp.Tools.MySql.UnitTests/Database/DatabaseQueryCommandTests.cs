@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Database;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,7 +55,7 @@ public class DatabaseQueryCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DatabaseQueryResult>(json);
+        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.DatabaseQueryCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedResults, result.Results);
     }
@@ -93,11 +93,5 @@ public class DatabaseQueryCommandTests
         Assert.Equal("Query MySQL Database", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
-    }
-
-    private class DatabaseQueryResult
-    {
-        [JsonPropertyName("Results")]
-        public List<string> Results { get; set; } = [];
     }
 }

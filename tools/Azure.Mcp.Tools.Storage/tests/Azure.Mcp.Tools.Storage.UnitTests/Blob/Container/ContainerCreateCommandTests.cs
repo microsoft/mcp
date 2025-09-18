@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -103,7 +104,7 @@ public class ContainerCreateCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ContainerCreateCommand.ContainerCreateCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.ContainerCreateCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Container);

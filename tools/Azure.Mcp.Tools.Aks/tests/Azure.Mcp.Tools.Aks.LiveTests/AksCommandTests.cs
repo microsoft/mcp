@@ -34,7 +34,7 @@ public sealed class AksCommandTests(ITestOutputHelper output)
             Assert.Equal(JsonValueKind.Object, cluster.ValueKind);
 
             // Verify required properties exist
-            Assert.True(cluster.TryGetProperty("name", out var nameProperty));
+            var nameProperty = cluster.AssertProperty("name");
             Assert.False(string.IsNullOrEmpty(nameProperty.GetString()));
 
             // Verify optional but commonly present properties
@@ -82,17 +82,15 @@ public sealed class AksCommandTests(ITestOutputHelper output)
         // Should return runtime error response with error details in results
         Assert.True(result.HasValue);
         var errorDetails = result.Value;
-        Assert.True(errorDetails.TryGetProperty("message", out _));
-        Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
+        errorDetails.AssertProperty("message");
+        var typeProperty = errorDetails.AssertProperty("type");
         Assert.Equal("Exception", typeProperty.GetString());
     }
 
     [Fact]
     public async Task Should_validate_required_subscription_parameter()
     {
-        var result = await CallToolAsync(
-            "azmcp_aks_cluster_list",
-            new Dictionary<string, object?>());
+        var result = await CallToolAsync("azmcp_aks_cluster_list", []);
 
         // Should return error response for missing subscription (no results)
         Assert.False(result.HasValue);
@@ -131,15 +129,15 @@ public sealed class AksCommandTests(ITestOutputHelper output)
         Assert.Equal(JsonValueKind.Object, cluster.ValueKind);
 
         // Verify the cluster details
-        Assert.True(cluster.TryGetProperty("name", out var nameProperty));
+        var nameProperty = cluster.AssertProperty("name");
         Assert.Equal(clusterName, nameProperty.GetString());
 
-        Assert.True(cluster.TryGetProperty("resourceGroupName", out var rgProperty));
+        var rgProperty = cluster.AssertProperty("resourceGroupName");
         Assert.Equal(resourceGroupName, rgProperty.GetString());
 
         // Verify other common properties exist
-        Assert.True(cluster.TryGetProperty("subscriptionId", out _));
-        Assert.True(cluster.TryGetProperty("location", out _));
+        cluster.AssertProperty("subscriptionId");
+        cluster.AssertProperty("location");
     }
 
     [Fact]
@@ -157,8 +155,8 @@ public sealed class AksCommandTests(ITestOutputHelper output)
         // Should return runtime error response with error details
         Assert.True(result.HasValue);
         var errorDetails = result.Value;
-        Assert.True(errorDetails.TryGetProperty("message", out _));
-        Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
+        errorDetails.AssertProperty("message");
+        var typeProperty = errorDetails.AssertProperty("type");
         Assert.Equal("Exception", typeProperty.GetString());
     }
 

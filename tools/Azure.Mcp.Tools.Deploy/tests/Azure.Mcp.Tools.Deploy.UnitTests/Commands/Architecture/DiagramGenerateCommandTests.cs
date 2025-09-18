@@ -59,18 +59,18 @@ public class DiagramGenerateCommandTests
         {
             WorkspaceFolder = "testWorkspace",
             ProjectName = "testProject",
-            Services = new ServiceConfig[]
-            {
+            Services =
+            [
                 new ServiceConfig
                 {
                     Name = "website",
                     AzureComputeHost = "appservice",
                     Language = "dotnet",
                     Port = "80",
-                    Dependencies = new DependencyConfig[]
-                    {
+                    Dependencies =
+                    [
                         new DependencyConfig { Name = "store", ConnectionType = "system-identity", ServiceType = "azurestorageaccount" }
-                    },
+                    ],
                 },
                 new ServiceConfig
                 {
@@ -79,10 +79,10 @@ public class DiagramGenerateCommandTests
                     AzureComputeHost = "containerapp",
                     Language = "js",
                     Port = "8080",
-                    Dependencies = new DependencyConfig[]
-                    {
+                    Dependencies =
+                    [
                         new DependencyConfig { Name = "backend", ConnectionType = "http", ServiceType = "containerapp" }
-                    }
+                    ]
                 },
                 new ServiceConfig
                 {
@@ -91,11 +91,11 @@ public class DiagramGenerateCommandTests
                     AzureComputeHost = "containerapp",
                     Language = "python",
                     Port = "3000",
-                    Dependencies = new DependencyConfig[]
-                    {
+                    Dependencies =
+                    [
                         new DependencyConfig { Name = "db", ConnectionType = "secret", ServiceType = "azurecosmosdb" },
                         new DependencyConfig { Name = "secretStore", ConnectionType = "system-identity", ServiceType = "azurekeyvault" }
-                    }
+                    ]
                 },
                 new ServiceConfig
                 {
@@ -104,10 +104,10 @@ public class DiagramGenerateCommandTests
                     AzureComputeHost = "aks",
                     Language = "ts",
                     Port = "3001",
-                    Dependencies = new DependencyConfig[]
-                    {
+                    Dependencies =
+                    [
                         new DependencyConfig { Name = "backendservice", ConnectionType = "user-identity", ServiceType = "aks"}
-                    }
+                    ]
                 },
                 new ServiceConfig
                 {
@@ -116,12 +116,12 @@ public class DiagramGenerateCommandTests
                     AzureComputeHost = "aks",
                     Language = "python",
                     Port = "3000",
-                    Dependencies = new DependencyConfig[]
-                    {
+                    Dependencies =
+                    [
                         new DependencyConfig { Name = "database", ConnectionType = "user-identity", ServiceType = "azurecacheforredis" }
-                    }
+                    ]
                 }
-            }
+            ]
         };
 
         var args = command.GetCommand().Parse(["--raw-mcp-tool-input", JsonSerializer.Serialize(appTopology)]);

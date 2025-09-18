@@ -78,7 +78,7 @@ public class TopicListCommandTests
         var subscriptionId = "sub123";
 
         _eventGridService.GetTopicsAsync(Arg.Is(subscriptionId), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromResult(new List<Azure.Mcp.Tools.EventGrid.Models.EventGridTopicInfo>()));
+            .Returns([]);
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
@@ -91,8 +91,8 @@ public class TopicListCommandTests
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.TopicListCommandResult);
+
         Assert.NotNull(result);
-        Assert.NotNull(result!.Topics);
         Assert.Empty(result.Topics);
     }
 
@@ -134,7 +134,7 @@ public class TopicListCommandTests
                 new("topic2", "westus", "https://topic2.westus.eventgrid.azure.net/api/events", "Succeeded", "Enabled", "EventGridSchema")
             };
             _eventGridService.GetTopicsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-                .Returns(Task.FromResult(expectedTopics));
+                .Returns(expectedTopics);
         }
 
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));

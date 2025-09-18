@@ -73,9 +73,7 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new DirectoryCreateCommandResult(directory),
-                StorageJsonContext.Default.DirectoryCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(directory), StorageJsonContext.Default.DirectoryCreateCommandResult);
         }
         catch (Exception ex)
         {

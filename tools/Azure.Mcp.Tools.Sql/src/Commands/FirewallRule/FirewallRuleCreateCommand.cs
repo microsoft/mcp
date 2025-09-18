@@ -77,9 +77,7 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
                 options.EndIpAddress!,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new FirewallRuleCreateResult(firewallRule),
-                SqlJsonContext.Default.FirewallRuleCreateResult);
+            context.Response.Results = ResponseResult.Create(new(firewallRule), SqlJsonContext.Default.FirewallRuleCreateResult);
         }
         catch (Exception ex)
         {
