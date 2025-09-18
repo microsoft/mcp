@@ -52,8 +52,7 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(new(containerInfo),
-                StorageJsonContext.Default.ContainerCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(containerInfo), StorageJsonContext.Default.ContainerCreateCommandResult);
         }
         catch (Exception ex)
         {

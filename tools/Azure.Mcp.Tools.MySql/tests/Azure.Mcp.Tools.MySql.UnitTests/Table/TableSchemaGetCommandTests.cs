@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Table;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,7 +55,7 @@ public class TableSchemaGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TableSchemaGetResult>(json);
+        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.TableSchemaGetCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedSchema, result.Schema);
     }
@@ -93,11 +93,5 @@ public class TableSchemaGetCommandTests
         Assert.Equal("Get MySQL Table Schema", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
-    }
-
-    private class TableSchemaGetResult
-    {
-        [JsonPropertyName("Schema")]
-        public List<string> Schema { get; set; } = [];
     }
 }

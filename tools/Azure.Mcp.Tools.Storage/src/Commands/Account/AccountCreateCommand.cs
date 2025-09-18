@@ -90,9 +90,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
                 options.RetryPolicy);
 
             // Set results
-            context.Response.Results = ResponseResult.Create(
-                new AccountCreateCommandResult(account),
-                StorageJsonContext.Default.AccountCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(account), StorageJsonContext.Default.AccountCreateCommandResult);
         }
         catch (Exception ex)
         {

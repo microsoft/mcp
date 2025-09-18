@@ -71,9 +71,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
                 options.RetryPolicy);
 
             context.Response.Results = cluster is null ?
-                null : ResponseResult.Create(
-                    new ClusterGetCommandResult(cluster),
-                    AksJsonContext.Default.ClusterGetCommandResult);
+                null : ResponseResult.Create(new(cluster), AksJsonContext.Default.ClusterGetCommandResult);
         }
         catch (Exception ex)
         {

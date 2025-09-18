@@ -258,16 +258,3 @@ public class ResourceResolverServiceTests
 
     #endregion
 }
-
-// Helper class to create async enumerables for testing
-public static class AsyncPageableHelper
-{
-    public static async IAsyncEnumerable<T> CreateAsyncEnumerable<T>(IEnumerable<T> items)
-    {
-        foreach (var item in items)
-        {
-            yield return item;
-        }
-        await Task.CompletedTask;
-    }
-}

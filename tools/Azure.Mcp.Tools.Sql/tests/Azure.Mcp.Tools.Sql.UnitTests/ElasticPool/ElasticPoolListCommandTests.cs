@@ -205,7 +205,7 @@ public class ElasticPoolListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SqlElasticPool>());
+                .Returns([]);
         }
 
         var parseResult = _commandDefinition.Parse(args);

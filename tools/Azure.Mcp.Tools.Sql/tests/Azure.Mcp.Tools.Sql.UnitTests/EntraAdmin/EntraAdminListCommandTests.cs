@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.EntraAdmin;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
@@ -60,9 +61,9 @@ public class EntraAdminListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<Core.Options.RetryPolicyOptions?>(),
+                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SqlServerEntraAdministrator>());
+                .Returns([]);
         }
 
         var context = new CommandContext(_serviceProvider);
@@ -98,7 +99,7 @@ public class EntraAdminListCommandTests
             "testserver",
             "testrg",
             "testsub",
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(administrators);
 
@@ -122,7 +123,7 @@ public class EntraAdminListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -146,7 +147,7 @@ public class EntraAdminListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<SqlServerEntraAdministrator>>(new Exception("Test error")));
 
@@ -171,7 +172,7 @@ public class EntraAdminListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<SqlServerEntraAdministrator>>(requestException));
 
@@ -195,7 +196,7 @@ public class EntraAdminListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<SqlServerEntraAdministrator>>(requestException));
 

@@ -81,7 +81,7 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new CertificateImportCommandResult(
+                new(
                     certificate.Name,
                     certificate.Id,
                     certificate.KeyId,

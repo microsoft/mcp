@@ -74,9 +74,7 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new TopicDetailsCommandResult(details),
-                ServiceBusJsonContext.Default.TopicDetailsCommandResult);
+            context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.TopicDetailsCommandResult);
         }
         catch (Exception ex)
         {

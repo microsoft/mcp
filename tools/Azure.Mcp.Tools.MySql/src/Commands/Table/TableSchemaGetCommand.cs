@@ -57,11 +57,7 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
         {
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
             List<string> schema = await mysqlService.GetTableSchemaAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!, options.Table!);
-            context.Response.Results = schema?.Count > 0 ?
-                ResponseResult.Create(
-                    new TableSchemaGetCommandResult(schema),
-                    MySqlJsonContext.Default.TableSchemaGetCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(schema ?? []), MySqlJsonContext.Default.TableSchemaGetCommandResult);
         }
         catch (Exception ex)
         {

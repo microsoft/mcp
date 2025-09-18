@@ -3,10 +3,10 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -67,7 +67,7 @@ public class AccountGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccountGetCommand.AccountGetCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.AccountGetCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Accounts);
@@ -98,7 +98,7 @@ public class AccountGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccountGetCommand.AccountGetCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.AccountGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Accounts);
@@ -216,7 +216,7 @@ public class AccountGetCommandTests
         Assert.Equal(200, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccountGetCommand.AccountGetCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.AccountGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Single(result.Accounts);

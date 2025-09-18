@@ -633,10 +633,10 @@ public class DesignCommandTests
 
             // Manually call the state deserialization that happens in BindOptions
             var deserializeMethod = typeof(DesignCommand).GetMethod("DeserializeState",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                BindingFlags.NonPublic | BindingFlags.Static);
 
             Assert.NotNull(deserializeMethod);
-            deserializeMethod.Invoke(null, new object?[] { stateValue });
+            deserializeMethod.Invoke(null, [stateValue]);
         });
 
         // Verify the inner exception is the InvalidOperationException we expect

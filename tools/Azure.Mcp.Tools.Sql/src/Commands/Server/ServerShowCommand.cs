@@ -54,9 +54,7 @@ public sealed class ServerShowCommand(ILogger<ServerShowCommand> logger)
                 options.Subscription!,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new ServerShowResult(server),
-                SqlJsonContext.Default.ServerShowResult);
+            context.Response.Results = ResponseResult.Create(new(server), SqlJsonContext.Default.ServerShowResult);
         }
         catch (Exception ex)
         {
