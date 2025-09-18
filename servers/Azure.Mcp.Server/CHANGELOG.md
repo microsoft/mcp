@@ -15,6 +15,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - Replaced custom `DefaultAzureCredential` implementation with explicit credential chain for better control and transparency
   - For more details, see [Controlling Authentication Methods with AZURE_TOKEN_CREDENTIALS](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#controlling-authentication-methods-with-azure_token_credentials)
 - Added support for updating Azure SQL databases via the command `azmcp_sql_db_update`. [#488](https://github.com/microsoft/mcp/issues/488)
+- Added support for listing Application Insights code optimization recommendations across components via the command `azmcp_applicationinsights_recommendation_list` (returns up to 20 recommendations aggregated across resource groups). [#387](https://github.com/microsoft/mcp/pull/387)
 
 ### Breaking Changes
 
