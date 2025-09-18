@@ -115,52 +115,60 @@ public sealed class CommandFactoryToolLoader(
         var metadata = command.Metadata;
         if (metadata.Secret)
         {
-            // If client doesn't support elicitation, treat as rejected and don't execute
-            if (!request.Server.SupportsElicitation())
+            // Check if elicitation is disabled by insecure option
+            if (_options.Value.InsecureDisableElicitation)
             {
-                _logger.LogWarning("Tool '{Tool}' handles sensitive data but client does not support elicitation. Operation rejected.", toolName);
-                return new CallToolResult
-                {
-                    Content = [new TextContentBlock { Text = "This tool handles sensitive data and requires user consent, but the client does not support elicitation. Operation rejected for security." }],
-                    IsError = true
-                };
+                _logger.LogWarning("Tool '{Tool}' handles sensitive data but elicitation is disabled via --insecure-disable-elicitation. Proceeding without user consent (INSECURE).", toolName);
             }
-
-            try
+            else
             {
-                _logger.LogInformation("Tool '{Tool}' handles sensitive data. Requesting user confirmation via elicitation.", toolName);
-
-                // Create the elicitation request using our custom model
-                var elicitationRequest = new ElicitationRequestParams
+                // If client doesn't support elicitation, treat as rejected and don't execute
+                if (!request.Server.SupportsElicitation())
                 {
-                    Message = $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
-                    RequestedSchema = ElicitationSchema.CreateSecretSchema("confirmation", "Confirm Action", "Type 'yes' to confirm you want to proceed with this sensitive operation", true)
-                };
-
-                // Use our extension method to handle the elicitation
-                var elicitationResponse = await request.Server.RequestElicitationAsync(elicitationRequest, cancellationToken);
-
-                if (elicitationResponse.Action != ElicitationAction.Accept)
-                {
-                    _logger.LogInformation("User {Action} the elicitation for tool '{Tool}'. Operation not executed.",
-                        elicitationResponse.Action.ToString().ToLower(), toolName);
+                    _logger.LogWarning("Tool '{Tool}' handles sensitive data but client does not support elicitation. Operation rejected.", toolName);
                     return new CallToolResult
                     {
-                        Content = [new TextContentBlock { Text = $"Operation cancelled by user ({elicitationResponse.Action.ToString().ToLower()})." }],
+                        Content = [new TextContentBlock { Text = "This tool handles sensitive data and requires user consent, but the client does not support elicitation. Operation rejected for security." }],
                         IsError = true
                     };
                 }
 
-                _logger.LogInformation("User accepted elicitation for tool '{Tool}'. Proceeding with execution.", toolName);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during elicitation for tool '{Tool}': {Error}", toolName, ex.Message);
-                return new CallToolResult
+                try
                 {
-                    Content = [new TextContentBlock { Text = $"Elicitation failed for sensitive tool '{toolName}': {ex.Message}. Operation not executed for security." }],
-                    IsError = true
-                };
+                    _logger.LogInformation("Tool '{Tool}' handles sensitive data. Requesting user confirmation via elicitation.", toolName);
+
+                    // Create the elicitation request using our custom model
+                    var elicitationRequest = new ElicitationRequestParams
+                    {
+                        Message = $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
+                        RequestedSchema = ElicitationSchema.CreateSecretSchema("confirmation", "Confirm Action", "Type 'yes' to confirm you want to proceed with this sensitive operation", true)
+                    };
+
+                    // Use our extension method to handle the elicitation
+                    var elicitationResponse = await request.Server.RequestElicitationAsync(elicitationRequest, cancellationToken);
+
+                    if (elicitationResponse.Action != ElicitationAction.Accept)
+                    {
+                        _logger.LogInformation("User {Action} the elicitation for tool '{Tool}'. Operation not executed.",
+                            elicitationResponse.Action.ToString().ToLower(), toolName);
+                        return new CallToolResult
+                        {
+                            Content = [new TextContentBlock { Text = $"Operation cancelled by user ({elicitationResponse.Action.ToString().ToLower()})." }],
+                            IsError = true
+                        };
+                    }
+
+                    _logger.LogInformation("User accepted elicitation for tool '{Tool}'. Proceeding with execution.", toolName);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error during elicitation for tool '{Tool}': {Error}", toolName, ex.Message);
+                    return new CallToolResult
+                    {
+                        Content = [new TextContentBlock { Text = $"Elicitation failed for sensitive tool '{toolName}': {ex.Message}. Operation not executed for security." }],
+                        IsError = true
+                    };
+                }
             }
         }
 
