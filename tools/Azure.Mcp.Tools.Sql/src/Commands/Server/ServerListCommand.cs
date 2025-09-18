@@ -4,9 +4,9 @@
 using System.CommandLine.Parsing;
 using Azure;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
+using Azure.Mcp.Tools.Sql.Commands;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.Server;
 using Azure.Mcp.Tools.Sql.Services;
@@ -15,9 +15,8 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Tools.Sql.Commands.Server;
 
 public sealed class ServerListCommand(ILogger<ServerListCommand> logger)
-    : SubscriptionCommand<ServerListOptions>
+    : BaseSqlCommand<ServerListOptions>(logger)
 {
-    private readonly ILogger<ServerListCommand> _logger = logger;
     private const string CommandTitle = "List SQL Servers";
 
     public override string Name => "list";
@@ -45,14 +44,19 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger)
 
     protected override void RegisterOptions(Command command)
     {
-        base.RegisterOptions(command);
+        // Only register subscription and resource group options, not server option
+        // since we're listing all servers in the resource group
+        command.Options.Add(OptionDefinitions.Common.Subscription.AsRequired());
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
     }
 
     protected override ServerListOptions BindOptions(ParseResult parseResult)
     {
-        var options = base.BindOptions(parseResult);
+        var options = new ServerListOptions();
+        options.Subscription = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Subscription.Name);
         options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        // Server property is inherited from BaseSqlOptions but not needed for listing
+        options.Server = null;
         return options;
     }
 

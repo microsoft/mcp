@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Sql.Options;
 
 namespace Azure.Mcp.Tools.Sql.Options.Server;
 
-public class ServerListOptions : SubscriptionOptions
+public class ServerListOptions : BaseSqlOptions
 {
 }
