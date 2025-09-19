@@ -51,11 +51,11 @@ public class CosmosQueryValidatorTests
 
     [Theory]
     [InlineData("SELECT * FROM c UNION SELECT * FROM d")]
-    [InlineData("SELECT id FROM c; INSERT INTO c VALUES(1)")]  
+    [InlineData("SELECT id FROM c; INSERT INTO c VALUES(1)")]
     public void EnsureReadOnlySelect_DangerousKeywords_ShouldThrow(string query)
     {
         var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.True(ex.Message.Contains("not permitted", StringComparison.OrdinalIgnoreCase) || 
+        Assert.True(ex.Message.Contains("not permitted", StringComparison.OrdinalIgnoreCase) ||
                    ex.Message.Contains("multiple", StringComparison.OrdinalIgnoreCase));
     }
 
@@ -74,7 +74,7 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_CommentsPresent_ShouldThrow(string query)
     {
         var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.True(ex.Message.Contains("Comments", StringComparison.OrdinalIgnoreCase) || 
+        Assert.True(ex.Message.Contains("Comments", StringComparison.OrdinalIgnoreCase) ||
                    ex.Message.Contains("select", StringComparison.OrdinalIgnoreCase));
     }
 
@@ -157,7 +157,7 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_ProceduralAndSetOperations_ShouldThrow(string query)
     {
         var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.True(ex.Message.Contains("not permitted", StringComparison.OrdinalIgnoreCase) || 
+        Assert.True(ex.Message.Contains("not permitted", StringComparison.OrdinalIgnoreCase) ||
                    ex.Message.Contains("select", StringComparison.OrdinalIgnoreCase));
     }
 
@@ -201,7 +201,7 @@ public class CosmosQueryValidatorTests
     public void EnsureReadOnlySelect_DDLStatements_ShouldThrow(string query)
     {
         var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.True(ex.Message.Contains("select", StringComparison.OrdinalIgnoreCase) || 
+        Assert.True(ex.Message.Contains("select", StringComparison.OrdinalIgnoreCase) ||
                    ex.Message.Contains("not permitted", StringComparison.OrdinalIgnoreCase));
     }
 
