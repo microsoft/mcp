@@ -437,8 +437,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_storage_account_get | List all storage accounts in my subscription including their location and SKU |
 | azmcp_storage_account_get | Show me my storage accounts with whether hierarchical namespace (HNS) is enabled |
 | azmcp_storage_account_get | Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings |
-| azmcp_storage_blob_batch_set-tier | Set access tier to Cool for multiple blobs in the container <container> in the storage account <account> |
-| azmcp_storage_blob_batch_set-tier | Change the access tier to Archive for blobs file1.txt and file2.txt in the container <container> in the storage account <account> |
 | azmcp_storage_blob_container_create | Create the storage container mycontainer in storage account <account> |
 | azmcp_storage_blob_container_create | Create the container using blob public access in storage account <account> |
 | azmcp_storage_blob_container_create | Create a new blob container named documents with container public access in storage account <account> |
@@ -450,18 +448,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_storage_blob_get | List all blobs in the blob container <container> in the storage account <account> |
 | azmcp_storage_blob_get | Show me the blobs in the blob container <container> in the storage account <account> |
 | azmcp_storage_blob_upload | Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account> |
-| azmcp_storage_datalake_directory_create | Create a new directory at the path <directory_path> in Data Lake in the storage account <account> |
-| azmcp_storage_datalake_file-system_list-paths | List all paths in the Data Lake file system <file_system> in the storage account <account> |
-| azmcp_storage_datalake_file-system_list-paths | Show me the paths in the Data Lake file system <file_system> in the storage account <account> |
-| azmcp_storage_datalake_file-system_list-paths | Recursively list all paths in the Data Lake file system <file_system> in the storage account <account> filtered by <filter_path> |
-| azmcp_storage_queue_message_send | Send a message "Hello, World!" to the queue <queue> in storage account <account> |
-| azmcp_storage_queue_message_send | Send a message with TTL of 3600 seconds to the queue <queue> in storage account <account> |
-| azmcp_storage_queue_message_send | Add a message to the queue <queue> in storage account <account> with visibility timeout of 30 seconds |
-| azmcp_storage_share_file_list | List all files and directories in the File Share <share> in the storage account <account> |
-| azmcp_storage_share_file_list | Show me the files in the File Share <share> directory <directory_path> in the storage account <account> |
-| azmcp_storage_share_file_list | List files with prefix 'report' in the File Share <share> in the storage account <account> |
-| azmcp_storage_table_list | List all tables in the storage account <account> |
-| azmcp_storage_table_list | Show me the tables in the storage account <account> |
 
 ## Azure Subscription Management
 
