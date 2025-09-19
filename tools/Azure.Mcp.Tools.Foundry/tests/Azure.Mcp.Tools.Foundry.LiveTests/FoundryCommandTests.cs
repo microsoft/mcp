@@ -130,10 +130,10 @@ public class FoundryCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_create_openai_completion()
     {
-        var resourceName = "azmcp-test";
-        var deploymentName = "gpt-4o-mini"; 
-        var resourceGroup = "static-test-resources";
-        var subscriptionId = "70a036f6-8e4d-4615-bad6-149c02e7720d";
+        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OpenAIAccount", "dummy-test");
+        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("OpenAIDeploymentName", "gpt-4o-mini");
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OpenAIAccountResourceGroup", "static-test-resources");
+        var subscriptionId = Settings.SubscriptionId;
         
         try
         {
@@ -157,16 +157,16 @@ public class FoundryCommandTests(ITestOutputHelper output)
 
             var usageInfo = result.AssertProperty("usageInfo");
             Assert.Equal(JsonValueKind.Object, usageInfo.ValueKind);
-            
+
             // Verify usage info contains expected properties
             var promptTokens = usageInfo.AssertProperty("promptTokens");
             var completionTokens = usageInfo.AssertProperty("completionTokens");
             var totalTokens = usageInfo.AssertProperty("totalTokens");
-            
+
             Assert.Equal(JsonValueKind.Number, promptTokens.ValueKind);
             Assert.Equal(JsonValueKind.Number, completionTokens.ValueKind);
             Assert.Equal(JsonValueKind.Number, totalTokens.ValueKind);
-            
+
             // Verify total tokens = prompt + completion
             Assert.Equal(
                 promptTokens.GetInt32() + completionTokens.GetInt32(),

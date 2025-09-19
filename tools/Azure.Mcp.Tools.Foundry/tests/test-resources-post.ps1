@@ -26,3 +26,15 @@ $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 # Add your post deployment steps here
 # For example, you might want to configure resources or run additional scripts.
 
+# $DeploymentOutputs keys are from the Bicep outputs
+# Add DeploymentOutputs to the test settings
+$testSettings.DeploymentOutputs = @{
+    "OpenAIAccount" = "azmcp-test"
+    "OpenAIDeploymentName" = "gpt-4o-mini"
+    "OpenAIAccountResourceGroup" = "static-test-resources"
+}
+
+# Save the updated test settings
+Set-TestSettings -TestSettings $testSettings -OutputPath $PSScriptRoot
+
+
