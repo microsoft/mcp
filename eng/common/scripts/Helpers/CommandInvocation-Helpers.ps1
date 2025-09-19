@@ -23,7 +23,10 @@ function Invoke-LoggedCommand
     }
 
     try {
-      Invoke-Expression $Command
+      Invoke-Expression $Command | % { 
+          if ($_ -like "*: error*") { "##vso[task.LogIssue type=error;]$_" } 
+          else { $_ }
+        }
 
       $duration = (Get-Date) - $startTime
 
