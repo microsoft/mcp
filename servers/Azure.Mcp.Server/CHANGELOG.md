@@ -2,6 +2,12 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
+## 0.9.0 (unreleased)
+
+### Features Added
+
+- Added support for retrieving account settings of an Azure Key Vault via the command `azmcp-keyvault-admin-settings-get`.
+
 ## 0.8.0 (2025-09-18)
 
 ### Features Added

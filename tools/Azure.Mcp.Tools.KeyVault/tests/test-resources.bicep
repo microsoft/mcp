@@ -47,6 +47,13 @@ resource secretsOfficerRoleDefinition 'Microsoft.Authorization/roleDefinitions@2
   name: 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
 }
 
+// Key Vault Administrator role definition (full access including settings)
+resource keyVaultAdminRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  // This is the built-in Key Vault Administrator role required to read vault settings
+  name: '00482a5a-887f-4fb3-b363-3b7fe8e74483'
+}
+
 resource certificatesRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(certificateOfficerRoleDefinition.id, testApplicationOid, keyVault.id)
   scope: keyVault
@@ -71,6 +78,16 @@ resource secretsRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-
   properties: {
     principalId: testApplicationOid
     roleDefinitionId: secretsOfficerRoleDefinition.id
+  }
+}
+
+// Assign Key Vault Administrator to test principal so admin settings API calls succeed
+resource keyVaultAdminRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(keyVaultAdminRoleDefinition.id, testApplicationOid, keyVault.id)
+  scope: keyVault
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: keyVaultAdminRoleDefinition.id
   }
 }
 

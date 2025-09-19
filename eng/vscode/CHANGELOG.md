@@ -1,3 +1,8 @@
+# 0.5.13 - Unreleased
+
+## Added
+- Added `azmcp-keyvault-admin-settings-get` command to retrieve Key Vault account settings.
+
 
 # Release History
 
