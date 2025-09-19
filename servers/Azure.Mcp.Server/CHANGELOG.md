@@ -8,6 +8,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
+- Removed the following Storage tools [[#500](https://github.com/microsoft/mcp/pull/500)]:
+  - `azmcp_storage_blob_batch_set-tier`
+  - `azmcp_storage_datalake_directory_create`
+  - `azmcp_storage_datalake_file-system_list-paths`
+  - `azmcp_storage_queue_message_send`
+  - `azmcp_storage_share_file_list`
+  - `azmcp_storage_table_list`
 - Merged `azmcp_appconfig_kv_list` and `azmcp_appconfig_kv_show` into `azmcp_appconfig_kv_get` which can handle both listing and filtering key-values and getting a specific key-value. [[#505](https://github.com/microsoft/mcp/pull/505)]
 
 ### Bugs Fixed

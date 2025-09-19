@@ -169,7 +169,7 @@ public class KeyValueGetCommandTests
         _appConfigService.GetKeyValues(
             "account1",
             "sub123",
-            "key",
+            "my-key",
             "prod",
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
