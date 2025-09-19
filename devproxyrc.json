@@ -1,0 +1,15 @@
+{
+  "urlsToWatch": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "plugins": [
+    { "name": "ExecutionSummaryPlugin", "enabled": true, "pluginPath": "~appFolder/plugins/DevProxy.Plugins.dll" },
+    { "name": "HttpFileGeneratorPlugin", "enabled": true, "pluginPath": "~appFolder/plugins/DevProxy.Plugins.dll", "configSection": "httpFileGeneratorPlugin" },
+    { "name": "JsonReporter", "enabled": true, "pluginPath": "~appFolder/plugins/DevProxy.Plugins.dll" }
+  ],
+  "httpFileGeneratorPlugin": {
+    "$schema": "https://raw.githubusercontent.com/dotnet/dev-proxy/main/schemas/v1.0.0/httpfilegeneratorplugin.schema.json",
+    "includeOptionsRequests": false
+  }
+}
