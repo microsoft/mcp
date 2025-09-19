@@ -90,7 +90,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <param name="commandResult">The command result to validate.</param>
     /// <param name="commandResponse">Optional response object to set error details.</param>
     /// <returns>A ValidationResult indicating whether the validation passed.</returns>
-    public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
+    public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse)
     {
         // First run the base validation for required options and parser errors
         var baseResult = base.Validate(commandResult, commandResponse);

@@ -9,7 +9,7 @@ using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Commands;
 
-public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : class, new()
+public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : class
 {
     private const string MissingRequiredOptionsPrefix = "Missing Required options: ";
     private const int ValidationErrorStatusCode = 400;
@@ -42,8 +42,8 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
     /// <returns>An options object containing the bound options.</returns>
     protected virtual TOptions BindOptions(ParseResult parseResult)
     {
-        // If no specific binding is implemented, create a default instance
-        return Activator.CreateInstance<TOptions>();
+        // This method must be overridden by derived classes that need option binding
+        throw new NotImplementedException($"Command '{GetType().Name}' must override BindOptions to provide option binding.");
     }
 
     public abstract Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult);

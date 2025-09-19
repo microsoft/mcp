@@ -196,7 +196,7 @@ public class ServiceStartCommandTests
         var commandResult = parseResult.CommandResult;
 
         // Act
-        var result = _command.Validate(commandResult);
+        var result = _command.Validate(commandResult, null);
 
         // Assert
         Assert.True(result.IsValid);
@@ -211,7 +211,7 @@ public class ServiceStartCommandTests
         var commandResult = parseResult.CommandResult;
 
         // Act
-        var result = _command.Validate(commandResult);
+        var result = _command.Validate(commandResult, null);
 
         // Assert
         Assert.False(result.IsValid);
@@ -226,7 +226,7 @@ public class ServiceStartCommandTests
         var commandResult = parseResult.CommandResult;
 
         // Act
-        var result = _command.Validate(commandResult);
+        var result = _command.Validate(commandResult, null);
 
         // Assert
         Assert.False(result.IsValid);
