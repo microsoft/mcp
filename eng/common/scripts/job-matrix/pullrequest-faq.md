@@ -10,7 +10,6 @@ Let's get some basic repo structure discussion out of the way. The `azure-sdk` t
 sdk/
   storage
     Azure.Storage.Blobs
-    Azure.Storage.Queues
     ...
   <service>
     <service-package-1>

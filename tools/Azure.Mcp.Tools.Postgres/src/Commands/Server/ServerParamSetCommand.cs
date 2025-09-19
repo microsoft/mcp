@@ -24,7 +24,7 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
     {
         Destructive = true,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false

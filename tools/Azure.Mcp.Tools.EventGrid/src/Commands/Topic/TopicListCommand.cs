@@ -28,7 +28,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
