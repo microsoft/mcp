@@ -274,18 +274,32 @@ public class CommandFactory
     }
 
     /// <summary>
-    /// Gets the service area given the full command name (i.e. 'storage_account_list' would return 'storage').
+    /// Gets the service area given the full command name (i.e. 'storage_account_list' or 'azmcp_storage_account_list' would return 'storage').
     /// </summary>
-    /// <param name="commandName">Name of the command with prefixes.</param>
-    public string? GetServiceArea(string commandName)
+    /// <param name="fullCommandName">Name of the command.</param>
+    public string? GetServiceArea(string fullCommandName)
     {
-        if (string.IsNullOrEmpty(commandName))
+        if (string.IsNullOrEmpty(fullCommandName))
         {
             return null;
         }
 
-        return _commandNamesToArea.TryGetValue(commandName, out var area)
-            ? area.Name
+        if (_commandNamesToArea.TryGetValue(fullCommandName, out var area))
+        {
+            return area.Name;
+        }
+
+        // If it starts with azmcp, then it is already the full command name.
+        if (fullCommandName.StartsWith(RootCommandGroupName, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        // Else, it means that the command could be from namespace mode where the IAreaSetup.Name 
+        // is the root of the command tree.
+        var rootPrefixAppended = string.Join(Separator, RootCommandGroupName, fullCommandName);
+        return _commandNamesToArea.TryGetValue(rootPrefixAppended, out var area2)
+            ? area2.Name
             : null;
     }
 
