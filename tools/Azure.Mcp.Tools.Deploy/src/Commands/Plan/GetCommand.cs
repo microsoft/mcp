@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Tools.Deploy.Commands.Plan;
 
 public sealed class GetCommand(ILogger<GetCommand> logger)
-    : BaseCommand()
+    : BaseCommand<GetOptions>
 {
     private const string CommandTitle = "Generate Azure Deployment Plan";
     private readonly ILogger<GetCommand> _logger = logger;
@@ -47,7 +47,7 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
         command.Options.Add(DeployOptionDefinitions.PlanGet.AzdIacOptions);
     }
 
-    private GetOptions BindOptions(ParseResult parseResult)
+    protected override GetOptions BindOptions(ParseResult parseResult)
     {
         return new GetOptions
         {

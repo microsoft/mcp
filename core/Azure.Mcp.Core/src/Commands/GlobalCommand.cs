@@ -12,7 +12,7 @@ using Azure.Mcp.Core.Options;
 namespace Azure.Mcp.Core.Commands;
 
 public abstract class GlobalCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : BaseCommand
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : BaseCommand<TOptions>
     where TOptions : GlobalOptions, new()
 {
     protected override void RegisterOptions(Command command)
@@ -67,7 +67,7 @@ public abstract class GlobalCommand<
 
         return commandPath;
     }
-    protected virtual TOptions BindOptions(ParseResult parseResult)
+    protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = new TOptions
         {
@@ -76,7 +76,7 @@ public abstract class GlobalCommand<
         };
 
         // Create a RetryPolicyOptions capturing only explicitly provided values so unspecified settings remain SDK defaults
-        var hasAnyRetry = Azure.Mcp.Core.Options.ParseResultExtensions.HasAnyRetryOptions(parseResult);
+        var hasAnyRetry = Options.ParseResultExtensions.HasAnyRetryOptions(parseResult);
         if (hasAnyRetry)
         {
             var policy = new RetryPolicyOptions();

@@ -62,7 +62,7 @@ public class CommandFactoryToolLoaderTests
             Assert.NotNull(tool.Name);
             Assert.NotEmpty(tool.Name);
             Assert.NotNull(tool.Description);
-            Assert.True(tool.InputSchema.ValueKind != System.Text.Json.JsonValueKind.Null, "InputSchema should not be null");
+            Assert.True(tool.InputSchema.ValueKind != JsonValueKind.Null, "InputSchema should not be null");
 
             // Verify this tool corresponds to a command from the factory
             var correspondingCommand = visibleCommands.FirstOrDefault(kvp => kvp.Key == tool.Name);

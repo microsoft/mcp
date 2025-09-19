@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureTerraformBestPractices.Commands;
 
-public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraformBestPracticesGetCommand> logger) : BaseCommand()
+public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraformBestPracticesGetCommand> logger) : BaseCommand<EmptyOptions>
 {
     private const string CommandTitle = "Get Terraform Best Practices for Azure";
     private readonly ILogger<AzureTerraformBestPracticesGetCommand> _logger = logger;

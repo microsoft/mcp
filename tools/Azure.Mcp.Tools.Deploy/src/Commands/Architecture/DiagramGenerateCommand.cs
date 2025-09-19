@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Deploy.Commands.Architecture;
 
-public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logger) : BaseCommand()
+public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logger) : BaseCommand<DiagramGenerateOptions>
 {
     private const string CommandTitle = "Generate Architecture Diagram";
     private readonly ILogger<DiagramGenerateCommand> _logger = logger;
@@ -43,7 +43,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
         command.Options.Add(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption);
     }
 
-    private DiagramGenerateOptions BindOptions(ParseResult parseResult)
+    protected override DiagramGenerateOptions BindOptions(ParseResult parseResult)
     {
         var options = new DiagramGenerateOptions();
         options.RawMcpToolInput = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption.Name);

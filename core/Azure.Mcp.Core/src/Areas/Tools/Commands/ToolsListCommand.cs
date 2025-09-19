@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Core.Areas.Tools.Commands;
 
 [HiddenCommand]
-public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCommand()
+public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCommand<EmptyOptions>
 {
     private const string CommandTitle = "List Available Tools";
 

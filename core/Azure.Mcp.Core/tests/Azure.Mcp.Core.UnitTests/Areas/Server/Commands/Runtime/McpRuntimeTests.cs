@@ -211,7 +211,7 @@ public class McpRuntimeTests
         Assert.Equal(expectedResult, result);
         await mockToolLoader.Received(1).ListToolsHandler(request, Arg.Any<CancellationToken>());
 
-        await mockTelemetry.Received(1).StartActivity(TelemetryConstants.ActivityName.ListToolsHandler, Arg.Any<Implementation?>());
+        await mockTelemetry.Received(1).StartActivity(ActivityName.ListToolsHandler, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Ok, activity.Status);
     }
 
@@ -255,7 +255,7 @@ public class McpRuntimeTests
         Assert.Equal(expectedResult, result);
         await mockToolLoader.Received(1).CallToolHandler(request, Arg.Any<CancellationToken>());
 
-        await mockTelemetry.Received(1).StartActivity(TelemetryConstants.ActivityName.ToolExecuted, Arg.Any<Implementation?>());
+        await mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Ok, activity.Status);
 
         // The runtime may or may not surface telemetry tags on the Activity depending on the
@@ -346,10 +346,10 @@ public class McpRuntimeTests
 
         Assert.Equal(expectedException.Message, actualException.Message);
 
-        await mockTelemetry.Received(1).StartActivity(TelemetryConstants.ActivityName.ListToolsHandler, Arg.Any<Implementation?>());
+        await mockTelemetry.Received(1).StartActivity(ActivityName.ListToolsHandler, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
 
-        GetAndAssertTagKeyValue(activity, TelemetryConstants.TagName.ErrorDetails);
+        GetAndAssertTagKeyValue(activity, TagName.ErrorDetails);
     }
 
     [Fact]
@@ -506,9 +506,9 @@ public class McpRuntimeTests
         // Verify that the tool loader was NOT called since the null request is handled at the runtime level
         await mockToolLoader.DidNotReceive().CallToolHandler(Arg.Any<RequestContext<CallToolRequestParams>>(), Arg.Any<CancellationToken>());
 
-        await mockTelemetry.Received(1).StartActivity(TelemetryConstants.ActivityName.ToolExecuted, Arg.Any<Implementation?>());
+        await mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
-        GetAndAssertTagKeyValue(activity, TelemetryConstants.TagName.ErrorDetails);
+        GetAndAssertTagKeyValue(activity, TagName.ErrorDetails);
     }
 
     [Fact]
@@ -807,7 +807,7 @@ public class McpRuntimeTests
         // Act
         var result = await runtime.CallToolHandler(request, CancellationToken.None);
 
-        await mockTelemetry.Received(1).StartActivity(TelemetryConstants.ActivityName.ToolExecuted, Arg.Any<Implementation?>());
+        await mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
 
         // Error details are present in the CallToolResult content; assert that instead of relying

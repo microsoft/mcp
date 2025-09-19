@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using System.Net;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
@@ -21,7 +22,7 @@ namespace Azure.Mcp.Core.Areas.Server.Commands;
 /// This command is hidden from the main command list.
 /// </summary>
 [HiddenCommand]
-public sealed class ServiceStartCommand : BaseCommand
+public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 {
     private const string CommandTitle = "Start MCP Server";
 
@@ -64,6 +65,86 @@ public sealed class ServiceStartCommand : BaseCommand
     }
 
     /// <summary>
+    /// Binds the parsed command line arguments to the ServiceStartOptions object.
+    /// </summary>
+    /// <param name="parseResult">The parsed command line arguments.</param>
+    /// <returns>A configured ServiceStartOptions instance.</returns>
+    protected override ServiceStartOptions BindOptions(ParseResult parseResult)
+    {
+        var options = new ServiceStartOptions
+        {
+            Transport = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo,
+            Namespace = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
+            Mode = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Mode.Name),
+            ReadOnly = parseResult.GetValueOrDefault<bool?>(ServiceOptionDefinitions.ReadOnly.Name),
+            Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
+            EnableInsecureTransports = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports.Name),
+            InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name)
+        };
+        return options;
+    }
+
+    /// <summary>
+    /// Validates the command options and arguments.
+    /// </summary>
+    /// <param name="commandResult">The command result to validate.</param>
+    /// <param name="commandResponse">Optional response object to set error details.</param>
+    /// <returns>A ValidationResult indicating whether the validation passed.</returns>
+    public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
+    {
+        // First run the base validation for required options and parser errors
+        var baseResult = base.Validate(commandResult, commandResponse);
+        if (!baseResult.IsValid)
+        {
+            return baseResult;
+        }
+
+        // Get option values directly from commandResult
+        var mode = commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode);
+        var transport = commandResult.GetValueOrDefault(ServiceOptionDefinitions.Transport);
+
+        if (!IsValidMode(mode))
+        {
+            var result = new ValidationResult
+            {
+                IsValid = false,
+                ErrorMessage = $"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}."
+            };
+
+            if (commandResponse != null)
+            {
+                commandResponse.Status = 400;
+                commandResponse.Message = result.ErrorMessage;
+            }
+
+            return result;
+        }
+
+        try
+        {
+            ValidateTransport(transport);
+        }
+        catch (ArgumentException ex)
+        {
+            var result = new ValidationResult
+            {
+                IsValid = false,
+                ErrorMessage = ex.Message
+            };
+
+            if (commandResponse != null)
+            {
+                commandResponse.Status = 400;
+                commandResponse.Message = result.ErrorMessage;
+            }
+
+            return result;
+        }
+
+        return new ValidationResult { IsValid = true };
+    }
+
+    /// <summary>
     /// Executes the service start command, creating and starting the MCP server.
     /// </summary>
     /// <param name="context">The command execution context.</param>
@@ -71,50 +152,35 @@ public sealed class ServiceStartCommand : BaseCommand
     /// <returns>A command response indicating the result of the operation.</returns>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        string[]? namespaces = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name);
-        string? mode = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Mode.Name);
-        bool? readOnly = parseResult.GetValueOrDefault<bool?>(ServiceOptionDefinitions.ReadOnly.Name);
-        string? transport = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name);
-
-        var debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name);
-
-        if (!IsValidMode(mode))
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
-            throw new ArgumentException($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}.");
+            return context.Response;
         }
 
-        if (!IsValidTransport(transport))
-        {
-            throw new ArgumentException($"Invalid transport '{transport}'. Valid transports are: {TransportTypes.StdIo}.");
-        }
+        var options = BindOptions(parseResult);
 
-        var enableInsecureTransports = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports.Name);
-
-        if (enableInsecureTransports)
+        try
         {
-            var includeProdCreds = EnvironmentHelpers.GetEnvironmentVariableAsBool("AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS");
-            if (!includeProdCreds)
+            if (options.EnableInsecureTransports)
             {
-                throw new InvalidOperationException("Using --enable-insecure-transport requires the host to have either Managed Identity or Workload Identity enabled. Please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.");
+                var includeProdCreds = EnvironmentHelpers.GetEnvironmentVariableAsBool("AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS");
+                if (!includeProdCreds)
+                {
+                    throw new InvalidOperationException("Using --enable-insecure-transport requires the host to have either Managed Identity or Workload Identity enabled. Please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.");
+                }
             }
+
+            using var host = CreateHost(options);
+            await host.StartAsync(CancellationToken.None);
+            await host.WaitForShutdownAsync(CancellationToken.None);
+
+            return context.Response;
         }
-
-        var serverOptions = new ServiceStartOptions
+        catch (Exception ex)
         {
-            Transport = transport ?? TransportTypes.StdIo,
-            Namespace = namespaces,
-            Mode = mode,
-            ReadOnly = readOnly,
-            Debug = debug,
-            EnableInsecureTransports = enableInsecureTransports,
-            InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name),
-        };
-
-        using var host = CreateHost(serverOptions);
-        await host.StartAsync(CancellationToken.None);
-        await host.WaitForShutdownAsync(CancellationToken.None);
-
-        return context.Response;
+            HandleException(context, ex);
+            return context.Response;
+        }
     }
 
     /// <summary>
@@ -130,14 +196,45 @@ public sealed class ServiceStartCommand : BaseCommand
     }
 
     /// <summary>
-    /// Validates if the provided transport is a valid transport type.
+    /// Validates the transport parameter and throws an exception if invalid.
     /// </summary>
     /// <param name="transport">The transport to validate.</param>
-    /// <returns>True if the transport is valid, otherwise false.</returns>
-    private static bool IsValidTransport(string? transport)
+    /// <exception cref="ArgumentException">Thrown when the transport is not null and invalid.</exception>
+    private static void ValidateTransport(string? transport)
     {
-        return transport == TransportTypes.StdIo;
+        if (transport is not null && transport != TransportTypes.StdIo)
+        {
+            throw new ArgumentException($"Invalid transport '{transport}'. Valid transports are: {TransportTypes.StdIo}.");
+        }
     }
+
+    /// <summary>
+    /// Provides custom error messages for service start specific exceptions.
+    /// </summary>
+    /// <param name="ex">The exception to get an error message for.</param>
+    /// <returns>A user-friendly error message.</returns>
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        ArgumentException argEx when argEx.Message.Contains("transport") =>
+            $"Invalid transport option specified. {argEx.Message} Use --transport stdio for standard input/output.",
+        ArgumentException argEx when argEx.Message.Contains("mode") =>
+            $"Invalid mode option specified. {argEx.Message} Use --mode single, namespace, or all.",
+        InvalidOperationException opEx when opEx.Message.Contains("enable-insecure-transport") =>
+            "Insecure transport configuration error. Ensure your environment has proper authentication configured (Managed Identity or Workload Identity).",
+        _ => ex.Message
+    };
+
+    /// <summary>
+    /// Provides appropriate HTTP status codes for service start specific exceptions.
+    /// </summary>
+    /// <param name="ex">The exception to get a status code for.</param>
+    /// <returns>An appropriate HTTP status code.</returns>
+    protected override int GetStatusCode(Exception ex) => ex switch
+    {
+        ArgumentException => 400,  // Bad Request for invalid arguments
+        InvalidOperationException => 422,  // Unprocessable Entity for configuration errors
+        _ => 500
+    };
 
     /// <summary>
     /// Creates the host for the MCP server with the specified options.

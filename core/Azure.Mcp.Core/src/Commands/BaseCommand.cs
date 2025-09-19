@@ -9,7 +9,7 @@ using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Commands;
 
-public abstract class BaseCommand : IBaseCommand
+public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : class, new()
 {
     private const string MissingRequiredOptionsPrefix = "Missing Required options: ";
     private const int ValidationErrorStatusCode = 400;
@@ -32,6 +32,18 @@ public abstract class BaseCommand : IBaseCommand
 
     protected virtual void RegisterOptions(Command command)
     {
+    }
+
+    /// <summary>
+    /// Binds the parsed command line arguments to a strongly-typed options object.
+    /// Override this method in derived classes to provide custom option binding.
+    /// </summary>
+    /// <param name="parseResult">The parsed command line arguments.</param>
+    /// <returns>An options object containing the bound options.</returns>
+    protected virtual TOptions BindOptions(ParseResult parseResult)
+    {
+        // If no specific binding is implemented, create a default instance
+        return Activator.CreateInstance<TOptions>();
     }
 
     public abstract Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult);
@@ -73,11 +85,6 @@ public abstract class BaseCommand : IBaseCommand
         response.Results = ResponseResult.Create(result, JsonSourceGenerationContext.Default.ExceptionResult);
     }
 
-    internal record ExceptionResult(
-        string Message,
-        string? StackTrace,
-        string Type);
-
     protected virtual string GetErrorMessage(Exception ex) => ex.Message;
 
     protected virtual int GetStatusCode(Exception ex) => 500;
@@ -86,6 +93,7 @@ public abstract class BaseCommand : IBaseCommand
     {
         var result = new ValidationResult { IsValid = true };
 
+        // First, check for missing required options
         var missingOptions = commandResult.Command.Options
             .Where(o => o.Required && !o.HasDefaultValue && !commandResult.HasOptionResult(o))
             .Select(o => $"--{NameNormalization.NormalizeOptionName(o.Name)}")
@@ -101,8 +109,7 @@ public abstract class BaseCommand : IBaseCommand
             return result;
         }
 
-        // If no missing required options, propagate parser/validator errors as-is.
-        // Commands can throw CommandValidationException for structured handling.
+        // Check for parser/validator errors
         if (commandResult.Errors != null && commandResult.Errors.Any())
         {
             result.IsValid = false;
@@ -124,3 +131,8 @@ public abstract class BaseCommand : IBaseCommand
         }
     }
 }
+
+internal record ExceptionResult(
+    string Message,
+    string? StackTrace,
+    string Type);

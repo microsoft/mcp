@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
 
-public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : BaseCommand
+public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : BaseCommand<BestPracticesOptions>
 {
     private const string CommandTitle = "Get Azure Best Practices";
     private readonly ILogger<BestPracticesCommand> _logger = logger;
@@ -47,7 +47,7 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         command.Options.Add(BestPracticesOptionDefinitions.Action);
     }
 
-    private BestPracticesOptions BindOptions(ParseResult parseResult)
+    protected override BestPracticesOptions BindOptions(ParseResult parseResult)
     {
         return new BestPracticesOptions
         {
