@@ -110,26 +110,38 @@ public class StorageSetup : IAreaSetup
         shares.AddSubGroup(shareFiles);
 
         // Register Storage commands
-        storageAccount.AddCommand("create", serviceProvider.GetRequiredService<AccountCreateCommand>());
-        storageAccount.AddCommand("get", serviceProvider.GetRequiredService<AccountGetCommand>());
+        var accountCreate = serviceProvider.GetRequiredService<AccountCreateCommand>();
+        storageAccount.AddCommand(accountCreate.Name, accountCreate);
+        var accountGet = serviceProvider.GetRequiredService<AccountGetCommand>();
+        storageAccount.AddCommand(accountGet.Name, accountGet);
 
-        tables.AddCommand("list", serviceProvider.GetRequiredService<TableListCommand>());
+        var tableList = serviceProvider.GetRequiredService<TableListCommand>();
+        tables.AddCommand(tableList.Name, tableList);
 
-        blobs.AddCommand("get", serviceProvider.GetRequiredService<BlobGetCommand>());
-        blobs.AddCommand("upload", serviceProvider.GetRequiredService<BlobUploadCommand>());
+        var blobGet = serviceProvider.GetRequiredService<BlobGetCommand>();
+        blobs.AddCommand(blobGet.Name, blobGet);
+        var blobUpload = serviceProvider.GetRequiredService<BlobUploadCommand>();
+        blobs.AddCommand(blobUpload.Name, blobUpload);
 
-        batch.AddCommand("set-tier", serviceProvider.GetRequiredService<BatchSetTierCommand>());
+        var batchSetTier = serviceProvider.GetRequiredService<BatchSetTierCommand>();
+        batch.AddCommand(batchSetTier.Name, batchSetTier);
 
-        blobContainer.AddCommand("create", serviceProvider.GetRequiredService<ContainerCreateCommand>());
-        blobContainer.AddCommand("get", serviceProvider.GetRequiredService<ContainerGetCommand>());
+        var containerCreate = serviceProvider.GetRequiredService<ContainerCreateCommand>();
+        blobContainer.AddCommand(containerCreate.Name, containerCreate);
+        var containerGet = serviceProvider.GetRequiredService<ContainerGetCommand>();
+        blobContainer.AddCommand(containerGet.Name, containerGet);
 
-        fileSystem.AddCommand("list-paths", serviceProvider.GetRequiredService<FileSystemListPathsCommand>());
+        var fileSystemListPaths = serviceProvider.GetRequiredService<FileSystemListPathsCommand>();
+        fileSystem.AddCommand(fileSystemListPaths.Name, fileSystemListPaths);
 
-        directory.AddCommand("create", serviceProvider.GetRequiredService<DirectoryCreateCommand>());
+        var directoryCreate = serviceProvider.GetRequiredService<DirectoryCreateCommand>();
+        directory.AddCommand(directoryCreate.Name, directoryCreate);
 
-        queueMessage.AddCommand("send", serviceProvider.GetRequiredService<QueueMessageSendCommand>());
+        var queueMessageSend = serviceProvider.GetRequiredService<QueueMessageSendCommand>();
+        queueMessage.AddCommand(queueMessageSend.Name, queueMessageSend);
 
-        shareFiles.AddCommand("list", serviceProvider.GetRequiredService<FileListCommand>());
+        var shareFilesList = serviceProvider.GetRequiredService<FileListCommand>();
+        shareFiles.AddCommand(shareFilesList.Name, shareFilesList);
 
         return storage;
     }

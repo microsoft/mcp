@@ -29,14 +29,17 @@ public class ServiceBusSetup : IAreaSetup
 
         var queue = new CommandGroup("queue", "Queue operations - Commands for using Azure Service Bus queues.");
         // queue.AddCommand("peek", new QueuePeekCommand());
-        queue.AddCommand("details", serviceProvider.GetRequiredService<QueueDetailsCommand>());
+        var queueDetails = serviceProvider.GetRequiredService<QueueDetailsCommand>();
+        queue.AddCommand(queueDetails.Name, queueDetails);
 
         var topic = new CommandGroup("topic", "Topic operations - Commands for using Azure Service Bus topics and subscriptions.");
-        topic.AddCommand("details", serviceProvider.GetRequiredService<TopicDetailsCommand>());
+        var topicDetails = serviceProvider.GetRequiredService<TopicDetailsCommand>();
+        topic.AddCommand(topicDetails.Name, topicDetails);
 
         var subscription = new CommandGroup("subscription", "Subscription operations - Commands for using subscriptions within a Service Bus topic.");
         // subscription.AddCommand("peek", new SubscriptionPeekCommand());
-        subscription.AddCommand("details", serviceProvider.GetRequiredService<SubscriptionDetailsCommand>());
+        var subscriptionDetails = serviceProvider.GetRequiredService<SubscriptionDetailsCommand>();
+        subscription.AddCommand(subscriptionDetails.Name, subscriptionDetails);
 
         serviceBus.AddSubGroup(queue);
         serviceBus.AddSubGroup(topic);

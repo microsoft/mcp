@@ -56,18 +56,27 @@ public class LoadTestingSetup : IAreaSetup
         service.AddSubGroup(testRun);
 
         // Register commands for Load Test Resource
-        testResource.AddCommand("list", serviceProvider.GetRequiredService<TestResourceListCommand>());
-        testResource.AddCommand("create", serviceProvider.GetRequiredService<TestResourceCreateCommand>());
+
+        var testResourceList = serviceProvider.GetRequiredService<TestResourceListCommand>();
+        testResource.AddCommand(testResourceList.Name, testResourceList);
+        var testResourceCreate = serviceProvider.GetRequiredService<TestResourceCreateCommand>();
+        testResource.AddCommand(testResourceCreate.Name, testResourceCreate);
 
         // Register commands for Load Test
-        test.AddCommand("get", serviceProvider.GetRequiredService<TestGetCommand>());
-        test.AddCommand("create", serviceProvider.GetRequiredService<TestCreateCommand>());
+        var testGet = serviceProvider.GetRequiredService<TestGetCommand>();
+        test.AddCommand(testGet.Name, testGet);
+        var testCreate = serviceProvider.GetRequiredService<TestCreateCommand>();
+        test.AddCommand(testCreate.Name, testCreate);
 
         // Register commands for Load Test Run
-        testRun.AddCommand("get", serviceProvider.GetRequiredService<TestRunGetCommand>());
-        testRun.AddCommand("list", serviceProvider.GetRequiredService<TestRunListCommand>());
-        testRun.AddCommand("create", serviceProvider.GetRequiredService<TestRunCreateCommand>());
-        testRun.AddCommand("update", serviceProvider.GetRequiredService<TestRunUpdateCommand>());
+        var testRunGet = serviceProvider.GetRequiredService<TestRunGetCommand>();
+        testRun.AddCommand(testRunGet.Name, testRunGet);
+        var testRunList = serviceProvider.GetRequiredService<TestRunListCommand>();
+        testRun.AddCommand(testRunList.Name, testRunList);
+        var testRunCreate = serviceProvider.GetRequiredService<TestRunCreateCommand>();
+        testRun.AddCommand(testRunCreate.Name, testRunCreate);
+        var testRunUpdate = serviceProvider.GetRequiredService<TestRunUpdateCommand>();
+        testRun.AddCommand(testRunUpdate.Name, testRunUpdate);
 
         return service;
     }

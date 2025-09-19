@@ -34,7 +34,8 @@ public sealed class ServerSetup : IAreaSetup
         var mcpServer = new CommandGroup(Name, "MCP Server operations - Commands for managing and interacting with the MCP Server.");
 
         // Register MCP Server commands
-        mcpServer.AddCommand("start", serviceProvider.GetRequiredService<ServiceStartCommand>());
+        var startCommand = serviceProvider.GetRequiredService<ServiceStartCommand>();
+        mcpServer.AddCommand(startCommand.Name, startCommand);
 
         return mcpServer;
     }

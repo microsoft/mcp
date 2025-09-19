@@ -32,23 +32,27 @@ public class RedisSetup : IAreaSetup
         var cache = new CommandGroup("cache", "Redis Cache resource operations - Commands for listing and managing Redis Cache resources in your Azure subscription.");
         redis.AddSubGroup(cache);
 
-        cache.AddCommand("list", serviceProvider.GetRequiredService<CacheListCommand>());
+        var cacheList = serviceProvider.GetRequiredService<CacheListCommand>();
+        cache.AddCommand(cacheList.Name, cacheList);
 
         var accessPolicy = new CommandGroup("accesspolicy", "Redis Cluster database operations - Commands for listing and managing Redis Cluster databases in your Azure subscription.");
         cache.AddSubGroup(accessPolicy);
 
-        accessPolicy.AddCommand("list", serviceProvider.GetRequiredService<AccessPolicyListCommand>());
+        var accessPolicyList = serviceProvider.GetRequiredService<AccessPolicyListCommand>();
+        accessPolicy.AddCommand(accessPolicyList.Name, accessPolicyList);
 
         // Azure Managed Redis
         var cluster = new CommandGroup("cluster", "Redis Cluster resource operations - Commands for listing and managing Redis Cluster resources in your Azure subscription.");
         redis.AddSubGroup(cluster);
 
-        cluster.AddCommand("list", serviceProvider.GetRequiredService<ClusterListCommand>());
+        var clusterList = serviceProvider.GetRequiredService<ClusterListCommand>();
+        cluster.AddCommand(clusterList.Name, clusterList);
 
         var database = new CommandGroup("database", "Redis Cluster database operations - Commands for listing and managing Redis Cluster Databases in your Azure subscription.");
         cluster.AddSubGroup(database);
 
-        database.AddCommand("list", serviceProvider.GetRequiredService<DatabaseListCommand>());
+        var databaseList = serviceProvider.GetRequiredService<DatabaseListCommand>();
+        database.AddCommand(databaseList.Name, databaseList);
 
         return redis;
     }

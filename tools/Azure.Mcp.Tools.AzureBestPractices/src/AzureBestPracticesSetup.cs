@@ -31,10 +31,8 @@ public class AzureBestPracticesSetup : IAreaSetup
             it belongs to the Get Azure Best Practices category."
         );
 
-        bestPractices.AddCommand(
-            "get",
-            serviceProvider.GetRequiredService<BestPracticesCommand>()
-        );
+        var bestPracticesCommand = serviceProvider.GetRequiredService<BestPracticesCommand>();
+        bestPractices.AddCommand(bestPracticesCommand.Name, bestPracticesCommand);
 
         return bestPractices;
     }
