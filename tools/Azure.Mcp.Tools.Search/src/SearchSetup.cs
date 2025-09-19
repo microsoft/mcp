@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.Search.Commands.Index;
 using Azure.Mcp.Tools.Search.Commands.Service;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Search;
 
@@ -18,9 +17,13 @@ public class SearchSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ISearchService, SearchService>();
+
+        services.AddSingleton<ServiceListCommand>();
+        services.AddSingleton<IndexGetCommand>();
+        services.AddSingleton<IndexQueryCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var search = new CommandGroup(Name,
         """
@@ -35,17 +38,21 @@ public class SearchSetup : IAreaSetup
         for different search service and index operations. Note that this tool requires appropriate Azure AI Search
         permissions and will only access search services and indexes accessible to the authenticated user.
         """);
-        rootGroup.AddSubGroup(search);
 
         var service = new CommandGroup("service", "Azure AI Search (formerly known as \"Azure Cognitive Search\") service operations - Commands for listing and managing search services in your Azure subscription.");
         search.AddSubGroup(service);
 
-        service.AddCommand("list", new ServiceListCommand(loggerFactory.CreateLogger<ServiceListCommand>()));
+        var serviceList = serviceProvider.GetRequiredService<ServiceListCommand>();
+        service.AddCommand(serviceList.Name, serviceList);
 
         var index = new CommandGroup("index", "Azure AI Search (formerly known as \"Azure Cognitive Search\") index operations - Commands for listing, managing, and querying search indexes in a specific search service.");
         search.AddSubGroup(index);
 
-        index.AddCommand("get", new IndexGetCommand(loggerFactory.CreateLogger<IndexGetCommand>()));
-        index.AddCommand("query", new IndexQueryCommand(loggerFactory.CreateLogger<IndexQueryCommand>()));
+        var indexGet = serviceProvider.GetRequiredService<IndexGetCommand>();
+        index.AddCommand(indexGet.Name, indexGet);
+        var indexQuery = serviceProvider.GetRequiredService<IndexQueryCommand>();
+        index.AddCommand(indexQuery.Name, indexQuery);
+
+        return search;
     }
 }

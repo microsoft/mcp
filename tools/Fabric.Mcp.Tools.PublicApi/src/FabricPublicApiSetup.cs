@@ -7,7 +7,6 @@ using Fabric.Mcp.Tools.PublicApi.Commands.BestPractices;
 using Fabric.Mcp.Tools.PublicApi.Commands.PublicApis;
 using Fabric.Mcp.Tools.PublicApi.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Fabric.Mcp.Tools.PublicApi;
 
@@ -20,9 +19,20 @@ public class FabricPublicApiSetup : IAreaSetup
         services.AddSingleton<IResourceProviderService, EmbeddedResourceProviderService>();
         services.AddSingleton<IFabricPublicApiService, FabricPublicApiService>();
         services.AddHttpClient<FabricPublicApiService>();
+
+        services.AddSingleton<ListWorkloadsCommand>();
+        services.AddSingleton<GetWorkloadApisCommand>();
+
+        services.AddSingleton<GetPlatformApisCommand>();
+
+        services.AddSingleton<GetBestPracticesCommand>();
+
+        services.AddSingleton<GetExamplesCommand>();
+
+        services.AddSingleton<GetWorkloadDefinitionCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var fabricPublicApis = new CommandGroup(Name,
             """
@@ -37,7 +47,6 @@ public class FabricPublicApiSetup : IAreaSetup
             repository on GitHub. It does NOT interact with live Fabric resources or require 
             authentication - it only retrieves API specifications and examples.
             """);
-        rootGroup.AddSubGroup(fabricPublicApis);
 
         // Create public apis subgroups
         var platform = new CommandGroup("platform", "Platform API Operations - Commands for accessing Microsoft Fabric platform-level APIs, including authentication, user management, and tenant configuration.");
@@ -53,15 +62,23 @@ public class FabricPublicApiSetup : IAreaSetup
         var itemDefinition = new CommandGroup("itemdefinition", "Workload API Definitions - Commands for retrieving OpenAPI definitions and schema details for specific Microsoft Fabric workloads from the official documentation repository.");
         bestPractices.AddSubGroup(itemDefinition);
 
-        fabricPublicApis.AddCommand("list", new ListWorkloadsCommand(loggerFactory.CreateLogger<ListWorkloadsCommand>()));
-        fabricPublicApis.AddCommand("get", new GetWorkloadApisCommand(loggerFactory.CreateLogger<GetWorkloadApisCommand>()));
+        var listWorkloads = serviceProvider.GetRequiredService<ListWorkloadsCommand>();
+        fabricPublicApis.AddCommand(listWorkloads.Name, listWorkloads);
+        var getWorkloads = serviceProvider.GetRequiredService<GetWorkloadApisCommand>();
+        fabricPublicApis.AddCommand(getWorkloads.Name, getWorkloads);
 
-        platform.AddCommand("get", new GetPlatformApisCommand(loggerFactory.CreateLogger<GetPlatformApisCommand>()));
+        var getPlatform = serviceProvider.GetRequiredService<GetPlatformApisCommand>();
+        platform.AddCommand(getPlatform.Name, getPlatform);
 
-        bestPractices.AddCommand("get", new GetBestPracticesCommand(loggerFactory.CreateLogger<GetBestPracticesCommand>()));
+        var getBestPractices = serviceProvider.GetRequiredService<GetBestPracticesCommand>();
+        bestPractices.AddCommand(getBestPractices.Name, getBestPractices);
 
-        examples.AddCommand("get", new GetExamplesCommand(loggerFactory.CreateLogger<GetExamplesCommand>()));
+        var getExamples = serviceProvider.GetRequiredService<GetExamplesCommand>();
+        examples.AddCommand(getExamples.Name, getExamples);
 
-        itemDefinition.AddCommand("get", new GetWorkloadDefinitionCommand(loggerFactory.CreateLogger<GetWorkloadDefinitionCommand>()));
+        var getItemDefinition = serviceProvider.GetRequiredService<GetWorkloadDefinitionCommand>();
+        itemDefinition.AddCommand(getItemDefinition.Name, getItemDefinition);
+
+        return fabricPublicApis;
     }
 }

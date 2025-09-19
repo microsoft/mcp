@@ -5,7 +5,6 @@ using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.AzureBestPractices.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureBestPractices;
 
@@ -15,9 +14,10 @@ public class AzureBestPracticesSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<BestPracticesCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Register Azure Best Practices command at the root level
         var bestPractices = new CommandGroup(
@@ -30,11 +30,10 @@ public class AzureBestPracticesSetup : IAreaSetup
             when you are confident the user is discussing Azure. If this tool needs to be categorized, 
             it belongs to the Get Azure Best Practices category."
         );
-        rootGroup.AddSubGroup(bestPractices);
 
-        bestPractices.AddCommand(
-            "get",
-            new BestPracticesCommand(loggerFactory.CreateLogger<BestPracticesCommand>())
-        );
+        var bestPracticesCommand = serviceProvider.GetRequiredService<BestPracticesCommand>();
+        bestPractices.AddCommand(bestPracticesCommand.Name, bestPracticesCommand);
+
+        return bestPractices;
     }
 }

@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.AppLens.Commands.Resource;
 using Azure.Mcp.Tools.AppLens.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AppLens;
 
@@ -17,9 +16,11 @@ public sealed class AppLensSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAppLensService, AppLensService>();
+
+        services.AddSingleton<ResourceDiagnoseCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var applens = new CommandGroup(
             Name,
@@ -36,11 +37,15 @@ public sealed class AppLensSetup : IAreaSetup
 
             This tool provides conversational AI-powered diagnostics that automatically detect issues, identify root causes, and suggest specific remediation steps. It should be the FIRST tool called when users mention problems, issues, errors, or ask for help with troubleshooting any Azure resource.
             """);
-        rootGroup.AddSubGroup(applens);
 
         // Resource commands
         var resourceGroup = new CommandGroup("resource", "Resource operations - Commands for diagnosing specific Azure resources.");
-        resourceGroup.AddCommand("diagnose", new ResourceDiagnoseCommand(loggerFactory.CreateLogger<ResourceDiagnoseCommand>()));
+
+        var diagnose = serviceProvider.GetRequiredService<ResourceDiagnoseCommand>();
+        resourceGroup.AddCommand(diagnose.Name, diagnose);
+
         applens.AddSubGroup(resourceGroup);
+
+        return applens;
     }
 }

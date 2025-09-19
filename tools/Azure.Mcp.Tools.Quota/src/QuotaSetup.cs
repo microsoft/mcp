@@ -3,12 +3,10 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Quota.Commands.Region;
 using Azure.Mcp.Tools.Quota.Commands.Usage;
 using Azure.Mcp.Tools.Quota.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota;
 
@@ -20,24 +18,30 @@ public sealed class QuotaSetup : IAreaSetup
     {
         services.AddHttpClientServices();
 
-        services.AddTransient<IQuotaService>(serviceProvider =>
-            new QuotaService(serviceProvider.GetService<ILoggerFactory>(), serviceProvider.GetRequiredService<IHttpClientService>()));
+        services.AddTransient<IQuotaService, QuotaService>();
+
+        services.AddTransient<CheckCommand>();
+        services.AddTransient<AvailabilityListCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var quota = new CommandGroup(Name, "Quota commands for getting the available regions of specific Azure resource types"
                     + " or checking Azure resource quota and usage");
-        rootGroup.AddSubGroup(quota);
 
         var usageGroup = new CommandGroup("usage", "Resource usage and quota operations");
-        usageGroup.AddCommand("check", new CheckCommand(loggerFactory.CreateLogger<CheckCommand>()));
+        var checkCommand = serviceProvider.GetRequiredService<CheckCommand>();
+        usageGroup.AddCommand(checkCommand.Name, checkCommand);
         quota.AddSubGroup(usageGroup);
 
         var regionGroup = new CommandGroup("region", "Region availability operations");
         var availabilityGroup = new CommandGroup("availability", "Region availability information");
-        availabilityGroup.AddCommand("list", new AvailabilityListCommand(loggerFactory.CreateLogger<AvailabilityListCommand>()));
+
+        var availabilityListCommand = serviceProvider.GetRequiredService<AvailabilityListCommand>();
+        availabilityGroup.AddCommand(availabilityListCommand.Name, availabilityListCommand);
         regionGroup.AddSubGroup(availabilityGroup);
         quota.AddSubGroup(regionGroup);
+
+        return quota;
     }
 }
