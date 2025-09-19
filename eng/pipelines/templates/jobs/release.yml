@@ -79,4 +79,4 @@ jobs:
       CommitMsg: "Increment package version after release"
       PRTitle: "Increment version after release"
       RepoOwner: microsoft
-      CloseAfterOpenForTesting: ${{ parameters.IsTestPipeline}}
+      CloseAfterOpenForTesting: ${{ parameters.IsTestPipeline }}
