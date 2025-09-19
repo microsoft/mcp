@@ -36,7 +36,7 @@ public class StorageSetup : IAreaSetup
         rootGroup.AddSubGroup(storage);
 
         // Create Storage subgroups
-        var storageAccount = new CommandGroup("account", "Storage account operations - Commands for listing and managing Storage accounts in your Azure subscription.");
+        var storageAccount = new CommandGroup("account", "Storage accounts operations - Commands for listing and managing Storage accounts in your Azure subscription.");
         storage.AddSubGroup(storageAccount);
 
         var blobs = new CommandGroup("blob", "Storage blob operations - Commands for uploading, downloading, and managing blob in your Azure Storage accounts.");
