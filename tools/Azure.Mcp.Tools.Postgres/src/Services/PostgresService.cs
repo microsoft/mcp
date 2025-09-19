@@ -277,12 +277,6 @@ public class PostgresService : BaseAzureService, IPostgresService
             throw new InvalidOperationException("Multiple SQL statements are not allowed. Use only a single SELECT statement.");
         }
 
-        // Check for dangerous keywords
-        if (HasDangerousKeywords(cleanedQuery))
-        {
-            throw new InvalidOperationException("Query contains dangerous keyword or patterns");
-        }
-
         // Check for allowed statement types only
         if (!IsAllowedStatementType(cleanedQuery))
         {
@@ -331,22 +325,6 @@ public class PostgresService : BaseAzureService, IPostgresService
         }
 
         return false;
-    }
-
-    private static bool HasDangerousKeywords(string query)
-    {
-        var dangerousKeywords = new[]
-        {
-            "DROP", "DELETE", "INSERT", "UPDATE", "CREATE", "ALTER", "GRANT", "REVOKE",
-            "TRUNCATE", "VACUUM", "REINDEX", "BEGIN", "COMMIT", "ROLLBACK", "SAVEPOINT",
-            "EXTENSION", "LANGUAGE", "USER", "ROLE", "DATABASE", "SCHEMA", "FUNCTION",
-            "TRIGGER", "VIEW", "INDEX", "SHOW", "COPY", "\\COPY", "EXPLAIN", "ANALYZE",
-            "UNION", "INTERSECT", "EXCEPT"
-        };
-
-        var upperQuery = query.ToUpperInvariant();
-        return dangerousKeywords.Any(keyword =>
-            System.Text.RegularExpressions.Regex.IsMatch(upperQuery, @"\b" + System.Text.RegularExpressions.Regex.Escape(keyword) + @"\b"));
     }
 
     private static bool IsAllowedStatementType(string query)
