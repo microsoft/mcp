@@ -114,7 +114,22 @@ public sealed class NodepoolGetCommandTests
             Mode = "User",
             OsType = "Linux",
             OsSKU = "Ubuntu",
-            NodeImageVersion = "AKSUbuntu-2204gen2containerd-202508.20.1"
+            NodeImageVersion = "AKSUbuntu-2204gen2containerd-202508.20.1",
+            Tags = new Dictionary<string, string> { ["gc_skip"] = "true" },
+            SpotMaxPrice = -1,
+            WorkloadRuntime = "OCIContainer",
+            EnableEncryptionAtHost = false,
+            UpgradeSettings = new Models.NodePoolUpgradeSettings { MaxSurge = "10%", MaxUnavailable = "0" },
+            SecurityProfile = new Models.NodePoolSecurityProfile { EnableVTPM = false, EnableSecureBoot = false },
+            GpuProfile = new Models.NodePoolGpuProfile { Driver = "Install" },
+            NetworkProfile = new Models.NodePoolNetworkProfile
+            {
+                AllowedHostPorts = new List<Models.PortRange> { new() { StartPort = 8080, EndPort = 8080 } },
+                ApplicationSecurityGroups = new List<string> { "/subscriptions/s/rg/r/providers/Microsoft.Network/applicationSecurityGroups/asg1" },
+                NodePublicIPTags = new List<Models.IPTag> { new() { IpTagType = "FirstPartyUsage", Tag = "foo" } }
+            },
+            PodSubnetId = "/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/podsubnet",
+            VnetSubnetId = "/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/nodesubnet"
         };
         _aksService.GetNodePool(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedNodePool);
@@ -160,6 +175,14 @@ public sealed class NodepoolGetCommandTests
         Assert.Equal(expectedNodePool.OsType, result.NodePool.OsType);
         Assert.Equal(expectedNodePool.OsSKU, result.NodePool.OsSKU);
         Assert.Equal(expectedNodePool.NodeImageVersion, result.NodePool.NodeImageVersion);
+        Assert.Equal("true", result.NodePool.Tags!["gc_skip"]);
+        Assert.Equal(-1, result.NodePool.SpotMaxPrice);
+        Assert.Equal("OCIContainer", result.NodePool.WorkloadRuntime);
+        Assert.False(result.NodePool.EnableEncryptionAtHost!.Value);
+        Assert.Equal("Install", result.NodePool.GpuProfile?.Driver);
+        Assert.Equal(1, result.NodePool.NetworkProfile?.AllowedHostPorts?.Count);
+        Assert.Equal("/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/podsubnet", result.NodePool.PodSubnetId);
+        Assert.Equal("/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/nodesubnet", result.NodePool.VnetSubnetId);
     }
 
     [Fact]

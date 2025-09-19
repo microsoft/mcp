@@ -52,6 +52,43 @@ public sealed class AksCommandTests(ITestOutputHelper output)
             {
                 Assert.False(string.IsNullOrEmpty(stateProperty.GetString()));
             }
+
+            // New enriched fields (presence and shape only)
+            if (cluster.TryGetProperty("id", out var idProperty))
+            {
+                Assert.True(idProperty.ValueKind is JsonValueKind.String);
+            }
+            if (cluster.TryGetProperty("networkProfile", out var netProfile))
+            {
+                Assert.True(netProfile.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+                if (netProfile.ValueKind == JsonValueKind.Object)
+                {
+                    if (netProfile.TryGetProperty("loadBalancerProfile", out var lbProfile))
+                    {
+                        Assert.True(lbProfile.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+                    }
+                }
+            }
+            if (cluster.TryGetProperty("windowsProfile", out var winProfile))
+            {
+                Assert.True(winProfile.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+            }
+            if (cluster.TryGetProperty("servicePrincipalProfile", out var spProfile))
+            {
+                Assert.True(spProfile.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+            }
+            if (cluster.TryGetProperty("addonProfiles", out var addons))
+            {
+                Assert.True(addons.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+            }
+            if (cluster.TryGetProperty("identityProfile", out var idProfile))
+            {
+                Assert.True(idProfile.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+            }
+            if (cluster.TryGetProperty("tags", out var tags))
+            {
+                Assert.True(tags.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+            }
         }
     }
 
@@ -136,8 +173,28 @@ public sealed class AksCommandTests(ITestOutputHelper output)
         Assert.Equal(resourceGroupName, rgProperty.GetString());
 
         // Verify other common properties exist
-        cluster.AssertProperty("subscriptionId");
-        cluster.AssertProperty("location");
+        Assert.True(cluster.TryGetProperty("subscriptionId", out _));
+        Assert.True(cluster.TryGetProperty("location", out _));
+
+        // Enriched cluster checks
+        Assert.True(cluster.TryGetProperty("id", out _));
+        Assert.True(cluster.TryGetProperty("enableRbac", out _));
+        Assert.True(cluster.TryGetProperty("skuName", out _));
+        Assert.True(cluster.TryGetProperty("skuTier", out _));
+        Assert.True(cluster.TryGetProperty("nodeResourceGroup", out _));
+        Assert.True(cluster.TryGetProperty("maxAgentPools", out _));
+        Assert.True(cluster.TryGetProperty("supportPlan", out _));
+
+        // Profiles present or null
+        Assert.True(cluster.TryGetProperty("networkProfile", out _));
+        Assert.True(cluster.TryGetProperty("windowsProfile", out _));
+        Assert.True(cluster.TryGetProperty("servicePrincipalProfile", out _));
+        Assert.True(cluster.TryGetProperty("addonProfiles", out _));
+        Assert.True(cluster.TryGetProperty("identityProfile", out _));
+
+        // Get-specific should return agentPoolProfiles (we populate on Get)
+        Assert.True(cluster.TryGetProperty("agentPoolProfiles", out var pools));
+        Assert.Equal(JsonValueKind.Array, pools.ValueKind);
     }
 
     [Fact]
