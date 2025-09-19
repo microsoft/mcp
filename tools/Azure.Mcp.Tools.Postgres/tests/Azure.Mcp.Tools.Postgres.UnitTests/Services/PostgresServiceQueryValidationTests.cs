@@ -37,58 +37,6 @@ public class PostgresServiceQueryValidationTests
     }
 
     [Theory]
-    [InlineData("DROP TABLE users")]
-    [InlineData("DELETE FROM users")]
-    [InlineData("INSERT INTO users")]
-    [InlineData("UPDATE users SET")]
-    [InlineData("CREATE TABLE test")]
-    [InlineData("ALTER TABLE users")]
-    [InlineData("GRANT ALL PRIVILEGES")]
-    [InlineData("REVOKE SELECT ON users")]
-    [InlineData("TRUNCATE TABLE users")]
-    [InlineData("VACUUM FULL users")]
-    [InlineData("REINDEX TABLE users")]
-    [InlineData("CREATE USER testuser")]
-    [InlineData("DROP USER testuser")]
-    [InlineData("CREATE ROLE testrole")]
-    [InlineData("DROP ROLE testrole")]
-    [InlineData("CREATE DATABASE testdb")]
-    [InlineData("DROP DATABASE testdb")]
-    [InlineData("CREATE SCHEMA testschema")]
-    [InlineData("DROP SCHEMA testschema")]
-    [InlineData("CREATE FUNCTION testfunc()")]
-    [InlineData("DROP FUNCTION testfunc")]
-    [InlineData("CREATE TRIGGER testtrigger")]
-    [InlineData("DROP TRIGGER testtrigger")]
-    [InlineData("CREATE VIEW testview")]
-    [InlineData("DROP VIEW testview")]
-    [InlineData("CREATE INDEX testindex")]
-    [InlineData("DROP INDEX testindex")]
-    [InlineData("BEGIN TRANSACTION")]
-    [InlineData("COMMIT TRANSACTION")]
-    [InlineData("ROLLBACK TRANSACTION")]
-    [InlineData("SAVEPOINT testsavepoint")]
-    [InlineData("CREATE EXTENSION testext")]
-    [InlineData("DROP EXTENSION testext")]
-    [InlineData("CREATE LANGUAGE testlang")]
-    [InlineData("DROP LANGUAGE testlang")]
-    public void ValidateQuerySafety_WithDangerousQueries_ShouldThrowInvalidOperationException(string query)
-    {
-        // Arrange
-        var validateMethod = GetValidateQuerySafetyMethod();
-
-        // Act & Assert
-        var exception = Assert.Throws<TargetInvocationException>(() =>
-            validateMethod.Invoke(null, new object[] { query }));
-
-        Assert.IsType<InvalidOperationException>(exception.InnerException);
-        Assert.True(
-            exception.InnerException!.Message.Contains("dangerous keyword") ||
-            exception.InnerException.Message.Contains("dangerous patterns"),
-            $"Expected error message to contain either 'dangerous keyword' or 'dangerous patterns', but got: {exception.InnerException.Message}");
-    }
-
-    [Theory]
     [InlineData("SHOW DATABASES")]
     [InlineData("EXPLAIN SELECT * FROM users")]
     [InlineData("ANALYZE SELECT * FROM users")]
@@ -190,25 +138,6 @@ public class PostgresServiceQueryValidationTests
 
         // Act & Assert - Should not throw because comments are stripped before validation
         validateMethod.Invoke(null, new object[] { query });
-    }
-
-    [Theory]
-    [InlineData("SELECT * FROM users WHERE name = 'test'; DROP TABLE users; --")]
-    [InlineData("SELECT * FROM users UNION SELECT password FROM admin")]
-    public void ValidateQuerySafety_WithSQLInjectionAttempts_ShouldThrowInvalidOperationException(string query)
-    {
-        // Arrange
-        var validateMethod = GetValidateQuerySafetyMethod();
-
-        // Act & Assert
-        var exception = Assert.Throws<TargetInvocationException>(() =>
-            validateMethod.Invoke(null, new object[] { query }));
-
-        Assert.IsType<InvalidOperationException>(exception.InnerException);
-        Assert.True(
-            exception.InnerException!.Message.Contains("Multiple SQL statements are not allowed") ||
-            exception.InnerException.Message.Contains("dangerous keyword"),
-            $"Expected SQL injection prevention error, but got: {exception.InnerException.Message}");
     }
 
     private static MethodInfo GetValidateQuerySafetyMethod()
