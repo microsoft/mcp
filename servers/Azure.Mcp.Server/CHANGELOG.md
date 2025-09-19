@@ -7,6 +7,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Added support for `azmcp sql server list` command to list SQL servers in a subscription and resource group. [[#503](https://github.com/microsoft/mcp/issues/503)]
+- Added validation for the PostgreSQL database query command `azmcp_postgres_database_query`.[[#518](https://github.com/microsoft/mcp/pull/518)]
 
 ### Breaking Changes
 
