@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
 using Azure.Mcp.Tools.AzureIsv.Services;
 using Azure.Mcp.Tools.AzureIsv.Services.Datadog;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureIsv;
 
@@ -29,7 +28,8 @@ public class AzureIsvSetup : IAreaSetup
         var monitoredResources = new CommandGroup("monitoredresources", "Datadog monitored resources operations - Commands for listing monitored resources in a specific Datadog monitor.");
         datadog.AddSubGroup(monitoredResources);
 
-        monitoredResources.AddCommand("list", serviceProvider.GetRequiredService<MonitoredResourcesListCommand>());
+        var monitoredResourcesList = serviceProvider.GetRequiredService<MonitoredResourcesListCommand>();
+        monitoredResources.AddCommand(monitoredResourcesList.Name, monitoredResourcesList);
 
         return datadog;
     }

@@ -39,10 +39,14 @@ public class FoundrySetup : IAreaSetup
         var deployments = new CommandGroup("deployments", "Foundry models deployments operations - Commands for listing and managing models deployments in AI Foundry.");
         models.AddSubGroup(deployments);
 
-        deployments.AddCommand("list", serviceProvider.GetRequiredService<DeploymentsListCommand>());
+        var deploymentList = serviceProvider.GetRequiredService<DeploymentsListCommand>();
+        deployments.AddCommand(deploymentList.Name, deploymentList);
 
-        models.AddCommand("list", serviceProvider.GetRequiredService<ModelsListCommand>());
-        models.AddCommand("deploy", serviceProvider.GetRequiredService<ModelDeploymentCommand>());
+        var modelList = serviceProvider.GetRequiredService<ModelsListCommand>();
+        models.AddCommand(modelList.Name, modelList);
+
+        var deploymentCommand = serviceProvider.GetRequiredService<ModelDeploymentCommand>();
+        models.AddCommand(deploymentCommand.Name, deploymentCommand);
 
         var knowledge = new CommandGroup("knowledge", "Foundry knowledge operations - Commands for managing knowledge bases and indexes in AI Foundry.");
         foundry.AddSubGroup(knowledge);
@@ -50,8 +54,11 @@ public class FoundrySetup : IAreaSetup
         var index = new CommandGroup("index", "Foundry knowledge index operations - Commands for managing knowledge indexes in AI Foundry.");
         knowledge.AddSubGroup(index);
 
-        index.AddCommand("list", serviceProvider.GetRequiredService<KnowledgeIndexListCommand>());
-        index.AddCommand("schema", serviceProvider.GetRequiredService<KnowledgeIndexSchemaCommand>());
+        var indexList = serviceProvider.GetRequiredService<KnowledgeIndexListCommand>();
+        index.AddCommand(indexList.Name, indexList);
+
+        var indexSchema = serviceProvider.GetRequiredService<KnowledgeIndexSchemaCommand>();
+        index.AddCommand(indexSchema.Name, indexSchema);
 
         var agents = new CommandGroup("agents", "Foundry agents operations - Commands for listing, querying, and evaluating agents in AI Foundry.");
         foundry.AddSubGroup(agents);

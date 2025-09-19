@@ -44,16 +44,23 @@ public class KustoSetup : IAreaSetup
         var tables = new CommandGroup("table", "Kusto table operations - Commands for listing tables in a database.");
         kusto.AddSubGroup(tables);
 
-        kusto.AddCommand("sample", serviceProvider.GetRequiredService<SampleCommand>());
-        kusto.AddCommand("query", serviceProvider.GetRequiredService<QueryCommand>());
+        var sampleCommand = serviceProvider.GetRequiredService<SampleCommand>();
+        kusto.AddCommand(sampleCommand.Name, sampleCommand);
+        var queryCommand = serviceProvider.GetRequiredService<QueryCommand>();
+        kusto.AddCommand(queryCommand.Name, queryCommand);
 
-        clusters.AddCommand("list", serviceProvider.GetRequiredService<ClusterListCommand>());
-        clusters.AddCommand("get", serviceProvider.GetRequiredService<ClusterGetCommand>());
+        var clusterList = serviceProvider.GetRequiredService<ClusterListCommand>();
+        clusters.AddCommand(clusterList.Name, clusterList);
+        var clusterGet = serviceProvider.GetRequiredService<ClusterGetCommand>();
+        clusters.AddCommand(clusterGet.Name, clusterGet);
 
-        databases.AddCommand("list", serviceProvider.GetRequiredService<DatabaseListCommand>());
+        var databaseList = serviceProvider.GetRequiredService<DatabaseListCommand>();
+        databases.AddCommand(databaseList.Name, databaseList);
 
-        tables.AddCommand("list", serviceProvider.GetRequiredService<TableListCommand>());
-        tables.AddCommand("schema", serviceProvider.GetRequiredService<TableSchemaCommand>());
+        var tableList = serviceProvider.GetRequiredService<TableListCommand>();
+        tables.AddCommand(tableList.Name, tableList);
+        var tableSchema = serviceProvider.GetRequiredService<TableSchemaCommand>();
+        tables.AddCommand(tableSchema.Name, tableSchema);
 
         return kusto;
     }

@@ -38,29 +38,39 @@ public class PostgresSetup : IAreaSetup
 
         var database = new CommandGroup("database", "PostgreSQL database operations");
         pg.AddSubGroup(database);
-        database.AddCommand("list", serviceProvider.GetRequiredService<DatabaseListCommand>());
-        database.AddCommand("query", serviceProvider.GetRequiredService<DatabaseQueryCommand>());
+
+        var databaseList = serviceProvider.GetRequiredService<DatabaseListCommand>();
+        database.AddCommand(databaseList.Name, databaseList);
+        var databaseQuery = serviceProvider.GetRequiredService<DatabaseQueryCommand>();
+        database.AddCommand(databaseQuery.Name, databaseQuery);
 
         var table = new CommandGroup("table", "PostgreSQL table operations");
         pg.AddSubGroup(table);
-        table.AddCommand("list", serviceProvider.GetRequiredService<TableListCommand>());
+
+        var tableList = serviceProvider.GetRequiredService<TableListCommand>();
+        table.AddCommand(tableList.Name, tableList);
 
         var schema = new CommandGroup("schema", "PostgreSQL table schema operations");
         table.AddSubGroup(schema);
-        schema.AddCommand("get", serviceProvider.GetRequiredService<TableSchemaGetCommand>());
+        var tableSchemaGet = serviceProvider.GetRequiredService<TableSchemaGetCommand>();
+        schema.AddCommand(tableSchemaGet.Name, tableSchemaGet);
 
         var server = new CommandGroup("server", "PostgreSQL server operations");
         pg.AddSubGroup(server);
-        server.AddCommand("list", serviceProvider.GetRequiredService<ServerListCommand>());
+        var serverList = serviceProvider.GetRequiredService<ServerListCommand>();
+        server.AddCommand(serverList.Name, serverList);
 
         var config = new CommandGroup("config", "PostgreSQL server configuration operations");
         server.AddSubGroup(config);
-        config.AddCommand("get", serviceProvider.GetRequiredService<ServerConfigGetCommand>());
+        var serverConfigGet = serviceProvider.GetRequiredService<ServerConfigGetCommand>();
+        config.AddCommand(serverConfigGet.Name, serverConfigGet);
 
         var param = new CommandGroup("param", "PostgreSQL server parameter operations");
         server.AddSubGroup(param);
-        param.AddCommand("get", serviceProvider.GetRequiredService<ServerParamGetCommand>());
-        param.AddCommand("set", serviceProvider.GetRequiredService<ServerParamSetCommand>());
+        var serverParamGet = serviceProvider.GetRequiredService<ServerParamGetCommand>();
+        param.AddCommand(serverParamGet.Name, serverParamGet);
+        var serverParamSet = serviceProvider.GetRequiredService<ServerParamSetCommand>();
+        param.AddCommand(serverParamSet.Name, serverParamSet);
 
         return pg;
     }

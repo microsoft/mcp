@@ -40,11 +40,19 @@ public class CosmosSetup : IAreaSetup
 
         // Create items subgroup for Cosmos
         var cosmosItem = new CommandGroup("item", "Cosmos DB item operations - Commands for querying, creating, updating, and deleting document within your Cosmos DB containers.");
-        cosmosContainer.AddSubGroup(cosmosItem);        // Register Cosmos commands
-        databases.AddCommand("list", serviceProvider.GetRequiredService<DatabaseListCommand>());
-        cosmosContainer.AddCommand("list", serviceProvider.GetRequiredService<ContainerListCommand>());
-        cosmosAccount.AddCommand("list", serviceProvider.GetRequiredService<AccountListCommand>());
-        cosmosItem.AddCommand("query", serviceProvider.GetRequiredService<ItemQueryCommand>());
+        cosmosContainer.AddSubGroup(cosmosItem);
+
+        var databaseList = serviceProvider.GetRequiredService<DatabaseListCommand>();
+        databases.AddCommand(databaseList.Name, databaseList);
+
+        var containerList = serviceProvider.GetRequiredService<ContainerListCommand>();
+        cosmosContainer.AddCommand(containerList.Name, containerList);
+
+        var accountList = serviceProvider.GetRequiredService<AccountListCommand>();
+        cosmosAccount.AddCommand(accountList.Name, accountList);
+
+        var itemQuery = serviceProvider.GetRequiredService<ItemQueryCommand>();
+        cosmosItem.AddCommand(itemQuery.Name, itemQuery);
 
         return cosmos;
     }

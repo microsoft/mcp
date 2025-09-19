@@ -45,10 +45,13 @@ public class ResourceHealthSetup : IAreaSetup
         resourceHealth.AddSubGroup(serviceHealthEvents);
 
         // Register commands
-        availabilityStatus.AddCommand("get", serviceProvider.GetRequiredService<AvailabilityStatusGetCommand>());
-        availabilityStatus.AddCommand("list", serviceProvider.GetRequiredService<AvailabilityStatusListCommand>());
+        var availabilityStatusGet = serviceProvider.GetRequiredService<AvailabilityStatusGetCommand>();
+        availabilityStatus.AddCommand(availabilityStatusGet.Name, availabilityStatusGet);
+        var availabilityStatusList = serviceProvider.GetRequiredService<AvailabilityStatusListCommand>();
+        availabilityStatus.AddCommand(availabilityStatusList.Name, availabilityStatusList);
 
-        serviceHealthEvents.AddCommand("list", serviceProvider.GetRequiredService<ServiceHealthEventsListCommand>());
+        var serviceHealthEventsList = serviceProvider.GetRequiredService<ServiceHealthEventsListCommand>();
+        serviceHealthEvents.AddCommand(serviceHealthEventsList.Name, serviceHealthEventsList);
 
         return resourceHealth;
     }

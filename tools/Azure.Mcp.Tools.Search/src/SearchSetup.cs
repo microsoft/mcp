@@ -42,13 +42,16 @@ public class SearchSetup : IAreaSetup
         var service = new CommandGroup("service", "Azure AI Search (formerly known as \"Azure Cognitive Search\") service operations - Commands for listing and managing search services in your Azure subscription.");
         search.AddSubGroup(service);
 
-        service.AddCommand("list", serviceProvider.GetRequiredService<ServiceListCommand>());
+        var serviceList = serviceProvider.GetRequiredService<ServiceListCommand>();
+        service.AddCommand(serviceList.Name, serviceList);
 
         var index = new CommandGroup("index", "Azure AI Search (formerly known as \"Azure Cognitive Search\") index operations - Commands for listing, managing, and querying search indexes in a specific search service.");
         search.AddSubGroup(index);
 
-        index.AddCommand("get", serviceProvider.GetRequiredService<IndexGetCommand>());
-        index.AddCommand("query", serviceProvider.GetRequiredService<IndexQueryCommand>());
+        var indexGet = serviceProvider.GetRequiredService<IndexGetCommand>();
+        index.AddCommand(indexGet.Name, indexGet);
+        var indexQuery = serviceProvider.GetRequiredService<IndexQueryCommand>();
+        index.AddCommand(indexQuery.Name, indexQuery);
 
         return search;
     }

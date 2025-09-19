@@ -8,7 +8,6 @@ using System.Text.Encodings.Web;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Services.Telemetry;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 

@@ -24,7 +24,8 @@ public class FunctionAppSetup : IAreaSetup
     {
         var functionApp = new CommandGroup(Name, "Function App operations - Commands for managing and accessing Azure Function App resources.");
 
-        functionApp.AddCommand("get", serviceProvider.GetRequiredService<FunctionAppGetCommand>());
+        var getCommand = serviceProvider.GetRequiredService<FunctionAppGetCommand>();
+        functionApp.AddCommand(getCommand.Name, getCommand);
 
         return functionApp;
     }

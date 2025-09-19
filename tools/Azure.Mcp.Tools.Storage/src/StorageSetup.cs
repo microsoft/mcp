@@ -54,14 +54,20 @@ public class StorageSetup : IAreaSetup
         blobs.AddSubGroup(blobContainer);
 
         // Register Storage commands
-        storageAccount.AddCommand("create", serviceProvider.GetRequiredService<AccountCreateCommand>());
-        storageAccount.AddCommand("get", serviceProvider.GetRequiredService<AccountGetCommand>());
+        var accountCreate = serviceProvider.GetRequiredService<AccountCreateCommand>();
+        storageAccount.AddCommand(accountCreate.Name, accountCreate);
+        var accountGet = serviceProvider.GetRequiredService<AccountGetCommand>();
+        storageAccount.AddCommand(accountGet.Name, accountGet);
 
-        blobs.AddCommand("get", serviceProvider.GetRequiredService<BlobGetCommand>());
-        blobs.AddCommand("upload", serviceProvider.GetRequiredService<BlobUploadCommand>());
+        var blobGet = serviceProvider.GetRequiredService<BlobGetCommand>();
+        blobs.AddCommand(blobGet.Name, blobGet);
+        var blobUpload = serviceProvider.GetRequiredService<BlobUploadCommand>();
+        blobs.AddCommand(blobUpload.Name, blobUpload);
 
-        blobContainer.AddCommand("create", serviceProvider.GetRequiredService<ContainerCreateCommand>());
-        blobContainer.AddCommand("get", serviceProvider.GetRequiredService<ContainerGetCommand>());
+        var containerCreate = serviceProvider.GetRequiredService<ContainerCreateCommand>();
+        blobContainer.AddCommand(containerCreate.Name, containerCreate);
+        var containerGet = serviceProvider.GetRequiredService<ContainerGetCommand>();
+        blobContainer.AddCommand(containerGet.Name, containerGet);
 
         return storage;
     }

@@ -66,13 +66,18 @@ public class MonitorSetup : IAreaSetup
 
         // Register Monitor commands
 
-        workspaceLogs.AddCommand("query", serviceProvider.GetRequiredService<WorkspaceLogQueryCommand>());
-        resourceLogs.AddCommand("query", serviceProvider.GetRequiredService<ResourceLogQueryCommand>());
+        var workspaceLogQuery = serviceProvider.GetRequiredService<WorkspaceLogQueryCommand>();
+        workspaceLogs.AddCommand(workspaceLogQuery.Name, workspaceLogQuery);
+        var resourceLogQuery = serviceProvider.GetRequiredService<ResourceLogQueryCommand>();
+        resourceLogs.AddCommand(resourceLogQuery.Name, resourceLogQuery);
 
-        workspaces.AddCommand("list", serviceProvider.GetRequiredService<WorkspaceListCommand>());
-        monitorTable.AddCommand("list", serviceProvider.GetRequiredService<TableListCommand>());
+        var workspaceList = serviceProvider.GetRequiredService<WorkspaceListCommand>();
+        workspaces.AddCommand(workspaceList.Name, workspaceList);
+        var tableList = serviceProvider.GetRequiredService<TableListCommand>();
+        monitorTable.AddCommand(tableList.Name, tableList);
 
-        monitorTableType.AddCommand("list", serviceProvider.GetRequiredService<TableTypeListCommand>());
+        var tableTypeList = serviceProvider.GetRequiredService<TableTypeListCommand>();
+        monitorTableType.AddCommand(tableTypeList.Name, tableTypeList);
 
         var health = new CommandGroup("healthmodels", "Azure Monitor Health Models operations - Commands for working with Azure Monitor Health Models.");
         monitor.AddSubGroup(health);
@@ -80,14 +85,17 @@ public class MonitorSetup : IAreaSetup
         var entity = new CommandGroup("entity", "Entity operations - Commands for working with entities in Azure Monitor Health Models.");
         health.AddSubGroup(entity);
 
-        entity.AddCommand("gethealth", serviceProvider.GetRequiredService<EntityGetHealthCommand>());
+        var entityGetHealth = serviceProvider.GetRequiredService<EntityGetHealthCommand>();
+        entity.AddCommand(entityGetHealth.Name, entityGetHealth);
 
         // Create Metrics command group and register commands
         var metrics = new CommandGroup("metrics", "Azure Monitor metrics operations - Commands for querying and analyzing Azure Monitor metrics.");
         monitor.AddSubGroup(metrics);
 
-        metrics.AddCommand("query", serviceProvider.GetRequiredService<MetricsQueryCommand>());
-        metrics.AddCommand("definitions", serviceProvider.GetRequiredService<MetricsDefinitionsCommand>());
+        var metricsQuery = serviceProvider.GetRequiredService<MetricsQueryCommand>();
+        metrics.AddCommand(metricsQuery.Name, metricsQuery);
+        var metricsDefinitions = serviceProvider.GetRequiredService<MetricsDefinitionsCommand>();
+        metrics.AddCommand(metricsDefinitions.Name, metricsDefinitions);
 
         return monitor;
     }

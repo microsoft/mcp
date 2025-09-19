@@ -46,18 +46,28 @@ public class KeyVaultSetup : IAreaSetup
         var certificate = new CommandGroup("certificate", "Key Vault certificate operations - Commands for managing and accessing certificates in Azure Key Vault.");
         keyVault.AddSubGroup(certificate);
 
-        keys.AddCommand("list", serviceProvider.GetRequiredService<KeyListCommand>());
-        keys.AddCommand("get", serviceProvider.GetRequiredService<KeyGetCommand>());
-        keys.AddCommand("create", serviceProvider.GetRequiredService<KeyCreateCommand>());
+        var keyList = serviceProvider.GetRequiredService<KeyListCommand>();
+        keys.AddCommand(keyList.Name, keyList);
+        var keyGet = serviceProvider.GetRequiredService<KeyGetCommand>();
+        keys.AddCommand(keyGet.Name, keyGet);
+        var keyCreate = serviceProvider.GetRequiredService<KeyCreateCommand>();
+        keys.AddCommand(keyCreate.Name, keyCreate);
 
-        secret.AddCommand("list", serviceProvider.GetRequiredService<SecretListCommand>());
-        secret.AddCommand("create", serviceProvider.GetRequiredService<SecretCreateCommand>());
-        secret.AddCommand("get", serviceProvider.GetRequiredService<SecretGetCommand>());
+        var secretList = serviceProvider.GetRequiredService<SecretListCommand>();
+        secret.AddCommand(secretList.Name, secretList);
+        var secretCreate = serviceProvider.GetRequiredService<SecretCreateCommand>();
+        secret.AddCommand(secretCreate.Name, secretCreate);
+        var secretGet = serviceProvider.GetRequiredService<SecretGetCommand>();
+        secret.AddCommand(secretGet.Name, secretGet);
 
-        certificate.AddCommand("list", serviceProvider.GetRequiredService<CertificateListCommand>());
-        certificate.AddCommand("get", serviceProvider.GetRequiredService<CertificateGetCommand>());
-        certificate.AddCommand("create", serviceProvider.GetRequiredService<CertificateCreateCommand>());
-        certificate.AddCommand("import", serviceProvider.GetRequiredService<CertificateImportCommand>());
+        var certificateList = serviceProvider.GetRequiredService<CertificateListCommand>();
+        certificate.AddCommand(certificateList.Name, certificateList);
+        var certificateGet = serviceProvider.GetRequiredService<CertificateGetCommand>();
+        certificate.AddCommand(certificateGet.Name, certificateGet);
+        var certificateCreate = serviceProvider.GetRequiredService<CertificateCreateCommand>();
+        certificate.AddCommand(certificateCreate.Name, certificateCreate);
+        var certificateImport = serviceProvider.GetRequiredService<CertificateImportCommand>();
+        certificate.AddCommand(certificateImport.Name, certificateImport);
 
         return keyVault;
     }

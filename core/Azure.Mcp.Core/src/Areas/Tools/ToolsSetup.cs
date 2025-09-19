@@ -4,7 +4,6 @@
 using Azure.Mcp.Core.Areas.Tools.Commands;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Areas.Tools;
 
@@ -22,7 +21,8 @@ public sealed class ToolsSetup : IAreaSetup
         // Create Tools command group
         var tools = new CommandGroup(Name, "CLI tools operations - Commands for discovering and exploring the functionality available in this CLI tool.");
 
-        tools.AddCommand("list", serviceProvider.GetRequiredService<ToolsListCommand>());
+        var list = serviceProvider.GetRequiredService<ToolsListCommand>();
+        tools.AddCommand(list.Name, list);
 
         return tools;
     }

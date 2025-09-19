@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Marketplace.Commands.Product;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Marketplace;
 
@@ -32,8 +31,10 @@ public class MarketplaceSetup : IAreaSetup
         marketplace.AddSubGroup(product);
 
         // Register Product commands
-        product.AddCommand("get", serviceProvider.GetRequiredService<ProductGetCommand>());
-        product.AddCommand("list", serviceProvider.GetRequiredService<ProductListCommand>());
+        var productGet = serviceProvider.GetRequiredService<ProductGetCommand>();
+        product.AddCommand(productGet.Name, productGet);
+        var productList = serviceProvider.GetRequiredService<ProductListCommand>();
+        product.AddCommand(productList.Name, productList);
 
         return marketplace;
     }
