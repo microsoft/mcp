@@ -25,7 +25,7 @@ jobs:
       filePath: $(Build.SourcesDirectory)/eng/scripts/Compress-ForSigning.ps1
       arguments: >
         -ArtifactsPath '$(Pipeline.Workspace)'
-        -ArtifactPrefix '$(PipelineArtifactName)_'
+        -ArtifactPrefix 'build_'
         -OutputPath '$(Build.ArtifactStagingDirectory)/signed'
 
   - template: pipelines/steps/binary-signing.yml@azure-sdk-build-tools
@@ -67,7 +67,7 @@ jobs:
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)/signed
-      ArtifactName: $(PipelineArtifactName)_signed
+      ArtifactName: binaries_signed
       SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
 
 - job: Verify_Signing
@@ -84,13 +84,13 @@ jobs:
   - checkout: none
 
   - download: current
-    artifact: $(PipelineArtifactName)_signed
+    artifact: binaries_signed
     displayName: "Download signed MCP server binaries"
 
   - pwsh: |
       Write-Host "Verifying binary signing for win-x64 and win-arm64 binaries..."
       $allSigned = $true
-      $signedBinaries = Get-ChildItem -Path '$(Pipeline.Workspace)/$(PipelineArtifactName)_signed/**/win-*' -Recurse -Include @("*.dll", "*.exe")
+      $signedBinaries = Get-ChildItem -Path '$(Pipeline.Workspace)/binaries_signed/**/win-*' -Recurse -Include @("*.dll", "*.exe")
       foreach ($binary in $signedBinaries) {
           if ((Get-AuthenticodeSignature -FilePath $binary.FullName).Status -ne 'Valid') {
               Write-Host "Binary $($binary.FullName) is NOT signed correctly."
