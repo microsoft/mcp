@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Exceptions;
 using System.Text.RegularExpressions;
+using Azure.Mcp.Core.Exceptions;
 
 namespace Azure.Mcp.Tools.Postgres.Validation;
 
