@@ -31,7 +31,7 @@ public sealed class BatchSetTierCommand(ILogger<BatchSetTierCommand> logger) : B
     {
         Destructive = true,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false

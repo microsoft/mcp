@@ -32,7 +32,7 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCom
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
