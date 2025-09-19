@@ -169,8 +169,13 @@ public class CommandFactoryTests
         // Act
         var actual = factory.GetServiceArea(commandNameToTry);
 
+        // Try in the case that the root prefix is not used.  This is in the case that the tool
+        // is created using the IAreaSetup name as root.
+        var actual2 = factory.GetServiceArea(commandName);
+
         // Assert
         Assert.Equal(expected, actual);
+        Assert.Equal(expected, actual2);
     }
 
     [Fact]
