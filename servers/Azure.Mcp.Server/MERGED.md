@@ -55,8 +55,9 @@ The Azure MCP Server implements the [MCP specification](https://modelcontextprot
 ## Getting Started
 
 ### Prerequisites
-
-- You will need a supported IDE (Visual Studio Code or IntelliJ IDEA) with the GitHub Copilot extension/plugin installed.
+Before you begin, ensure you have:
+- An active Azure subscription
+- A supported IDE with the GitHub Copilot extension / plugin installed.
 
     || Visual Studio Code | IntelliJ IDEA |
     |-------|-----|-----|
@@ -68,127 +69,135 @@ The Azure MCP Server implements the [MCP specification](https://modelcontextprot
 To verify your .NET version, run the following command in your terminal: `dotnet --info`
 <!-- remove-section: end -->
 <!-- remove-section: start nuget;vsix -->
-- To use Azure MCP server from node you must have Node.js (LTS) installed — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
+- To use Azure MCP server from node you must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
 <!-- remove-section: end -->
 
 ### Configuration
 
-You can configure the Azure MCP Server either by installing the [Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server) (recommended for interactive configuration on vs code) or by updating the `mcp.json` configuration file directly in your IDE.
+You can configure the Azure MCP Server by installing the appropriate extension / plugin for your IDE or editing the `mcp.json` file directly.
+- Installing the extension / plugin
 
-<!-- remove-section: start vsix -->
-<!-- remove-chunk: start nuget;npm --><details><!-- remove-chunk: end -->
-<!-- remove-chunk: start nuget;npm --><summary><b>Find mcp.json file for your IDE</b></summary><!-- remove-chunk: end -->
-<!-- insert-chunk nuget;npm {{#### Find mcp.json file for your IDE}} -->
+  |Visual Studio Code | IntelliJ IDEA |
+  |-------|-----|
+  | Install the [Azure MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server) | Install the [Azure Toolkit for Intellij plugin](https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij) |
 
-||| Find mcp.json in Visual Studio Code | Find mcp.json in IntelliJ IDEA |
-|-------|-----|-----|-----|
-|1| Open GitHub Copilot in your IDE | View > Chat  | Tools > GitHub Copilot > Open Chat  |
-|2| Switch to Agent Mode then click on the Tools Configuration button  |  ![VSCode](../../eng/images/VisualStudioCodeUI.png) | ![IntelliJ](../../eng/images/IntelliJIDEAUI.png)  |
-|2| Click on the button for configuring or adding tools  | Gear icon button if a previous `mcp.json` tool has been configured. Otherwise you can create a new `mcp.json` in your project | + Add More Tools |
-</details>
-<!-- remove-section: end -->
+- Edit the `mcp.json` file directly.
 
-<!-- remove-section: start vsix;npm -->
-<!-- remove-chunk: start nuget --><details><!-- remove-chunk: end -->
-<!-- remove-chunk: start nuget --><summary><b>Configure Azure MCP Server using .NET Tool</b></summary><!-- remove-chunk: end -->
-<!-- insert-chunk nuget {{#### Configure Azure MCP Server in mcp.json}} -->
 
-To use the latest version enter the following snippet in your `mcp.json`
-```json
-"servers": {
-  "Azure MCP Server": {
-    "command": "dnx",
-    "args": [
-      "Azure.Mcp",
-      "--source",
-      "https://api.nuget.org/v3/index.json",
-      "--yes",
-      "--",
-      "azmcp",
-      "server",
-      "start"
-    ],
-    "type": "stdio"
-  }
-}
-```
+    <!-- remove-section: start vsix -->
+    <!-- remove-chunk: start nuget;npm --><details><!-- remove-chunk: end -->
+    <!-- remove-chunk: start nuget;npm --><summary><b>Find mcp.json file for your IDE</b></summary><!-- remove-chunk: end -->
+    <!-- insert-chunk nuget;npm {{#### Find mcp.json file for your IDE}} -->
 
-You can also specific a version using the --version argument, like so:
+    ||| Find mcp.json in Visual Studio Code | Find mcp.json in IntelliJ IDEA |
+    |-------|-----|-----|-----|
+    |1| Open GitHub Copilot in your IDE | View > Chat  | Tools > GitHub Copilot > Open Chat  |
+    |2| Switch to Agent Mode then click on the Tools Configuration button  |  ![VSCode](../../eng/images/VisualStudioCodeUI.png) | ![IntelliJ](../../eng/images/IntelliJIDEAUI.png)  |
+    |2| Click on the button for configuring or adding tools  | Gear icon button if a previous `mcp.json` tool has been configured. Otherwise you can create a new `mcp.json` in your project | + Add More Tools |
+    </details>
+    <!-- remove-section: end -->
 
-```json
-"servers": {
-  "Azure MCP Server": {
-    "command": "dnx",
-    "args": [
-      "Azure.Mcp",
-      "--source",
-      "https://api.nuget.org/v3/index.json",
-      "--version",
-      "<version>",
-      "--yes",
-      "--",
-      "azmcp",
-      "server",
-      "start"
-    ],
-    "type": "stdio"
-  }
-}
-```
-</details>
-<!-- remove-section: end -->
+    <!-- remove-section: start vsix;npm -->
+    <!-- remove-chunk: start nuget --><details><!-- remove-chunk: end -->
+    <!-- remove-chunk: start nuget --><summary><b>Configure Azure MCP Server using .NET Tool</b></summary><!-- remove-chunk: end -->
+    <!-- insert-chunk nuget {{#### Configure Azure MCP Server in mcp.json}} -->
 
-<!-- remove-section: start vsix;nuget -->
-<!-- remove-chunk: start npm --><details><!-- remove-chunk: end -->
-<!-- remove-chunk: start npm --><summary><b>Configure Azure MCP Server using node tool</b></summary><!-- remove-chunk: end -->
-<!-- insert-chunk npm {{#### Configure Azure MCP Server in mcp.json}} -->
+    To use the latest version enter the following snippet in your `mcp.json`
+    ```json
+    "servers": {
+      "Azure MCP Server": {
+        "command": "dnx",
+        "args": [
+          "Azure.Mcp",
+          "--source",
+          "https://api.nuget.org/v3/index.json",
+          "--yes",
+          "--",
+          "azmcp",
+          "server",
+          "start"
+        ],
+        "type": "stdio"
+      }
+    }
+    ```
 
-To use the latest version enter the following snippet in your mcp.json
+    You can also specific a version using the --version argument, like so:
 
-```json
-"servers": {
-  "azure-mcp-server": {
-    "command": "npx",
-    "args": [
-      "-y",
-      "@azure/mcp@latest",
-      "server",
-      "start"
-    ]
-  }
-}
-```
+    ```json
+    "servers": {
+      "Azure MCP Server": {
+        "command": "dnx",
+        "args": [
+          "Azure.Mcp",
+          "--source",
+          "https://api.nuget.org/v3/index.json",
+          "--version",
+          "<version>",
+          "--yes",
+          "--",
+          "azmcp",
+          "server",
+          "start"
+        ],
+        "type": "stdio"
+      }
+    }
+    ```
+    </details>
+    <!-- remove-section: end -->
 
-You can also install a targeted version
+    <!-- remove-section: start vsix;nuget -->
+    <!-- remove-chunk: start npm --><details><!-- remove-chunk: end -->
+    <!-- remove-chunk: start npm --><summary><b>Configure Azure MCP Server using node tool</b></summary><!-- remove-chunk: end -->
+    <!-- insert-chunk npm {{#### Configure Azure MCP Server in mcp.json}} -->
 
-```json
-"servers": {
-  "azure-mcp-server": {
-    "command": "npx",
-    "args": [
-      "-y",
-      "@azure/mcp@<version>",
-      "server",
-      "start"
-    ]
-  }
-}
-```
-</details>
-<!-- remove-section: end -->
+    To use the latest version enter the following snippet in your mcp.json
 
-<!-- remove-chunk: start npm;nuget;vsix --><details><!-- remove-chunk: end -->
-<!-- remove-chunk: start npm;nuget;vsix --><summary><b>Start (or Auto-Start) the MCP Server</b></summary><!-- remove-chunk: end -->
-<!-- insert-chunk npm;nuget;vsix {{#### Start (or Auto-Start) the MCP Server}} -->
+    ```json
+    "servers": {
+      "azure-mcp-server": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@azure/mcp@latest",
+          "server",
+          "start"
+        ]
+      }
+    }
+    ```
 
-| | Enable Auto-Start | | Manual Start (if autostart is off) |
-| -- | -- | -- | -- |
-| 1| Open Settings in VS Code | 1| Open Command Palette (Ctrl+Shift+P / Cmd+Shift+P). |
-| 2| Search for `chat.mcp.autostart` | 2| Run MCP: List Servers.![List Servers](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ListServers.png) |
-| 3| Select **newAndOutdated** to automatically start MCP servers without manual refresh. | 3| Select Azure MCP Server ext, then click Start Server.![Select Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/SelectServer.png)![Start Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/StartServer.png) |
-| 4| You can also set this from the refresh icon tooltip in the Chat view, which also shows which servers will auto-start.![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ToolTip.png) | 4| Check That It's Running |
+    You can also install a targeted version
 
-</details>
+    ```json
+    "servers": {
+      "azure-mcp-server": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@azure/mcp@<version>",
+          "server",
+          "start"
+        ]
+      }
+    }
+    ```
+    </details>
+    <!-- remove-section: end -->
+
+    <!-- remove-chunk: start npm;nuget;vsix --><details><!-- remove-chunk: end -->
+    <!-- remove-chunk: start npm;nuget;vsix --><summary><b>Start (or Auto-Start) the MCP Server</b></summary><!-- remove-chunk: end -->
+    <!-- insert-chunk npm;nuget;vsix {{#### Start (or Auto-Start) the MCP Server}} -->
+
+    | | Enable Auto-Start | | Manual Start (if autostart is off) |
+    | -- | -- | -- | -- |
+    | 1| Open Settings in VS Code | 1| Open Command Palette (Ctrl+Shift+P / Cmd+Shift+P). |
+    | 2| Search for `chat.mcp.autostart` | 2| Run MCP: List Servers.![List Servers](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ListServers.png) |
+    | 3| Select **newAndOutdated** to automatically start MCP servers without manual refresh. | 3| Select Azure MCP Server ext, then click Start Server.![Select Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/SelectServer.png)![Start Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/StartServer.png) |
+    | 4| You can also set this from the refresh icon tooltip in the Chat view, which also shows which servers will auto-start.![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ToolTip.png) | 4| Confirm its runing observing the log messages in the output tab. ![Output](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/Output.png)|
+
+    </details>
 
 
 ## <!-- remove-chunk: start nuget;vsix --><a id="what-can-you-do-with-the-azure-mcp-server"></a> ✨<!-- remove-chunk: end --> What can you do with the Azure MCP Server?
