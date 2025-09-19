@@ -40,11 +40,7 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
     /// </summary>
     /// <param name="parseResult">The parsed command line arguments.</param>
     /// <returns>An options object containing the bound options.</returns>
-    protected virtual TOptions BindOptions(ParseResult parseResult)
-    {
-        // This method must be overridden by derived classes that need option binding
-        throw new NotImplementedException($"Command '{GetType().Name}' must override BindOptions to provide option binding.");
-    }
+    protected abstract TOptions BindOptions(ParseResult parseResult);
 
     public abstract Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult);
 
