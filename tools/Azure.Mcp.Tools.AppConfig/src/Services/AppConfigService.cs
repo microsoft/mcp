@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Core;
 using Azure.Data.AppConfiguration;
 using Azure.Mcp.Core.Models.Identity;
@@ -8,8 +9,8 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Models;
-using Azure.ResourceManager.AppConfiguration;
 using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.AppConfig.Services;
@@ -28,26 +29,28 @@ public class AppConfigService(ISubscriptionService subscriptionService, ITenantS
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var accounts = new List<AppConfigurationAccount>();
 
-        await foreach (var account in subscriptionResource.GetAppConfigurationStoresAsync())
+        await foreach (var account in subscriptionResource.GetGenericResourcesAsync("resourceType eq 'Microsoft.AppConfiguration/configurationStores'"))
         {
             ResourceIdentifier resourceId = account.Id;
             if (resourceId.ToString().Length == 0)
                 continue;
 
+            var properties = JsonSerializer.Deserialize(account.Data.Properties, AppConfigJsonContext.Default.IDictionaryStringObject);
+            var encryption = (IDictionary<string, object>?)(properties?["encryption"]);
+            var keyVaultProperties = (IDictionary<string, object>?)(encryption?["keyVaultProperties"]);
             var acc = new AppConfigurationAccount
             {
                 Name = account.Data.Name,
                 Location = account.Data.Location.ToString(),
-                Endpoint = account.Data.Endpoint,
+                Endpoint = properties?["endpoint"]?.ToString()!,
                 CreationDate = account.Data.CreatedOn?.DateTime ?? DateTime.MinValue,
-                PublicNetworkAccess = account.Data.PublicNetworkAccess.HasValue &&
-                    account.Data.PublicNetworkAccess.Value.ToString().Equals("Enabled", StringComparison.OrdinalIgnoreCase),
-                Sku = account.Data.SkuName,
+                PublicNetworkAccess = "Enabled".Equals(properties?["publicNetworkAccess"]?.ToString(), StringComparison.OrdinalIgnoreCase),
+                Sku = account.Data.Sku.Name,
                 Tags = account.Data.Tags ?? new Dictionary<string, string>(),
-                DisableLocalAuth = account.Data.DisableLocalAuth,
-                SoftDeleteRetentionInDays = account.Data.SoftDeleteRetentionInDays,
-                EnablePurgeProtection = account.Data.EnablePurgeProtection,
-                CreateMode = account.Data.CreateMode?.ToString(),
+                DisableLocalAuth = (bool?)(properties?["disableLocalAuth"]),
+                SoftDeleteRetentionInDays = (int?)(properties?["softDeleteRetentionInDays"]),
+                EnablePurgeProtection = (bool?)(properties?["enablePurgeProtection"]),
+                CreateMode = properties?["createMode"]?.ToString(),
 
                 // Map the new managed identity structure
                 ManagedIdentity = account.Data.Identity == null ? null : new ManagedIdentityInfo
@@ -68,10 +71,10 @@ public class AppConfigService(ISubscriptionService subscriptionService, ITenantS
                 },
 
                 // Full encryption properties from KeyVaultProperties
-                Encryption = account.Data.EncryptionKeyVaultProperties == null ? null : new EncryptionProperties
+                Encryption = keyVaultProperties == null ? null : new EncryptionProperties
                 {
-                    KeyIdentifier = account.Data.EncryptionKeyVaultProperties.KeyIdentifier,
-                    IdentityClientId = account.Data.EncryptionKeyVaultProperties.IdentityClientId,
+                    KeyIdentifier = keyVaultProperties?["keyIdentifier"]?.ToString(),
+                    IdentityClientId = keyVaultProperties?["identityClientId"].ToString()
                 }
             };
 
@@ -195,8 +198,7 @@ public class AppConfigService(ISubscriptionService subscriptionService, ITenantS
     private async Task<ConfigurationClient> GetConfigurationClient(string accountName, string subscription, string? tenant, RetryPolicyOptions? retryPolicy)
     {
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-        var configStore = await FindAppConfigStore(subscriptionResource, accountName, subscription);
-        var endpoint = configStore.Data.Endpoint;
+        var endpoint = await FindAppConfigStoreEndpoint(subscriptionResource, accountName, subscription);
         var credential = await GetCredential(tenant);
         var options = new ConfigurationClientOptions();
         AddDefaultPolicies(options);
@@ -204,21 +206,18 @@ public class AppConfigService(ISubscriptionService subscriptionService, ITenantS
         return new ConfigurationClient(new Uri(endpoint), credential, options);
     }
 
-    private static async Task<AppConfigurationStoreResource> FindAppConfigStore(SubscriptionResource subscription, string accountName, string subscriptionIdentifier)
+    private static async Task<string> FindAppConfigStoreEndpoint(SubscriptionResource subscription, string accountName, string subscriptionIdentifier)
     {
-        AppConfigurationStoreResource? configStore = null;
-        await foreach (var store in subscription.GetAppConfigurationStoresAsync())
+        await foreach (var account in subscription.GetGenericResourcesAsync("resourceType eq 'Microsoft.AppConfiguration/configurationStores' and name eq '" + accountName + "'"))
         {
-            if (store.Data.Name == accountName)
+            var properties = JsonSerializer.Deserialize(account.Data.Properties, AppConfigJsonContext.Default.IDictionaryStringObject);
+            var endpoint = properties?["endpoint"]?.ToString();
+            if (!string.IsNullOrEmpty(endpoint))
             {
-                configStore = store;
-                break;
+                return endpoint;
             }
         }
 
-        if (configStore == null)
-            throw new Exception($"App Configuration store '{accountName}' not found in subscription '{subscriptionIdentifier}'");
-
-        return configStore;
+        throw new Exception($"App Configuration store '{accountName}' not found in subscription '{subscriptionIdentifier}'");
     }
 }
