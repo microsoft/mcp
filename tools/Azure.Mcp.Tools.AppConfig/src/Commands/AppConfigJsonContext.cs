@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
 namespace Azure.Mcp.Tools.AppConfig.Commands;
 
 [JsonSerializable(typeof(AccountListCommand.AccountListCommandResult))]
+[JsonSerializable(typeof(IDictionary<string, object>))]
 [JsonSerializable(typeof(KeyValueDeleteCommand.KeyValueDeleteCommandResult))]
 [JsonSerializable(typeof(KeyValueListCommand.KeyValueListCommandResult))]
 [JsonSerializable(typeof(KeyValueLockSetCommand.KeyValueLockSetCommandResult))]
