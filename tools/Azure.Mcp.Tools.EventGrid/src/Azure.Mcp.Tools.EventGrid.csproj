@@ -10,6 +10,7 @@
     <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Azure.Messaging.EventGrid" />
     <PackageReference Include="Azure.ResourceManager" />
     <PackageReference Include="Azure.ResourceManager.EventGrid" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />

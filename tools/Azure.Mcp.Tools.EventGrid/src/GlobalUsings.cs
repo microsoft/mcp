@@ -9,4 +9,5 @@ global using Azure.Mcp.Core.Services.Azure;
 global using Azure.Mcp.Core.Services.Azure.Subscription;
 global using Azure.Mcp.Core.Services.Azure.Tenant;
 global using Azure.Mcp.Tools.EventGrid.Models;
+global using Azure.Messaging.EventGrid;
 global using Microsoft.Extensions.Logging;
