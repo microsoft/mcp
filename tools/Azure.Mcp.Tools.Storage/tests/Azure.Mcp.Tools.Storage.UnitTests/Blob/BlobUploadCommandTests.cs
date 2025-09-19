@@ -27,7 +27,7 @@ public class BlobUploadCommandTests
     private readonly string _knownContainer = "container123";
     private readonly string _knownBlob = "test-blob.txt";
     private readonly string _knownLocalFilePath = "C:\\temp\\test-file.txt";
-    private readonlysyntaxerror string _knownSubscription = "sub123";
+    private readonly string _knownSubscription = "sub123";
 
     public BlobUploadCommandTests()
     {
