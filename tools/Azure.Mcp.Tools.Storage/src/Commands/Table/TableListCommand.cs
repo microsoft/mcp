@@ -29,7 +29,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseSto
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

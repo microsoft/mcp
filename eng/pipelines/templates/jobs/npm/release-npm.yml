@@ -16,7 +16,7 @@ jobs:
     isProduction: true
     inputs:
     - input: pipelineArtifact
-      artifactName: npm_$(PipelineArtifactName)_packed
+      artifactName: packages_npm
       targetPath: $(Pipeline.Workspace)/drop
   environment: package-publish
   timeoutInMinutes: 120

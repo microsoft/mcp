@@ -6,6 +6,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_foundry_agents_connect | Query an agent in my AI foundry project |
+| azmcp_foundry_agents_evaluate | Evaluate the full query and response I got from my agent for task_adherence |
+| azmcp_foundry_agents_query-and-evaluate | Query and evaluate an agent in my AI Foundry project for task_adherence |
 | azmcp_foundry_knowledge_index_list | List all knowledge indexes in my AI Foundry project |
 | azmcp_foundry_knowledge_index_list | Show me the knowledge indexes in my AI Foundry project |
 | azmcp_foundry_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my AI Foundry project |
@@ -50,6 +53,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applens_resource_diagnose | Please help me diagnose issues with my app using app lens |
 | azmcp_applens_resource_diagnose | Use app lens to check why my app is slow? |
 | azmcp_applens_resource_diagnose | What does app lens say is wrong with my service? |
+
+## Azure Application Insights
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_applicationinsights_recommendation_list | List code optimization recommendations across my Application Insights components |
+| azmcp_applicationinsights_recommendation_list | Show me code optimization recommendations for all Application Insights resources in my subscription |
+| azmcp_applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> |
+| azmcp_applicationinsights_recommendation_list | Show me performance improvement recommendations from Application Insights |
 
 ## Azure Container Registry (ACR)
 
@@ -183,9 +195,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_keyvault_certificate_list | List all certificates in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_list | Show me the certificates in the key vault <key_vault_account_name> |
 | azmcp_keyvault_key_create | Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name> |
+| azmcp_keyvault_key_get | Show me the key <key_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_key_get | Show me the details of the key <key_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_key_list | List all keys in the key vault <key_vault_account_name> |
 | azmcp_keyvault_key_list | Show me the keys in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_create | Create a new secret called <secret_name> with value <secret_value> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_get | Show me the secret <secret_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_get | Show me the details of the secret <secret_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_list | List all secrets in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_list | Show me the secrets in the key vault <key_vault_account_name> |
 

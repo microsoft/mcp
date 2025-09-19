@@ -47,6 +47,12 @@
 # ServiceLabel: %area-AppLens
 # ServiceOwners:                       @msalaman
 
+# PRLabel: %tools-ApplicationInsights
+/tools/Azure.Mcp.Tools.ApplicationInsights/  @regexrowboat @xiaomi7732 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ApplicationInsights
+# ServiceOwners:                       @regexrowboat @xiaomi7732
+
 # PRLabel: %tools-ACR
 /tools/Azure.Mcp.Tools.Acr/            @jongio @microsoft/azure-mcp
 
@@ -205,6 +211,6 @@
 
 # PRLabel: %tools-EventGrid
 /tools/Azure.Mcp.Tools.EventGrid/     @microsoft/azure-mcp
- 
+
 # ServiceLabel: %tools-EventGrid
 # ServiceOwners:                      @microsoft/azure-mcp
