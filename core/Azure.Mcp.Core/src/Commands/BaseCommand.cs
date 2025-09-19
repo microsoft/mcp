@@ -9,7 +9,7 @@ using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Commands;
 
-public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : class
+public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : class, new()
 {
     private const string MissingRequiredOptionsPrefix = "Missing Required options: ";
     private const int ValidationErrorStatusCode = 400;
@@ -36,7 +36,7 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
 
     /// <summary>
     /// Binds the parsed command line arguments to a strongly-typed options object.
-    /// Override this method in derived classes to provide custom option binding.
+    /// Implement this method in derived classes to provide option binding logic.
     /// </summary>
     /// <param name="parseResult">The parsed command line arguments.</param>
     /// <returns>An options object containing the bound options.</returns>
@@ -83,7 +83,12 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
 
     protected virtual string GetErrorMessage(Exception ex) => ex.Message;
 
-    protected virtual int GetStatusCode(Exception ex) => 500;
+    protected virtual int GetStatusCode(Exception ex) => ex switch
+    {
+        ArgumentException => 400,  // Bad Request for invalid arguments
+        InvalidOperationException => 422,  // Unprocessable Entity for configuration errors
+        _ => 500  // Internal Server Error for unexpected errors
+    };
 
     public virtual ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
     {
@@ -124,6 +129,21 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
                 response.Status = ValidationErrorStatusCode;
                 response.Message = errorMessage;
             }
+        }
+    }
+
+    /// <summary>
+    /// Sets validation error details on the command response with a custom status code.
+    /// </summary>
+    /// <param name="response">The command response to update.</param>
+    /// <param name="errorMessage">The error message.</param>
+    /// <param name="statusCode">The HTTP status code (defaults to ValidationErrorStatusCode).</param>
+    protected static void SetValidationError(CommandResponse? response, string errorMessage, int statusCode)
+    {
+        if (response != null)
+        {
+            response.Status = statusCode;
+            response.Message = errorMessage;
         }
     }
 }

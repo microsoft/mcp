@@ -102,46 +102,13 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // Get option values directly from commandResult
         var mode = commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode);
         var transport = commandResult.GetValueOrDefault(ServiceOptionDefinitions.Transport);
+        var enableInsecureTransports = commandResult.GetValueOrDefault(ServiceOptionDefinitions.EnableInsecureTransports);
 
-        if (!IsValidMode(mode))
-        {
-            var result = new ValidationResult
-            {
-                IsValid = false,
-                ErrorMessage = $"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}."
-            };
-
-            if (commandResponse != null)
-            {
-                commandResponse.Status = 400;
-                commandResponse.Message = result.ErrorMessage;
-            }
-
-            return result;
-        }
-
-        try
-        {
-            ValidateTransport(transport);
-        }
-        catch (ArgumentException ex)
-        {
-            var result = new ValidationResult
-            {
-                IsValid = false,
-                ErrorMessage = ex.Message
-            };
-
-            if (commandResponse != null)
-            {
-                commandResponse.Status = 400;
-                commandResponse.Message = result.ErrorMessage;
-            }
-
-            return result;
-        }
-
-        return new ValidationResult { IsValid = true };
+        // Validate and return early on any failures
+        return ValidateMode(mode, commandResponse) ??
+               ValidateTransport(transport, commandResponse) ??
+               ValidateInsecureTransportsConfiguration(enableInsecureTransports, commandResponse) ??
+               new ValidationResult { IsValid = true };
     }
 
     /// <summary>
@@ -161,15 +128,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         try
         {
-            if (options.EnableInsecureTransports)
-            {
-                var includeProdCreds = EnvironmentHelpers.GetEnvironmentVariableAsBool("AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS");
-                if (!includeProdCreds)
-                {
-                    throw new InvalidOperationException("Using --enable-insecure-transport requires the host to have either Managed Identity or Workload Identity enabled. Please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.");
-                }
-            }
-
             using var host = CreateHost(options);
             await host.StartAsync(CancellationToken.None);
             await host.WaitForShutdownAsync(CancellationToken.None);
@@ -187,54 +145,80 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// Validates if the provided mode is a valid mode type.
     /// </summary>
     /// <param name="mode">The mode to validate.</param>
-    /// <returns>True if the mode is valid, otherwise false.</returns>
-    private static bool IsValidMode(string? mode)
+    /// <param name="commandResponse">Optional command response to update on failure.</param>
+    /// <returns>ValidationResult with error details if invalid, null if valid.</returns>
+    private static ValidationResult? ValidateMode(string? mode, CommandResponse? commandResponse)
     {
-        return mode == ModeTypes.SingleToolProxy ||
-               mode == ModeTypes.NamespaceProxy ||
-               mode == ModeTypes.All;
+        if (mode == ModeTypes.SingleToolProxy ||
+            mode == ModeTypes.NamespaceProxy ||
+            mode == ModeTypes.All)
+        {
+            return null; // Success
+        }
+
+        var result = new ValidationResult
+        {
+            IsValid = false,
+            ErrorMessage = $"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}."
+        };
+
+        SetValidationError(commandResponse, result.ErrorMessage!, 400);
+        return result;
     }
 
     /// <summary>
-    /// Validates the transport parameter and throws an exception if invalid.
+    /// Validates if the provided transport is valid.
     /// </summary>
     /// <param name="transport">The transport to validate.</param>
-    /// <exception cref="ArgumentException">Thrown when the transport is not null and invalid.</exception>
-    private static void ValidateTransport(string? transport)
+    /// <param name="commandResponse">Optional command response to update on failure.</param>
+    /// <returns>ValidationResult with error details if invalid, null if valid.</returns>
+    private static ValidationResult? ValidateTransport(string? transport, CommandResponse? commandResponse)
     {
-        if (transport is not null && transport != TransportTypes.StdIo)
+        if (transport is null || transport == TransportTypes.StdIo)
         {
-            throw new ArgumentException($"Invalid transport '{transport}'. Valid transports are: {TransportTypes.StdIo}.");
+            return null; // Success
         }
+
+        var result = new ValidationResult
+        {
+            IsValid = false,
+            ErrorMessage = $"Invalid transport '{transport}'. Valid transports are: {TransportTypes.StdIo}."
+        };
+
+        SetValidationError(commandResponse, result.ErrorMessage!, 400);
+        return result;
     }
 
     /// <summary>
-    /// Provides custom error messages for service start specific exceptions.
+    /// Validates if the insecure transport configuration is valid.
     /// </summary>
-    /// <param name="ex">The exception to get an error message for.</param>
-    /// <returns>A user-friendly error message.</returns>
-    protected override string GetErrorMessage(Exception ex) => ex switch
+    /// <param name="enableInsecureTransports">Whether insecure transports are enabled.</param>
+    /// <param name="commandResponse">Optional command response to update on failure.</param>
+    /// <returns>ValidationResult with error details if invalid, null if valid.</returns>
+    private static ValidationResult? ValidateInsecureTransportsConfiguration(bool enableInsecureTransports, CommandResponse? commandResponse)
     {
-        ArgumentException argEx when argEx.Message.Contains("transport") =>
-            $"Invalid transport option specified. {argEx.Message} Use --transport stdio for standard input/output.",
-        ArgumentException argEx when argEx.Message.Contains("mode") =>
-            $"Invalid mode option specified. {argEx.Message} Use --mode single, namespace, or all.",
-        InvalidOperationException opEx when opEx.Message.Contains("enable-insecure-transport") =>
-            "Insecure transport configuration error. Ensure your environment has proper authentication configured (Managed Identity or Workload Identity).",
-        _ => ex.Message
-    };
+        // If insecure transports are not enabled, configuration is valid
+        if (!enableInsecureTransports)
+        {
+            return null; // Success
+        }
 
-    /// <summary>
-    /// Provides appropriate HTTP status codes for service start specific exceptions.
-    /// </summary>
-    /// <param name="ex">The exception to get a status code for.</param>
-    /// <returns>An appropriate HTTP status code.</returns>
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => 400,  // Bad Request for invalid arguments
-        InvalidOperationException => 422,  // Unprocessable Entity for configuration errors
-        _ => 500
-    };
+        // If insecure transports are enabled, check if proper credentials are configured
+        var hasCredentials = EnvironmentHelpers.GetEnvironmentVariableAsBool("AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS");
+        if (hasCredentials)
+        {
+            return null; // Success
+        }
+
+        var result = new ValidationResult
+        {
+            IsValid = false,
+            ErrorMessage = "Using --enable-insecure-transport requires the host to have either Managed Identity or Workload Identity enabled. Please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting."
+        };
+
+        SetValidationError(commandResponse, result.ErrorMessage!, 422);
+        return result;
+    }
 
     /// <summary>
     /// Creates the host for the MCP server with the specified options.

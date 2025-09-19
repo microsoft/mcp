@@ -33,6 +33,8 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         Secret = false
     };
 
+    protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         try
