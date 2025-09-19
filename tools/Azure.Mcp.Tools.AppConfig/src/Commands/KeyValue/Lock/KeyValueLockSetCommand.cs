@@ -32,7 +32,7 @@ public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logge
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false

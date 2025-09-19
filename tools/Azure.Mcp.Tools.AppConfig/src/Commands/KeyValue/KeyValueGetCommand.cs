@@ -33,7 +33,7 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger) : Bas
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

@@ -29,7 +29,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

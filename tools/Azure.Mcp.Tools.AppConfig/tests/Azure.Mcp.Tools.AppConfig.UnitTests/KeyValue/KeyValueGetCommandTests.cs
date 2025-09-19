@@ -50,8 +50,8 @@ public class KeyValueGetCommandTests
             new() { Key = "key2", Value = "value2", Label = "dev" }
         };
         _appConfigService.GetKeyValues(
-          "sub123",
           "account1",
+          "sub123",
           Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
           Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
           Arg.Any<string?>(),
@@ -87,8 +87,8 @@ public class KeyValueGetCommandTests
             new() { Key = "key1", Value = "value1", Label = "prod" }
         };
         _appConfigService.GetKeyValues(
-          "sub123",
           "account1",
+          "sub123",
           Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
           Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
           "key1",
@@ -125,8 +125,8 @@ public class KeyValueGetCommandTests
             new() { Key = "key1", Value = "value1", Label = "prod" }
         };
         _appConfigService.GetKeyValues(
-          "sub123",
           "account1",
+          "sub123",
           Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
           Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
           Arg.Any<string?>(),
@@ -167,8 +167,8 @@ public class KeyValueGetCommandTests
             Locked = false
         };
         _appConfigService.GetKeyValues(
-            "sub123",
             "account1",
+            "sub123",
             "key",
             "prod",
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
@@ -213,8 +213,8 @@ public class KeyValueGetCommandTests
             Locked = false
         };
         _appConfigService.GetKeyValues(
-            "sub123",
             "account1",
+            "sub123",
             "my-key",
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),

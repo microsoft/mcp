@@ -1,6 +1,5 @@
 variables:
   OfficialBuildId: $(Build.BuildNumber)
   skipComponentGovernanceDetection: true
-  PipelineArtifactName: packages
   nugetMultiFeedWarnLevel: 'none'
   GDN_SUPPRESS_FORKED_BUILD_WARNING: true
