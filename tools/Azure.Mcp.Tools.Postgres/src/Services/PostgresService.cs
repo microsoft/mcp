@@ -304,11 +304,11 @@ public class PostgresService : BaseAzureService, IPostgresService
         // Simple check for semicolons not within quoted strings
         var inQuotes = false;
         var quoteChar = '\0';
-        
+
         for (int i = 0; i < query.Length; i++)
         {
             var c = query[i];
-            
+
             if (!inQuotes && (c == '\'' || c == '"'))
             {
                 inQuotes = true;
@@ -329,7 +329,7 @@ public class PostgresService : BaseAzureService, IPostgresService
                 }
             }
         }
-        
+
         return false;
     }
 
@@ -337,15 +337,15 @@ public class PostgresService : BaseAzureService, IPostgresService
     {
         var dangerousKeywords = new[]
         {
-            "DROP", "DELETE", "INSERT", "UPDATE", "CREATE", "ALTER", "GRANT", "REVOKE", 
+            "DROP", "DELETE", "INSERT", "UPDATE", "CREATE", "ALTER", "GRANT", "REVOKE",
             "TRUNCATE", "VACUUM", "REINDEX", "BEGIN", "COMMIT", "ROLLBACK", "SAVEPOINT",
-            "EXTENSION", "LANGUAGE", "USER", "ROLE", "DATABASE", "SCHEMA", "FUNCTION", 
+            "EXTENSION", "LANGUAGE", "USER", "ROLE", "DATABASE", "SCHEMA", "FUNCTION",
             "TRIGGER", "VIEW", "INDEX", "SHOW", "COPY", "\\COPY", "EXPLAIN", "ANALYZE",
             "UNION", "INTERSECT", "EXCEPT"
         };
 
         var upperQuery = query.ToUpperInvariant();
-        return dangerousKeywords.Any(keyword => 
+        return dangerousKeywords.Any(keyword =>
             System.Text.RegularExpressions.Regex.IsMatch(upperQuery, @"\b" + System.Text.RegularExpressions.Regex.Escape(keyword) + @"\b"));
     }
 
