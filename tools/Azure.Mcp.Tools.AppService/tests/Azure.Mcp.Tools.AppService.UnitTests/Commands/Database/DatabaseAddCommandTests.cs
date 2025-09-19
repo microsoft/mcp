@@ -5,11 +5,11 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.Linq;
+using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AppService.Commands.Database;
 using Azure.Mcp.Tools.AppService.Models;
 using Azure.Mcp.Tools.AppService.Services;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -41,10 +41,10 @@ public class DatabaseAddCommandTests
     [InlineData("PostgreSQL", "postgres-server.postgres.database.azure.com", "postgres-db", null, "tenant123")]
     [InlineData("CosmosDB", "cosmos-account.documents.azure.com", "cosmos-db", "AccountEndpoint=https://cosmos-account.documents.azure.com:443/;AccountKey=key;", "tenant456")]
     public async Task ExecuteAsync_WithValidParameters_CallsServiceWithCorrectArguments(
-        string databaseType, 
-        string databaseServer, 
-        string databaseName, 
-        string? connectionString, 
+        string databaseType,
+        string databaseServer,
+        string databaseName,
+        string? connectionString,
         string? tenant)
     {
         // Arrange
