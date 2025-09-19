@@ -103,14 +103,17 @@ internal static class SqlQueryValidator
                 throw new CommandValidationException("Query contains a disallowed keyword.");
             }
 
-            // If it's recognized as a SQL keyword (not an identifier), ensure it's in the allow list.
-            // Heuristic: treat token as keyword if it's all alpha and present in either allowed or disallowed sets or is a known structural word.
-            if (IsPotentialKeyword(token) && !AllowedKeywords.Contains(token))
+            // Only validate tokens that are explicitly known SQL keywords (in either allow or disallow lists).
+            // This allows table names, column names, and other identifiers that aren't SQL keywords.
+            if (AllowedKeywords.Contains(token) || DisallowedKeywords.Contains(token))
             {
-                throw new CommandValidationException($"Keyword '{token}' is not permitted in this query context.");
+                // It's a recognized SQL keyword - ensure it's allowed
+                if (!AllowedKeywords.Contains(token))
+                {
+                    throw new CommandValidationException($"Keyword '{token}' is not permitted in this query context.");
+                }
             }
+            // If it's not in either list, treat it as an identifier and allow it
         }
-
-        static bool IsPotentialKeyword(string token) => token.All(char.IsLetter);
     }
 }
