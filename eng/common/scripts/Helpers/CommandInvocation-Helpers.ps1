@@ -6,7 +6,8 @@ function Invoke-LoggedCommand
         [string] $Command,
         [string] $ExecutePath,
         [switch] $GroupOutput,
-        [int[]] $AllowedExitCodes = @(0)
+        [int[]] $AllowedExitCodes = @(0),
+        [switch] $OnlyLogErrorOutput
     )
 
     $pipelineBuild = !!$env:TF_BUILD
@@ -23,7 +24,11 @@ function Invoke-LoggedCommand
     }
 
     try {
-      Invoke-Expression $Command
+      if ($OnlyLogErrorOutput) {
+        & { Invoke-Expression $Command } 3>&1 1>$null
+      } else {
+        Invoke-Expression $Command
+      }
 
       $duration = (Get-Date) - $startTime
 

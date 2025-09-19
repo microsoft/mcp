@@ -266,7 +266,7 @@ try {
         $command += " --filter '$memberFilterString'"
     }
 
-    Invoke-LoggedCommand -Command $command -AllowedExitCodes @(0, 1)
+    Invoke-LoggedCommand -Command $command -AllowedExitCodes @(0, 1) -OnlyLogErrorOutput
 }
 finally {
     Pop-Location
