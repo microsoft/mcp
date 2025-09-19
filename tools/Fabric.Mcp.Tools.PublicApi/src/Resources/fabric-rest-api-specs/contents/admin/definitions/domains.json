@@ -1,0 +1,271 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Domain data types"
+    },
+    "paths": {},
+    "definitions": {
+        "Domain": {
+            "type": "object",
+            "description": "Represents a domain or subdomain.",
+            "required": [
+                "id",
+                "displayName",
+                "contributorsScope"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "The domain object ID.",
+                    "format": "uuid"
+                },
+                "displayName": {
+                    "type": "string",
+                    "description": "The name of the domain."
+                },
+                "description": {
+                    "type": "string",
+                    "description": "The description of the domain."
+                },
+                "parentDomainId": {
+                    "type": "string",
+                    "description": "The domain parent object ID.",
+                    "format": "uuid"
+                },
+                "contributorsScope": {
+                    "description": "The domain contributors scope.",
+                    "$ref": "#/definitions/ContributorsScopeType"
+                }
+            }
+        },
+        "DomainsResponse": {
+            "description": "This is a response wrapper for a list of all domains.",
+            "properties": {
+                "domains": {
+                    "type": "array",
+                    "description": "The list of domains.",
+                    "items": {
+                        "$ref": "#/definitions/Domain"
+                    }
+                }
+            }
+        },
+        "DomainWorkspace": {
+            "type": "object",
+            "description": "Represents a workspace in a domain.",
+            "required": [
+                "id",
+                "displayName"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "The workspace ID.",
+                    "format": "uuid"
+                },
+                "displayName": {
+                    "type": "string",
+                    "description": "The name of the workspace."
+                }
+            }
+        },
+        "DomainWorkspaces": {
+            "description": "A response wrapper for a list of all the workspaces assigned to a domain with a continuous token.",
+            "properties": {
+                "value": {
+                    "type": "array",
+                    "description": "The list of all the workspaces assigned to the domain.",
+                    "items": {
+                        "$ref": "#/definitions/DomainWorkspace"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "UpdateDomainRequest": {
+            "description": "The request payload for updating a domain.",
+            "properties": {
+                "displayName": {
+                    "type": "string",
+                    "description": "The domain display name.\nThe display name cannot contain more than 40 characters.",
+                    "readOnly": false
+                },
+                "description": {
+                    "type": "string",
+                    "description": "The domain description.\nThe description cannot contain more than 256 characters.",
+                    "readOnly": false
+                },
+                "contributorsScope": {
+                    "description": "The domain contributors scope.",
+                    "$ref": "#/definitions/ContributorsScopeType"
+                }
+            }
+        },
+        "DomainRoleUnassignmentRequest": {
+            "description": "The request payload for unassigning domain members by principal.",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "description": "The update request type.",
+                    "$ref": "#/definitions/DomainRole"
+                },
+                "principals": {
+                    "type": "array",
+                    "description": "The principals that will be unassigned from the domain role.",
+                    "items": {
+                        "$ref": "../../common/definitions.json#/definitions/Principal"
+                    }
+                }
+            }
+        },
+        "DomainRoleAssignmentRequest": {
+            "description": "The request payload for assigning domain members for a domain by principal.",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "description": "The update request type.",
+                    "$ref": "#/definitions/DomainRole"
+                },
+                "principals": {
+                    "type": "array",
+                    "description": "The principals that will be assigned to the domain role.",
+                    "items": {
+                        "$ref": "../../common/definitions.json#/definitions/Principal"
+                    }
+                }
+            }
+        },
+        "AssignDomainWorkspacesByPrincipalsRequest": {
+            "description": "The request payload for assigning workspaces to a domain by principal.",
+            "properties": {
+                "principals": {
+                    "description": "The principals that are admins of the workspaces.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "../../common/definitions.json#/definitions/Principal"
+                    }
+                }
+            }
+        },
+        "AssignDomainWorkspacesByCapacitiesRequest": {
+            "description": "The request payload for assigning workspaces to a domain by capacity.",
+            "properties": {
+                "capacitiesIds": {
+                    "type": "array",
+                    "description": "The capacity IDs.",
+                    "items": {
+                        "type": "string",
+                        "format": "uuid"
+                    }
+                }
+            }
+        },
+        "UnassignDomainWorkspacesByIdsRequest": {
+            "description": "The request payload for unassigning workspaces from a domain by workspace ID.",
+            "properties": {
+                "workspacesIds": {
+                    "description": "The workspace IDs that will be unassigned from that domain.",
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "uuid"
+                    }
+                }
+            }
+        },
+        "AssignDomainWorkspacesByIdsRequest": {
+            "description": "The request payload for assigning workspaces to a domain by workspace ID.",
+            "properties": {
+                "workspacesIds": {
+                    "description": "The workspace IDs that will be assigned to that domain.",
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "format": "uuid"
+                    }
+                }
+            }
+        },
+        "CreateDomainRequest": {
+            "required": [
+                "displayName"
+            ],
+            "description": "The request payload for creating a domain or subdomain.",
+            "properties": {
+                "displayName": {
+                    "description": "The domain display name.\nThe display name cannot contain more than 40 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The domain description.\nThe description cannot contain more than 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "parentDomainId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The domain parent object ID."
+                }
+            }
+        },
+        "DomainRole": {
+            "type": "string",
+            "description": "Represents the domain members by the principal's request type. Additional request types may be added over time.",
+            "enum": [
+                "Admins",
+                "Contributors"
+            ],
+            "x-ms-enum": {
+                "name": "DomainRole",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Admins",
+                        "description": "Domain admins request type."
+                    },
+                    {
+                        "value": "Contributors",
+                        "description": "Domain contributors request type."
+                    }
+                ]
+            }
+        },
+        "ContributorsScopeType": {
+            "type": "string",
+            "description": "The contributor scope. Additional contributor scopes may be added over time.",
+            "enum": [
+                "AllTenant",
+                "SpecificUsersAndGroups",
+                "AdminsOnly"
+            ],
+            "x-ms-enum": {
+                "name": "ContributorsScopeType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "AllTenant",
+                        "description": "All the tenant's users."
+                    },
+                    {
+                        "value": "SpecificUsersAndGroups",
+                        "description": "Specific users and groups."
+                    },
+                    {
+                        "value": "AdminsOnly",
+                        "description": "Tenant and domain admins only."
+                    }
+                ]
+            }
+        }
+    }
+}

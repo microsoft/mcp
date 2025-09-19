@@ -22,7 +22,15 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
         """;
     public override string Title => _commandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = true,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -47,7 +55,7 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
                 options.RetryPolicy);
             // Set results if any were returned
             context.Response.Results = results != null ?
-                ResponseResult.Create(new TestResourceCreateCommandResult(results), LoadTestJsonContext.Default.TestResourceCreateCommandResult) :
+                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestResourceCreateCommandResult) :
                 null;
         }
         catch (Exception ex)

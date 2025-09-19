@@ -1,0 +1,95 @@
+{
+    "parameters": {
+        "deploymentPipelineId": "a5ded933-57b7-41f4-b072-ed4c1f9d5824",
+        "operationId": "1065e6a3-a020-4c0c-ada7-92b5fe99eec5"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "1065e6a3-a020-4c0c-ada7-92b5fe99eec5",
+                "type": "Deploy",
+                "status": "Succeeded",
+                "lastUpdatedTime": "2020-12-13T09:26:43.153",
+                "executionStartTime": "2020-12-13T09:25:43.153Z",
+                "executionEndTime": "2020-12-13T09:26:43.153Z",
+                "sourceStageId": "2e6f0272-e809-410a-be63-50e1d97ba75a",
+                "targetStageId": "d2056166-041c-4a56-8d37-ea90038bc0d6",
+                "executionPlan": {
+                    "steps": [
+                        {
+                            "index": 0,
+                            "description": "DataflowDeployment",
+                            "status": "Succeeded",
+                            "preDeploymentDiffState": "New",
+                            "sourceAndTarget": {
+                                "sourceItemId": "29efcfb0-0063-44af-a4ed-6c0bee3417d3",
+                                "sourceItemDisplayName": "Source dataflow",
+                                "itemType": "Dataflow"
+                            }
+                        },
+                        {
+                            "index": 1,
+                            "description": "DatamartDeployment",
+                            "status": "Succeeded",
+                            "preDeploymentDiffState": "New",
+                            "sourceAndTarget": {
+                                "sourceItemId": "645cd81f-1b21-4006-82b6-54cc7ec0352e",
+                                "sourceItemDisplayName": "Source datamart",
+                                "itemType": "Datamart"
+                            }
+                        },
+                        {
+                            "index": 2,
+                            "description": "DatasetDeployment",
+                            "status": "Succeeded",
+                            "preDeploymentDiffState": "NoDifference",
+                            "sourceAndTarget": {
+                                "sourceItemId": "1a201f2a-d1d8-45c0-8c61-1676338517de",
+                                "sourceItemDisplayName": "Source dataset",
+                                "targetItemId": "dd3b6aa1-4d40-405c-a19b-48314a27e8ee",
+                                "targetItemDisplayName": "Target dataset",
+                                "itemType": "SemanticModel"
+                            }
+                        },
+                        {
+                            "index": 3,
+                            "description": "ReportDeployment",
+                            "status": "Succeeded",
+                            "preDeploymentDiffState": "Different",
+                            "sourceAndTarget": {
+                                "sourceItemId": "2d225191-65f8-4ec3-b77d-06100602b1f7",
+                                "sourceItemDisplayName": "Source report",
+                                "targetItemId": "9d5c1f0f-f85c-48f4-8a8e-4c77547116b3",
+                                "targetItemDisplayName": "Target report",
+                                "itemType": "Report"
+                            }
+                        },
+                        {
+                            "index": 4,
+                            "description": "DashboardDeployment",
+                            "status": "Succeeded",
+                            "preDeploymentDiffState": "New",
+                            "sourceAndTarget": {
+                                "sourceItemId": "9046e4cc-8aea-4a7a-a3b5-1a78b1447d82",
+                                "sourceItemDisplayName": "Source dashboard",
+                                "itemType": "Dashboard"
+                            }
+                        }
+                    ]
+                },
+                "note": {
+                    "content": "Sample note"
+                },
+                "preDeploymentDiffInformation": {
+                    "newItemsCount": 3,
+                    "differentItemsCount": 1,
+                    "noDifferenceItemsCount": 1
+                },
+                "performedBy": {
+                    "id": "a35d842b-90d5-59a2-c56a-5f8fcff0bf9d",
+                    "type": "User"
+                }
+            }
+        }
+    }
+}

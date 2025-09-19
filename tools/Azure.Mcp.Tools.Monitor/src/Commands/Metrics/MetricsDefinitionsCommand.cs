@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Options.Metrics;
@@ -19,10 +20,6 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
     private const string CommandTitle = "List Azure Monitor Metric Definitions";
     private readonly ILogger<MetricsDefinitionsCommand> _logger = logger;
 
-    private readonly Option<string> _metricNamespaceOption = MonitorOptionDefinitions.Metrics.MetricNamespaceOptional;
-    private readonly Option<string> _searchStringOption = MonitorOptionDefinitions.Metrics.SearchString;
-    private readonly Option<int> _limitOption = MonitorOptionDefinitions.Metrics.DefinitionsLimit;
-
     public override string Name => "definitions";
 
     public override string Description =>
@@ -32,22 +29,30 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_metricNamespaceOption);
-        command.Options.Add(_searchStringOption);
-        command.Options.Add(_limitOption);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.MetricNamespace.AsOptional());
+        command.Options.Add(MonitorOptionDefinitions.Metrics.SearchString);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.DefinitionsLimit);
     }
 
     protected override MetricsDefinitionsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.MetricNamespace = parseResult.GetValue(_metricNamespaceOption);
-        options.SearchString = parseResult.GetValue(_searchStringOption);
-        options.Limit = parseResult.GetValue(_limitOption);
+        options.MetricNamespace = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.MetricNamespace.Name);
+        options.SearchString = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.SearchString.Name);
+        options.Limit = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Metrics.DefinitionsLimit.Name);
         return options;
     }
 
@@ -94,9 +99,7 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
 
                 // Set response message and results
                 context.Response.Message = status;
-                context.Response.Results = ResponseResult.Create(
-                    new MetricsDefinitionsCommandResult(limitedResults, status),
-                    MonitorJsonContext.Default.MetricsDefinitionsCommandResult);
+                context.Response.Results = ResponseResult.Create(new(limitedResults, status), MonitorJsonContext.Default.MetricsDefinitionsCommandResult);
             }
             else
             {

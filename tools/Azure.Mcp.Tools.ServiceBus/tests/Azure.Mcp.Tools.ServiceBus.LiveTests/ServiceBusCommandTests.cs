@@ -6,24 +6,20 @@ using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tools.ServiceBus.Options;
 using Azure.Messaging.ServiceBus;
 using Xunit;
 
 namespace Azure.Mcp.Tools.ServiceBus.LiveTests
 {
-    public class ServiceBusCommandTests : CommandTestsBase, IClassFixture<LiveTestFixture>
+    public class ServiceBusCommandTests : CommandTestsBase
     {
         private const string QueueName = "queue1";
         private const string TopicName = "topic1";
         private const string SubscriptionName = "subscription1";
 
-        private readonly string _serviceBusNamespace;
-
-        public ServiceBusCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : base(liveTestFixture, output)
+        public ServiceBusCommandTests(ITestOutputHelper output) : base(output)
         {
-            _serviceBusNamespace = $"{Settings.ResourceBaseName}.servicebus.windows.net";
         }
 
         [Fact(Skip = "The command for this test has been commented out until we know how to surface binary data.")]
@@ -39,7 +35,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
                     { ServiceBusOptionDefinitions.QueueName, QueueName },
-                    { ServiceBusOptionDefinitions.NamespaceName, _serviceBusNamespace},
+                    { ServiceBusOptionDefinitions.NamespaceName, $"{Settings.ResourceBaseName}.servicebus.windows.net"},
                     { ServiceBusOptionDefinitions.MaxMessagesName, numberOfMessages.ToString() }
                 });
 
@@ -60,7 +56,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
                 new()
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
-                    { ServiceBusOptionDefinitions.NamespaceName, _serviceBusNamespace},
+                    { ServiceBusOptionDefinitions.NamespaceName, $"{Settings.ResourceBaseName}.servicebus.windows.net"},
                     { ServiceBusOptionDefinitions.TopicName, TopicName },
                     { ServiceBusOptionDefinitions.SubscriptionName, SubscriptionName },
                     { ServiceBusOptionDefinitions.MaxMessagesName, numberOfMessages.ToString() }
@@ -80,7 +76,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
                     { ServiceBusOptionDefinitions.QueueName, QueueName },
-                    { ServiceBusOptionDefinitions.NamespaceName, _serviceBusNamespace},
+                    { ServiceBusOptionDefinitions.NamespaceName, $"{Settings.ResourceBaseName}.servicebus.windows.net"},
                 });
 
             var details = result.AssertProperty("queueDetails");
@@ -96,7 +92,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
                     { ServiceBusOptionDefinitions.TopicName, TopicName },
-                    { ServiceBusOptionDefinitions.NamespaceName, _serviceBusNamespace},
+                    { ServiceBusOptionDefinitions.NamespaceName, $"{Settings.ResourceBaseName}.servicebus.windows.net"},
                 });
 
             var details = result.AssertProperty("topicDetails");
@@ -113,7 +109,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
                     { ServiceBusOptionDefinitions.TopicName, TopicName },
                     { ServiceBusOptionDefinitions.SubscriptionName, SubscriptionName },
-                    { ServiceBusOptionDefinitions.NamespaceName, _serviceBusNamespace},
+                    { ServiceBusOptionDefinitions.NamespaceName, $"{Settings.ResourceBaseName}.servicebus.windows.net"},
                 });
 
             var details = result.AssertProperty("subscriptionDetails");
@@ -123,7 +119,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
         private async Task SendTestMessages(string queueOrTopicName, int numberOfMessages)
         {
             var credentials = new CustomChainedCredential(Settings.TenantId);
-            await using (var client = new ServiceBusClient(_serviceBusNamespace, credentials))
+            await using (var client = new ServiceBusClient($"{Settings.ResourceBaseName}.servicebus.windows.net", credentials))
             await using (var sender = client.CreateSender(queueOrTopicName))
             {
                 var batch = await sender.CreateMessageBatchAsync(TestContext.Current.CancellationToken);

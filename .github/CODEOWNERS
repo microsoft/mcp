@@ -29,10 +29,10 @@
 # Services
 ##################
 # PRLabel: %tools-AKS
-/tools/Azure.Mcp.Tools.Aks/            @jongio @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Aks/            @feiskyer @gossion @microsoft/azure-mcp
 
 # ServiceLabel: %tools-AKS
-# ServiceOwners:                       @jongio
+# ServiceOwners:                       @feiskyer @gossion
 
 
 # PRLabel: %tools-AppConfig
@@ -41,6 +41,17 @@
 # ServiceLabel: %tools-AppConfig
 # ServiceOwners:                       @shenmuxiaosen @avanigupta
 
+# PRLabel: %area-AppLens
+/tools/Azure.Mcp.Tools.AppLens/        @masalaman @microsoft/azure-mcp
+
+# ServiceLabel: %area-AppLens
+# ServiceOwners:                       @msalaman
+
+# PRLabel: %tools-ApplicationInsights
+/tools/Azure.Mcp.Tools.ApplicationInsights/  @regexrowboat @xiaomi7732 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ApplicationInsights
+# ServiceOwners:                       @regexrowboat @xiaomi7732
 
 # PRLabel: %tools-ACR
 /tools/Azure.Mcp.Tools.Acr/            @jongio @microsoft/azure-mcp
@@ -99,7 +110,7 @@
 # ServiceOwners:                       @vcolin7 @JonathanCrd
 
 # PRLabel: %tools-ISV
-/tools/Azure.Mcp.Tools.AzureIsv/       @jayanthjj @pachaturevedi
+/tools/Azure.Mcp.Tools.AzureIsv/       @jayanthjj @pachaturevedi @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ISV
 # ServiceOwners:                       @jayanthjj @pachaturevedi
@@ -125,7 +136,7 @@
 # ServiceOwners:                       @smritiy @srnagar @jongio
 
 # PRLabel: %tools-AzureManagedLustre
-/tools/Azure.Mcp.Tools.AzureManagedLustre/                        @wolfgang-desalvador
+/tools/Azure.Mcp.Tools.AzureManagedLustre/                        @wolfgang-desalvador @microsoft/azure-mcp
 # ServiceLabel: %tools-AzureManagedLustre
 # ServiceOwners:                       @wolfgang-desalvador
 
@@ -135,6 +146,11 @@
 # ServiceLabel: %tools-MySQL
 # ServiceOwners:                       @ramnov @mattkohnms
 
+# PRLabel: %tools-SQL
+/tools/Azure.Mcp.Tools.Sql/          @ericshape @AV25242 @akromm @jeremyfrosti @mitesh-pv @achyuth-ms @microsoft/azure-mcp
+
+# ServiceLabel: %tools-SQL
+# ServiceOwners:                     @ericshape @AV25242 @akromm @jeremyfrosti @mitesh-pv @achyuth-ms
 
 # PRLabel: %tools-Postgres
 /tools/Azure.Mcp.Tools.Postgres/       @kk-src @shreyaaithal @maxluk @xiangyan99 @microsoft/azure-mcp
@@ -195,6 +211,6 @@
 
 # PRLabel: %tools-EventGrid
 /tools/Azure.Mcp.Tools.EventGrid/     @microsoft/azure-mcp
- 
+
 # ServiceLabel: %tools-EventGrid
 # ServiceOwners:                      @microsoft/azure-mcp

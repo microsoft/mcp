@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
@@ -27,7 +28,15 @@ public sealed class FileListCommand(ILogger<FileListCommand> logger) : BaseFileC
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -63,9 +72,7 @@ public sealed class FileListCommand(ILogger<FileListCommand> logger) : BaseFileC
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = filesAndDirectories?.Count > 0
-                ? ResponseResult.Create(new FileListCommandResult(filesAndDirectories), StorageJsonContext.Default.FileListCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(filesAndDirectories ?? []), StorageJsonContext.Default.FileListCommandResult);
         }
         catch (Exception ex)
         {
@@ -76,5 +83,5 @@ public sealed class FileListCommand(ILogger<FileListCommand> logger) : BaseFileC
         return context.Response;
     }
 
-    internal record FileListCommandResult(List<FileShareItemInfo> Files);
+    internal record FileListCommandResult([property: JsonPropertyName("files")] List<FileShareItemInfo> Files);
 }

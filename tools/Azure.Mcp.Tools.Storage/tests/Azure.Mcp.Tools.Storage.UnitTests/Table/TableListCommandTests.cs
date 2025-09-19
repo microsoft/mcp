@@ -3,10 +3,10 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Table;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -65,14 +65,14 @@ public class TableListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TableListResult>(json);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.TableListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedTables, result.Tables);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoTables()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoTables()
     {
         // Arrange
         _storageService.ListTables(Arg.Is(_knownAccount), Arg.Is(_knownSubscription),
@@ -90,7 +90,13 @@ public class TableListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.TableListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Tables);
     }
 
     [Fact]
@@ -116,11 +122,5 @@ public class TableListCommandTests
         Assert.NotNull(response);
         Assert.Equal(500, response.Status);
         Assert.StartsWith(expectedError, response.Message);
-    }
-
-    private class TableListResult
-    {
-        [JsonPropertyName("tables")]
-        public List<string> Tables { get; set; } = [];
     }
 }

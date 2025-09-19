@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.0.1</Version>
+    <Version>0.0.12</Version>
     <CliName>mcptmp</CliName>
     <AssemblyTitle>Template MCP Server</AssemblyTitle>
     <Description>Template MCP Server - Basic Model Context Protocol implementation</Description>
-    <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
+    <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Template.Mcp.Server#readme</ReadmeUrl>
     <NpmPackageName>@azure/mcp-template</NpmPackageName>
     <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>
     <PackageId>Microsoft.Template.Mcp</PackageId>
@@ -22,7 +22,6 @@
     <PublishReadyToRun>false</PublishReadyToRun>
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
   <!-- Enable Trim and AOT Analyzers -->
@@ -56,13 +55,6 @@
     <PackageDescription>Template MCP Server - Basic Model Context Protocol implementation. Internal implementation package for $(RuntimeIdentifier).</PackageDescription>
   </PropertyGroup>
 
-  <!-- Debug configuration -->
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <PublishSingleFile>false</PublishSingleFile>
-    <SelfContained>false</SelfContained>
-    <DebugType>portable</DebugType>
-    <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>

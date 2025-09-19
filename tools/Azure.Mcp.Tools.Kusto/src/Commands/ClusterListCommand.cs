@@ -25,7 +25,15 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -44,9 +52,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = clusterNames?.Count > 0 ?
-                ResponseResult.Create(new ClusterListCommandResult(clusterNames), KustoJsonContext.Default.ClusterListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(clusterNames ?? []), KustoJsonContext.Default.ClusterListCommandResult);
         }
         catch (Exception ex)
         {

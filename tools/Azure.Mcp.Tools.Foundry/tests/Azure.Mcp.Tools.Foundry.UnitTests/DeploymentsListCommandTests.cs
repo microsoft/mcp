@@ -39,9 +39,9 @@ public class DeploymentsListCommandTests
         };
 
         _foundryService.ListDeployments(
-                Arg.Is<string>(s => s == endpoint),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Is(endpoint),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
             .Returns(expectedDeployments);
 
         var command = new DeploymentsListCommand();
@@ -54,15 +54,15 @@ public class DeploymentsListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoDeploymentsExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDeploymentsExist()
     {
         var endpoint = "https://test-endpoint.com";
 
         _foundryService.ListDeployments(
-                Arg.Is<string>(s => s == endpoint),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<Deployment>());
+            Arg.Is(endpoint),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns([]);
 
         var command = new DeploymentsListCommand();
         var args = command.GetCommand().Parse(["--endpoint", endpoint]);
@@ -70,7 +70,7 @@ public class DeploymentsListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
     }
 
     [Fact]
@@ -80,9 +80,9 @@ public class DeploymentsListCommandTests
         var expectedError = "Test error";
 
         _foundryService.ListDeployments(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new DeploymentsListCommand();
@@ -102,9 +102,9 @@ public class DeploymentsListCommandTests
         var expectedError = "Test error";
 
         _foundryService.ListDeployments(
-                Arg.Is<string>(s => s == endpoint),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Is(endpoint),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new DeploymentsListCommand();

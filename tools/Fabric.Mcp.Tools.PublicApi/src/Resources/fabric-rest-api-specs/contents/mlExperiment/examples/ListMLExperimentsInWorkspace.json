@@ -1,0 +1,33 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "3546052c-ae64-4526-b1a8-52af7761426f",
+                        "displayName": "MLExperiment_1",
+                        "description": "A machine learning experiment description.",
+                        "type": "MLExperiment",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "mlFlowExperimentId":"7b0f1b08-da51-4561-a0ed-c0a2833f50c0"
+                        }
+                    },
+                    {
+                        "id": "6c192553-2375-4ba1-a61c-dec7729bdccc",
+                        "displayName": "MLExperiment_2",
+                        "description": "A machine learning experiment description.",
+                        "type": "MLExperiment",
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "properties": {
+                            "mlFlowExperimentId":"d5d773cb-cf52-4b9b-b78b-760324ea161e"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

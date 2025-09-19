@@ -26,7 +26,15 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -68,9 +76,7 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
                     options.RetryPolicy);
             }
 
-            context.Response.Results = sessionHosts.Count > 0
-                ? ResponseResult.Create(new SessionHostListCommandResult([.. sessionHosts]), VirtualDesktopJsonContext.Default.SessionHostListCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new([.. sessionHosts ?? []]), VirtualDesktopJsonContext.Default.SessionHostListCommandResult);
         }
         catch (Exception ex)
         {
@@ -90,12 +96,6 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
             "Access denied. Verify you have the necessary permissions to access the hostpool.",
         RequestFailedException rfEx => rfEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException rfEx => rfEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record SessionHostListCommandResult(List<Models.SessionHost> SessionHosts);

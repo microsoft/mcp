@@ -32,13 +32,21 @@ public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraform
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         var bestPractices = GetBestPracticesText();
         context.Response.Status = 200;
-        context.Response.Results = ResponseResult.Create(new List<string> { bestPractices }, AzureTerraformBestPracticesJsonContext.Default.ListString);
+        context.Response.Results = ResponseResult.Create([bestPractices], AzureTerraformBestPracticesJsonContext.Default.ListString);
         context.Response.Message = string.Empty;
         return Task.FromResult(context.Response);
     }

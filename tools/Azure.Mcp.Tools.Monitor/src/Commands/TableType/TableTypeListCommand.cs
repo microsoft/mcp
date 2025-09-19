@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.TableType;
 
-public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) : BaseMonitorCommand<TableTypeListOptions>()
+public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) : BaseWorkspaceMonitorCommand<TableTypeListOptions>()
 {
     private const string CommandTitle = "List Log Analytics Table Types";
     private readonly ILogger<TableTypeListCommand> _logger = logger;
@@ -20,14 +20,15 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) :
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
-
-    protected override void RegisterOptions(Command command)
+    public override ToolMetadata Metadata => new()
     {
-        base.RegisterOptions(command);
-        RequireResourceGroup();
-    }
-
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -48,12 +49,7 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) :
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = tableTypes?.Count > 0 ?
-                ResponseResult.Create(
-                    new TableTypeListCommandResult(tableTypes),
-                    MonitorJsonContext.Default.TableTypeListCommandResult // Changed to match the expected type
-                ) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(tableTypes ?? []), MonitorJsonContext.Default.TableTypeListCommandResult);
         }
         catch (Exception ex)
         {

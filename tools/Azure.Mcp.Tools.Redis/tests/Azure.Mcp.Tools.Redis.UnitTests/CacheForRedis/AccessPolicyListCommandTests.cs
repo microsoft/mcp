@@ -4,6 +4,8 @@
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Redis.Commands;
 using Azure.Mcp.Tools.Redis.Commands.CacheForRedis;
 using Azure.Mcp.Tools.Redis.Models.CacheForRedis;
 using Azure.Mcp.Tools.Redis.Services;
@@ -47,7 +49,7 @@ public class AccessPolicyListCommandTests
             "sub123",
             Arg.Any<string>(),
             Arg.Any<AuthMethod>(),
-            Arg.Any<Core.Options.RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>())
             .Returns(expectedAssignments);
 
         var command = new AccessPolicyListCommand(_logger);
@@ -61,11 +63,7 @@ public class AccessPolicyListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccessPolicyListCommandResult>(json, new JsonSerializerOptions()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, RedisJsonContext.Default.AccessPolicyListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedAssignments.Length, result.AccessPolicyAssignments.Count());
@@ -75,7 +73,7 @@ public class AccessPolicyListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoAccessPolicyAssignments()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccessPolicyAssignments()
     {
         _redisService.ListAccessPolicyAssignmentsAsync(
             "cache1",
@@ -83,7 +81,7 @@ public class AccessPolicyListCommandTests
             "sub123",
             Arg.Any<string>(),
             Arg.Any<AuthMethod>(),
-            Arg.Any<Core.Options.RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>())
             .Returns([]);
 
         var command = new AccessPolicyListCommand(_logger);
@@ -92,7 +90,13 @@ public class AccessPolicyListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, RedisJsonContext.Default.AccessPolicyListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.AccessPolicyAssignments);
     }
 
     [Fact]
@@ -105,7 +109,7 @@ public class AccessPolicyListCommandTests
             "sub123",
             Arg.Any<string>(),
             Arg.Any<AuthMethod>(),
-            Arg.Any<Core.Options.RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception("Test error"));
 
         var command = new AccessPolicyListCommand(_logger);
@@ -146,6 +150,4 @@ public class AccessPolicyListCommandTests
         Assert.Equal(400, response.Status);
         Assert.Contains("required", response.Message, StringComparison.OrdinalIgnoreCase);
     }
-
-    private record AccessPolicyListCommandResult(IEnumerable<AccessPolicyAssignment> AccessPolicyAssignments);
 }

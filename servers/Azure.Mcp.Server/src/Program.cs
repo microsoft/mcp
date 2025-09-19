@@ -37,7 +37,9 @@ internal class Program
             var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
-            return await parseResult.InvokeAsync();
+            var status = await parseResult.InvokeAsync();
+
+            return (status >= 200 && status < 300) ? 0 : 1;
         }
         catch (Exception ex)
         {
@@ -64,6 +66,7 @@ internal class Program
             // Register Azure service areas
             new Azure.Mcp.Tools.Aks.AksSetup(),
             new Azure.Mcp.Tools.AppConfig.AppConfigSetup(),
+            new Azure.Mcp.Tools.AppLens.AppLensSetup(),
             new Azure.Mcp.Tools.Authorization.AuthorizationSetup(),
             new Azure.Mcp.Tools.AzureIsv.AzureIsvSetup(),
             new Azure.Mcp.Tools.AzureManagedLustre.AzureManagedLustreSetup(),
@@ -71,6 +74,7 @@ internal class Program
             new Azure.Mcp.Tools.Deploy.DeploySetup(),
             new Azure.Mcp.Tools.EventGrid.EventGridSetup(),
             new Azure.Mcp.Tools.Acr.AcrSetup(),
+            new Azure.Mcp.Tools.BicepSchema.BicepSchemaSetup(),
             new Azure.Mcp.Tools.Cosmos.CosmosSetup(),
             new Azure.Mcp.Tools.CloudArchitect.CloudArchitectSetup(),
             new Azure.Mcp.Tools.Foundry.FoundrySetup(),
@@ -82,6 +86,7 @@ internal class Program
             new Azure.Mcp.Tools.Marketplace.MarketplaceSetup(),
             new Azure.Mcp.Tools.Quota.QuotaSetup(),
             new Azure.Mcp.Tools.Monitor.MonitorSetup(),
+            new Azure.Mcp.Tools.ApplicationInsights.ApplicationInsightsSetup(),
             new Azure.Mcp.Tools.MySql.MySqlSetup(),
             new Azure.Mcp.Tools.Postgres.PostgresSetup(),
             new Azure.Mcp.Tools.Redis.RedisSetup(),
@@ -98,7 +103,7 @@ internal class Program
             // If the "(Native AOT) Build module" stage fails in CI,
             // follow the AOT compatibility guide instead of changing this list:
             // https://github.com/Azure/azure-mcp/blob/main/docs/aot-compatibility.md
-            new Azure.Mcp.Tools.BicepSchema.BicepSchemaSetup(),
+
 #endif
         ];
     }

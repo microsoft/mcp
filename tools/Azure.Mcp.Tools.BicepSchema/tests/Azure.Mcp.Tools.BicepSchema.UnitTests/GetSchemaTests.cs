@@ -8,7 +8,6 @@ using Azure.Mcp.Tools.BicepSchema.Services;
 using Azure.Mcp.Tools.BicepSchema.Services.ResourceProperties;
 using Azure.Mcp.Tools.BicepSchema.Services.ResourceProperties.Entities;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace Azure.Mcp.Tools.BicepSchema.UnitTests;
@@ -148,7 +147,7 @@ public class GetSchemaTests
         SchemaGenerator.ConfigureServices(serviceCollection);
         IServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
 
-        ResourceVisitor visitor = new ResourceVisitor(serviceProvider.GetRequiredService<ITypeLoader>());
+        ResourceVisitor visitor = new(serviceProvider.GetRequiredService<ITypeLoader>());
         TypesDefinitionResult result = visitor.LoadSingleResource($"{resourceProvider}/{resourceType}", apiVersion);
 
         Assert.Equal(resourceProvider, result.ResourceProvider);
@@ -239,9 +238,10 @@ public class GetSchemaTests
         // Verify
         Assert.Contains($"{resourceType}@{apiVersion}", response);
 
-        JArray root = JArray.Parse(response);
-        Assert.Equal("Resource", root.SelectToken("[0].$type")!.ToString());
-        Assert.Equal($"{resourceType}@{apiVersion}", root.SelectToken("[0].name")!.ToString());
+        using JsonDocument document = JsonDocument.Parse(response);
+        JsonElement root = document.RootElement;
+        Assert.Equal("Resource", root[0].GetProperty("$type").GetString());
+        Assert.Equal($"{resourceType}@{apiVersion}", root[0].GetProperty("name").GetString());
 
         //TODO: Consider more checks after optimizing output
     }
@@ -288,7 +288,7 @@ public class GetSchemaTests
                 "name": "Microsoft.ApiManagement/service/diagnostics/loggers"
               },
               "writableScopes": "ResourceGroup",
-              "readableScopes": "ResourceGroup",
+              "readableScopes": "None",
               "name": "Microsoft.ApiManagement/service/diagnostics/loggers@2018-01-01"
             }
           ]

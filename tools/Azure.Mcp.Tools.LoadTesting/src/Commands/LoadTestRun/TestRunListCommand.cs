@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
@@ -15,7 +16,6 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
 {
     private const string _commandTitle = "Test Run List";
     private readonly ILogger<TestRunListCommand> _logger = logger;
-    private readonly Option<string> _loadTestIdOption = OptionDefinitions.LoadTesting.Test;
     public override string Name => "list";
     public override string Description =>
         $"""
@@ -25,18 +25,26 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
         """;
     public override string Title => _commandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_loadTestIdOption);
+        command.Options.Add(OptionDefinitions.LoadTesting.Test);
     }
 
     protected override TestRunListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestId = parseResult.GetValue(_loadTestIdOption);
+        options.TestId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Test.Name);
         return options;
     }
 
@@ -62,9 +70,7 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
                 options.Tenant,
                 options.RetryPolicy);
             // Set results if any were returned
-            context.Response.Results = results != null ?
-                ResponseResult.Create(new TestRunListCommandResult(results), LoadTestJsonContext.Default.TestRunListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestRunListCommandResult);
         }
         catch (Exception ex)
         {

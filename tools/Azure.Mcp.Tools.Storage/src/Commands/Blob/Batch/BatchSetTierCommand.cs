@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Commands.Blob.Container;
@@ -16,34 +17,38 @@ public sealed class BatchSetTierCommand(ILogger<BatchSetTierCommand> logger) : B
     private const string CommandTitle = "Set Access Tier for Multiple Blobs";
     private readonly ILogger<BatchSetTierCommand> _logger = logger;
 
-    private readonly Option<string> _tierOption = StorageOptionDefinitions.Tier;
-    private readonly Option<string[]> _blobsOption = StorageOptionDefinitions.Blobs;
-
     public override string Name => "set-tier";
 
     public override string Description =>
         $"""
-        Set access tier for multiple blobs in a single batch operation. This tool efficiently changes the
-        storage tier for multiple blobs simultaneously in a single request. Different tiers offer different
-        trade-offs between storage costs, access costs, and retrieval latency.
+        Sets access tier for multiple blobs in a single batch operation, returning the names of blobs that had their access
+        tier set and blobs that failed to have their access tier set.
         """;
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = true,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_tierOption);
-        command.Options.Add(_blobsOption);
+        command.Options.Add(StorageOptionDefinitions.Tier);
+        command.Options.Add(StorageOptionDefinitions.Blobs);
     }
 
     protected override BatchSetTierOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Tier = parseResult.GetValueOrDefault(_tierOption);
-        options.BlobNames = parseResult.GetValueOrDefault(_blobsOption);
+        options.Tier = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Tier.Name);
+        options.BlobNames = parseResult.GetValueOrDefault<string[]>(StorageOptionDefinitions.Blobs.Name);
         return options;
     }
 
@@ -69,9 +74,7 @@ public sealed class BatchSetTierCommand(ILogger<BatchSetTierCommand> logger) : B
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new BatchSetTierCommandResult(result.SuccessfulBlobs, result.FailedBlobs),
-                StorageJsonContext.Default.BatchSetTierCommandResult);
+            context.Response.Results = ResponseResult.Create(new(result.SuccessfulBlobs, result.FailedBlobs), StorageJsonContext.Default.BatchSetTierCommandResult);
         }
         catch (Exception ex)
         {
@@ -84,5 +87,7 @@ public sealed class BatchSetTierCommand(ILogger<BatchSetTierCommand> logger) : B
         return context.Response;
     }
 
-    internal record BatchSetTierCommandResult(List<string> SuccessfulBlobs, List<string> FailedBlobs);
+    internal record BatchSetTierCommandResult(
+        [property: JsonPropertyName("successfulBlobs")] List<string> SuccessfulBlobs,
+        [property: JsonPropertyName("failedBlobs")] List<string> FailedBlobs);
 }

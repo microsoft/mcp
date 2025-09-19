@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Options;
 using Azure.Mcp.Tools.Quota.Options.Region;
 using Azure.Mcp.Tools.Quota.Services;
@@ -15,11 +16,6 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
     private const string CommandTitle = "Get available regions for Azure resource types";
     private readonly ILogger<AvailabilityListCommand> _logger = logger;
 
-    private readonly Option<string> _resourceTypesOption = QuotaOptionDefinitions.RegionCheck.ResourceTypes;
-    private readonly Option<string> _cognitiveServiceModelNameOption = QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelName;
-    private readonly Option<string> _cognitiveServiceModelVersionOption = QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelVersion;
-    private readonly Option<string> _cognitiveServiceDeploymentSkuNameOption = QuotaOptionDefinitions.RegionCheck.CognitiveServiceDeploymentSkuName;
-
     public override string Name => "list";
 
     public override string Description =>
@@ -28,24 +24,32 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
         """;
 
     public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_resourceTypesOption);
-        command.Options.Add(_cognitiveServiceModelNameOption);
-        command.Options.Add(_cognitiveServiceModelVersionOption);
-        command.Options.Add(_cognitiveServiceDeploymentSkuNameOption);
+        command.Options.Add(QuotaOptionDefinitions.RegionCheck.ResourceTypes);
+        command.Options.Add(QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelName);
+        command.Options.Add(QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelVersion);
+        command.Options.Add(QuotaOptionDefinitions.RegionCheck.CognitiveServiceDeploymentSkuName);
     }
 
     protected override AvailabilityListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceTypes = parseResult.GetValue(_resourceTypesOption) ?? string.Empty;
-        options.CognitiveServiceModelName = parseResult.GetValue(_cognitiveServiceModelNameOption);
-        options.CognitiveServiceModelVersion = parseResult.GetValue(_cognitiveServiceModelVersionOption);
-        options.CognitiveServiceDeploymentSkuName = parseResult.GetValue(_cognitiveServiceDeploymentSkuNameOption);
+        options.ResourceTypes = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.RegionCheck.ResourceTypes.Name) ?? string.Empty;
+        options.CognitiveServiceModelName = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelName.Name);
+        options.CognitiveServiceModelVersion = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.RegionCheck.CognitiveServiceModelVersion.Name);
+        options.CognitiveServiceDeploymentSkuName = parseResult.GetValueOrDefault<string>(QuotaOptionDefinitions.RegionCheck.CognitiveServiceDeploymentSkuName.Name);
         return options;
     }
 
@@ -60,6 +64,7 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
 
         try
         {
+            context.Activity?.AddTag(QuotaTelemetryTags.ResourceTypes, options.ResourceTypes);
 
             var resourceTypes = options.ResourceTypes.Split(',')
                 .Select(rt => rt.Trim())
@@ -81,11 +86,7 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
 
             _logger.LogInformation("Region check result: {ToolResult}", toolResult);
 
-            context.Response.Results = toolResult?.Count > 0 ?
-                ResponseResult.Create(
-                    new RegionCheckCommandResult(toolResult),
-                    QuotaJsonContext.Default.RegionCheckCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(toolResult ?? []), QuotaJsonContext.Default.RegionCheckCommandResult);
         }
         catch (Exception ex)
         {

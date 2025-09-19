@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Foundry.Models;
-using Azure.ResourceManager.CognitiveServices.Models;
+using Azure.Mcp.Tools.Foundry.Services.Models;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
@@ -21,7 +21,6 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 [JsonSerializable(typeof(ModelDeploymentResult))]
 [JsonSerializable(typeof(KnowledgeIndexInformation))]
 [JsonSerializable(typeof(KnowledgeIndexSchema))]
-[JsonSerializable(typeof(CognitiveServicesAccountSku))]
-[JsonSerializable(typeof(CognitiveServicesAccountDeploymentProperties))]
+[JsonSerializable(typeof(CognitiveServicesAccountDeploymentData))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
 internal sealed partial class FoundryJsonContext : JsonSerializerContext;

@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -14,14 +15,20 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
 {
     private const string CommandTitle = "Create Key Vault Certificate";
     private readonly ILogger<CertificateCreateCommand> _logger = logger;
-    private readonly Option<string> _vaultOption = KeyVaultOptionDefinitions.VaultName;
-    private readonly Option<string> _certificateOption = KeyVaultOptionDefinitions.CertificateName;
 
     public override string Name => "create";
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override string Description =>
         """
@@ -32,15 +39,15 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_vaultOption);
-        command.Options.Add(_certificateOption);
+        command.Options.Add(KeyVaultOptionDefinitions.VaultName);
+        command.Options.Add(KeyVaultOptionDefinitions.CertificateName);
     }
 
     protected override CertificateCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValue(_vaultOption);
-        options.CertificateName = parseResult.GetValue(_certificateOption);
+        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
+        options.CertificateName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.CertificateName.Name);
         return options;
     }
 
@@ -68,7 +75,7 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
             var certificate = completedOperation.Value;
 
             context.Response.Results = ResponseResult.Create(
-                new CertificateCreateCommandResult(
+                new(
                     certificate.Name,
                     certificate.Id,
                     certificate.KeyId,

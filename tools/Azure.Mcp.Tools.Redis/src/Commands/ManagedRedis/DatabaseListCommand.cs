@@ -26,7 +26,15 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
         """;
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -48,11 +56,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
                 options.AuthMethod,
                 options.RetryPolicy);
 
-            context.Response.Results = databases.Any() ?
-                ResponseResult.Create(
-                    new DatabaseListCommandResult(databases),
-                    RedisJsonContext.Default.DatabaseListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(databases ?? []), RedisJsonContext.Default.DatabaseListCommandResult);
         }
         catch (Exception ex)
         {

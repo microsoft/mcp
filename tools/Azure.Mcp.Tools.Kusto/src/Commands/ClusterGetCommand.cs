@@ -23,7 +23,15 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseC
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -44,7 +52,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseC
                 options.RetryPolicy);
 
             context.Response.Results = cluster is null ?
-                null : ResponseResult.Create(new ClusterGetCommandResult(cluster), KustoJsonContext.Default.ClusterGetCommandResult);
+                null : ResponseResult.Create(new(cluster), KustoJsonContext.Default.ClusterGetCommandResult);
         }
         catch (Exception ex)
         {

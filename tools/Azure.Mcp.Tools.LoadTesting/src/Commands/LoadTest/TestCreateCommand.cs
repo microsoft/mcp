@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTest;
@@ -15,13 +16,6 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
 {
     private const string _commandTitle = "Test Create";
     private readonly ILogger<TestCreateCommand> _logger = logger;
-    private readonly Option<string> _loadTestIdOption = OptionDefinitions.LoadTesting.Test;
-    private readonly Option<string> _loadTestDescriptionOption = OptionDefinitions.LoadTesting.Description;
-    private readonly Option<string> _loadTestDisplayNameOption = OptionDefinitions.LoadTesting.DisplayName;
-    private readonly Option<string> _loadTestEndpointOption = OptionDefinitions.LoadTesting.Endpoint;
-    private readonly Option<int> _loadTestVirtualUsersOption = OptionDefinitions.LoadTesting.VirtualUsers;
-    private readonly Option<int> _loadTestDurationOption = OptionDefinitions.LoadTesting.Duration;
-    private readonly Option<int> _loadTestRampUpTimeOption = OptionDefinitions.LoadTesting.RampUpTime;
     public override string Name => "create";
     public override string Description =>
         $"""
@@ -30,30 +24,38 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
         """;
     public override string Title => _commandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = true,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_loadTestIdOption);
-        command.Options.Add(_loadTestDescriptionOption);
-        command.Options.Add(_loadTestDisplayNameOption);
-        command.Options.Add(_loadTestEndpointOption);
-        command.Options.Add(_loadTestVirtualUsersOption);
-        command.Options.Add(_loadTestDurationOption);
-        command.Options.Add(_loadTestRampUpTimeOption);
+        command.Options.Add(OptionDefinitions.LoadTesting.Test);
+        command.Options.Add(OptionDefinitions.LoadTesting.Description);
+        command.Options.Add(OptionDefinitions.LoadTesting.DisplayName);
+        command.Options.Add(OptionDefinitions.LoadTesting.Endpoint);
+        command.Options.Add(OptionDefinitions.LoadTesting.VirtualUsers);
+        command.Options.Add(OptionDefinitions.LoadTesting.Duration);
+        command.Options.Add(OptionDefinitions.LoadTesting.RampUpTime);
     }
 
     protected override TestCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestId = parseResult.GetValue(_loadTestIdOption);
-        options.Description = parseResult.GetValue(_loadTestDescriptionOption);
-        options.DisplayName = parseResult.GetValue(_loadTestDisplayNameOption);
-        options.Endpoint = parseResult.GetValue(_loadTestEndpointOption);
-        options.VirtualUsers = parseResult.GetValue(_loadTestVirtualUsersOption);
-        options.Duration = parseResult.GetValue(_loadTestDurationOption);
-        options.RampUpTime = parseResult.GetValue(_loadTestRampUpTimeOption);
+        options.TestId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Test.Name);
+        options.Description = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Description.Name);
+        options.DisplayName = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.DisplayName.Name);
+        options.Endpoint = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Endpoint.Name);
+        options.VirtualUsers = parseResult.GetValueOrDefault<int>(OptionDefinitions.LoadTesting.VirtualUsers.Name);
+        options.Duration = parseResult.GetValueOrDefault<int>(OptionDefinitions.LoadTesting.Duration.Name);
+        options.RampUpTime = parseResult.GetValueOrDefault<int>(OptionDefinitions.LoadTesting.RampUpTime.Name);
         return options;
     }
 
@@ -88,7 +90,7 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
 
             // Set results if any were returned
             context.Response.Results = results != null ?
-                ResponseResult.Create(new TestCreateCommandResult(results), LoadTestJsonContext.Default.TestCreateCommandResult) :
+                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestCreateCommandResult) :
                 null;
         }
         catch (Exception ex)

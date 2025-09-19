@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
@@ -16,8 +17,6 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
     private const string CommandTitle = "Create Data Lake Directory";
     private readonly ILogger<DirectoryCreateCommand> _logger = logger;
 
-    private readonly Option<string> _directoryPathOption = StorageOptionDefinitions.DirectoryPath;
-
     public override string Name => "create";
 
     public override string Description =>
@@ -31,18 +30,26 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_directoryPathOption);
+        command.Options.Add(StorageOptionDefinitions.DirectoryPath);
     }
 
     protected override DirectoryCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DirectoryPath = parseResult.GetValueOrDefault(_directoryPathOption);
+        options.DirectoryPath = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.DirectoryPath.Name);
         return options;
     }
 
@@ -66,9 +73,7 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new DirectoryCreateCommandResult(directory),
-                StorageJsonContext.Default.DirectoryCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(directory), StorageJsonContext.Default.DirectoryCreateCommandResult);
         }
         catch (Exception ex)
         {
@@ -80,5 +85,5 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
         return context.Response;
     }
 
-    internal record DirectoryCreateCommandResult(DataLakePathInfo Directory);
+    internal record DirectoryCreateCommandResult([property: JsonPropertyName("directory")] DataLakePathInfo Directory);
 }

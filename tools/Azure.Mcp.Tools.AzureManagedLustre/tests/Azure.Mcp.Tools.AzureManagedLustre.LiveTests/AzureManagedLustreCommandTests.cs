@@ -4,13 +4,11 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
 {
-    public class AzureManagedLustreCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-        : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+    public class AzureManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
     {
         [Fact]
         public async Task Should_list_filesystems_by_subscription()
@@ -40,6 +38,59 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
 
             var ips = result.AssertProperty("numberOfRequiredIPs");
             Assert.Equal(JsonValueKind.Number, ips.ValueKind);
+        }
+
+        [Fact]
+        public async Task Should_get_sku_info()
+        {
+            var result = await CallToolAsync(
+                "azmcp_azuremanagedlustre_filesystem_sku_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId }
+                });
+
+            var skus = result.AssertProperty("skus");
+            Assert.Equal(JsonValueKind.Array, skus.ValueKind);
+        }
+
+        [Fact]
+        public async Task Should_get_sku_info_zonal_support()
+        {
+            var result = await CallToolAsync(
+                "azmcp_azuremanagedlustre_filesystem_sku_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "location", "westeurope" }
+                });
+
+            var skus = result.AssertProperty("skus");
+            foreach (var sku in skus.EnumerateArray())
+            {
+                var supportsZones = sku.AssertProperty("supportsZones");
+                Assert.True(supportsZones.GetBoolean(), "'supportsZones' must be true.");
+            }
+        }
+
+        [Fact]
+        public async Task Should_get_sku_info_no_zonal_support()
+        {
+            var result = await CallToolAsync(
+                "azmcp_azuremanagedlustre_filesystem_sku_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "location", "westus" }
+                });
+
+            var skus = result.AssertProperty("skus");
+            Assert.Equal(JsonValueKind.Array, skus.ValueKind);
+            foreach (var sku in skus.EnumerateArray())
+            {
+                var supportsZones = sku.AssertProperty("supportsZones");
+                Assert.False(supportsZones.GetBoolean(), "'supportsZones' must be false.");
+            }
         }
     }
 }

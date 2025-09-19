@@ -28,7 +28,15 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -49,9 +57,7 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
                 options.Subscription!,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new ElasticPoolListResult(elasticPools),
-                SqlJsonContext.Default.ElasticPoolListResult);
+            context.Response.Results = ResponseResult.Create(new(elasticPools ?? []), SqlJsonContext.Default.ElasticPoolListResult);
         }
         catch (Exception ex)
         {
@@ -72,12 +78,6 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
             $"Authorization failed accessing the SQL server. Verify you have appropriate permissions. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record ElasticPoolListResult(List<SqlElasticPool> ElasticPools);

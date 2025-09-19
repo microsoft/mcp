@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Models;
@@ -12,8 +13,6 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class KnowledgeIndexSchemaCommand : GlobalCommand<KnowledgeIndexSchemaOptions>
 {
     private const string CommandTitle = "Get Knowledge Index Schema in Azure AI Foundry";
-    private readonly Option<string> _endpointOption = FoundryOptionDefinitions.EndpointOption;
-    private readonly Option<string> _indexNameOption = FoundryOptionDefinitions.IndexNameOption;
 
     public override string Name => "schema";
 
@@ -32,20 +31,28 @@ public sealed class KnowledgeIndexSchemaCommand : GlobalCommand<KnowledgeIndexSc
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_endpointOption);
-        command.Options.Add(_indexNameOption);
+        command.Options.Add(FoundryOptionDefinitions.EndpointOption);
+        command.Options.Add(FoundryOptionDefinitions.IndexNameOption);
     }
 
     protected override KnowledgeIndexSchemaOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValue(_endpointOption);
-        options.IndexName = parseResult.GetValue(_indexNameOption);
+        options.Endpoint = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.EndpointOption.Name);
+        options.IndexName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.IndexNameOption.Name);
 
         return options;
     }
@@ -73,9 +80,7 @@ public sealed class KnowledgeIndexSchemaCommand : GlobalCommand<KnowledgeIndexSc
                 throw new Exception("Failed to retrieve knowledge index schema - no data returned.");
             }
 
-            context.Response.Results = ResponseResult.Create(
-                new KnowledgeIndexSchemaCommandResult(indexSchema),
-                FoundryJsonContext.Default.KnowledgeIndexSchemaCommandResult);
+            context.Response.Results = ResponseResult.Create(new(indexSchema), FoundryJsonContext.Default.KnowledgeIndexSchemaCommandResult);
         }
         catch (Exception ex)
         {

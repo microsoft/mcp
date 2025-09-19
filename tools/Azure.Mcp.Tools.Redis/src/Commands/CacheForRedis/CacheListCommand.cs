@@ -28,7 +28,15 @@ public sealed class CacheListCommand(ILogger<CacheListCommand> logger) : Subscri
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -48,11 +56,7 @@ public sealed class CacheListCommand(ILogger<CacheListCommand> logger) : Subscri
                 options.AuthMethod,
                 options.RetryPolicy);
 
-            context.Response.Results = caches.Any() ?
-                ResponseResult.Create(
-                    new CacheListCommandResult(caches),
-                    RedisJsonContext.Default.CacheListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(caches ?? []), RedisJsonContext.Default.CacheListCommandResult);
         }
         catch (Exception ex)
         {

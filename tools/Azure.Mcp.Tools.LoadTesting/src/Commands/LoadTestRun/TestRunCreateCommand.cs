@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
@@ -15,11 +16,6 @@ public sealed class TestRunCreateCommand(ILogger<TestRunCreateCommand> logger)
 {
     private const string _commandTitle = "Test Run Create";
     private readonly ILogger<TestRunCreateCommand> _logger = logger;
-    private readonly Option<string> _testRunIdOption = OptionDefinitions.LoadTesting.TestRun;
-    private readonly Option<string> _testIdOption = OptionDefinitions.LoadTesting.Test;
-    private readonly Option<string> _displayNameOption = OptionDefinitions.LoadTesting.DisplayName;
-    private readonly Option<string> _descriptionOption = OptionDefinitions.LoadTesting.Description;
-    private readonly Option<string> _oldTestRunIdOption = OptionDefinitions.LoadTesting.OldTestRunId;
     public override string Name => "create";
     public override string Description =>
         $"""
@@ -29,26 +25,34 @@ public sealed class TestRunCreateCommand(ILogger<TestRunCreateCommand> logger)
         """;
     public override string Title => _commandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = true,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_testRunIdOption);
-        command.Options.Add(_testIdOption);
-        command.Options.Add(_displayNameOption);
-        command.Options.Add(_descriptionOption);
-        command.Options.Add(_oldTestRunIdOption);
+        command.Options.Add(OptionDefinitions.LoadTesting.TestRun);
+        command.Options.Add(OptionDefinitions.LoadTesting.Test);
+        command.Options.Add(OptionDefinitions.LoadTesting.DisplayName);
+        command.Options.Add(OptionDefinitions.LoadTesting.Description);
+        command.Options.Add(OptionDefinitions.LoadTesting.OldTestRunId);
     }
 
     protected override TestRunCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestRunId = parseResult.GetValue(_testRunIdOption);
-        options.TestId = parseResult.GetValue(_testIdOption);
-        options.DisplayName = parseResult.GetValue(_displayNameOption);
-        options.Description = parseResult.GetValue(_descriptionOption);
-        options.OldTestRunId = parseResult.GetValue(_oldTestRunIdOption);
+        options.TestRunId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.TestRun.Name);
+        options.TestId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Test.Name);
+        options.DisplayName = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.DisplayName.Name);
+        options.Description = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Description.Name);
+        options.OldTestRunId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.OldTestRunId.Name);
         return options;
     }
 
@@ -80,7 +84,7 @@ public sealed class TestRunCreateCommand(ILogger<TestRunCreateCommand> logger)
                 options.RetryPolicy);
             // Set results if any were returned
             context.Response.Results = results != null ?
-                ResponseResult.Create(new TestRunCreateCommandResult(results), LoadTestJsonContext.Default.TestRunCreateCommandResult) :
+                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestRunCreateCommandResult) :
                 null;
         }
         catch (Exception ex)

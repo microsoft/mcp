@@ -24,7 +24,15 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -60,9 +68,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
                     options.RetryPolicy);
             }
 
-            context.Response.Results = tableNames?.Count > 0 ?
-                ResponseResult.Create(new TableListCommandResult(tableNames), KustoJsonContext.Default.TableListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(tableNames ?? []), KustoJsonContext.Default.TableListCommandResult);
         }
         catch (Exception ex)
         {

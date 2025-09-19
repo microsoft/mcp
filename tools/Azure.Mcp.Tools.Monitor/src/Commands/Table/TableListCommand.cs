@@ -8,11 +8,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Table;
 
-public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseMonitorCommand<TableListOptions>()
+public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseWorkspaceMonitorCommand<TableListOptions>()
 {
     private const string CommandTitle = "List Log Analytics Tables";
     private readonly ILogger<TableListCommand> _logger = logger;
-    private readonly Option<string> _tableTypeOption = MonitorOptionDefinitions.TableType;
 
     public override string Name => "list";
 
@@ -24,19 +23,26 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseMon
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_tableTypeOption);
-        RequireResourceGroup();
+        command.Options.Add(MonitorOptionDefinitions.TableType);
     }
 
     protected override TableListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TableType = parseResult.GetValue(_tableTypeOption);
+        options.TableType = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.TableType.Name);
         return options;
     }
 
@@ -60,9 +66,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseMon
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = tables?.Count > 0 ?
-                ResponseResult.Create(new TableListCommandResult(tables), MonitorJsonContext.Default.TableListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(tables ?? []), MonitorJsonContext.Default.TableListCommandResult);
         }
         catch (Exception ex)
         {

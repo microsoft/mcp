@@ -16,10 +16,6 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
 {
     private const string CommandTitle = "Create SQL Server Firewall Rule";
 
-    private readonly Option<string> _firewallRuleNameOption = SqlOptionDefinitions.FirewallRuleNameOption;
-    private readonly Option<string> _startIpAddressOption = SqlOptionDefinitions.StartIpAddressOption;
-    private readonly Option<string> _endIpAddressOption = SqlOptionDefinitions.EndIpAddressOption;
-
     public override string Name => "create";
 
     public override string Description =>
@@ -32,22 +28,30 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_firewallRuleNameOption);
-        command.Options.Add(_startIpAddressOption);
-        command.Options.Add(_endIpAddressOption);
+        command.Options.Add(SqlOptionDefinitions.FirewallRuleNameOption);
+        command.Options.Add(SqlOptionDefinitions.StartIpAddressOption);
+        command.Options.Add(SqlOptionDefinitions.EndIpAddressOption);
     }
 
     protected override FirewallRuleCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.FirewallRuleName = parseResult.GetValueOrDefault(_firewallRuleNameOption);
-        options.StartIpAddress = parseResult.GetValueOrDefault(_startIpAddressOption);
-        options.EndIpAddress = parseResult.GetValueOrDefault(_endIpAddressOption);
+        options.FirewallRuleName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.FirewallRuleNameOption.Name);
+        options.StartIpAddress = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.StartIpAddressOption.Name);
+        options.EndIpAddress = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.EndIpAddressOption.Name);
         return options;
     }
 
@@ -73,9 +77,7 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
                 options.EndIpAddress!,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new FirewallRuleCreateResult(firewallRule),
-                SqlJsonContext.Default.FirewallRuleCreateResult);
+            context.Response.Results = ResponseResult.Create(new(firewallRule), SqlJsonContext.Default.FirewallRuleCreateResult);
         }
         catch (Exception ex)
         {

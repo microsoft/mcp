@@ -15,35 +15,36 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
     private const string CommandTitle = "Upload Local File to Blob";
     private readonly ILogger<BlobUploadCommand> _logger = logger;
 
-    // Define options from OptionDefinitions
-    private readonly Option<string> _localFilePathOption = StorageOptionDefinitions.LocalFilePath;
-
     public override string Name => "upload";
 
     public override string Description =>
         """
-        Uploads a local file to a blob in Azure Storage only if the blob does not exist.
-        Returns details about the uploaded blob including last modified time, ETag, and content hash.
+        Uploads a local file to an Azure Storage blob, only if the blob does not exist, returning the last modified time,
+        ETag, and content hash of the uploaded blob.
         """;
 
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = true,
-        ReadOnly = false
+        Destructive = false,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = true,
+        Secret = false
     };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_localFilePathOption);
+        command.Options.Add(StorageOptionDefinitions.LocalFilePath);
     }
 
     protected override BlobUploadOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.LocalFilePath = parseResult.GetValueOrDefault(_localFilePathOption);
+        options.LocalFilePath = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.LocalFilePath.Name);
         return options;
     }
 

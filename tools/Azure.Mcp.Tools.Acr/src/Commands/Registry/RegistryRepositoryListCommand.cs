@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Acr.Options;
 using Azure.Mcp.Tools.Acr.Options.Registry;
@@ -25,13 +26,27 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        UseResourceGroup();
         command.Options.Add(AcrOptionDefinitions.Registry);
+    }
+
+    protected override RegistryRepositoryListOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.Registry ??= parseResult.GetValueOrDefault<string>(AcrOptionDefinitions.Registry.Name);
+        return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
@@ -53,11 +68,7 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = map.Count > 0
-                ? ResponseResult.Create(
-                    new RegistryRepositoryListCommandResult(map),
-                    AcrJsonContext.Default.RegistryRepositoryListCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(map ?? []), AcrJsonContext.Default.RegistryRepositoryListCommandResult);
         }
         catch (Exception ex)
         {

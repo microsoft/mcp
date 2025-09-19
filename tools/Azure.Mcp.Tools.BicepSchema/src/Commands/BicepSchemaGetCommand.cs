@@ -31,7 +31,15 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands
 
         public override string Title => CommandTitle;
 
-        public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+        public override ToolMetadata Metadata => new()
+        {
+            Destructive = false,
+            Idempotent = true,
+            OpenWorld = false,
+            ReadOnly = true,
+            LocalRequired = false,
+            Secret = false
+        };
 
         private static readonly Lazy<IServiceProvider> s_serviceProvider;
 
@@ -65,8 +73,7 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands
                     // There is a slight chance that the LLM hallucinates the resource type
                     // parameter with value containing data that we shouldn't log.
                     context.Activity?.AddTag("resourceType", options.ResourceType);
-                    context.Response.Results = ResponseResult.Create(
-                        new BicepSchemaGetCommandResult(response),
+                    context.Response.Results = ResponseResult.Create(new(response),
                         BicepSchemaJsonContext.Default.BicepSchemaGetCommandResult);
                 }
                 else

@@ -1,0 +1,53 @@
+{
+    "parameters": {
+        "gatewayId": "8e41c4dd-a382-4937-9bf3-695ab881f7c2"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "ef543eb8-969c-46b0-a5a1-3f93351b6b31",
+                        "principal": {
+                            "id": "ef543eb8-969c-46b0-a5a1-3f93351b6b31",
+                            "type": "User"
+                        },
+                        "role": "Admin"
+                    },
+                    {
+                        "id": "5cf7d203-9123-4dff-a87f-7097dc4b5d60",
+                        "principal": {
+                            "id": "5cf7d203-9123-4dff-a87f-7097dc4b5d60",
+                            "type": "User"
+                        },
+                        "role": "ConnectionCreatorWithResharing"
+                    },
+                    {
+                        "id": "5931cd21-857f-42a5-beaf-0120e8b36542",
+                        "principal": {
+                            "id": "5931cd21-857f-42a5-beaf-0120e8b36542",
+                            "type": "User"
+                        },
+                        "role": "ConnectionCreator"
+                    },
+                    {
+                        "id": "97614f04-507c-4f6c-8dbc-da1845f582ef",
+                        "principal": {
+                            "id": "97614f04-507c-4f6c-8dbc-da1845f582ef",
+                            "type": "User"
+                        },
+                        "role": "ConnectionCreator"
+                    },
+                    {
+                        "id": "a5d9f30d-a15c-4fb9-b8ff-e2a884c9fd82",
+                        "principal": {
+                            "id": "a5d9f30d-a15c-4fb9-b8ff-e2a884c9fd82",
+                            "type": "Group"
+                        },
+                        "role": "ConnectionCreator"
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -25,7 +25,15 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -70,9 +78,7 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
                     options.RetryPolicy);
             }
 
-            context.Response.Results = userSessions.Count > 0
-                 ? ResponseResult.Create(new SessionHostUserSessionListCommandResult([.. userSessions]), VirtualDesktopJsonContext.Default.SessionHostUserSessionListCommandResult)
-                 : null;
+            context.Response.Results = ResponseResult.Create(new([.. userSessions ?? []]), VirtualDesktopJsonContext.Default.SessionHostUserSessionListCommandResult);
         }
         catch (Exception ex)
         {
@@ -92,12 +98,6 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
             "Access denied. Verify you have the necessary permissions to access the session host and hostpool.",
         RequestFailedException rfEx => rfEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException rfEx => rfEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record SessionHostUserSessionListCommandResult(List<UserSession> UserSessions);

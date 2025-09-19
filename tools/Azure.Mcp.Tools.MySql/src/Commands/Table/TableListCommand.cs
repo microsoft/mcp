@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Database;
-using Azure.Mcp.Tools.MySql.Json;
 using Azure.Mcp.Tools.MySql.Options.Table;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
@@ -20,7 +19,15 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -35,11 +42,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
         {
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
             List<string> tables = await mysqlService.GetTablesAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!);
-            context.Response.Results = tables?.Count > 0 ?
-                ResponseResult.Create(
-                    new TableListCommandResult(tables),
-                    MySqlJsonContext.Default.TableListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(tables ?? []), MySqlJsonContext.Default.TableListCommandResult);
         }
         catch (Exception ex)
         {

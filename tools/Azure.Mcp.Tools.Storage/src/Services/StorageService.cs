@@ -29,7 +29,8 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
     private const string StorageAccountsCacheKey = "accounts";
     private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
 
-    public async Task<List<StorageAccountInfo>> GetStorageAccounts(
+    public async Task<List<Models.AccountInfo>> GetAccountDetails(
+        string? account,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
@@ -38,85 +39,61 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
 
-        // Create cache key using the resolved subscription ID for consistency
-        var cacheKey = string.IsNullOrEmpty(tenant)
-            ? $"{StorageAccountsCacheKey}_{subscriptionResource.Data.SubscriptionId}"
-            : $"{StorageAccountsCacheKey}_{subscriptionResource.Data.SubscriptionId}_{tenant}";
-
-        // Try to get from cache first
-        var cachedAccounts = await _cacheService.GetAsync<List<StorageAccountInfo>>(CacheGroup, cacheKey, s_cacheDuration);
-        if (cachedAccounts != null)
+        var accounts = new List<Models.AccountInfo>();
+        if (string.IsNullOrEmpty(account))
         {
-            return cachedAccounts;
-        }
-
-        var accounts = new List<StorageAccountInfo>();
-        try
-        {
-            await foreach (var account in subscriptionResource.GetStorageAccountsAsync())
+            try
             {
-                var data = account?.Data;
-                if (data?.Name == null)
-                    continue;
+                await foreach (var accountResource in subscriptionResource.GetStorageAccountsAsync())
+                {
+                    var data = accountResource?.Data;
+                    if (data?.Name == null)
+                        continue;
 
-                accounts.Add(new StorageAccountInfo(
+                    accounts.Add(new(
+                        data.Name,
+                        data.Location.ToString(),
+                        data.Kind?.ToString(),
+                        data.Sku?.Name.ToString(),
+                        data.Sku?.Tier?.ToString(),
+                        data.IsHnsEnabled,
+                        data.AllowBlobPublicAccess,
+                        data.EnableHttpsTrafficOnly));
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error listing Storage accounts: {ex.Message}", ex);
+            }
+        }
+        else
+        {
+            try
+            {
+                var storageAccount = await GetStorageAccount(subscriptionResource, account)
+                    ?? throw new Exception($"Storage account '{account}' not found in subscription '{subscription}'");
+
+                var data = storageAccount.Data;
+                accounts.Add(new(
                     data.Name,
                     data.Location.ToString(),
                     data.Kind?.ToString(),
-                    data.Sku?.Name.ToString(),
-                    data.Sku?.Tier.ToString(),
+                    data.Sku.Name.ToString(),
+                    data.Sku.Tier?.ToString(),
                     data.IsHnsEnabled,
                     data.AllowBlobPublicAccess,
                     data.EnableHttpsTrafficOnly));
             }
-
-            // Cache the results
-            await _cacheService.SetAsync(CacheGroup, cacheKey, accounts, s_cacheDuration);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error retrieving Storage accounts: {ex.Message}", ex);
+            catch (Exception ex)
+            {
+                throw new Exception($"Error retrieving Storage account details for '{account}': {ex.Message}", ex);
+            }
         }
 
         return accounts;
     }
 
-    public async Task<StorageAccountInfo> GetStorageAccountDetails(
-        string account,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
-    {
-        ValidateRequiredParameters(account, subscription);
-
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-
-        try
-        {
-            var storageAccount = await GetStorageAccount(subscriptionResource, account);
-            if (storageAccount == null)
-            {
-                throw new Exception($"Storage account '{account}' not found in subscription '{subscription}'");
-            }
-
-            var data = storageAccount.Data;
-            return new StorageAccountInfo(
-                data.Name,
-                data.Location.ToString(),
-                data.Kind?.ToString(),
-                data.Sku?.Name.ToString(),
-                data.Sku?.Tier.ToString(),
-                data.IsHnsEnabled,
-                data.AllowBlobPublicAccess,
-                data.EnableHttpsTrafficOnly);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error retrieving Storage account details for '{account}': {ex.Message}", ex);
-        }
-    }
-
-    public async Task<StorageAccountInfo> CreateStorageAccount(
+    public async Task<Models.AccountInfo> CreateStorageAccount(
         string account,
         string resourceGroup,
         string location,
@@ -162,7 +139,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
             var result = operation.Value;
             var data = result.Data;
 
-            return new StorageAccountInfo(
+            return new Models.AccountInfo(
                 data.Name,
                 data.Location.ToString(),
                 data.Kind?.ToString(),
@@ -176,32 +153,6 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         {
             throw new Exception($"Error creating Storage account '{account}': {ex.Message}", ex);
         }
-    }
-
-    public async Task<List<string>> ListContainers(
-        string account,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
-    {
-        ValidateRequiredParameters(account, subscription);
-
-        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy);
-        var containers = new List<string>();
-
-        try
-        {
-            await foreach (var container in blobServiceClient.GetBlobContainersAsync())
-            {
-                containers.Add(container.Name);
-            }
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error listing containers: {ex.Message}", ex);
-        }
-
-        return containers;
     }
 
     public async Task<List<string>> ListTables(
@@ -297,9 +248,10 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         }
     }
 
-    public async Task<List<string>> ListBlobs(
+    public async Task<List<BlobInfo>> GetBlobDetails(
         string account,
         string container,
+        string? blob,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
@@ -308,72 +260,154 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
 
         var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy);
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
-        var blobs = new List<string>();
 
-        try
+        var blobInfos = new List<BlobInfo>();
+        if (string.IsNullOrEmpty(blob))
         {
-            await foreach (var blob in containerClient.GetBlobsAsync())
+            try
             {
-                blobs.Add(blob.Name);
+                await foreach (var blobItem in containerClient.GetBlobsAsync())
+                {
+                    blobInfos.Add(new BlobInfo(
+                        blobItem.Name,
+                        blobItem.Properties.LastModified,
+                        blobItem.Properties.ETag?.ToString(),
+                        blobItem.Properties.ContentLength,
+                        blobItem.Properties.ContentType,
+                        blobItem.Properties.ContentHash,
+                        blobItem.Properties.BlobType?.ToString(),
+                        blobItem.Metadata,
+                        blobItem.Properties.LeaseStatus?.ToString(),
+                        blobItem.Properties.LeaseState?.ToString(),
+                        blobItem.Properties.LeaseDuration?.ToString(),
+                        blobItem.Properties.CopyStatus?.ToString(),
+                        blobItem.Properties.CopySource,
+                        blobItem.Properties.CopyCompletedOn,
+                        blobItem.Properties.AccessTier?.ToString(),
+                        blobItem.Properties.AccessTierChangedOn,
+                        blobItem.Properties.HasLegalHold,
+                        blobItem.Properties.CreatedOn,
+                        blobItem.Properties.ArchiveStatus?.ToString(),
+                        blobItem.VersionId));
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error listing blobs: {ex.Message}", ex);
             }
         }
-        catch (Exception ex)
+        else
         {
-            throw new Exception($"Error listing blobs: {ex.Message}", ex);
+            var blobClient = containerClient.GetBlobClient(blob);
+
+            try
+            {
+                var response = await blobClient.GetPropertiesAsync();
+                var properties = response.Value;
+                blobInfos.Add(new BlobInfo(
+                    blob,
+                    properties.LastModified,
+                    properties.ETag.ToString(),
+                    properties.ContentLength,
+                    properties.ContentType,
+                    properties.ContentHash,
+                    properties.BlobType.ToString(),
+                    properties.Metadata,
+                    properties.LeaseStatus.ToString(),
+                    properties.LeaseState.ToString(),
+                    properties.LeaseDuration.ToString(),
+                    properties.CopyStatus.ToString(),
+                    properties.CopySource,
+                    properties.CopyCompletedOn,
+                    properties.AccessTier.ToString(),
+                    properties.AccessTierChangedOn,
+                    properties.HasLegalHold,
+                    properties.CreatedOn,
+                    properties.ArchiveStatus,
+                    properties.VersionId));
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error getting blob details: {ex.Message}", ex);
+            }
         }
 
-        return blobs;
+        return blobInfos;
     }
 
-    public async Task<BlobProperties> GetBlobDetails(
+    public async Task<List<ContainerInfo>> GetContainerDetails(
         string account,
-        string container,
-        string blob,
+        string? container,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(account, container, blob, subscription);
+        ValidateRequiredParameters(account, subscription);
 
         var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy);
-        var containerClient = blobServiceClient.GetBlobContainerClient(container);
-        var blobClient = containerClient.GetBlobClient(blob);
+        var containers = new List<ContainerInfo>();
 
-        try
+        if (string.IsNullOrEmpty(container))
         {
-            var properties = await blobClient.GetPropertiesAsync();
-            return properties.Value;
+            try
+            {
+                await foreach (var containerItem in blobServiceClient.GetBlobContainersAsync())
+                {
+                    var properties = containerItem.Properties;
+                    containers.Add(new(
+                        containerItem.Name,
+                        properties.LastModified,
+                        properties.ETag.ToString(),
+                        properties.Metadata,
+                        properties.LeaseStatus?.ToString(),
+                        properties.LeaseState?.ToString(),
+                        properties.LeaseDuration?.ToString(),
+                        properties.PublicAccess?.ToString(),
+                        properties.HasImmutabilityPolicy,
+                        properties.HasLegalHold,
+                        properties.DeletedOn,
+                        properties.RemainingRetentionDays,
+                        properties.HasImmutableStorageWithVersioning));
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error listing containers: {ex.Message}", ex);
+            }
         }
-        catch (Exception ex)
+        else
         {
-            throw new Exception($"Error getting blob details: {ex.Message}", ex);
+            var containerClient = blobServiceClient.GetBlobContainerClient(container);
+
+            try
+            {
+                var response = await containerClient.GetPropertiesAsync();
+                var properties = response.Value;
+                containers.Add(new(
+                    container,
+                    properties.LastModified,
+                    properties.ETag.ToString(),
+                    properties.Metadata,
+                    properties.LeaseStatus?.ToString(),
+                    properties.LeaseState?.ToString(),
+                    properties.LeaseDuration?.ToString(),
+                    properties.PublicAccess?.ToString(),
+                    properties.HasImmutabilityPolicy,
+                    properties.HasLegalHold,
+                    properties.DeletedOn,
+                    properties.RemainingRetentionDays,
+                    properties.HasImmutableStorageWithVersioning));
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error getting container details: {ex.Message}", ex);
+            }
         }
+
+        return containers;
     }
 
-    public async Task<BlobContainerProperties> GetContainerDetails(
-        string account,
-        string container,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
-    {
-        ValidateRequiredParameters(account, container, subscription);
-
-        var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy);
-        var containerClient = blobServiceClient.GetBlobContainerClient(container);
-
-        try
-        {
-            var properties = await containerClient.GetPropertiesAsync();
-            return properties.Value;
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Error getting container details: {ex.Message}", ex);
-        }
-    }
-
-    public async Task<BlobContainerProperties> CreateContainer(
+    public async Task<ContainerInfo> CreateContainer(
         string account,
         string container,
         string subscription,
@@ -388,8 +422,22 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
         try
         {
             await containerClient.CreateAsync(PublicAccessType.None);
-            var properties = await containerClient.GetPropertiesAsync();
-            return properties.Value;
+            var response = await containerClient.GetPropertiesAsync();
+            var properties = response.Value;
+            return new(
+                container,
+                properties.LastModified,
+                properties.ETag.ToString(),
+                properties.Metadata,
+                properties.LeaseStatus?.ToString(),
+                properties.LeaseState?.ToString(),
+                properties.LeaseDuration?.ToString(),
+                properties.PublicAccess?.ToString(),
+                properties.HasImmutabilityPolicy,
+                properties.HasLegalHold,
+                properties.DeletedOn,
+                properties.RemainingRetentionDays,
+                properties.HasImmutableStorageWithVersioning);
         }
         catch (Exception ex)
         {

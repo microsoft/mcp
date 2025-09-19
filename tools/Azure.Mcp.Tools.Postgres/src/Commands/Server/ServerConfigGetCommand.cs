@@ -17,7 +17,15 @@ public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logge
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -34,9 +42,7 @@ public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logge
             IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
             var config = await pgService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!);
             context.Response.Results = config?.Length > 0 ?
-                ResponseResult.Create(
-                    new ServerConfigGetCommandResult(config),
-                    PostgresJsonContext.Default.ServerConfigGetCommandResult) :
+                ResponseResult.Create(new(config), PostgresJsonContext.Default.ServerConfigGetCommandResult) :
                 null;
         }
         catch (Exception ex)

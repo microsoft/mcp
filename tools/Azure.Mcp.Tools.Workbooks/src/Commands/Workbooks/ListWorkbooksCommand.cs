@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Options;
 using Azure.Mcp.Tools.Workbooks.Options.Workbook;
@@ -17,10 +18,6 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
     private const string CommandTitle = "List Workbooks";
     private readonly ILogger<ListWorkbooksCommand> _logger = logger;
 
-    private readonly Option<string> _kindOption = WorkbooksOptionDefinitions.Kind;
-    private readonly Option<string> _categoryOption = WorkbooksOptionDefinitions.Category;
-    private readonly Option<string> _sourceIdOption = WorkbooksOptionDefinitions.SourceIdFilter;
-
     public override string Name => "list";
 
     public override string Description =>
@@ -32,23 +29,32 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        RequireResourceGroup();
-        command.Options.Add(_kindOption);
-        command.Options.Add(_categoryOption);
-        command.Options.Add(_sourceIdOption);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(WorkbooksOptionDefinitions.Kind);
+        command.Options.Add(WorkbooksOptionDefinitions.Category);
+        command.Options.Add(WorkbooksOptionDefinitions.SourceIdFilter);
     }
 
     protected override ListWorkbooksOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Kind = parseResult.GetValueOrDefault(_kindOption);
-        options.Category = parseResult.GetValueOrDefault(_categoryOption);
-        options.SourceId = parseResult.GetValueOrDefault(_sourceIdOption);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Kind = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.Kind.Name);
+        options.Category = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.Category.Name);
+        options.SourceId = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.SourceIdFilter.Name);
         return options;
     }
 
@@ -72,9 +78,7 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
                 options.RetryPolicy,
                 options.Tenant);
 
-            context.Response.Results = workbooks?.Count > 0
-                ? ResponseResult.Create(new ListWorkbooksCommandResult(workbooks), WorkbooksJsonContext.Default.ListWorkbooksCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(workbooks ?? []), WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
         }
         catch (Exception ex)
         {

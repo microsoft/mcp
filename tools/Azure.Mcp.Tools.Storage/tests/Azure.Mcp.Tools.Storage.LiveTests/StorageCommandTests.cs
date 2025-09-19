@@ -4,19 +4,17 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Storage.LiveTests
 {
-    public class StorageCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+    public class StorageCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
     {
         [Fact]
         public async Task Should_list_storage_accounts_by_subscription_id()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_account_list",
+                "azmcp_storage_account_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionId }
@@ -31,17 +29,18 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_get_storage_account_details_by_subscription_id()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_account_details",
+                "azmcp_storage_account_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionId },
                 { "account", Settings.ResourceBaseName }
                 });
 
-            var account = result.AssertProperty("account");
-            Assert.Equal(JsonValueKind.Object, account.ValueKind);
+            var accounts = result.AssertProperty("accounts");
+            Assert.Equal(JsonValueKind.Array, accounts.ValueKind);
+            Assert.Equal(1, accounts.GetArrayLength());
 
-            // Verify the account has basic properties
+            var account = accounts.EnumerateArray().First();
             var name = account.GetProperty("name");
             Assert.Equal(Settings.ResourceBaseName, name.GetString());
 
@@ -62,16 +61,18 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_get_storage_account_details_by_subscription_name()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_account_details",
+                "azmcp_storage_account_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
                 { "account", Settings.ResourceBaseName }
                 });
 
-            var account = result.AssertProperty("account");
-            Assert.Equal(JsonValueKind.Object, account.ValueKind);
+            var accounts = result.AssertProperty("accounts");
+            Assert.Equal(JsonValueKind.Array, accounts.ValueKind);
+            Assert.Equal(1, accounts.GetArrayLength());
 
+            var account = accounts.EnumerateArray().First();
             var name = account.GetProperty("name");
             Assert.Equal(Settings.ResourceBaseName, name.GetString());
 
@@ -83,7 +84,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_get_storage_account_details_with_tenant_id()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_account_details",
+                "azmcp_storage_account_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -91,9 +92,11 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                 { "account", Settings.ResourceBaseName }
                 });
 
-            var account = result.AssertProperty("account");
-            Assert.Equal(JsonValueKind.Object, account.ValueKind);
+            var accounts = result.AssertProperty("accounts");
+            Assert.Equal(JsonValueKind.Array, accounts.ValueKind);
+            Assert.Equal(1, accounts.GetArrayLength());
 
+            var account = accounts.EnumerateArray().First();
             var name = account.GetProperty("name");
             Assert.Equal(Settings.ResourceBaseName, name.GetString());
         }
@@ -104,7 +107,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
             var result = await CallToolAsync(
-                "azmcp_storage_account_details",
+                "azmcp_storage_account_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -112,9 +115,11 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                 { "account", Settings.ResourceBaseName }
                 });
 
-            var account = result.AssertProperty("account");
-            Assert.Equal(JsonValueKind.Object, account.ValueKind);
+            var accounts = result.AssertProperty("accounts");
+            Assert.Equal(JsonValueKind.Array, accounts.ValueKind);
+            Assert.Equal(1, accounts.GetArrayLength());
 
+            var account = accounts.EnumerateArray().First();
             var name = account.GetProperty("name");
             Assert.Equal(Settings.ResourceBaseName, name.GetString());
         }
@@ -123,7 +128,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_list_storage_accounts_by_subscription_name()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_account_list",
+                "azmcp_storage_account_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName }
@@ -138,7 +143,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_list_storage_accounts_by_subscription_name_with_tenant_id()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_account_list",
+                "azmcp_storage_account_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -156,7 +161,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
             var result = await CallToolAsync(
-                "azmcp_storage_account_list",
+                "azmcp_storage_account_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -172,7 +177,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_list_blobs_in_container()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_blob_list",
+                "azmcp_storage_blob_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -190,7 +195,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_get_blob_details()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_blob_details",
+                "azmcp_storage_blob_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -200,17 +205,21 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                 { "blob", "README.md" },
                 });
 
-            var details = result.AssertProperty("details");
-            Assert.Equal(JsonValueKind.Object, details.ValueKind);
+            var blobs = result.AssertProperty("blobs");
+            Assert.Equal(JsonValueKind.Array, blobs.ValueKind);
+            Assert.Equal(1, blobs.GetArrayLength());
+
+            var blobInfo = blobs.EnumerateArray().First();
+            Assert.Equal(JsonValueKind.Object, blobInfo.ValueKind);
 
             // Verify the blob has basic properties
-            var contentLength = details.GetProperty("contentLength");
+            var contentLength = blobInfo.GetProperty("contentLength");
             Assert.True(contentLength.GetInt64() > 0);
 
-            var contentType = details.GetProperty("contentType");
+            var contentType = blobInfo.GetProperty("contentType");
             Assert.NotNull(contentType.GetString());
 
-            var lastModified = details.GetProperty("lastModified");
+            var lastModified = blobInfo.GetProperty("lastModified");
             Assert.NotEqual(default, lastModified.GetDateTimeOffset());
         }
 
@@ -266,7 +275,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_list_containers()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_blob_container_list",
+                "azmcp_storage_blob_container_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -337,7 +346,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_get_container_details()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_blob_container_details",
+                "azmcp_storage_blob_container_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -345,15 +354,19 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                 { "container", "bar" }
                 });
 
-            var actual = result.AssertProperty("details");
-            Assert.Equal(JsonValueKind.Object, actual.ValueKind);
+            var actual = result.AssertProperty("containers");
+            Assert.Equal(JsonValueKind.Array, actual.ValueKind);
+            Assert.Equal(1, actual.GetArrayLength());
+
+            var container = actual.EnumerateArray().First();
+            Assert.Equal(JsonValueKind.Object, container.ValueKind);
         }
 
         [Fact]
         public async Task Should_get_container_details_with_tenant_authkey()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_blob_container_details",
+                "azmcp_storage_blob_container_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -362,8 +375,12 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                 { "auth-method", "key" }
                 });
 
-            var actual = result.AssertProperty("details");
-            Assert.Equal(JsonValueKind.Object, actual.ValueKind);
+            var actual = result.AssertProperty("containers");
+            Assert.Equal(JsonValueKind.Array, actual.ValueKind);
+            Assert.Equal(1, actual.GetArrayLength());
+
+            var container = actual.EnumerateArray().First();
+            Assert.Equal(JsonValueKind.Object, container.ValueKind);
         }
 
         [Fact]
@@ -382,9 +399,9 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
 
             var actual = result.AssertProperty("container");
             Assert.Equal(JsonValueKind.Object, actual.ValueKind);
-            Assert.True(actual.TryGetProperty("lastModified", out _));
-            Assert.True(actual.TryGetProperty("eTag", out _));
-            Assert.True(actual.TryGetProperty("publicAccess", out _));
+            actual.AssertProperty("lastModified");
+            actual.AssertProperty("eTag");
+            actual.AssertProperty("publicAccess");
         }
 
         [Fact]
@@ -507,7 +524,9 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
 
             // When using a prefix that does not match any files, we should still return a valid response
             // with no result.
-            Assert.Null(result);
+            var files = result.AssertProperty("files");
+            Assert.Equal(JsonValueKind.Array, files.ValueKind);
+            Assert.Equal(0, files.GetArrayLength());
         }
 
         [Fact]
@@ -529,12 +548,12 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             Assert.Equal(JsonValueKind.Object, message.ValueKind);
 
             // Check message properties
-            Assert.True(message.TryGetProperty("messageId", out _));
-            Assert.True(message.TryGetProperty("insertionTime", out _));
-            Assert.True(message.TryGetProperty("expirationTime", out _));
-            Assert.True(message.TryGetProperty("popReceipt", out _));
-            Assert.True(message.TryGetProperty("nextVisibleTime", out _));
-            Assert.True(message.TryGetProperty("message", out var messageElement));
+            message.AssertProperty("messageId");
+            message.AssertProperty("insertionTime");
+            message.AssertProperty("expirationTime");
+            message.AssertProperty("popReceipt");
+            message.AssertProperty("nextVisibleTime");
+            var messageElement = message.AssertProperty("message");
             Assert.Equal("Test message from integration test", messageElement.GetString());
         }
 
@@ -557,7 +576,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             // Assert
             var message = result.AssertProperty("message");
             Assert.Equal(JsonValueKind.Object, message.ValueKind);
-            Assert.True(message.TryGetProperty("message", out var messageElement));
+            var messageElement = message.AssertProperty("message");
             Assert.Equal("Test message with TTL", messageElement.GetString());
         }
 

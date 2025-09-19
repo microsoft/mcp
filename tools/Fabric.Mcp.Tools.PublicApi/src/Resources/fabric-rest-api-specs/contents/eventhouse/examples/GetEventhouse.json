@@ -1,0 +1,26 @@
+{
+	"parameters": {
+		"workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+		"eventhouseId": "5b218778-e7a5-4d73-8187-f10824047715"
+	},
+	"responses": {
+		"200": {
+			"body": {
+				"displayName": "Eventhouse_1",
+				"description": "An eventhouse description.",
+				"type": "Eventhouse",
+				"workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+				"id": "5b218778-e7a5-4d73-8187-f10824047715",
+				"properties": {
+					"queryServiceUri": "https://trd-f7k1b2rzuqrjmb3wpd.z5.kusto.fabric.microsoft.com",
+					"ingestionServiceUri": "https://ingest-trd-f7k1b2rzuqrjmb3wpd.z5.kusto.fabric.microsoft.com",
+					"databasesItemIds": [
+						"f1082404-7716-5b21-8778-e7a5e7a54d73",
+						"8187f108-2404-4771-6e7a-5b218778e7a5"
+					],
+                    "minimumConsumptionUnits": 0
+				}
+			}
+		}
+	}
+}

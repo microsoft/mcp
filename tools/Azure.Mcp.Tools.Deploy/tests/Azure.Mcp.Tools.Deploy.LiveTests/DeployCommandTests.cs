@@ -10,13 +10,13 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Deploy.LiveTests;
 
-public class DeployCommandTests : CommandTestsBase,
-    IClassFixture<LiveTestFixture>
+public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
-    private readonly string _subscriptionId;
+    private string _subscriptionId = default!;
 
-    public DeployCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output) : base(liveTestFixture, output)
+    public override async ValueTask InitializeAsync()
     {
+        await base.InitializeAsync();
         _subscriptionId = Settings.SubscriptionId;
     }
 
@@ -41,14 +41,6 @@ public class DeployCommandTests : CommandTestsBase,
     [Fact]
     public async Task Should_get_infrastructure_code_rules()
     {
-        // arrange
-        var parameters = new
-        {
-            deploymentTool = "azd",
-            iacType = "bicep",
-            resourceTypes = new[] { "appservice", "azurestorage" }
-        };
-
         // act
         var result = await CallToolMessageAsync(
             "azmcp_deploy_iac_rules_get",
@@ -59,7 +51,7 @@ public class DeployCommandTests : CommandTestsBase,
                 { "resource-types", "appservice, azurestorage" }
             });
 
-        Assert.Contains("Deployment Tool azd rules", result ?? String.Empty, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Deployment Tool azd rules", result ?? string.Empty, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -76,7 +68,7 @@ public class DeployCommandTests : CommandTestsBase,
             });
 
         // assert
-        Assert.Contains("IaC Type: terraform rules", result ?? String.Empty, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("IaC Type: terraform rules", result ?? string.Empty, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -111,7 +103,7 @@ public class DeployCommandTests : CommandTestsBase,
             });
 
         // assert
-        Assert.StartsWith("Help the user to set up a CI/CD pipeline", result ?? String.Empty);
+        Assert.StartsWith("Help the user to set up a CI/CD pipeline", result ?? string.Empty);
     }
 
     // skip as this test need local files

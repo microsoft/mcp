@@ -1,7 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security.Cryptography;
+using System.Text;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Options;
 using Azure.Mcp.Tools.Deploy.Options.Plan;
 using Azure.Mcp.Tools.Deploy.Services.Util;
@@ -15,12 +19,6 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
     private const string CommandTitle = "Generate Azure Deployment Plan";
     private readonly ILogger<GetCommand> _logger = logger;
 
-    private readonly Option<string> _workspaceFolderOption = DeployOptionDefinitions.PlanGet.WorkspaceFolder;
-    private readonly Option<string> _projectNameOption = DeployOptionDefinitions.PlanGet.ProjectName;
-    private readonly Option<string> _deploymentTargetServiceOption = DeployOptionDefinitions.PlanGet.TargetAppService;
-    private readonly Option<string> _provisioningToolOption = DeployOptionDefinitions.PlanGet.ProvisioningTool;
-    private readonly Option<string> _azdIacOptionsOption = DeployOptionDefinitions.PlanGet.AzdIacOptions;
-
     public override string Name => "get";
 
     public override string Description =>
@@ -29,27 +27,35 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
         """;
 
     public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_workspaceFolderOption);
-        command.Options.Add(_projectNameOption);
-        command.Options.Add(_deploymentTargetServiceOption);
-        command.Options.Add(_provisioningToolOption);
-        command.Options.Add(_azdIacOptionsOption);
+        command.Options.Add(DeployOptionDefinitions.PlanGet.WorkspaceFolder);
+        command.Options.Add(DeployOptionDefinitions.PlanGet.ProjectName);
+        command.Options.Add(DeployOptionDefinitions.PlanGet.TargetAppService);
+        command.Options.Add(DeployOptionDefinitions.PlanGet.ProvisioningTool);
+        command.Options.Add(DeployOptionDefinitions.PlanGet.AzdIacOptions);
     }
 
     private GetOptions BindOptions(ParseResult parseResult)
     {
         return new GetOptions
         {
-            WorkspaceFolder = parseResult.GetValue(_workspaceFolderOption) ?? string.Empty,
-            ProjectName = parseResult.GetValue(_projectNameOption) ?? string.Empty,
-            TargetAppService = parseResult.GetValue(_deploymentTargetServiceOption) ?? string.Empty,
-            ProvisioningTool = parseResult.GetValue(_provisioningToolOption) ?? string.Empty,
-            AzdIacOptions = parseResult.GetValue(_azdIacOptionsOption) ?? string.Empty
+            WorkspaceFolder = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.WorkspaceFolder.Name) ?? string.Empty,
+            ProjectName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.ProjectName.Name) ?? string.Empty,
+            TargetAppService = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.TargetAppService.Name) ?? string.Empty,
+            ProvisioningTool = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.ProvisioningTool.Name) ?? string.Empty,
+            AzdIacOptions = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PlanGet.AzdIacOptions.Name) ?? string.Empty
         };
     }
 
@@ -64,6 +70,16 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
 
         try
         {
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(options.ProjectName));
+                context.Activity?.AddTag(DeployTelemetryTags.ProjectName, BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant());
+            }
+            context.Activity?
+                    .AddTag(DeployTelemetryTags.ComputeHostResources, options.TargetAppService)
+                    .AddTag(DeployTelemetryTags.DeploymentTool, options.ProvisioningTool)
+                    .AddTag(DeployTelemetryTags.IacType, options.AzdIacOptions ?? string.Empty);
+
             var planTemplate = DeploymentPlanTemplateUtil.GetPlanTemplate(options.ProjectName, options.TargetAppService, options.ProvisioningTool, options.AzdIacOptions);
 
             context.Response.Message = planTemplate;

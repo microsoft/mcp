@@ -25,7 +25,15 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -44,11 +52,7 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = accounts?.Count > 0 ?
-                ResponseResult.Create(
-                    new AccountListCommandResult(accounts),
-                    AppConfigJsonContext.Default.AccountListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(accounts ?? []), AppConfigJsonContext.Default.AccountListCommandResult);
         }
         catch (Exception ex)
         {

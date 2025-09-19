@@ -13,7 +13,6 @@
   <ItemGroup>
     <PackageReference Include="Azure.AI.Projects" />
     <PackageReference Include="Azure.ResourceManager" />
-    <PackageReference Include="Azure.ResourceManager.CognitiveServices" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />

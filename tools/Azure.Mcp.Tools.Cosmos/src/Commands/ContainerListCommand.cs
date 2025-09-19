@@ -24,7 +24,15 @@ public sealed class ContainerListCommand(ILogger<ContainerListCommand> logger) :
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -46,11 +54,7 @@ public sealed class ContainerListCommand(ILogger<ContainerListCommand> logger) :
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = containers?.Count > 0 ?
-                ResponseResult.Create(
-                    new ContainerListCommandResult(containers),
-                    CosmosJsonContext.Default.ContainerListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(containers ?? []), CosmosJsonContext.Default.ContainerListCommandResult);
         }
         catch (Exception ex)
         {

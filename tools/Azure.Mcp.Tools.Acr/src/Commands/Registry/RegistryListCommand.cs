@@ -24,13 +24,15 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger) : B
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
-
-    protected override void RegisterOptions(Command command)
+    public override ToolMetadata Metadata => new()
     {
-        base.RegisterOptions(command);
-        UseResourceGroup();
-    }
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -50,9 +52,7 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger) : B
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = registries?.Count > 0
-                ? ResponseResult.Create(new RegistryListCommandResult(registries), AcrJsonContext.Default.RegistryListCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(registries ?? []), AcrJsonContext.Default.RegistryListCommandResult);
         }
         catch (Exception ex)
         {

@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.TestUtilities;
+using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Server;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,9 +48,9 @@ public class ServerConfigGetCommandTests
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<GetConfigResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.ServerConfigGetCommandResult);
         Assert.NotNull(result);
-        Assert.Equal(expectedConfig, result.Config);
+        Assert.Equal(expectedConfig, result.Configuration);
     }
 
     [Fact]
@@ -90,11 +90,5 @@ public class ServerConfigGetCommandTests
         Assert.NotNull(response);
         Assert.Equal(400, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
-    }
-
-    private class GetConfigResult
-    {
-        [JsonPropertyName("Configuration")]
-        public string Config { get; set; } = string.Empty;
     }
 }

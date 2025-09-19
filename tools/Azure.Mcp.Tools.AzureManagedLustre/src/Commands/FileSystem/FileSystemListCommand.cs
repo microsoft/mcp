@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.AzureManagedLustre.Options.FileSystem;
 using Azure.Mcp.Tools.AzureManagedLustre.Services;
 using Microsoft.Extensions.Logging;
@@ -22,13 +24,28 @@ public sealed class FileSystemListCommand(ILogger<FileSystemListCommand> logger)
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        UseResourceGroup();
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+    }
+
+    protected override FileSystemListOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
@@ -49,9 +66,7 @@ public sealed class FileSystemListCommand(ILogger<FileSystemListCommand> logger)
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = fileSystems.Count > 0 ? ResponseResult.Create(
-                new FileSystemListResult(fileSystems),
-                AzureManagedLustreJsonContext.Default.FileSystemListResult) : null;
+            context.Response.Results = ResponseResult.Create(new(fileSystems ?? []), AzureManagedLustreJsonContext.Default.FileSystemListResult);
         }
         catch (Exception ex)
         {
@@ -63,12 +78,6 @@ public sealed class FileSystemListCommand(ILogger<FileSystemListCommand> logger)
 
         return context.Response;
     }
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
 
     internal record FileSystemListResult(List<Models.LustreFileSystem> FileSystems);
 }

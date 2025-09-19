@@ -1,0 +1,27 @@
+{
+    "parameters": {
+        "connectionId": "f3a2e6af-d048-4f85-94d9-b3d16140df05",
+        "addConnectionRoleAssignmentRequest": {
+            "principal": {
+                "id": "6a002b3d-e4ec-43df-8c08-e8eb7547d9dd",
+                "type": "User"
+            },
+            "role": "Owner"
+        }
+    },
+    "responses": {
+        "201": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/connections/f3a2e6af-d048-4f85-94d9-b3d16140df05/roleAssignments/6a002b3d-e4ec-43df-8c08-e8eb7547d9dd"
+            },
+            "body": {
+                "id": "6a002b3d-e4ec-43df-8c08-e8eb7547d9dd",
+                "principal": {
+                    "id": "6a002b3d-e4ec-43df-8c08-e8eb7547d9dd",
+                    "type": "User"
+                },
+                "role": "Owner"
+            }
+        }
+    }
+}

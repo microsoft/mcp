@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -70,7 +69,7 @@ public sealed class SampleCommandTests
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<SampleResult>(json);
+        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.SampleCommandResult);
         Assert.NotNull(result);
         Assert.NotNull(result.Results);
         Assert.Single(result.Results);
@@ -81,7 +80,7 @@ public sealed class SampleCommandTests
 
     [Theory]
     [MemberData(nameof(SampleArgumentMatrix))]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoResults(string cliArgs, bool useClusterUri)
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoResults(string cliArgs, bool useClusterUri)
     {
         if (useClusterUri)
         {
@@ -90,14 +89,14 @@ public sealed class SampleCommandTests
                 "db1",
                 "table1 | sample 10",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
-                .Returns(new List<JsonElement>());
+                .Returns([]);
         }
         else
         {
             _kusto.QueryItems(
                 "sub1", "mycluster", "db1", "table1 | sample 10",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
-                .Returns(new List<JsonElement>());
+                .Returns([]);
         }
         var command = new SampleCommand(_logger);
 
@@ -106,7 +105,11 @@ public sealed class SampleCommandTests
 
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.SampleCommandResult);
+        Assert.NotNull(result);
+        Assert.Empty(result.Results);
     }
 
     // TODO: jongio - Talk to author about why they expect 500 here
@@ -153,11 +156,5 @@ public sealed class SampleCommandTests
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
         Assert.Equal(400, response.Status);
-    }
-
-    private sealed class SampleResult
-    {
-        [JsonPropertyName("results")]
-        public List<JsonElement> Results { get; set; } = new();
     }
 }

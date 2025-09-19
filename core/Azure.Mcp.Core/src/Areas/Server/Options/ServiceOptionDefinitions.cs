@@ -9,7 +9,9 @@ public static class ServiceOptionDefinitions
     public const string NamespaceName = "namespace";
     public const string ModeName = "mode";
     public const string ReadOnlyName = "read-only";
+    public const string DebugName = "debug";
     public const string EnableInsecureTransportsName = "enable-insecure-transports";
+    public const string InsecureDisableElicitationName = "insecure-disable-elicitation";
 
     public static readonly Option<string> Transport = new($"--{TransportName}")
     {
@@ -46,12 +48,27 @@ public static class ServiceOptionDefinitions
         DefaultValueFactory = _ => false
     };
 
+    public static readonly Option<bool> Debug = new(
+        $"--{DebugName}")
+    {
+        Description = "Enable debug mode with verbose logging to stderr.",
+        DefaultValueFactory = _ => false
+    };
+
     public static readonly Option<bool> EnableInsecureTransports = new(
         $"--{EnableInsecureTransportsName}")
     {
         Required = false,
         Hidden = true,
         Description = "Enable insecure transport",
+        DefaultValueFactory = _ => false
+    };
+
+    public static readonly Option<bool> InsecureDisableElicitation = new(
+        $"--{InsecureDisableElicitationName}")
+    {
+        Required = false,
+        Description = "Disable elicitation (user confirmation) before allowing high risk commands to run, such as returning Secrets (passwords) from KeyVault.",
         DefaultValueFactory = _ => false
     };
 }

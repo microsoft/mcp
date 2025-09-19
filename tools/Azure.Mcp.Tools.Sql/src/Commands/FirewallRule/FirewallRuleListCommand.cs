@@ -25,7 +25,15 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -46,11 +54,7 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
                 options.Subscription!,
                 options.RetryPolicy);
 
-            context.Response.Results = firewallRules?.Count > 0
-                ? ResponseResult.Create(
-                    new FirewallRuleListResult(firewallRules),
-                    SqlJsonContext.Default.FirewallRuleListResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(firewallRules ?? []), SqlJsonContext.Default.FirewallRuleListResult);
         }
         catch (Exception ex)
         {
@@ -71,12 +75,6 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
             $"Authorization failed accessing the SQL server. Verify you have appropriate permissions. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record FirewallRuleListResult(List<SqlServerFirewallRule> FirewallRules);

@@ -26,7 +26,15 @@ public sealed class AccessPolicyListCommand(ILogger<AccessPolicyListCommand> log
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -48,11 +56,7 @@ public sealed class AccessPolicyListCommand(ILogger<AccessPolicyListCommand> log
                 options.AuthMethod,
                 options.RetryPolicy);
 
-            context.Response.Results = accessPolicyAssignments.Any() ?
-                ResponseResult.Create(
-                    new AccessPolicyListCommandResult(accessPolicyAssignments),
-                    RedisJsonContext.Default.AccessPolicyListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(accessPolicyAssignments ?? []), RedisJsonContext.Default.AccessPolicyListCommandResult);
         }
         catch (Exception ex)
         {

@@ -15,7 +15,6 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
 {
     private const string CommandTitle = "Get Workbook";
     private readonly ILogger<ShowWorkbooksCommand> _logger = logger;
-    private readonly Option<string> _workbookIdOption = WorkbooksOptionDefinitions.WorkbookId;
 
     public override string Name => "show";
 
@@ -28,18 +27,26 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_workbookIdOption);
+        command.Options.Add(WorkbooksOptionDefinitions.WorkbookId);
     }
 
     protected override ShowWorkbooksOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkbookId = parseResult.GetValueOrDefault(_workbookIdOption);
+        options.WorkbookId = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.WorkbookId.Name);
         return options;
     }
 
@@ -57,9 +64,7 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
             var workbooksService = context.GetService<IWorkbooksService>();
             var workbook = await workbooksService.GetWorkbook(options.WorkbookId!, options.RetryPolicy, options.Tenant) ?? throw new InvalidOperationException("Failed to retrieve workbook");
 
-            context.Response.Results = ResponseResult.Create(
-                new ShowWorkbooksCommandResult(workbook),
-                WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
+            context.Response.Results = ResponseResult.Create(new(workbook), WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
         }
         catch (Exception ex)
         {

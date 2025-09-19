@@ -4,14 +4,12 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.LiveTests;
 
 [Trait("Area", "VirtualDesktop")]
-public class VirtualDesktopCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     [Fact]
     [Trait("Category", "Live")]
@@ -30,12 +28,12 @@ public class VirtualDesktopCommandTests(LiveTestFixture liveTestFixture, ITestOu
         // Check results format if any hostpools exist
         foreach (var hostpool in hostpools.EnumerateArray())
         {
-            Assert.True(hostpool.ValueKind == JsonValueKind.Object);
+            Assert.Equal(JsonValueKind.Object, hostpool.ValueKind);
             var name = hostpool.GetProperty("name").GetString();
             Assert.False(string.IsNullOrEmpty(name));
-            Assert.True(hostpool.TryGetProperty("resourceGroupName", out _));
-            Assert.True(hostpool.TryGetProperty("location", out _));
-            Assert.True(hostpool.TryGetProperty("hostPoolType", out _));
+            hostpool.AssertProperty("resourceGroupName");
+            hostpool.AssertProperty("location");
+            hostpool.AssertProperty("hostPoolType");
         }
     }
 
@@ -56,12 +54,12 @@ public class VirtualDesktopCommandTests(LiveTestFixture liveTestFixture, ITestOu
         // Check results format if any hostpools exist
         foreach (var hostpool in hostpools.EnumerateArray())
         {
-            Assert.True(hostpool.ValueKind == JsonValueKind.Object);
+            Assert.Equal(JsonValueKind.Object, hostpool.ValueKind);
             var name = hostpool.GetProperty("name").GetString();
             Assert.False(string.IsNullOrEmpty(name));
-            Assert.True(hostpool.TryGetProperty("resourceGroupName", out _));
-            Assert.True(hostpool.TryGetProperty("location", out _));
-            Assert.True(hostpool.TryGetProperty("hostPoolType", out _));
+            hostpool.AssertProperty("resourceGroupName");
+            hostpool.AssertProperty("location");
+            hostpool.AssertProperty("hostPoolType");
         }
     }
 
@@ -98,18 +96,14 @@ public class VirtualDesktopCommandTests(LiveTestFixture liveTestFixture, ITestOu
             // All returned hostpools should be from the specified resource group
             foreach (var hostpool in hostpools.EnumerateArray())
             {
-                Assert.True(hostpool.ValueKind == JsonValueKind.Object);
+                Assert.Equal(JsonValueKind.Object, hostpool.ValueKind);
                 var name = hostpool.GetProperty("name").GetString();
                 Assert.False(string.IsNullOrEmpty(name));
                 var hostpoolResourceGroup = hostpool.GetProperty("resourceGroupName").GetString();
                 Assert.Equal(resourceGroupName, hostpoolResourceGroup);
-                Assert.True(hostpool.TryGetProperty("location", out _));
-                Assert.True(hostpool.TryGetProperty("hostPoolType", out _));
+                hostpool.AssertProperty("location");
+                hostpool.AssertProperty("hostPoolType");
             }
-        }
-        else
-        {
-            Assert.True(true, "No hostpools available for testing resource group filtering");
         }
     }
 
@@ -146,18 +140,14 @@ public class VirtualDesktopCommandTests(LiveTestFixture liveTestFixture, ITestOu
             // All returned hostpools should be from the specified resource group
             foreach (var hostpool in hostpools.EnumerateArray())
             {
-                Assert.True(hostpool.ValueKind == JsonValueKind.Object);
+                Assert.Equal(JsonValueKind.Object, hostpool.ValueKind);
                 var name = hostpool.GetProperty("name").GetString();
                 Assert.False(string.IsNullOrEmpty(name));
                 var hostpoolResourceGroup = hostpool.GetProperty("resourceGroupName").GetString();
                 Assert.Equal(resourceGroupName, hostpoolResourceGroup);
-                Assert.True(hostpool.TryGetProperty("location", out _));
-                Assert.True(hostpool.TryGetProperty("hostPoolType", out _));
+                hostpool.AssertProperty("location");
+                hostpool.AssertProperty("hostPoolType");
             }
-        }
-        else
-        {
-            Assert.True(true, "No hostpools available for testing resource group filtering");
         }
     }
 
@@ -174,7 +164,9 @@ public class VirtualDesktopCommandTests(LiveTestFixture liveTestFixture, ITestOu
                 { "resource-group", "non-existent-resource-group-12345" }
             });
 
-        Assert.False(result.Value.TryGetProperty("hostpools", out var property), $"Property 'hostpools' not found.");
+        var hostpools = result.AssertProperty("hostpools");
+        Assert.Equal(JsonValueKind.Array, hostpools.ValueKind);
+        Assert.Equal(0, hostpools.GetArrayLength());
     }
 
     [Fact]
@@ -210,18 +202,9 @@ public class VirtualDesktopCommandTests(LiveTestFixture liveTestFixture, ITestOu
                 // Check results format if any session hosts exist
                 foreach (var sessionHost in sessionHosts.Value.EnumerateArray())
                 {
-                    Assert.True(sessionHost.ValueKind == JsonValueKind.Object);
+                    Assert.Equal(JsonValueKind.Object, sessionHost.ValueKind);
                 }
             }
-            else
-            {
-                Assert.True(true, "No session hosts available for testing");
-            }
-        }
-        else
-        {
-            // Skip test if no hostpools are available
-            Assert.True(true, "No hostpools available for testing session hosts");
         }
     }
 
@@ -258,18 +241,9 @@ public class VirtualDesktopCommandTests(LiveTestFixture liveTestFixture, ITestOu
                 // Check results format if any session hosts exist
                 foreach (var sessionHost in sessionHosts.Value.EnumerateArray())
                 {
-                    Assert.True(sessionHost.ValueKind == JsonValueKind.Object);
+                    Assert.Equal(JsonValueKind.Object, sessionHost.ValueKind);
                 }
             }
-            else
-            {
-                Assert.True(true, "No session hosts available for testing");
-            }
-        }
-        else
-        {
-            // Skip test if no hostpools are available
-            Assert.True(true, "No hostpools available for testing session hosts");
         }
     }
 
@@ -321,26 +295,14 @@ public class VirtualDesktopCommandTests(LiveTestFixture liveTestFixture, ITestOu
                     // Check results format if any user sessions exist
                     foreach (var userSession in userSessions.Value.EnumerateArray())
                     {
-                        Assert.True(userSession.ValueKind == JsonValueKind.Object);
+                        Assert.Equal(JsonValueKind.Object, userSession.ValueKind);
                         // Verify common properties exist
-                        Assert.True(userSession.TryGetProperty("name", out _));
-                        Assert.True(userSession.TryGetProperty("hostPoolName", out _));
-                        Assert.True(userSession.TryGetProperty("sessionHostName", out _));
+                        userSession.AssertProperty("name");
+                        userSession.AssertProperty("hostPoolName");
+                        userSession.AssertProperty("sessionHostName");
                     }
                 }
-                else
-                {
-                    Assert.True(true, "No user sessions available");
-                }
             }
-            else
-            {
-                Assert.True(true, "No session hosts available for testing user sessions");
-            }
-        }
-        else
-        {
-            Assert.True(true, "No hostpools available for testing user sessions");
         }
     }
 
@@ -392,26 +354,14 @@ public class VirtualDesktopCommandTests(LiveTestFixture liveTestFixture, ITestOu
                     // Check results format if any user sessions exist
                     foreach (var userSession in userSessions.Value.EnumerateArray())
                     {
-                        Assert.True(userSession.ValueKind == JsonValueKind.Object);
+                        Assert.Equal(JsonValueKind.Object, userSession.ValueKind);
                         // Verify common properties exist
-                        Assert.True(userSession.TryGetProperty("name", out _));
-                        Assert.True(userSession.TryGetProperty("hostPoolName", out _));
-                        Assert.True(userSession.TryGetProperty("sessionHostName", out _));
+                        userSession.AssertProperty("name");
+                        userSession.AssertProperty("hostPoolName");
+                        userSession.AssertProperty("sessionHostName");
                     }
                 }
-                else
-                {
-                    Assert.True(true, "No user session available for testing");
-                }
             }
-            else
-            {
-                Assert.True(true, "No session hosts available for testing user sessions");
-            }
-        }
-        else
-        {
-            Assert.True(true, "No hostpools available for testing user sessions");
         }
     }
 }

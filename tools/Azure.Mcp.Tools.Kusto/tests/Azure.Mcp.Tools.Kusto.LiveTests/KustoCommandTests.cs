@@ -6,7 +6,6 @@ using Azure.Identity;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tools.Kusto.Services;
 using ModelContextProtocol.Client;
 using Xunit;
@@ -14,20 +13,15 @@ using MsOptions = Microsoft.Extensions.Options.Options;
 
 namespace Azure.Mcp.Tools.Kusto.LiveTests;
 
-public class KustoCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output),
-    IClassFixture<LiveTestFixture>, IAsyncLifetime
+public class KustoCommandTests(ITestOutputHelper output)
+    : CommandTestsBase(output)
 {
     private const string TestDatabaseName = "ToDoLists";
 
-    public ValueTask DisposeAsync()
+    public override async ValueTask InitializeAsync()
     {
-        base.Dispose();
-        return ValueTask.CompletedTask;
-    }
+        await base.InitializeAsync(); // Initialize the base class first
 
-    public async ValueTask InitializeAsync()
-    {
         try
         {
             var credentials = new DefaultAzureCredential();

@@ -26,7 +26,15 @@ public sealed class KeyValueShowCommand(ILogger<KeyValueShowCommand> logger) : B
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -49,9 +57,7 @@ public sealed class KeyValueShowCommand(ILogger<KeyValueShowCommand> logger) : B
                 options.Label,
                 options.ContentType);
 
-            context.Response.Results = ResponseResult.Create(
-                new KeyValueShowResult(setting),
-                AppConfigJsonContext.Default.KeyValueShowResult);
+            context.Response.Results = ResponseResult.Create(new(setting), AppConfigJsonContext.Default.KeyValueShowResult);
         }
         catch (Exception ex)
         {

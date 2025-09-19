@@ -5,6 +5,7 @@ using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Redis.Commands;
 using Azure.Mcp.Tools.Redis.Commands.CacheForRedis;
 using Azure.Mcp.Tools.Redis.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,11 +52,7 @@ public class CacheListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<CacheListResult>(json, new JsonSerializerOptions()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, RedisJsonContext.Default.CacheListCommandResult);
 
         Assert.NotNull(result);
         Assert.Collection(result.Caches,
@@ -64,7 +61,7 @@ public class CacheListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoCaches()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoCaches()
     {
         _redisService.ListCachesAsync("sub123").Returns([]);
 
@@ -74,7 +71,13 @@ public class CacheListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, RedisJsonContext.Default.CacheListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Caches);
     }
 
     [Fact]
@@ -117,6 +120,4 @@ public class CacheListCommandTests
         Assert.Equal(400, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
     }
-
-    private record CacheListResult(IEnumerable<CacheModel> Caches);
 }

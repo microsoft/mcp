@@ -15,8 +15,6 @@ public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand>
 {
     private const string CommandTitle = "Delete SQL Server Firewall Rule";
 
-    private readonly Option<string> _firewallRuleNameOption = SqlOptionDefinitions.FirewallRuleNameOption;
-
     public override string Name => "delete";
 
     public override string Description =>
@@ -29,18 +27,26 @@ public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand>
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = true, ReadOnly = false };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = true,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_firewallRuleNameOption);
+        command.Options.Add(SqlOptionDefinitions.FirewallRuleNameOption);
     }
 
     protected override FirewallRuleDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.FirewallRuleName = parseResult.GetValueOrDefault(_firewallRuleNameOption);
+        options.FirewallRuleName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.FirewallRuleNameOption.Name);
         return options;
     }
 
@@ -64,9 +70,7 @@ public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand>
                 options.FirewallRuleName!,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new FirewallRuleDeleteResult(deleted, options.FirewallRuleName!),
-                SqlJsonContext.Default.FirewallRuleDeleteResult);
+            context.Response.Results = ResponseResult.Create(new(deleted, options.FirewallRuleName!), SqlJsonContext.Default.FirewallRuleDeleteResult);
         }
         catch (Exception ex)
         {

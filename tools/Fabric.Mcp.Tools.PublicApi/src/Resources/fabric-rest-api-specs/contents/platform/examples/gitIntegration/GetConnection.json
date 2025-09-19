@@ -1,0 +1,24 @@
+{
+    "parameters": {
+        "workspaceId": "1455b6a2-c120-4c1c-dda7-92bafe99bec3"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "gitProviderDetails": {
+                    "organizationName": "Test Organization",
+                    "projectName": "Test Project",
+                    "gitProviderType": "AzureDevOps",
+                    "repositoryName": "Test Repo",
+                    "branchName": "Test Branch",
+                    "directoryName": ""
+                },
+                "gitSyncDetails": {
+                    "head": "eaa737b48cda41b37ffefac772ea48f6fed3eac4",
+                    "lastSyncTime": "2021-11-20T09:26:43.153"
+                },
+                "gitConnectionState": "ConnectedAndInitialized"
+            }
+        }
+    }
+}

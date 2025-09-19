@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
@@ -60,9 +61,9 @@ public class FirewallRuleListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<Core.Options.RetryPolicyOptions?>(),
+                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
-                .Returns(new List<SqlServerFirewallRule>());
+                .Returns([]);
         }
 
         var context = new CommandContext(_serviceProvider);
@@ -99,7 +100,7 @@ public class FirewallRuleListCommandTests
             "testserver",
             "testrg",
             "testsub",
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(firewallRules);
 
@@ -123,9 +124,9 @@ public class FirewallRuleListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SqlServerFirewallRule>());
+            .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
@@ -135,7 +136,7 @@ public class FirewallRuleListCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
     }
 
@@ -147,7 +148,7 @@ public class FirewallRuleListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<SqlServerFirewallRule>>(new Exception("Test error")));
 
@@ -172,7 +173,7 @@ public class FirewallRuleListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<SqlServerFirewallRule>>(requestException));
 
@@ -196,7 +197,7 @@ public class FirewallRuleListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<SqlServerFirewallRule>>(requestException));
 
@@ -223,9 +224,9 @@ public class FirewallRuleListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(new List<SqlServerFirewallRule>());
+            .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _commandDefinition.Parse($"--subscription {subscription} --resource-group {resourceGroup} --server {serverName}");
@@ -238,7 +239,7 @@ public class FirewallRuleListCommandTests
             serverName,
             resourceGroup,
             subscription,
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -256,7 +257,7 @@ public class FirewallRuleListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(firewallRules);
 
@@ -275,7 +276,7 @@ public class FirewallRuleListCommandTests
             "testserver",
             "testrg",
             "testsub",
-            Arg.Is<Core.Options.RetryPolicyOptions?>(r => r != null && r.MaxRetries == 3),
+            Arg.Is<RetryPolicyOptions?>(r => r != null && r.MaxRetries == 3),
             Arg.Any<CancellationToken>());
     }
 }

@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Commands.Service;
 using Azure.Mcp.Tools.Search.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,18 +53,18 @@ public class ServiceListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ServiceListResult>(json);
+        var result = JsonSerializer.Deserialize(json, SearchJsonContext.Default.ServiceListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedServices, result.Services);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoServices()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoServices()
     {
         // Arrange
         _searchService.ListServices(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<string>());
+            .Returns([]);
 
         var command = new ServiceListCommand(_logger);
 
@@ -76,7 +76,13 @@ public class ServiceListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, SearchJsonContext.Default.ServiceListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Services);
     }
 
     [Fact]
@@ -101,11 +107,5 @@ public class ServiceListCommandTests
         Assert.NotNull(response);
         Assert.Equal(500, response.Status);
         Assert.StartsWith(expectedError, response.Message);
-    }
-
-    private class ServiceListResult
-    {
-        [JsonPropertyName("services")]
-        public List<string> Services { get; set; } = [];
     }
 }

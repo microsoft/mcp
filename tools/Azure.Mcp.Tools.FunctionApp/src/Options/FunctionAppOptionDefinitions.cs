@@ -12,6 +12,6 @@ public static class FunctionAppOptionDefinitions
     )
     {
         Description = "The name of the Function App.",
-        Required = true
+        Required = false
     };
 }

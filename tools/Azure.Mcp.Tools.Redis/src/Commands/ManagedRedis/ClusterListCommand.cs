@@ -27,7 +27,15 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
         """;
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -47,11 +55,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
                 options.AuthMethod,
                 options.RetryPolicy);
 
-            context.Response.Results = clusters.Any() ?
-                ResponseResult.Create(
-                    new ClusterListCommandResult(clusters),
-                    RedisJsonContext.Default.ClusterListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(clusters ?? []), RedisJsonContext.Default.ClusterListCommandResult);
         }
         catch (Exception ex)
         {

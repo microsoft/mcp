@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.MySql.Commands.Database;
-using Azure.Mcp.Tools.MySql.Json;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Options.Table;
 using Azure.Mcp.Tools.MySql.Services;
@@ -14,7 +14,6 @@ namespace Azure.Mcp.Tools.MySql.Commands.Table;
 public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger) : BaseDatabaseCommand<TableSchemaGetOptions>(logger)
 {
     private const string CommandTitle = "Get MySQL Table Schema";
-    private readonly Option<string> _tableOption = MySqlOptionDefinitions.Table;
 
     public override string Name => "schema";
 
@@ -22,18 +21,26 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_tableOption);
+        command.Options.Add(MySqlOptionDefinitions.Table);
     }
 
     protected override TableSchemaGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Table = parseResult.GetValue(_tableOption);
+        options.Table = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.Table.Name);
         return options;
     }
 
@@ -50,11 +57,7 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
         {
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
             List<string> schema = await mysqlService.GetTableSchemaAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!, options.Table!);
-            context.Response.Results = schema?.Count > 0 ?
-                ResponseResult.Create(
-                    new TableSchemaGetCommandResult(schema),
-                    MySqlJsonContext.Default.TableSchemaGetCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(schema ?? []), MySqlJsonContext.Default.TableSchemaGetCommandResult);
         }
         catch (Exception ex)
         {

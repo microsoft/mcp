@@ -1,0 +1,1111 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "v1",
+        "title": "Eventstream source data types"
+    },
+    "paths": {},
+    "definitions": {
+        "SourceType": {
+            "type": "string",
+            "description": "Represents the type of the source. Additional source types may be added over time.",
+            "enum": [
+                "AmazonKinesis",
+                "AmazonMSKKafka",
+                "ApacheKafka",
+                "AzureBlobStorageEvents",
+                "AzureCosmosDBCDC",
+                "AzureEventHub",
+                "AzureIoTHub",
+                "AzureSQLDBCDC",
+                "AzureSQLMIDBCDC",
+                "ConfluentCloud",
+                "CustomEndpoint",
+                "FabricCapacityUtilizationEvents",
+                "FabricJobEvents",
+                "FabricOneLakeEvents",
+                "FabricWorkspaceItemEvents",
+                "GooglePubSub",
+                "MySQLCDC",
+                "PostgreSQLCDC",
+                "SQLServerOnVMDBCDC",
+                "SampleData"
+            ],
+            "x-ms-enum": {
+                "name": "SourceType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "AmazonKinesis",
+                        "description": "The Amazon Kinesis source type."
+                    },
+                    {
+                        "value": "AmazonMSKKafka",
+                        "description": "The Amazon MSK Kafka source type."
+                    },
+                    {
+                        "value": "ApacheKafka",
+                        "description": "The Apache Kafka source type."
+                    },
+                    {
+                        "value": "AzureBlobStorageEvents",
+                        "description": "The Azure Blob Storage Events source type."
+                    },
+                    {
+                        "value": "AzureCosmosDBCDC",
+                        "description": "The Azure Cosmos DB CDC source type."
+                    },
+                    {
+                        "value": "AzureEventHub",
+                        "description": "The Azure Event Hub source type."
+                    },
+                    {
+                        "value": "AzureIoTHub",
+                        "description": "The Azure IoT Hub source type."
+                    },
+                    {
+                        "value": "AzureSQLDBCDC",
+                        "description": "The Azure SQL DB CDC source type."
+                    },
+                    {
+                        "value": "AzureSQLMIDBCDC",
+                        "description": "The Azure SQL MI DB CDC source type."
+                    },
+                    {
+                        "value": "ConfluentCloud",
+                        "description": "The Confluent Cloud source type."
+                    },
+                    {
+                        "value": "CustomEndpoint",
+                        "description": "The Custom Endpoint source type."
+                    },
+                    {
+                        "value": "FabricCapacityUtilizationEvents",
+                        "description": "The Fabric Capacity Utilization Events source type."
+                    },
+                    {
+                        "value": "FabricJobEvents",
+                        "description": "The Fabric Job Events source type."
+                    },
+                    {
+                        "value": "FabricOneLakeEvents",
+                        "description": "The Fabric One Lake Events source type."
+                    },
+                    {
+                        "value": "FabricWorkspaceItemEvents",
+                        "description": "The Fabric Workspace Item Events source type."
+                    },
+                    {
+                        "value": "GooglePubSub",
+                        "description": "The Google PubSub source type."
+                    },
+                    {
+                        "value": "MySQLCDC",
+                        "description": "The MySQL CDC source type."
+                    },
+                    {
+                        "value": "PostgreSQLCDC",
+                        "description": "The PostgreSQL CDC source type."
+                    },
+                    {
+                        "value": "SQLServerOnVMDBCDC",
+                        "description": "The SQL Server on VM DB CDC source type."
+                    },
+                    {
+                        "value": "SampleData",
+                        "description": "The Sample Data source type."
+                    }
+                ]
+            }
+        },
+        "BaseSource": {
+            "type": "object",
+            "description": "Represents an Eventstream source.",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "The unique identifier of the source.",
+                    "format": "uuid"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The unique name of the source."
+                },
+                "inputSchemas": {
+                    "type": "array",
+                    "description": "The input schemas of the source.",
+                    "items": {
+                        "$ref": "operatorCommon.json#/definitions/InputSchema"
+                    }
+                }
+            }
+        },
+        "SourceResponse": {
+            "type": "object",
+            "description": "Represents an Eventstream source response.",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "description": "The type of the source.",
+                    "$ref": "#/definitions/SourceType"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/BaseSource"
+                },
+                {
+                    "$ref": "common.json#/definitions/RuntimeInformation"
+                }
+            ],
+            "discriminator": "type"
+        },
+        "SourceConnectionResponse": {
+            "type": "object",
+            "description": "Represents the connection information for a source custom endpoint.",
+            "allOf": [
+                {
+                    "$ref": "common.json#/definitions/BaseCustomEndpointConnection"
+                }
+            ]
+        },
+        "AzureEventHubSourceResponse": {
+            "type": "object",
+            "description": "Azure Event Hub source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Azure Event Hub source.",
+                    "$ref": "#/definitions/AzureEventHubSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "AzureEventHub"
+        },
+        "AzureIoTHubSourceResponse": {
+            "type": "object",
+            "description": "Azure IoT Hub source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Azure IoT Hub source.",
+                    "$ref": "#/definitions/AzureIoTHubSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "AzureIoTHub"
+        },
+        "AzureBlobStorageEventsSourceResponse": {
+            "type": "object",
+            "description": "Azure Blob Storage events source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Azure Blob Storage events source.",
+                    "$ref": "#/definitions/AzureBlobStorageEventsSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "AzureBlobStorageEvents"
+        },
+        "CustomEndpointSourceResponse": {
+            "type": "object",
+            "description": "Custom endpoint events source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the custom endpoint events source.",
+                    "$ref": "#/definitions/CustomEndpointSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "CustomEndpoint"
+        },
+        "SampleDataSourceResponse": {
+            "type": "object",
+            "description": "Sample data events source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the sample data events source.",
+                    "$ref": "#/definitions/SampleDataSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "SampleData"
+        },
+        "AmazonKinesisSourceResponse": {
+            "type": "object",
+            "description": "Amazon Kinesis source properties response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Amazon Kinesis source.",
+                    "$ref": "#/definitions/AmazonKinesisSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "AmazonKinesis"
+        },
+        "AmazonMSKKafkaSourceResponse": {
+            "type": "object",
+            "description": "Amazon MSK Kafka source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Amazon MSK Kafka source.",
+                    "$ref": "#/definitions/AmazonMSKKafkaSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "AmazonMSKKafka"
+        },
+        "ApacheKafkaSourceResponse": {
+            "type": "object",
+            "description": "Apache Kafka source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Apache Kafka source.",
+                    "$ref": "#/definitions/ApacheKafkaSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "ApacheKafka"
+        },
+        "ConfluentCloudSourceResponse": {
+            "type": "object",
+            "description": "Confluent Cloud source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/BaseKafkaSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "ConfluentCloud"
+        },
+        "AzureCosmosDBCDCSourceResponse": {
+            "type": "object",
+            "description": "Azure Cosmos DB CDC source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Azure Cosmos DB CDC source.",
+                    "$ref": "#/definitions/AzureCosmosDBCDCSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "AzureCosmosDBCDC"
+        },
+        "AzureSQLDBCDCSourceResponse": {
+            "type": "object",
+            "description": "Azure SQL DB CDC source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/BaseSQLCDCSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "AzureSQLDBCDC"
+        },
+        "AzureSQLMIDBCDCSourceResponse": {
+            "type": "object",
+            "description": "Azure SQL MI DB CDC source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/BaseSQLCDCSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "AzureSQLMIDBCDC"
+        },
+        "SQLServerOnVMDBCDCSourceResponse": {
+            "type": "object",
+            "description": "Azure SQL Server on VM DB CDC source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "$ref": "#/definitions/BaseSQLCDCSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "SQLServerOnVMDBCDC"
+        },
+        "MySQLCDCSourceResponse": {
+            "type": "object",
+            "description": "MySQL CDC source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {}
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "MySQLCDC"
+        },
+        "PostgreSQLCDCSourceResponse": {
+            "type": "object",
+            "description": "PostgreSQL CDC source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the PostgreSQL CDC source.",
+                    "$ref": "#/definitions/PostgreSQLCDCSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "PostgreSQLCDC"
+        },
+        "GooglePubSubSourceResponse": {
+            "type": "object",
+            "description": "Google Pub/Sub source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Google Pub/Sub source.",
+                    "$ref": "#/definitions/GooglePubSubSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "GooglePubSub"
+        },
+        "FabricCapacityUtilizationEventsSourceResponse": {
+            "type": "object",
+            "description": "Fabric Capacity Utilization events source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Fabric Capacity Utilization events source.",
+                    "$ref": "#/definitions/FabricCapacityUtilizationEventsSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "FabricCapacityUtilizationEvents"
+        },
+        "FabricJobEventsSourceResponse": {
+            "type": "object",
+            "description": "Fabric Job events source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Fabric Job events source.",
+                    "$ref": "#/definitions/FabricJobEventsSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "FabricJobEvents"
+        },
+        "FabricOneLakeEventsSourceResponse": {
+            "type": "object",
+            "description": "Fabric OneLake events source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Fabric OneLake events source.",
+                    "$ref": "#/definitions/FabricOneLakeEventsSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "FabricOneLakeEvents"
+        },
+        "FabricWorkspaceItemEventsSourceResponse": {
+            "type": "object",
+            "description": "Fabric Workspace Item events source response.",
+            "required": [
+                "properties"
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The properties of the Fabric Workspace Item events source.",
+                    "$ref": "#/definitions/FabricWorkspaceItemEventsSourceProperties"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/SourceResponse"
+                }
+            ],
+            "x-ms-discriminator-value": "FabricWorkspaceItemEvents"
+        },
+        "AzureEventHubSourceProperties": {
+            "type": "object",
+            "description": "Azure Event Hub source properties.",
+            "required": [
+                "dataConnectionId",
+                "consumerGroupName",
+                "inputSerialization"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The Azure Event Hub data connection identifier.",
+                    "format": "uuid"
+                },
+                "consumerGroupName": {
+                    "type": "string",
+                    "description": "The consumer group name."
+                },
+                "inputSerialization": {
+                    "$ref": "./serialization.json#/definitions/SerializationInfo"
+                }
+            }
+        },
+        "AzureIoTHubSourceProperties": {
+            "type": "object",
+            "description": "Azure IoT Hub source properties.",
+            "required": [
+                "dataConnectionId",
+                "consumerGroupName",
+                "inputSerialization"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The Azure IoT Hub data connection identifier.",
+                    "format": "uuid"
+                },
+                "consumerGroupName": {
+                    "type": "string",
+                    "description": "The consumer group name."
+                },
+                "inputSerialization": {
+                    "$ref": "./serialization.json#/definitions/SerializationInfo"
+                }
+            }
+        },
+        "AzureBlobStorageEventsSourceProperties": {
+            "type": "object",
+            "description": "Azure Blob Storage events source properties.",
+            "required": [
+                "azureBlobStorageEvents",
+                "streamEvents"
+            ],
+            "properties": {
+                "azureBlobStorageEvents": {
+                    "type": "array",
+                    "description": "The Azure Blob Storage events.",
+                    "items": {
+                        "$ref": "#/definitions/AzureBlobStorageEvents"
+                    }
+                },
+                "streamEvents": {
+                    "type": "boolean",
+                    "description": "Indicates whether to stream events."
+                }
+            }
+        },
+        "AzureBlobStorageEvents": {
+            "type": "object",
+            "description": "Azure Blob Storage events source.",
+            "required": [
+                "azureResourceId",
+                "includedEventTypes"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "The unique identifier of the source.",
+                    "format": "uuid"
+                },
+                "azureResourceId": {
+                    "type": "string",
+                    "description": "The Azure resource identifier of the blob storage."
+                },
+                "includedEventTypes": {
+                    "type": "array",
+                    "description": "The included event types.",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "Microsoft.Storage.BlobCreated",
+                            "Microsoft.Storage.BlobDeleted",
+                            "Microsoft.Storage.BlobRenamed",
+                            "Microsoft.Storage.BlobTierChanged",
+                            "Microsoft.Storage.DirectoryCreated",
+                            "Microsoft.Storage.DirectoryDeleted",
+                            "Microsoft.Storage.DirectoryRenamed",
+                            "Microsoft.Storage.BlobInventoryPolicyCompleted",
+                            "Microsoft.Storage.AsyncOperationInitiated",
+                            "Microsoft.Storage.LifecyclePolicyCompleted"
+                        ]
+                    }
+                }
+            }
+        },
+        "CustomEndpointSourceProperties": {
+            "type": "object",
+            "description": "Custom endpoint events source properties.",
+            "properties": {}
+        },
+        "SampleDataSourceProperties": {
+            "type": "object",
+            "description": "Sample data source properties.",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The sample data type.",
+                    "enum": [
+                        "YellowTaxi",
+                        "StockMarket",
+                        "Bicycles"
+                    ]
+                }
+            }
+        },
+        "AmazonKinesisSourceProperties": {
+            "type": "object",
+            "description": "Amazon Kinesis source properties.",
+            "required": [
+                "dataConnectionId",
+                "region"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The Amazon Kinesis data connection identifier.",
+                    "format": "uuid"
+                },
+                "region": {
+                    "type": "string",
+                    "description": "The Amazon Kinesis region name.",
+                    "enum": [
+                        "af-south-1",
+                        "ap-east-1",
+                        "ap-northeast-1",
+                        "ap-northeast-2",
+                        "ap-northeast-3",
+                        "ap-south-1",
+                        "ap-south-2",
+                        "ap-southeast-1",
+                        "ap-southeast-2",
+                        "ap-southeast-3",
+                        "ap-southeast-4",
+                        "ap-southeast-5",
+                        "ca-central-1",
+                        "ca-west-1",
+                        "eu-central-1",
+                        "eu-central-2",
+                        "eu-north-1",
+                        "eu-south-1",
+                        "eu-south-2",
+                        "eu-west-1",
+                        "eu-west-2",
+                        "eu-west-3",
+                        "il-central-1",
+                        "me-central-1",
+                        "me-south-1",
+                        "sa-east-1",
+                        "us-east-1",
+                        "us-east-2",
+                        "us-gov-east-1",
+                        "us-gov-west-1",
+                        "us-west-1",
+                        "us-west-2"
+                    ]
+                }
+            }
+        },
+        "BaseKafkaSourceProperties": {
+            "type": "object",
+            "description": "Base Kafka source properties.",
+            "required": [
+                "dataConnectionId",
+                "topic",
+                "consumerGroupName",
+                "autoOffsetReset"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The Kafka data connection identifier.",
+                    "format": "uuid"
+                },
+                "topic": {
+                    "type": "string",
+                    "description": "The Kafka topic."
+                },
+                "consumerGroupName": {
+                    "type": "string",
+                    "description": "The consumer group name."
+                },
+                "autoOffsetReset": {
+                    "type": "string",
+                    "description": "The auto offset reset property. Default is None.",
+                    "enum": [
+                        "None",
+                        "Earliest",
+                        "Latest"
+                    ],
+                    "default": "None"
+                }
+            }
+        },
+        "AmazonMSKKafkaSourceProperties": {
+            "type": "object",
+            "description": "Amazon MSK Kafka source properties.",
+            "required": [
+                "saslMechanism",
+                "securityProtocol"
+            ],
+            "properties": {
+                "saslMechanism": {
+                    "type": "string",
+                    "description": "The SASL mechanism.",
+                    "enum": [
+                        "PLAIN",
+                        "SCRAM-SHA-256",
+                        "SCRAM-SHA-512"
+                    ]
+                },
+                "securityProtocol": {
+                    "type": "string",
+                    "description": "The security protocol.",
+                    "enum": [
+                        "SASL_PLAINTEXT",
+                        "PLAINTEXT",
+                        "SASL_SSL",
+                        "SSL"
+                    ]
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/BaseKafkaSourceProperties"
+                }
+            ]
+        },
+        "ApacheKafkaSourceProperties": {
+            "type": "object",
+            "description": "Apache Kafka source properties.",
+            "required": [
+                "saslMechanism",
+                "securityProtocol"
+            ],
+            "properties": {
+                "saslMechanism": {
+                    "type": "string",
+                    "description": "The SASL mechanism.",
+                    "enum": [
+                        "PLAIN",
+                        "SCRAM-SHA-256",
+                        "SCRAM-SHA-512"
+                    ]
+                },
+                "securityProtocol": {
+                    "type": "string",
+                    "description": "The security protocol.",
+                    "enum": [
+                        "SASL_PLAINTEXT",
+                        "PLAINTEXT",
+                        "SASL_SSL",
+                        "SSL"
+                    ]
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/BaseKafkaSourceProperties"
+                }
+            ]
+        },
+        "AzureCosmosDBCDCSourceProperties": {
+            "type": "object",
+            "description": "Azure Cosmos DB CDC source properties.",
+            "required": [
+                "dataConnectionId",
+                "containerName",
+                "databaseName",
+                "offsetPolicy"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The Azure Cosmos DB CDC data connection identifier.",
+                    "format": "uuid"
+                },
+                "containerName": {
+                    "type": "string",
+                    "description": "The container name."
+                },
+                "databaseName": {
+                    "type": "string",
+                    "description": "The database name."
+                },
+                "offsetPolicy": {
+                    "type": "string",
+                    "description": "The offset policy.",
+                    "enum": [
+                        "Earliest",
+                        "Latest"
+                    ]
+                }
+            }
+        },
+        "BaseSQLCDCSourceProperties": {
+            "type": "object",
+            "description": "Base SQL CDC source properties.",
+            "required": [
+                "dataConnectionId",
+                "tableName"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The SQL CDC data connection identifier.",
+                    "format": "uuid"
+                },
+                "tableName": {
+                    "type": "string",
+                    "description": "The table name."
+                }
+            }
+        },
+        "MySQLCDCSourceProperties": {
+            "type": "object",
+            "description": "MySQL CDC source properties.",
+            "required": [
+                "serverId"
+            ],
+            "properties": {
+                "serverId": {
+                    "type": "integer",
+                    "description": "The server identifier for the CDC connector."
+                },
+                "port": {
+                    "type": "integer",
+                    "description": "The port number. Default is 3306.",
+                    "default": 3306
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/BaseSQLCDCSourceProperties"
+                }
+            ]
+        },
+        "PostgreSQLCDCSourceProperties": {
+            "type": "object",
+            "description": "PostgreSQL CDC source properties.",
+            "required": [
+                "slotName"
+            ],
+            "allOf": [
+                {
+                    "$ref": "#/definitions/BaseSQLCDCSourceProperties"
+                }
+            ],
+            "properties": {
+                "slotName": {
+                    "type": "string",
+                    "description": "The slot name for the CDC connector."
+                },
+                "port": {
+                    "type": "integer",
+                    "description": "The port number. Default is 5432.",
+                    "default": 5432
+                }
+            }
+        },
+        "GooglePubSubSourceProperties": {
+            "type": "object",
+            "description": "Google Pub/Sub source properties.",
+            "required": [
+                "dataConnectionId"
+            ],
+            "properties": {
+                "dataConnectionId": {
+                    "type": "string",
+                    "description": "The Google Pub/Sub data connection identifier.",
+                    "format": "uuid"
+                }
+            }
+        },
+        "FabricCapacityUtilizationEventsSourceProperties": {
+            "type": "object",
+            "description": "Fabric Capacity Utilization events source properties.",
+            "required": [
+                "eventScope",
+                "capacityId"
+            ],
+            "properties": {
+                "eventScope": {
+                    "type": "string",
+                    "enum": [
+                        "Tenant",
+                        "Capacity",
+                        "Workspace",
+                        "Item",
+                        "SubItem"
+                    ]
+                },
+                "capacityId": {
+                    "type": "string",
+                    "description": "The capacity identifier.",
+                    "format": "uuid"
+                },
+                "includedEventTypes": {
+                    "type": "array",
+                    "description": "The included event types.",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "filters": {
+                    "type": "object",
+                    "description": "The advanced filters defined in https://learn.microsoft.com/azure/event-grid/event-filtering#advanced-filtering."
+                }
+            }
+        },
+        "FabricJobEventsSourceProperties": {
+            "type": "object",
+            "description": "Fabric Job events source properties.",
+            "required": [
+                "eventScope",
+                "workspaceId",
+                "itemId"
+            ],
+            "properties": {
+                "eventScope": {
+                    "type": "string",
+                    "enum": [
+                        "Tenant",
+                        "Capacity",
+                        "Workspace",
+                        "Item",
+                        "SubItem"
+                    ]
+                },
+                "workspaceId": {
+                    "type": "string",
+                    "description": "The workspace identifier.",
+                    "format": "uuid"
+                },
+                "itemId": {
+                    "type": "string",
+                    "description": "The item identifier.",
+                    "format": "uuid"
+                },
+                "includedEventTypes": {
+                    "type": "array",
+                    "description": "The included event types.",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "filters": {
+                    "type": "object",
+                    "description": "The advanced filters defined in https://learn.microsoft.com/azure/event-grid/event-filtering#advanced-filtering."
+                }
+            }
+        },
+        "FabricOneLakeEventsSourceProperties": {
+            "type": "object",
+            "description": "Fabric OneLake events source properties.",
+            "required": [
+                "tenantId",
+                "workspaceId",
+                "itemId",
+                "oneLakePaths"
+            ],
+            "properties": {
+                "tenantId": {
+                    "type": "string",
+                    "description": "The tenant identifier.",
+                    "format": "uuid"
+                },
+                "workspaceId": {
+                    "type": "string",
+                    "description": "The workspace identifier.",
+                    "format": "uuid"
+                },
+                "itemId": {
+                    "type": "string",
+                    "description": "The item identifier.",
+                    "format": "uuid"
+                },
+                "oneLakePaths": {
+                    "type": "array",
+                    "description": "The OneLake paths.",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "includedEventTypes": {
+                    "type": "array",
+                    "description": "The included event types.",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "filters": {
+                    "type": "object",
+                    "description": "The advanced filters defined in https://learn.microsoft.com/azure/event-grid/event-filtering#advanced-filtering."
+                }
+            }
+        },
+        "FabricWorkspaceItemEventsSourceProperties": {
+            "type": "object",
+            "description": "Fabric Workspace Item events source properties.",
+            "required": [
+                "eventScope",
+                "workspaceId"
+            ],
+            "properties": {
+                "eventScope": {
+                    "type": "string",
+                    "enum": [
+                        "Tenant",
+                        "Capacity",
+                        "Workspace",
+                        "Item",
+                        "SubItem"
+                    ]
+                },
+                "workspaceId": {
+                    "type": "string",
+                    "description": "The workspace identifier.",
+                    "format": "uuid"
+                },
+                "itemId": {
+                    "type": "string",
+                    "description": "The item identifier.",
+                    "format": "uuid"
+                },
+                "includedEventTypes": {
+                    "type": "array",
+                    "description": "The included event types.",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "filters": {
+                    "type": "object",
+                    "description": "The advanced filters defined in https://learn.microsoft.com/azure/event-grid/event-filtering#advanced-filtering."
+                }
+            }
+        }
+    }
+}

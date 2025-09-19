@@ -1,0 +1,29 @@
+{
+    "parameters": {
+        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+        "createItemRequest": {
+            "displayName": "Item 1",
+            "type": "Lakehouse",
+            "folderId": "bbbbbbbb-1111-2222-3333-cccccccccccc"
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "displayName": "Item 1",
+                "description": "",
+                "type": "Lakehouse",
+                "folderId": "bbbbbbbb-1111-2222-3333-cccccccccccc",
+                "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+                "id": "cccccccc-2222-3333-4444-dddddddddddd"
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/0000aaaa-11bb-cccc-dd22-eeeeee333333",
+                "x-ms-operation-id": "0000aaaa-11bb-cccc-dd22-eeeeee333333",
+                "Retry-After": 30
+            }
+        }
+    }
+}

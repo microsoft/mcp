@@ -1,0 +1,16 @@
+{
+    "parameters": {
+        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+        "folderId": "bbbbbbbb-1111-2222-3333-cccccccccccc"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "bbbbbbbb-1111-2222-3333-cccccccccccc",
+                "displayName": "A nested folder",
+                "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+                "parentFolderId": "aaaaaaaa-6666-7777-8888-bbbbbbbbbbbb"
+            }
+        }
+    }
+}

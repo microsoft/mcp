@@ -1,0 +1,410 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Spark setting data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "WorkspaceSparkSettings": {
+            "type": "object",
+            "description": "Workspace Spark settings.",
+            "properties": {
+                "automaticLog": {
+                    "$ref": "#/definitions/AutomaticLogProperties",
+                    "description": "Automatic log settings."
+                },
+                "highConcurrency": {
+                    "$ref": "#/definitions/HighConcurrencyProperties",
+                    "description": "High concurrency settings."
+                },
+                "pool": {
+                    "$ref": "#/definitions/PoolProperties",
+                    "description": "Pool settings."
+                },
+                "environment": {
+                    "$ref": "#/definitions/EnvironmentProperties",
+                    "description": "Environment settings."
+                },
+                "job": {
+                    "$ref": "#/definitions/SparkJobsProperties",
+                    "description": "Job management settings."
+                }
+            }
+        },
+        "UpdateWorkspaceSparkSettingsRequest": {
+            "type": "object",
+            "description": "Update workspace Spark settings request payload.",
+            "properties": {
+                "automaticLog": {
+                    "$ref": "#/definitions/AutomaticLogProperties",
+                    "type": "object",
+                    "description": "Automatic log settings."
+                },
+                "highConcurrency": {
+                    "$ref": "#/definitions/HighConcurrencyProperties",
+                    "type": "object",
+                    "description": "High concurrency settings."
+                },
+                "pool": {
+                    "$ref": "#/definitions/PoolProperties",
+                    "type": "object",
+                    "description": "Pool settings."
+                },
+                "environment": {
+                    "$ref": "#/definitions/EnvironmentProperties",
+                    "type": "object",
+                    "description": "Environment settings."
+                },
+                "job": {
+                    "$ref": "#/definitions/SparkJobsProperties",
+                    "type": "object",
+                    "description": "Job management settings."
+                }
+            }
+        },
+        "AutomaticLogProperties": {
+            "description": "Automatic Log Properties.",
+            "required": [
+                "enabled"
+            ],
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "description": "The status of the automatic log. False - Disabled, true - Enabled."
+                }
+            }
+        },
+        "HighConcurrencyProperties": {
+            "description": "High Concurrency Properties.",
+            "type": "object",
+            "properties": {
+                "notebookInteractiveRunEnabled": {
+                    "type": "boolean",
+                    "description": "The status of the high concurrency for notebook interactive run. False - Disabled, true - Enabled."
+                },
+                "notebookPipelineRunEnabled": {
+                    "type": "boolean",
+                    "description": "The status of the high concurrency for notebook pipeline run. False - Disabled, true - Enabled."
+                }
+            }
+        },
+        "PoolProperties": {
+            "type": "object",
+            "description": "Properties of a pool",
+            "properties": {
+                "customizeComputeEnabled": {
+                    "description": "Customize compute configurations for items. False - Disabled, true - Enabled.",
+                    "type": "boolean"
+                },
+                "defaultPool": {
+                    "$ref": "#/definitions/InstancePool",
+                    "description": "Default pool for workspace. It should be a valid custom pool name. \"Starter Pool\" means use starter pool."
+                },
+                "starterPool": {
+                    "$ref": "#/definitions/StarterPoolProperties",
+                    "description": "Customize starter pool. For more information about configuring starter pool, see [configuring starter pool](/fabric/data-engineering/configure-starter-pools)."
+                }
+            }
+        },
+        "EnvironmentProperties": {
+            "description": "Properties of an environment.",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "The name of the default environment. Empty string indicated there is no workspace default environment.",
+                    "type": "string"
+                },
+                "runtimeVersion": {
+                    "description": "[Runtime](/fabric/data-engineering/runtime) version. For example: 1.3",
+                    "type": "string"
+                }
+            }
+        },
+        "SparkJobsProperties": {
+            "description": "Properties of a Spark job.",
+            "type": "object",
+            "properties": {
+                "conservativeJobAdmissionEnabled": {
+                    "description": "Reserve maximum cores for active Spark jobs. When this setting is enabled, your Fabric capacity reserves the maximum number of cores needed for active Spark jobs, ensuring job reliability by making sure that cores are available if a job scales up. When this setting is disabled, jobs are started based on the minimum number of cores needed, letting more jobs run at the same time. For more information see [job admission and management](/fabric/data-engineering/job-admission-management). False - Disabled, true - Enabled.",
+                    "type": "boolean"
+                },
+                "sessionTimeoutInMinutes": {
+                    "description": "Time to terminate inactive Spark sessions. The maximum is 14 days.",
+                    "format": "int32",
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20160
+                }
+            }
+        },
+        "InstancePool": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "Instance pool name.",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Instance pool type.",
+                    "$ref": "#/definitions/CustomPoolType"
+                },
+                "id": {
+                    "format": "uuid",
+                    "description": "Instance pool ID.",
+                    "type": "string"
+                }
+            }
+        },
+        "CustomPoolType": {
+            "type": "string",
+            "description": "Custom pool type. Additional `CustomPoolType` types may be added over time.",
+            "enum": ["Workspace", "Capacity"],
+            "x-ms-enum": {
+                "name": "CustomPoolType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Workspace",
+                        "description": "Workspace level custom pool"
+                    },
+                    {
+                        "value": "Capacity",
+                        "description": "Capacity level custom pool"
+                    }
+                ]
+            }
+        },
+        "StarterPoolProperties": {
+            "description": "Custom starter pool.",
+            "type": "object",
+            "properties": {
+                "maxNodeCount": {
+                    "format": "int32",
+                    "description": "The maximum node count.",
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "maxExecutors": {
+                    "format": "int32",
+                    "description": "The maximum executors count.",
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "NodeFamily": {
+            "type": "string",
+            "description": "Node family. Additional `NodeFamily` types may be added over time.",
+            "enum": ["MemoryOptimized"],
+            "x-ms-enum": {
+                "name": "NodeFamily",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "MemoryOptimized",
+                        "description": "Memory optimized"
+                    }
+                ]
+            }
+        },
+        "NodeSize": {
+            "type": "string",
+            "description": "[Node size](/fabric/data-engineering/spark-compute#node-sizes). Additional `NodeSize` types may be added over time.",
+            "enum": [ "Small", "Medium", "Large", "XLarge", "XXLarge" ],
+            "x-ms-enum": {
+                "name": "NodeSize",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Small",
+                        "description": "Small node size"
+                    },
+                    {
+                        "value": "Medium",
+                        "description": "Medium node size"
+                    },
+                    {
+                        "value": "Large",
+                        "description": "Large node size"
+                    },
+                    {
+                        "value": "XLarge",
+                        "description": "XLarge node size"
+                    },
+                    {
+                        "value": "XXLarge",
+                        "description": "XXLarge node size"
+                    }
+                ]
+            }
+        },
+        "CreateCustomPoolRequest": {
+            "description": "Create custom pool request payload.",
+            "required": [
+                "name",
+                "nodeFamily",
+                "nodeSize",
+                "autoScale",
+                "dynamicExecutorAllocation"
+            ],
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "Custom pool name.<br>The name must be between 1 and 64 characters long and must contain only letters, numbers, dashes, underscores and spaces.<br>Custom pool names must be unique within the workspace.<br>\"Starter Pool\" is a reserved custom pool name.",
+                    "type": "string"
+                },
+                "nodeFamily": {
+                    "description": "Node family.",
+                    "$ref": "#/definitions/NodeFamily"
+                },
+                "nodeSize": {
+                    "description": "Node size.",
+                    "$ref": "#/definitions/NodeSize"
+                },
+                "autoScale": {
+                    "$ref": "#/definitions/AutoScaleProperties",
+                    "description": "Autoscale."
+                },
+                "dynamicExecutorAllocation": {
+                    "$ref": "#/definitions/DynamicExecutorAllocationProperties",
+                    "description": "Dynamic executor allocation."
+                }
+            }
+        },
+        "AutoScaleProperties": {
+            "description": "Autoscale properties.",
+            "required": [
+                "enabled",
+                "minNodeCount",
+                "maxNodeCount"
+            ],
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "description": "The status of the auto scale. False - Disabled, true - Enabled.",
+                    "type": "boolean"
+                },
+                "minNodeCount": {
+                    "description": "The minimum node count.",
+                    "format": "int32",
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "maxNodeCount": {
+                    "description": "The maximum node count.",
+                    "format": "int32",
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "DynamicExecutorAllocationProperties": {
+            "description": "Dynamic executor allocation proerties.",
+            "required": [
+                "enabled",
+                "minExecutors",
+                "maxExecutors"
+            ],
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "description": "The status of the dynamic executor allocation. False - Disabled, true - Enabled.",
+                    "type": "boolean"
+                },
+                "minExecutors": {
+                    "description": "The minimum executors.",
+                    "format": "int32",
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "maxExecutors": {
+                    "description": "The maximum executors.",
+                    "format": "int32",
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "CustomPool": {
+            "description": "Custom pool.",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "format": "uuid",
+                    "description": "Custom pool ID.",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Custom pool name.",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Custom pool type.",
+                    "$ref": "#/definitions/CustomPoolType"
+                },
+                "nodeFamily": {
+                    "description": "Node family.",
+                    "$ref": "#/definitions/NodeFamily"
+                },
+                "nodeSize": {
+                    "description": "Node size.",
+                    "$ref": "#/definitions/NodeSize"
+                },
+                "autoScale": {
+                    "$ref": "#/definitions/AutoScaleProperties",
+                    "description": "Autoscale."
+                },
+                "dynamicExecutorAllocation": {
+                    "$ref": "#/definitions/DynamicExecutorAllocationProperties",
+                    "description": "Dynamic executor allocation."
+                }
+            }
+        },
+        "CustomPools": {
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of custom pools.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CustomPool"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "UpdateCustomPoolRequest": {
+            "description": "Update custom pool request payload.",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "Custom pool name.<br>The name must be between 1 and 64 characters long and must contain only letters, numbers, dashes, underscores and spaces.<br>Custom pool names must be unique within the workspace.<br>\"Starter Pool\" is a reserved custom pool name.",
+                    "type": "string"
+                },
+                "nodeFamily": {
+                    "description": "Node family.",
+                    "$ref": "#/definitions/NodeFamily"
+                },
+                "nodeSize": {
+                    "description": "Node size.",
+                    "$ref": "#/definitions/NodeSize"
+                },
+                "autoScale": {
+                    "$ref": "#/definitions/AutoScaleProperties",
+                    "description": "Autoscale."
+                },
+                "dynamicExecutorAllocation": {
+                    "$ref": "#/definitions/DynamicExecutorAllocationProperties",
+                    "description": "Dynamic executor allocation."
+                }
+            }
+        }
+    }
+}

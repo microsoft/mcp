@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using static Azure.Mcp.Tools.Cosmos.Commands.ItemQueryCommand;
 
 namespace Azure.Mcp.Tools.Cosmos.UnitTests;
 
@@ -70,10 +69,7 @@ public class ItemQueryCommandTests
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ItemQueryCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.ItemQueryCommandResult);
         Assert.NotNull(result);
         Assert.Equal(2, result.Items.Count);
     }
@@ -114,16 +110,13 @@ public class ItemQueryCommandTests
         // Assert
         Assert.NotNull(response);
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ItemQueryCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.ItemQueryCommandResult);
         Assert.NotNull(result);
         Assert.Equal(2, result.Items.Count);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoItemsExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoItemsExist()
     {
         // Arrange
         _cosmosService.QueryItems(
@@ -135,7 +128,7 @@ public class ItemQueryCommandTests
             Arg.Is<AuthMethod>(a => a == AuthMethod.Credential),
             Arg.Is<string?>(t => t == null),
             Arg.Any<RetryPolicyOptions?>())
-            .Returns(new List<JsonElement>());
+            .Returns([]);
 
         var args = _commandDefinition.Parse([
             "--account", "account123",
@@ -149,7 +142,11 @@ public class ItemQueryCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.ItemQueryCommandResult);
+        Assert.NotNull(result);
+        Assert.Empty(result.Items);
     }
 
     [Fact]

@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Key;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -14,14 +15,20 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
 {
     private const string CommandTitle = "List Key Vault Keys";
     private readonly ILogger<KeyListCommand> _logger = logger;
-    private readonly Option<string> _vaultOption = KeyVaultOptionDefinitions.VaultName;
-    private readonly Option<bool> _includeManagedKeysOption = KeyVaultOptionDefinitions.IncludeManagedKeys;
 
     public override string Name => "list";
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override string Description =>
         """
@@ -32,15 +39,15 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_vaultOption);
-        command.Options.Add(_includeManagedKeysOption);
+        command.Options.Add(KeyVaultOptionDefinitions.VaultName);
+        command.Options.Add(KeyVaultOptionDefinitions.IncludeManagedKeys);
     }
 
     protected override KeyListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValue(_vaultOption);
-        options.IncludeManagedKeys = parseResult.GetValue(_includeManagedKeysOption);
+        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
+        options.IncludeManagedKeys = parseResult.GetValueOrDefault<bool>(KeyVaultOptionDefinitions.IncludeManagedKeys.Name);
         return options;
     }
 
@@ -63,11 +70,7 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = keys?.Count > 0 ?
-                ResponseResult.Create(
-                    new KeyListCommandResult(keys),
-                    KeyVaultJsonContext.Default.KeyListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(keys ?? []), KeyVaultJsonContext.Default.KeyListCommandResult);
         }
         catch (Exception ex)
         {

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Storage.Options.Table;
 using Azure.Mcp.Tools.Storage.Services;
@@ -24,7 +25,15 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseSto
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -46,9 +55,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseSto
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = tables?.Count > 0
-                ? ResponseResult.Create(new TableListCommandResult(tables), StorageJsonContext.Default.TableListCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(tables ?? []), StorageJsonContext.Default.TableListCommandResult);
 
             // Only show warning if we actually had to fall back to a different auth method
             if (context.Response.Results is not null && !string.IsNullOrEmpty(context.Response.Message))
@@ -79,5 +86,5 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseSto
         return context.Response;
     }
 
-    internal record TableListCommandResult(List<string> Tables);
+    internal record TableListCommandResult([property: JsonPropertyName("tables")] List<string> Tables);
 }

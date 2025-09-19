@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Storage.Models;
@@ -17,11 +18,6 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
     private const string CommandTitle = "Send message to Azure Storage queue";
     private readonly ILogger<QueueMessageSendCommand> _logger = logger;
 
-    // Define options from OptionDefinitions
-    private readonly Option<string> _messageOption = StorageOptionDefinitions.Message;
-    private readonly Option<int?> _timeToLiveOption = StorageOptionDefinitions.TimeToLiveInSeconds;
-    private readonly Option<int?> _visibilityTimeoutOption = StorageOptionDefinitions.VisibilityTimeoutInSeconds;
-
     public override string Name => "send";
 
     public override string Description =>
@@ -37,23 +33,27 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        ReadOnly = false
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
     };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_messageOption);
-        command.Options.Add(_timeToLiveOption);
-        command.Options.Add(_visibilityTimeoutOption);
+        command.Options.Add(StorageOptionDefinitions.Message);
+        command.Options.Add(StorageOptionDefinitions.TimeToLiveInSeconds);
+        command.Options.Add(StorageOptionDefinitions.VisibilityTimeoutInSeconds);
     }
 
     protected override QueueMessageSendOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Message = parseResult.GetValueOrDefault(_messageOption);
-        options.TimeToLiveInSeconds = parseResult.GetValueOrDefault(_timeToLiveOption);
-        options.VisibilityTimeoutInSeconds = parseResult.GetValueOrDefault(_visibilityTimeoutOption);
+        options.Message = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Message.Name);
+        options.TimeToLiveInSeconds = parseResult.GetValueOrDefault<int?>(StorageOptionDefinitions.TimeToLiveInSeconds.Name);
+        options.VisibilityTimeoutInSeconds = parseResult.GetValueOrDefault<int?>(StorageOptionDefinitions.VisibilityTimeoutInSeconds.Name);
         return options;
     }
 
@@ -84,9 +84,7 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
 
             // Set results
             context.Response.Results = result != null ?
-                ResponseResult.Create(
-                    new QueueMessageSendCommandResult(result),
-                    StorageJsonContext.Default.QueueMessageSendCommandResult) :
+                ResponseResult.Create(new(result), StorageJsonContext.Default.QueueMessageSendCommandResult) :
                 null;
         }
         catch (Exception ex)
@@ -101,23 +99,6 @@ public sealed class QueueMessageSendCommand(ILogger<QueueMessageSendCommand> log
         return context.Response;
     }
 
-    // Implementation-specific error handling
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx when reqEx.Status == 404 =>
-            "Queue not found. Verify the queue name exists and you have access.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
-            $"Authorization failed accessing the storage queue. Details: {reqEx.Message}",
-        RequestFailedException reqEx => reqEx.Message,
-        _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
     // Strongly-typed result record
-    internal record QueueMessageSendCommandResult(QueueMessageSendResult Message);
+    internal record QueueMessageSendCommandResult([property: JsonPropertyName("message")] QueueMessageSendResult Message);
 }

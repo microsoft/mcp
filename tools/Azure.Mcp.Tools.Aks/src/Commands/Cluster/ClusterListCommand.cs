@@ -23,7 +23,15 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Bas
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -42,11 +50,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Bas
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = clusters?.Count > 0 ?
-                ResponseResult.Create(
-                    new ClusterListCommandResult(clusters),
-                    AksJsonContext.Default.ClusterListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(clusters ?? []), AksJsonContext.Default.ClusterListCommandResult);
         }
         catch (Exception ex)
         {
@@ -67,12 +71,6 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Bas
             $"Authorization failed accessing AKS clusters. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record ClusterListCommandResult(List<Models.Cluster> Clusters);

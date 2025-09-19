@@ -14,18 +14,16 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
     private const string CommandTitle = "Sample Kusto Table Data";
     private readonly ILogger<SampleCommand> _logger = logger;
 
-    private readonly Option<int> _limitOption = KustoOptionDefinitions.Limit;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_limitOption);
+        command.Options.Add(KustoOptionDefinitions.Limit);
     }
 
     protected override SampleOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Limit = parseResult.GetValueOrDefault(_limitOption);
+        options.Limit = parseResult.GetValueOrDefault<int>(KustoOptionDefinitions.Limit.Name);
         return options;
     }
 
@@ -40,7 +38,15 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -79,9 +85,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
                     options.RetryPolicy);
             }
 
-            context.Response.Results = results?.Count > 0 ?
-                ResponseResult.Create(new SampleCommandResult(results), KustoJsonContext.Default.SampleCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(results ?? []), KustoJsonContext.Default.SampleCommandResult);
         }
         catch (Exception ex)
         {

@@ -120,7 +120,7 @@ public class SessionHostUserSessionListCommandTests
         else
         {
             Assert.Equal(400, response.Status);
-            Assert.True(response.Message?.ToLower().Contains("required") == true ||
+            Assert.True(response.Message?.Contains("required", StringComparison.CurrentCultureIgnoreCase) == true ||
                        response.Message?.Contains("hostpool") == true ||
                        response.Message?.Contains("hostpool-resource-id") == true);
         }
@@ -318,7 +318,7 @@ public class SessionHostUserSessionListCommandTests
         // Assert
         Assert.Equal(200, response.Status);
         Assert.Equal("Success", response.Message);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
     }
 
     [Fact]

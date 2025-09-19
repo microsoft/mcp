@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Server;
-using Azure.Mcp.Tools.MySql.Json;
 using Azure.Mcp.Tools.MySql.Options.Database;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
@@ -20,7 +19,15 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -35,11 +42,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
         {
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
             List<string> databases = await mysqlService.ListDatabasesAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!);
-            context.Response.Results = databases?.Count > 0 ?
-                ResponseResult.Create(
-                    new DatabaseListCommandResult(databases),
-                    MySqlJsonContext.Default.DatabaseListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(databases ?? []), MySqlJsonContext.Default.DatabaseListCommandResult);
         }
         catch (Exception ex)
         {

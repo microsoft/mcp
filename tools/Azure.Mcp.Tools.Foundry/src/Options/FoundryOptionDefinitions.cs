@@ -9,7 +9,6 @@ public static class FoundryOptionDefinitions
     public const string SearchForFreePlayground = "search-for-free-playground";
     public const string PublisherName = "publisher";
     public const string LicenseName = "license";
-    public const string OptionalModelName = "model-name";
     public const string DeploymentName = "deployment";
     public const string ModelName = "model-name";
     public const string ModelFormat = "model-format";
@@ -29,14 +28,6 @@ public static class FoundryOptionDefinitions
         Description = "The endpoint URL for the Azure AI service.",
         Required = true
     };
-
-    public static readonly Option<string> OptionalModelNameOption = new(
-        $"--{ModelName}"
-    )
-    {
-        Description = "The name of the model to search for."
-    };
-
 
     public static readonly Option<string> DeploymentNameOption = new(
         $"--{DeploymentName}"

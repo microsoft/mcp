@@ -30,7 +30,15 @@ public sealed class DatabaseShowCommand(ILogger<DatabaseShowCommand> logger)
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -52,9 +60,7 @@ public sealed class DatabaseShowCommand(ILogger<DatabaseShowCommand> logger)
                 options.Subscription!,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new DatabaseShowResult(database),
-                SqlJsonContext.Default.DatabaseShowResult);
+            context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseShowResult);
         }
         catch (Exception ex)
         {

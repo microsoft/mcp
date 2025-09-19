@@ -13,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using static Azure.Mcp.Tools.Cosmos.Commands.ContainerListCommand;
 
 namespace Azure.Mcp.Tools.Cosmos.UnitTests;
 
@@ -65,17 +64,14 @@ public class ContainerListCommandTests
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ContainerListCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.ContainerListCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedContainers.Count, result.Containers.Count);
         Assert.Equal(expectedContainers, result.Containers);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoContainersExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoContainersExist()
     {
         // Arrange
         _cosmosService.ListContainers(
@@ -85,7 +81,7 @@ public class ContainerListCommandTests
             Arg.Any<AuthMethod>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<string>());
+            .Returns([]);
 
         var args = _commandDefinition.Parse([
             "--account", "account123",
@@ -98,7 +94,11 @@ public class ContainerListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.ContainerListCommandResult);
+        Assert.NotNull(result);
+        Assert.Empty(result.Containers);
     }
 
     [Fact]

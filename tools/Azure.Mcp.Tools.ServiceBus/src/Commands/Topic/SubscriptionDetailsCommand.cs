@@ -16,9 +16,6 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsCommand> logger) : SubscriptionCommand<SubscriptionDetailsOptions>
 {
     private const string CommandTitle = "Get Service Bus Topic Subscription Details";
-    private readonly Option<string> _namespaceOption = ServiceBusOptionDefinitions.Namespace;
-    private readonly Option<string> _topicOption = ServiceBusOptionDefinitions.Topic;
-    private readonly Option<string> _subscriptionNameOption = ServiceBusOptionDefinitions.Subscription;
     private readonly ILogger<SubscriptionDetailsCommand> _logger = logger;
     public override string Name => "details";
 
@@ -34,22 +31,30 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_namespaceOption);
-        command.Options.Add(_topicOption);
-        command.Options.Add(_subscriptionNameOption);
+        command.Options.Add(ServiceBusOptionDefinitions.Namespace);
+        command.Options.Add(ServiceBusOptionDefinitions.Topic);
+        command.Options.Add(ServiceBusOptionDefinitions.Subscription);
     }
 
     protected override SubscriptionDetailsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Namespace = parseResult.GetValueOrDefault(_namespaceOption);
-        options.TopicName = parseResult.GetValueOrDefault(_topicOption);
-        options.SubscriptionName = parseResult.GetValueOrDefault(_subscriptionNameOption);
+        options.Namespace = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Namespace.Name);
+        options.TopicName = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Topic.Name);
+        options.SubscriptionName = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Subscription.Name);
         return options;
     }
 
@@ -72,9 +77,7 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new SubscriptionDetailsCommandResult(details),
-                ServiceBusJsonContext.Default.SubscriptionDetailsCommandResult);
+            context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.SubscriptionDetailsCommandResult);
         }
         catch (Exception ex)
         {

@@ -7,6 +7,7 @@ using Azure.Mcp.Tools.Sql.Commands.Database;
 using Azure.Mcp.Tools.Sql.Commands.ElasticPool;
 using Azure.Mcp.Tools.Sql.Commands.EntraAdmin;
 using Azure.Mcp.Tools.Sql.Commands.FirewallRule;
+using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -32,9 +33,16 @@ public class SqlSetup : IAreaSetup
 
         database.AddCommand("show", new DatabaseShowCommand(loggerFactory.CreateLogger<DatabaseShowCommand>()));
         database.AddCommand("list", new DatabaseListCommand(loggerFactory.CreateLogger<DatabaseListCommand>()));
+        database.AddCommand("create", new DatabaseCreateCommand(loggerFactory.CreateLogger<DatabaseCreateCommand>()));
+        database.AddCommand("update", new DatabaseUpdateCommand(loggerFactory.CreateLogger<DatabaseUpdateCommand>()));
+        database.AddCommand("delete", new DatabaseDeleteCommand(loggerFactory.CreateLogger<DatabaseDeleteCommand>()));
 
         var server = new CommandGroup("server", "SQL server operations");
         sql.AddSubGroup(server);
+
+        server.AddCommand("create", new ServerCreateCommand(loggerFactory.CreateLogger<ServerCreateCommand>()));
+        server.AddCommand("delete", new ServerDeleteCommand(loggerFactory.CreateLogger<ServerDeleteCommand>()));
+        server.AddCommand("show", new ServerShowCommand(loggerFactory.CreateLogger<ServerShowCommand>()));
 
         var elasticPool = new CommandGroup("elastic-pool", "SQL elastic pool operations");
         sql.AddSubGroup(elasticPool);

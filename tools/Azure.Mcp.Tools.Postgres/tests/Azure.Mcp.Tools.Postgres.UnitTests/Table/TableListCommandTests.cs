@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.TestUtilities;
+using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Table;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,7 +48,7 @@ public class TableListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TableListResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.TableListCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedTables, result.Tables);
     }
@@ -66,7 +66,12 @@ public class TableListCommandTests
         Assert.NotNull(response);
         Assert.Equal(200, response.Status);
         Assert.Equal("Success", response.Message);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.TableListCommandResult);
+        Assert.NotNull(result);
+        Assert.Empty(result.Tables);
     }
 
     [Theory]
@@ -92,11 +97,5 @@ public class TableListCommandTests
         Assert.NotNull(response);
         Assert.Equal(400, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
-    }
-
-    private class TableListResult
-    {
-        [JsonPropertyName("Tables")]
-        public List<string> Tables { get; set; } = [];
     }
 }

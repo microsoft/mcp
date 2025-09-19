@@ -22,7 +22,15 @@ public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> log
         """;
     public override string Title => _commandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -45,9 +53,7 @@ public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> log
                 options.Tenant,
                 options.RetryPolicy);
             // Set results if any were returned
-            context.Response.Results = results != null ?
-                ResponseResult.Create(new TestResourceListCommandResult(results), LoadTestJsonContext.Default.TestResourceListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestResourceListCommandResult);
         }
         catch (Exception ex)
         {

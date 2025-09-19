@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
@@ -12,18 +13,17 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
 {
     private const string CommandTitle = "Query Kusto Database";
     private readonly ILogger<QueryCommand> _logger = logger;
-    private readonly Option<string> _queryOption = KustoOptionDefinitions.Query;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_queryOption);
+        command.Options.Add(KustoOptionDefinitions.Query);
     }
 
     protected override QueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValue(_queryOption);
+        options.Query = parseResult.GetValueOrDefault<string>(KustoOptionDefinitions.Query.Name);
         return options;
     }
 
@@ -38,7 +38,15 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -76,9 +84,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
                     options.RetryPolicy);
             }
 
-            context.Response.Results = results?.Count > 0 ?
-                ResponseResult.Create(new QueryCommandResult(results), KustoJsonContext.Default.QueryCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(results ?? []), KustoJsonContext.Default.QueryCommandResult);
         }
         catch (Exception ex)
         {

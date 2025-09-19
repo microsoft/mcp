@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ModelContextProtocol.AspNetCore;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -25,11 +24,6 @@ namespace Azure.Mcp.Core.Areas.Server.Commands;
 public sealed class ServiceStartCommand : BaseCommand
 {
     private const string CommandTitle = "Start MCP Server";
-    private readonly Option<string> _transportOption = ServiceOptionDefinitions.Transport;
-    private readonly Option<string[]?> _namespaceOption = ServiceOptionDefinitions.Namespace;
-    private readonly Option<string?> _modeOption = ServiceOptionDefinitions.Mode;
-    private readonly Option<bool?> _readOnlyOption = ServiceOptionDefinitions.ReadOnly;
-    private readonly Option<bool> _enableInsecureTransportsOption = ServiceOptionDefinitions.EnableInsecureTransports;
 
     /// <summary>
     /// Gets the name of the command.
@@ -60,11 +54,13 @@ public sealed class ServiceStartCommand : BaseCommand
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_transportOption);
-        command.Options.Add(_namespaceOption);
-        command.Options.Add(_modeOption);
-        command.Options.Add(_readOnlyOption);
-        command.Options.Add(_enableInsecureTransportsOption);
+        command.Options.Add(ServiceOptionDefinitions.Transport);
+        command.Options.Add(ServiceOptionDefinitions.Namespace);
+        command.Options.Add(ServiceOptionDefinitions.Mode);
+        command.Options.Add(ServiceOptionDefinitions.ReadOnly);
+        command.Options.Add(ServiceOptionDefinitions.Debug);
+        command.Options.Add(ServiceOptionDefinitions.EnableInsecureTransports);
+        command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
     }
 
     /// <summary>
@@ -75,16 +71,18 @@ public sealed class ServiceStartCommand : BaseCommand
     /// <returns>A command response indicating the result of the operation.</returns>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        string[]? namespaces = parseResult.GetValue(_namespaceOption);
-        string? mode = parseResult.GetValue(_modeOption);
-        bool? readOnly = parseResult.GetValue(_readOnlyOption);
+        string[]? namespaces = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name);
+        string? mode = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Mode.Name);
+        bool? readOnly = parseResult.GetValueOrDefault<bool?>(ServiceOptionDefinitions.ReadOnly.Name);
+
+        var debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name);
 
         if (!IsValidMode(mode))
         {
             throw new ArgumentException($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}.");
         }
 
-        var enableInsecureTransports = parseResult.GetValueOrDefault(_enableInsecureTransportsOption);
+        var enableInsecureTransports = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports.Name);
 
         if (enableInsecureTransports)
         {
@@ -97,11 +95,13 @@ public sealed class ServiceStartCommand : BaseCommand
 
         var serverOptions = new ServiceStartOptions
         {
-            Transport = parseResult.GetValue(_transportOption) ?? TransportTypes.StdIo,
+            Transport = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo,
             Namespace = namespaces,
             Mode = mode,
             ReadOnly = readOnly,
+            Debug = debug,
             EnableInsecureTransports = enableInsecureTransports,
+            InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name),
         };
 
         using var host = CreateHost(serverOptions);
@@ -153,6 +153,25 @@ public sealed class ServiceStartCommand : BaseCommand
                 logging.ClearProviders();
                 logging.ConfigureOpenTelemetryLogger();
                 logging.AddEventSourceLogger();
+
+                if (serverOptions.Debug)
+                {
+                    // Configure console logger to emit Debug+ to stderr so tests can capture logs from StandardError
+                    logging.AddConsole(options =>
+                    {
+                        options.LogToStandardErrorThreshold = LogLevel.Debug;
+                        options.FormatterName = Microsoft.Extensions.Logging.Console.ConsoleFormatterNames.Simple;
+                    });
+                    logging.AddSimpleConsole(simple =>
+                    {
+                        simple.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Disabled;
+                        simple.IncludeScopes = false;
+                        simple.SingleLine = true;
+                        simple.TimestampFormat = "[HH:mm:ss] ";
+                    });
+                    logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", LogLevel.Debug);
+                    logging.SetMinimumLevel(LogLevel.Debug);
+                }
             })
             .ConfigureServices(services =>
             {

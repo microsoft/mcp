@@ -27,7 +27,15 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -46,11 +54,7 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = workspaces.Any() ?
-                ResponseResult.Create(
-                    new WorkspaceListCommandResult(workspaces),
-                    GrafanaJsonContext.Default.WorkspaceListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(workspaces ?? []), GrafanaJsonContext.Default.WorkspaceListCommandResult);
         }
         catch (Exception ex)
         {

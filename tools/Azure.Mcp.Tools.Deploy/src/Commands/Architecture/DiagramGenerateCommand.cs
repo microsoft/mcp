@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
 using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Options;
@@ -18,8 +19,6 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
 
     public override string Name => "generate";
 
-    private readonly Option<string> _rawMcpToolInputOption = DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption;
-
     public override string Description =>
         "Generates an azure service architecture diagram for the application based on the provided app topology."
         + "Call this tool when the user need recommend or design the azure architecture of their application."
@@ -28,18 +27,26 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
         + "If it's a .NET Aspire application, check aspireManifest.json file if there is. Try your best to fulfill the input schema with your analyze result.";
 
     public override string Title => "Generate Architecture Diagram";
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_rawMcpToolInputOption);
+        command.Options.Add(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption);
     }
 
     private DiagramGenerateOptions BindOptions(ParseResult parseResult)
     {
         var options = new DiagramGenerateOptions();
-        options.RawMcpToolInput = parseResult.GetValue(_rawMcpToolInputOption);
+        options.RawMcpToolInput = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption.Name);
         return options;
     }
 
@@ -64,6 +71,11 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
             {
                 throw new ArgumentException($"Invalid JSON format: {ex.Message}", nameof(rawMcpToolInput), ex);
             }
+
+            context.Activity?
+                .AddTag(DeployTelemetryTags.ServiceCount, appTopology.Services.Length)
+                .AddTag(DeployTelemetryTags.ComputeHostResources, string.Join(", ", appTopology.Services.Select(s => s.AzureComputeHost)))
+                .AddTag(DeployTelemetryTags.BackingServiceResources, string.Join(", ", appTopology.Services.SelectMany(s => s.Dependencies).Select(d => d.ServiceType)));
 
             _logger.LogInformation("Successfully parsed app topology with {ServiceCount} services", appTopology.Services.Length);
 

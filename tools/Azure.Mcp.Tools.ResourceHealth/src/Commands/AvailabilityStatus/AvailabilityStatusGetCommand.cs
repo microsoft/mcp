@@ -29,7 +29,15 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = true,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -62,9 +70,7 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
                 options.ResourceId!,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new AvailabilityStatusGetCommandResult(status),
-                ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new(status), ResourceHealthJsonContext.Default.AvailabilityStatusGetCommandResult);
         }
         catch (Exception ex)
         {
