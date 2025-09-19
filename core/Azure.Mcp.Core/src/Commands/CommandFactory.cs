@@ -116,7 +116,7 @@ public class CommandFactory
             if (!existingAreaNames.Add(area.Name))
             {
                 var matchingAreaTypes = _serviceAreas
-                    .Where(x => x.Name == area.Name)
+                    .Where(x => string.Equals(x.Name, area.Name, StringComparison.OrdinalIgnoreCase))
                     .Select(a => a.GetType().FullName);
 
                 var error = new ArgumentException("Cannot have multiple IAreaSetup with the same Name.");
