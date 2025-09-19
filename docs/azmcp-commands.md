@@ -1094,6 +1094,10 @@ azmcp sql server firewall-rule list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
 
+# List SQL servers in a resource group
+azmcp sql server list --subscription <subscription> \
+                      --resource-group <resource-group>
+
 # Delete a SQL server
 azmcp sql server delete --subscription <subscription> \
                         --resource-group <resource-group> \

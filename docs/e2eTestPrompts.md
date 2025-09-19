@@ -421,6 +421,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_server_firewall-rule_list | List all firewall rules for SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_list | Show me the firewall rules for SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_list | What firewall rules are configured for my SQL server <server_name>? |
+| azmcp_sql_server_list | List all Azure SQL servers in resource group <resource_group_name> |
+| azmcp_sql_server_list | Show me every SQL server available in resource group <resource_group_name> |
 | azmcp_sql_server_show | Show me the details of Azure SQL server <server_name> in resource group <resource_group_name> |
 | azmcp_sql_server_show | Get the configuration details for SQL server <server_name> |
 | azmcp_sql_server_show | Display the properties of SQL server <server_name> |
