@@ -114,7 +114,22 @@ public sealed class NodepoolListCommandTests
                 Mode = "System",
                 OsType = "Linux",
                 OsSKU = "Ubuntu",
-                NodeImageVersion = "AKSUbuntu-2204gen2containerd-202508.20.1"
+                NodeImageVersion = "AKSUbuntu-2204gen2containerd-202508.20.1",
+                Tags = new Dictionary<string,string> { ["env"] = "test" },
+                SpotMaxPrice = -1,
+                WorkloadRuntime = "OCIContainer",
+                EnableEncryptionAtHost = true,
+                UpgradeSettings = new Models.NodePoolUpgradeSettings { MaxSurge = "10%", MaxUnavailable = "0" },
+                SecurityProfile = new Models.NodePoolSecurityProfile { EnableVTPM = false, EnableSecureBoot = false },
+                GpuProfile = new Models.NodePoolGpuProfile { Driver = "Install" },
+                NetworkProfile = new Models.NodePoolNetworkProfile
+                {
+                    AllowedHostPorts = new List<Models.PortRange> { new() { StartPort = 80, EndPort = 80 } },
+                    ApplicationSecurityGroups = new List<string> { "/subscriptions/s/rg/r/providers/Microsoft.Network/applicationSecurityGroups/asg1" },
+                    NodePublicIPTags = new List<Models.IPTag> { new() { IpTagType = "FirstPartyUsage", Tag = "foo" } }
+                },
+                PodSubnetId = "/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/podsubnet",
+                VnetSubnetId = "/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/nodesubnet"
             },
             new()
             {
@@ -193,6 +208,13 @@ public sealed class NodepoolListCommandTests
         Assert.Equal(expectedNodePools[0].OsType, result.NodePools[0].OsType);
         Assert.Equal(expectedNodePools[0].OsSKU, result.NodePools[0].OsSKU);
         Assert.Equal(expectedNodePools[0].NodeImageVersion, result.NodePools[0].NodeImageVersion);
+        Assert.Equal("test", result.NodePools[0].Tags!["env"]);
+        Assert.Equal(-1, result.NodePools[0].SpotMaxPrice);
+        Assert.True(result.NodePools[0].EnableEncryptionAtHost);
+        Assert.Equal("Install", result.NodePools[0].GpuProfile?.Driver);
+        Assert.Equal(1, result.NodePools[0].NetworkProfile?.AllowedHostPorts?.Count);
+        Assert.Equal("/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/podsubnet", result.NodePools[0].PodSubnetId);
+        Assert.Equal("/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/nodesubnet", result.NodePools[0].VnetSubnetId);
     }
 
     [Fact]
