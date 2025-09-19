@@ -22,9 +22,13 @@ public class FabricPublicApiSetup : IAreaSetup
 
         services.AddSingleton<ListWorkloadsCommand>();
         services.AddSingleton<GetWorkloadApisCommand>();
+
         services.AddSingleton<GetPlatformApisCommand>();
+
         services.AddSingleton<GetBestPracticesCommand>();
+
         services.AddSingleton<GetExamplesCommand>();
+
         services.AddSingleton<GetWorkloadDefinitionCommand>();
     }
 
@@ -58,16 +62,22 @@ public class FabricPublicApiSetup : IAreaSetup
         var itemDefinition = new CommandGroup("itemdefinition", "Workload API Definitions - Commands for retrieving OpenAPI definitions and schema details for specific Microsoft Fabric workloads from the official documentation repository.");
         bestPractices.AddSubGroup(itemDefinition);
 
-        fabricPublicApis.AddCommand("list", serviceProvider.GetRequiredService<ListWorkloadsCommand>());
-        fabricPublicApis.AddCommand("get", serviceProvider.GetRequiredService<GetWorkloadApisCommand>());
+        var listWorkloads = serviceProvider.GetRequiredService<ListWorkloadsCommand>();
+        fabricPublicApis.AddCommand(listWorkloads.Name, listWorkloads);
+        var getWorkloads = serviceProvider.GetRequiredService<GetWorkloadApisCommand>();
+        fabricPublicApis.AddCommand(getWorkloads.Name, getWorkloads);
 
-        platform.AddCommand("get", serviceProvider.GetRequiredService<GetPlatformApisCommand>());
+        var getPlatform = serviceProvider.GetRequiredService<GetPlatformApisCommand>();
+        platform.AddCommand(getPlatform.Name, getPlatform);
 
-        bestPractices.AddCommand("get", serviceProvider.GetRequiredService<GetBestPracticesCommand>());
+        var getBestPractices = serviceProvider.GetRequiredService<GetBestPracticesCommand>();
+        bestPractices.AddCommand(getBestPractices.Name, getBestPractices);
 
-        examples.AddCommand("get", serviceProvider.GetRequiredService<GetExamplesCommand>());
+        var getExamples = serviceProvider.GetRequiredService<GetExamplesCommand>();
+        examples.AddCommand(getExamples.Name, getExamples);
 
-        itemDefinition.AddCommand("get", serviceProvider.GetRequiredService<GetWorkloadDefinitionCommand>());
+        var getItemDefinition = serviceProvider.GetRequiredService<GetWorkloadDefinitionCommand>();
+        itemDefinition.AddCommand(getItemDefinition.Name, getItemDefinition);
 
         return fabricPublicApis;
     }
