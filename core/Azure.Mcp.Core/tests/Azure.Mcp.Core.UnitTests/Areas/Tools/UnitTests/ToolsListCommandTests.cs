@@ -75,6 +75,8 @@ public class ToolsListCommandTests
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
+        Assert.Equal(result.Count, response.ResultsCount);
+
         foreach (var command in result)
         {
             Assert.False(string.IsNullOrWhiteSpace(command.Name), "Command name should not be empty");
@@ -82,6 +84,9 @@ public class ToolsListCommandTests
             Assert.False(string.IsNullOrWhiteSpace(command.Command), "Command path should not be empty");
 
             Assert.StartsWith("azmcp ", command.Command);
+
+            // Leaf commands: subcommandsCount should always be 0
+            Assert.Equal(0, command.SubcommandsCount);
 
             if (command.Options != null && command.Options.Count > 0)
             {
@@ -119,6 +124,7 @@ public class ToolsListCommandTests
         // Verify JSON round-trip preserves all data
         var serializedJson = JsonSerializer.Serialize(result);
         Assert.Equal(json, serializedJson);
+        Assert.Equal(result.Count, response.ResultsCount);
     }
 
     /// <summary>
@@ -145,6 +151,8 @@ public class ToolsListCommandTests
         Assert.DoesNotContain(result, cmd => cmd.Name == "list" && cmd.Command.Contains("tool"));
 
         Assert.Contains(result, cmd => !string.IsNullOrEmpty(cmd.Name));
+
+        Assert.Equal(result.Count, response.ResultsCount);
 
     }
 
@@ -245,6 +253,8 @@ public class ToolsListCommandTests
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
+        Assert.Equal(result.Count, response.ResultsCount);
+
         Assert.True(result.Count >= MinimumExpectedCommands, $"Expected at least {MinimumExpectedCommands} commands, got {result.Count}");
 
         var allCommands = result.Select(cmd => cmd.Command).ToList();
@@ -301,6 +311,8 @@ public class ToolsListCommandTests
 
         Assert.NotNull(result);
 
+        Assert.Equal(result.Count, response.ResultsCount);
+
         foreach (var command in result)
         {
             // Command paths should not start or end with spaces
@@ -309,6 +321,105 @@ public class ToolsListCommandTests
 
             // Command paths should not have double spaces
             Assert.DoesNotContain("  ", command.Command);
+        }
+    }
+
+    /// <summary>
+    /// Verifies that the --namespaces switch returns only distinct top-level namespaces.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_WithNamespaceSwitch_ReturnsNamespacesOnly()
+    {
+        // Arrange
+        var args = _commandDefinition.Parse(new[] { "--namespaces" });
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(SuccessStatusCode, response.Status);
+        Assert.NotNull(response.Results);
+
+        // Serialize then deserialize as list of CommandInfo
+        var json = JsonSerializer.Serialize(response.Results);
+        var namespaces = JsonSerializer.Deserialize<List<CommandInfo>>(json);
+
+        Assert.NotNull(namespaces);
+        Assert.NotEmpty(namespaces);
+
+        Assert.Equal(namespaces!.Count, response.ResultsCount);
+
+        // Should include some well-known namespaces (matching Name property)
+        Assert.Contains(namespaces, ci => ci.Name.Equals("subscription", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(namespaces, ci => ci.Name.Equals("storage", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(namespaces, ci => ci.Name.Equals("keyvault", StringComparison.OrdinalIgnoreCase));
+
+        bool foundNamespaceWithSubcommands = false;
+        bool foundSubcommandWithOptions = false;
+
+        foreach (var ns in namespaces!)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(ns.Name));
+            Assert.False(string.IsNullOrWhiteSpace(ns.Command));
+            Assert.StartsWith("azmcp ", ns.Command, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(ns.Name, ns.Name.Trim());
+            Assert.DoesNotContain(" ", ns.Name);
+            // Namespace should not itself have options
+            Assert.Null(ns.Options);
+            // Count should equal number of subcommands for namespaces
+            Assert.Equal(ns.Subcommands?.Count ?? 0, ns.SubcommandsCount);
+
+            if (ns.Subcommands is { Count: > 0 })
+            {
+                foundNamespaceWithSubcommands = true;
+                // Validate a few subcommands
+                foreach (var sub in ns.Subcommands.Take(5))
+                {
+                    Assert.False(string.IsNullOrWhiteSpace(sub.Name));
+                    Assert.False(string.IsNullOrWhiteSpace(sub.Command));
+                    Assert.StartsWith($"azmcp {ns.Name} ", sub.Command, StringComparison.OrdinalIgnoreCase);
+                    // Subcommand entries are leaf commands; count must be 0
+                    Assert.Equal(0, sub.SubcommandsCount);
+
+                    if (sub.Options != null && sub.Options.Count > 0)
+                    {
+                        foundSubcommandWithOptions = true;
+                    }
+                }
+            }
+        }
+
+        Assert.True(foundNamespaceWithSubcommands, "Expected at least one namespace to contain subcommands.");
+        Assert.True(foundSubcommandWithOptions, "Expected at least one subcommand to include options.");
+    }
+
+    /// <summary>
+    /// Explicitly verifies that count reflects subcommand counts for namespaces and 0 for their leaf subcommands.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_Namespaces_CountMatchesSubcommandCounts()
+    {
+        var args = _commandDefinition.Parse(new[] { "--namespaces" });
+        var response = await _command.ExecuteAsync(_context, args);
+
+        Assert.NotNull(response.Results);
+
+        var namespaces = DeserializeResults(response.Results);
+
+        Assert.NotEmpty(namespaces);
+        Assert.Equal(namespaces.Count, response.ResultsCount);
+
+        foreach (var ns in namespaces.Take(10))
+        {
+            Assert.Equal(ns.Subcommands?.Count ?? 0, ns.SubcommandsCount);
+            if (ns.Subcommands != null)
+            {
+                foreach (var sub in ns.Subcommands)
+                {
+                    Assert.Equal(0, sub.SubcommandsCount);
+                }
+            }
         }
     }
 
@@ -351,6 +462,7 @@ public class ToolsListCommandTests
 
         Assert.NotNull(result);
         Assert.Empty(result); // Should be empty when no commands are available
+        Assert.Equal(result.Count, response.ResultsCount);
     }
 
     /// <summary>
