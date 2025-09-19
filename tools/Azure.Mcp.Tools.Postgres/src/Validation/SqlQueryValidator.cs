@@ -102,7 +102,7 @@ internal static class SqlQueryValidator
         foreach (Match m in matches)
         {
             var token = m.Value;
-            
+
             // Only validate tokens that are recognized SQL keywords
             // This allows table names, column names, and other identifiers that aren't SQL keywords
             if (KnownSqlKeywords.Contains(token))
