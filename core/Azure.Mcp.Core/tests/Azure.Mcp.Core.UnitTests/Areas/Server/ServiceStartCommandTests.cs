@@ -523,7 +523,7 @@ public class ServiceStartCommandTests
     private ServiceStartOptions GetBoundOptions(ParseResult parseResult)
     {
         // Use reflection to access the protected BindOptions method
-        var method = typeof(ServiceStartCommand).GetMethod("BindOptions", 
+        var method = typeof(ServiceStartCommand).GetMethod("BindOptions",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         return (ServiceStartOptions)method!.Invoke(_command, new object[] { parseResult })!;
     }
@@ -531,7 +531,7 @@ public class ServiceStartCommandTests
     private string GetErrorMessage(Exception exception)
     {
         // Use reflection to access the protected GetErrorMessage method
-        var method = typeof(ServiceStartCommand).GetMethod("GetErrorMessage", 
+        var method = typeof(ServiceStartCommand).GetMethod("GetErrorMessage",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         return (string)method!.Invoke(_command, new object[] { exception })!;
     }
@@ -539,7 +539,7 @@ public class ServiceStartCommandTests
     private int GetStatusCode(Exception exception)
     {
         // Use reflection to access the protected GetStatusCode method
-        var method = typeof(ServiceStartCommand).GetMethod("GetStatusCode", 
+        var method = typeof(ServiceStartCommand).GetMethod("GetStatusCode",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         return (int)method!.Invoke(_command, new object[] { exception })!;
     }
