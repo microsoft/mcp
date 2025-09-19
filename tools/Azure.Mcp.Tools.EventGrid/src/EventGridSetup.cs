@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Areas;
+using Azure.Mcp.Tools.EventGrid.Commands.Events;
 using Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 using Azure.Mcp.Tools.EventGrid.Commands.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
@@ -24,6 +25,10 @@ public class EventGridSetup : IAreaSetup
         var eventGrid = new CommandGroup(Name, "Event Grid operations - Commands for managing and accessing Event Grid topics, domains, and event subscriptions.");
         rootGroup.AddSubGroup(eventGrid);
 
+        // Events subgroup
+        var events = new CommandGroup("events", "Event Grid event operations - Commands for publishing and managing events sent to Event Grid topics.");
+        eventGrid.AddSubGroup(events);
+
         // Topics subgroup
         var topics = new CommandGroup("topic", "Event Grid topic operations - Commands for managing Event Grid topics and their configurations.");
         eventGrid.AddSubGroup(topics);
@@ -31,6 +36,9 @@ public class EventGridSetup : IAreaSetup
         // Subscriptions subgroup
         var subscriptions = new CommandGroup("subscription", "Event Grid subscription operations - Commands for managing event subscriptions with filtering and endpoint configuration.");
         eventGrid.AddSubGroup(subscriptions);
+
+        // Register Events commands
+        events.AddCommand("publish", new EventsPublishCommand(loggerFactory.CreateLogger<EventsPublishCommand>()));
 
         // Register Topic commands
         topics.AddCommand("list", new TopicListCommand(loggerFactory.CreateLogger<TopicListCommand>()));
