@@ -1,6 +1,4 @@
 parameters:
-- name: VsixTargets
-  type: object
 - name: ServerName
   type: string
 - name: IncludeNative
@@ -16,8 +14,8 @@ jobs:
   - checkout: self
 
   - download: current
-    displayName: Download npm_$(PipelineArtifactName)_packed
-    artifact: npm_$(PipelineArtifactName)_packed
+    displayName: Download packages_npm
+    artifact: packages_npm
 
   - template: /eng/common/pipelines/templates/steps/retain-run.yml
 
@@ -28,7 +26,7 @@ jobs:
       $tag = "$serverName-$version$versionSuffix"
 
       gh release create $tag --title "$serverName $version$versionSuffix"
-      gh release upload $tag $(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed/*/*/*.tgz
+      gh release upload $tag $(Pipeline.Workspace)/packages_npm/*/*/*.tgz
     displayName: Create GitHub Release and upload artifacts
     env:
       GH_TOKEN: $(azuresdk-github-pat)
@@ -47,9 +45,7 @@ jobs:
 - template: /eng/pipelines/templates/jobs/vsix/release-vsix.yml
   parameters:
     ServerName: ${{ parameters.ServerName }}
-    VsixTargets: ${{ parameters.VsixTargets }}
     DependsOn: TagRepository
-
 
 - ${{ if ne(parameters.SkipDockerRelease, 'true') }}:
   - template: /eng/pipelines/templates/jobs/docker/release-docker.yml

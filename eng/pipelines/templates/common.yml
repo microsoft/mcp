@@ -13,19 +13,10 @@ parameters:
   default: false
 - name: ServerName
   type: string
-  default: none
+  default: ''
 - name: SkipDockerRelease
   type: string
   default: false
-- name: VsixTargets
-  type: object
-  default:
-    - linux-x64
-    - linux-arm64
-    - osx-x64
-    - osx-arm64
-    - win-x64
-    - win-arm64
 
 resources:
   repositories:
@@ -73,8 +64,7 @@ extends:
           JobTemplatePath: /eng/pipelines/templates/jobs/build.yml
           AdditionalParameters:
             TestTimeoutInMinutes: 10
-            ${{ if ne(parameters.ServerName, 'none') }}:
-              ServerName: ${{ parameters.ServerName }}
+            ServerName: ${{ parameters.ServerName }}
           MatrixConfigs:
             - Name: build_matrix
               Path: eng/pipelines/build-matrix.json
@@ -128,10 +118,11 @@ extends:
           variables:
           - template: /eng/pipelines/templates/variables/image.yml
           - template: /eng/pipelines/templates/variables/globals.yml
+          - name: VersionSuffix
+            value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
           jobs:
           - template: /eng/pipelines/templates/jobs/release.yml
             parameters:
-              VsixTargets: ${{ parameters.VsixTargets }}
               ServerName: ${{ parameters.ServerName }}
               IncludeNative: false
               SkipDockerRelease: ${{ parameters.SkipDockerRelease }}
