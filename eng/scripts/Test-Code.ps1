@@ -259,14 +259,16 @@ try {
     $resultsArg = "--results-directory '$TestResultsPath'"
     $loggerArg = "--logger 'trx' --logger 'console;verbosity=detailed'"
 
-    $command = "dotnet test $coverageArg $resultsArg $loggerArg"
+    $buildCommand = "dotnet build --verbosity:quiet"
+    $testCommand = "dotnet test --no-build --no-restore $coverageArg $resultsArg $loggerArg"
 
     if($Members.Count -gt 0) {
         $memberFilterString = $Members | ForEach-Object { "FullyQualifiedName~$_" } | Join-String -Separator '|'
-        $command += " --filter '$memberFilterString'"
+        $testCommand += " --filter '$memberFilterString'"
     }
 
-    Invoke-LoggedCommand -Command $command -AllowedExitCodes @(0, 1) -OnlyLogErrorOutput
+    Invoke-LoggedCommand $buildCommand
+    Invoke-LoggedCommand -Command $testCommand -AllowedExitCodes @(0, 1) -OnlyLogErrorOutput
 }
 finally {
     Pop-Location

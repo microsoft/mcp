@@ -25,7 +25,7 @@ function Invoke-LoggedCommand
 
     try {
       if ($OnlyLogErrorOutput) {
-        & { Invoke-Expression $Command } 3>&1 1>$null
+        & { Invoke-Expression $Command } 1>$null
       } else {
         Invoke-Expression $Command
       }
