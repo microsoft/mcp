@@ -389,7 +389,7 @@ public class SessionHostUserSessionListCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException_Forbidden()
     {
         // Arrange
-        var exception = new RequestFailedException(403, "Access denied");
+        var exception = new RequestFailedException((int)HttpStatusCode.Forbidden, "Access denied");
         _virtualDesktopService.ListUserSessionsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),

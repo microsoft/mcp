@@ -198,7 +198,7 @@ public class FirewallRuleDeleteCommandTests
     public async Task ExecuteAsync_Handles403Error()
     {
         // Arrange
-        var requestException = new RequestFailedException(403, "Access denied");
+        var requestException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Access denied");
         _service.DeleteFirewallRuleAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),

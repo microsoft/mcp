@@ -97,7 +97,7 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
             "SQL server not found. Verify the server name, resource group, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed creating the firewall rule. Verify you have appropriate permissions. Details: {reqEx.Message}",
-        RequestFailedException reqEx when reqEx.Status == 409 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "A firewall rule with this name already exists. Choose a different name or update the existing rule.",
         RequestFailedException reqEx => reqEx.Message,
         ArgumentException argEx => $"Invalid IP address format: {argEx.Message}",

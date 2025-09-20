@@ -169,7 +169,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
-        var authException = new RequestFailedException(403, "Authorization failed");
+        var authException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
 
         _storageService.CreateStorageAccount(
             Arg.Any<string>(),

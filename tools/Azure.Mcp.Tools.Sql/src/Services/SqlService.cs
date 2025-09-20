@@ -729,7 +729,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 var response = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
                 resourceGroupResource = response.Value;
             }
-            catch (RequestFailedException reqEx) when (reqEx.Status == 404)
+            catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
             {
                 _logger.LogWarning(reqEx,
                     "Resource group not found when listing SQL servers. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",

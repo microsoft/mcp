@@ -185,7 +185,7 @@ public class ClusterGetCommandTests
     public async Task ExecuteAsync_Handles403Forbidden()
     {
         // Arrange
-        var forbiddenException = new RequestFailedException(403, "Forbidden");
+        var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Forbidden");
         _aksService.GetCluster(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<Models.Cluster?>(forbiddenException));
 

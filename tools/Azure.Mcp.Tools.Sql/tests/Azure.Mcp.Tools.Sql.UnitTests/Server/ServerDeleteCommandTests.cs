@@ -195,7 +195,7 @@ public class ServerDeleteCommandTests
     public async Task ExecuteAsync_WhenUnauthorized_Returns403StatusCode()
     {
         // Arrange
-        var requestException = new RequestFailedException(403, "Forbidden: Insufficient permissions");
+        var requestException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Forbidden: Insufficient permissions");
 
         _service.DeleteServerAsync(
             Arg.Any<string>(),

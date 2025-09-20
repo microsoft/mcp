@@ -107,7 +107,7 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
             $"The given SQL server not found. It may have already been deleted.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed deleting the SQL server. Verify you have appropriate permissions. Details: {reqEx.Message}",
-        RequestFailedException reqEx when reqEx.Status == 409 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             $"Cannot delete SQL server due to a conflict. It may be in use or have dependent resources. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         ArgumentException argEx => $"Invalid parameter: {argEx.Message}",

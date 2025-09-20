@@ -279,7 +279,7 @@ public class AccountGetCommandTests
 
         _storageService.GetAccountDetails(
             Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .ThrowsAsync(new RequestFailedException(403, "Authorization failed"));
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 

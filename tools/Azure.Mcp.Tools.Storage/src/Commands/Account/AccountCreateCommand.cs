@@ -108,7 +108,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     // Implementation-specific error handling
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 409 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "Storage account name already exists. Choose a different name.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed creating the storage account. Details: {reqEx.Message}",

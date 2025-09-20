@@ -263,7 +263,7 @@ public class DatabaseCreateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
-        var authException = new RequestFailedException(403, "Authorization failed");
+        var authException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
         _sqlService.CreateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),

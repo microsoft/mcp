@@ -41,7 +41,7 @@ internal class Program
             var parseResult = rootCommand.Parse(args);
             var status = await parseResult.InvokeAsync();
 
-            return (status >= 200 && status < 300) ? 0 : 1;
+            return (status >= (int)HttpStatusCode.OK && status < (int)HttpStatusCode.MultipleChoices) ? 0 : 1;
         }
         catch (Exception ex)
         {

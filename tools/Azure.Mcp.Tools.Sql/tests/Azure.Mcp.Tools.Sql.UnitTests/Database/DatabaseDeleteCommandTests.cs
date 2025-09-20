@@ -179,7 +179,7 @@ public class DatabaseDeleteCommandTests
     [Fact]
     public async Task ExecuteAsync_Handles403Error()
     {
-        var requestFailed = new RequestFailedException(403, "Access denied");
+        var requestFailed = new RequestFailedException((int)HttpStatusCode.Forbidden, "Access denied");
         _sqlService.DeleteDatabaseAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),

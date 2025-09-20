@@ -230,7 +230,7 @@ public class FileSystemListCommandTests
         // Arrange - 403 Forbidden
         _amlfsService.ListFileSystemsAsync(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-            .ThrowsAsync(new RequestFailedException(403, "forbidden"));
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "forbidden"));
 
         var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);
         var response = await _command.ExecuteAsync(_context, args);

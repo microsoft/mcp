@@ -150,7 +150,7 @@ public class ServerShowCommandTests
     public async Task ExecuteAsync_WhenAzureRequestFails403_ReturnsAuthorizationError()
     {
         // Arrange
-        var requestFailedException = new RequestFailedException(403, "Authorization failed");
+        var requestFailedException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
         _service.GetServerAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
