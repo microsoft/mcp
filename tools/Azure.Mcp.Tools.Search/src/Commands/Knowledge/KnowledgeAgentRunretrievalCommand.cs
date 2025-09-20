@@ -17,7 +17,7 @@ public sealed class KnowledgeAgentRunRetrievalCommand(ILogger<KnowledgeAgentRunR
     private readonly Option<string> _queryOption = SearchOptionDefinitions.OptionalQuery;
     private readonly Option<string[]> _messagesOption = SearchOptionDefinitions.Messages;
 
-    public override string Name => "runretrieval";
+    public override string Name => "run-retrieval";
 
     public override string Title => "Execute retrieval using a knowledge agent in Azure AI Search";
 
