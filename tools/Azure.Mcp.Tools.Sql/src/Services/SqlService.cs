@@ -351,6 +351,117 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             throw;
         }
     }
+    /// Exports an Azure SQL Database to a BACPAC file in Azure Storage.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server hosting the database</param>
+    /// <param name="databaseName">The name of the database to export</param>
+    /// <param name="resourceGroup">The name of the resource group containing the server</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="storageUri">The storage URI for the BACPAC file</param>
+    /// <param name="storageKey">The storage access key or shared access signature</param>
+    /// <param name="storageKeyType">The storage key type (StorageAccessKey, SharedAccessKey, or ManagedIdentity)</param>
+    /// <param name="adminUser">The SQL Server administrator login name</param>
+    /// <param name="adminPassword">The SQL Server administrator password</param>
+    /// <param name="authType">Optional authentication type (SQL, ADPassword, or ManagedIdentity)</param>
+    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>The export operation information</returns>
+    /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
+    public async Task<SqlDatabaseExportResult> ExportDatabaseAsync(
+        string serverName,
+        string databaseName,
+        string resourceGroup,
+        string subscription,
+        string storageUri,
+        string storageKey,
+        string storageKeyType,
+        string adminUser,
+        string adminPassword,
+        string? authType = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(serverName, resourceGroup, subscription, databaseName);
+
+        if (string.IsNullOrEmpty(storageUri))
+            throw new ArgumentException("Storage URI cannot be null or empty", nameof(storageUri));
+        if (string.IsNullOrEmpty(storageKey))
+            throw new ArgumentException("Storage key cannot be null or empty", nameof(storageKey));
+        if (string.IsNullOrEmpty(storageKeyType))
+            throw new ArgumentException("Storage key type cannot be null or empty", nameof(storageKeyType));
+        if (string.IsNullOrEmpty(adminUser))
+            throw new ArgumentException("Admin user cannot be null or empty", nameof(adminUser));
+        if (string.IsNullOrEmpty(adminPassword))
+            throw new ArgumentException("Admin password cannot be null or empty", nameof(adminPassword));
+
+        try
+        {
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
+            var databaseResource = await sqlServerResource.Value.GetSqlDatabases().GetAsync(databaseName);
+
+            // Parse storage key type
+            if (!Enum.TryParse<ResourceManager.Sql.Models.StorageKeyType>(storageKeyType, true, out var storageKeyTypeEnum))
+            {
+                throw new ArgumentException($"Invalid storage key type: {storageKeyType}. Valid values are: StorageAccessKey, SharedAccessKey, ManagedIdentity");
+            }
+
+            var exportDefinition = new ResourceManager.Sql.Models.DatabaseExportDefinition(
+                storageKeyTypeEnum,
+                storageKey,
+                new Uri(storageUri),
+                adminUser)
+            {
+                AdministratorLoginPassword = adminPassword
+            };
+
+            var operation = await databaseResource.Value.ExportAsync(
+                Azure.WaitUntil.Started,
+                exportDefinition,
+                cancellationToken);
+
+            var result = operation.Value;
+
+            _logger.LogInformation(
+                "Successfully started SQL database export. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, OperationId: {OperationId}",
+                serverName, databaseName, resourceGroup, result?.Id?.ToString());
+
+            // Convert string times to DateTimeOffset if possible
+            DateTimeOffset? queuedTime = null;
+            DateTimeOffset? lastModifiedTime = null;
+
+            if (!string.IsNullOrEmpty(result?.QueuedTime) && DateTimeOffset.TryParse(result.QueuedTime, out var queuedDateTime))
+            {
+                queuedTime = queuedDateTime;
+            }
+
+            if (!string.IsNullOrEmpty(result?.LastModifiedTime) && DateTimeOffset.TryParse(result.LastModifiedTime, out var lastModifiedDateTime))
+            {
+                lastModifiedTime = lastModifiedDateTime;
+            }
+
+            return new SqlDatabaseExportResult(
+                result?.Id?.ToString(),
+                result?.RequestId?.ToString(),
+                result?.Status,
+                queuedTime,
+                lastModifiedTime,
+                serverName,
+                databaseName,
+                storageUri,
+                result?.ErrorMessage
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error exporting SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, StorageUri: {StorageUri}",
+                serverName, databaseName, resourceGroup, storageUri);
+            throw;
+        }
+    }
 
     /// <summary>
     /// Retrieves a list of all SQL databases from an Azure SQL Server.

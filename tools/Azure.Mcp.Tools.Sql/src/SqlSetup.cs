@@ -57,6 +57,8 @@ public class SqlSetup : IAreaSetup
         database.AddCommand(databaseCreate.Name, databaseCreate);
         var databaseRename = serviceProvider.GetRequiredService<DatabaseRenameCommand>();
         database.AddCommand(databaseRename.Name, databaseRename);
+        var databaseExport = serviceProvider.GetRequiredService<DatabaseExportCommand>();
+        database.AddCommand(databaseExport.Name, databaseExport);
         var databaseUpdate = serviceProvider.GetRequiredService<DatabaseUpdateCommand>();
         database.AddCommand(databaseUpdate.Name, databaseUpdate);
         var databaseDelete = serviceProvider.GetRequiredService<DatabaseDeleteCommand>();

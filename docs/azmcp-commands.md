@@ -1185,6 +1185,18 @@ azmcp sql db update --subscription <subscription> \
                     [--elastic-pool-name <elastic-pool-name>] \
                     [--zone-redundant <true/false>] \
                     [--read-scale <Enabled|Disabled>]
+
+# Export an Azure SQL Database to a BACPAC file in Azure Storage
+azmcp sql db export --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name> \
+                    --storage-uri <storage-uri> \
+                    --storage-key <storage-key> \
+                    --storage-key-type <StorageAccessKey|SharedAccessKey|ManagedIdentity> \
+                    --admin-user <admin-user> \
+                    --admin-password <admin-password> \
+                    [--auth-type <SQL|ADPassword|ManagedIdentity>]
 ```
 
 #### Elastic Pool
