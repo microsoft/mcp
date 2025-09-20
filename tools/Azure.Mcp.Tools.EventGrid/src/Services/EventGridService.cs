@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics.CodeAnalysis;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using Azure.Core;
 using Azure.Mcp.Core.Options;
-using Azure.ResourceManager;
+using Azure.Messaging.EventGrid;
 using Azure.ResourceManager.EventGrid;
 using Azure.ResourceManager.EventGrid.Models;
 using Azure.ResourceManager.Resources;
@@ -81,6 +84,218 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
 
         return subscriptions;
     }
+
+    public async Task<EventPublishResult> PublishEventsAsync(
+        string subscription,
+        string? resourceGroup,
+        string topicName,
+        string eventData,
+        string? eventSchema = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        var operationId = Guid.NewGuid().ToString();
+        _logger.LogInformation("Starting event publication. OperationId: {OperationId}, Topic: {TopicName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+            operationId, topicName, resourceGroup, subscription);
+
+        try
+        {
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+            // Find the topic to get its endpoint and access key
+            var topic = await FindTopic(subscriptionResource, resourceGroup, topicName);
+            if (topic == null)
+            {
+                var errorMessage = $"Event Grid topic '{topicName}' not found in resource group '{resourceGroup}'. Make sure the topic exists and you have access to it.";
+                _logger.LogError(errorMessage);
+                return new EventPublishResult(
+                    Status: "Failed",
+                    Message: errorMessage,
+                    PublishedEventCount: 0,
+                    OperationId: operationId,
+                    PublishedAt: DateTime.UtcNow);
+            }
+
+            if (topic.Data.Endpoint == null)
+            {
+                var errorMessage = $"Event Grid topic '{topicName}' does not have a valid endpoint.";
+                _logger.LogError(errorMessage);
+                return new EventPublishResult(
+                    Status: "Failed",
+                    Message: errorMessage,
+                    PublishedEventCount: 0,
+                    OperationId: operationId,
+                    PublishedAt: DateTime.UtcNow);
+            }
+
+            // Get credential using standardized method from base class for Azure AD authentication
+            var credential = await GetCredential(tenant);
+
+            // Parse and validate event data
+            var events = ParseAndValidateEventData(eventData, eventSchema ?? "EventGridEvent");
+
+            // Use raw HTTP approach to completely avoid AOT serialization issues
+            using var httpClient = new HttpClient();
+
+            // Create events as raw JSON strings using lazy evaluation
+            var eventJsonStrings = events.Select(evt =>
+            {
+                // Use JsonEncodedText.Encode for AOT-compatible JSON escaping
+                var escapedSubject = JsonEncodedText.Encode(evt.Subject);
+                var escapedEventType = JsonEncodedText.Encode(evt.EventType);
+                var escapedId = JsonEncodedText.Encode(evt.Id);
+                var escapedDataVersion = JsonEncodedText.Encode(evt.DataVersion);
+                var formattedEventTime = evt.EventTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+
+                return $$"""
+                {
+                    "id": "{{escapedId}}",
+                    "subject": "{{escapedSubject}}",
+                    "eventType": "{{escapedEventType}}",
+                    "dataVersion": "{{escapedDataVersion}}",
+                    "eventTime": "{{formattedEventTime}}",
+                    "data": {{evt.Data ?? "{}"}}
+                }
+                """;
+            });
+
+            var jsonPayload = $"[{string.Join(",", eventJsonStrings)}]";
+
+            // Get event count for logging (this will materialize the enumerable once)
+            var eventCount = events.Count();
+            _logger.LogInformation("Publishing {EventCount} events to topic '{TopicName}' with operation ID: {OperationId}",
+                eventCount, topicName, operationId);
+
+            try
+            {
+                // Send the events using raw HTTP POST to avoid EventGridPublisherClient AOT issues
+                var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+                // Get access token for Event Grid using Azure AD authentication
+                var tokenRequestContext = new TokenRequestContext(new[] { "https://eventgrid.azure.net/.default" });
+                var tokenResult = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
+
+                // Add Authorization header with Bearer token for Azure AD authentication
+                httpClient.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokenResult.Token);
+
+                var response = await httpClient.PostAsync(topic.Data.Endpoint, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    throw new HttpRequestException(
+                        $"Event Grid returned status code {response.StatusCode}. Response: {responseContent}");
+                }
+            }
+            catch (Exception publishEx)
+            {
+                _logger.LogError(publishEx, "Failed to publish events to topic '{TopicName}' with operation ID: {OperationId}",
+                    topicName, operationId);
+                throw;
+            }
+
+            _logger.LogInformation("Successfully published {EventCount} events to topic '{TopicName}'",
+                eventCount, topicName);
+
+            return new EventPublishResult(
+                Status: "Success",
+                Message: $"Successfully published {eventCount} event(s) to topic '{topicName}'.",
+                PublishedEventCount: eventCount,
+                OperationId: operationId,
+                PublishedAt: DateTime.UtcNow);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to publish events to topic '{TopicName}' in resource group '{ResourceGroup}'",
+                topicName, resourceGroup);
+
+            return new EventPublishResult(
+                Status: "Failed",
+                Message: $"Failed to publish events: {ex.Message}",
+                PublishedEventCount: 0,
+                OperationId: operationId,
+                PublishedAt: DateTime.UtcNow);
+        }
+    }
+
+    private static IEnumerable<EventData> ParseAndValidateEventData(string eventData, string eventSchema)
+    {
+        try
+        {
+            // Parse the JSON data
+            var jsonDocument = JsonDocument.Parse(eventData);
+
+            IEnumerable<EventData> events;
+
+            if (jsonDocument.RootElement.ValueKind == JsonValueKind.Array)
+            {
+                // Handle array of events - use lazy evaluation
+                events = jsonDocument.RootElement.EnumerateArray()
+                    .Select(eventElement => CreateEventDataFromJsonElement(eventElement, eventSchema));
+            }
+            else
+            {
+                // Handle single event - return single item enumerable
+                events = new[] { CreateEventDataFromJsonElement(jsonDocument.RootElement, eventSchema) };
+            }
+
+            // Force evaluation to validate all events before returning
+            var eventsList = events.ToList();
+            if (eventsList.Count == 0)
+            {
+                throw new ArgumentException("No valid events found in the provided event data.");
+            }
+
+            return eventsList;
+        }
+        catch (JsonException ex)
+        {
+            throw new ArgumentException($"Invalid JSON format in event data: {ex.Message}", ex);
+        }
+    }
+
+    private static EventData CreateEventDataFromJsonElement(JsonElement eventElement, string eventSchema)
+    {
+        // Extract required properties
+        var eventType = eventElement.TryGetProperty("eventType", out var eventTypeProp) ? eventTypeProp.GetString() :
+                       eventElement.TryGetProperty("type", out var typeProp) ? typeProp.GetString() : "CustomEvent";
+
+        var subject = eventElement.TryGetProperty("subject", out var subjectProp) ? subjectProp.GetString() : "/default/subject";
+
+        var dataVersion = eventElement.TryGetProperty("dataVersion", out var dataVersionProp) ? dataVersionProp.GetString() : "1.0";
+
+        // Extract data payload as raw JSON string for AOT compatibility
+        string? data = null;
+        if (eventElement.TryGetProperty("data", out var dataProp))
+        {
+            data = dataProp.GetRawText();
+        }
+
+        var id = eventElement.TryGetProperty("id", out var idProp) ? idProp.GetString() : Guid.NewGuid().ToString();
+        var eventTime = eventElement.TryGetProperty("eventTime", out var timeProp) && timeProp.TryGetDateTimeOffset(out var eventTimeValue)
+                       ? eventTimeValue : DateTimeOffset.UtcNow;
+
+        // Create a simple event data structure
+        return new EventData(
+            Id: id ?? Guid.NewGuid().ToString(),
+            Subject: subject ?? "/default/subject",
+            EventType: eventType ?? "CustomEvent",
+            DataVersion: dataVersion ?? "1.0",
+            Data: data,
+            EventTime: eventTime,
+            Schema: eventSchema);
+    }
+
+    // Simple record to hold event data for validation
+    private record EventData(
+        string Id,
+        string Subject,
+        string EventType,
+        string DataVersion,
+        string? Data,
+        DateTimeOffset EventTime,
+        string Schema);
 
     private async Task GetSubscriptionsForSpecificTopic(
         SubscriptionResource subscriptionResource,
@@ -205,26 +420,42 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
     {
         if (!string.IsNullOrEmpty(resourceGroup))
         {
-            // Search in specific resource group
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
-
-            await foreach (var topic in resourceGroupResource.Value.GetEventGridTopics().GetAllAsync())
+            try
             {
-                if (topic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                // Search in specific resource group
+                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+
+                await foreach (var topic in resourceGroupResource.Value.GetEventGridTopics().GetAllAsync())
                 {
-                    return topic;
+                    if (topic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return topic;
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error accessing resource group '{ResourceGroup}'", resourceGroup);
+                throw;
             }
         }
         else
         {
-            // Search in all resource groups
-            await foreach (var topic in subscriptionResource.GetEventGridTopicsAsync())
+            try
             {
-                if (topic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                // Search in all resource groups
+                await foreach (var topic in subscriptionResource.GetEventGridTopicsAsync())
                 {
-                    return topic;
+                    if (topic.Data.Name.Equals(topicName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return topic;
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching topics across subscription");
+                throw;
             }
         }
 
@@ -365,4 +596,6 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             }
         }
     }
+
+
 }

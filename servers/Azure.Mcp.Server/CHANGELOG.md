@@ -6,6 +6,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added support for publishing custom events to Azure Event Grid topics via the command `azmcp_eventgrid_events_publish`. This enables publishing single events or arrays of events with flexible JSON input, automatic field validation, default value assignment for missing fields, and comprehensive error handling with operation tracking.
 - Added support for `azmcp sql server list` command to list SQL servers in a subscription and resource group. [[#503](https://github.com/microsoft/mcp/issues/503)]
 
 ### Breaking Changes
