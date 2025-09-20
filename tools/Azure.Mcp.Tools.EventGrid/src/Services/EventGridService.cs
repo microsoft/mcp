@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Messaging.EventGrid;
 using Azure.ResourceManager.EventGrid;
-using System.Net.Http;
-using System.Text;
 using Azure.ResourceManager.EventGrid.Models;
 using Azure.ResourceManager.Resources;
 
@@ -136,7 +136,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
 
             // Use raw HTTP approach to completely avoid AOT serialization issues
             using var httpClient = new HttpClient();
-            
+
             // Create events as raw JSON strings using lazy evaluation
             var eventJsonStrings = events.Select(evt =>
             {
@@ -170,17 +170,17 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             {
                 // Send the events using raw HTTP POST to avoid EventGridPublisherClient AOT issues
                 var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-                
+
                 // Get access token for Event Grid using Azure AD authentication
                 var tokenRequestContext = new TokenRequestContext(new[] { "https://eventgrid.azure.net/.default" });
                 var tokenResult = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
-                
+
                 // Add Authorization header with Bearer token for Azure AD authentication
-                httpClient.DefaultRequestHeaders.Authorization = 
+                httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokenResult.Token);
-                
+
                 var response = await httpClient.PostAsync(topic.Data.Endpoint, content);
-                
+
                 if (!response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
@@ -604,7 +604,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             return string.Empty;
 
         var result = new StringBuilder(input.Length + 10);
-        
+
         foreach (char c in input)
         {
             switch (c)
@@ -642,7 +642,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
                     break;
             }
         }
-        
+
         return result.ToString();
     }
 }
