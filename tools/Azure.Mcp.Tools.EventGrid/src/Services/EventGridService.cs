@@ -6,6 +6,8 @@ using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Messaging.EventGrid;
 using Azure.ResourceManager.EventGrid;
+using System.Net.Http;
+using System.Text;
 using Azure.ResourceManager.EventGrid.Models;
 using Azure.ResourceManager.Resources;
 
@@ -126,48 +128,65 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
                     PublishedAt: DateTime.UtcNow);
             }
 
-            // Get the access key for the topic
-            var keys = await topic.GetSharedAccessKeysAsync();
-            var accessKey = keys.Value.Key1;
-
-            if (string.IsNullOrEmpty(accessKey))
-            {
-                var errorMessage = $"Unable to retrieve access key for Event Grid topic '{topicName}'.";
-                _logger.LogError(errorMessage);
-                return new EventPublishResult(
-                    Status: "Failed",
-                    Message: errorMessage,
-                    PublishedEventCount: 0,
-                    OperationId: operationId,
-                    PublishedAt: DateTime.UtcNow);
-            }
+            // Get credential using standardized method from base class for Azure AD authentication
+            var credential = await GetCredential(tenant);
 
             // Parse and validate event data
             var events = ParseAndValidateEventData(eventData, eventSchema ?? "EventGridEvent");
 
-            // Create EventGridPublisherClient and publish events
-            var credential = new AzureKeyCredential(accessKey);
-            var client = new EventGridPublisherClient(topic.Data.Endpoint, credential);
-
-            // Convert to EventGridEvent objects for publishing
-            var eventGridEvents = events.Select(eventData => new EventGridEvent(
-                subject: eventData.Subject,
-                eventType: eventData.EventType,
-                dataVersion: eventData.DataVersion,
-                data: BinaryData.FromString(eventData.Data ?? "{}")
-            )
+            // Use raw HTTP approach to completely avoid AOT serialization issues
+            using var httpClient = new HttpClient();
+            
+            // Create events as raw JSON strings using lazy evaluation
+            var eventJsonStrings = events.Select(evt =>
             {
-                Id = eventData.Id,
-                EventTime = eventData.EventTime
-            }).ToList();
+                // Manually escape JSON strings to avoid JsonSerializer
+                var escapedSubject = EscapeJsonString(evt.Subject);
+                var escapedEventType = EscapeJsonString(evt.EventType);
+                var escapedId = EscapeJsonString(evt.Id);
+                var escapedDataVersion = EscapeJsonString(evt.DataVersion);
+                var formattedEventTime = evt.EventTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
 
+                return $$"""
+                {
+                    "id": "{{escapedId}}",
+                    "subject": "{{escapedSubject}}",
+                    "eventType": "{{escapedEventType}}",
+                    "dataVersion": "{{escapedDataVersion}}",
+                    "eventTime": "{{formattedEventTime}}",
+                    "data": {{evt.Data ?? "{}"}}
+                }
+                """;
+            });
+
+            var jsonPayload = $"[{string.Join(",", eventJsonStrings)}]";
+
+            // Get event count for logging (this will materialize the enumerable once)
+            var eventCount = events.Count();
             _logger.LogInformation("Publishing {EventCount} events to topic '{TopicName}' with operation ID: {OperationId}",
-                eventGridEvents.Count, topicName, operationId);
+                eventCount, topicName, operationId);
 
             try
             {
-                // Publish the events
-                await client.SendEventsAsync(eventGridEvents);
+                // Send the events using raw HTTP POST to avoid EventGridPublisherClient AOT issues
+                var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+                
+                // Get access token for Event Grid using Azure AD authentication
+                var tokenRequestContext = new TokenRequestContext(new[] { "https://eventgrid.azure.net/.default" });
+                var tokenResult = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
+                
+                // Add Authorization header with Bearer token for Azure AD authentication
+                httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokenResult.Token);
+                
+                var response = await httpClient.PostAsync(topic.Data.Endpoint, content);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    throw new HttpRequestException(
+                        $"Event Grid returned status code {response.StatusCode}. Response: {responseContent}");
+                }
             }
             catch (Exception publishEx)
             {
@@ -177,12 +196,12 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             }
 
             _logger.LogInformation("Successfully published {EventCount} events to topic '{TopicName}'",
-                eventGridEvents.Count, topicName);
+                eventCount, topicName);
 
             return new EventPublishResult(
                 Status: "Success",
-                Message: $"Successfully published {events.Count} event(s) to topic '{topicName}'.",
-                PublishedEventCount: events.Count,
+                Message: $"Successfully published {eventCount} event(s) to topic '{topicName}'.",
+                PublishedEventCount: eventCount,
                 OperationId: operationId,
                 PublishedAt: DateTime.UtcNow);
         }
@@ -200,35 +219,35 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    private static List<EventData> ParseAndValidateEventData(string eventData, string eventSchema)
+    private static IEnumerable<EventData> ParseAndValidateEventData(string eventData, string eventSchema)
     {
         try
         {
-            var events = new List<EventData>();
-
             // Parse the JSON data
             var jsonDocument = JsonDocument.Parse(eventData);
 
+            IEnumerable<EventData> events;
+
             if (jsonDocument.RootElement.ValueKind == JsonValueKind.Array)
             {
-                // Handle array of events
-                foreach (var eventElement in jsonDocument.RootElement.EnumerateArray())
-                {
-                    events.Add(CreateEventDataFromJsonElement(eventElement, eventSchema));
-                }
+                // Handle array of events - use lazy evaluation
+                events = jsonDocument.RootElement.EnumerateArray()
+                    .Select(eventElement => CreateEventDataFromJsonElement(eventElement, eventSchema));
             }
             else
             {
-                // Handle single event
-                events.Add(CreateEventDataFromJsonElement(jsonDocument.RootElement, eventSchema));
+                // Handle single event - return single item enumerable
+                events = new[] { CreateEventDataFromJsonElement(jsonDocument.RootElement, eventSchema) };
             }
 
-            if (events.Count == 0)
+            // Force evaluation to validate all events before returning
+            var eventsList = events.ToList();
+            if (eventsList.Count == 0)
             {
                 throw new ArgumentException("No valid events found in the provided event data.");
             }
 
-            return events;
+            return eventsList;
         }
         catch (JsonException ex)
         {
@@ -576,5 +595,54 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
                 subscriptions.Add(CreateSubscriptionInfo(subscription.Data));
             }
         }
+    }
+
+    // Helper method to escape JSON strings manually to avoid JsonSerializer AOT issues
+    private static string EscapeJsonString(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return string.Empty;
+
+        var result = new StringBuilder(input.Length + 10);
+        
+        foreach (char c in input)
+        {
+            switch (c)
+            {
+                case '"':
+                    result.Append("\\\"");
+                    break;
+                case '\\':
+                    result.Append("\\\\");
+                    break;
+                case '\b':
+                    result.Append("\\b");
+                    break;
+                case '\f':
+                    result.Append("\\f");
+                    break;
+                case '\n':
+                    result.Append("\\n");
+                    break;
+                case '\r':
+                    result.Append("\\r");
+                    break;
+                case '\t':
+                    result.Append("\\t");
+                    break;
+                default:
+                    if (char.IsControl(c))
+                    {
+                        result.Append($"\\u{(int)c:x4}");
+                    }
+                    else
+                    {
+                        result.Append(c);
+                    }
+                    break;
+            }
+        }
+        
+        return result.ToString();
     }
 }
