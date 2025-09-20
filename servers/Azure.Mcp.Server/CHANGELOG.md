@@ -9,6 +9,15 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added `--tool` option to start Azure MCP server with only specific tools by name, providing fine-grained control over tool exposure. This option switches server mode to `--all` automatically. The `--namespace` and `--tool` options cannot be used together. [[#685](https://github.com/microsoft/mcp/issues/685)]
 - Added support for getting ledger entries on Azure Confidential Ledger via the command `azmcp_confidentialledger_entries_get`. [[#705](https://github.com/microsoft/mcp/pull/723)]
 - Added support for listing an Azure resource's activity logs via the command `azmcp_monitor_activitylog_list`. [[#720](https://github.com/microsoft/mcp/pull/720)]
+- Added elicitation support. An elicitation request is sent if the tool annotation secret hint is true. [[#404](https://github.com/microsoft/mcp/pull/404)]
+- Added the following Azure Managed Lustre commands: [[#100](https://github.com/microsoft/mcp/issues/100)]
+  - `azmcp_azuremanagedlustre_filesystem_get_sku_info`: Get information about Azure Managed Lustre SKU.
+- Added support for Azure AI Search knowledge agents and knowledge sources (preview):
+  - `azmcp_search_knowledge_source_list` - List knowledge sources defined in an Azure AI Search service.
+  - `azmcp_search_knowledge_agent_list` - List knowledge agents defined in an Azure AI Search service.
+  - `azmcp_search_knowledge_agent_run-retrieval` - Execute a retrieval operation using a specified knowledge agent with optional multi-turn conversation history.
+  These commands enable agentic retrieval and reasoning grounded in Azure AI Search's new knowledge constructs.
+- Bumped Azure AI Search .NET SDK dependency to align with knowledge agent APIs.
 
 ### Breaking Changes
 
