@@ -117,6 +117,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "Show me details about my Azure SQL database 'mydb'"
 * "List all databases in my Azure SQL server 'myserver'"
 * "Update the performance tier of my Azure SQL database 'mydb'"
+* "Export my Azure SQL database 'mydb' to a BACPAC file in Azure Storage"
 * "List all firewall rules for my Azure SQL server 'myserver'"
 * "Create a firewall rule for my Azure SQL server 'myserver'"
 * "Delete a firewall rule from my Azure SQL server 'myserver'"
@@ -318,6 +319,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * List the details and properties of all databases
 * Create a SQL database
 * Update a SQL database configuration
+* Export a SQL database to BACPAC file
 * Delete a SQL database
 * List SQL server firewall rules
 * Create SQL server firewall rules
