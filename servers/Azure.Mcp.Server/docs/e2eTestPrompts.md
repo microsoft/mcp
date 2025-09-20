@@ -29,6 +29,18 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_search_knowledge_agent_list | List all knowledge agents in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_agent_list | Show me the knowledge agents in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_agent_list | List all knowledge agents in the search service <service-name> |
+| azmcp_search_knowledge_agent_list | Show me the knowledge agents in the search service <service-name> |
+| azmcp_search_knowledge_agent_run-retrieval | Run a retrieval with knowledge agent <agent-name> in Azure AI Search service <service-name> for the query <query> |
+| azmcp_search_knowledge_agent_run-retrieval | Ask knowledge agent <agent-name> in search service <service-name> to retrieve information about <query> |
+| azmcp_search_knowledge_agent_run-retrieval | Run a retrieval with knowledge agent <agent-name> in search service <service-name> for the query <query> |
+| azmcp_search_knowledge_agent_run-retrieval | Ask knowledge agent <agent-name> in search service <service-name> to retrieve information about <query> |
+| azmcp_search_knowledge_source_list | List all knowledge sources in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_source_list | Show me the knowledge sources in the Azure AI Search Search service <service-name> |
+| azmcp_search_knowledge_source_list | List all knowledge sources in the search service <service-name> |
+| azmcp_search_knowledge_source_list | Show me the knowledge sources in the search Search service <service-name> |
 | azmcp_search_index_get | Show me the details of the index \<index-name> in Cognitive Search service \<service-name> |
 | azmcp_search_index_get | List all indexes in the Cognitive Search service \<service-name> |
 | azmcp_search_index_get | Show me the indexes in the Cognitive Search service \<service-name> |
