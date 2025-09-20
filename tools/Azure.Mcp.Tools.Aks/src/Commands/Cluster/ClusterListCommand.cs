@@ -27,7 +27,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Bas
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

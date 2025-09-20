@@ -31,7 +31,7 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : Subscri
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

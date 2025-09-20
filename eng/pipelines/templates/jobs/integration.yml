@@ -13,12 +13,12 @@ jobs:
   - checkout: self
 
   - download: current
-    displayName: Download npm_$(PipelineArtifactName)_packed
-    artifact: npm_$(PipelineArtifactName)_packed
+    displayName: Download packages_npm
+    artifact: packages_npm
 
   - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
     parameters:
-      PathToArtifacts: $(Pipeline.Workspace)/npm_$(PipelineArtifactName)_packed
+      PathToArtifacts: $(Pipeline.Workspace)/packages_npm
       Registry: https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/
       ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'IndividualCI')) }}:
         Tag: dev
@@ -32,21 +32,21 @@ jobs:
   - checkout: self
 
   - download: current
-    displayName: Download nuget_$(PipelineArtifactName)_packed
-    artifact: nuget_$(PipelineArtifactName)_packed
+    displayName: Download packages_nuget_signed
+    artifact: packages_nuget_signed
 
   - task: 1ES.PublishNuget@1
     displayName: Publish platform-specific Nugets
     inputs:
       packageParentPath: '$(Pipeline.Workspace)'
-      packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}/platform/*.nupkg;!$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}/platform/*.symbols.nupkg'
+      packagesToPush: '$(Pipeline.Workspace)/packages_nuget_signed/${{ parameters.ServerName }}/platform/*.nupkg;!$(Pipeline.Workspace)/packages_nuget_signed/${{ parameters.ServerName }}/platform/*.symbols.nupkg'
       publishVstsFeed: ${{ parameters.NugetDevFeed }}
 
   - task: 1ES.PublishNuget@1
     displayName: Publish wrapper Nuget
     inputs:
       packageParentPath: '$(Pipeline.Workspace)'
-      packagesToPush: '$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}/wrapper/*.nupkg;!$(Pipeline.Workspace)/nuget_$(PipelineArtifactName)_packed/${{ parameters.ServerName }}/wrapper/*.symbols.nupkg'
+      packagesToPush: '$(Pipeline.Workspace)/packages_nuget_signed/${{ parameters.ServerName }}/wrapper/*.nupkg;!$(Pipeline.Workspace)/packages_nuget_signed/${{ parameters.ServerName }}/wrapper/*.symbols.nupkg'
       publishVstsFeed: ${{ parameters.NugetDevFeed }}
 
 # - job: PublishDocsToNightly

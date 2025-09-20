@@ -29,7 +29,7 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

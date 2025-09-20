@@ -28,7 +28,7 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger) : B
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

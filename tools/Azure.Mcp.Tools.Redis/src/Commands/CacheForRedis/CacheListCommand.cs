@@ -32,7 +32,7 @@ public sealed class CacheListCommand(ILogger<CacheListCommand> logger) : Subscri
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

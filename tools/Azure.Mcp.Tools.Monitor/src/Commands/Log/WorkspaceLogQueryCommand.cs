@@ -30,7 +30,7 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

@@ -23,7 +23,7 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger) : BaseP
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

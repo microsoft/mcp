@@ -35,7 +35,7 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

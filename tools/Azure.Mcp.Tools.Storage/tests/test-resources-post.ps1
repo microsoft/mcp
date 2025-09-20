@@ -25,18 +25,3 @@ Set-AzStorageBlobContent `
     -Force `
     -ProgressAction SilentlyContinue
 | Out-Null
-
-# Write a file to file share storage
-
-# File share needs to use EnableFileBackupRequestIntent
-$context = New-AzStorageContext -StorageAccountName $testSettings.ResourceBaseName -UseConnectedAccount -EnableFileBackupRequestIntent
-
-Write-Host "Uploading README.md to file share: testshare" -ForegroundColor Yellow
-Set-AzStorageFileContent `
-    -ShareName "testshare" `
-    -Source "$RepoRoot/README.md" `
-    -Path "README.md" `
-    -Context $context `
-    -Force `
-    -ProgressAction SilentlyContinue
-| Out-Null

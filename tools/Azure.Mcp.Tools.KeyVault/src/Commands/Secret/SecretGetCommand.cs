@@ -24,7 +24,7 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = true

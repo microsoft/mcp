@@ -26,7 +26,7 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
     {
         Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false

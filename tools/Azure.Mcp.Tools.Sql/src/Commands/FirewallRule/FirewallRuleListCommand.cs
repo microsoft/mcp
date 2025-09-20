@@ -29,7 +29,7 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

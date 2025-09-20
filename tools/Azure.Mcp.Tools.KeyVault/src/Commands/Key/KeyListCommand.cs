@@ -24,7 +24,7 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

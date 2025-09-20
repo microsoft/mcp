@@ -147,6 +147,29 @@ The `azmcp server start` command supports the following options:
 ### Azure AI Foundry Operations
 
 ```bash
+
+# Connect to an agent in an AI Foundry project and query it
+azmcp foundry agents connect --agent-id <agent-id> \
+                             --query <query> \
+                             --endpoint <endpoint>
+
+# Evaluate a response from an agent by passing query and response inline
+azmcp foundry agents evaluate --agent-id <agent-id> \
+                                        --query <query> \
+                                        --response <response> \
+                                        --evaluator <evaluator> \
+                                        --azure-openai-endpoint <azure-openai-endpoint> \
+                                        --azure-openai-deployment <azure-openai-deployment> \
+                                        [--tool-definitions <tool-definitions>]
+
+# Query and evaluate an agent in one command
+azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
+                                        --query <query> \
+                                        --endpoint <endpoint> \
+                                        --azure-openai-endpoint <azure-openai-endpoint> \
+                                        --azure-openai-deployment <azure-openai-deployment> \
+                                        [--evaluators <evaluators>]
+
 # List knowledge indexes in an AI Foundry project
 azmcp foundry knowledge index list --endpoint <endpoint>
 
@@ -1113,6 +1136,10 @@ azmcp sql server firewall-rule list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
 
+# List SQL servers in a resource group
+azmcp sql server list --subscription <subscription> \
+                      --resource-group <resource-group>
+
 # Delete a SQL server
 azmcp sql server delete --subscription <subscription> \
                         --resource-group <resource-group> \
@@ -1147,13 +1174,6 @@ azmcp storage account get --subscription <subscription> \
 #### Blob Storage
 
 ```bash
-# Set access tier for multiple blobs in a batch operation
-azmcp storage blob batch set-tier --subscription <subscription> \
-                                  --account <account> \
-                                  --container <container> \
-                                  --tier <tier> \
-                                  --blobs <blob-name1> <blob-name2> ... <blob-nameN>
-
 # Create a blob container with optional public access
 azmcp storage blob container create --subscription <subscription> \
                                     --account <account> \
@@ -1176,53 +1196,6 @@ azmcp storage blob upload --subscription <subscription> \
                           --container <container> \
                           --blob <blob> \
                           --local-file-path <path-to-local-file>
-```
-
-#### DataLake
-
-```bash
-# Create a directory in DataLake using a specific path
-azmcp storage datalake directory create --subscription <subscription> \
-                                        --account <account> \
-                                        --directory-path <directory-path>
-
-# List paths in a Data Lake file system
-azmcp storage datalake file-system list-paths --subscription <subscription> \
-                                              --account <account> \
-                                              --file-system <file-system> \
-                                              [--filter-path <filter-path>] \
-                                              [--recursive]
-```
-
-#### Files
-
-```bash
-# List files and directories in a File Share directory
-azmcp storage share file list --subscription <subscription> \
-                              --account <account> \
-                              --share <share> \
-                              --directory-path <directory-path> \
-                              [--prefix <prefix>]
-```
-
-#### Tables
-```bash
-
-# List tables in a Storage account
-azmcp storage table list --subscription <subscription> \
-                         --account <account>
-```
-
-#### Queues
-
-```bash
-# Send a message to a Storage queue
-azmcp storage queue message send --subscription <subscription> \
-                                 --account <account> \
-                                 --queue <queue> \
-                                 --message "<message>" \
-                                 [--time-to-live-in-seconds <seconds>] \
-                                 [--visibility-timeout-in-seconds <seconds>]
 ```
 
 ### Azure Subscription Management

@@ -14,7 +14,6 @@ parameters:
   type: number
 - name: ServerName
   type: string
-  default: ''
 
 jobs:
 - job: Build_${{ parameters.OSName }}
@@ -142,5 +141,5 @@ jobs:
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)
-      ArtifactName: $(PipelineArtifactName)_$(System.JobName)
+      ArtifactName: build_$(System.JobName)
       SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}

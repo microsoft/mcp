@@ -35,7 +35,7 @@ public sealed class KnowledgeIndexSchemaCommand : GlobalCommand<KnowledgeIndexSc
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

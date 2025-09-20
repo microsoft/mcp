@@ -24,7 +24,7 @@ public sealed class SecretListCommand(ILogger<SecretListCommand> logger) : Subsc
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

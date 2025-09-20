@@ -38,7 +38,7 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

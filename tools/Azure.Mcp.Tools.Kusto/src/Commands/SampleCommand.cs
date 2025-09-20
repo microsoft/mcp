@@ -42,7 +42,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

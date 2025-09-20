@@ -30,7 +30,7 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

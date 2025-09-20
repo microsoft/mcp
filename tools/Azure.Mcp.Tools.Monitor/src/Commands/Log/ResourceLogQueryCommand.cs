@@ -36,7 +36,7 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

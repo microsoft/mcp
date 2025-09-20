@@ -33,7 +33,7 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

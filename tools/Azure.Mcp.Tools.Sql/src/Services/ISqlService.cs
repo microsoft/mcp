@@ -261,6 +261,20 @@ public interface ISqlService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Lists SQL servers in a resource group.
+    /// </summary>
+    /// <param name="resourceGroup">The name of the resource group</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="retryPolicy">Optional retry policy options</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>A list of SQL servers</returns>
+    Task<List<SqlServer>> ListServersAsync(
+        string resourceGroup,
+        string subscription,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Deletes a SQL server.
     /// </summary>
     /// <param name="serverName">The name of the SQL server</param>

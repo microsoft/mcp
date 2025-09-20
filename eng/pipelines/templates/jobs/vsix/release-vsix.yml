@@ -1,10 +1,18 @@
 parameters:
 - name: ServerName
   type: string
-- name: VsixTargets
-  type: object
 - name: DependsOn
   type: object
+- name: VsixTargets
+  type: object
+  default:
+    - linux-x64
+    - linux-arm64
+    - osx-x64
+    - osx-arm64
+    - win-x64
+    - win-arm64
+
 
 jobs:
 # Deployment Jobs: Publish VSIX artifacts to Marketplace for each vsix target
@@ -18,7 +26,7 @@ jobs:
       isProduction: true
       inputs:
       - input: pipelineArtifact
-        artifactName: vsix_packages_signed
+        artifactName: packages_vsix_signed
         targetPath: $(Pipeline.Workspace)/drop
     environment: package-publish
     pool:

@@ -30,7 +30,7 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

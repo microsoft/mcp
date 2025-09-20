@@ -23,6 +23,7 @@ namespace Azure.Mcp.Tools.Sql.Commands;
 [JsonSerializable(typeof(FirewallRuleDeleteCommand.FirewallRuleDeleteResult))]
 [JsonSerializable(typeof(ServerCreateCommand.ServerCreateResult))]
 [JsonSerializable(typeof(ServerDeleteCommand.ServerDeleteResult))]
+[JsonSerializable(typeof(ServerListCommand.ServerListResult))]
 [JsonSerializable(typeof(ServerShowCommand.ServerShowResult))]
 [JsonSerializable(typeof(ElasticPoolListCommand.ElasticPoolListResult))]
 [JsonSerializable(typeof(SqlDatabase))]

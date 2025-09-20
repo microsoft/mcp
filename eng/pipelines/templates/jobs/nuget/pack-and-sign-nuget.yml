@@ -11,8 +11,8 @@ jobs:
   - checkout: self
 
   - download: current
-    displayName: Download $(PipelineArtifactName)_signed
-    artifact: $(PipelineArtifactName)_signed
+    displayName: Download binaries_signed
+    artifact: binaries_signed
 
   - script: |
       brew update
@@ -29,7 +29,7 @@ jobs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Nuget.ps1
       arguments: >
-        -ArtifactsPath '$(Pipeline.Workspace)/$(PipelineArtifactName)_signed'
+        -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
         -OutputPath '$(Build.ArtifactStagingDirectory)/packed'
         -VersionSuffix '$(VersionSuffix)'
         -RepoUrl '$(Build.Repository.Uri)'
@@ -70,5 +70,5 @@ jobs:
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)/packed/nuget
-      ArtifactName: nuget_$(PipelineArtifactName)_packed
+      ArtifactName: packages_nuget_signed
       SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}

@@ -29,7 +29,7 @@ public sealed class TestRunCreateCommand(ILogger<TestRunCreateCommand> logger)
     {
         Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false

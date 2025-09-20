@@ -28,7 +28,7 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger)
     {
         Destructive = true,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
