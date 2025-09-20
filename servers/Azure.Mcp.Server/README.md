@@ -8,11 +8,11 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 ## Table of Contents
 - [Overview](#overview)
 - [Installation](#installation)
-    - [IDE Extensions](#ide-extensions) 
+    - [IDE Extensions](#ide-extensions)
         - [VS Code (Recommended)](#vs-code-recommended)
         - [Visual Studio 2022](#visual-studio-2022)
         - [IntelliJ IDEA](#intellij-idea)
-    - [Package Managers](#package-managers) 
+    - [Package Managers](#package-managers)
         - [NuGet](#nuget)
         - [NPM](#npm)
         - [Docker](#docker)
@@ -110,7 +110,7 @@ Optionally, use `--env` or `--volume` to pass authentication values.
 
 ## <a id="custom-clients"></a> 🤖 Custom Clients
 
-You can easily configure your MCP client to use the Azure MCP Server. 
+You can easily configure your MCP client to use the Azure MCP Server.
 
 <details>
 <summary>Have your client run the following command and access it via standard IO:</summary>
@@ -164,7 +164,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * List foundry model deployments
 * List knowledge indexes
 * Get knowledge index schema configuration
-  
+
 ### 🔎 Azure AI Search
 
 * "What indexes do I have in my Azure AI Search service 'mysvc'?"
@@ -245,6 +245,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "List all databases in my Azure SQL server 'myserver'"
 * "Update the performance tier of my Azure SQL database 'mydb'"
 * "Rename my Azure SQL database 'mydb' to 'newname'"
+* "Export my Azure SQL database 'mydb' to a BACPAC file in Azure Storage"
 * "List all firewall rules for my Azure SQL server 'myserver'"
 * "Create a firewall rule for my Azure SQL server 'myserver'"
 * "Delete a firewall rule from my Azure SQL server 'myserver'"
