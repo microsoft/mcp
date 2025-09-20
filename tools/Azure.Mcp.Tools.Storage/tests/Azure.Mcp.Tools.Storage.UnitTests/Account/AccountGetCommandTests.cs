@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Command;
@@ -125,7 +126,7 @@ public class AccountGetCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
     }
 
@@ -173,7 +174,7 @@ public class AccountGetCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+            Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
             if (shouldSucceed)
             {
                 Assert.NotNull(response.Results);
@@ -213,7 +214,7 @@ public class AccountGetCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.AccountGetCommandResult);
@@ -243,7 +244,7 @@ public class AccountGetCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -257,7 +258,7 @@ public class AccountGetCommandTests
 
         _storageService.GetAccountDetails(
             Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .ThrowsAsync(new RequestFailedException(404, "Storage account not found"));
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Storage account not found"));
 
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
@@ -265,7 +266,7 @@ public class AccountGetCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(404, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("Storage account not found", response.Message);
     }
 
@@ -278,7 +279,7 @@ public class AccountGetCommandTests
 
         _storageService.GetAccountDetails(
             Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .ThrowsAsync(new RequestFailedException(403, "Authorization failed"));
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
@@ -286,7 +287,7 @@ public class AccountGetCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(403, response.Status);
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
     }
 }

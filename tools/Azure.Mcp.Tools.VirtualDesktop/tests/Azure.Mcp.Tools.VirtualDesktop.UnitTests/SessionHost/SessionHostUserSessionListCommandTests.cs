@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
@@ -114,12 +115,12 @@ public class SessionHostUserSessionListCommandTests
         // Assert
         if (shouldSucceed)
         {
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
         }
         else
         {
-            Assert.Equal(400, response.Status);
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
             Assert.True(response.Message?.Contains("required", StringComparison.CurrentCultureIgnoreCase) == true ||
                        response.Message?.Contains("hostpool") == true ||
                        response.Message?.Contains("hostpool-resource-id") == true);
@@ -166,7 +167,7 @@ public class SessionHostUserSessionListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
@@ -210,7 +211,7 @@ public class SessionHostUserSessionListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
@@ -261,7 +262,7 @@ public class SessionHostUserSessionListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
@@ -316,7 +317,7 @@ public class SessionHostUserSessionListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
     }
@@ -347,7 +348,7 @@ public class SessionHostUserSessionListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -356,7 +357,7 @@ public class SessionHostUserSessionListCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException_NotFound()
     {
         // Arrange
-        var exception = new RequestFailedException(404, "Session host not found");
+        var exception = new RequestFailedException((int)HttpStatusCode.NotFound, "Session host not found");
         _virtualDesktopService.ListUserSessionsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -379,7 +380,7 @@ public class SessionHostUserSessionListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(404, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("Session host or hostpool not found", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -388,7 +389,7 @@ public class SessionHostUserSessionListCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException_Forbidden()
     {
         // Arrange
-        var exception = new RequestFailedException(403, "Access denied");
+        var exception = new RequestFailedException((int)HttpStatusCode.Forbidden, "Access denied");
         _virtualDesktopService.ListUserSessionsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -411,7 +412,7 @@ public class SessionHostUserSessionListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(403, response.Status);
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Access denied", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -455,7 +456,7 @@ public class SessionHostUserSessionListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 

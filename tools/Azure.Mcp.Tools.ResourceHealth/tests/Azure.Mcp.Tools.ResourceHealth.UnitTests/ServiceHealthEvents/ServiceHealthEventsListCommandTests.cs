@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ResourceHealth.Commands.ServiceHealthEvents;
@@ -81,13 +82,13 @@ public class ServiceHealthEventsListCommandTests
         // Assert
         if (shouldSucceed)
         {
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response);
             Assert.Equal("Success", response.Message);
         }
         else
         {
-            Assert.Equal(400, response.Status);
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
             // Error message might contain "required" for missing subscription or "Invalid" for enum validation
             Assert.True(
                 response.Message?.ToLower().Contains("required") == true ||
@@ -120,7 +121,7 @@ public class ServiceHealthEventsListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
     }
 
@@ -148,7 +149,7 @@ public class ServiceHealthEventsListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains(expectedError, response.Message ?? "");
     }
 

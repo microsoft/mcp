@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.Database;
@@ -76,12 +77,12 @@ public class DatabaseListCommandTests
         // Assert
         if (shouldSucceed)
         {
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
         }
         else
         {
-            Assert.NotEqual(200, response.Status);
+            Assert.NotEqual(HttpStatusCode.OK, response.Status);
         }
     }
 
@@ -103,7 +104,7 @@ public class DatabaseListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.NotEqual(200, response.Status);
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
         Assert.Contains("Test error", response.Message);
     }
 
@@ -131,7 +132,7 @@ public class DatabaseListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         await _sqlService.Received(1).ListDatabasesAsync("test-server", "test-rg", "test-sub", Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());

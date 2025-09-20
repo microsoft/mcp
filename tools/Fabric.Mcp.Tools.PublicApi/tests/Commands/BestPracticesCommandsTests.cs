@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Fabric.Mcp.Tools.PublicApi.Commands.BestPractices;
 using Fabric.Mcp.Tools.PublicApi.Services;
@@ -71,7 +72,7 @@ public class BestPracticesCommandsTests
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
         fabricService.Received(1).GetTopicBestPractices("pagination");
     }
@@ -95,7 +96,7 @@ public class BestPracticesCommandsTests
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, result.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, result.Status);
         Assert.Equal("Missing Required options: --topic", result.Message);
         fabricService.DidNotReceive().GetTopicBestPractices(Arg.Any<string>());
     }
@@ -121,7 +122,7 @@ public class BestPracticesCommandsTests
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(404, result.Status);
+        Assert.Equal(HttpStatusCode.NotFound, result.Status);
         Assert.Contains("No best practice resources found for invalid-topic", result.Message);
     }
 
@@ -146,7 +147,7 @@ public class BestPracticesCommandsTests
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(500, result.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
         Assert.NotEmpty(result.Message);
     }
 
@@ -213,7 +214,7 @@ public class BestPracticesCommandsTests
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
         await fabricService.Received(1).GetWorkloadExamplesAsync("notebook");
     }
@@ -237,7 +238,7 @@ public class BestPracticesCommandsTests
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, result.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, result.Status);
         Assert.Equal("Missing Required options: --workload-type", result.Message);
         await fabricService.DidNotReceive().GetWorkloadExamplesAsync(Arg.Any<string>());
     }
@@ -263,7 +264,7 @@ public class BestPracticesCommandsTests
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(500, result.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
         Assert.NotEmpty(result.Message);
     }
 
@@ -326,7 +327,7 @@ public class BestPracticesCommandsTests
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
         fabricService.Received(1).GetWorkloadItemDefinition("notebook");
     }
@@ -350,7 +351,7 @@ public class BestPracticesCommandsTests
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, result.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, result.Status);
         Assert.Equal("Missing Required options: --workload-type", result.Message);
         fabricService.DidNotReceive().GetWorkloadItemDefinition(Arg.Any<string>());
     }
@@ -376,7 +377,7 @@ public class BestPracticesCommandsTests
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(404, result.Status);
+        Assert.Equal(HttpStatusCode.NotFound, result.Status);
         Assert.Contains("No item definition found for workload invalid-workload", result.Message);
     }
 
@@ -401,7 +402,7 @@ public class BestPracticesCommandsTests
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(500, result.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
         Assert.NotEmpty(result.Message);
     }
 

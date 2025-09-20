@@ -1,7 +1,5 @@
-using System.CommandLine.Parsing;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;

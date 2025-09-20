@@ -77,7 +77,7 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
             }
         }
 
-        var tokenRequestContext = new TokenRequestContext(new[] { "https://ossrdbms-aad.database.windows.net/.default" });
+        var tokenRequestContext = new TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"]);
         var tokenCredential = await GetCredential();
         var accessToken = await tokenCredential
             .GetTokenAsync(tokenRequestContext, CancellationToken.None)

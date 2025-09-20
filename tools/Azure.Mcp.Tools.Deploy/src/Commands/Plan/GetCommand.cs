@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using Azure.Mcp.Core.Commands;
@@ -14,7 +15,7 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Tools.Deploy.Commands.Plan;
 
 public sealed class GetCommand(ILogger<GetCommand> logger)
-    : BaseCommand()
+    : BaseCommand<GetOptions>
 {
     private const string CommandTitle = "Generate Azure Deployment Plan";
     private readonly ILogger<GetCommand> _logger = logger;
@@ -47,7 +48,7 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
         command.Options.Add(DeployOptionDefinitions.PlanGet.AzdIacOptions);
     }
 
-    private GetOptions BindOptions(ParseResult parseResult)
+    protected override GetOptions BindOptions(ParseResult parseResult)
     {
         return new GetOptions
         {
@@ -83,7 +84,7 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
             var planTemplate = DeploymentPlanTemplateUtil.GetPlanTemplate(options.ProjectName, options.TargetAppService, options.ProvisioningTool, options.AzdIacOptions);
 
             context.Response.Message = planTemplate;
-            context.Response.Status = 200;
+            context.Response.Status = HttpStatusCode.OK;
         }
         catch (Exception ex)
         {

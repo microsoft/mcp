@@ -7,7 +7,7 @@ using Azure.Mcp.Core.Commands;
 
 namespace Azure.Mcp;
 
-[JsonSerializable(typeof(BaseCommand.ExceptionResult))]
+[JsonSerializable(typeof(ExceptionResult))]
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(List<string>))]
 [JsonSerializable(typeof(List<JsonNode>))]

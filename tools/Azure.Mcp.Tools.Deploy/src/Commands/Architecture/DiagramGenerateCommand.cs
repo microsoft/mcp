@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
@@ -12,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Deploy.Commands.Architecture;
 
-public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logger) : BaseCommand()
+public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logger) : BaseCommand<DiagramGenerateOptions>
 {
     private const string CommandTitle = "Generate Architecture Diagram";
     private readonly ILogger<DiagramGenerateCommand> _logger = logger;
@@ -43,7 +44,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
         command.Options.Add(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption);
     }
 
-    private DiagramGenerateOptions BindOptions(ParseResult parseResult)
+    protected override DiagramGenerateOptions BindOptions(ParseResult parseResult)
     {
         var options = new DiagramGenerateOptions();
         options.RawMcpToolInput = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.RawMcpToolInput.RawMcpToolInputOption.Name);
@@ -82,7 +83,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
             if (appTopology.Services.Length == 0)
             {
                 _logger.LogWarning("No services detected in the app topology.");
-                context.Response.Status = 200;
+                context.Response.Status = HttpStatusCode.OK;
                 context.Response.Message = "No service detected.";
                 return Task.FromResult(context.Response);
             }

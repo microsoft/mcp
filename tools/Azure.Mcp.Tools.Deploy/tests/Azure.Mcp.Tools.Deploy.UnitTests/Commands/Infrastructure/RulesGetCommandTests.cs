@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,7 +47,7 @@ public class RulesGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("Deployment Tool azd rules", result.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -66,7 +67,7 @@ public class RulesGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("Expected parameters in terraform parameters", result.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -86,7 +87,7 @@ public class RulesGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("Additional requirements for Function Apps", result.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Storage Blob Data Owner", result.Message, StringComparison.OrdinalIgnoreCase);
@@ -107,7 +108,7 @@ public class RulesGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("Additional requirements for Container Apps", result.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("mcr.microsoft.com/azuredocs/containerapps-helloworld:latest", result.Message, StringComparison.OrdinalIgnoreCase);
@@ -128,7 +129,7 @@ public class RulesGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("If creating AzCli script, the script should stop if any command fails.", result.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -148,7 +149,7 @@ public class RulesGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("Tools needed:", result.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("az cli", result.Message, StringComparison.OrdinalIgnoreCase);
@@ -171,7 +172,7 @@ public class RulesGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("Resources: appservice, containerapp, function", result.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("App Service Rules", result.Message, StringComparison.OrdinalIgnoreCase);

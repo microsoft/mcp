@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.Database;
@@ -71,7 +72,7 @@ public class DatabaseDeleteCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<Core.Options.RetryPolicyOptions?>(),
+                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(true);
         }
@@ -82,7 +83,7 @@ public class DatabaseDeleteCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.Equal("Success", response.Message);
@@ -109,7 +110,7 @@ public class DatabaseDeleteCommandTests
 
         var response = await _command.ExecuteAsync(_context, parseResult);
 
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
     }
@@ -130,7 +131,7 @@ public class DatabaseDeleteCommandTests
 
         var response = await _command.ExecuteAsync(_context, parseResult);
 
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
     }
@@ -150,7 +151,7 @@ public class DatabaseDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub1 --resource-group rg1 --server server1 --database db1");
         var response = await _command.ExecuteAsync(_context, parseResult);
 
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -158,7 +159,7 @@ public class DatabaseDeleteCommandTests
     [Fact]
     public async Task ExecuteAsync_Handles404Error()
     {
-        var requestFailed = new RequestFailedException(404, "Not found");
+        var requestFailed = new RequestFailedException((int)HttpStatusCode.NotFound, "Not found");
         _sqlService.DeleteDatabaseAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -171,14 +172,14 @@ public class DatabaseDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub1 --resource-group rg1 --server server1 --database db1");
         var response = await _command.ExecuteAsync(_context, parseResult);
 
-        Assert.Equal(404, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("SQL server or database not found", response.Message);
     }
 
     [Fact]
     public async Task ExecuteAsync_Handles403Error()
     {
-        var requestFailed = new RequestFailedException(403, "Access denied");
+        var requestFailed = new RequestFailedException((int)HttpStatusCode.Forbidden, "Access denied");
         _sqlService.DeleteDatabaseAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -191,7 +192,7 @@ public class DatabaseDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub1 --resource-group rg1 --server server1 --database db1");
         var response = await _command.ExecuteAsync(_context, parseResult);
 
-        Assert.Equal(403, response.Status);
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
     }
 
@@ -239,7 +240,7 @@ public class DatabaseDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub1 --resource-group rg1 --server server1 --database db1 --retry-max-retries 5");
         var response = await _command.ExecuteAsync(_context, parseResult);
 
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         await _sqlService.Received(1).DeleteDatabaseAsync(
             "server1",
             "db1",
@@ -269,7 +270,7 @@ public class DatabaseDeleteCommandTests
         var parseResult = _commandDefinition.Parse($"--subscription sub1 --resource-group rg1 --server server1 --database {dbName}");
         var response = await _command.ExecuteAsync(_context, parseResult);
 
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         await _sqlService.Received(1).DeleteDatabaseAsync(
             "server1",
             dbName,
@@ -295,7 +296,7 @@ public class DatabaseDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub1 --resource-group rg1 --server server1 --database invalidDb");
         var response = await _command.ExecuteAsync(_context, parseResult);
 
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Invalid database name", response.Message);
     }
 
@@ -314,7 +315,7 @@ public class DatabaseDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub1 --resource-group rg1 --server server1 --database db1");
         var response = await _command.ExecuteAsync(_context, parseResult);
 
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Aks.Commands.Cluster;
@@ -77,7 +78,7 @@ public class ClusterGetCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.NotNull(response.Results);
@@ -112,7 +113,7 @@ public class ClusterGetCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
     }
@@ -130,7 +131,7 @@ public class ClusterGetCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Null(response.Results);
         Assert.Equal("Success", response.Message);
     }
@@ -148,7 +149,7 @@ public class ClusterGetCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -157,7 +158,7 @@ public class ClusterGetCommandTests
     public async Task ExecuteAsync_Handles404NotFound()
     {
         // Arrange
-        var notFoundException = new RequestFailedException(404, "Not Found");
+        var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Not Found");
         _aksService.GetCluster(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<Models.Cluster?>(notFoundException));
 
@@ -167,7 +168,7 @@ public class ClusterGetCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(404, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("AKS cluster not found", response.Message);
     }
 
@@ -175,7 +176,7 @@ public class ClusterGetCommandTests
     public async Task ExecuteAsync_Handles403Forbidden()
     {
         // Arrange
-        var forbiddenException = new RequestFailedException(403, "Forbidden");
+        var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Forbidden");
         _aksService.GetCluster(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<Models.Cluster?>(forbiddenException));
 
@@ -185,7 +186,7 @@ public class ClusterGetCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(403, response.Status);
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
     }
 }

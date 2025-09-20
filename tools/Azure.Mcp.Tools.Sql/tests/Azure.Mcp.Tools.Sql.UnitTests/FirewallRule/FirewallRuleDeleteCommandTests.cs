@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.FirewallRule;
@@ -82,7 +83,7 @@ public class FirewallRuleDeleteCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.Equal("Success", response.Message);
@@ -113,7 +114,7 @@ public class FirewallRuleDeleteCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
     }
@@ -138,7 +139,7 @@ public class FirewallRuleDeleteCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
     }
@@ -163,7 +164,7 @@ public class FirewallRuleDeleteCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -172,7 +173,7 @@ public class FirewallRuleDeleteCommandTests
     public async Task ExecuteAsync_Handles404Error()
     {
         // Arrange
-        var requestException = new RequestFailedException(404, "Server not found");
+        var requestException = new RequestFailedException((int)HttpStatusCode.NotFound, "Server not found");
         _service.DeleteFirewallRuleAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -189,7 +190,7 @@ public class FirewallRuleDeleteCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(404, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("SQL server or firewall rule not found", response.Message);
     }
 
@@ -197,7 +198,7 @@ public class FirewallRuleDeleteCommandTests
     public async Task ExecuteAsync_Handles403Error()
     {
         // Arrange
-        var requestException = new RequestFailedException(403, "Access denied");
+        var requestException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Access denied");
         _service.DeleteFirewallRuleAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -214,7 +215,7 @@ public class FirewallRuleDeleteCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(403, response.Status);
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
     }
 
@@ -272,7 +273,7 @@ public class FirewallRuleDeleteCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the service was called with retry policy
@@ -310,7 +311,7 @@ public class FirewallRuleDeleteCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the service was called with the correct rule name
@@ -344,7 +345,7 @@ public class FirewallRuleDeleteCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Invalid firewall rule name", response.Message);
     }
 
@@ -369,7 +370,7 @@ public class FirewallRuleDeleteCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 }

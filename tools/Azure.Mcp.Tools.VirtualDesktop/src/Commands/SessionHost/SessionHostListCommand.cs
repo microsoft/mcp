@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
@@ -90,9 +91,9 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException rfEx when rfEx.Status == 404 =>
+        RequestFailedException rfEx when rfEx.Status == (int)HttpStatusCode.NotFound =>
             "Hostpool not found. Verify the hostpool name and that you have access to it.",
-        RequestFailedException rfEx when rfEx.Status == 403 =>
+        RequestFailedException rfEx when rfEx.Status == (int)HttpStatusCode.Forbidden =>
             "Access denied. Verify you have the necessary permissions to access the hostpool.",
         RequestFailedException rfEx => rfEx.Message,
         _ => base.GetErrorMessage(ex)

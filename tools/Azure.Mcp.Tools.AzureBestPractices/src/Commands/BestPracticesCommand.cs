@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using Azure.Mcp.Core.Commands;
@@ -12,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
 
-public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : BaseCommand
+public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : BaseCommand<BestPracticesOptions>
 {
     private const string CommandTitle = "Get Azure Best Practices";
     private readonly ILogger<BestPracticesCommand> _logger = logger;
@@ -47,7 +48,7 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         command.Options.Add(BestPracticesOptionDefinitions.Action);
     }
 
-    private BestPracticesOptions BindOptions(ParseResult parseResult)
+    protected override BestPracticesOptions BindOptions(ParseResult parseResult)
     {
         return new BestPracticesOptions
         {
@@ -69,7 +70,7 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         {
             if (string.IsNullOrEmpty(options.Resource) || string.IsNullOrEmpty(options.Action))
             {
-                context.Response.Status = 400;
+                context.Response.Status = HttpStatusCode.BadRequest;
                 context.Response.Message = "Both resource and action parameters are required.";
                 return Task.FromResult(context.Response);
             }
@@ -77,7 +78,7 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
             var resourceFileName = GetResourceFileName(options.Resource, options.Action);
             var bestPractices = GetBestPracticesText(resourceFileName);
 
-            context.Response.Status = 200;
+            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create([bestPractices], AzureBestPracticesJsonContext.Default.ListString);
             context.Response.Message = string.Empty;
 
@@ -131,7 +132,7 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
 
         if (!result.IsValid && commandResponse != null)
         {
-            commandResponse.Status = 400;
+            commandResponse.Status = HttpStatusCode.BadRequest;
             commandResponse.Message = result.ErrorMessage!;
         }
 

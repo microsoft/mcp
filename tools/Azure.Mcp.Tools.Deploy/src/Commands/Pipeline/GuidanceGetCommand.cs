@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
@@ -68,7 +69,7 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
             var result = PipelineGenerationUtil.GeneratePipelineGuidelines(options);
 
             context.Response.Message = result;
-            context.Response.Status = 200;
+            context.Response.Status = HttpStatusCode.OK;
         }
         catch (Exception ex)
         {

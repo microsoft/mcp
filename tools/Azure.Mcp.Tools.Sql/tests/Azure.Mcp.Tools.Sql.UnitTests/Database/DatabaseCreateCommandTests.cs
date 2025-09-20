@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.Database;
@@ -94,7 +95,7 @@ public class DatabaseCreateCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
     }
@@ -157,7 +158,7 @@ public class DatabaseCreateCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
     }
@@ -189,7 +190,7 @@ public class DatabaseCreateCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -198,7 +199,7 @@ public class DatabaseCreateCommandTests
     public async Task ExecuteAsync_HandlesDatabaseAlreadyExists()
     {
         // Arrange
-        var conflictException = new RequestFailedException(409, "Database already exists");
+        var conflictException = new RequestFailedException((int)HttpStatusCode.Conflict, "Database already exists");
         _sqlService.CreateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -222,7 +223,7 @@ public class DatabaseCreateCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(409, response.Status);
+        Assert.Equal(HttpStatusCode.Conflict, response.Status);
         Assert.Contains("already exists", response.Message);
     }
 
@@ -230,7 +231,7 @@ public class DatabaseCreateCommandTests
     public async Task ExecuteAsync_HandlesServerNotFound()
     {
         // Arrange
-        var notFoundException = new RequestFailedException(404, "Server not found");
+        var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Server not found");
         _sqlService.CreateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -254,7 +255,7 @@ public class DatabaseCreateCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(404, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("SQL server not found", response.Message);
     }
 
@@ -262,7 +263,7 @@ public class DatabaseCreateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
-        var authException = new RequestFailedException(403, "Authorization failed");
+        var authException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
         _sqlService.CreateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -286,7 +287,7 @@ public class DatabaseCreateCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(403, response.Status);
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
     }
 
@@ -294,7 +295,7 @@ public class DatabaseCreateCommandTests
     public async Task ExecuteAsync_HandlesInvalidConfiguration()
     {
         // Arrange
-        var badRequestException = new RequestFailedException(400, "Invalid configuration");
+        var badRequestException = new RequestFailedException((int)HttpStatusCode.BadRequest, "Invalid configuration");
         _sqlService.CreateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -318,7 +319,7 @@ public class DatabaseCreateCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Invalid database configuration", response.Message);
     }
 
@@ -377,11 +378,11 @@ public class DatabaseCreateCommandTests
         // Assert
         if (shouldSucceed)
         {
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
         }
         else
         {
-            Assert.NotEqual(200, response.Status);
+            Assert.NotEqual(HttpStatusCode.OK, response.Status);
             if (expectedError != null)
             {
                 Assert.Contains(expectedError, response.Message, StringComparison.OrdinalIgnoreCase);

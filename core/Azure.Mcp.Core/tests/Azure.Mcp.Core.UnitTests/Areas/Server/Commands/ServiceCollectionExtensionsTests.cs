@@ -247,7 +247,7 @@ public class ServiceCollectionExtensionsTests
         var options = new ServiceStartOptions
         {
             Transport = StdioTransport,
-            Namespace = new[] { "keyvault", "storage" }
+            Namespace = ["keyvault", "storage"]
         };
 
         // Act
@@ -279,7 +279,7 @@ public class ServiceCollectionExtensionsTests
         var options = new ServiceStartOptions
         {
             Transport = StdioTransport,
-            Namespace = new[] { serviceArea }
+            Namespace = [serviceArea]
         };
 
         // Act

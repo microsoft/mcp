@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
@@ -170,7 +171,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         catch (Exception ex)
         {
             // Some implementations might return 404 - this is also acceptable
-            Assert.Contains("404", ex.Message);
+            Assert.Contains(((int)HttpStatusCode.NotFound).ToString(), ex.Message);
         }
     }
 

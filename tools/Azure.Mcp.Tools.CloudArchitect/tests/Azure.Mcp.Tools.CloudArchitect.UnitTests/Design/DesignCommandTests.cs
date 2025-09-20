@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -86,7 +87,7 @@ public class DesignCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Empty(response.Message);
 
@@ -129,7 +130,7 @@ public class DesignCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Empty(response.Message);
 
@@ -159,7 +160,7 @@ public class DesignCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Empty(response.Message);
 
@@ -197,7 +198,7 @@ public class DesignCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Empty(response.Message);
 
@@ -246,7 +247,7 @@ public class DesignCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         string serializedResult = SerializeResponseResult(response.Results!);
         var responseObject = JsonSerializer.Deserialize(serializedResult, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
@@ -269,7 +270,7 @@ public class DesignCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Empty(response.Message);
 
@@ -302,7 +303,7 @@ public class DesignCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Empty(response.Message);
 
@@ -561,7 +562,7 @@ public class DesignCommandTests
 
         // Assert
         Assert.Empty(parseResult.Errors);
-        Assert.Equal(200, _context.Response.Status);
+        Assert.Equal(HttpStatusCode.OK, _context.Response.Status);
 
         // Verify that the state was parsed correctly by checking the response
         string serializedResult = SerializeResponseResult(_context.Response.Results!);
@@ -588,7 +589,7 @@ public class DesignCommandTests
     //     var response = await _command.ExecuteAsync(_context, parseResult);
 
     //     // Assert - The command should handle the error gracefully and return an error response
-    //     Assert.NotEqual(200, response.Status);
+    //     Assert.NotEqual(HttpStatusCode.OK, response.Status);
     //     Assert.NotEmpty(response.Message);
     // }
 
@@ -603,7 +604,7 @@ public class DesignCommandTests
         var result = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, _context.Response.Status);
+        Assert.Equal(HttpStatusCode.OK, _context.Response.Status);
 
         string serializedResult = SerializeResponseResult(_context.Response.Results!);
         var responseObject = JsonSerializer.Deserialize(serializedResult, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);

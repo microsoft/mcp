@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.EventGrid.Models;
-
 namespace Azure.Mcp.Tools.EventGrid.Services;
 
 public interface IEventGridService

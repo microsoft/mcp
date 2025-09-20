@@ -3,6 +3,7 @@
 
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
@@ -47,7 +48,7 @@ public abstract class BaseClusterCommand<
 
                 if (commandResponse != null)
                 {
-                    commandResponse.Status = 400;
+                    commandResponse.Status = HttpStatusCode.BadRequest;
                     commandResponse.Message = validationResult.ErrorMessage;
                 }
             }

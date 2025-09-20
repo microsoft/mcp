@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
@@ -39,13 +40,13 @@ internal class Program
             var parseResult = rootCommand.Parse(args);
             var status = await parseResult.InvokeAsync();
 
-            return (status >= 200 && status < 300) ? 0 : 1;
+            return (status >= (int)HttpStatusCode.OK && status < (int)HttpStatusCode.MultipleChoices) ? 0 : 1;
         }
         catch (Exception ex)
         {
             WriteResponse(new CommandResponse
             {
-                Status = 500,
+                Status = HttpStatusCode.InternalServerError,
                 Message = ex.Message,
                 Duration = 0
             });

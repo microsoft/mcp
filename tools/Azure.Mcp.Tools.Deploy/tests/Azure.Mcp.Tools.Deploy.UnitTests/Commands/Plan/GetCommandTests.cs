@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Deploy.Commands.Plan;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,7 +49,7 @@ public class GetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("# Azure Deployment Plan for django Project", result.Message);
         Assert.Contains("Azure Container Apps", result.Message);
@@ -71,7 +72,7 @@ public class GetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("# Azure Deployment Plan for myapp Project", result.Message);
         Assert.Contains("Azure Web App Service", result.Message);
@@ -93,7 +94,7 @@ public class GetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("# Azure Deployment Plan for k8s-app Project", result.Message);
         Assert.Contains("Azure Kubernetes Service", result.Message);
@@ -114,7 +115,7 @@ public class GetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("# Azure Deployment Plan for default-app Project", result.Message);
         Assert.Contains("Azure Container Apps", result.Message); // Should default to Container Apps
