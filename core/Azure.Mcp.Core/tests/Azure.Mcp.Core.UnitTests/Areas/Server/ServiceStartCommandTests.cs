@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Models.Command;
@@ -103,9 +104,9 @@ public class ServiceStartCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains($"Invalid transport '{invalidTransport}'", response.Message);
-        Assert.Contains("Valid transports are: stdio", response.Message);
+        Assert.Contains("Valid transports are: stdio.", response.Message);
     }
 
     [Theory]
@@ -123,9 +124,9 @@ public class ServiceStartCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains($"Invalid mode '{invalidMode}'", response.Message);
-        Assert.Contains("Valid modes are: single, namespace, all", response.Message);
+        Assert.Contains("Valid modes are: single, namespace, all.", response.Message);
     }
 
     [Theory]
@@ -144,7 +145,7 @@ public class ServiceStartCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert - Should not fail validation, though may fail later due to server startup
-        if (response.Status == 400 && response.Message?.Contains("Invalid mode") == true)
+        if (response.Status == HttpStatusCode.BadRequest && response.Message?.Contains("Invalid mode") == true)
         {
             Assert.Fail($"Mode '{validMode}' should be valid but got validation error: {response.Message}");
         }
@@ -285,7 +286,7 @@ public class ServiceStartCommandTests
         var statusCode = GetStatusCode(exception);
 
         // Assert
-        Assert.Equal(400, statusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, statusCode);
     }
 
     [Fact]
@@ -298,7 +299,7 @@ public class ServiceStartCommandTests
         var statusCode = GetStatusCode(exception);
 
         // Assert
-        Assert.Equal(422, statusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, statusCode);
     }
 
     [Fact]
@@ -311,7 +312,7 @@ public class ServiceStartCommandTests
         var statusCode = GetStatusCode(exception);
 
         // Assert
-        Assert.Equal(500, statusCode);
+        Assert.Equal(HttpStatusCode.InternalServerError, statusCode);
     }
 
     [Fact]
@@ -525,7 +526,7 @@ public class ServiceStartCommandTests
         // Use reflection to access the protected BindOptions method
         var method = typeof(ServiceStartCommand).GetMethod("BindOptions",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        return (ServiceStartOptions)method!.Invoke(_command, new object[] { parseResult })!;
+        return (ServiceStartOptions)method!.Invoke(_command, [parseResult])!;
     }
 
     private string GetErrorMessage(Exception exception)
@@ -533,14 +534,14 @@ public class ServiceStartCommandTests
         // Use reflection to access the protected GetErrorMessage method
         var method = typeof(ServiceStartCommand).GetMethod("GetErrorMessage",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        return (string)method!.Invoke(_command, new object[] { exception })!;
+        return (string)method!.Invoke(_command, [exception])!;
     }
 
-    private int GetStatusCode(Exception exception)
+    private HttpStatusCode GetStatusCode(Exception exception)
     {
         // Use reflection to access the protected GetStatusCode method
         var method = typeof(ServiceStartCommand).GetMethod("GetStatusCode",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        return (int)method!.Invoke(_command, new object[] { exception })!;
+        return (HttpStatusCode)method!.Invoke(_command, [exception])!;
     }
 }

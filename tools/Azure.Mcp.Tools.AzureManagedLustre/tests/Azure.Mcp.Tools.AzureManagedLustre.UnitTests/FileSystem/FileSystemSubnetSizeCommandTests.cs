@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -92,7 +93,7 @@ public class FileSystemSubnetSizeCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.True(response.Status == 200 || response.Results != null);
+        Assert.True(response.Status == HttpStatusCode.OK || response.Results != null);
     }
 
     [Fact]
@@ -109,7 +110,7 @@ public class FileSystemSubnetSizeCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.True(response.Status >= 400);
+        Assert.True(response.Status >= HttpStatusCode.BadRequest);
         Assert.Contains("invalid sku", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -126,7 +127,7 @@ public class FileSystemSubnetSizeCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.True(response.Status >= 500);
+        Assert.True(response.Status >= HttpStatusCode.InternalServerError);
         Assert.Contains("boom", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

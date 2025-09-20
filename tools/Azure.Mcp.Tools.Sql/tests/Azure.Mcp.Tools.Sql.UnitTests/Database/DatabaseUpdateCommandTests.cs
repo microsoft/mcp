@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.Database;
@@ -106,7 +107,7 @@ public class DatabaseUpdateCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
     }
@@ -143,7 +144,7 @@ public class DatabaseUpdateCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -152,7 +153,7 @@ public class DatabaseUpdateCommandTests
     public async Task ExecuteAsync_HandlesDatabaseNotFound()
     {
         // Arrange
-        var notFoundException = new RequestFailedException(404, "Database not found");
+        var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Database not found");
         _sqlService.UpdateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -181,7 +182,7 @@ public class DatabaseUpdateCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(404, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not found", response.Message);
     }
 
@@ -189,7 +190,7 @@ public class DatabaseUpdateCommandTests
     public async Task ExecuteAsync_HandlesInvalidConfiguration()
     {
         // Arrange
-        var badRequestException = new RequestFailedException(400, "Invalid configuration");
+        var badRequestException = new RequestFailedException((int)HttpStatusCode.BadRequest, "Invalid configuration");
         _sqlService.UpdateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -218,7 +219,7 @@ public class DatabaseUpdateCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Invalid database configuration", response.Message);
     }
 
@@ -280,11 +281,11 @@ public class DatabaseUpdateCommandTests
         // Assert
         if (shouldSucceed)
         {
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
         }
         else
         {
-            Assert.NotEqual(200, response.Status);
+            Assert.NotEqual(HttpStatusCode.OK, response.Status);
             if (expectedError != null)
             {
                 Assert.Contains(expectedError, response.Message, StringComparison.OrdinalIgnoreCase);
@@ -343,7 +344,7 @@ public class DatabaseUpdateCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
 
@@ -415,7 +416,7 @@ public class DatabaseUpdateCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
     }
@@ -474,7 +475,7 @@ public class DatabaseUpdateCommandTests
 
             // Assert
             Assert.NotNull(response);
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
             Assert.Equal("Success", response.Message);
         }
@@ -517,7 +518,7 @@ public class DatabaseUpdateCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Invalid server name", response.Message);
     }
 }

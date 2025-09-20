@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
@@ -82,7 +83,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
             if (appTopology.Services.Length == 0)
             {
                 _logger.LogWarning("No services detected in the app topology.");
-                context.Response.Status = 200;
+                context.Response.Status = HttpStatusCode.OK;
                 context.Response.Message = "No service detected.";
                 return Task.FromResult(context.Response);
             }

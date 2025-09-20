@@ -162,7 +162,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             ErrorMessage = $"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}."
         };
 
-        SetValidationError(commandResponse, result.ErrorMessage!, 400);
+        SetValidationError(commandResponse, result.ErrorMessage!, HttpStatusCode.BadRequest);
         return result;
     }
 
@@ -185,7 +185,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             ErrorMessage = $"Invalid transport '{transport}'. Valid transports are: {TransportTypes.StdIo}."
         };
 
-        SetValidationError(commandResponse, result.ErrorMessage!, 400);
+        SetValidationError(commandResponse, result.ErrorMessage!, HttpStatusCode.BadRequest);
         return result;
     }
 
@@ -216,9 +216,25 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             ErrorMessage = "Using --enable-insecure-transport requires the host to have either Managed Identity or Workload Identity enabled. Please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting."
         };
 
-        SetValidationError(commandResponse, result.ErrorMessage!, 422);
+        SetValidationError(commandResponse, result.ErrorMessage!, HttpStatusCode.InternalServerError);
         return result;
     }
+
+    /// <summary>
+    /// Provides custom error messages for specific exception types to improve user experience.
+    /// </summary>
+    /// <param name="ex">The exception to format an error message for.</param>
+    /// <returns>A user-friendly error message.</returns>
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        ArgumentException argEx when argEx.Message.Contains("Invalid transport") =>
+            "Invalid transport option specified. Use --transport stdio for the supported transport mechanism.",
+        ArgumentException argEx when argEx.Message.Contains("Invalid mode") =>
+            "Invalid mode option specified. Use --mode single, namespace, or all for the supported modes.",
+        InvalidOperationException invOpEx when invOpEx.Message.Contains("Using --enable-insecure-transport") =>
+            "Insecure transport configuration error. Ensure proper authentication configured with Managed Identity or Workload Identity.",
+        _ => base.GetErrorMessage(ex)
+    };
 
     /// <summary>
     /// Creates the host for the MCP server with the specified options.
@@ -380,14 +396,5 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
 
         return url;
-    }
-
-    /// <summary>
-    /// Hosted service for running the MCP server using standard input/output.
-    /// </summary>
-    private sealed class StdioMcpServerHostedService(IMcpServer session) : BackgroundService
-    {
-        /// <inheritdoc />
-        protected override Task ExecuteAsync(CancellationToken stoppingToken) => session.RunAsync(stoppingToken);
     }
 }

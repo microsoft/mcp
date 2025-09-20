@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Mcp.Core.Models.Option;
@@ -127,11 +128,11 @@ public abstract class GlobalCommand<
         _ => ex.Message  // Just return the actual exception message
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        AuthenticationFailedException => 401,
-        RequestFailedException rfEx => rfEx.Status,
-        HttpRequestException => 503,
-        _ => 500
+        AuthenticationFailedException => HttpStatusCode.Unauthorized,
+        RequestFailedException rfEx => (HttpStatusCode)rfEx.Status,
+        HttpRequestException => HttpStatusCode.ServiceUnavailable,
+        _ => HttpStatusCode.InternalServerError
     };
 }

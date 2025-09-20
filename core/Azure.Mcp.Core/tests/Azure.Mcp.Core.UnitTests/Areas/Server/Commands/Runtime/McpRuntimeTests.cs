@@ -164,7 +164,7 @@ public class McpRuntimeTests
         var options = CreateOptions(new ServiceStartOptions
         {
             ReadOnly = true,
-            Namespace = new[] { "storage", "keyvault" }
+            Namespace = ["storage", "keyvault"]
         });
 
         // Act
@@ -410,7 +410,7 @@ public class McpRuntimeTests
         var options2 = CreateOptions(new ServiceStartOptions
         {
             ReadOnly = null,
-            Namespace = new[] { "storage", "keyvault", "monitor" }
+            Namespace = ["storage", "keyvault", "monitor"]
         });
         var runtime2 = new McpRuntime(mockToolLoader, options2, CreateMockTelemetryService(), logger);
         Assert.NotNull(runtime2);

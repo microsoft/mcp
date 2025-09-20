@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Reflection;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
@@ -42,10 +43,12 @@ public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraform
         Secret = false
     };
 
+    protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
+
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         var bestPractices = GetBestPracticesText();
-        context.Response.Status = 200;
+        context.Response.Status = HttpStatusCode.OK;
         context.Response.Results = ResponseResult.Create([bestPractices], AzureTerraformBestPracticesJsonContext.Default.ListString);
         context.Response.Message = string.Empty;
         return Task.FromResult(context.Response);

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
@@ -49,7 +50,7 @@ internal class Program
         {
             WriteResponse(new CommandResponse
             {
-                Status = 500,
+                Status = HttpStatusCode.InternalServerError,
                 Message = ex.Message,
                 Duration = 0
             });

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
@@ -150,7 +151,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             // Configure read scale if provided
             if (!string.IsNullOrEmpty(readScale))
             {
-                if (Enum.TryParse<ResourceManager.Sql.Models.DatabaseReadScale>(readScale, true, out var readScaleEnum))
+                if (Enum.TryParse<DatabaseReadScale>(readScale, true, out var readScaleEnum))
                 {
                     databaseData.ReadScale = readScaleEnum;
                 }
@@ -261,7 +262,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             }
 
             if (!string.IsNullOrEmpty(readScale) &&
-                Enum.TryParse<ResourceManager.Sql.Models.DatabaseReadScale>(readScale, true, out var readScaleEnum))
+                Enum.TryParse<DatabaseReadScale>(readScale, true, out var readScaleEnum))
             {
                 databaseData.ReadScale = readScaleEnum;
             }
@@ -542,7 +543,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
             return true;
         }
-        catch (RequestFailedException ex) when (ex.Status == 404)
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(
                 "Firewall rule not found during delete operation. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}",
@@ -687,7 +688,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 Tags: tags
             );
         }
-        catch (RequestFailedException reqEx) when (reqEx.Status == 404)
+        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
         {
             throw new KeyNotFoundException($"SQL server '{serverName}' not found in resource group '{resourceGroup}' for subscription '{subscription}'.");
         }
@@ -778,7 +779,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
             return true;
         }
-        catch (RequestFailedException reqEx) when (reqEx.Status == 404)
+        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(
                 "SQL server not found during delete operation. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
@@ -833,7 +834,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
             return true;
         }
-        catch (RequestFailedException ex) when (ex.Status == 404)
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(
                 "Database not found during delete operation. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",

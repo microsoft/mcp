@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using Azure.Mcp.Core.Commands;
@@ -83,7 +84,7 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
             var planTemplate = DeploymentPlanTemplateUtil.GetPlanTemplate(options.ProjectName, options.TargetAppService, options.ProvisioningTool, options.AzdIacOptions);
 
             context.Response.Message = planTemplate;
-            context.Response.Status = 200;
+            context.Response.Status = HttpStatusCode.OK;
         }
         catch (Exception ex)
         {

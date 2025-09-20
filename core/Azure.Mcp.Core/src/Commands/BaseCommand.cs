@@ -3,6 +3,7 @@
 
 using System.CommandLine.Parsing;
 using System.Diagnostics;
+using System.Net;
 using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Helpers;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
@@ -12,7 +13,6 @@ namespace Azure.Mcp.Core.Commands;
 public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : class, new()
 {
     private const string MissingRequiredOptionsPrefix = "Missing Required options: ";
-    private const int ValidationErrorStatusCode = 400;
     private const string TroubleshootingUrl = "https://aka.ms/azmcp/troubleshooting";
 
     private readonly Command _command;
@@ -83,11 +83,11 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
 
     protected virtual string GetErrorMessage(Exception ex) => ex.Message;
 
-    protected virtual int GetStatusCode(Exception ex) => ex switch
+    protected virtual HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        ArgumentException => 400,  // Bad Request for invalid arguments
-        InvalidOperationException => 422,  // Unprocessable Entity for configuration errors
-        _ => 500  // Internal Server Error for unexpected errors
+        ArgumentException => HttpStatusCode.BadRequest,  // Bad Request for invalid arguments
+        InvalidOperationException => HttpStatusCode.UnprocessableEntity,  // Unprocessable Entity for configuration errors
+        _ => HttpStatusCode.InternalServerError  // Internal Server Error for unexpected errors
     };
 
     public virtual ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
@@ -126,7 +126,7 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
         {
             if (response != null)
             {
-                response.Status = ValidationErrorStatusCode;
+                response.Status = HttpStatusCode.BadRequest;
                 response.Message = errorMessage;
             }
         }
@@ -138,7 +138,7 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
     /// <param name="response">The command response to update.</param>
     /// <param name="errorMessage">The error message.</param>
     /// <param name="statusCode">The HTTP status code (defaults to ValidationErrorStatusCode).</param>
-    protected static void SetValidationError(CommandResponse? response, string errorMessage, int statusCode)
+    protected static void SetValidationError(CommandResponse? response, string errorMessage, HttpStatusCode statusCode)
     {
         if (response != null)
         {
