@@ -140,11 +140,11 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             // Create events as raw JSON strings using lazy evaluation
             var eventJsonStrings = events.Select(evt =>
             {
-                // Manually escape JSON strings to avoid JsonSerializer
-                var escapedSubject = EscapeJsonString(evt.Subject);
-                var escapedEventType = EscapeJsonString(evt.EventType);
-                var escapedId = EscapeJsonString(evt.Id);
-                var escapedDataVersion = EscapeJsonString(evt.DataVersion);
+                // Use JsonEncodedText.Encode for AOT-compatible JSON escaping
+                var escapedSubject = JsonEncodedText.Encode(evt.Subject);
+                var escapedEventType = JsonEncodedText.Encode(evt.EventType);
+                var escapedId = JsonEncodedText.Encode(evt.Id);
+                var escapedDataVersion = JsonEncodedText.Encode(evt.DataVersion);
                 var formattedEventTime = evt.EventTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
 
                 return $$"""
@@ -597,52 +597,5 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    // Helper method to escape JSON strings manually to avoid JsonSerializer AOT issues
-    private static string EscapeJsonString(string input)
-    {
-        if (string.IsNullOrEmpty(input))
-            return string.Empty;
 
-        var result = new StringBuilder(input.Length + 10);
-
-        foreach (char c in input)
-        {
-            switch (c)
-            {
-                case '"':
-                    result.Append("\\\"");
-                    break;
-                case '\\':
-                    result.Append("\\\\");
-                    break;
-                case '\b':
-                    result.Append("\\b");
-                    break;
-                case '\f':
-                    result.Append("\\f");
-                    break;
-                case '\n':
-                    result.Append("\\n");
-                    break;
-                case '\r':
-                    result.Append("\\r");
-                    break;
-                case '\t':
-                    result.Append("\\t");
-                    break;
-                default:
-                    if (char.IsControl(c))
-                    {
-                        result.Append($"\\u{(int)c:x4}");
-                    }
-                    else
-                    {
-                        result.Append(c);
-                    }
-                    break;
-            }
-        }
-
-        return result.ToString();
-    }
 }
