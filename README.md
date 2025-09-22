@@ -80,7 +80,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **DESCRIPTION**: Community-contributed instructions, prompts, and configurations to help you make the most of GitHub Copilot.
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
-- **INSTALL**: [![Install Awesome Copilot MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Awesome_Copilot_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://aka.ms/awesome-copilot/mcp/vscode) [![Install Awesome Copilot MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Awesome_Copilot_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://aka.ms/awesome-copilot/mcp/vscode-insiders) [![Install in Visual Studio](https://img.shields.io/badge/Visual_Studio-Install-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://aka.ms/awesome-copilot/mcp/vs)
+- **INSTALL**: [![Install Awesome Copilot MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Awesome_Copilot_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://aka.ms/awesome-copilot/mcp/vscode) [![Install Awesome Copilot MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Awesome_Copilot_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://aka.ms/awesome-copilot/mcp/vscode-insiders) [![Install in Visual Studio](https://img.shields.io/badge/Visual_Studio-Install_Awesome_Copilot_MCP_Server-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://aka.ms/awesome-copilot/mcp/vs)
 
 ### 📝 Markitdown
 - **REPOSITORY**: [microsoft/markitdown](https://github.com/microsoft/markitdown)
