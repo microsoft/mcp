@@ -155,58 +155,5 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         Assert.True(namespaceData.TryGetProperty("tags", out _));
     }
 
-    [Fact]
-    public async Task Should_GetSingleNamespaceById_Successfully()
-    {
-        // First get the namespace ID by listing namespaces
-        var listResult = await CallToolAsync(
-            "azmcp_eventhubs_namespace_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName }
-            });
-
-        var namespaces = listResult.AssertProperty("namespaces");
-        var namespaceArray = namespaces.EnumerateArray().ToList();
-        var testNamespace = namespaceArray.FirstOrDefault(ns =>
-            ns.GetProperty("name").GetString() == Settings.ResourceBaseName);
-
-        Assert.NotEqual(default, testNamespace);
-        var namespaceId = testNamespace.GetProperty("id").GetString();
-        Assert.NotNull(namespaceId);
-
-        // Now test getting the namespace by ID
-        var result = await CallToolAsync(
-            "azmcp_eventhubs_namespace_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "namespace-id", namespaceId }
-            });
-
-        // Should successfully retrieve the single namespace with detailed metadata
-        var namespaceData = result.AssertProperty("namespace");
-        Assert.Equal(JsonValueKind.Object, namespaceData.ValueKind);
-
-        // Verify it's the same namespace
-        var name = namespaceData.GetProperty("name").GetString();
-        Assert.Equal(Settings.ResourceBaseName, name);
-
-        var id = namespaceData.GetProperty("id").GetString();
-        Assert.Equal(namespaceId, id);
-
-        // Verify comprehensive metadata is present (same validations as the previous test)
-        Assert.True(namespaceData.TryGetProperty("location", out var location));
-        Assert.NotNull(location.GetString());
-
-        Assert.True(namespaceData.TryGetProperty("sku", out var sku));
-        Assert.Equal(JsonValueKind.Object, sku.ValueKind);
-
-        Assert.True(namespaceData.TryGetProperty("serviceBusEndpoint", out var serviceBusEndpoint));
-        Assert.Contains(".servicebus.windows.net", serviceBusEndpoint.GetString());
-
-        Assert.True(namespaceData.TryGetProperty("metricId", out var metricId));
-        Assert.Contains(Settings.ResourceBaseName, metricId.GetString());
-    }
+    
 }

@@ -8,9 +8,6 @@ namespace Azure.Mcp.Tools.EventHubs.Options.Namespace;
 
 public class NamespaceGetOptions : BaseEventHubsOptions
 {
-    [JsonPropertyName(EventHubsOptionDefinitions.NamespaceIdName)]
-    public string? NamespaceId { get; set; }
-
     [JsonPropertyName(EventHubsOptionDefinitions.NamespaceNameName)]
     public string? NamespaceName { get; set; }
 }

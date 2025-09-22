@@ -45,7 +45,6 @@ public class NamespaceGetCommandTests
     [InlineData("--subscription test-sub", false)]
     [InlineData("--subscription 00000000-0000-0000-0000-000000000000 --resource-group test-rg", true)]
     [InlineData("--subscription production-subscription --resource-group rg-eventhubs-prod", true)]
-    [InlineData("--subscription test-sub --namespace-id /subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.EventHub/namespaces/ns1", true)]
     [InlineData("--subscription test-sub --namespace-name myns --resource-group myrg", true)]
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
     {
@@ -54,7 +53,7 @@ public class NamespaceGetCommandTests
         if (shouldSucceed)
         {
             // Set up appropriate service method based on arguments
-            if (args.Contains("--namespace-id") || (args.Contains("--namespace-name") && args.Contains("--resource-group")))
+            if (args.Contains("--namespace-name") && args.Contains("--resource-group"))
             {
                 // Single namespace request
                 var namespaceDetails = new EventHubsNamespaceDetails(
@@ -75,7 +74,7 @@ public class NamespaceGetCommandTests
                     true,
                     new Dictionary<string, string> { { "env", "prod" } });
 
-                _eventHubsService.GetNamespaceAsync(Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+                _eventHubsService.GetNamespaceAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
                     .Returns(namespaceDetails);
             }
             else
@@ -217,8 +216,10 @@ public class NamespaceGetCommandTests
     public async Task ExecuteAsync_ReturnsSingleNamespaceWithComprehensiveMetadata()
     {
         // Arrange
+        var namespaceName = "eh-prod-comprehensive";
+        var resourceGroup = "rg-prod";
         var namespaceId = "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-prod/providers/Microsoft.EventHub/namespaces/eh-prod-comprehensive";
-        var parseResult = _command.GetCommand().Parse($"--subscription test-sub --namespace-id {namespaceId}");
+        var parseResult = _command.GetCommand().Parse($"--subscription test-sub --resource-group {resourceGroup} --namespace-name {namespaceName}");
 
         var expectedCreationTime = DateTimeOffset.UtcNow.AddDays(-45);
         var expectedUpdateTime = DateTimeOffset.UtcNow.AddDays(-2);
@@ -230,9 +231,9 @@ public class NamespaceGetCommandTests
         };
 
         var expectedNamespace = new EventHubsNamespaceDetails(
-            Name: "eh-prod-comprehensive",
+            Name: namespaceName,
             Id: namespaceId,
-            ResourceGroup: "rg-prod",
+            ResourceGroup: resourceGroup,
             Location: "East US 2",
             Sku: new EventHubsNamespaceSku("Standard", "Standard", 5),
             Status: "Active",
@@ -247,7 +248,7 @@ public class NamespaceGetCommandTests
             ZoneRedundant: true,
             Tags: expectedTags);
 
-        _eventHubsService.GetNamespaceAsync(Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _eventHubsService.GetNamespaceAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(expectedNamespace);
 
         // Act
@@ -296,7 +297,7 @@ public class NamespaceGetCommandTests
         Assert.Equal("Engineering", namespaceResult.Tags["CostCenter"]);
 
         // Verify the single namespace service method was called
-        await _eventHubsService.Received(1).GetNamespaceAsync(Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>());
+        await _eventHubsService.Received(1).GetNamespaceAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>());
         await _eventHubsService.DidNotReceive().GetNamespacesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>());
     }
 }
