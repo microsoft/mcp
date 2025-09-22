@@ -104,8 +104,8 @@ public class AppConfigService(ISubscriptionService subscriptionService, ITenantS
         {
             var selector = new SettingSelector
             {
-                KeyFilter = string.IsNullOrEmpty(key) ? null : key,
-                LabelFilter = string.IsNullOrEmpty(label) ? null : label
+                KeyFilter = string.IsNullOrEmpty(keyFilter) ? null : keyFilter,
+                LabelFilter = string.IsNullOrEmpty(labelFilter) ? null : labelFilter
             };
 
             await foreach (var setting in client.GetConfigurationSettingsAsync(selector))

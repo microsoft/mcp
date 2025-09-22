@@ -277,6 +277,7 @@ public class KeyValueGetCommandTests
     [Theory]
     [InlineData("--account", "account1")] // Missing subscription
     [InlineData("--subscription", "sub123")] // Missing account
+    [InlineData("--subscription", "sub123", "--account", "account1", "--key", "key1", "--key-filter", "keyfilter")] // Key filter and key together
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
         // Arrange
