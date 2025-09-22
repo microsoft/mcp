@@ -354,7 +354,7 @@
     "Show me my PostgreSQL servers",
     "Show me the PostgreSQL servers in my subscription"
   ],
-  "azmcp_postgres_server_param": [
+  "azmcp_postgres_server_param_get": [
     "Show me if the parameter my PostgreSQL server <server> has replication enabled"
   ],
   "azmcp_postgres_server_param_set": [
