@@ -37,7 +37,7 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
