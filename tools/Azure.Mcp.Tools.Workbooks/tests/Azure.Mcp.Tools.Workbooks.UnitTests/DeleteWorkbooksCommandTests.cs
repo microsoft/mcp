@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -78,7 +79,7 @@ public class DeleteWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
@@ -110,7 +111,7 @@ public class DeleteWorkbooksCommandTests
         var response = await _command.ExecuteAsync(context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains($"Failed to delete workbook with ID '{workbookId}'", response.Message);
         Assert.Contains("troubleshooting", response.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -137,7 +138,7 @@ public class DeleteWorkbooksCommandTests
         var response = await _command.ExecuteAsync(context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Service error", response.Message);
         Assert.Contains("troubleshooting", response.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -244,7 +245,7 @@ public class DeleteWorkbooksCommandTests
         var response = await _command.ExecuteAsync(context, args);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("workbook", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -260,7 +261,7 @@ public class DeleteWorkbooksCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("workbook", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -286,7 +287,7 @@ public class DeleteWorkbooksCommandTests
         var response = await _command.ExecuteAsync(context, args);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
@@ -319,7 +320,7 @@ public class DeleteWorkbooksCommandTests
         var response = await _command.ExecuteAsync(context, args);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);

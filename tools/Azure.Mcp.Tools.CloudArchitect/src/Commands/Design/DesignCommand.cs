@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Reflection;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
@@ -156,7 +157,7 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
                 ResponseObject = responseObject
             };
 
-            context.Response.Status = 200;
+            context.Response.Status = HttpStatusCode.OK;
             context.Response.Results = ResponseResult.Create(result, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
             context.Response.Message = string.Empty;
         }

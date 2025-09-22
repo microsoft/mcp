@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.ElasticPool;
@@ -88,7 +89,7 @@ public class ElasticPoolListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
     }
@@ -114,7 +115,7 @@ public class ElasticPoolListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
     }
@@ -137,7 +138,7 @@ public class ElasticPoolListCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -146,7 +147,7 @@ public class ElasticPoolListCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException_NotFound()
     {
         // Arrange
-        var requestException = new RequestFailedException(404, "Server not found");
+        var requestException = new RequestFailedException((int)HttpStatusCode.NotFound, "Server not found");
         _sqlService.GetElasticPoolsAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -161,7 +162,7 @@ public class ElasticPoolListCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(404, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("SQL server not found", response.Message);
     }
 
@@ -169,7 +170,7 @@ public class ElasticPoolListCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException_Forbidden()
     {
         // Arrange
-        var requestException = new RequestFailedException(403, "Forbidden");
+        var requestException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Forbidden");
         _sqlService.GetElasticPoolsAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -184,7 +185,7 @@ public class ElasticPoolListCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(403, response.Status);
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
     }
 
@@ -216,12 +217,12 @@ public class ElasticPoolListCommandTests
         // Assert
         if (shouldSucceed)
         {
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.Equal("Success", response.Message);
         }
         else
         {
-            Assert.Equal(400, response.Status);
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
             Assert.Contains("required", response.Message.ToLower());
         }
     }

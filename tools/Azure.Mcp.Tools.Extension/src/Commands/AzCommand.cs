@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
@@ -182,7 +183,7 @@ Your job is to answer questions about an Azure environment by executing Azure CL
 
             if (result.ExitCode != 0)
             {
-                context.Response.Status = 500;
+                context.Response.Status = HttpStatusCode.InternalServerError;
                 context.Response.Message = result.Error;
             }
 
