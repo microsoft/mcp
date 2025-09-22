@@ -42,7 +42,7 @@ function Write-Warn($Message) { Write-Host "[WARN] $Message" -ForegroundColor Ye
 function Write-ErrorLine($Message) { Write-Host "[ERROR] $Message" -ForegroundColor Red }
 
 # Normalize curly quotes & unescape escaped angle brackets (mirrors Program.cs intent + prior logic)
-function Normalize-Prompt([string]$Text) {
+function Convert-Special-Characters([string]$Text) {
     if (-not $Text) { return $Text }
     return $Text.Replace("\u2018", "'").Replace("\u2019", "'").Replace("\u201C", '"').Replace("\u201D", '"').Replace("\<", "<")
 }
@@ -90,7 +90,7 @@ function Get-ToolPrompts([string]$Path) {
         if (-not $tool.StartsWith('azmcp_')) { return }
         if (-not $prompt) { return }
         if (-not $result.ContainsKey($tool)) { $result[$tool] = @() }
-        $result[$tool] += (Normalize-Prompt $prompt)
+        $result[$tool] += (Convert-Special-Characters $prompt)
     }
     return $result
 }

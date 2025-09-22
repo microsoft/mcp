@@ -542,9 +542,9 @@
           ]
         },
         {
-          "name": "lock",
-          "description": "Lock a key-value in an App Configuration store. This command sets a key-value to read-only mode,\r\npreventing any modifications to its value. You must specify an account name and key. Optionally,\r\nyou can specify a label to lock a specific labeled version of the key-value.",
-          "command": "azmcp appconfig kv lock",
+          "name": "set",
+          "description": "Sets the lock state of a key-value in an App Configuration store. This command can lock and unlock key-values.\r\nLocking sets a key-value to read-only mode, preventing any modifications to its value. Unlocking removes the\r\nread-only mode from a key-value setting, allowing modifications to its value. You must specify an account name\r\nand key. Optionally, you can specify a label to lock or unlock a specific labeled version of the key-value.\r\nDefault is unlocking the key-value.",
+          "command": "azmcp appconfig kv lock set",
           "option": [
             {
               "name": "--tenant",
@@ -606,6 +606,11 @@
             {
               "name": "--content-type",
               "description": "The content type of the configuration value. This is used to indicate how the value should be interpreted or parsed.",
+              "type": "string"
+            },
+            {
+              "name": "--lock",
+              "description": "Whether a key-value will be locked (set to read-only) or unlocked (read-only removed).",
               "type": "string"
             }
           ]
@@ -758,78 +763,9 @@
               "type": "string"
             }
           ]
-        },
-        {
-          "name": "unlock",
-          "description": "Unlock a key-value setting in an App Configuration store. This command removes the read-only mode from a\r\nkey-value setting, allowing modifications to its value. You must specify an account name and key. Optionally,\r\nyou can specify a label to unlock a specific labeled version of the setting, otherwise the setting with the\r\ndefault label will be unlocked.",
-          "command": "azmcp appconfig kv unlock",
-          "option": [
-            {
-              "name": "--tenant",
-              "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-              "type": "string"
-            },
-            {
-              "name": "--auth-method",
-              "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-              "type": "string"
-            },
-            {
-              "name": "--retry-delay",
-              "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-              "type": "string"
-            },
-            {
-              "name": "--retry-max-delay",
-              "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-              "type": "string"
-            },
-            {
-              "name": "--retry-max-retries",
-              "description": "Maximum number of retry attempts for failed operations before giving up.",
-              "type": "string"
-            },
-            {
-              "name": "--retry-mode",
-              "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-              "type": "string"
-            },
-            {
-              "name": "--retry-network-timeout",
-              "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-              "type": "string"
-            },
-            {
-              "name": "--subscription",
-              "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-              "type": "string"
-            },
-            {
-              "name": "--account",
-              "description": "The name of the App Configuration store (e.g., my-appconfig).",
-              "type": "string",
-              "required": true
-            },
-            {
-              "name": "--key",
-              "description": "The name of the key to access within the App Configuration store.",
-              "type": "string",
-              "required": true
-            },
-            {
-              "name": "--label",
-              "description": "The label to apply to the configuration key. Labels are used to group and organize settings.",
-              "type": "string"
-            },
-            {
-              "name": "--content-type",
-              "description": "The content type of the configuration value. This is used to indicate how the value should be interpreted or parsed.",
-              "type": "string"
-            }
-          ]
         }
       ],
-      "subcommandsCount": 7
+      "subcommandsCount": 6
     },
     {
       "name": "applens",
@@ -2266,9 +2202,9 @@
       "subcommandsCount": 1
     },
     {
-      "name": "get_bestpractices",
-      "description": "Azure best practices - Commands return a list of best practices for code generation, operations and deployment \r\n            when working with Azure services. It should be called for any code generation, deployment or \r\n            operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container \r\n            Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory, \r\n            Azure App Services, or any other Azure technology or programming language. Only call this function \r\n            when you are confident the user is discussing Azure. If this tool needs to be categorized, \r\n            it belongs to the Get Azure Best Practices category.",
-      "command": "azmcp get_bestpractices",
+      "name": "get",
+      "description": "",
+      "command": "azmcp get",
       "subcommands": [
         {
           "name": "get",
@@ -7072,6 +7008,111 @@
           ]
         },
         {
+          "name": "update",
+          "description": "Update configuration settings for an existing Azure SQL Database. This command modifies an existing database's\r\ncompute tier, performance characteristics, redundancy, or other settings. Equivalent to 'az sql db update'.\r\nReturns the updated database information including applied configuration changes.",
+          "command": "azmcp sql db update",
+          "option": [
+            {
+              "name": "--tenant",
+              "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+              "type": "string"
+            },
+            {
+              "name": "--auth-method",
+              "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+              "type": "string"
+            },
+            {
+              "name": "--retry-delay",
+              "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+              "type": "string"
+            },
+            {
+              "name": "--retry-max-delay",
+              "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+              "type": "string"
+            },
+            {
+              "name": "--retry-max-retries",
+              "description": "Maximum number of retry attempts for failed operations before giving up.",
+              "type": "string"
+            },
+            {
+              "name": "--retry-mode",
+              "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+              "type": "string"
+            },
+            {
+              "name": "--retry-network-timeout",
+              "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+              "type": "string"
+            },
+            {
+              "name": "--subscription",
+              "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+              "type": "string"
+            },
+            {
+              "name": "--resource-group",
+              "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "--server",
+              "description": "The Azure SQL Server name.",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "--database",
+              "description": "The Azure SQL Database name.",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "--sku-name",
+              "description": "The SKU name for the database (e.g., Basic, S0, P1, GP_Gen5_2).",
+              "type": "string"
+            },
+            {
+              "name": "--sku-tier",
+              "description": "The SKU tier for the database (e.g., Basic, Standard, Premium, GeneralPurpose).",
+              "type": "string"
+            },
+            {
+              "name": "--sku-capacity",
+              "description": "The SKU capacity (DTU or vCore count) for the database.",
+              "type": "string"
+            },
+            {
+              "name": "--collation",
+              "description": "The collation for the database (e.g., SQL_Latin1_General_CP1_CI_AS).",
+              "type": "string"
+            },
+            {
+              "name": "--max-size-bytes",
+              "description": "The maximum size of the database in bytes.",
+              "type": "string"
+            },
+            {
+              "name": "--elastic-pool-name",
+              "description": "The name of the elastic pool to assign the database to.",
+              "type": "string"
+            },
+            {
+              "name": "--zone-redundant",
+              "description": "Whether the database should be zone redundant.",
+              "type": "string"
+            },
+            {
+              "name": "--read-scale",
+              "description": "Read scale option for the database (Enabled or Disabled).",
+              "type": "string"
+            }
+          ]
+        },
+        {
           "name": "list",
           "description": "Lists all SQL elastic pools in an Azure SQL Server with their SKU, capacity, state, and database limits.\r\nUse when you need to: view elastic pool inventory, check pool utilization, compare pool configurations,\r\nor find available pools for database placement.\r\nRequires: subscription ID, resource group name, server name.\r\nReturns: JSON array of elastic pools with complete configuration details.\r\nEquivalent to 'az sql elastic-pool list'.",
           "command": "azmcp sql elastic-pool list",
@@ -7601,7 +7642,7 @@
           ]
         }
       ],
-      "subcommandsCount": 12
+      "subcommandsCount": 13
     },
     {
       "name": "storage",
@@ -8931,8 +8972,60 @@
         }
       ],
       "subcommandsCount": 5
+    },
+    {
+      "name": "azqr",
+      "description": "Runs Azure Quick Review CLI (azqr) commands to generate compliance/security reports for Azure resources.\r\nThis tool should be used when the user wants to identify any non-compliant configurations or areas for improvement in their Azure resources.\r\nRequires a subscription id and optionally a resource group name. Returns the generated report file's path.\r\nNote that Azure Quick Review CLI (azqr) is different from Azure CLI (az).",
+      "command": "azmcp extension azqr",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string"
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string"
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string"
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string"
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string"
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string"
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string"
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string"
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string"
+        }
+      ]
     }
   ],
-  "duration": 67,
-  "resultsCount": 35
+  "duration": 46,
+  "resultsCount": 36
 }

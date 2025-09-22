@@ -107,7 +107,7 @@
     "Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription>",
     "List Event Grid subscriptions for subscription <subscription> in location <location>"
   ],
-  "azmcp_extension": [
+  "azmcp_extension_azqr": [
     "Check my Azure subscription for any compliance issues or recommendations",
     "Provide compliance recommendations for my current Azure subscription",
     "Scan my Azure subscription for compliance recommendations"

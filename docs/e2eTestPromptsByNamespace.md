@@ -293,9 +293,9 @@ Columns:
 
 | Tool Name | Test Prompt |
 | --------- | ----------- |
-| azmcp_extension | Check my Azure subscription for any compliance issues or recommendations |
-| azmcp_extension | Provide compliance recommendations for my current Azure subscription |
-| azmcp_extension | Scan my Azure subscription for compliance recommendations |
+| azmcp_extension_azqr | Check my Azure subscription for any compliance issues or recommendations |
+| azmcp_extension_azqr | Provide compliance recommendations for my current Azure subscription |
+| azmcp_extension_azqr | Scan my Azure subscription for compliance recommendations |
 
 ## Azure Native ISV (Datadog)
 
