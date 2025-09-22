@@ -7,15 +7,13 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.EventHubs.Models;
 using Azure.ResourceManager.EventHubs;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.EventHubs.Services;
 
-public class EventHubsService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventHubsService> logger)
+public class EventHubsService(ISubscriptionService subscriptionService, ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IEventHubsService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
-    private readonly ILogger<EventHubsService> _logger = logger;
 
     public async Task<List<EventHubsNamespaceInfo>> GetNamespacesAsync(
         string resourceGroup,
@@ -23,22 +21,12 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        try
-        {
-            return await ExecuteResourceQueryAsync(
-                "Microsoft.EventHub/namespaces",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToEventHubsNamespaceInfo);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error getting Event Hubs namespaces. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                resourceGroup, subscription);
-            throw;
-        }
+        return await ExecuteResourceQueryAsync(
+            "Microsoft.EventHub/namespaces",
+            resourceGroup,
+            subscription,
+            retryPolicy,
+            ConvertToEventHubsNamespaceInfo);
     }
 
     private static EventHubsNamespaceInfo ConvertToEventHubsNamespaceInfo(JsonElement item)
@@ -63,24 +51,14 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        try
-        {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
 
-            // Get by resource group and name
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
-            var response = await resourceGroupResource.Value.GetEventHubsNamespaces().GetAsync(namespaceName);
-            var namespaceResource = response.Value;
+        // Get by resource group and name
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+        var response = await resourceGroupResource.Value.GetEventHubsNamespaces().GetAsync(namespaceName);
+        var namespaceResource = response.Value;
 
-            return ConvertToEventHubsNamespaceDetails(namespaceResource.Data);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "Error getting Event Hubs namespace. NamespaceName: {NamespaceName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                namespaceName, resourceGroup, subscription);
-            throw;
-        }
+        return ConvertToEventHubsNamespaceDetails(namespaceResource.Data);
     }
 
     private static EventHubsNamespaceDetails ConvertToEventHubsNamespaceDetails(EventHubsNamespaceData data)
@@ -109,12 +87,15 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
     private static string ExtractResourceGroupFromId(string resourceId)
     {
-        // Resource ID format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/...
+         // Resource ID format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/...
         var parts = resourceId.Split('/', StringSplitOptions.RemoveEmptyEntries);
         var resourceGroupIndex = Array.IndexOf(parts, "resourceGroups");
 
-        return resourceGroupIndex >= 0 && resourceGroupIndex + 1 < parts.Length
-            ? parts[resourceGroupIndex + 1]
-            : "Unknown";
+        if (resourceGroupIndex >= 0 && resourceGroupIndex + 1 < parts.Length)
+        {
+            return parts[resourceGroupIndex + 1];
+        }
+
+        throw new ArgumentException($"Invalid resource ID format: {resourceId}", nameof(resourceId));
     }
 }
