@@ -6,13 +6,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-<<<<<<< HEAD
 - Added support for `azmcp sql server list` command to list SQL servers in a subscription and resource group. [[#503](https://github.com/microsoft/mcp/issues/503)]
-=======
 - Added support for Azure App Service database management via the command:
   - `azmcp_appservice_database_add`: Add a database connection to an App Service web app (does not create the database itself; only adds the connection).
         This enables prompt-driven addition of database connections for Azure App Service web apps.
->>>>>>> 0c2c04a1 (app service add database tool)
 
 ### Breaking Changes
 
