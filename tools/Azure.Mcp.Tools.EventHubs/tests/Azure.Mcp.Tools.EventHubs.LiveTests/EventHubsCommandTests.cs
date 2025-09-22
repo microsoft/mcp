@@ -155,5 +155,5 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         Assert.True(namespaceData.TryGetProperty("tags", out _));
     }
 
-    
+
 }
