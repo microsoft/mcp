@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.CommandLine.Parsing;
 using System.Linq;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.AppService.Commands.Database;
@@ -126,7 +127,7 @@ public class DatabaseAddCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
 
         await _appServiceService.DidNotReceive().AddDatabaseAsync(
             Arg.Any<string>(),
@@ -187,7 +188,7 @@ public class DatabaseAddCommandTests
         Assert.NotNull(response);
 
         // Validate that parameters are correctly passed and processed
-        if (response.Status != 200)
+        if (response.Status != HttpStatusCode.OK)
         {
             var errorContent = response.Message ?? string.Empty;
 
@@ -210,7 +211,7 @@ public class DatabaseAddCommandTests
         else
         {
             // If successful, validate the response has expected structure
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
         }
     }
 
@@ -254,6 +255,6 @@ public class DatabaseAddCommandTests
         var response = await command.ExecuteAsync(context, args);
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
     }
 }
