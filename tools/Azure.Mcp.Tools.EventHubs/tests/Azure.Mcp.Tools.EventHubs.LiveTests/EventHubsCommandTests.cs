@@ -79,4 +79,134 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         }
         // If it returns an error instead, that's also acceptable behavior
     }
+
+    [Fact]
+    public async Task Should_GetSingleNamespaceWithComprehensiveMetadata_Successfully()
+    {
+        // Test getting a single namespace by name and resource group
+        var result = await CallToolAsync(
+            "azmcp_eventhubs_namespace_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "namespace-name", Settings.ResourceBaseName }
+            });
+
+        // Should successfully retrieve the single namespace with detailed metadata
+        var namespaceData = result.AssertProperty("namespace");
+        Assert.Equal(JsonValueKind.Object, namespaceData.ValueKind);
+
+        // Verify basic properties
+        var name = namespaceData.GetProperty("name").GetString();
+        Assert.Equal(Settings.ResourceBaseName, name);
+
+        var id = namespaceData.GetProperty("id").GetString();
+        Assert.Contains($"/subscriptions/{Settings.SubscriptionId}", id);
+        Assert.Contains($"/resourceGroups/{Settings.ResourceGroupName}", id);
+        Assert.Contains("/providers/Microsoft.EventHub/namespaces/", id);
+        Assert.Contains(Settings.ResourceBaseName, id);
+
+        var resourceGroup = namespaceData.GetProperty("resourceGroup").GetString();
+        Assert.Equal(Settings.ResourceGroupName, resourceGroup);
+
+        // Verify comprehensive metadata fields are present
+        Assert.True(namespaceData.TryGetProperty("location", out var location));
+        Assert.NotNull(location.GetString());
+        Assert.False(string.IsNullOrEmpty(location.GetString()));
+
+        Assert.True(namespaceData.TryGetProperty("status", out var status));
+        Assert.NotNull(status.GetString());
+
+        Assert.True(namespaceData.TryGetProperty("provisioningState", out var provisioningState));
+        Assert.NotNull(provisioningState.GetString());
+
+        // Verify SKU information is present and detailed
+        Assert.True(namespaceData.TryGetProperty("sku", out var sku));
+        Assert.Equal(JsonValueKind.Object, sku.ValueKind);
+
+        Assert.True(sku.TryGetProperty("name", out var skuName));
+        Assert.NotNull(skuName.GetString());
+
+        Assert.True(sku.TryGetProperty("tier", out var skuTier));
+        Assert.NotNull(skuTier.GetString());
+
+        // Verify timestamps are present
+        Assert.True(namespaceData.TryGetProperty("creationTime", out var creationTime));
+        Assert.NotEqual(JsonValueKind.Null, creationTime.ValueKind);
+
+        // Verify service endpoint is present
+        Assert.True(namespaceData.TryGetProperty("serviceBusEndpoint", out var serviceBusEndpoint));
+        Assert.NotNull(serviceBusEndpoint.GetString());
+        Assert.Contains(".servicebus.windows.net", serviceBusEndpoint.GetString());
+
+        // Verify metric ID is present
+        Assert.True(namespaceData.TryGetProperty("metricId", out var metricId));
+        Assert.NotNull(metricId.GetString());
+        Assert.Contains(Settings.SubscriptionId, metricId.GetString());
+        Assert.Contains(Settings.ResourceBaseName, metricId.GetString());
+
+        // Verify feature flags are present (even if false/null)
+        Assert.True(namespaceData.TryGetProperty("isAutoInflateEnabled", out _));
+        Assert.True(namespaceData.TryGetProperty("kafkaEnabled", out _));
+        Assert.True(namespaceData.TryGetProperty("zoneRedundant", out _));
+
+        // Verify tags property exists (may be null or empty)
+        Assert.True(namespaceData.TryGetProperty("tags", out _));
+    }
+
+    [Fact]
+    public async Task Should_GetSingleNamespaceById_Successfully()
+    {
+        // First get the namespace ID by listing namespaces
+        var listResult = await CallToolAsync(
+            "azmcp_eventhubs_namespace_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName }
+            });
+
+        var namespaces = listResult.AssertProperty("namespaces");
+        var namespaceArray = namespaces.EnumerateArray().ToList();
+        var testNamespace = namespaceArray.FirstOrDefault(ns =>
+            ns.GetProperty("name").GetString() == Settings.ResourceBaseName);
+
+        Assert.NotEqual(default, testNamespace);
+        var namespaceId = testNamespace.GetProperty("id").GetString();
+        Assert.NotNull(namespaceId);
+
+        // Now test getting the namespace by ID
+        var result = await CallToolAsync(
+            "azmcp_eventhubs_namespace_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "namespace-id", namespaceId }
+            });
+
+        // Should successfully retrieve the single namespace with detailed metadata
+        var namespaceData = result.AssertProperty("namespace");
+        Assert.Equal(JsonValueKind.Object, namespaceData.ValueKind);
+
+        // Verify it's the same namespace
+        var name = namespaceData.GetProperty("name").GetString();
+        Assert.Equal(Settings.ResourceBaseName, name);
+
+        var id = namespaceData.GetProperty("id").GetString();
+        Assert.Equal(namespaceId, id);
+
+        // Verify comprehensive metadata is present (same validations as the previous test)
+        Assert.True(namespaceData.TryGetProperty("location", out var location));
+        Assert.NotNull(location.GetString());
+
+        Assert.True(namespaceData.TryGetProperty("sku", out var sku));
+        Assert.Equal(JsonValueKind.Object, sku.ValueKind);
+
+        Assert.True(namespaceData.TryGetProperty("serviceBusEndpoint", out var serviceBusEndpoint));
+        Assert.Contains(".servicebus.windows.net", serviceBusEndpoint.GetString());
+
+        Assert.True(namespaceData.TryGetProperty("metricId", out var metricId));
+        Assert.Contains(Settings.ResourceBaseName, metricId.GetString());
+    }
 }

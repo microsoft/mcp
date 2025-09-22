@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventHubs.Commands;
+using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.Logging;
@@ -24,9 +25,14 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
 
     public override string Description =>
         """
-        Get all EventHubs namespaces in a resource group. This command retrieves all EventHubs namespaces 
-        available in the specified resource group and subscription. Results are returned as a JSON array 
-        of objects containing the name, id, and resource group of each namespace.
+        Get EventHubs namespaces from Azure. This command can either:
+        1. List all EventHubs namespaces in a resource group (when only --resource-group is provided)
+        2. Get a single namespace by ID (using --namespace-id)
+        3. Get a single namespace by name (using --namespace-name with --resource-group)
+        
+        When retrieving a single namespace, detailed information including SKU, settings, and metadata 
+        is returned. When listing namespaces, basic information (name, id, resource group) is returned 
+        for all namespaces in the specified resource group.
         """;
 
     public override string Title => CommandTitle;
@@ -44,15 +50,21 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(EventHubsOptionDefinitions.NamespaceId.AsOptional());
+        command.Options.Add(EventHubsOptionDefinitions.NamespaceName.AsOptional());
     }
 
     protected override NamespaceGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.NamespaceId = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceId.Name);
+        options.NamespaceName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceName.Name);
         return options;
     }
+
+
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -66,15 +78,47 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
         try
         {
             var eventHubsService = context.GetService<IEventHubsService>();
-            var namespaces = await eventHubsService.GetNamespacesAsync(
-                options.ResourceGroup!,
-                options.Subscription!,
-                options.Tenant,
-                options.RetryPolicy);
 
-            context.Response.Results = namespaces?.Count > 0
-                ? ResponseResult.Create(new NamespaceGetCommandResult(namespaces), EventHubsJsonContext.Default.NamespaceGetCommandResult)
-                : null;
+            // Determine if this is a single namespace request or list request
+            bool isSingleNamespaceRequest = !string.IsNullOrEmpty(options.NamespaceId) ||
+                                          (!string.IsNullOrEmpty(options.NamespaceName) && !string.IsNullOrEmpty(options.ResourceGroup));
+
+            if (isSingleNamespaceRequest)
+            {
+                // Get single namespace with detailed information
+                var namespaceDetails = await eventHubsService.GetNamespaceAsync(
+                    options.NamespaceId,
+                    options.NamespaceName,
+                    options.ResourceGroup,
+                    options.Subscription!,
+                    options.Tenant,
+                    options.RetryPolicy);
+
+                context.Response.Results = namespaceDetails != null
+                    ? ResponseResult.Create(new NamespaceGetSingleCommandResult(namespaceDetails), EventHubsJsonContext.Default.NamespaceGetSingleCommandResult)
+                    : null;
+            }
+            else
+            {
+                // List all namespaces in resource group
+                if (string.IsNullOrEmpty(options.ResourceGroup))
+                {
+                    // For backward compatibility, still require resource group for list operations
+                    context.Response.Status = 400;
+                    context.Response.Message = "Resource group is required when not specifying a specific namespace ID or name.";
+                    return context.Response;
+                }
+
+                var namespaces = await eventHubsService.GetNamespacesAsync(
+                    options.ResourceGroup!,
+                    options.Subscription!,
+                    options.Tenant,
+                    options.RetryPolicy);
+
+                context.Response.Results = namespaces?.Count > 0
+                    ? ResponseResult.Create(new NamespaceGetCommandResult(namespaces), EventHubsJsonContext.Default.NamespaceGetCommandResult)
+                    : null;
+            }
         }
         catch (Exception ex)
         {
@@ -108,4 +152,5 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
         _ => base.GetErrorMessage(ex)
     };
     internal record NamespaceGetCommandResult(List<Models.EventHubsNamespaceInfo> Namespaces);
+    internal record NamespaceGetSingleCommandResult(Models.EventHubsNamespaceDetails Namespace);
 }
