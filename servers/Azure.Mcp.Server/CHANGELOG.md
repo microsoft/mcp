@@ -4,15 +4,14 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ## 0.8.1 (Unreleased)
 
+### Features Added
+
+- Added support for `azmcp sql server list` command to list SQL servers in a subscription and resource group. [[#503](https://github.com/microsoft/mcp/issues/503)]
 - Added support for Azure Monitor Web Tests management operations:
   - `azmcp-monitor-webtests-list` - List all web tests in a subscription or optionally, within a resource group
   - `azmcp-monitor-webtests-get` - Get details for a specific web test
   - `azmcp-monitor-webtests-createorupdate` - Create or update a web test in Azure Monitor
   
-### Features Added
-
-- Added support for `azmcp sql server list` command to list SQL servers in a subscription and resource group. [[#503](https://github.com/microsoft/mcp/issues/503)]
-
 ### Breaking Changes
 
 - Removed the following Storage tools:
