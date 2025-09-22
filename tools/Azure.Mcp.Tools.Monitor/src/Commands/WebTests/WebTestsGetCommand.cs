@@ -37,14 +37,14 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
     {
         base.RegisterOptions(command);
         command.Options.Add(_webTestResourceNameOption);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
     }
 
     protected override WebTestsGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.ResourceName = parseResult.GetValueOrDefault(_webTestResourceNameOption);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
 

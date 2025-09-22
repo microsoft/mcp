@@ -92,7 +92,7 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
         options.Location = parseResult.GetValueOrDefault(_resourceLocationOption)!;
         options.Locations = parseResult.GetValueOrDefault(_locationsOption)!;
         options.RequestUrl = parseResult.GetValueOrDefault(_requestUrlOption)!;
-        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
 
         options.WebTestName = parseResult.GetValueOrDefault(_webTestNameOption);
         options.Description = parseResult.GetValueOrDefault(_descriptionOption);
