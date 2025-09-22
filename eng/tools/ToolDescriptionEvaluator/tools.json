@@ -985,6 +985,25 @@
     },
     {
       "name": "get",
+      "description": "This tool returns a list of best practices for code generation, operations and deployment\r\n        when working with Azure services. It should be called for any code generation, deployment or\r\n        operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container\r\n        Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory,\r\n        Azure App Services, or any other Azure technology or programming language. Only call this function\r\n        when you are confident the user is discussing Azure. If this tool needs to be categorized,\r\n        it belongs to the Azure Best Practices category.",
+      "command": "azmcp bestpractices get",
+      "option": [
+        {
+          "name": "--resource",
+          "description": "The Azure resource type for which to get best practices. Options: 'general' (general Azure), 'azurefunctions' (Azure Functions), 'static-web-app' (Azure Static Web Apps).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--action",
+          "description": "The action type for the best practices. Options: 'all', 'code-generation', 'deployment'. Note: 'static-web-app' resource only supports 'all'.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "get",
       "description": "\r\n Provides the Bicep schema for the most recent apiVersion of an Azure resource. Do not call this command for Terraform IaC generation.\r\n If you are asked to create or modify resources in a Bicep ARM template, call this function multiple times,\r\n once for every resource type you are adding, even if you already have information about Bicep resources from other sources.\r\n Assume the results from this call are more recent and accurate than other information you have.\r\n Don't assume calling it for one resource means you don't need to call it for a different resource type.\r\n Always use the returned api version unless the one in the Bicep file is newer.\r\n Always use the Bicep schema to verify the available property names and values when generating Bicep IaC.",
       "command": "azmcp bicepschema get",
       "option": [
@@ -2138,25 +2157,6 @@
           "name": "--function-app",
           "description": "The name of the Function App.",
           "type": "string"
-        }
-      ]
-    },
-    {
-      "name": "get",
-      "description": "This tool returns a list of best practices for code generation, operations and deployment\r\n        when working with Azure services. It should be called for any code generation, deployment or\r\n        operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container\r\n        Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory,\r\n        Azure App Services, or any other Azure technology or programming language. Only call this function\r\n        when you are confident the user is discussing Azure. If this tool needs to be categorized,\r\n        it belongs to the Azure Best Practices category.",
-      "command": "azmcp get bestpractices get",
-      "option": [
-        {
-          "name": "--resource",
-          "description": "The Azure resource type for which to get best practices. Options: 'general' (general Azure), 'azurefunctions' (Azure Functions), 'static-web-app' (Azure Static Web Apps).",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--action",
-          "description": "The action type for the best practices. Options: 'all', 'code-generation', 'deployment'. Note: 'static-web-app' resource only supports 'all'.",
-          "type": "string",
-          "required": true
         }
       ]
     },
@@ -8746,6 +8746,6 @@
       ]
     }
   ],
-  "duration": 42,
+  "duration": 35,
   "resultsCount": 140
 }

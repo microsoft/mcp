@@ -1032,6 +1032,33 @@
       "subcommandsCount": 1
     },
     {
+      "name": "bestpractices",
+      "description": "Azure best practices - Commands return a list of best practices for code generation, operations and deployment \r\n            when working with Azure services. It should be called for any code generation, deployment or \r\n            operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container \r\n            Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory, \r\n            Azure App Services, or any other Azure technology or programming language. Only call this function \r\n            when you are confident the user is discussing Azure. If this tool needs to be categorized, \r\n            it belongs to the Get Azure Best Practices category.",
+      "command": "azmcp bestpractices",
+      "subcommands": [
+        {
+          "name": "get",
+          "description": "This tool returns a list of best practices for code generation, operations and deployment\r\n        when working with Azure services. It should be called for any code generation, deployment or\r\n        operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container\r\n        Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory,\r\n        Azure App Services, or any other Azure technology or programming language. Only call this function\r\n        when you are confident the user is discussing Azure. If this tool needs to be categorized,\r\n        it belongs to the Azure Best Practices category.",
+          "command": "azmcp bestpractices get",
+          "option": [
+            {
+              "name": "--resource",
+              "description": "The Azure resource type for which to get best practices. Options: 'general' (general Azure), 'azurefunctions' (Azure Functions), 'static-web-app' (Azure Static Web Apps).",
+              "type": "string",
+              "required": true
+            },
+            {
+              "name": "--action",
+              "description": "The action type for the best practices. Options: 'all', 'code-generation', 'deployment'. Note: 'static-web-app' resource only supports 'all'.",
+              "type": "string",
+              "required": true
+            }
+          ]
+        }
+      ],
+      "subcommandsCount": 1
+    },
+    {
       "name": "bicepschema",
       "description": "Bicep schema operations - Commands for working with Azure Bicep Infrastructure as Code (IaC) generation and schema management. Includes operations for retrieving Bicep schemas, templates, and resource definitions to support infrastructure deployment automation.",
       "command": "azmcp bicepschema",
@@ -2195,33 +2222,6 @@
               "name": "--function-app",
               "description": "The name of the Function App.",
               "type": "string"
-            }
-          ]
-        }
-      ],
-      "subcommandsCount": 1
-    },
-    {
-      "name": "get",
-      "description": "",
-      "command": "azmcp get",
-      "subcommands": [
-        {
-          "name": "get",
-          "description": "This tool returns a list of best practices for code generation, operations and deployment\r\n        when working with Azure services. It should be called for any code generation, deployment or\r\n        operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container\r\n        Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory,\r\n        Azure App Services, or any other Azure technology or programming language. Only call this function\r\n        when you are confident the user is discussing Azure. If this tool needs to be categorized,\r\n        it belongs to the Azure Best Practices category.",
-          "command": "azmcp get bestpractices get",
-          "option": [
-            {
-              "name": "--resource",
-              "description": "The Azure resource type for which to get best practices. Options: 'general' (general Azure), 'azurefunctions' (Azure Functions), 'static-web-app' (Azure Static Web Apps).",
-              "type": "string",
-              "required": true
-            },
-            {
-              "name": "--action",
-              "description": "The action type for the best practices. Options: 'all', 'code-generation', 'deployment'. Note: 'static-web-app' resource only supports 'all'.",
-              "type": "string",
-              "required": true
             }
           ]
         }
@@ -9026,6 +9026,6 @@
       ]
     }
   ],
-  "duration": 46,
+  "duration": 27,
   "resultsCount": 36
 }
