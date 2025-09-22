@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ComponentModel;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
@@ -89,11 +90,11 @@ public class DatabaseAddCommandLiveTests(ITestOutputHelper output) : CommandTest
             new Dictionary<string, object?>
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", "test-rg" },
-                { "app", "test-app" },
+                { "resource-group", Settings.ResourceGroupName },
+                { "app", Settings.ResourceBaseName + "-webapp" },
                 { "database-type", invalidDatabaseType },
-                { "database-server", "test-server" },
-                { "database", "test-db" }
+                { "database-server", Settings.ResourceBaseName + "-sql.database.windows.net" },
+                { "database", Settings.ResourceBaseName + "db" }
             });
 
         // For invalid types, the tool should not return a JSON result — expect no content
