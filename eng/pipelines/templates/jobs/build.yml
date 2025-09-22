@@ -55,7 +55,7 @@ jobs:
       version: 9.0.x
 
   - task: Powershell@2
-    displayName: "Build module"
+    displayName: "(Trimmed) Build module"
     condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
     inputs:
       pwsh: true
@@ -97,16 +97,17 @@ jobs:
     inputs:
       summaryFileLocation: $(CoverageFile)
 
-  - task: Powershell@2
-    displayName: "(Native AOT) Install Linux arm64 cross compile toolchain"
-    condition: and(succeeded(), eq('${{ parameters.OSName }}', 'linux'), eq(variables['Architecture'], 'arm64'))
-    inputs:
-      pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Install-LinuxArm64CrossCompileToolchain.ps1
+  # Native build on Linux arm64 is disabled due to unstable cross platform tool chain install script
+  # - task: Powershell@2
+  #   displayName: "(Native AOT) Install Linux arm64 cross compile toolchain"
+  #   condition: and(succeeded(), eq('${{ parameters.OSName }}', 'linux'), eq(variables['Architecture'], 'arm64'))
+  #   inputs:
+  #     pwsh: true
+  #     filePath: $(Build.SourcesDirectory)/eng/scripts/Install-LinuxArm64CrossCompileToolchain.ps1
 
   - task: Powershell@2
     displayName: "(Native AOT) Build module"
-    condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
+    condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'), not(and(eq('${{ parameters.OSName }}', 'linux'), eq(variables['Architecture'], 'arm64'))))
     inputs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Code.ps1
