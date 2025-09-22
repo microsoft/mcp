@@ -119,6 +119,47 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output)
             {
                 Assert.True(imgVer.ValueKind is JsonValueKind.String or JsonValueKind.Null);
             }
+
+            // Enriched fields on node pool (optional checks)
+            if (pool.TryGetProperty("tags", out var tags))
+            {
+                Assert.True(tags.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+            }
+            if (pool.TryGetProperty("spotMaxPrice", out var spot))
+            {
+                Assert.True(spot.ValueKind is JsonValueKind.Number or JsonValueKind.Null);
+            }
+            if (pool.TryGetProperty("workloadRuntime", out var wr))
+            {
+                Assert.True(wr.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+            }
+            if (pool.TryGetProperty("networkProfile", out var np))
+            {
+                Assert.True(np.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+                if (np.ValueKind == JsonValueKind.Object)
+                {
+                    if (np.TryGetProperty("allowedHostPorts", out var ahp))
+                    {
+                        Assert.True(ahp.ValueKind is JsonValueKind.Array or JsonValueKind.Null);
+                    }
+                    if (np.TryGetProperty("applicationSecurityGroups", out var asg))
+                    {
+                        Assert.True(asg.ValueKind is JsonValueKind.Array or JsonValueKind.Null);
+                    }
+                    if (np.TryGetProperty("nodePublicIPTags", out var ipt))
+                    {
+                        Assert.True(ipt.ValueKind is JsonValueKind.Array or JsonValueKind.Null);
+                    }
+                }
+            }
+            if (pool.TryGetProperty("podSubnetID", out var podSubnet))
+            {
+                Assert.True(podSubnet.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+            }
+            if (pool.TryGetProperty("vnetSubnetID", out var vnetSubnet))
+            {
+                Assert.True(vnetSubnet.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+            }
         }
     }
 

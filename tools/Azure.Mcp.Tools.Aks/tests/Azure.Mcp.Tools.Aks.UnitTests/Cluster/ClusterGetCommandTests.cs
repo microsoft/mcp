@@ -95,12 +95,21 @@ public class ClusterGetCommandTests
         // Arrange
         var expectedCluster = new Models.Cluster
         {
+            Id = "/subscriptions/s/rg/r/providers/Microsoft.ContainerService/managedClusters/test-cluster",
             Name = "test-cluster",
             SubscriptionId = "test-subscription",
             ResourceGroupName = "test-rg",
             Location = "East US",
             KubernetesVersion = "1.28.0",
-            ProvisioningState = "Succeeded"
+            ProvisioningState = "Succeeded",
+            EnableRbac = true,
+            NetworkProfile = new Models.ClusterNetworkProfile { NetworkPlugin = "azure", NetworkPolicy = "cilium" },
+            WindowsProfile = new Models.WindowsProfile { AdminUsername = "azureuser", EnableCsiProxy = true },
+            ServicePrincipalProfile = new Models.ServicePrincipalProfile { ClientId = "msi" },
+            AutoUpgradeProfile = new Models.AutoUpgradeProfile { UpgradeChannel = "stable" },
+            AddonProfiles = new Dictionary<string, IDictionary<string, string>> { ["azurepolicy"] = new Dictionary<string, string> { ["enabled"] = "true" } },
+            IdentityProfile = new Dictionary<string, Models.ManagedIdentityReference> { ["kubeletidentity"] = new() { ClientId = Guid.NewGuid().ToString() } },
+            AgentPoolProfiles = new List<Models.NodePool> { new() { Name = "systempool", Count = 3 } }
         };
 
         _aksService.GetCluster("test-subscription", "test-cluster", "test-rg", null, Arg.Any<RetryPolicyOptions>())
