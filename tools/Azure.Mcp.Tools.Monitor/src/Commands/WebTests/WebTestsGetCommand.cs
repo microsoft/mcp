@@ -3,6 +3,7 @@
 
 using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Options.WebTests;
@@ -36,13 +37,14 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
     {
         base.RegisterOptions(command);
         command.Options.Add(_webTestResourceNameOption);
-        RequireResourceGroup();
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
     }
 
     protected override WebTestsGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.ResourceName = parseResult.GetValueOrDefault(_webTestResourceNameOption);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
         return options;
     }
 

@@ -3,14 +3,14 @@
 
 using System.Text.RegularExpressions;
 using Azure.Core;
-using Azure.ResourceManager.ApplicationInsights;
-using Azure.ResourceManager.ApplicationInsights.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
+using Azure.ResourceManager.ApplicationInsights;
+using Azure.ResourceManager.ApplicationInsights.Models;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 

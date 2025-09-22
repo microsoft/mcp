@@ -3,6 +3,7 @@
 
 using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
 using Azure.Mcp.Tools.Monitor.Options;
 using Azure.Mcp.Tools.Monitor.Options.WebTests;
@@ -62,7 +63,7 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
         command.Options.Add(_resourceLocationOption);
         command.Options.Add(_locationsOption);
         command.Options.Add(_requestUrlOption);
-        RequireResourceGroup();
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
 
         // Add optional options
         command.Options.Add(_webTestNameOption);
@@ -91,6 +92,7 @@ public sealed class WebTestsCreateOrUpdateCommand(ILogger<WebTestsCreateOrUpdate
         options.Location = parseResult.GetValueOrDefault(_resourceLocationOption)!;
         options.Locations = parseResult.GetValueOrDefault(_locationsOption)!;
         options.RequestUrl = parseResult.GetValueOrDefault(_requestUrlOption)!;
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
 
         options.WebTestName = parseResult.GetValueOrDefault(_webTestNameOption);
         options.Description = parseResult.GetValueOrDefault(_descriptionOption);

@@ -374,7 +374,7 @@ public static class MonitorOptionDefinitions
             Description = "Number of days to check SSL certificate lifetime",
             DefaultValueFactory = _ => 7
         };
-        
+
         public static readonly Option<int> TimeoutInSeconds = new(
             $"--{TimeoutInSecondsName}"
         )
