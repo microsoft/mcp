@@ -247,4 +247,19 @@ public class CosmosQueryValidatorTests
         var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
         Assert.Contains("select", ex.Message.ToLowerInvariant());
     }
+
+    [Fact]
+    public void EnsureReadOnlySelect_RegexTimeoutProtection_ShouldNotHang()
+    {
+        // Test with a potentially problematic pattern that could cause catastrophic backtracking
+        // This shouldn't take more than a few milliseconds due to the timeout
+        var potentialReDoSPattern = "SELECT * FROM c WHERE c.field = '" + new string('a', 1000) + new string('b', 1000) + "'";
+        
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        CosmosQueryValidator.EnsureReadOnlySelect(potentialReDoSPattern);
+        stopwatch.Stop();
+
+        // Should complete quickly (well under 5 seconds) due to regex timeout protection
+        Assert.True(stopwatch.ElapsedMilliseconds < 5000, $"Validation took too long: {stopwatch.ElapsedMilliseconds}ms");
+    }
 }

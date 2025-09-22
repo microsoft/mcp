@@ -15,6 +15,7 @@ namespace Azure.Mcp.Tools.Cosmos.Validation;
 internal static class CosmosQueryValidator
 {
     private const int MaxQueryLength = 5000; // Safety cap similar to Postgres validator.
+    private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(3); // Prevent ReDoS attacks
 
     // Allowed (case-insensitive) Cosmos SQL keywords / functions in simple read-only queries.
     private static readonly HashSet<string> AllowedKeywords = new(StringComparer.OrdinalIgnoreCase)
@@ -79,10 +80,10 @@ internal static class CosmosQueryValidator
         }
 
         // Strip single-quoted string literals to avoid flagging keywords inside them.
-        var withoutStrings = Regex.Replace(core, "'([^']|'')*'", "'str'", RegexOptions.Compiled);
+        var withoutStrings = Regex.Replace(core, "'([^']|'')*'", "'str'", RegexOptions.Compiled, RegexTimeout);
 
         // Tokenize: letters / underscore. Numbers & punctuation ignored.
-        var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.Compiled);
+        var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.Compiled, RegexTimeout);
         if (matches.Count == 0)
         {
             throw new CommandValidationException("Query must contain a SELECT statement.");
