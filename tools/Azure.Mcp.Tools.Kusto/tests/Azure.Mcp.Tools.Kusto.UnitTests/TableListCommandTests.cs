@@ -42,7 +42,7 @@ public sealed class TableListCommandTests
         var expectedTables = new List<string> { "table1", "table2" };
         if (useClusterUri)
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
@@ -50,7 +50,7 @@ public sealed class TableListCommandTests
         }
         else
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "sub1", "mycluster", "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(expectedTables);
@@ -78,7 +78,7 @@ public sealed class TableListCommandTests
     {
         if (useClusterUri)
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
@@ -86,7 +86,7 @@ public sealed class TableListCommandTests
         }
         else
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "sub1", "mycluster", "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns([]);
@@ -114,7 +114,7 @@ public sealed class TableListCommandTests
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         if (useClusterUri)
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
@@ -122,7 +122,7 @@ public sealed class TableListCommandTests
         }
         else
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "sub1", "mycluster", "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(Task.FromException<List<string>>(new Exception("Test error")));

@@ -22,6 +22,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Refactored Kusto service implementation to use Azure Resource Graph queries instead of direct ARM API calls.
+
+#### Dependency Updates
+
+- Removed the following dependencies:
+  - Azure.ResourceManager.Kusto
+
 ## 0.8.0 (2025-09-18)
 
 ### Features Added

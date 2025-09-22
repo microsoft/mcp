@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
@@ -45,7 +46,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseC
         try
         {
             var kusto = context.GetService<IKustoService>();
-            var cluster = await kusto.GetCluster(
+            var cluster = await kusto.GetClusterAsync(
                 options.Subscription!,
                 options.ClusterName!,
                 options.Tenant,
@@ -63,5 +64,23 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseC
         return context.Response;
     }
 
-    internal record ClusterGetCommandResult(KustoClusterResourceProxy Cluster);
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        KeyNotFoundException => $"Kusto cluster not found. Verify the cluster name, resource group, and that you have access.",
+        RequestFailedException reqEx when reqEx.Status == 404 =>
+            "Kusto cluster not found. Verify the cluster name, resource group, and subscription, and ensure you have access.",
+        RequestFailedException reqEx when reqEx.Status == 403 =>
+            $"Authorization failed accessing the Kusto cluster. Details: {reqEx.Message}",
+        RequestFailedException reqEx => reqEx.Message,
+        _ => base.GetErrorMessage(ex)
+    };
+
+    protected override int GetStatusCode(Exception ex) => ex switch
+    {
+        KeyNotFoundException => 404,
+        RequestFailedException reqEx => reqEx.Status,
+        _ => base.GetStatusCode(ex)
+    };
+
+    internal record ClusterGetCommandResult(KustoClusterModel Cluster);
 }

@@ -43,7 +43,7 @@ public sealed class TableSchemaCommandTests
 
         if (useClusterUri)
         {
-            _kusto.GetTableSchema(
+            _kusto.GetTableSchemaAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1",
@@ -52,7 +52,7 @@ public sealed class TableSchemaCommandTests
         }
         else
         {
-            _kusto.GetTableSchema(
+            _kusto.GetTableSchemaAsync(
                 "sub1", "mycluster", "db1", "table1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(expectedSchema);
@@ -82,7 +82,7 @@ public sealed class TableSchemaCommandTests
 
         if (useClusterUri)
         {
-            _kusto.GetTableSchema(
+            _kusto.GetTableSchemaAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1",
@@ -91,7 +91,7 @@ public sealed class TableSchemaCommandTests
         }
         else
         {
-            _kusto.GetTableSchema(
+            _kusto.GetTableSchemaAsync(
                 "sub1", "mycluster", "db1", "table1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .ThrowsAsync(new Exception("Test error"));
@@ -116,7 +116,7 @@ public sealed class TableSchemaCommandTests
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         if (useClusterUri)
         {
-            _kusto.GetTableSchema(
+            _kusto.GetTableSchemaAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1",
@@ -125,7 +125,7 @@ public sealed class TableSchemaCommandTests
         }
         else
         {
-            _kusto.GetTableSchema(
+            _kusto.GetTableSchemaAsync(
                 "sub1", "mycluster", "db1", "table1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(Task.FromException<string>(new Exception("Test error")));

@@ -43,7 +43,7 @@ public sealed class QueryCommandTests
         var expectedJson = JsonDocument.Parse("[{\"foo\":42}]").RootElement.EnumerateArray().Select(e => e.Clone()).ToList();
         if (useClusterUri)
         {
-            _kusto.QueryItems(
+            _kusto.QueryItemsAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "StormEvents | take 1",
@@ -52,7 +52,7 @@ public sealed class QueryCommandTests
         }
         else
         {
-            _kusto.QueryItems(
+            _kusto.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "StormEvents | take 1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(expectedJson);
@@ -84,7 +84,7 @@ public sealed class QueryCommandTests
     {
         if (useClusterUri)
         {
-            _kusto.QueryItems(
+            _kusto.QueryItemsAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "StormEvents | take 1",
@@ -93,7 +93,7 @@ public sealed class QueryCommandTests
         }
         else
         {
-            _kusto.QueryItems(
+            _kusto.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "StormEvents | take 1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns([]);
@@ -120,7 +120,7 @@ public sealed class QueryCommandTests
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         if (useClusterUri)
         {
-            _kusto.QueryItems(
+            _kusto.QueryItemsAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "StormEvents | take 1",
@@ -129,7 +129,7 @@ public sealed class QueryCommandTests
         }
         else
         {
-            _kusto.QueryItems(
+            _kusto.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "StormEvents | take 1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(Task.FromException<List<JsonElement>>(new Exception("Test error")));
