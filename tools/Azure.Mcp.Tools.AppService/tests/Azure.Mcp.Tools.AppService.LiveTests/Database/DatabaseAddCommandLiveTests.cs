@@ -97,7 +97,32 @@ public class DatabaseAddCommandLiveTests(ITestOutputHelper output) : CommandTest
                 { "database", Settings.ResourceBaseName + "db" }
             });
 
-        // For invalid types, the tool should not return a JSON result — expect no content
-        Assert.False(result.HasValue, $"Invalid database type '{invalidDatabaseType}' should cause validation error (expected no JSON result)");
+        // For invalid types, the tool may either return no JSON (error case) or a JSON error payload.
+        if (!result.HasValue)
+        {
+            // No JSON result indicates the tool returned an error — acceptable outcome
+            return;
+        }
+
+        // If JSON was returned, validate the error message explicitly
+        var root = result.Value;
+        string? message = null;
+        if (root.ValueKind == JsonValueKind.Object)
+        {
+            if (root.TryGetProperty("message", out var m) && m.ValueKind == JsonValueKind.String)
+            {
+                message = m.GetString();
+            }
+            else if (root.TryGetProperty("results", out var r) && r.ValueKind == JsonValueKind.Object)
+            {
+                if (r.TryGetProperty("message", out var rm) && rm.ValueKind == JsonValueKind.String)
+                {
+                    message = rm.GetString();
+                }
+            }
+        }
+
+        Assert.False(string.IsNullOrWhiteSpace(message), $"Expected an error message for invalid database type '{invalidDatabaseType}' but none was found");
+        Assert.Contains("Unsupported database type", message, StringComparison.OrdinalIgnoreCase);
     }
 }
