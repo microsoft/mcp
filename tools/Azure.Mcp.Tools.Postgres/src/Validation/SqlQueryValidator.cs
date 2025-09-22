@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tools.Postgres.Validation;
 internal static class SqlQueryValidator
 {
     private const int MaxQueryLength = 5000; // Arbitrary safety cap to avoid extremely large inputs.
+    private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(3); // 3 second timeout for regex operations
 
     // Allowed (case-insensitive) SQL keywords / functions in simple read-only queries.
     private static readonly HashSet<string> AllowedKeywords = new(StringComparer.OrdinalIgnoreCase)
@@ -78,16 +79,16 @@ internal static class SqlQueryValidator
         var lower = core.ToLowerInvariant();
 
         // Naive detection of tautology patterns still applied before token-level allow list.
-        if (lower.Contains(" or 1=1") || lower.Contains("' or '1'='1"))
+        if (lower.Contains(" or 1=1") || lower.Contains(" or '1'='1"))
         {
             throw new CommandValidationException("Suspicious boolean tautology pattern detected.");
         }
 
         // Strip single-quoted string literals to avoid flagging keywords inside them.
-        var withoutStrings = Regex.Replace(core, "'([^']|'')*'", "'str'", RegexOptions.Compiled);
+        var withoutStrings = Regex.Replace(core, "'([^']|'')*'", "'str'", RegexOptions.Compiled, RegexTimeout);
 
         // Tokenize: capture word tokens (letters / underscore). Numerics & punctuation ignored.
-        var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.Compiled);
+        var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.Compiled, RegexTimeout);
         if (matches.Count == 0)
         {
             throw new CommandValidationException("Query must contain a SELECT statement.");
