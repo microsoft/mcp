@@ -30,7 +30,7 @@ internal sealed class KustoClusterData
     public IList<string>? Zones { get; set; }
     /// <summary> A unique read-only string that changes whenever the resource is updated. </summary>
     [JsonPropertyName("etag")]
-    public string? ETag { get; }
+    public string? ETag { get; set; }
     /// <summary> Properties of the Kusto cluster. </summary>
     public KustoClusterProperties? Properties { get; set; }
 

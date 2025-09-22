@@ -11,9 +11,9 @@ namespace Azure.Mcp.Tools.Kusto.Services.Models;
 internal sealed class KustoManagedServiceIdentity
 {
     /// <summary> The service principal ID of the system assigned identity. This property will only be provided for a system assigned identity. </summary>
-    public Guid? PrincipalId { get; }
+    public Guid? PrincipalId { get; set; }
     /// <summary> The tenant ID of the system assigned identity. This property will only be provided for a system assigned identity. </summary>
-    public Guid? TenantId { get; }
+    public Guid? TenantId { get; set; }
     /// <summary> Type of managed service identity (where both SystemAssigned and UserAssigned types are allowed). </summary>
     [JsonPropertyName("type")]
     public string? ManagedServiceIdentityType { get; set; }

@@ -13,7 +13,7 @@ public interface IKustoService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<KustoClusterModel?> GetClusterAsync(
+    Task<KustoClusterModel> GetClusterAsync(
         string subscription,
         string clusterName,
         string? tenant = null,

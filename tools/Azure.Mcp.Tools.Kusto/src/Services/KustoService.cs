@@ -60,7 +60,7 @@ public sealed class KustoService(
         }
     }
 
-    public async Task<KustoClusterModel?> GetClusterAsync(
+    public async Task<KustoClusterModel> GetClusterAsync(
             string subscriptionId,
             string clusterName,
             string? tenant = null,

@@ -75,11 +75,11 @@ public sealed class ClusterGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenClusterDoesNotExist()
+    public async Task ExecuteAsync_Returns404_WhenClusterDoesNotExist()
     {
         _kusto.GetClusterAsync(
             "sub123", "clusterA", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromResult<KustoClusterModel?>(null));
+            .Returns(Task.FromException<KustoClusterModel>(new KeyNotFoundException("Kusto cluster 'clusterA' not found for subscription 'sub123'.")));
         var command = new ClusterGetCommand(_logger);
 
         var args = command.GetCommand().Parse("--subscription sub123 --cluster clusterA");
@@ -87,9 +87,8 @@ public sealed class ClusterGetCommandTests
 
         var response = await command.ExecuteAsync(context, args);
 
-        Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.Equal(404, response.Status);
+        Assert.Contains("not found", response.Message);
     }
 
     [Fact]
