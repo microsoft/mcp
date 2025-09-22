@@ -19,14 +19,14 @@ namespace Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
     : BaseEventHubsCommand<NamespaceGetOptions>(logger)
 {
-    private const string CommandTitle = "Get EventHubs Namespaces";
+    private const string CommandTitle = "Get Event Hubs Namespaces";
 
     public override string Name => "get";
 
     public override string Description =>
         """
-        Get EventHubs namespaces from Azure. This command can either:
-        1. List all EventHubs namespaces in a resource group (when only --resource-group is provided)
+        Get Event Hubs namespaces from Azure. This command can either:
+        1. List all Event Hubs namespaces in a resource group (when only --resource-group is provided)
         2. Get a single namespace by name (using --namespace-name with --resource-group)
         
         When retrieving a single namespace, detailed information including SKU, settings, and metadata 
@@ -117,7 +117,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting EventHubs namespaces");
+            _logger.LogError(ex, "Error getting Event Hubs namespaces");
             HandleException(context, ex);
         }
 
@@ -137,7 +137,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
         Identity.AuthenticationFailedException authEx =>
             "Authentication failed. Please ensure your Azure credentials are properly configured and have not expired.",
         RequestFailedException reqEx when reqEx.Status == 403 =>
-            "Access denied. Please ensure you have sufficient permissions to get EventHubs namespaces in the specified resource group.",
+            "Access denied. Please ensure you have sufficient permissions to get Event Hubs namespaces in the specified resource group.",
         RequestFailedException reqEx when reqEx.Status == 404 =>
             "The specified resource group or subscription was not found. Please verify the resource group name and subscription.",
         ArgumentException argEx when argEx.ParamName == "resourceGroup" =>
