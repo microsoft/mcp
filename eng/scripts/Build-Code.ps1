@@ -184,7 +184,7 @@ function BuildServer($serverName) {
     }
 }
 
-
+$exitCode = 0
 Push-Location $RepoRoot
 try {
     $serverNames = @(if($ServerName) {
@@ -195,8 +195,13 @@ try {
 
     foreach ($serverName in $serverNames) {
         BuildServer $serverName
+        if ($LastExitCode -ne 0) {
+            $exitCode = $LastExitCode
+        }
     }
 }
 finally {
     Pop-Location
 }
+
+exit $exitCode
