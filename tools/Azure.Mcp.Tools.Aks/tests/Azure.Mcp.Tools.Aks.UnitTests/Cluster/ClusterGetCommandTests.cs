@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Aks.Commands.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -66,7 +67,7 @@ public class ClusterGetCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<Core.Options.RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>())
                 .Returns(testCluster);
         }
 
@@ -94,15 +95,24 @@ public class ClusterGetCommandTests
         // Arrange
         var expectedCluster = new Models.Cluster
         {
+            Id = "/subscriptions/s/rg/r/providers/Microsoft.ContainerService/managedClusters/test-cluster",
             Name = "test-cluster",
             SubscriptionId = "test-subscription",
             ResourceGroupName = "test-rg",
             Location = "East US",
             KubernetesVersion = "1.28.0",
-            ProvisioningState = "Succeeded"
+            ProvisioningState = "Succeeded",
+            EnableRbac = true,
+            NetworkProfile = new Models.ClusterNetworkProfile { NetworkPlugin = "azure", NetworkPolicy = "cilium" },
+            WindowsProfile = new Models.WindowsProfile { AdminUsername = "azureuser", EnableCsiProxy = true },
+            ServicePrincipalProfile = new Models.ServicePrincipalProfile { ClientId = "msi" },
+            AutoUpgradeProfile = new Models.AutoUpgradeProfile { UpgradeChannel = "stable" },
+            AddonProfiles = new Dictionary<string, IDictionary<string, string>> { ["azurepolicy"] = new Dictionary<string, string> { ["enabled"] = "true" } },
+            IdentityProfile = new Dictionary<string, Models.ManagedIdentityReference> { ["kubeletidentity"] = new() { ClientId = Guid.NewGuid().ToString() } },
+            AgentPoolProfiles = new List<Models.NodePool> { new() { Name = "systempool", Count = 3 } }
         };
 
-        _aksService.GetCluster("test-subscription", "test-cluster", "test-rg", null, Arg.Any<Core.Options.RetryPolicyOptions>())
+        _aksService.GetCluster("test-subscription", "test-cluster", "test-rg", null, Arg.Any<RetryPolicyOptions>())
             .Returns(expectedCluster);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
@@ -120,7 +130,7 @@ public class ClusterGetCommandTests
     public async Task ExecuteAsync_ReturnsNullWhenClusterNotFound()
     {
         // Arrange
-        _aksService.GetCluster("test-subscription", "nonexistent-cluster", "test-rg", null, Arg.Any<Core.Options.RetryPolicyOptions>())
+        _aksService.GetCluster("test-subscription", "nonexistent-cluster", "test-rg", null, Arg.Any<RetryPolicyOptions>())
             .Returns((Models.Cluster?)null);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "nonexistent-cluster"]);
@@ -138,7 +148,7 @@ public class ClusterGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _aksService.GetCluster(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Core.Options.RetryPolicyOptions>())
+        _aksService.GetCluster(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<Models.Cluster?>(new Exception("Test error")));
 
         var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
@@ -157,7 +167,7 @@ public class ClusterGetCommandTests
     {
         // Arrange
         var notFoundException = new RequestFailedException(404, "Not Found");
-        _aksService.GetCluster(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Core.Options.RetryPolicyOptions>())
+        _aksService.GetCluster(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<Models.Cluster?>(notFoundException));
 
         var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);
@@ -175,7 +185,7 @@ public class ClusterGetCommandTests
     {
         // Arrange
         var forbiddenException = new RequestFailedException(403, "Forbidden");
-        _aksService.GetCluster(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<Core.Options.RetryPolicyOptions>())
+        _aksService.GetCluster(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<Models.Cluster?>(forbiddenException));
 
         var parseResult = _commandDefinition.Parse(["--subscription", "test-subscription", "--resource-group", "test-rg", "--cluster", "test-cluster"]);

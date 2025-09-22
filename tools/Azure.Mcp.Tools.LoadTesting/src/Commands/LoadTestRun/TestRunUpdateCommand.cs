@@ -31,7 +31,7 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
     {
         Destructive = true,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -84,7 +84,7 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
                 options.RetryPolicy);
             // Set results if any were returned
             context.Response.Results = results != null ?
-                ResponseResult.Create(new TestRunUpdateCommandResult(results), LoadTestJsonContext.Default.TestRunUpdateCommandResult) :
+                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestRunUpdateCommandResult) :
                 null;
         }
         catch (Exception ex)

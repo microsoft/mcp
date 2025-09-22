@@ -45,8 +45,8 @@ public class ProductListCommandTests : CommandTestsBase
         var productArray = products.EnumerateArray().ToArray();
         Assert.NotEmpty(productArray);
         var product = productArray[0];
-        Assert.True(product.TryGetProperty("uniqueProductId", out _));
-        Assert.True(product.TryGetProperty("displayName", out _));
+        product.AssertProperty("uniqueProductId");
+        product.AssertProperty("displayName");
     }
 
     [Fact]
@@ -107,8 +107,8 @@ public class ProductListCommandTests : CommandTestsBase
 
         var productArray = products.EnumerateArray().ToArray();
         var product = productArray[0];
-        Assert.True(product.TryGetProperty("uniqueProductId", out _));
-        Assert.True(product.TryGetProperty("displayName", out _));
+        product.AssertProperty("uniqueProductId");
+        product.AssertProperty("displayName");
     }
 
     [Fact]
@@ -128,8 +128,8 @@ public class ProductListCommandTests : CommandTestsBase
 
         var productArray = products.EnumerateArray().ToArray();
         var product = productArray[0];
-        Assert.True(product.TryGetProperty("uniqueProductId", out _));
-        Assert.True(product.TryGetProperty("displayName", out _));
+        product.AssertProperty("uniqueProductId");
+        product.AssertProperty("displayName");
     }
 
     [Fact]
@@ -213,9 +213,9 @@ public class ProductListCommandTests : CommandTestsBase
         // Verify selected properties are present
         Assert.NotEmpty(productArray);
         var product = productArray[0];
-        Assert.True(product.TryGetProperty("uniqueProductId", out _));
-        Assert.True(product.TryGetProperty("displayName", out _));
-        Assert.True(product.TryGetProperty("publisherDisplayName", out _));
+        product.AssertProperty("uniqueProductId");
+        product.AssertProperty("displayName");
+        product.AssertProperty("publisherDisplayName");
     }
 
     [Fact]
@@ -239,8 +239,7 @@ public class ProductListCommandTests : CommandTestsBase
         var productArray = products.EnumerateArray().ToArray();
         Assert.NotEmpty(productArray);
         var product = productArray[0];
-        Assert.True(product.TryGetProperty("uniqueProductId", out _));
-        Assert.True(product.TryGetProperty("displayName", out _));
-
+        product.AssertProperty("uniqueProductId");
+        product.AssertProperty("displayName");
     }
 }

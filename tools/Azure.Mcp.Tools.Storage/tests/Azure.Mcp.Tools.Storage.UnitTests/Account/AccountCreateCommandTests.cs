@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services;
@@ -96,7 +97,7 @@ public class AccountCreateCommandTests
             Assert.Equal("Success", response.Message);
 
             var json = JsonSerializer.Serialize(response.Results);
-            var result = JsonSerializer.Deserialize<AccountCreateCommand.AccountCreateCommandResult>(json);
+            var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.AccountCreateCommandResult);
             Assert.NotNull(result);
             Assert.NotNull(result!.Account);
             Assert.Equal("testaccount", result.Account.Name);

@@ -30,9 +30,9 @@ public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -83,9 +83,7 @@ public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
                 options.PublicNetworkAccess,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new ServerCreateResult(server),
-                SqlJsonContext.Default.ServerCreateResult);
+            context.Response.Results = ResponseResult.Create(new(server), SqlJsonContext.Default.ServerCreateResult);
         }
         catch (Exception ex)
         {

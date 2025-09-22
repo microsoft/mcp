@@ -3,8 +3,10 @@
 
 using System.CommandLine;
 using System.Text.Json;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -65,7 +67,7 @@ public class AccountGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccountGetCommand.AccountGetCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.AccountGetCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Accounts);
@@ -96,7 +98,7 @@ public class AccountGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccountGetCommand.AccountGetCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.AccountGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Accounts);
@@ -144,14 +146,14 @@ public class AccountGetCommandTests
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Arrange
-        var originalSubscriptionEnv = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
+        var originalSubscriptionEnv = EnvironmentHelpers.GetAzureSubscriptionId();
 
         try
         {
             // Clear environment variable for failing test cases to ensure proper validation
             if (!shouldSucceed && !args.Contains("--subscription"))
             {
-                Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", null);
+                EnvironmentHelpers.SetAzureSubscriptionId(null);
             }
 
             if (shouldSucceed)
@@ -185,7 +187,7 @@ public class AccountGetCommandTests
         finally
         {
             // Restore original environment variable
-            Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", originalSubscriptionEnv);
+            EnvironmentHelpers.SetAzureSubscriptionId(originalSubscriptionEnv);
         }
     }
 
@@ -214,7 +216,7 @@ public class AccountGetCommandTests
         Assert.Equal(200, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccountGetCommand.AccountGetCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.AccountGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Single(result.Accounts);

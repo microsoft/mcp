@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Services;
@@ -65,7 +66,7 @@ public class TestGetCommandTests
         Assert.Equal(200, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TestGetCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, LoadTestJsonContext.Default.TestGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expected.TestId, result.Test.TestId);
@@ -113,10 +114,5 @@ public class TestGetCommandTests
         Assert.Equal(500, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
-    }
-
-    private class TestGetCommandResult
-    {
-        public Test Test { get; set; } = new();
     }
 }

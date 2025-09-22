@@ -28,7 +28,7 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

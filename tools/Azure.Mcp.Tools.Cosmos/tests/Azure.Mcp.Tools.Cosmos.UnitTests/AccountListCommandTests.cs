@@ -12,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using static Azure.Mcp.Tools.Cosmos.Commands.AccountListCommand;
 
 namespace Azure.Mcp.Tools.Cosmos.UnitTests;
 
@@ -57,10 +56,7 @@ public class AccountListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccountListCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-        });
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.AccountListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedAccounts, result.Accounts);
@@ -83,10 +79,7 @@ public class AccountListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccountListCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-        });
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.AccountListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Accounts);

@@ -36,12 +36,12 @@ public class KeyVaultSetup : IAreaSetup
         keyVault.AddSubGroup(certificate);
 
         keys.AddCommand("list", new KeyListCommand(loggerFactory.CreateLogger<KeyListCommand>()));
-        //keys.AddCommand("get", new KeyGetCommand(loggerFactory.CreateLogger<KeyGetCommand>()));
+        keys.AddCommand("get", new KeyGetCommand(loggerFactory.CreateLogger<KeyGetCommand>()));
         keys.AddCommand("create", new KeyCreateCommand(loggerFactory.CreateLogger<KeyCreateCommand>()));
 
         secret.AddCommand("list", new SecretListCommand(loggerFactory.CreateLogger<SecretListCommand>()));
         secret.AddCommand("create", new SecretCreateCommand(loggerFactory.CreateLogger<SecretCreateCommand>()));
-        //secret.AddCommand("get", new SecretGetCommand(loggerFactory.CreateLogger<SecretGetCommand>()));
+        secret.AddCommand("get", new SecretGetCommand(loggerFactory.CreateLogger<SecretGetCommand>()));
 
         certificate.AddCommand("list", new CertificateListCommand(loggerFactory.CreateLogger<CertificateListCommand>()));
         certificate.AddCommand("get", new CertificateGetCommand(loggerFactory.CreateLogger<CertificateGetCommand>()));

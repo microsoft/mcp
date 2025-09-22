@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.FirewallRule;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -69,7 +70,7 @@ public class FirewallRuleDeleteCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<Core.Options.RetryPolicyOptions?>(),
+                Arg.Any<RetryPolicyOptions?>(),
                 Arg.Any<CancellationToken>())
                 .Returns(true);
         }
@@ -101,7 +102,7 @@ public class FirewallRuleDeleteCommandTests
             "testrg",
             "testsub",
             "TestRule",
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -126,7 +127,7 @@ public class FirewallRuleDeleteCommandTests
             "testrg",
             "testsub",
             "NonExistentRule",
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(false);
 
@@ -151,7 +152,7 @@ public class FirewallRuleDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(new Exception("Test error")));
 
@@ -177,7 +178,7 @@ public class FirewallRuleDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(requestException));
 
@@ -202,7 +203,7 @@ public class FirewallRuleDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(requestException));
 
@@ -231,7 +232,7 @@ public class FirewallRuleDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -247,7 +248,7 @@ public class FirewallRuleDeleteCommandTests
             resourceGroup,
             subscription,
             ruleName,
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -260,7 +261,7 @@ public class FirewallRuleDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -280,7 +281,7 @@ public class FirewallRuleDeleteCommandTests
             "testrg",
             "testsub",
             "TestRule",
-            Arg.Is<Core.Options.RetryPolicyOptions?>(r => r != null && r.MaxRetries == 3),
+            Arg.Is<RetryPolicyOptions?>(r => r != null && r.MaxRetries == 3),
             Arg.Any<CancellationToken>());
     }
 
@@ -298,7 +299,7 @@ public class FirewallRuleDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 
@@ -318,7 +319,7 @@ public class FirewallRuleDeleteCommandTests
             "testrg",
             "testsub",
             ruleName,
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -332,7 +333,7 @@ public class FirewallRuleDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(argumentException));
 
@@ -357,7 +358,7 @@ public class FirewallRuleDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(true);
 

@@ -33,12 +33,16 @@ public class SqlSetup : IAreaSetup
 
         database.AddCommand("show", new DatabaseShowCommand(loggerFactory.CreateLogger<DatabaseShowCommand>()));
         database.AddCommand("list", new DatabaseListCommand(loggerFactory.CreateLogger<DatabaseListCommand>()));
+        database.AddCommand("create", new DatabaseCreateCommand(loggerFactory.CreateLogger<DatabaseCreateCommand>()));
+        database.AddCommand("update", new DatabaseUpdateCommand(loggerFactory.CreateLogger<DatabaseUpdateCommand>()));
+        database.AddCommand("delete", new DatabaseDeleteCommand(loggerFactory.CreateLogger<DatabaseDeleteCommand>()));
 
         var server = new CommandGroup("server", "SQL server operations");
         sql.AddSubGroup(server);
 
         server.AddCommand("create", new ServerCreateCommand(loggerFactory.CreateLogger<ServerCreateCommand>()));
         server.AddCommand("delete", new ServerDeleteCommand(loggerFactory.CreateLogger<ServerDeleteCommand>()));
+        server.AddCommand("list", new ServerListCommand(loggerFactory.CreateLogger<ServerListCommand>()));
         server.AddCommand("show", new ServerShowCommand(loggerFactory.CreateLogger<ServerShowCommand>()));
 
         var elasticPool = new CommandGroup("elastic-pool", "SQL elastic pool operations");

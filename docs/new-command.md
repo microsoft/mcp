@@ -497,11 +497,11 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,    // Set to true for commands that modify resources
-        OpenWorld = true,       // Set to false for commands with closed/predictable domains (e.g., schema, best practices)
-        Idempotent = true,      // Set to false for commands that are not idempotent
-        ReadOnly = true,        // Set to false for commands that modify resources
-        Secret = false,         // Set to true for commands that may return sensitive information
+        Destructive = false,    // Set to true for tools that modify resources
+        OpenWorld = true,       // Set to false for tools whose domain of interaction is closed and well-defined
+        Idempotent = true,      // Set to false for tools that are not idempotent
+        ReadOnly = true,        // Set to false for tools that modify resources
+        Secret = false,         // Set to true for tools that may return sensitive information
         LocalRequired = false   // Set to true for tools requiring local execution/resources
     };
 
@@ -943,7 +943,10 @@ Guidelines:
 - Use `{Toolset}JsonContext.Default.{Operation}CommandResult` when deserializing JSON to a response result model. Do not define custom models for serialization.
    - ✅ Good: `JsonSerializer.Deserialize(json, {Toolset}JsonContext.Default.{Operation}CommandResult)`
    - ❌ Bad: `JsonSerializer.Deserialize<TestModel>(json)`
-
+- When using argument matchers for a specific value use `Arg.Is(<Value>)` or use the value directly as it is cleaner than `Arg.Is<T>(Predicate<T>)`.
+   - ✅ Good: `_service.{Operation}(Arg.Is(value)).Returns(return)`
+   - ✅ Good: `_service.{Operation}(value).Returns(return)`
+   - ❌ Bad: `_service.{Operation}(Arg.Is<T>(t => t == value)).Returns(return)`
 ### 7. Integration Tests
 
 Integration tests inherit from `CommandTestsBase` and use test fixtures:
@@ -974,8 +977,16 @@ public class {Toolset}CommandTests(ITestOutputHelper output)
         // Check results format
         foreach (var item in items.EnumerateArray())
         {
-            Assert.True(item.TryGetProperty("name", out _));
-            Assert.True(item.TryGetProperty("type", out _));
+            // When JSON properties are expected, use AssertProperty.
+            // It provides more failure information than asserting TryGetProperty returns true.
+            item.AssertProperty("name");
+            item.AssertProperty("type");
+
+            // Conditionally validate optional properties.
+            if (item.TryGetProperty("optional", out var optionalProp))
+            {
+                Assert.Equal(JsonValueKind.String, optionalProp.ValueKind);
+            }
         }
     }
 
@@ -993,6 +1004,10 @@ public class {Toolset}CommandTests(ITestOutputHelper output)
     }
 }
 ```
+
+Guidelines:
+- When validating JSON for an expected property use `JsonElement.AssertProperty`.
+- When validating JSON for a conditional property use `JsonElement.TryGetProperty` in an if-clause. 
 
 ### 8. Command Registration
 

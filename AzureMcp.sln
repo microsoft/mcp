@@ -178,6 +178,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.MySql", "Az
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{065991D2-6F8C-6F65-0E72-DC96953B87D8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.ApplicationInsights", "tools\Azure.Mcp.Tools.ApplicationInsights\src\Azure.Mcp.Tools.ApplicationInsights.csproj", "{E2C2A3E4-1D5F-4F6E-9A7F-1C2E54F893AB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.ApplicationInsights.UnitTests", "tools\Azure.Mcp.Tools.ApplicationInsights\tests\Azure.Mcp.Tools.ApplicationInsights.UnitTests\Azure.Mcp.Tools.ApplicationInsights.UnitTests.csproj", "{C0F9D8F5-3F6D-4D46-9E6D-8A7E4EDC0E11}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.MySql", "tools\Azure.Mcp.Tools.MySql\src\Azure.Mcp.Tools.MySql.csproj", "{916DF4C9-3EB7-4D2B-B727-6EEEBB049A80}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Postgres", "Azure.Mcp.Tools.Postgres", "{898C8C6E-FC1C-58E1-FB62-BBE77ED42888}"
@@ -822,6 +826,18 @@ Global
 		{168BAD1F-6D9B-4A41-9A40-CAA2766110EF}.Release|x64.Build.0 = Release|Any CPU
 		{168BAD1F-6D9B-4A41-9A40-CAA2766110EF}.Release|x86.ActiveCfg = Release|Any CPU
 		{168BAD1F-6D9B-4A41-9A40-CAA2766110EF}.Release|x86.Build.0 = Release|Any CPU
+		{E2C2A3E4-1D5F-4F6E-9A7F-1C2E54F893AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2C2A3E4-1D5F-4F6E-9A7F-1C2E54F893AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2C2A3E4-1D5F-4F6E-9A7F-1C2E54F893AB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E2C2A3E4-1D5F-4F6E-9A7F-1C2E54F893AB}.Debug|x64.Build.0 = Debug|Any CPU
+		{E2C2A3E4-1D5F-4F6E-9A7F-1C2E54F893AB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E2C2A3E4-1D5F-4F6E-9A7F-1C2E54F893AB}.Debug|x86.Build.0 = Debug|Any CPU
+		{E2C2A3E4-1D5F-4F6E-9A7F-1C2E54F893AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2C2A3E4-1D5F-4F6E-9A7F-1C2E54F893AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2C2A3E4-1D5F-4F6E-9A7F-1C2E54F893AB}.Release|x64.ActiveCfg = Release|Any CPU
+		{E2C2A3E4-1D5F-4F6E-9A7F-1C2E54F893AB}.Release|x64.Build.0 = Release|Any CPU
+		{E2C2A3E4-1D5F-4F6E-9A7F-1C2E54F893AB}.Release|x86.ActiveCfg = Release|Any CPU
+		{E2C2A3E4-1D5F-4F6E-9A7F-1C2E54F893AB}.Release|x86.Build.0 = Release|Any CPU
 		{916DF4C9-3EB7-4D2B-B727-6EEEBB049A80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{916DF4C9-3EB7-4D2B-B727-6EEEBB049A80}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{916DF4C9-3EB7-4D2B-B727-6EEEBB049A80}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -1746,6 +1762,18 @@ Global
 		{D3F46C2D-3AFD-FD9C-9C6A-180B1514DD2F}.Release|x64.Build.0 = Release|Any CPU
 		{D3F46C2D-3AFD-FD9C-9C6A-180B1514DD2F}.Release|x86.ActiveCfg = Release|Any CPU
 		{D3F46C2D-3AFD-FD9C-9C6A-180B1514DD2F}.Release|x86.Build.0 = Release|Any CPU
+		{C0F9D8F5-3F6D-4D46-9E6D-8A7E4EDC0E11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0F9D8F5-3F6D-4D46-9E6D-8A7E4EDC0E11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0F9D8F5-3F6D-4D46-9E6D-8A7E4EDC0E11}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C0F9D8F5-3F6D-4D46-9E6D-8A7E4EDC0E11}.Debug|x64.Build.0 = Debug|Any CPU
+		{C0F9D8F5-3F6D-4D46-9E6D-8A7E4EDC0E11}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C0F9D8F5-3F6D-4D46-9E6D-8A7E4EDC0E11}.Debug|x86.Build.0 = Debug|Any CPU
+		{C0F9D8F5-3F6D-4D46-9E6D-8A7E4EDC0E11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0F9D8F5-3F6D-4D46-9E6D-8A7E4EDC0E11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0F9D8F5-3F6D-4D46-9E6D-8A7E4EDC0E11}.Release|x64.ActiveCfg = Release|Any CPU
+		{C0F9D8F5-3F6D-4D46-9E6D-8A7E4EDC0E11}.Release|x64.Build.0 = Release|Any CPU
+		{C0F9D8F5-3F6D-4D46-9E6D-8A7E4EDC0E11}.Release|x86.ActiveCfg = Release|Any CPU
+		{C0F9D8F5-3F6D-4D46-9E6D-8A7E4EDC0E11}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

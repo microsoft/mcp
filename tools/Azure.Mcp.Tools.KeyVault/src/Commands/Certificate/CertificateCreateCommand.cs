@@ -22,9 +22,9 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -75,7 +75,7 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
             var certificate = completedOperation.Value;
 
             context.Response.Results = ResponseResult.Create(
-                new CertificateCreateCommandResult(
+                new(
                     certificate.Name,
                     certificate.Id,
                     certificate.KeyId,

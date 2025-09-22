@@ -32,7 +32,7 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -99,9 +99,7 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
 
             // Set results
             context.Response.Results = result != null ?
-                ResponseResult.Create(
-                    new ProductGetCommandResult(result),
-                    MarketplaceJsonContext.Default.ProductGetCommandResult) :
+                ResponseResult.Create(new(result), MarketplaceJsonContext.Default.ProductGetCommandResult) :
                 null;
         }
         catch (Exception ex)

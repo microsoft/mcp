@@ -38,7 +38,7 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -84,11 +84,7 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
                 options.Tenant,
                 options.RetryPolicy);
 
-            var peekedMessages = messages ?? new List<ServiceBusReceivedMessage>();
-
-            context.Response.Results = ResponseResult.Create(
-                new SubscriptionPeekCommandResult(peekedMessages),
-                ServiceBusJsonContext.Default.SubscriptionPeekCommandResult);
+            context.Response.Results = ResponseResult.Create(new(messages ?? []), ServiceBusJsonContext.Default.SubscriptionPeekCommandResult);
         }
         catch (Exception ex)
         {

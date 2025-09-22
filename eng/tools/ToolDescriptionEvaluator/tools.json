@@ -187,7 +187,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--cluster",
@@ -309,7 +309,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--cluster",
@@ -382,7 +382,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--cluster",
@@ -600,9 +600,9 @@
       ]
     },
     {
-      "name": "lock",
-      "description": "Lock a key-value in an App Configuration store. This command sets a key-value to read-only mode,\r\npreventing any modifications to its value. You must specify an account name and key. Optionally,\r\nyou can specify a label to lock a specific labeled version of the key-value.",
-      "command": "azmcp appconfig kv lock",
+      "name": "set",
+      "description": "Sets the lock state of a key-value in an App Configuration store. This command can lock and unlock key-values.\r\nLocking sets a key-value to read-only mode, preventing any modifications to its value. Unlocking removes the\r\nread-only mode from a key-value setting, allowing modifications to its value. You must specify an account name\r\nand key. Optionally, you can specify a label to lock or unlock a specific labeled version of the key-value.\r\nDefault is unlocking the key-value.",
+      "command": "azmcp appconfig kv lock set",
       "option": [
         {
           "name": "--tenant",
@@ -673,6 +673,12 @@
         {
           "name": "--content-type",
           "description": "The content type of the configuration value. This is used to indicate how the value should be interpreted or parsed.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--lock",
+          "description": "Whether a key-value will be locked (set to read-only) or unlocked (read-only removed).",
           "type": "string",
           "required": null
         }
@@ -849,85 +855,6 @@
       ]
     },
     {
-      "name": "unlock",
-      "description": "Unlock a key-value setting in an App Configuration store. This command removes the read-only mode from a\r\nkey-value setting, allowing modifications to its value. You must specify an account name and key. Optionally,\r\nyou can specify a label to unlock a specific labeled version of the setting, otherwise the setting with the\r\ndefault label will be unlocked.",
-      "command": "azmcp appconfig kv unlock",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--account",
-          "description": "The name of the App Configuration store (e.g., my-appconfig).",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--key",
-          "description": "The name of the key to access within the App Configuration store.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--label",
-          "description": "The label to apply to the configuration key. Labels are used to group and organize settings.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--content-type",
-          "description": "The content type of the configuration value. This is used to indicate how the value should be interpreted or parsed.",
-          "type": "string",
-          "required": null
-        }
-      ]
-    },
-    {
       "name": "diagnose",
       "description": "**PRIMARY USE: Diagnose Azure resource performance issues, slowness, failures, and availability problems.**\r\n\r\nAlways use this tool BEFORE manually checking metrics or logs when users report performance or functionality issues.\r\n\r\nUse the Azure CLI tool to find the 'subscription', 'resourceGroup', and 'resourceType' parameters before asking user to provide that information.\"\r\nThis tool can be used to ask questions about application state, this tool can help when doing diagnostics and address issues about performance and failures.\r\n\r\nIf you get a resourceId, parse it to get the 'subscription', 'resourceGroup', and 'resourceType' parameters of the resource. ResourceIds are in the format:\r\n/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resource}\r\n\r\nOnce proper input is provided this tool returns a list of insights and solutions to the user question.",
       "command": "azmcp applens resource diagnose",
@@ -981,6 +908,12 @@
           "required": null
         },
         {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
           "name": "--question",
           "description": "User question",
           "type": "string",
@@ -997,12 +930,6 @@
           "description": "Resource type. Try to get this information using the Azure CLI tool before asking the user.",
           "type": "string",
           "required": true
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": null
         }
       ]
     },
@@ -1672,7 +1599,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         }
       ]
     },
@@ -1781,7 +1708,7 @@
         },
         {
           "name": "--resource-types",
-          "description": "Specifies the Azure resource types to retrieve IaC rules for. It should be comma-separated. Supported values are: 'appservice', 'containerapp', 'function', 'aks'. If none of these services are used, this parameter can be left empty.",
+          "description": "Specifies the Azure resource types to retrieve IaC rules for. It should be comma-separated. Supported values are: 'appservice', 'containerapp', 'function', 'aks', 'storage'. If none of these services are used, this parameter can be left empty.",
           "type": "string",
           "required": null
         }
@@ -1905,7 +1832,7 @@
     },
     {
       "name": "list",
-      "description": "List all Event Grid topics in a subscription with configuration and status information. This tool retrieves \r\ntopic details including endpoints, access keys, and subscription information for event publishing and management. \r\nReturns topic information as JSON array. Requires subscription.",
+      "description": "List all Event Grid topics in a subscription with configuration and status information. This tool retrieves\r\ntopic details including endpoints, access keys, and subscription information for event publishing and management.\r\nReturns topic information as JSON array. Requires subscription.",
       "command": "azmcp eventgrid topic list",
       "option": [
         {
@@ -2195,6 +2122,12 @@
           "required": null
         },
         {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
           "name": "--deployment",
           "description": "The name of the deployment.",
           "type": "string",
@@ -2217,12 +2150,6 @@
           "description": "The name of the Azure AI services account to deploy to.",
           "type": "string",
           "required": true
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": null
         },
         {
           "name": "--model-version",
@@ -2384,7 +2311,7 @@
         },
         {
           "name": "--model-name",
-          "description": "The name of the model to search for.",
+          "description": "The name of the model to deploy.",
           "type": "string",
           "required": null
         }
@@ -4549,6 +4476,12 @@
           "required": null
         },
         {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
           "name": "--entity",
           "description": "The entity to get health for.",
           "type": "string",
@@ -4559,12 +4492,6 @@
           "description": "The name of the health model for which to get the health.",
           "type": "string",
           "required": true
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": null
         }
       ]
     },
@@ -4622,6 +4549,12 @@
           "required": null
         },
         {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
           "name": "--resource-type",
           "description": "The Azure resource type (e.g., 'Microsoft.Storage/storageAccounts', 'Microsoft.Compute/virtualMachines'). If not specified, will attempt to infer from resource name.",
           "type": "string",
@@ -4632,12 +4565,6 @@
           "description": "The name of the Azure resource to query metrics for.",
           "type": "string",
           "required": true
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": null
         },
         {
           "name": "--metric-namespace",
@@ -4713,6 +4640,12 @@
           "required": null
         },
         {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
           "name": "--resource-type",
           "description": "The Azure resource type (e.g., 'Microsoft.Storage/storageAccounts', 'Microsoft.Compute/virtualMachines'). If not specified, will attempt to infer from resource name.",
           "type": "string",
@@ -4723,12 +4656,6 @@
           "description": "The name of the Azure resource to query metrics for.",
           "type": "string",
           "required": true
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": null
         },
         {
           "name": "--metric-names",
@@ -4922,7 +4849,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--workspace",
@@ -4995,7 +4922,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--workspace",
@@ -5117,7 +5044,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--workspace",
@@ -5208,7 +5135,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--user",
@@ -5281,7 +5208,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--user",
@@ -5366,7 +5293,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--user",
@@ -5439,7 +5366,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--user",
@@ -5506,7 +5433,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--user",
@@ -5585,7 +5512,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--user",
@@ -5670,7 +5597,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--user",
@@ -5749,7 +5676,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--user",
@@ -5834,7 +5761,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--user",
@@ -5907,7 +5834,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--user",
@@ -5992,7 +5919,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--user",
@@ -6065,7 +5992,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--user",
@@ -6132,7 +6059,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--user",
@@ -6211,7 +6138,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--user",
@@ -6296,7 +6223,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--user",
@@ -6375,7 +6302,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--user",
@@ -6603,16 +6530,16 @@
           "required": null
         },
         {
-          "name": "--cache",
-          "description": "The name of the Redis cache (e.g., my-redis-cache).",
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
           "required": true
         },
         {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "name": "--cache",
+          "description": "The name of the Redis cache (e.g., my-redis-cache).",
           "type": "string",
-          "required": null
+          "required": true
         }
       ]
     },
@@ -6725,16 +6652,16 @@
           "required": null
         },
         {
-          "name": "--cluster",
-          "description": "The name of the Redis cluster (e.g., my-redis-cluster).",
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
           "required": true
         },
         {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "name": "--cluster",
+          "description": "The name of the Redis cluster (e.g., my-redis-cluster).",
           "type": "string",
-          "required": null
+          "required": true
         }
       ]
     },
@@ -7514,7 +7441,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--server",
@@ -7581,7 +7508,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--server",
@@ -7654,7 +7581,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--server",
@@ -7666,7 +7593,7 @@
     },
     {
       "name": "create",
-      "description": "Creates a new Azure SQL server in the specified resource group and location. \r\nThe server will be created with the specified administrator credentials and \r\noptional configuration settings. Returns the created server with its properties \r\nincluding the fully qualified domain name.",
+      "description": "Creates a new Azure SQL server in the specified resource group and location.\r\nThe server will be created with the specified administrator credentials and\r\noptional configuration settings. Returns the created server with its properties\r\nincluding the fully qualified domain name.",
       "command": "azmcp sql server create",
       "option": [
         {
@@ -7721,7 +7648,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--server",
@@ -7763,7 +7690,7 @@
     },
     {
       "name": "delete",
-      "description": "Deletes an Azure SQL server and all of its databases from the specified resource group. \r\nThis operation is irreversible and will permanently remove the server and all its data. \r\nUse the --force flag to skip confirmation prompts.",
+      "description": "Deletes an Azure SQL server and all of its databases from the specified resource group.\r\nThis operation is irreversible and will permanently remove the server and all its data.\r\nUse the --force flag to skip confirmation prompts.",
       "command": "azmcp sql server delete",
       "option": [
         {
@@ -7818,7 +7745,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--server",
@@ -7891,7 +7818,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--server",
@@ -7958,7 +7885,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--server",
@@ -8043,7 +7970,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--server",
@@ -8116,7 +8043,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--server",
@@ -8128,7 +8055,7 @@
     },
     {
       "name": "show",
-      "description": "Retrieves detailed information about an Azure SQL server including its configuration, \r\nstatus, and properties such as the fully qualified domain name, version, \r\nadministrator login, and network access settings.",
+      "description": "Retrieves detailed information about an Azure SQL server including its configuration,\r\nstatus, and properties such as the fully qualified domain name, version,\r\nadministrator login, and network access settings.",
       "command": "azmcp sql server show",
       "option": [
         {
@@ -8183,7 +8110,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--server",
@@ -8247,16 +8174,16 @@
           "required": null
         },
         {
-          "name": "--account",
-          "description": "The name of the Azure Storage account to create. Must be globally unique, 3-24 characters, lowercase letters and numbers only.",
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
           "required": true
         },
         {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "name": "--account",
+          "description": "The name of the Azure Storage account to create. Must be globally unique, 3-24 characters, lowercase letters and numbers only.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--location",
@@ -9400,7 +9327,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--display-name",
@@ -9534,7 +9461,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": null
+          "required": true
         },
         {
           "name": "--kind",
@@ -9679,5 +9606,5 @@
       ]
     }
   ],
-  "duration": 63
+  "duration": 23
 }

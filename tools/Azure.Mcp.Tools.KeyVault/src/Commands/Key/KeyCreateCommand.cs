@@ -22,9 +22,9 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : Subscri
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -74,7 +74,7 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : Subscri
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new KeyCreateCommandResult(
+                new(
                     key.Name,
                     key.KeyType.ToString(),
                     key.Properties.Enabled,

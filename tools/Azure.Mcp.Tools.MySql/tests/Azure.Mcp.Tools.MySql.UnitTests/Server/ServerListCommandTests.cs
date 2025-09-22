@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Server;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,7 +53,7 @@ public class ServerListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ServerListResult>(json);
+        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.ServerListCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedServers, result.Servers);
     }
@@ -89,11 +89,5 @@ public class ServerListCommandTests
         Assert.Equal("List MySQL Servers", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
-    }
-
-    private class ServerListResult
-    {
-        [JsonPropertyName("Servers")]
-        public List<string> Servers { get; set; } = [];
     }
 }

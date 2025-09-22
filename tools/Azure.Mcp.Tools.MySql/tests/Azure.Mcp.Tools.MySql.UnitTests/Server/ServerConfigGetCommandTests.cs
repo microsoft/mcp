@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Server;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -64,7 +64,7 @@ public class ServerConfigGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ServerConfigGetCommand.ServerConfigGetCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.ServerConfigGetCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedConfig, result.Configuration);
     }
@@ -101,11 +101,5 @@ public class ServerConfigGetCommandTests
         Assert.Equal("Get MySQL Server Configuration", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
-    }
-
-    private class ServerConfigResult
-    {
-        [JsonPropertyName("Configuration")]
-        public string Configuration { get; set; } = string.Empty;
     }
 }

@@ -65,7 +65,7 @@ public class BestPracticesCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), new[] { "--topic", "pagination" });
+        var parseResult = CreateParseResult(command.GetCommand(), ["--topic", "pagination"]);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
@@ -89,7 +89,7 @@ public class BestPracticesCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), Array.Empty<string>());
+        var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
@@ -115,7 +115,7 @@ public class BestPracticesCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), new[] { "--topic", "invalid-topic" });
+        var parseResult = CreateParseResult(command.GetCommand(), ["--topic", "invalid-topic"]);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
@@ -140,7 +140,7 @@ public class BestPracticesCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), new[] { "--topic", "pagination" });
+        var parseResult = CreateParseResult(command.GetCommand(), ["--topic", "pagination"]);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
@@ -207,7 +207,7 @@ public class BestPracticesCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), new[] { "--workload-type", "notebook" });
+        var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
@@ -231,7 +231,7 @@ public class BestPracticesCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), Array.Empty<string>());
+        var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
@@ -257,7 +257,7 @@ public class BestPracticesCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), new[] { "--workload-type", "notebook" });
+        var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
@@ -320,7 +320,7 @@ public class BestPracticesCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), new[] { "--workload-type", "notebook" });
+        var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
@@ -370,7 +370,7 @@ public class BestPracticesCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), new[] { "--workload-type", "invalid-workload" });
+        var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "invalid-workload"]);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
@@ -395,7 +395,7 @@ public class BestPracticesCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), new[] { "--workload-type", "notebook" });
+        var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);

@@ -36,7 +36,7 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

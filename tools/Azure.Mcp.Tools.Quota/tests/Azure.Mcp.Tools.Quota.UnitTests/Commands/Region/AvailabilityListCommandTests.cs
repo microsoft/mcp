@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.Quota.Commands;
 using Azure.Mcp.Tools.Quota.Commands.Region;
 using Azure.Mcp.Tools.Quota.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -91,13 +92,8 @@ public sealed class AvailabilityListCommandTests
 
         // Verify the response structure
         var json = JsonSerializer.Serialize(result.Results);
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        };
+        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.RegionCheckCommandResult);
 
-        var response = JsonSerializer.Deserialize<AvailabilityListCommand.RegionCheckCommandResult>(json, options);
         Assert.NotNull(response);
         Assert.NotNull(response.AvailableRegions);
         Assert.Equal(5, response.AvailableRegions.Count);
@@ -165,13 +161,8 @@ public sealed class AvailabilityListCommandTests
 
         // Verify the response structure
         var json = JsonSerializer.Serialize(result.Results);
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        };
+        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.RegionCheckCommandResult);
 
-        var response = JsonSerializer.Deserialize<AvailabilityListCommand.RegionCheckCommandResult>(json, options);
         Assert.NotNull(response);
         Assert.NotNull(response.AvailableRegions);
         Assert.Equal(3, response.AvailableRegions.Count);
@@ -324,13 +315,8 @@ public sealed class AvailabilityListCommandTests
         Assert.NotNull(result.Results); // Should be empty when no regions are found
 
         var json = JsonSerializer.Serialize(result.Results);
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        };
+        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.RegionCheckCommandResult);
 
-        var response = JsonSerializer.Deserialize<AvailabilityListCommand.RegionCheckCommandResult>(json, options);
         Assert.NotNull(response);
         Assert.Empty(response.AvailableRegions);
     }
@@ -518,13 +504,8 @@ public sealed class AvailabilityListCommandTests
 
         // Verify the response structure
         var json = JsonSerializer.Serialize(result.Results);
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        };
+        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.RegionCheckCommandResult);
 
-        var response = JsonSerializer.Deserialize<AvailabilityListCommand.RegionCheckCommandResult>(json, options);
         Assert.NotNull(response);
         Assert.NotNull(response.AvailableRegions);
         Assert.Equal(5, response.AvailableRegions.Count);

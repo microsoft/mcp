@@ -35,7 +35,7 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -74,9 +74,7 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new TopicDetailsCommandResult(details),
-                ServiceBusJsonContext.Default.TopicDetailsCommandResult);
+            context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.TopicDetailsCommandResult);
         }
         catch (Exception ex)
         {
