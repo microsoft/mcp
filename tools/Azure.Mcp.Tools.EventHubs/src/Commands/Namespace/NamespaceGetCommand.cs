@@ -61,8 +61,6 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
         return options;
     }
 
-
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
