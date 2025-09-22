@@ -1,14 +1,14 @@
 # Tool Selection Analysis Setup
 
-**Setup completed:** 2025-09-22 15:39:57  
+**Setup completed:** 2025-09-22 16:25:00  
 **Tool count:** 140  
-**Database setup time:** 1.6964240s  
+**Database setup time:** 0.8176977s  
 
 ---
 
 # Tool Selection Analysis Results
 
-**Analysis Date:** 2025-09-22 15:39:57  
+**Analysis Date:** 2025-09-22 16:25:00  
 **Tool count:** 140  
 
 ## Table of Contents
@@ -331,11 +331,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.743538 | `azmcp_acr_registry_list` | ✅ **EXPECTED** |
-| 2 | 0.711544 | `azmcp_acr_registry_repository_list` | ❌ |
+| 1 | 0.743568 | `azmcp_acr_registry_list` | ✅ **EXPECTED** |
+| 2 | 0.711580 | `azmcp_acr_registry_repository_list` | ❌ |
 | 3 | 0.541506 | `azmcp_search_service_list` | ❌ |
-| 4 | 0.527464 | `azmcp_aks_cluster_list` | ❌ |
-| 5 | 0.516020 | `azmcp_subscription_list` | ❌ |
+| 4 | 0.527457 | `azmcp_aks_cluster_list` | ❌ |
+| 5 | 0.515937 | `azmcp_subscription_list` | ❌ |
 
 ---
 
@@ -348,11 +348,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.585940 | `azmcp_acr_registry_list` | ✅ **EXPECTED** |
-| 2 | 0.563628 | `azmcp_acr_registry_repository_list` | ❌ |
+| 1 | 0.586014 | `azmcp_acr_registry_list` | ✅ **EXPECTED** |
+| 2 | 0.563636 | `azmcp_acr_registry_repository_list` | ❌ |
 | 3 | 0.450287 | `azmcp_storage_blob_container_get` | ❌ |
 | 4 | 0.415552 | `azmcp_cosmos_database_container_list` | ❌ |
-| 5 | 0.382742 | `azmcp_mysql_server_list` | ❌ |
+| 5 | 0.382728 | `azmcp_mysql_server_list` | ❌ |
 
 ---
 
@@ -365,8 +365,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.637164 | `azmcp_acr_registry_list` | ✅ **EXPECTED** |
-| 2 | 0.563535 | `azmcp_acr_registry_repository_list` | ❌ |
+| 1 | 0.637130 | `azmcp_acr_registry_list` | ✅ **EXPECTED** |
+| 2 | 0.563476 | `azmcp_acr_registry_repository_list` | ❌ |
 | 3 | 0.474000 | `azmcp_redis_cache_list` | ❌ |
 | 4 | 0.471804 | `azmcp_redis_cluster_list` | ❌ |
 | 5 | 0.463742 | `azmcp_postgres_server_list` | ❌ |
@@ -382,11 +382,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.654310 | `azmcp_acr_registry_repository_list` | ❌ |
-| 2 | 0.633856 | `azmcp_acr_registry_list` | ✅ **EXPECTED** |
-| 3 | 0.476023 | `azmcp_mysql_server_list` | ❌ |
+| 1 | 0.654318 | `azmcp_acr_registry_repository_list` | ❌ |
+| 2 | 0.633938 | `azmcp_acr_registry_list` | ✅ **EXPECTED** |
+| 3 | 0.476015 | `azmcp_mysql_server_list` | ❌ |
 | 4 | 0.454929 | `azmcp_group_list` | ❌ |
-| 5 | 0.454003 | `azmcp_datadog_monitoredresources_list` | ❌ |
+| 5 | 0.453960 | `azmcp_datadog_monitoredresources_list` | ❌ |
 
 ---
 
@@ -399,10 +399,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.639315 | `azmcp_acr_registry_list` | ✅ **EXPECTED** |
-| 2 | 0.637989 | `azmcp_acr_registry_repository_list` | ❌ |
-| 3 | 0.468034 | `azmcp_mysql_server_list` | ❌ |
-| 4 | 0.449649 | `azmcp_datadog_monitoredresources_list` | ❌ |
+| 1 | 0.639391 | `azmcp_acr_registry_list` | ✅ **EXPECTED** |
+| 2 | 0.637972 | `azmcp_acr_registry_repository_list` | ❌ |
+| 3 | 0.468028 | `azmcp_mysql_server_list` | ❌ |
+| 4 | 0.449587 | `azmcp_datadog_monitoredresources_list` | ❌ |
 | 5 | 0.445741 | `azmcp_group_list` | ❌ |
 
 ---
@@ -416,8 +416,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.626469 | `azmcp_acr_registry_repository_list` | ✅ **EXPECTED** |
-| 2 | 0.617547 | `azmcp_acr_registry_list` | ❌ |
+| 1 | 0.626482 | `azmcp_acr_registry_repository_list` | ✅ **EXPECTED** |
+| 2 | 0.617504 | `azmcp_acr_registry_list` | ❌ |
 | 3 | 0.510435 | `azmcp_redis_cache_list` | ❌ |
 | 4 | 0.495567 | `azmcp_postgres_server_list` | ❌ |
 | 5 | 0.492550 | `azmcp_redis_cluster_list` | ❌ |
@@ -433,8 +433,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.546249 | `azmcp_acr_registry_repository_list` | ✅ **EXPECTED** |
-| 2 | 0.469285 | `azmcp_acr_registry_list` | ❌ |
+| 1 | 0.546333 | `azmcp_acr_registry_repository_list` | ✅ **EXPECTED** |
+| 2 | 0.469295 | `azmcp_acr_registry_list` | ❌ |
 | 3 | 0.407973 | `azmcp_cosmos_database_container_list` | ❌ |
 | 4 | 0.400145 | `azmcp_storage_blob_container_get` | ❌ |
 | 5 | 0.339307 | `azmcp_mysql_database_list` | ❌ |
@@ -450,8 +450,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.674073 | `azmcp_acr_registry_repository_list` | ✅ **EXPECTED** |
-| 2 | 0.541713 | `azmcp_acr_registry_list` | ❌ |
+| 1 | 0.674296 | `azmcp_acr_registry_repository_list` | ✅ **EXPECTED** |
+| 2 | 0.541779 | `azmcp_acr_registry_list` | ❌ |
 | 3 | 0.433927 | `azmcp_cosmos_database_container_list` | ❌ |
 | 4 | 0.388490 | `azmcp_storage_blob_container_get` | ❌ |
 | 5 | 0.370375 | `azmcp_mysql_database_list` | ❌ |
@@ -467,8 +467,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.600573 | `azmcp_acr_registry_repository_list` | ✅ **EXPECTED** |
-| 2 | 0.501800 | `azmcp_acr_registry_list` | ❌ |
+| 1 | 0.600780 | `azmcp_acr_registry_repository_list` | ✅ **EXPECTED** |
+| 2 | 0.501842 | `azmcp_acr_registry_list` | ❌ |
 | 3 | 0.418623 | `azmcp_cosmos_database_container_list` | ❌ |
 | 4 | 0.374628 | `azmcp_storage_blob_container_get` | ❌ |
 | 5 | 0.359922 | `azmcp_mysql_database_list` | ❌ |
@@ -484,10 +484,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.661009 | `azmcp_aks_cluster_get` | ✅ **EXPECTED** |
-| 2 | 0.611387 | `azmcp_aks_cluster_list` | ❌ |
+| 1 | 0.660816 | `azmcp_aks_cluster_get` | ✅ **EXPECTED** |
+| 2 | 0.611431 | `azmcp_aks_cluster_list` | ❌ |
 | 3 | 0.579676 | `azmcp_aks_nodepool_get` | ❌ |
-| 4 | 0.540767 | `azmcp_aks_nodepool_list` | ❌ |
+| 4 | 0.537185 | `azmcp_aks_nodepool_list` | ❌ |
 | 5 | 0.481416 | `azmcp_mysql_server_config_get` | ❌ |
 
 ---
@@ -501,10 +501,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.666881 | `azmcp_aks_cluster_get` | ✅ **EXPECTED** |
-| 2 | 0.589055 | `azmcp_aks_cluster_list` | ❌ |
+| 1 | 0.666815 | `azmcp_aks_cluster_get` | ✅ **EXPECTED** |
+| 2 | 0.589101 | `azmcp_aks_cluster_list` | ❌ |
 | 3 | 0.545820 | `azmcp_aks_nodepool_get` | ❌ |
-| 4 | 0.530314 | `azmcp_aks_nodepool_list` | ❌ |
+| 4 | 0.527013 | `azmcp_aks_nodepool_list` | ❌ |
 | 5 | 0.508226 | `azmcp_kusto_cluster_get` | ❌ |
 
 ---
@@ -518,9 +518,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.567423 | `azmcp_aks_cluster_get` | ✅ **EXPECTED** |
-| 2 | 0.563004 | `azmcp_aks_cluster_list` | ❌ |
-| 3 | 0.493940 | `azmcp_aks_nodepool_list` | ❌ |
+| 1 | 0.567289 | `azmcp_aks_cluster_get` | ✅ **EXPECTED** |
+| 2 | 0.563029 | `azmcp_aks_cluster_list` | ❌ |
+| 3 | 0.492492 | `azmcp_aks_nodepool_list` | ❌ |
 | 4 | 0.486040 | `azmcp_aks_nodepool_get` | ❌ |
 | 5 | 0.380301 | `azmcp_mysql_server_config_get` | ❌ |
 
@@ -535,10 +535,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.661426 | `azmcp_aks_cluster_get` | ✅ **EXPECTED** |
-| 2 | 0.578608 | `azmcp_aks_cluster_list` | ❌ |
+| 1 | 0.661365 | `azmcp_aks_cluster_get` | ✅ **EXPECTED** |
+| 2 | 0.578662 | `azmcp_aks_cluster_list` | ❌ |
 | 3 | 0.563549 | `azmcp_aks_nodepool_get` | ❌ |
-| 4 | 0.534089 | `azmcp_aks_nodepool_list` | ❌ |
+| 4 | 0.532400 | `azmcp_aks_nodepool_list` | ❌ |
 | 5 | 0.503925 | `azmcp_kusto_cluster_get` | ❌ |
 
 ---
@@ -552,10 +552,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.801054 | `azmcp_aks_cluster_list` | ✅ **EXPECTED** |
+| 1 | 0.801067 | `azmcp_aks_cluster_list` | ✅ **EXPECTED** |
 | 2 | 0.690255 | `azmcp_kusto_cluster_list` | ❌ |
 | 3 | 0.599940 | `azmcp_redis_cluster_list` | ❌ |
-| 4 | 0.594509 | `azmcp_aks_nodepool_list` | ❌ |
+| 4 | 0.591721 | `azmcp_aks_nodepool_list` | ❌ |
 | 5 | 0.562043 | `azmcp_search_service_list` | ❌ |
 
 ---
@@ -569,9 +569,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.608059 | `azmcp_aks_cluster_list` | ✅ **EXPECTED** |
-| 2 | 0.536472 | `azmcp_aks_cluster_get` | ❌ |
-| 3 | 0.500890 | `azmcp_aks_nodepool_list` | ❌ |
+| 1 | 0.608056 | `azmcp_aks_cluster_list` | ✅ **EXPECTED** |
+| 2 | 0.536277 | `azmcp_aks_cluster_get` | ❌ |
+| 3 | 0.496998 | `azmcp_aks_nodepool_list` | ❌ |
 | 4 | 0.492910 | `azmcp_kusto_cluster_list` | ❌ |
 | 5 | 0.455228 | `azmcp_search_service_list` | ❌ |
 
@@ -586,9 +586,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.623859 | `azmcp_aks_cluster_list` | ✅ **EXPECTED** |
-| 2 | 0.538749 | `azmcp_aks_nodepool_list` | ❌ |
-| 3 | 0.529985 | `azmcp_aks_cluster_get` | ❌ |
+| 1 | 0.623896 | `azmcp_aks_cluster_list` | ✅ **EXPECTED** |
+| 2 | 0.537249 | `azmcp_aks_nodepool_list` | ❌ |
+| 3 | 0.529999 | `azmcp_aks_cluster_get` | ❌ |
 | 4 | 0.466749 | `azmcp_aks_nodepool_get` | ❌ |
 | 5 | 0.449602 | `azmcp_kusto_cluster_list` | ❌ |
 
@@ -604,9 +604,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.753920 | `azmcp_aks_nodepool_get` | ✅ **EXPECTED** |
-| 2 | 0.699423 | `azmcp_aks_nodepool_list` | ❌ |
-| 3 | 0.597319 | `azmcp_aks_cluster_get` | ❌ |
-| 4 | 0.498546 | `azmcp_aks_cluster_list` | ❌ |
+| 2 | 0.695215 | `azmcp_aks_nodepool_list` | ❌ |
+| 3 | 0.597236 | `azmcp_aks_cluster_get` | ❌ |
+| 4 | 0.498592 | `azmcp_aks_cluster_list` | ❌ |
 | 5 | 0.482683 | `azmcp_kusto_cluster_get` | ❌ |
 
 ---
@@ -621,10 +621,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.678158 | `azmcp_aks_nodepool_get` | ✅ **EXPECTED** |
-| 2 | 0.640096 | `azmcp_aks_nodepool_list` | ❌ |
-| 3 | 0.481475 | `azmcp_aks_cluster_get` | ❌ |
+| 2 | 0.636154 | `azmcp_aks_nodepool_list` | ❌ |
+| 3 | 0.481217 | `azmcp_aks_cluster_get` | ❌ |
 | 4 | 0.458596 | `azmcp_sql_elastic-pool_list` | ❌ |
-| 5 | 0.445982 | `azmcp_aks_cluster_list` | ❌ |
+| 5 | 0.446020 | `azmcp_aks_cluster_list` | ❌ |
 
 ---
 
@@ -637,11 +637,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.599524 | `azmcp_aks_nodepool_get` | ✅ **EXPECTED** |
-| 2 | 0.582330 | `azmcp_aks_nodepool_list` | ❌ |
-| 3 | 0.412145 | `azmcp_aks_cluster_get` | ❌ |
-| 4 | 0.391546 | `azmcp_aks_cluster_list` | ❌ |
-| 5 | 0.385258 | `azmcp_virtualdesktop_hostpool_list` | ❌ |
+| 1 | 0.599506 | `azmcp_aks_nodepool_get` | ✅ **EXPECTED** |
+| 2 | 0.579801 | `azmcp_aks_nodepool_list` | ❌ |
+| 3 | 0.412003 | `azmcp_aks_cluster_get` | ❌ |
+| 4 | 0.391590 | `azmcp_aks_cluster_list` | ❌ |
+| 5 | 0.385173 | `azmcp_virtualdesktop_hostpool_list` | ❌ |
 
 ---
 
@@ -654,9 +654,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.694117 | `azmcp_aks_nodepool_list` | ✅ **EXPECTED** |
+| 1 | 0.690202 | `azmcp_aks_nodepool_list` | ✅ **EXPECTED** |
 | 2 | 0.615516 | `azmcp_aks_nodepool_get` | ❌ |
-| 3 | 0.531947 | `azmcp_aks_cluster_list` | ❌ |
+| 3 | 0.531972 | `azmcp_aks_cluster_list` | ❌ |
 | 4 | 0.506624 | `azmcp_virtualdesktop_hostpool_list` | ❌ |
 | 5 | 0.487707 | `azmcp_sql_elastic-pool_list` | ❌ |
 
@@ -671,9 +671,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.712299 | `azmcp_aks_nodepool_list` | ✅ **EXPECTED** |
+| 1 | 0.708467 | `azmcp_aks_nodepool_list` | ✅ **EXPECTED** |
 | 2 | 0.644451 | `azmcp_aks_nodepool_get` | ❌ |
-| 3 | 0.547413 | `azmcp_aks_cluster_list` | ❌ |
+| 3 | 0.547444 | `azmcp_aks_cluster_list` | ❌ |
 | 4 | 0.510269 | `azmcp_sql_elastic-pool_list` | ❌ |
 | 5 | 0.509732 | `azmcp_virtualdesktop_hostpool_list` | ❌ |
 
@@ -688,11 +688,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.623160 | `azmcp_aks_nodepool_list` | ✅ **EXPECTED** |
-| 2 | 0.580543 | `azmcp_aks_nodepool_get` | ❌ |
-| 3 | 0.453658 | `azmcp_aks_cluster_list` | ❌ |
-| 4 | 0.443929 | `azmcp_virtualdesktop_hostpool_list` | ❌ |
-| 5 | 0.425537 | `azmcp_sql_elastic-pool_list` | ❌ |
+| 1 | 0.620796 | `azmcp_aks_nodepool_list` | ✅ **EXPECTED** |
+| 2 | 0.580535 | `azmcp_aks_nodepool_get` | ❌ |
+| 3 | 0.453744 | `azmcp_aks_cluster_list` | ❌ |
+| 4 | 0.443902 | `azmcp_virtualdesktop_hostpool_list` | ❌ |
+| 5 | 0.425448 | `azmcp_sql_elastic-pool_list` | ❌ |
 
 ---
 
@@ -705,11 +705,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.786343 | `azmcp_appconfig_account_list` | ✅ **EXPECTED** |
-| 2 | 0.635520 | `azmcp_appconfig_kv_list` | ❌ |
-| 3 | 0.492243 | `azmcp_redis_cache_list` | ❌ |
-| 4 | 0.491437 | `azmcp_postgres_server_list` | ❌ |
-| 5 | 0.473652 | `azmcp_redis_cluster_list` | ❌ |
+| 1 | 0.786360 | `azmcp_appconfig_account_list` | ✅ **EXPECTED** |
+| 2 | 0.635561 | `azmcp_appconfig_kv_list` | ❌ |
+| 3 | 0.492146 | `azmcp_redis_cache_list` | ❌ |
+| 4 | 0.491380 | `azmcp_postgres_server_list` | ❌ |
+| 5 | 0.473554 | `azmcp_redis_cluster_list` | ❌ |
 
 ---
 
@@ -742,7 +742,7 @@
 | 1 | 0.565435 | `azmcp_appconfig_account_list` | ✅ **EXPECTED** |
 | 2 | 0.564705 | `azmcp_appconfig_kv_list` | ❌ |
 | 3 | 0.414689 | `azmcp_appconfig_kv_show` | ❌ |
-| 4 | 0.355916 | `azmcp_postgres_server_config_get` | ❌ |
+| 4 | 0.355952 | `azmcp_postgres_server_config_get` | ❌ |
 | 5 | 0.348661 | `azmcp_appconfig_kv_delete` | ❌ |
 
 ---
@@ -790,11 +790,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.682275 | `azmcp_appconfig_kv_list` | ✅ **EXPECTED** |
-| 2 | 0.606545 | `azmcp_appconfig_kv_show` | ❌ |
-| 3 | 0.522426 | `azmcp_appconfig_account_list` | ❌ |
-| 4 | 0.512945 | `azmcp_appconfig_kv_set` | ❌ |
-| 5 | 0.468503 | `azmcp_appconfig_kv_delete` | ❌ |
+| 1 | 0.682222 | `azmcp_appconfig_kv_list` | ✅ **EXPECTED** |
+| 2 | 0.606450 | `azmcp_appconfig_kv_show` | ❌ |
+| 3 | 0.522415 | `azmcp_appconfig_account_list` | ❌ |
+| 4 | 0.512857 | `azmcp_appconfig_kv_set` | ❌ |
+| 5 | 0.468496 | `azmcp_appconfig_kv_delete` | ❌ |
 
 ---
 
@@ -841,11 +841,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.609817 | `azmcp_appconfig_kv_set` | ✅ **EXPECTED** |
-| 2 | 0.536639 | `azmcp_appconfig_kv_lock_set` | ❌ |
-| 3 | 0.518870 | `azmcp_appconfig_kv_list` | ❌ |
-| 4 | 0.507232 | `azmcp_appconfig_kv_show` | ❌ |
-| 5 | 0.505682 | `azmcp_appconfig_kv_delete` | ❌ |
+| 1 | 0.609635 | `azmcp_appconfig_kv_set` | ✅ **EXPECTED** |
+| 2 | 0.536497 | `azmcp_appconfig_kv_lock_set` | ❌ |
+| 3 | 0.518499 | `azmcp_appconfig_kv_list` | ❌ |
+| 4 | 0.507170 | `azmcp_appconfig_kv_show` | ❌ |
+| 5 | 0.505571 | `azmcp_appconfig_kv_delete` | ❌ |
 
 ---
 
@@ -909,11 +909,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.256325 | `azmcp_deploy_architecture_diagram_generate` | ❌ |
-| 2 | 0.250546 | `azmcp_applens_resource_diagnose` | ✅ **EXPECTED** |
-| 3 | 0.215890 | `azmcp_deploy_app_logs_get` | ❌ |
-| 4 | 0.199067 | `azmcp_resourcehealth_availability-status_get` | ❌ |
-| 5 | 0.188245 | `azmcp_cloudarchitect_design` | ❌ |
+| 1 | 0.256336 | `azmcp_deploy_architecture_diagram_generate` | ❌ |
+| 2 | 0.250649 | `azmcp_applens_resource_diagnose` | ✅ **EXPECTED** |
+| 3 | 0.215937 | `azmcp_deploy_app_logs_get` | ❌ |
+| 4 | 0.199116 | `azmcp_resourcehealth_availability-status_get` | ❌ |
+| 5 | 0.188299 | `azmcp_cloudarchitect_design` | ❌ |
 
 ---
 
@@ -943,11 +943,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.743917 | `azmcp_azuremanagedlustre_filesystem_list` | ✅ **EXPECTED** |
-| 2 | 0.613006 | `azmcp_azuremanagedlustre_filesystem_sku_get` | ❌ |
-| 3 | 0.520222 | `azmcp_datadog_monitoredresources_list` | ❌ |
-| 4 | 0.514207 | `azmcp_mysql_server_list` | ❌ |
-| 5 | 0.492108 | `azmcp_acr_registry_repository_list` | ❌ |
+| 1 | 0.743903 | `azmcp_azuremanagedlustre_filesystem_list` | ✅ **EXPECTED** |
+| 2 | 0.613217 | `azmcp_azuremanagedlustre_filesystem_sku_get` | ❌ |
+| 3 | 0.519947 | `azmcp_datadog_monitoredresources_list` | ❌ |
+| 4 | 0.514120 | `azmcp_mysql_server_list` | ❌ |
+| 5 | 0.492115 | `azmcp_acr_registry_repository_list` | ❌ |
 
 ---
 
@@ -1015,7 +1015,7 @@
 | 2 | 0.512141 | `azmcp_bestpractices_get` | ❌ |
 | 3 | 0.510004 | `azmcp_deploy_iac_rules_get` | ❌ |
 | 4 | 0.444297 | `azmcp_deploy_pipeline_guidance_get` | ❌ |
-| 5 | 0.440083 | `azmcp_keyvault_secret_list` | ❌ |
+| 5 | 0.439871 | `azmcp_keyvault_secret_list` | ❌ |
 
 ---
 
@@ -1287,7 +1287,7 @@
 | 2 | 0.668480 | `azmcp_cosmos_database_list` | ❌ |
 | 3 | 0.615268 | `azmcp_cosmos_database_container_list` | ❌ |
 | 4 | 0.588682 | `azmcp_storage_table_list` | ❌ |
-| 5 | 0.588050 | `azmcp_subscription_list` | ❌ |
+| 5 | 0.587691 | `azmcp_subscription_list` | ❌ |
 
 ---
 
@@ -1320,7 +1320,7 @@
 | 1 | 0.752494 | `azmcp_cosmos_account_list` | ✅ **EXPECTED** |
 | 2 | 0.605125 | `azmcp_cosmos_database_list` | ❌ |
 | 3 | 0.566249 | `azmcp_cosmos_database_container_list` | ❌ |
-| 4 | 0.546591 | `azmcp_subscription_list` | ❌ |
+| 4 | 0.546327 | `azmcp_subscription_list` | ❌ |
 | 5 | 0.535227 | `azmcp_storage_table_list` | ❌ |
 
 ---
@@ -1351,11 +1351,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.852831 | `azmcp_cosmos_database_container_list` | ✅ **EXPECTED** |
-| 2 | 0.681046 | `azmcp_cosmos_database_list` | ❌ |
-| 3 | 0.630657 | `azmcp_cosmos_account_list` | ❌ |
-| 4 | 0.581591 | `azmcp_storage_blob_container_get` | ❌ |
-| 5 | 0.535257 | `azmcp_storage_table_list` | ❌ |
+| 1 | 0.852832 | `azmcp_cosmos_database_container_list` | ✅ **EXPECTED** |
+| 2 | 0.681044 | `azmcp_cosmos_database_list` | ❌ |
+| 3 | 0.630659 | `azmcp_cosmos_account_list` | ❌ |
+| 4 | 0.581593 | `azmcp_storage_blob_container_get` | ❌ |
+| 5 | 0.535260 | `azmcp_storage_table_list` | ❌ |
 
 ---
 
@@ -1368,11 +1368,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.789415 | `azmcp_cosmos_database_container_list` | ✅ **EXPECTED** |
-| 2 | 0.614268 | `azmcp_cosmos_database_list` | ❌ |
-| 3 | 0.562124 | `azmcp_cosmos_account_list` | ❌ |
-| 4 | 0.537312 | `azmcp_storage_blob_container_get` | ❌ |
-| 5 | 0.521507 | `azmcp_cosmos_database_container_item_query` | ❌ |
+| 1 | 0.789620 | `azmcp_cosmos_database_container_list` | ✅ **EXPECTED** |
+| 2 | 0.614114 | `azmcp_cosmos_database_list` | ❌ |
+| 3 | 0.561772 | `azmcp_cosmos_account_list` | ❌ |
+| 4 | 0.537446 | `azmcp_storage_blob_container_get` | ❌ |
+| 5 | 0.521478 | `azmcp_cosmos_database_container_item_query` | ❌ |
 
 ---
 
@@ -1419,11 +1419,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.669338 | `azmcp_datadog_monitoredresources_list` | ✅ **EXPECTED** |
-| 2 | 0.435204 | `azmcp_redis_cache_list` | ❌ |
-| 3 | 0.413185 | `azmcp_monitor_metrics_query` | ❌ |
-| 4 | 0.409129 | `azmcp_redis_cluster_list` | ❌ |
-| 5 | 0.401915 | `azmcp_grafana_list` | ❌ |
+| 1 | 0.668901 | `azmcp_datadog_monitoredresources_list` | ✅ **EXPECTED** |
+| 2 | 0.434813 | `azmcp_redis_cache_list` | ❌ |
+| 3 | 0.413173 | `azmcp_monitor_metrics_query` | ❌ |
+| 4 | 0.408658 | `azmcp_redis_cluster_list` | ❌ |
+| 5 | 0.401731 | `azmcp_grafana_list` | ❌ |
 
 ---
 
@@ -1436,11 +1436,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.624066 | `azmcp_datadog_monitoredresources_list` | ✅ **EXPECTED** |
-| 2 | 0.443868 | `azmcp_monitor_metrics_query` | ❌ |
-| 3 | 0.393227 | `azmcp_redis_cache_list` | ❌ |
-| 4 | 0.374071 | `azmcp_redis_cluster_list` | ❌ |
-| 5 | 0.371017 | `azmcp_grafana_list` | ❌ |
+| 1 | 0.624139 | `azmcp_datadog_monitoredresources_list` | ✅ **EXPECTED** |
+| 2 | 0.443484 | `azmcp_monitor_metrics_query` | ❌ |
+| 3 | 0.393179 | `azmcp_redis_cache_list` | ❌ |
+| 4 | 0.374040 | `azmcp_redis_cluster_list` | ❌ |
+| 5 | 0.370997 | `azmcp_grafana_list` | ❌ |
 
 ---
 
@@ -1591,7 +1591,7 @@
 |------|-------|------|--------|
 | 1 | 0.594210 | `azmcp_eventgrid_subscription_list` | ✅ **EXPECTED** |
 | 2 | 0.593171 | `azmcp_eventgrid_topic_list` | ❌ |
-| 3 | 0.525237 | `azmcp_subscription_list` | ❌ |
+| 3 | 0.525017 | `azmcp_subscription_list` | ❌ |
 | 4 | 0.518857 | `azmcp_search_service_list` | ❌ |
 | 5 | 0.509007 | `azmcp_resourcehealth_service-health-events_list` | ❌ |
 
@@ -1609,7 +1609,7 @@
 | 1 | 0.604278 | `azmcp_eventgrid_topic_list` | ❌ |
 | 2 | 0.602603 | `azmcp_eventgrid_subscription_list` | ✅ **EXPECTED** |
 | 3 | 0.535955 | `azmcp_kusto_cluster_list` | ❌ |
-| 4 | 0.518121 | `azmcp_subscription_list` | ❌ |
+| 4 | 0.518141 | `azmcp_subscription_list` | ❌ |
 | 5 | 0.510115 | `azmcp_group_list` | ❌ |
 
 ---
@@ -1627,7 +1627,7 @@
 | 2 | 0.557573 | `azmcp_group_list` | ❌ |
 | 3 | 0.531313 | `azmcp_eventgrid_topic_list` | ❌ |
 | 4 | 0.504984 | `azmcp_resourcehealth_availability-status_list` | ❌ |
-| 5 | 0.502308 | `azmcp_datadog_monitoredresources_list` | ❌ |
+| 5 | 0.502170 | `azmcp_datadog_monitoredresources_list` | ❌ |
 
 ---
 
@@ -1643,7 +1643,7 @@
 | 1 | 0.652090 | `azmcp_eventgrid_subscription_list` | ✅ **EXPECTED** |
 | 2 | 0.581728 | `azmcp_eventgrid_topic_list` | ❌ |
 | 3 | 0.480537 | `azmcp_resourcehealth_service-health-events_list` | ❌ |
-| 4 | 0.478218 | `azmcp_subscription_list` | ❌ |
+| 4 | 0.478385 | `azmcp_subscription_list` | ❌ |
 | 5 | 0.476763 | `azmcp_search_service_list` | ❌ |
 
 ---
@@ -1657,11 +1657,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.759178 | `azmcp_eventgrid_topic_list` | ✅ **EXPECTED** |
-| 2 | 0.610435 | `azmcp_eventgrid_subscription_list` | ❌ |
-| 3 | 0.545540 | `azmcp_search_service_list` | ❌ |
-| 4 | 0.514189 | `azmcp_kusto_cluster_list` | ❌ |
-| 5 | 0.496586 | `azmcp_subscription_list` | ❌ |
+| 1 | 0.759128 | `azmcp_eventgrid_topic_list` | ✅ **EXPECTED** |
+| 2 | 0.610392 | `azmcp_eventgrid_subscription_list` | ❌ |
+| 3 | 0.545605 | `azmcp_search_service_list` | ❌ |
+| 4 | 0.514222 | `azmcp_kusto_cluster_list` | ❌ |
+| 5 | 0.496515 | `azmcp_subscription_list` | ❌ |
 
 ---
 
@@ -1708,11 +1708,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.659417 | `azmcp_eventgrid_topic_list` | ✅ **EXPECTED** |
-| 2 | 0.615084 | `azmcp_eventgrid_subscription_list` | ❌ |
-| 3 | 0.609343 | `azmcp_group_list` | ❌ |
-| 4 | 0.514238 | `azmcp_workbooks_list` | ❌ |
-| 5 | 0.506181 | `azmcp_datadog_monitoredresources_list` | ❌ |
+| 1 | 0.659232 | `azmcp_eventgrid_topic_list` | ✅ **EXPECTED** |
+| 2 | 0.614519 | `azmcp_eventgrid_subscription_list` | ❌ |
+| 3 | 0.609175 | `azmcp_group_list` | ❌ |
+| 4 | 0.514613 | `azmcp_workbooks_list` | ❌ |
+| 5 | 0.505810 | `azmcp_datadog_monitoredresources_list` | ❌ |
 
 ---
 
@@ -1845,9 +1845,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.313400 | `azmcp_foundry_models_deploy` | ✅ **EXPECTED** |
-| 2 | 0.282481 | `azmcp_mysql_server_list` | ❌ |
+| 2 | 0.282464 | `azmcp_mysql_server_list` | ❌ |
 | 3 | 0.274011 | `azmcp_deploy_plan_get` | ❌ |
-| 4 | 0.269553 | `azmcp_loadtesting_testresource_create` | ❌ |
+| 4 | 0.269513 | `azmcp_loadtesting_testresource_create` | ❌ |
 | 5 | 0.268967 | `azmcp_deploy_pipeline_guidance_get` | ❌ |
 
 ---
@@ -1931,7 +1931,7 @@
 |------|-------|------|--------|
 | 1 | 0.660116 | `azmcp_functionapp_get` | ✅ **EXPECTED** |
 | 2 | 0.448179 | `azmcp_deploy_app_logs_get` | ❌ |
-| 3 | 0.390059 | `azmcp_mysql_server_list` | ❌ |
+| 3 | 0.390048 | `azmcp_mysql_server_list` | ❌ |
 | 4 | 0.380314 | `azmcp_bestpractices_get` | ❌ |
 | 5 | 0.379655 | `azmcp_resourcehealth_availability-status_list` | ❌ |
 
@@ -2086,7 +2086,7 @@
 | 2 | 0.559382 | `azmcp_search_service_list` | ❌ |
 | 3 | 0.516618 | `azmcp_cosmos_account_list` | ❌ |
 | 4 | 0.516217 | `azmcp_appconfig_account_list` | ❌ |
-| 5 | 0.485403 | `azmcp_subscription_list` | ❌ |
+| 5 | 0.485259 | `azmcp_subscription_list` | ❌ |
 
 ---
 
@@ -2137,7 +2137,7 @@
 | 2 | 0.551851 | `azmcp_search_service_list` | ❌ |
 | 3 | 0.513028 | `azmcp_monitor_workspace_list` | ❌ |
 | 4 | 0.505836 | `azmcp_kusto_cluster_list` | ❌ |
-| 5 | 0.498077 | `azmcp_datadog_monitoredresources_list` | ❌ |
+| 5 | 0.498085 | `azmcp_datadog_monitoredresources_list` | ❌ |
 
 ---
 
@@ -2152,7 +2152,7 @@
 |------|-------|------|--------|
 | 1 | 0.755935 | `azmcp_group_list` | ✅ **EXPECTED** |
 | 2 | 0.566552 | `azmcp_workbooks_list` | ❌ |
-| 3 | 0.552633 | `azmcp_datadog_monitoredresources_list` | ❌ |
+| 3 | 0.552564 | `azmcp_datadog_monitoredresources_list` | ❌ |
 | 4 | 0.546156 | `azmcp_resourcehealth_availability-status_list` | ❌ |
 | 5 | 0.545480 | `azmcp_redis_cluster_list` | ❌ |
 
@@ -2168,8 +2168,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.529504 | `azmcp_group_list` | ✅ **EXPECTED** |
-| 2 | 0.463685 | `azmcp_datadog_monitoredresources_list` | ❌ |
-| 3 | 0.462383 | `azmcp_mysql_server_list` | ❌ |
+| 2 | 0.463651 | `azmcp_datadog_monitoredresources_list` | ❌ |
+| 3 | 0.462391 | `azmcp_mysql_server_list` | ❌ |
 | 4 | 0.459304 | `azmcp_resourcehealth_availability-status_list` | ❌ |
 | 5 | 0.453960 | `azmcp_workbooks_list` | ❌ |
 
@@ -2185,7 +2185,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.665771 | `azmcp_group_list` | ✅ **EXPECTED** |
-| 2 | 0.532656 | `azmcp_datadog_monitoredresources_list` | ❌ |
+| 2 | 0.532610 | `azmcp_datadog_monitoredresources_list` | ❌ |
 | 3 | 0.531920 | `azmcp_resourcehealth_availability-status_list` | ❌ |
 | 4 | 0.523088 | `azmcp_redis_cluster_list` | ❌ |
 | 5 | 0.522911 | `azmcp_workbooks_list` | ❌ |
@@ -2201,11 +2201,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.740327 | `azmcp_keyvault_certificate_create` | ✅ **EXPECTED** |
-| 2 | 0.595854 | `azmcp_keyvault_key_create` | ❌ |
-| 3 | 0.590531 | `azmcp_keyvault_secret_create` | ❌ |
-| 4 | 0.575950 | `azmcp_keyvault_certificate_list` | ❌ |
-| 5 | 0.543057 | `azmcp_keyvault_certificate_get` | ❌ |
+| 1 | 0.740347 | `azmcp_keyvault_certificate_create` | ✅ **EXPECTED** |
+| 2 | 0.597696 | `azmcp_keyvault_key_create` | ❌ |
+| 3 | 0.590556 | `azmcp_keyvault_secret_create` | ❌ |
+| 4 | 0.575893 | `azmcp_keyvault_certificate_list` | ❌ |
+| 5 | 0.542979 | `azmcp_keyvault_certificate_get` | ❌ |
 
 ---
 
@@ -2218,9 +2218,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.627967 | `azmcp_keyvault_certificate_get` | ✅ **EXPECTED** |
-| 2 | 0.624455 | `azmcp_keyvault_certificate_list` | ❌ |
-| 3 | 0.565005 | `azmcp_keyvault_certificate_create` | ❌ |
+| 1 | 0.627925 | `azmcp_keyvault_certificate_get` | ✅ **EXPECTED** |
+| 2 | 0.624457 | `azmcp_keyvault_certificate_list` | ❌ |
+| 3 | 0.565014 | `azmcp_keyvault_certificate_create` | ❌ |
 | 4 | 0.539554 | `azmcp_keyvault_certificate_import` | ❌ |
 | 5 | 0.493432 | `azmcp_keyvault_key_list` | ❌ |
 
@@ -2235,10 +2235,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.662317 | `azmcp_keyvault_certificate_get` | ✅ **EXPECTED** |
-| 2 | 0.606531 | `azmcp_keyvault_certificate_list` | ❌ |
+| 1 | 0.662356 | `azmcp_keyvault_certificate_get` | ✅ **EXPECTED** |
+| 2 | 0.606534 | `azmcp_keyvault_certificate_list` | ❌ |
 | 3 | 0.540155 | `azmcp_keyvault_certificate_import` | ❌ |
-| 4 | 0.535157 | `azmcp_keyvault_certificate_create` | ❌ |
+| 4 | 0.535161 | `azmcp_keyvault_certificate_create` | ❌ |
 | 5 | 0.499272 | `azmcp_keyvault_key_list` | ❌ |
 
 ---
@@ -2252,11 +2252,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.649993 | `azmcp_keyvault_certificate_import` | ✅ **EXPECTED** |
-| 2 | 0.521183 | `azmcp_keyvault_certificate_create` | ❌ |
-| 3 | 0.469726 | `azmcp_keyvault_certificate_get` | ❌ |
-| 4 | 0.467090 | `azmcp_keyvault_certificate_list` | ❌ |
-| 5 | 0.426600 | `azmcp_keyvault_key_create` | ❌ |
+| 1 | 0.649996 | `azmcp_keyvault_certificate_import` | ✅ **EXPECTED** |
+| 2 | 0.520983 | `azmcp_keyvault_certificate_create` | ❌ |
+| 3 | 0.469611 | `azmcp_keyvault_certificate_get` | ❌ |
+| 4 | 0.467001 | `azmcp_keyvault_certificate_list` | ❌ |
+| 5 | 0.426994 | `azmcp_keyvault_key_create` | ❌ |
 
 ---
 
@@ -2270,10 +2270,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.649676 | `azmcp_keyvault_certificate_import` | ✅ **EXPECTED** |
-| 2 | 0.629902 | `azmcp_keyvault_certificate_create` | ❌ |
-| 3 | 0.527467 | `azmcp_keyvault_certificate_list` | ❌ |
-| 4 | 0.525759 | `azmcp_keyvault_certificate_get` | ❌ |
-| 5 | 0.491898 | `azmcp_keyvault_key_create` | ❌ |
+| 2 | 0.629901 | `azmcp_keyvault_certificate_create` | ❌ |
+| 3 | 0.527468 | `azmcp_keyvault_certificate_list` | ❌ |
+| 4 | 0.525743 | `azmcp_keyvault_certificate_get` | ❌ |
+| 5 | 0.493638 | `azmcp_keyvault_key_create` | ❌ |
 
 ---
 
@@ -2286,11 +2286,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.762001 | `azmcp_keyvault_certificate_list` | ✅ **EXPECTED** |
+| 1 | 0.762015 | `azmcp_keyvault_certificate_list` | ✅ **EXPECTED** |
 | 2 | 0.637437 | `azmcp_keyvault_key_list` | ❌ |
-| 3 | 0.608976 | `azmcp_keyvault_secret_list` | ❌ |
-| 4 | 0.566484 | `azmcp_keyvault_certificate_get` | ❌ |
-| 5 | 0.539624 | `azmcp_keyvault_certificate_create` | ❌ |
+| 3 | 0.608799 | `azmcp_keyvault_secret_list` | ❌ |
+| 4 | 0.566429 | `azmcp_keyvault_certificate_get` | ❌ |
+| 5 | 0.539618 | `azmcp_keyvault_certificate_create` | ❌ |
 
 ---
 
@@ -2303,11 +2303,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.660568 | `azmcp_keyvault_certificate_list` | ✅ **EXPECTED** |
-| 2 | 0.570291 | `azmcp_keyvault_certificate_get` | ❌ |
+| 1 | 0.660576 | `azmcp_keyvault_certificate_list` | ✅ **EXPECTED** |
+| 2 | 0.570231 | `azmcp_keyvault_certificate_get` | ❌ |
 | 3 | 0.540050 | `azmcp_keyvault_key_list` | ❌ |
-| 4 | 0.516920 | `azmcp_keyvault_secret_list` | ❌ |
-| 5 | 0.509123 | `azmcp_keyvault_certificate_create` | ❌ |
+| 4 | 0.516722 | `azmcp_keyvault_secret_list` | ❌ |
+| 5 | 0.509126 | `azmcp_keyvault_certificate_create` | ❌ |
 
 ---
 
@@ -2320,11 +2320,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.676352 | `azmcp_keyvault_key_create` | ✅ **EXPECTED** |
+| 1 | 0.677763 | `azmcp_keyvault_key_create` | ✅ **EXPECTED** |
 | 2 | 0.569250 | `azmcp_keyvault_secret_create` | ❌ |
-| 3 | 0.555829 | `azmcp_keyvault_certificate_create` | ❌ |
+| 3 | 0.555810 | `azmcp_keyvault_certificate_create` | ❌ |
 | 4 | 0.465742 | `azmcp_keyvault_key_list` | ❌ |
-| 5 | 0.417376 | `azmcp_keyvault_certificate_list` | ❌ |
+| 5 | 0.417395 | `azmcp_keyvault_certificate_list` | ❌ |
 
 ---
 
@@ -2338,8 +2338,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.737135 | `azmcp_keyvault_key_list` | ✅ **EXPECTED** |
-| 2 | 0.650393 | `azmcp_keyvault_secret_list` | ❌ |
-| 3 | 0.631519 | `azmcp_keyvault_certificate_list` | ❌ |
+| 2 | 0.650155 | `azmcp_keyvault_secret_list` | ❌ |
+| 3 | 0.631528 | `azmcp_keyvault_certificate_list` | ❌ |
 | 4 | 0.498767 | `azmcp_cosmos_account_list` | ❌ |
 | 5 | 0.473916 | `azmcp_storage_table_list` | ❌ |
 
@@ -2355,10 +2355,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.609392 | `azmcp_keyvault_key_list` | ✅ **EXPECTED** |
-| 2 | 0.535646 | `azmcp_keyvault_secret_list` | ❌ |
-| 3 | 0.520008 | `azmcp_keyvault_certificate_list` | ❌ |
-| 4 | 0.479833 | `azmcp_keyvault_certificate_get` | ❌ |
-| 5 | 0.462249 | `azmcp_keyvault_key_create` | ❌ |
+| 2 | 0.535381 | `azmcp_keyvault_secret_list` | ❌ |
+| 3 | 0.520010 | `azmcp_keyvault_certificate_list` | ❌ |
+| 4 | 0.479701 | `azmcp_keyvault_certificate_get` | ❌ |
+| 5 | 0.464078 | `azmcp_keyvault_key_create` | ❌ |
 
 ---
 
@@ -2371,11 +2371,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.768140 | `azmcp_keyvault_secret_create` | ✅ **EXPECTED** |
-| 2 | 0.614040 | `azmcp_keyvault_key_create` | ❌ |
-| 3 | 0.572679 | `azmcp_keyvault_certificate_create` | ❌ |
-| 4 | 0.516660 | `azmcp_keyvault_secret_list` | ❌ |
-| 5 | 0.461900 | `azmcp_appconfig_kv_set` | ❌ |
+| 1 | 0.767701 | `azmcp_keyvault_secret_create` | ✅ **EXPECTED** |
+| 2 | 0.615775 | `azmcp_keyvault_key_create` | ❌ |
+| 3 | 0.572293 | `azmcp_keyvault_certificate_create` | ❌ |
+| 4 | 0.516457 | `azmcp_keyvault_secret_list` | ❌ |
+| 5 | 0.461437 | `azmcp_appconfig_kv_set` | ❌ |
 
 ---
 
@@ -2388,9 +2388,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.747294 | `azmcp_keyvault_secret_list` | ✅ **EXPECTED** |
+| 1 | 0.747343 | `azmcp_keyvault_secret_list` | ✅ **EXPECTED** |
 | 2 | 0.617131 | `azmcp_keyvault_key_list` | ❌ |
-| 3 | 0.569903 | `azmcp_keyvault_certificate_list` | ❌ |
+| 3 | 0.569911 | `azmcp_keyvault_certificate_list` | ❌ |
 | 4 | 0.519133 | `azmcp_keyvault_secret_create` | ❌ |
 | 5 | 0.455500 | `azmcp_cosmos_account_list` | ❌ |
 
@@ -2405,11 +2405,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.615572 | `azmcp_keyvault_secret_list` | ✅ **EXPECTED** |
+| 1 | 0.615400 | `azmcp_keyvault_secret_list` | ✅ **EXPECTED** |
 | 2 | 0.520654 | `azmcp_keyvault_key_list` | ❌ |
 | 3 | 0.502403 | `azmcp_keyvault_secret_create` | ❌ |
-| 4 | 0.467740 | `azmcp_keyvault_certificate_list` | ❌ |
-| 5 | 0.456345 | `azmcp_keyvault_certificate_get` | ❌ |
+| 4 | 0.467743 | `azmcp_keyvault_certificate_list` | ❌ |
+| 5 | 0.456280 | `azmcp_keyvault_certificate_get` | ❌ |
 
 ---
 
@@ -2423,7 +2423,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.482148 | `azmcp_kusto_cluster_get` | ✅ **EXPECTED** |
-| 2 | 0.464557 | `azmcp_aks_cluster_get` | ❌ |
+| 2 | 0.464501 | `azmcp_aks_cluster_get` | ❌ |
 | 3 | 0.457669 | `azmcp_redis_cluster_list` | ❌ |
 | 4 | 0.416762 | `azmcp_redis_cluster_database_list` | ❌ |
 | 5 | 0.378455 | `azmcp_aks_nodepool_get` | ❌ |
@@ -2442,7 +2442,7 @@
 | 1 | 0.651218 | `azmcp_kusto_cluster_list` | ✅ **EXPECTED** |
 | 2 | 0.644037 | `azmcp_redis_cluster_list` | ❌ |
 | 3 | 0.549093 | `azmcp_kusto_database_list` | ❌ |
-| 4 | 0.536043 | `azmcp_aks_cluster_list` | ❌ |
+| 4 | 0.536049 | `azmcp_aks_cluster_list` | ❌ |
 | 5 | 0.509396 | `azmcp_grafana_list` | ❌ |
 
 ---
@@ -2473,11 +2473,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.584068 | `azmcp_redis_cluster_list` | ❌ |
-| 2 | 0.549830 | `azmcp_kusto_cluster_list` | ✅ **EXPECTED** |
-| 3 | 0.471142 | `azmcp_aks_cluster_list` | ❌ |
-| 4 | 0.469626 | `azmcp_kusto_cluster_get` | ❌ |
-| 5 | 0.464375 | `azmcp_kusto_database_list` | ❌ |
+| 1 | 0.584053 | `azmcp_redis_cluster_list` | ❌ |
+| 2 | 0.549797 | `azmcp_kusto_cluster_list` | ✅ **EXPECTED** |
+| 3 | 0.471120 | `azmcp_aks_cluster_list` | ❌ |
+| 4 | 0.469570 | `azmcp_kusto_cluster_get` | ❌ |
+| 5 | 0.464294 | `azmcp_kusto_database_list` | ❌ |
 
 ---
 
@@ -2524,11 +2524,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.380954 | `azmcp_kusto_query` | ✅ **EXPECTED** |
-| 2 | 0.363598 | `azmcp_mysql_table_list` | ❌ |
-| 3 | 0.363010 | `azmcp_kusto_sample` | ❌ |
-| 4 | 0.348911 | `azmcp_monitor_table_list` | ❌ |
-| 5 | 0.345737 | `azmcp_redis_cluster_list` | ❌ |
+| 1 | 0.381352 | `azmcp_kusto_query` | ✅ **EXPECTED** |
+| 2 | 0.363594 | `azmcp_mysql_table_list` | ❌ |
+| 3 | 0.363252 | `azmcp_kusto_sample` | ❌ |
+| 4 | 0.349147 | `azmcp_monitor_table_list` | ❌ |
+| 5 | 0.345799 | `azmcp_redis_cluster_list` | ❌ |
 
 ---
 
@@ -2541,11 +2541,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.537154 | `azmcp_kusto_sample` | ✅ **EXPECTED** |
-| 2 | 0.419463 | `azmcp_kusto_table_schema` | ❌ |
-| 3 | 0.391423 | `azmcp_kusto_table_list` | ❌ |
-| 4 | 0.391248 | `azmcp_mysql_database_query` | ❌ |
-| 5 | 0.380691 | `azmcp_mysql_table_schema_get` | ❌ |
+| 1 | 0.537147 | `azmcp_kusto_sample` | ✅ **EXPECTED** |
+| 2 | 0.419282 | `azmcp_kusto_table_schema` | ❌ |
+| 3 | 0.391567 | `azmcp_mysql_database_query` | ❌ |
+| 4 | 0.391227 | `azmcp_kusto_table_list` | ❌ |
+| 5 | 0.380537 | `azmcp_mysql_table_schema_get` | ❌ |
 
 ---
 
@@ -2592,11 +2592,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.588151 | `azmcp_kusto_table_schema` | ✅ **EXPECTED** |
-| 2 | 0.564311 | `azmcp_postgres_table_schema_get` | ❌ |
-| 3 | 0.527917 | `azmcp_mysql_table_schema_get` | ❌ |
-| 4 | 0.445190 | `azmcp_mysql_table_list` | ❌ |
-| 5 | 0.437466 | `azmcp_kusto_table_list` | ❌ |
+| 1 | 0.588229 | `azmcp_kusto_table_schema` | ✅ **EXPECTED** |
+| 2 | 0.564417 | `azmcp_postgres_table_schema_get` | ❌ |
+| 3 | 0.528065 | `azmcp_mysql_table_schema_get` | ❌ |
+| 4 | 0.445078 | `azmcp_mysql_table_list` | ❌ |
+| 5 | 0.437254 | `azmcp_kusto_table_list` | ❌ |
 
 ---
 
@@ -2610,7 +2610,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.585388 | `azmcp_loadtesting_test_create` | ✅ **EXPECTED** |
-| 2 | 0.531935 | `azmcp_loadtesting_testresource_create` | ❌ |
+| 2 | 0.531362 | `azmcp_loadtesting_testresource_create` | ❌ |
 | 3 | 0.508690 | `azmcp_loadtesting_testrun_create` | ❌ |
 | 4 | 0.413857 | `azmcp_loadtesting_testresource_list` | ❌ |
 | 5 | 0.394664 | `azmcp_loadtesting_testrun_get` | ❌ |
@@ -2626,11 +2626,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.642528 | `azmcp_loadtesting_test_get` | ✅ **EXPECTED** |
-| 2 | 0.608922 | `azmcp_loadtesting_testresource_list` | ❌ |
-| 3 | 0.574853 | `azmcp_loadtesting_testresource_create` | ❌ |
-| 4 | 0.534232 | `azmcp_loadtesting_testrun_get` | ❌ |
-| 5 | 0.473347 | `azmcp_loadtesting_testrun_create` | ❌ |
+| 1 | 0.642308 | `azmcp_loadtesting_test_get` | ✅ **EXPECTED** |
+| 2 | 0.609095 | `azmcp_loadtesting_testresource_list` | ❌ |
+| 3 | 0.574678 | `azmcp_loadtesting_testresource_create` | ❌ |
+| 4 | 0.534109 | `azmcp_loadtesting_testrun_get` | ❌ |
+| 5 | 0.473237 | `azmcp_loadtesting_testrun_create` | ❌ |
 
 ---
 
@@ -2643,7 +2643,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.718065 | `azmcp_loadtesting_testresource_create` | ✅ **EXPECTED** |
+| 1 | 0.717577 | `azmcp_loadtesting_testresource_create` | ✅ **EXPECTED** |
 | 2 | 0.596828 | `azmcp_loadtesting_testresource_list` | ❌ |
 | 3 | 0.514437 | `azmcp_loadtesting_test_create` | ❌ |
 | 4 | 0.476662 | `azmcp_loadtesting_testrun_create` | ❌ |
@@ -2661,9 +2661,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.738027 | `azmcp_loadtesting_testresource_list` | ✅ **EXPECTED** |
-| 2 | 0.592196 | `azmcp_loadtesting_testresource_create` | ❌ |
+| 2 | 0.591851 | `azmcp_loadtesting_testresource_create` | ❌ |
 | 3 | 0.577408 | `azmcp_group_list` | ❌ |
-| 4 | 0.565565 | `azmcp_datadog_monitoredresources_list` | ❌ |
+| 4 | 0.565501 | `azmcp_datadog_monitoredresources_list` | ❌ |
 | 5 | 0.561516 | `azmcp_resourcehealth_availability-status_list` | ❌ |
 
 ---
@@ -2678,7 +2678,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.621803 | `azmcp_loadtesting_testrun_create` | ✅ **EXPECTED** |
-| 2 | 0.593628 | `azmcp_loadtesting_testresource_create` | ❌ |
+| 2 | 0.592805 | `azmcp_loadtesting_testresource_create` | ❌ |
 | 3 | 0.540789 | `azmcp_loadtesting_test_create` | ❌ |
 | 4 | 0.530882 | `azmcp_loadtesting_testrun_update` | ❌ |
 | 5 | 0.488142 | `azmcp_loadtesting_testrun_get` | ❌ |
@@ -2694,11 +2694,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.625244 | `azmcp_loadtesting_test_get` | ❌ |
-| 2 | 0.603084 | `azmcp_loadtesting_testresource_list` | ❌ |
-| 3 | 0.568330 | `azmcp_loadtesting_testrun_get` | ✅ **EXPECTED** |
-| 4 | 0.562405 | `azmcp_loadtesting_testresource_create` | ❌ |
-| 5 | 0.535180 | `azmcp_loadtesting_testrun_create` | ❌ |
+| 1 | 0.625332 | `azmcp_loadtesting_test_get` | ❌ |
+| 2 | 0.603066 | `azmcp_loadtesting_testresource_list` | ❌ |
+| 3 | 0.568405 | `azmcp_loadtesting_testrun_get` | ✅ **EXPECTED** |
+| 4 | 0.561944 | `azmcp_loadtesting_testresource_create` | ❌ |
+| 5 | 0.535183 | `azmcp_loadtesting_testrun_create` | ❌ |
 
 ---
 
@@ -2711,11 +2711,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.615946 | `azmcp_loadtesting_testresource_list` | ❌ |
-| 2 | 0.606032 | `azmcp_loadtesting_test_get` | ❌ |
-| 3 | 0.569118 | `azmcp_loadtesting_testrun_get` | ❌ |
-| 4 | 0.565077 | `azmcp_loadtesting_testrun_list` | ✅ **EXPECTED** |
-| 5 | 0.535602 | `azmcp_loadtesting_testresource_create` | ❌ |
+| 1 | 0.615977 | `azmcp_loadtesting_testresource_list` | ❌ |
+| 2 | 0.606058 | `azmcp_loadtesting_test_get` | ❌ |
+| 3 | 0.569145 | `azmcp_loadtesting_testrun_get` | ❌ |
+| 4 | 0.565093 | `azmcp_loadtesting_testrun_list` | ✅ **EXPECTED** |
+| 5 | 0.535207 | `azmcp_loadtesting_testresource_create` | ❌ |
 
 ---
 
@@ -2732,7 +2732,7 @@
 | 2 | 0.509199 | `azmcp_loadtesting_testrun_create` | ❌ |
 | 3 | 0.454745 | `azmcp_loadtesting_testrun_get` | ❌ |
 | 4 | 0.443828 | `azmcp_loadtesting_test_get` | ❌ |
-| 5 | 0.422757 | `azmcp_loadtesting_testresource_create` | ❌ |
+| 5 | 0.422036 | `azmcp_loadtesting_testresource_create` | ❌ |
 
 ---
 
@@ -2745,8 +2745,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.570145 | `azmcp_marketplace_product_get` | ✅ **EXPECTED** |
-| 2 | 0.477592 | `azmcp_marketplace_product_list` | ❌ |
+| 1 | 0.570093 | `azmcp_marketplace_product_get` | ✅ **EXPECTED** |
+| 2 | 0.477522 | `azmcp_marketplace_product_list` | ❌ |
 | 3 | 0.353256 | `azmcp_servicebus_topic_subscription_details` | ❌ |
 | 4 | 0.330935 | `azmcp_servicebus_queue_details` | ❌ |
 | 5 | 0.324083 | `azmcp_search_index_get` | ❌ |
@@ -2762,8 +2762,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.527074 | `azmcp_marketplace_product_list` | ✅ **EXPECTED** |
-| 2 | 0.443133 | `azmcp_marketplace_product_get` | ❌ |
+| 1 | 0.527077 | `azmcp_marketplace_product_list` | ✅ **EXPECTED** |
+| 2 | 0.443048 | `azmcp_marketplace_product_get` | ❌ |
 | 3 | 0.343549 | `azmcp_search_service_list` | ❌ |
 | 4 | 0.330500 | `azmcp_foundry_models_list` | ❌ |
 | 5 | 0.328676 | `azmcp_azuremanagedlustre_filesystem_sku_get` | ❌ |
@@ -2779,8 +2779,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.461668 | `azmcp_marketplace_product_list` | ✅ **EXPECTED** |
-| 2 | 0.385167 | `azmcp_marketplace_product_get` | ❌ |
+| 1 | 0.461616 | `azmcp_marketplace_product_list` | ✅ **EXPECTED** |
+| 2 | 0.385109 | `azmcp_marketplace_product_get` | ❌ |
 | 3 | 0.308769 | `azmcp_foundry_models_list` | ❌ |
 | 4 | 0.260387 | `azmcp_azuremanagedlustre_filesystem_sku_get` | ❌ |
 | 5 | 0.259270 | `azmcp_redis_cache_list` | ❌ |
@@ -2796,11 +2796,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.498518 | `azmcp_monitor_healthmodels_entity_gethealth` | ✅ **EXPECTED** |
-| 2 | 0.472064 | `azmcp_monitor_workspace_list` | ❌ |
-| 3 | 0.468174 | `azmcp_monitor_table_list` | ❌ |
-| 4 | 0.467867 | `azmcp_monitor_workspace_log_query` | ❌ |
-| 5 | 0.463303 | `azmcp_resourcehealth_availability-status_get` | ❌ |
+| 1 | 0.498345 | `azmcp_monitor_healthmodels_entity_gethealth` | ✅ **EXPECTED** |
+| 2 | 0.472094 | `azmcp_monitor_workspace_list` | ❌ |
+| 3 | 0.468204 | `azmcp_monitor_table_list` | ❌ |
+| 4 | 0.467848 | `azmcp_monitor_workspace_log_query` | ❌ |
+| 5 | 0.463168 | `azmcp_resourcehealth_availability-status_get` | ❌ |
 
 ---
 
@@ -2814,7 +2814,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.592640 | `azmcp_monitor_metrics_definitions` | ✅ **EXPECTED** |
-| 2 | 0.424042 | `azmcp_monitor_metrics_query` | ❌ |
+| 2 | 0.424141 | `azmcp_monitor_metrics_query` | ❌ |
 | 3 | 0.332356 | `azmcp_monitor_table_type_list` | ❌ |
 | 4 | 0.315519 | `azmcp_azuremanagedlustre_filesystem_list` | ❌ |
 | 5 | 0.315310 | `azmcp_servicebus_topic_details` | ❌ |
@@ -2848,7 +2848,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.633173 | `azmcp_monitor_metrics_definitions` | ✅ **EXPECTED** |
-| 2 | 0.495465 | `azmcp_monitor_metrics_query` | ❌ |
+| 2 | 0.495513 | `azmcp_monitor_metrics_query` | ❌ |
 | 3 | 0.382374 | `azmcp_applens_resource_diagnose` | ❌ |
 | 4 | 0.380460 | `azmcp_resourcehealth_availability-status_get` | ❌ |
 | 5 | 0.370848 | `azmcp_monitor_table_type_list` | ❌ |
@@ -2864,7 +2864,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.555601 | `azmcp_monitor_metrics_query` | ✅ **EXPECTED** |
+| 1 | 0.555377 | `azmcp_monitor_metrics_query` | ✅ **EXPECTED** |
 | 2 | 0.447607 | `azmcp_monitor_resource_log_query` | ❌ |
 | 3 | 0.447192 | `azmcp_applens_resource_diagnose` | ❌ |
 | 4 | 0.433777 | `azmcp_loadtesting_testrun_get` | ❌ |
@@ -2881,7 +2881,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.557886 | `azmcp_monitor_metrics_query` | ✅ **EXPECTED** |
+| 1 | 0.557830 | `azmcp_monitor_metrics_query` | ✅ **EXPECTED** |
 | 2 | 0.508674 | `azmcp_resourcehealth_availability-status_get` | ❌ |
 | 3 | 0.460611 | `azmcp_resourcehealth_availability-status_list` | ❌ |
 | 4 | 0.455904 | `azmcp_quota_usage_check` | ❌ |
@@ -2898,11 +2898,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.461446 | `azmcp_monitor_metrics_query` | ✅ **EXPECTED** |
-| 2 | 0.390109 | `azmcp_monitor_metrics_definitions` | ❌ |
-| 3 | 0.306453 | `azmcp_resourcehealth_availability-status_list` | ❌ |
-| 4 | 0.304427 | `azmcp_resourcehealth_availability-status_get` | ❌ |
-| 5 | 0.301883 | `azmcp_monitor_resource_log_query` | ❌ |
+| 1 | 0.461249 | `azmcp_monitor_metrics_query` | ✅ **EXPECTED** |
+| 2 | 0.390029 | `azmcp_monitor_metrics_definitions` | ❌ |
+| 3 | 0.306338 | `azmcp_resourcehealth_availability-status_list` | ❌ |
+| 4 | 0.304372 | `azmcp_resourcehealth_availability-status_get` | ❌ |
+| 5 | 0.301811 | `azmcp_monitor_resource_log_query` | ❌ |
 
 ---
 
@@ -2915,7 +2915,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.491831 | `azmcp_monitor_metrics_query` | ✅ **EXPECTED** |
+| 1 | 0.492138 | `azmcp_monitor_metrics_query` | ✅ **EXPECTED** |
 | 2 | 0.417008 | `azmcp_resourcehealth_availability-status_get` | ❌ |
 | 3 | 0.415966 | `azmcp_monitor_resource_log_query` | ❌ |
 | 4 | 0.406200 | `azmcp_applens_resource_diagnose` | ❌ |
@@ -2932,11 +2932,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.525482 | `azmcp_monitor_metrics_query` | ✅ **EXPECTED** |
-| 2 | 0.384577 | `azmcp_monitor_metrics_definitions` | ❌ |
-| 3 | 0.376582 | `azmcp_monitor_resource_log_query` | ❌ |
-| 4 | 0.367139 | `azmcp_monitor_workspace_log_query` | ❌ |
-| 5 | 0.299442 | `azmcp_quota_usage_check` | ❌ |
+| 1 | 0.525563 | `azmcp_monitor_metrics_query` | ✅ **EXPECTED** |
+| 2 | 0.384646 | `azmcp_monitor_metrics_definitions` | ❌ |
+| 3 | 0.376656 | `azmcp_monitor_resource_log_query` | ❌ |
+| 4 | 0.367134 | `azmcp_monitor_workspace_log_query` | ❌ |
+| 5 | 0.299567 | `azmcp_quota_usage_check` | ❌ |
 
 ---
 
@@ -2949,11 +2949,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.480493 | `azmcp_monitor_metrics_query` | ✅ **EXPECTED** |
-| 2 | 0.381961 | `azmcp_resourcehealth_availability-status_get` | ❌ |
-| 3 | 0.363412 | `azmcp_quota_usage_check` | ❌ |
-| 4 | 0.359285 | `azmcp_applens_resource_diagnose` | ❌ |
-| 5 | 0.350523 | `azmcp_monitor_resource_log_query` | ❌ |
+| 1 | 0.480168 | `azmcp_monitor_metrics_query` | ✅ **EXPECTED** |
+| 2 | 0.383745 | `azmcp_resourcehealth_availability-status_get` | ❌ |
+| 3 | 0.364308 | `azmcp_quota_usage_check` | ❌ |
+| 4 | 0.361413 | `azmcp_applens_resource_diagnose` | ❌ |
+| 5 | 0.351175 | `azmcp_monitor_resource_log_query` | ❌ |
 
 ---
 
@@ -2966,11 +2966,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.594054 | `azmcp_monitor_workspace_log_query` | ❌ |
-| 2 | 0.580076 | `azmcp_monitor_resource_log_query` | ✅ **EXPECTED** |
-| 3 | 0.472051 | `azmcp_deploy_app_logs_get` | ❌ |
-| 4 | 0.470141 | `azmcp_monitor_metrics_query` | ❌ |
-| 5 | 0.443506 | `azmcp_monitor_workspace_list` | ❌ |
+| 1 | 0.593503 | `azmcp_monitor_workspace_log_query` | ❌ |
+| 2 | 0.579883 | `azmcp_monitor_resource_log_query` | ✅ **EXPECTED** |
+| 3 | 0.472290 | `azmcp_deploy_app_logs_get` | ❌ |
+| 4 | 0.469578 | `azmcp_monitor_metrics_query` | ❌ |
+| 5 | 0.443359 | `azmcp_monitor_workspace_list` | ❌ |
 
 ---
 
@@ -3000,11 +3000,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.798463 | `azmcp_monitor_table_list` | ✅ **EXPECTED** |
-| 2 | 0.701108 | `azmcp_monitor_table_type_list` | ❌ |
+| 1 | 0.798460 | `azmcp_monitor_table_list` | ✅ **EXPECTED** |
+| 2 | 0.701122 | `azmcp_monitor_table_type_list` | ❌ |
 | 3 | 0.599917 | `azmcp_monitor_workspace_list` | ❌ |
-| 4 | 0.532874 | `azmcp_storage_table_list` | ❌ |
-| 5 | 0.496997 | `azmcp_mysql_table_list` | ❌ |
+| 4 | 0.532887 | `azmcp_storage_table_list` | ❌ |
+| 5 | 0.497065 | `azmcp_mysql_table_list` | ❌ |
 
 ---
 
@@ -3122,7 +3122,7 @@
 | 1 | 0.634056 | `azmcp_postgres_database_list` | ❌ |
 | 2 | 0.623421 | `azmcp_mysql_database_list` | ✅ **EXPECTED** |
 | 3 | 0.534457 | `azmcp_mysql_table_list` | ❌ |
-| 4 | 0.498910 | `azmcp_mysql_server_list` | ❌ |
+| 4 | 0.498918 | `azmcp_mysql_server_list` | ❌ |
 | 5 | 0.490148 | `azmcp_sql_db_list` | ❌ |
 
 ---
@@ -3139,7 +3139,7 @@
 | 1 | 0.588122 | `azmcp_mysql_database_list` | ✅ **EXPECTED** |
 | 2 | 0.574089 | `azmcp_postgres_database_list` | ❌ |
 | 3 | 0.483855 | `azmcp_mysql_table_list` | ❌ |
-| 4 | 0.463238 | `azmcp_mysql_server_list` | ❌ |
+| 4 | 0.463244 | `azmcp_mysql_server_list` | ❌ |
 | 5 | 0.448169 | `azmcp_redis_cluster_database_list` | ❌ |
 
 ---
@@ -3153,11 +3153,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.476475 | `azmcp_mysql_table_list` | ❌ |
-| 2 | 0.455841 | `azmcp_mysql_database_list` | ❌ |
-| 3 | 0.433317 | `azmcp_mysql_database_query` | ✅ **EXPECTED** |
-| 4 | 0.419875 | `azmcp_mysql_server_list` | ❌ |
-| 5 | 0.409475 | `azmcp_mysql_table_schema_get` | ❌ |
+| 1 | 0.476267 | `azmcp_mysql_table_list` | ❌ |
+| 2 | 0.455515 | `azmcp_mysql_database_list` | ❌ |
+| 3 | 0.432930 | `azmcp_mysql_database_query` | ✅ **EXPECTED** |
+| 4 | 0.419492 | `azmcp_mysql_server_list` | ❌ |
+| 5 | 0.409138 | `azmcp_mysql_table_schema_get` | ❌ |
 
 ---
 
@@ -3170,7 +3170,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.531887 | `azmcp_postgres_server_config_get` | ❌ |
+| 1 | 0.531890 | `azmcp_postgres_server_config_get` | ❌ |
 | 2 | 0.489816 | `azmcp_mysql_server_config_get` | ✅ **EXPECTED** |
 | 3 | 0.485952 | `azmcp_mysql_server_param_set` | ❌ |
 | 4 | 0.476863 | `azmcp_mysql_server_param_get` | ❌ |
@@ -3189,7 +3189,7 @@
 |------|-------|------|--------|
 | 1 | 0.678472 | `azmcp_postgres_server_list` | ❌ |
 | 2 | 0.558177 | `azmcp_mysql_database_list` | ❌ |
-| 3 | 0.554806 | `azmcp_mysql_server_list` | ✅ **EXPECTED** |
+| 3 | 0.554817 | `azmcp_mysql_server_list` | ✅ **EXPECTED** |
 | 4 | 0.501199 | `azmcp_mysql_table_list` | ❌ |
 | 5 | 0.482079 | `azmcp_redis_cluster_list` | ❌ |
 
@@ -3205,7 +3205,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.478518 | `azmcp_mysql_database_list` | ❌ |
-| 2 | 0.474573 | `azmcp_mysql_server_list` | ✅ **EXPECTED** |
+| 2 | 0.474586 | `azmcp_mysql_server_list` | ✅ **EXPECTED** |
 | 3 | 0.435642 | `azmcp_postgres_server_list` | ❌ |
 | 4 | 0.412380 | `azmcp_mysql_table_list` | ❌ |
 | 5 | 0.389993 | `azmcp_postgres_database_list` | ❌ |
@@ -3222,7 +3222,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.636435 | `azmcp_postgres_server_list` | ❌ |
-| 2 | 0.534257 | `azmcp_mysql_server_list` | ✅ **EXPECTED** |
+| 2 | 0.534266 | `azmcp_mysql_server_list` | ✅ **EXPECTED** |
 | 3 | 0.530210 | `azmcp_mysql_database_list` | ❌ |
 | 4 | 0.464360 | `azmcp_mysql_table_list` | ❌ |
 | 5 | 0.456616 | `azmcp_redis_cluster_list` | ❌ |
@@ -3240,7 +3240,7 @@
 |------|-------|------|--------|
 | 1 | 0.495071 | `azmcp_mysql_server_param_get` | ✅ **EXPECTED** |
 | 2 | 0.407671 | `azmcp_mysql_server_param_set` | ❌ |
-| 3 | 0.333924 | `azmcp_mysql_database_query` | ❌ |
+| 3 | 0.333841 | `azmcp_mysql_database_query` | ❌ |
 | 4 | 0.313150 | `azmcp_mysql_table_schema_get` | ❌ |
 | 5 | 0.310834 | `azmcp_postgres_server_param_get` | ❌ |
 
@@ -3258,8 +3258,8 @@
 | 1 | 0.390761 | `azmcp_mysql_server_param_set` | ✅ **EXPECTED** |
 | 2 | 0.381144 | `azmcp_mysql_server_param_get` | ❌ |
 | 3 | 0.307496 | `azmcp_postgres_server_param_set` | ❌ |
-| 4 | 0.299283 | `azmcp_mysql_database_query` | ❌ |
-| 5 | 0.254163 | `azmcp_mysql_server_list` | ❌ |
+| 4 | 0.298911 | `azmcp_mysql_database_query` | ❌ |
+| 5 | 0.254180 | `azmcp_mysql_server_list` | ❌ |
 
 ---
 
@@ -3326,7 +3326,7 @@
 | 1 | 0.815617 | `azmcp_postgres_database_list` | ✅ **EXPECTED** |
 | 2 | 0.644014 | `azmcp_postgres_table_list` | ❌ |
 | 3 | 0.622790 | `azmcp_postgres_server_list` | ❌ |
-| 4 | 0.542685 | `azmcp_postgres_server_config_get` | ❌ |
+| 4 | 0.542717 | `azmcp_postgres_server_config_get` | ❌ |
 | 5 | 0.490904 | `azmcp_postgres_server_param_get` | ❌ |
 
 ---
@@ -3343,7 +3343,7 @@
 | 1 | 0.760033 | `azmcp_postgres_database_list` | ✅ **EXPECTED** |
 | 2 | 0.589783 | `azmcp_postgres_server_list` | ❌ |
 | 3 | 0.585891 | `azmcp_postgres_table_list` | ❌ |
-| 4 | 0.552660 | `azmcp_postgres_server_config_get` | ❌ |
+| 4 | 0.552679 | `azmcp_postgres_server_config_get` | ❌ |
 | 5 | 0.495629 | `azmcp_postgres_server_param_get` | ❌ |
 
 ---
@@ -3360,7 +3360,7 @@
 | 1 | 0.546211 | `azmcp_postgres_database_list` | ❌ |
 | 2 | 0.503267 | `azmcp_postgres_table_list` | ❌ |
 | 3 | 0.466599 | `azmcp_postgres_server_list` | ❌ |
-| 4 | 0.415805 | `azmcp_postgres_database_query` | ✅ **EXPECTED** |
+| 4 | 0.415817 | `azmcp_postgres_database_query` | ✅ **EXPECTED** |
 | 5 | 0.403969 | `azmcp_postgres_server_param_get` | ❌ |
 
 ---
@@ -3374,11 +3374,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.756593 | `azmcp_postgres_server_config_get` | ✅ **EXPECTED** |
-| 2 | 0.599471 | `azmcp_postgres_server_param_get` | ❌ |
-| 3 | 0.535229 | `azmcp_postgres_server_param_set` | ❌ |
-| 4 | 0.535049 | `azmcp_postgres_database_list` | ❌ |
-| 5 | 0.518574 | `azmcp_postgres_server_list` | ❌ |
+| 1 | 0.756640 | `azmcp_postgres_server_config_get` | ✅ **EXPECTED** |
+| 2 | 0.599469 | `azmcp_postgres_server_param_get` | ❌ |
+| 3 | 0.535267 | `azmcp_postgres_server_param_set` | ❌ |
+| 4 | 0.535096 | `azmcp_postgres_database_list` | ❌ |
+| 5 | 0.518650 | `azmcp_postgres_server_list` | ❌ |
 
 ---
 
@@ -3394,7 +3394,7 @@
 | 1 | 0.900023 | `azmcp_postgres_server_list` | ✅ **EXPECTED** |
 | 2 | 0.640733 | `azmcp_postgres_database_list` | ❌ |
 | 3 | 0.565914 | `azmcp_postgres_table_list` | ❌ |
-| 4 | 0.538997 | `azmcp_postgres_server_config_get` | ❌ |
+| 4 | 0.539009 | `azmcp_postgres_server_config_get` | ❌ |
 | 5 | 0.507621 | `azmcp_postgres_server_param_get` | ❌ |
 
 ---
@@ -3410,7 +3410,7 @@
 |------|-------|------|--------|
 | 1 | 0.674327 | `azmcp_postgres_server_list` | ✅ **EXPECTED** |
 | 2 | 0.607062 | `azmcp_postgres_database_list` | ❌ |
-| 3 | 0.576349 | `azmcp_postgres_server_config_get` | ❌ |
+| 3 | 0.576353 | `azmcp_postgres_server_config_get` | ❌ |
 | 4 | 0.522996 | `azmcp_postgres_table_list` | ❌ |
 | 5 | 0.506171 | `azmcp_postgres_server_param_get` | ❌ |
 
@@ -3427,7 +3427,7 @@
 |------|-------|------|--------|
 | 1 | 0.832155 | `azmcp_postgres_server_list` | ✅ **EXPECTED** |
 | 2 | 0.579232 | `azmcp_postgres_database_list` | ❌ |
-| 3 | 0.531804 | `azmcp_postgres_server_config_get` | ❌ |
+| 3 | 0.531818 | `azmcp_postgres_server_config_get` | ❌ |
 | 4 | 0.514445 | `azmcp_postgres_table_list` | ❌ |
 | 5 | 0.505869 | `azmcp_postgres_server_param_get` | ❌ |
 
@@ -3443,7 +3443,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.594753 | `azmcp_postgres_server_param_get` | ✅ **EXPECTED** |
-| 2 | 0.539671 | `azmcp_postgres_server_config_get` | ❌ |
+| 2 | 0.539692 | `azmcp_postgres_server_config_get` | ❌ |
 | 3 | 0.489693 | `azmcp_postgres_server_list` | ❌ |
 | 4 | 0.480826 | `azmcp_postgres_server_param_set` | ❌ |
 | 5 | 0.451871 | `azmcp_postgres_database_list` | ❌ |
@@ -3459,7 +3459,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.488474 | `azmcp_postgres_server_config_get` | ❌ |
+| 1 | 0.488490 | `azmcp_postgres_server_config_get` | ❌ |
 | 2 | 0.469794 | `azmcp_postgres_server_list` | ❌ |
 | 3 | 0.464562 | `azmcp_postgres_server_param_set` | ✅ **EXPECTED** |
 | 4 | 0.447011 | `azmcp_postgres_server_param_get` | ❌ |
@@ -3480,7 +3480,7 @@
 | 2 | 0.750580 | `azmcp_postgres_database_list` | ❌ |
 | 3 | 0.574930 | `azmcp_postgres_server_list` | ❌ |
 | 4 | 0.519820 | `azmcp_postgres_table_schema_get` | ❌ |
-| 5 | 0.501400 | `azmcp_postgres_server_config_get` | ❌ |
+| 5 | 0.501443 | `azmcp_postgres_server_config_get` | ❌ |
 
 ---
 
@@ -3497,7 +3497,7 @@
 | 2 | 0.690112 | `azmcp_postgres_database_list` | ❌ |
 | 3 | 0.558357 | `azmcp_postgres_table_schema_get` | ❌ |
 | 4 | 0.543331 | `azmcp_postgres_server_list` | ❌ |
-| 5 | 0.521570 | `azmcp_postgres_server_config_get` | ❌ |
+| 5 | 0.521596 | `azmcp_postgres_server_config_get` | ❌ |
 
 ---
 
@@ -3513,7 +3513,7 @@
 | 1 | 0.714877 | `azmcp_postgres_table_schema_get` | ✅ **EXPECTED** |
 | 2 | 0.597846 | `azmcp_postgres_table_list` | ❌ |
 | 3 | 0.574230 | `azmcp_postgres_database_list` | ❌ |
-| 4 | 0.508082 | `azmcp_postgres_server_config_get` | ❌ |
+| 4 | 0.508089 | `azmcp_postgres_server_config_get` | ❌ |
 | 5 | 0.480733 | `azmcp_mysql_table_schema_get` | ❌ |
 
 ---
@@ -3531,7 +3531,7 @@
 | 2 | 0.413274 | `azmcp_quota_usage_check` | ❌ |
 | 3 | 0.372940 | `azmcp_resourcehealth_availability-status_list` | ❌ |
 | 4 | 0.369855 | `azmcp_azuremanagedlustre_filesystem_sku_get` | ❌ |
-| 5 | 0.361386 | `azmcp_datadog_monitoredresources_list` | ❌ |
+| 5 | 0.361445 | `azmcp_datadog_monitoredresources_list` | ❌ |
 
 ---
 
@@ -3684,7 +3684,7 @@
 | 2 | 0.679028 | `azmcp_kusto_cluster_list` | ❌ |
 | 3 | 0.672104 | `azmcp_redis_cache_list` | ❌ |
 | 4 | 0.588847 | `azmcp_redis_cluster_database_list` | ❌ |
-| 5 | 0.569226 | `azmcp_aks_cluster_list` | ❌ |
+| 5 | 0.569222 | `azmcp_aks_cluster_list` | ❌ |
 
 ---
 
@@ -3765,11 +3765,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.577398 | `azmcp_resourcehealth_availability-status_list` | ❌ |
-| 2 | 0.570884 | `azmcp_resourcehealth_availability-status_get` | ✅ **EXPECTED** |
-| 3 | 0.424938 | `azmcp_mysql_server_list` | ❌ |
-| 4 | 0.393479 | `azmcp_azuremanagedlustre_filesystem_list` | ❌ |
-| 5 | 0.386598 | `azmcp_quota_usage_check` | ❌ |
+| 1 | 0.577429 | `azmcp_resourcehealth_availability-status_list` | ❌ |
+| 2 | 0.570794 | `azmcp_resourcehealth_availability-status_get` | ✅ **EXPECTED** |
+| 3 | 0.424817 | `azmcp_mysql_server_list` | ❌ |
+| 4 | 0.393567 | `azmcp_azuremanagedlustre_filesystem_list` | ❌ |
+| 5 | 0.386806 | `azmcp_quota_usage_check` | ❌ |
 
 ---
 
@@ -3802,7 +3802,7 @@
 | 1 | 0.644982 | `azmcp_resourcehealth_availability-status_list` | ✅ **EXPECTED** |
 | 2 | 0.587088 | `azmcp_resourcehealth_availability-status_get` | ❌ |
 | 3 | 0.508252 | `azmcp_quota_usage_check` | ❌ |
-| 4 | 0.473905 | `azmcp_datadog_monitoredresources_list` | ❌ |
+| 4 | 0.473920 | `azmcp_datadog_monitoredresources_list` | ❌ |
 | 5 | 0.462125 | `azmcp_search_service_list` | ❌ |
 
 ---
@@ -3818,9 +3818,9 @@
 |------|-------|------|--------|
 | 1 | 0.596890 | `azmcp_resourcehealth_availability-status_list` | ✅ **EXPECTED** |
 | 2 | 0.543421 | `azmcp_resourcehealth_availability-status_get` | ❌ |
-| 3 | 0.427638 | `azmcp_datadog_monitoredresources_list` | ❌ |
+| 3 | 0.427617 | `azmcp_datadog_monitoredresources_list` | ❌ |
 | 4 | 0.420567 | `azmcp_applens_resource_diagnose` | ❌ |
-| 5 | 0.420385 | `azmcp_mysql_server_list` | ❌ |
+| 5 | 0.420387 | `azmcp_mysql_server_list` | ❌ |
 
 ---
 
@@ -3920,7 +3920,7 @@
 |------|-------|------|--------|
 | 1 | 0.645259 | `azmcp_role_assignment_list` | ✅ **EXPECTED** |
 | 2 | 0.483988 | `azmcp_group_list` | ❌ |
-| 3 | 0.483302 | `azmcp_subscription_list` | ❌ |
+| 3 | 0.483125 | `azmcp_subscription_list` | ❌ |
 | 4 | 0.478700 | `azmcp_grafana_list` | ❌ |
 | 5 | 0.474796 | `azmcp_redis_cache_list` | ❌ |
 
@@ -3937,7 +3937,7 @@
 |------|-------|------|--------|
 | 1 | 0.609705 | `azmcp_role_assignment_list` | ✅ **EXPECTED** |
 | 2 | 0.456956 | `azmcp_grafana_list` | ❌ |
-| 3 | 0.436776 | `azmcp_subscription_list` | ❌ |
+| 3 | 0.436747 | `azmcp_subscription_list` | ❌ |
 | 4 | 0.435642 | `azmcp_redis_cache_list` | ❌ |
 | 5 | 0.435155 | `azmcp_monitor_workspace_list` | ❌ |
 
@@ -4003,11 +4003,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.522627 | `azmcp_search_index_get` | ❌ |
-| 2 | 0.515940 | `azmcp_search_index_query` | ✅ **EXPECTED** |
-| 3 | 0.497514 | `azmcp_search_service_list` | ❌ |
-| 4 | 0.374044 | `azmcp_foundry_knowledge_index_list` | ❌ |
-| 5 | 0.372909 | `azmcp_foundry_knowledge_index_schema` | ❌ |
+| 1 | 0.522826 | `azmcp_search_index_get` | ❌ |
+| 2 | 0.515870 | `azmcp_search_index_query` | ✅ **EXPECTED** |
+| 3 | 0.497467 | `azmcp_search_service_list` | ❌ |
+| 4 | 0.373917 | `azmcp_foundry_knowledge_index_list` | ❌ |
+| 5 | 0.372940 | `azmcp_foundry_knowledge_index_schema` | ❌ |
 
 ---
 
@@ -4039,7 +4039,7 @@
 |------|-------|------|--------|
 | 1 | 0.686140 | `azmcp_search_service_list` | ✅ **EXPECTED** |
 | 2 | 0.479898 | `azmcp_search_index_get` | ❌ |
-| 3 | 0.453454 | `azmcp_marketplace_product_list` | ❌ |
+| 3 | 0.453489 | `azmcp_marketplace_product_list` | ❌ |
 | 4 | 0.448446 | `azmcp_search_index_query` | ❌ |
 | 5 | 0.425939 | `azmcp_monitor_workspace_list` | ❌ |
 
@@ -4075,7 +4075,7 @@
 | 2 | 0.460932 | `azmcp_servicebus_topic_subscription_details` | ❌ |
 | 3 | 0.400870 | `azmcp_servicebus_topic_details` | ❌ |
 | 4 | 0.382417 | `azmcp_storage_queue_message_send` | ❌ |
-| 5 | 0.375447 | `azmcp_aks_cluster_get` | ❌ |
+| 5 | 0.375206 | `azmcp_aks_cluster_get` | ❌ |
 
 ---
 
@@ -4109,7 +4109,7 @@
 | 2 | 0.527109 | `azmcp_eventgrid_subscription_list` | ❌ |
 | 3 | 0.494515 | `azmcp_servicebus_queue_details` | ❌ |
 | 4 | 0.457036 | `azmcp_servicebus_topic_details` | ❌ |
-| 5 | 0.444604 | `azmcp_marketplace_product_get` | ❌ |
+| 5 | 0.444568 | `azmcp_marketplace_product_get` | ❌ |
 
 ---
 
@@ -4122,11 +4122,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.516780 | `azmcp_sql_db_create` | ✅ **EXPECTED** |
-| 2 | 0.470892 | `azmcp_sql_server_create` | ❌ |
-| 3 | 0.376833 | `azmcp_sql_server_delete` | ❌ |
-| 4 | 0.359945 | `azmcp_sql_db_show` | ❌ |
-| 5 | 0.357421 | `azmcp_sql_db_list` | ❌ |
+| 1 | 0.516742 | `azmcp_sql_db_create` | ✅ **EXPECTED** |
+| 2 | 0.470889 | `azmcp_sql_server_create` | ❌ |
+| 3 | 0.376816 | `azmcp_sql_server_delete` | ❌ |
+| 4 | 0.359949 | `azmcp_sql_db_show` | ❌ |
+| 5 | 0.357393 | `azmcp_sql_db_list` | ❌ |
 
 ---
 
@@ -4156,11 +4156,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.603998 | `azmcp_sql_db_create` | ✅ **EXPECTED** |
-| 2 | 0.545889 | `azmcp_sql_server_create` | ❌ |
-| 3 | 0.494309 | `azmcp_sql_db_show` | ❌ |
-| 4 | 0.473807 | `azmcp_sql_db_list` | ❌ |
-| 5 | 0.456392 | `azmcp_storage_account_create` | ❌ |
+| 1 | 0.604472 | `azmcp_sql_db_create` | ✅ **EXPECTED** |
+| 2 | 0.545906 | `azmcp_sql_server_create` | ❌ |
+| 3 | 0.494377 | `azmcp_sql_db_show` | ❌ |
+| 4 | 0.473975 | `azmcp_sql_db_list` | ❌ |
+| 5 | 0.456262 | `azmcp_storage_account_create` | ❌ |
 
 ---
 
@@ -4175,7 +4175,7 @@
 |------|-------|------|--------|
 | 1 | 0.520786 | `azmcp_sql_server_delete` | ❌ |
 | 2 | 0.484026 | `azmcp_sql_db_delete` | ✅ **EXPECTED** |
-| 3 | 0.386564 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
+| 3 | 0.386662 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
 | 4 | 0.364776 | `azmcp_sql_db_show` | ❌ |
 | 5 | 0.351204 | `azmcp_postgres_database_list` | ❌ |
 
@@ -4241,11 +4241,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.617755 | `azmcp_sql_server_show` | ❌ |
-| 2 | 0.609394 | `azmcp_sql_db_list` | ✅ **EXPECTED** |
-| 3 | 0.557385 | `azmcp_mysql_database_list` | ❌ |
-| 4 | 0.553495 | `azmcp_mysql_server_config_get` | ❌ |
-| 5 | 0.524351 | `azmcp_sql_db_show` | ❌ |
+| 1 | 0.617746 | `azmcp_sql_server_show` | ❌ |
+| 2 | 0.609322 | `azmcp_sql_db_list` | ✅ **EXPECTED** |
+| 3 | 0.557353 | `azmcp_mysql_database_list` | ❌ |
+| 4 | 0.553488 | `azmcp_mysql_server_config_get` | ❌ |
+| 5 | 0.524274 | `azmcp_sql_db_show` | ❌ |
 
 ---
 
@@ -4259,7 +4259,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.610991 | `azmcp_sql_server_show` | ❌ |
-| 2 | 0.593150 | `azmcp_postgres_server_config_get` | ❌ |
+| 2 | 0.593145 | `azmcp_postgres_server_config_get` | ❌ |
 | 3 | 0.530422 | `azmcp_mysql_server_config_get` | ❌ |
 | 4 | 0.528136 | `azmcp_sql_db_show` | ✅ **EXPECTED** |
 | 5 | 0.465693 | `azmcp_sql_db_list` | ❌ |
@@ -4309,11 +4309,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.402138 | `azmcp_sql_db_list` | ❌ |
-| 2 | 0.394998 | `azmcp_sql_db_show` | ❌ |
-| 3 | 0.389603 | `azmcp_sql_db_update` | ✅ **EXPECTED** |
-| 4 | 0.386482 | `azmcp_sql_server_delete` | ❌ |
-| 5 | 0.381735 | `azmcp_sql_db_create` | ❌ |
+| 1 | 0.401834 | `azmcp_sql_db_list` | ❌ |
+| 2 | 0.394808 | `azmcp_sql_db_show` | ❌ |
+| 3 | 0.389984 | `azmcp_sql_db_update` | ✅ **EXPECTED** |
+| 4 | 0.386647 | `azmcp_sql_server_delete` | ❌ |
+| 5 | 0.381892 | `azmcp_sql_db_create` | ❌ |
 
 ---
 
@@ -4330,7 +4330,7 @@
 | 2 | 0.502376 | `azmcp_sql_db_list` | ❌ |
 | 3 | 0.498367 | `azmcp_mysql_database_list` | ❌ |
 | 4 | 0.479044 | `azmcp_sql_server_show` | ❌ |
-| 5 | 0.473539 | `azmcp_aks_nodepool_list` | ❌ |
+| 5 | 0.470454 | `azmcp_aks_nodepool_list` | ❌ |
 
 ---
 
@@ -4346,7 +4346,7 @@
 | 1 | 0.606425 | `azmcp_sql_elastic-pool_list` | ✅ **EXPECTED** |
 | 2 | 0.502877 | `azmcp_sql_server_show` | ❌ |
 | 3 | 0.457163 | `azmcp_sql_db_list` | ❌ |
-| 4 | 0.438522 | `azmcp_aks_nodepool_list` | ❌ |
+| 4 | 0.435413 | `azmcp_aks_nodepool_list` | ❌ |
 | 5 | 0.432816 | `azmcp_mysql_database_list` | ❌ |
 
 ---
@@ -4362,7 +4362,7 @@
 |------|-------|------|--------|
 | 1 | 0.592709 | `azmcp_sql_elastic-pool_list` | ✅ **EXPECTED** |
 | 2 | 0.420325 | `azmcp_mysql_database_list` | ❌ |
-| 3 | 0.402611 | `azmcp_mysql_server_list` | ❌ |
+| 3 | 0.402616 | `azmcp_mysql_server_list` | ❌ |
 | 4 | 0.397670 | `azmcp_sql_db_list` | ❌ |
 | 5 | 0.397640 | `azmcp_sql_server_show` | ❌ |
 
@@ -4377,11 +4377,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.682576 | `azmcp_sql_server_create` | ✅ **EXPECTED** |
-| 2 | 0.563532 | `azmcp_sql_db_create` | ❌ |
-| 3 | 0.536357 | `azmcp_sql_server_delete` | ❌ |
-| 4 | 0.481395 | `azmcp_storage_account_create` | ❌ |
-| 5 | 0.472979 | `azmcp_sql_db_show` | ❌ |
+| 1 | 0.682606 | `azmcp_sql_server_create` | ✅ **EXPECTED** |
+| 2 | 0.563708 | `azmcp_sql_db_create` | ❌ |
+| 3 | 0.537173 | `azmcp_sql_server_delete` | ❌ |
+| 4 | 0.482102 | `azmcp_storage_account_create` | ❌ |
+| 5 | 0.473676 | `azmcp_sql_db_show` | ❌ |
 
 ---
 
@@ -4414,7 +4414,7 @@
 | 1 | 0.589818 | `azmcp_sql_server_create` | ✅ **EXPECTED** |
 | 2 | 0.501403 | `azmcp_sql_db_create` | ❌ |
 | 3 | 0.469425 | `azmcp_sql_server_delete` | ❌ |
-| 4 | 0.442915 | `azmcp_mysql_server_list` | ❌ |
+| 4 | 0.442934 | `azmcp_mysql_server_list` | ❌ |
 | 5 | 0.423887 | `azmcp_sql_server_show` | ❌ |
 
 ---
@@ -4448,7 +4448,7 @@
 | 1 | 0.429140 | `azmcp_sql_server_delete` | ✅ **EXPECTED** |
 | 2 | 0.393885 | `azmcp_postgres_server_list` | ❌ |
 | 3 | 0.376660 | `azmcp_sql_server_show` | ❌ |
-| 4 | 0.309280 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
+| 4 | 0.309477 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
 | 5 | 0.306368 | `azmcp_sql_db_show` | ❌ |
 
 ---
@@ -4464,7 +4464,7 @@
 |------|-------|------|--------|
 | 1 | 0.527930 | `azmcp_sql_server_delete` | ✅ **EXPECTED** |
 | 2 | 0.396541 | `azmcp_sql_db_delete` | ❌ |
-| 3 | 0.362389 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
+| 3 | 0.362583 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
 | 4 | 0.341503 | `azmcp_sql_server_show` | ❌ |
 | 5 | 0.315820 | `azmcp_workbooks_delete` | ❌ |
 
@@ -4532,7 +4532,7 @@
 |------|-------|------|--------|
 | 1 | 0.635466 | `azmcp_sql_server_firewall-rule_create` | ✅ **EXPECTED** |
 | 2 | 0.532712 | `azmcp_sql_server_firewall-rule_list` | ❌ |
-| 3 | 0.522184 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
+| 3 | 0.522193 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
 | 4 | 0.448822 | `azmcp_sql_server_create` | ❌ |
 | 5 | 0.432802 | `azmcp_sql_db_create` | ❌ |
 
@@ -4547,10 +4547,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.670225 | `azmcp_sql_server_firewall-rule_create` | ✅ **EXPECTED** |
-| 2 | 0.533583 | `azmcp_sql_server_firewall-rule_list` | ❌ |
-| 3 | 0.503661 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
-| 4 | 0.295006 | `azmcp_sql_server_show` | ❌ |
+| 1 | 0.670189 | `azmcp_sql_server_firewall-rule_create` | ✅ **EXPECTED** |
+| 2 | 0.533562 | `azmcp_sql_server_firewall-rule_list` | ❌ |
+| 3 | 0.503704 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
+| 4 | 0.295018 | `azmcp_sql_server_show` | ❌ |
 | 5 | 0.287457 | `azmcp_sql_server_create` | ❌ |
 
 ---
@@ -4566,7 +4566,7 @@
 |------|-------|------|--------|
 | 1 | 0.685107 | `azmcp_sql_server_firewall-rule_create` | ✅ **EXPECTED** |
 | 2 | 0.574336 | `azmcp_sql_server_firewall-rule_list` | ❌ |
-| 3 | 0.539577 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
+| 3 | 0.539624 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
 | 4 | 0.428919 | `azmcp_sql_server_create` | ❌ |
 | 5 | 0.395165 | `azmcp_sql_db_create` | ❌ |
 
@@ -4581,7 +4581,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.691421 | `azmcp_sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
+| 1 | 0.691529 | `azmcp_sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
 | 2 | 0.543857 | `azmcp_sql_server_firewall-rule_list` | ❌ |
 | 3 | 0.540333 | `azmcp_sql_server_firewall-rule_create` | ❌ |
 | 4 | 0.527546 | `azmcp_sql_server_delete` | ❌ |
@@ -4598,7 +4598,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.670179 | `azmcp_sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
+| 1 | 0.670247 | `azmcp_sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
 | 2 | 0.574340 | `azmcp_sql_server_firewall-rule_list` | ❌ |
 | 3 | 0.530419 | `azmcp_sql_server_firewall-rule_create` | ❌ |
 | 4 | 0.398706 | `azmcp_sql_server_delete` | ❌ |
@@ -4615,7 +4615,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.671212 | `azmcp_sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
+| 1 | 0.671312 | `azmcp_sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
 | 2 | 0.601230 | `azmcp_sql_server_firewall-rule_list` | ❌ |
 | 3 | 0.577330 | `azmcp_sql_server_firewall-rule_create` | ❌ |
 | 4 | 0.441605 | `azmcp_sql_server_delete` | ❌ |
@@ -4634,7 +4634,7 @@
 |------|-------|------|--------|
 | 1 | 0.729372 | `azmcp_sql_server_firewall-rule_list` | ✅ **EXPECTED** |
 | 2 | 0.549667 | `azmcp_sql_server_firewall-rule_create` | ❌ |
-| 3 | 0.513114 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
+| 3 | 0.513166 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
 | 4 | 0.468812 | `azmcp_sql_server_show` | ❌ |
 | 5 | 0.392512 | `azmcp_sql_server_entra-admin_list` | ❌ |
 
@@ -4651,7 +4651,7 @@
 |------|-------|------|--------|
 | 1 | 0.630731 | `azmcp_sql_server_firewall-rule_list` | ✅ **EXPECTED** |
 | 2 | 0.524126 | `azmcp_sql_server_firewall-rule_create` | ❌ |
-| 3 | 0.476757 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
+| 3 | 0.476787 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
 | 4 | 0.410680 | `azmcp_sql_server_show` | ❌ |
 | 5 | 0.316854 | `azmcp_sql_server_entra-admin_list` | ❌ |
 
@@ -4668,7 +4668,7 @@
 |------|-------|------|--------|
 | 1 | 0.630546 | `azmcp_sql_server_firewall-rule_list` | ✅ **EXPECTED** |
 | 2 | 0.532454 | `azmcp_sql_server_firewall-rule_create` | ❌ |
-| 3 | 0.473501 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
+| 3 | 0.473581 | `azmcp_sql_server_firewall-rule_delete` | ❌ |
 | 4 | 0.412957 | `azmcp_sql_server_show` | ❌ |
 | 5 | 0.308004 | `azmcp_sql_server_entra-admin_list` | ❌ |
 
@@ -4685,7 +4685,7 @@
 |------|-------|------|--------|
 | 1 | 0.629672 | `azmcp_sql_db_show` | ❌ |
 | 2 | 0.595184 | `azmcp_sql_server_show` | ✅ **EXPECTED** |
-| 3 | 0.559879 | `azmcp_mysql_server_list` | ❌ |
+| 3 | 0.559893 | `azmcp_mysql_server_list` | ❌ |
 | 4 | 0.540218 | `azmcp_sql_db_list` | ❌ |
 | 5 | 0.491401 | `azmcp_sql_server_create` | ❌ |
 
@@ -4701,7 +4701,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.658817 | `azmcp_sql_server_show` | ✅ **EXPECTED** |
-| 2 | 0.610507 | `azmcp_postgres_server_config_get` | ❌ |
+| 2 | 0.610478 | `azmcp_postgres_server_config_get` | ❌ |
 | 3 | 0.538034 | `azmcp_mysql_server_config_get` | ❌ |
 | 4 | 0.471541 | `azmcp_sql_db_show` | ❌ |
 | 5 | 0.445430 | `azmcp_postgres_server_param_get` | ❌ |
@@ -4718,7 +4718,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.563143 | `azmcp_sql_server_show` | ✅ **EXPECTED** |
-| 2 | 0.392532 | `azmcp_postgres_server_config_get` | ❌ |
+| 2 | 0.392488 | `azmcp_postgres_server_config_get` | ❌ |
 | 3 | 0.380021 | `azmcp_postgres_server_param_get` | ❌ |
 | 4 | 0.372194 | `azmcp_sql_server_firewall-rule_list` | ❌ |
 | 5 | 0.370539 | `azmcp_sql_db_show` | ❌ |
@@ -4751,11 +4751,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.500720 | `azmcp_storage_account_create` | ✅ **EXPECTED** |
-| 2 | 0.400100 | `azmcp_azuremanagedlustre_filesystem_sku_get` | ❌ |
-| 3 | 0.387100 | `azmcp_storage_account_get` | ❌ |
-| 4 | 0.382780 | `azmcp_azuremanagedlustre_filesystem_list` | ❌ |
-| 5 | 0.377206 | `azmcp_sql_db_create` | ❌ |
+| 1 | 0.500638 | `azmcp_storage_account_create` | ✅ **EXPECTED** |
+| 2 | 0.400151 | `azmcp_azuremanagedlustre_filesystem_sku_get` | ❌ |
+| 3 | 0.387071 | `azmcp_storage_account_get` | ❌ |
+| 4 | 0.382836 | `azmcp_azuremanagedlustre_filesystem_list` | ❌ |
+| 5 | 0.377221 | `azmcp_sql_db_create` | ❌ |
 
 ---
 
@@ -4857,7 +4857,7 @@
 | 2 | 0.499153 | `azmcp_storage_table_list` | ❌ |
 | 3 | 0.473598 | `azmcp_cosmos_account_list` | ❌ |
 | 4 | 0.461641 | `azmcp_storage_blob_container_get` | ❌ |
-| 5 | 0.454028 | `azmcp_subscription_list` | ❌ |
+| 5 | 0.453933 | `azmcp_subscription_list` | ❌ |
 
 ---
 
@@ -4870,11 +4870,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.620659 | `azmcp_storage_blob_batch_set-tier` | ✅ **EXPECTED** |
-| 2 | 0.465706 | `azmcp_storage_blob_container_get` | ❌ |
-| 3 | 0.408688 | `azmcp_storage_blob_container_create` | ❌ |
-| 4 | 0.408291 | `azmcp_storage_blob_get` | ❌ |
-| 5 | 0.378335 | `azmcp_cosmos_database_container_list` | ❌ |
+| 1 | 0.620756 | `azmcp_storage_blob_batch_set-tier` | ✅ **EXPECTED** |
+| 2 | 0.465722 | `azmcp_storage_blob_container_get` | ❌ |
+| 3 | 0.408639 | `azmcp_storage_blob_container_create` | ❌ |
+| 4 | 0.408384 | `azmcp_storage_blob_get` | ❌ |
+| 5 | 0.378380 | `azmcp_cosmos_database_container_list` | ❌ |
 
 ---
 
@@ -4972,11 +4972,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.613933 | `azmcp_cosmos_database_container_list` | ❌ |
-| 2 | 0.605437 | `azmcp_storage_blob_container_get` | ✅ **EXPECTED** |
-| 3 | 0.530702 | `azmcp_storage_table_list` | ❌ |
-| 4 | 0.521995 | `azmcp_storage_blob_get` | ❌ |
-| 5 | 0.479014 | `azmcp_storage_account_get` | ❌ |
+| 1 | 0.613985 | `azmcp_cosmos_database_container_list` | ❌ |
+| 2 | 0.605438 | `azmcp_storage_blob_container_get` | ✅ **EXPECTED** |
+| 3 | 0.530707 | `azmcp_storage_table_list` | ❌ |
+| 4 | 0.521910 | `azmcp_storage_blob_get` | ❌ |
+| 5 | 0.478954 | `azmcp_storage_account_get` | ❌ |
 
 ---
 
@@ -5023,11 +5023,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.662106 | `azmcp_storage_blob_container_get` | ❌ |
-| 2 | 0.661919 | `azmcp_storage_blob_get` | ✅ **EXPECTED** |
-| 3 | 0.537535 | `azmcp_storage_account_get` | ❌ |
-| 4 | 0.460657 | `azmcp_storage_blob_container_create` | ❌ |
-| 5 | 0.457038 | `azmcp_storage_account_create` | ❌ |
+| 1 | 0.662150 | `azmcp_storage_blob_container_get` | ❌ |
+| 2 | 0.661969 | `azmcp_storage_blob_get` | ✅ **EXPECTED** |
+| 3 | 0.537577 | `azmcp_storage_account_get` | ❌ |
+| 4 | 0.460650 | `azmcp_storage_blob_container_create` | ❌ |
+| 5 | 0.457044 | `azmcp_storage_account_create` | ❌ |
 
 ---
 
@@ -5074,11 +5074,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.566213 | `azmcp_storage_blob_upload` | ✅ **EXPECTED** |
-| 2 | 0.403309 | `azmcp_storage_blob_get` | ❌ |
-| 3 | 0.397499 | `azmcp_storage_blob_container_get` | ❌ |
-| 4 | 0.382052 | `azmcp_storage_account_create` | ❌ |
-| 5 | 0.377014 | `azmcp_storage_blob_container_create` | ❌ |
+| 1 | 0.566287 | `azmcp_storage_blob_upload` | ✅ **EXPECTED** |
+| 2 | 0.403451 | `azmcp_storage_blob_get` | ❌ |
+| 3 | 0.397722 | `azmcp_storage_blob_container_get` | ❌ |
+| 4 | 0.382123 | `azmcp_storage_account_create` | ❌ |
+| 5 | 0.377255 | `azmcp_storage_blob_container_create` | ❌ |
 
 ---
 
@@ -5091,11 +5091,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.648330 | `azmcp_storage_datalake_directory_create` | ✅ **EXPECTED** |
-| 2 | 0.482873 | `azmcp_storage_datalake_file-system_list-paths` | ❌ |
-| 3 | 0.443022 | `azmcp_storage_account_create` | ❌ |
-| 4 | 0.349702 | `azmcp_keyvault_secret_create` | ❌ |
-| 5 | 0.341619 | `azmcp_keyvault_certificate_create` | ❌ |
+| 1 | 0.646848 | `azmcp_storage_datalake_directory_create` | ✅ **EXPECTED** |
+| 2 | 0.481419 | `azmcp_storage_datalake_file-system_list-paths` | ❌ |
+| 3 | 0.443019 | `azmcp_storage_account_create` | ❌ |
+| 4 | 0.348451 | `azmcp_keyvault_secret_create` | ❌ |
+| 5 | 0.340520 | `azmcp_keyvault_certificate_create` | ❌ |
 
 ---
 
@@ -5159,11 +5159,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.558995 | `azmcp_storage_queue_message_send` | ✅ **EXPECTED** |
-| 2 | 0.411169 | `azmcp_storage_table_list` | ❌ |
-| 3 | 0.375260 | `azmcp_storage_account_get` | ❌ |
-| 4 | 0.373398 | `azmcp_storage_account_create` | ❌ |
-| 5 | 0.344298 | `azmcp_servicebus_queue_details` | ❌ |
+| 1 | 0.558401 | `azmcp_storage_queue_message_send` | ✅ **EXPECTED** |
+| 2 | 0.410972 | `azmcp_storage_table_list` | ❌ |
+| 3 | 0.375068 | `azmcp_storage_account_get` | ❌ |
+| 4 | 0.373072 | `azmcp_storage_account_create` | ❌ |
+| 5 | 0.344373 | `azmcp_servicebus_queue_details` | ❌ |
 
 ---
 
@@ -5193,11 +5193,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.595279 | `azmcp_storage_queue_message_send` | ✅ **EXPECTED** |
-| 2 | 0.360634 | `azmcp_servicebus_queue_details` | ❌ |
-| 3 | 0.338574 | `azmcp_storage_account_create` | ❌ |
-| 4 | 0.325301 | `azmcp_appconfig_kv_set` | ❌ |
-| 5 | 0.322605 | `azmcp_storage_table_list` | ❌ |
+| 1 | 0.595304 | `azmcp_storage_queue_message_send` | ✅ **EXPECTED** |
+| 2 | 0.360562 | `azmcp_servicebus_queue_details` | ❌ |
+| 3 | 0.338481 | `azmcp_storage_account_create` | ❌ |
+| 4 | 0.325256 | `azmcp_appconfig_kv_set` | ❌ |
+| 5 | 0.322508 | `azmcp_storage_table_list` | ❌ |
 
 ---
 
@@ -5210,11 +5210,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.640440 | `azmcp_storage_share_file_list` | ✅ **EXPECTED** |
-| 2 | 0.539851 | `azmcp_storage_table_list` | ❌ |
-| 3 | 0.522644 | `azmcp_storage_datalake_file-system_list-paths` | ❌ |
-| 4 | 0.500965 | `azmcp_storage_account_get` | ❌ |
-| 5 | 0.491152 | `azmcp_storage_blob_container_get` | ❌ |
+| 1 | 0.640598 | `azmcp_storage_share_file_list` | ✅ **EXPECTED** |
+| 2 | 0.539923 | `azmcp_storage_table_list` | ❌ |
+| 3 | 0.522606 | `azmcp_storage_datalake_file-system_list-paths` | ❌ |
+| 4 | 0.500888 | `azmcp_storage_account_get` | ❌ |
+| 5 | 0.491201 | `azmcp_storage_blob_container_get` | ❌ |
 
 ---
 
@@ -5244,11 +5244,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.602266 | `azmcp_storage_share_file_list` | ✅ **EXPECTED** |
-| 2 | 0.449421 | `azmcp_storage_table_list` | ❌ |
-| 3 | 0.445997 | `azmcp_storage_datalake_file-system_list-paths` | ❌ |
-| 4 | 0.436470 | `azmcp_storage_account_get` | ❌ |
-| 5 | 0.423719 | `azmcp_extension_azqr` | ❌ |
+| 1 | 0.602243 | `azmcp_storage_share_file_list` | ✅ **EXPECTED** |
+| 2 | 0.449424 | `azmcp_storage_table_list` | ❌ |
+| 3 | 0.446206 | `azmcp_storage_datalake_file-system_list-paths` | ❌ |
+| 4 | 0.436642 | `azmcp_storage_account_get` | ❌ |
+| 5 | 0.423860 | `azmcp_extension_azqr` | ❌ |
 
 ---
 
@@ -5295,7 +5295,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.576403 | `azmcp_subscription_list` | ✅ **EXPECTED** |
+| 1 | 0.576055 | `azmcp_subscription_list` | ✅ **EXPECTED** |
 | 2 | 0.512964 | `azmcp_cosmos_account_list` | ❌ |
 | 3 | 0.473852 | `azmcp_redis_cache_list` | ❌ |
 | 4 | 0.471653 | `azmcp_postgres_server_list` | ❌ |
@@ -5312,7 +5312,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.405813 | `azmcp_subscription_list` | ✅ **EXPECTED** |
+| 1 | 0.405723 | `azmcp_subscription_list` | ✅ **EXPECTED** |
 | 2 | 0.384208 | `azmcp_eventgrid_subscription_list` | ❌ |
 | 3 | 0.381238 | `azmcp_postgres_server_list` | ❌ |
 | 4 | 0.351864 | `azmcp_grafana_list` | ❌ |
@@ -5329,8 +5329,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.319893 | `azmcp_subscription_list` | ✅ **EXPECTED** |
-| 2 | 0.315547 | `azmcp_marketplace_product_get` | ❌ |
+| 1 | 0.319958 | `azmcp_subscription_list` | ✅ **EXPECTED** |
+| 2 | 0.315484 | `azmcp_marketplace_product_get` | ❌ |
 | 3 | 0.313335 | `azmcp_eventgrid_subscription_list` | ❌ |
 | 4 | 0.286711 | `azmcp_redis_cache_list` | ❌ |
 | 5 | 0.282645 | `azmcp_grafana_list` | ❌ |
@@ -5346,7 +5346,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.403186 | `azmcp_subscription_list` | ✅ **EXPECTED** |
+| 1 | 0.403229 | `azmcp_subscription_list` | ✅ **EXPECTED** |
 | 2 | 0.375168 | `azmcp_eventgrid_subscription_list` | ❌ |
 | 3 | 0.354504 | `azmcp_redis_cache_list` | ❌ |
 | 4 | 0.342318 | `azmcp_redis_cluster_list` | ❌ |
@@ -5364,7 +5364,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.711969 | `azmcp_virtualdesktop_hostpool_list` | ✅ **EXPECTED** |
-| 2 | 0.659745 | `azmcp_virtualdesktop_hostpool_sessionhost_list` | ❌ |
+| 2 | 0.659763 | `azmcp_virtualdesktop_hostpool_sessionhost_list` | ❌ |
 | 3 | 0.566615 | `azmcp_kusto_cluster_list` | ❌ |
 | 4 | 0.548888 | `azmcp_search_service_list` | ❌ |
 | 5 | 0.536542 | `azmcp_redis_cluster_list` | ❌ |
@@ -5380,10 +5380,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.726982 | `azmcp_virtualdesktop_hostpool_sessionhost_list` | ✅ **EXPECTED** |
+| 1 | 0.727054 | `azmcp_virtualdesktop_hostpool_sessionhost_list` | ✅ **EXPECTED** |
 | 2 | 0.714469 | `azmcp_virtualdesktop_hostpool_sessionhost_usersession-list` | ❌ |
 | 3 | 0.573352 | `azmcp_virtualdesktop_hostpool_list` | ❌ |
-| 4 | 0.439611 | `azmcp_aks_nodepool_list` | ❌ |
+| 4 | 0.435890 | `azmcp_aks_nodepool_list` | ❌ |
 | 5 | 0.402909 | `azmcp_aks_nodepool_get` | ❌ |
 
 ---
@@ -5398,9 +5398,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.812659 | `azmcp_virtualdesktop_hostpool_sessionhost_usersession-list` | ✅ **EXPECTED** |
-| 2 | 0.659093 | `azmcp_virtualdesktop_hostpool_sessionhost_list` | ❌ |
+| 2 | 0.659212 | `azmcp_virtualdesktop_hostpool_sessionhost_list` | ❌ |
 | 3 | 0.501167 | `azmcp_virtualdesktop_hostpool_list` | ❌ |
-| 4 | 0.356479 | `azmcp_aks_nodepool_list` | ❌ |
+| 4 | 0.352576 | `azmcp_aks_nodepool_list` | ❌ |
 | 5 | 0.336385 | `azmcp_monitor_workspace_list` | ❌ |
 
 ---
@@ -5414,7 +5414,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.552212 | `azmcp_workbooks_create` | ✅ **EXPECTED** |
+| 1 | 0.552422 | `azmcp_workbooks_create` | ✅ **EXPECTED** |
 | 2 | 0.433162 | `azmcp_workbooks_update` | ❌ |
 | 3 | 0.361364 | `azmcp_workbooks_delete` | ❌ |
 | 4 | 0.361215 | `azmcp_workbooks_show` | ❌ |
@@ -5433,7 +5433,7 @@
 |------|-------|------|--------|
 | 1 | 0.621310 | `azmcp_workbooks_delete` | ✅ **EXPECTED** |
 | 2 | 0.518630 | `azmcp_workbooks_show` | ❌ |
-| 3 | 0.432454 | `azmcp_workbooks_create` | ❌ |
+| 3 | 0.432499 | `azmcp_workbooks_create` | ❌ |
 | 4 | 0.425569 | `azmcp_workbooks_list` | ❌ |
 | 5 | 0.390355 | `azmcp_workbooks_update` | ❌ |
 
@@ -5449,7 +5449,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.772431 | `azmcp_workbooks_list` | ✅ **EXPECTED** |
-| 2 | 0.562485 | `azmcp_workbooks_create` | ❌ |
+| 2 | 0.562583 | `azmcp_workbooks_create` | ❌ |
 | 3 | 0.532565 | `azmcp_workbooks_show` | ❌ |
 | 4 | 0.516739 | `azmcp_grafana_list` | ❌ |
 | 5 | 0.488600 | `azmcp_group_list` | ❌ |
@@ -5466,7 +5466,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.708612 | `azmcp_workbooks_list` | ✅ **EXPECTED** |
-| 2 | 0.570259 | `azmcp_workbooks_create` | ❌ |
+| 2 | 0.570374 | `azmcp_workbooks_create` | ❌ |
 | 3 | 0.539957 | `azmcp_workbooks_show` | ❌ |
 | 4 | 0.485504 | `azmcp_workbooks_delete` | ❌ |
 | 5 | 0.472378 | `azmcp_grafana_list` | ❌ |
@@ -5483,7 +5483,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.697539 | `azmcp_workbooks_show` | ✅ **EXPECTED** |
-| 2 | 0.498390 | `azmcp_workbooks_create` | ❌ |
+| 2 | 0.498440 | `azmcp_workbooks_create` | ❌ |
 | 3 | 0.494708 | `azmcp_workbooks_list` | ❌ |
 | 4 | 0.452348 | `azmcp_workbooks_delete` | ❌ |
 | 5 | 0.419105 | `azmcp_workbooks_update` | ❌ |
@@ -5500,7 +5500,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.469476 | `azmcp_workbooks_show` | ✅ **EXPECTED** |
-| 2 | 0.455158 | `azmcp_workbooks_create` | ❌ |
+| 2 | 0.455226 | `azmcp_workbooks_create` | ❌ |
 | 3 | 0.437638 | `azmcp_workbooks_update` | ❌ |
 | 4 | 0.424338 | `azmcp_workbooks_list` | ❌ |
 | 5 | 0.366057 | `azmcp_workbooks_delete` | ❌ |
@@ -5517,7 +5517,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.469915 | `azmcp_workbooks_update` | ✅ **EXPECTED** |
-| 2 | 0.382651 | `azmcp_workbooks_create` | ❌ |
+| 2 | 0.382674 | `azmcp_workbooks_create` | ❌ |
 | 3 | 0.362354 | `azmcp_workbooks_show` | ❌ |
 | 4 | 0.349689 | `azmcp_workbooks_delete` | ❌ |
 | 5 | 0.276727 | `azmcp_loadtesting_testrun_update` | ❌ |
@@ -5527,7 +5527,7 @@
 ## Summary
 
 **Total Prompts Tested:** 306  
-**Execution Time:** 57.5946338s  
+**Analysis Execution Time:** 35.4082241s  
 
 ### Success Rate Metrics
 

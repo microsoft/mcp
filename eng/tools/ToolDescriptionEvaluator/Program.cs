@@ -19,6 +19,8 @@ class Program
 
     static async Task Main(string[] args)
     {
+        var stopwatchTotal = Stopwatch.StartNew();
+
         try
         {
             // Show help if requested
@@ -127,7 +129,7 @@ class Program
                     Environment.Exit(0);
                 }
 
-                throw new InvalidOperationException("AOAI_ENDPOINT environment variable is required");
+                throw new InvalidOperationException("AOAI_ENDPOINT environment variable is required.");
             }
 
             var apiKey = GetApiKey(isCiMode);
@@ -162,17 +164,30 @@ class Program
                 listToolsResult = await LoadToolsDynamicallyAsync(toolDir, isCiMode) ?? await LoadToolsFromJsonAsync(Path.Combine(toolDir, "tools.json"), isCiMode);
             }
 
-            if (listToolsResult == null && isCiMode)
+            if (listToolsResult == null)
             {
-                Console.WriteLine("⏭️  Skipping tool selection analysis in CI - tools data not available");
-                Environment.Exit(0);
+                if (isCiMode)
+                {
+                    Console.WriteLine("⏭️  Skipping tool selection analysis in CI - tools data not available");
+                    Environment.Exit(0);
+                }
+                else
+                {
+                    throw new InvalidOperationException("No tools found for processing.");
+                }
             }
 
             // Create vector database
             var db = new VectorDB(new CosineSimilarity());
             var stopwatch = Stopwatch.StartNew();
+            var tools = listToolsResult.Tools ?? listToolsResult.ConsolidatedAzureTools;
 
-            await PopulateDatabaseAsync(db, listToolsResult!.Tools, embeddingService);
+            if (tools == null || tools.Count == 0)
+            {
+                throw new InvalidOperationException("No tools found for processing.");
+            }
+
+            await PopulateDatabaseAsync(db, tools, embeddingService);
 
             stopwatch.Stop();
 
@@ -325,11 +340,14 @@ class Program
                 return;
             }
 
-            await RunPromptsAsync(db, toolNameAndPrompts!, embeddingService, executionTime, writer, isCiMode, maxResultsPerTest);
+            await PerformAnalysis(db, toolNameAndPrompts!, embeddingService, executionTime, writer, isCiMode, maxResultsPerTest);
+
+            stopwatchTotal.Stop();
 
             // Print summary to console for immediate feedback
             Console.WriteLine($"🎯 Tool selection analysis completed");
             Console.WriteLine($"📊 Results written to: {Path.GetFullPath(outputFilePath)}");
+            Console.WriteLine($"⏱️  Total execution time: {stopwatchTotal.Elapsed.TotalSeconds:F7}s");
         }
         catch (Exception ex)
         {
@@ -405,7 +423,7 @@ class Program
             dir = dir.Parent;
         }
 
-        throw new InvalidOperationException("Could not find repo root (AzureMcp.sln or .git)");
+        throw new InvalidOperationException("Could not find repo root (AzureMcp.sln or .git).");
     }
 
     // Resolve the ToolDescriptionEvaluator directory robustly from repo root, with fallbacks from exeDir
@@ -533,7 +551,7 @@ class Program
                     return null; // Graceful fallback in CI
                 }
 
-                throw new InvalidOperationException("No JSON output found from azmcp command");
+                throw new InvalidOperationException("No JSON output found from azmcp command.");
             }
 
             var jsonOutput = string.Join('\n', lines.Skip(jsonStartIndex));
@@ -546,7 +564,7 @@ class Program
             {
                 await SaveToolsToJsonAsync(result, Path.Combine(toolDir, "tools.json"));
 
-                Console.WriteLine($"💾 Saved {result.Tools.Count} tools to tools.json");
+                Console.WriteLine($"💾 Saved {result.Tools?.Count} tools to tools.json");
             }
 
             return result;
@@ -594,20 +612,23 @@ class Program
         try
         {
             // Normalize only tool and option descriptions instead of escaping the entire JSON document
-            foreach (var tool in toolsResult.Tools)
+            if (toolsResult.Tools != null)
             {
-                if (!string.IsNullOrEmpty(tool.Description))
+                foreach (var tool in toolsResult.Tools)
                 {
-                    tool.Description = EscapeCharacters(tool.Description);
-                }
-
-                if (tool.Options != null)
-                {
-                    foreach (var opt in tool.Options)
+                    if (!string.IsNullOrEmpty(tool.Description))
                     {
-                        if (!string.IsNullOrEmpty(opt.Description))
+                        tool.Description = EscapeCharacters(tool.Description);
+                    }
+
+                    if (tool.Options != null)
+                    {
+                        foreach (var opt in tool.Options)
                         {
-                            opt.Description = EscapeCharacters(opt.Description);
+                            if (!string.IsNullOrEmpty(opt.Description))
+                            {
+                                opt.Description = EscapeCharacters(opt.Description);
+                            }
                         }
                     }
                 }
@@ -822,7 +843,7 @@ class Program
         }
     }
 
-    private static async Task RunPromptsAsync(VectorDB db, Dictionary<string, List<string>> toolNameWithPrompts, EmbeddingService embeddingService, TimeSpan databaseSetupTime, StreamWriter writer, bool isCiMode = false, int maxResultsPerTest = 5)
+    private static async Task PerformAnalysis(VectorDB db, Dictionary<string, List<string>> toolNameWithPrompts, EmbeddingService embeddingService, TimeSpan databaseSetupTime, StreamWriter writer, bool isCiMode = false, int maxResultsPerTest = 5)
     {
         var stopwatch = Stopwatch.StartNew();
         int promptCount = 0;
@@ -926,7 +947,7 @@ class Program
             // Calculate success rate metrics for regular format too
             var metrics = await CalculateSuccessRateAsync(db, toolNameWithPrompts, embeddingService);
 
-            await writer.WriteLineAsync($"\n\nPrompt count={promptCount}, Execution time={stopwatch.Elapsed.TotalSeconds:F7}s");
+            await writer.WriteLineAsync($"\n\nTotal Prompts Tested={promptCount}, Analysis Execution Time={stopwatch.Elapsed.TotalSeconds:F7}s");
             await writer.WriteLineAsync($"Top choice success rate={metrics.TopChoicePercentage:F1}% ({metrics.TopChoiceCount}/{promptCount} tests passed)");
             await writer.WriteLineAsync();
             await writer.WriteLineAsync("Confidence Level Distribution:");
@@ -949,7 +970,7 @@ class Program
             await writer.WriteLineAsync("## Summary");
             await writer.WriteLineAsync();
             await writer.WriteLineAsync($"**Total Prompts Tested:** {promptCount}  ");
-            await writer.WriteLineAsync($"**Execution Time:** {stopwatch.Elapsed.TotalSeconds:F7}s  ");
+            await writer.WriteLineAsync($"**Analysis Execution Time:** {stopwatch.Elapsed.TotalSeconds:F7}s  ");
             await writer.WriteLineAsync();
 
             // Calculate success rate metrics
@@ -1228,23 +1249,44 @@ class Program
             // Load existing tools for comparison
             var listToolsResult = await LoadToolsDynamicallyAsync(toolDir, isCiMode) ?? await LoadToolsFromJsonAsync("tools.json", isCiMode);
 
-            if (listToolsResult == null && isCiMode)
+            if (listToolsResult == null)
             {
-                Console.WriteLine("⏭️  Skipping validation in CI - tools data not available");
-                Environment.Exit(0);
+                if (isCiMode)
+                {
+                    Console.WriteLine("⏭️  Skipping validation in CI - tools data not available");
+                    Environment.Exit(0);
+                }
+
+                Console.WriteLine("❌ Error: No tools found for processing");
+                Environment.Exit(1);
             }
 
             // Create test tools with the provided description
-            var testTools = new List<Tool>();
-
-            testTools.Add(new Tool
+            var testTools = new List<Tool>
             {
-                Name = $"{TestToolIdPrefix}1",
-                Description = toolDescription
-            });
+                new Tool
+                {
+                    Name = $"{TestToolIdPrefix}1",
+                    Description = toolDescription
+                }
+            };
+
+            var tools = listToolsResult.Tools ?? listToolsResult.ConsolidatedAzureTools;
+
+            if (tools == null || tools.Count == 0)
+            {
+                if (isCiMode)
+                {
+                    Console.WriteLine("⏭️  Skipping validation in CI - tools data not available");
+                    Environment.Exit(0);
+                }
+
+                Console.WriteLine("❌ Error: No tools found for processing");
+                Environment.Exit(1);
+            }
 
             // Create vector database with existing tools + test tools
-            var allTools = new List<Tool>(listToolsResult!.Tools);
+            var allTools = new List<Tool>(tools);
 
             allTools.AddRange(testTools);
 
