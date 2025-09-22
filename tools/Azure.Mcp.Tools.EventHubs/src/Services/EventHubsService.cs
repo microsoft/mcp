@@ -87,7 +87,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
     private static string ExtractResourceGroupFromId(string resourceId)
     {
-         // Resource ID format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/...
+        // Resource ID format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/...
         var parts = resourceId.Split('/', StringSplitOptions.RemoveEmptyEntries);
         var resourceGroupIndex = Array.IndexOf(parts, "resourceGroups");
 
