@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.EventHubs.Models;
 using Azure.ResourceManager.EventHubs;
-using Azure.ResourceManager.EventHubs.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.EventHubs.Services;
@@ -59,9 +57,8 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
     }
 
     public async Task<EventHubsNamespaceDetails?> GetNamespaceAsync(
-        string? namespaceId,
-        string? namespaceName,
-        string? resourceGroup,
+        string namespaceName,
+        string resourceGroup,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
@@ -70,36 +67,18 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         {
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
 
-            EventHubsNamespaceResource namespaceResource;
-
-            if (!string.IsNullOrEmpty(namespaceId))
-            {
-                // Get by resource ID
-                var armClient = subscriptionResource.GetCachedClient(client => client);
-                namespaceResource = armClient.GetEventHubsNamespaceResource(Azure.Core.ResourceIdentifier.Parse(namespaceId));
-                var response = await namespaceResource.GetAsync();
-                namespaceResource = response.Value;
-            }
-            else if (!string.IsNullOrEmpty(namespaceName) && !string.IsNullOrEmpty(resourceGroup))
-            {
-                // Get by resource group and name
-                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
-                var response = await resourceGroupResource.Value.GetEventHubsNamespaces().GetAsync(namespaceName);
-                namespaceResource = response.Value;
-            }
-            else
-            {
-                _logger.LogWarning("Either namespaceId or both namespaceName and resourceGroup must be provided");
-                return null;
-            }
+            // Get by resource group and name
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            var response = await resourceGroupResource.Value.GetEventHubsNamespaces().GetAsync(namespaceName);
+            var namespaceResource = response.Value;
 
             return ConvertToEventHubsNamespaceDetails(namespaceResource.Data);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting EventHubs namespace. NamespaceId: {NamespaceId}, NamespaceName: {NamespaceName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
-                namespaceId, namespaceName, resourceGroup, subscription);
+                "Error getting EventHubs namespace. NamespaceName: {NamespaceName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                namespaceName, resourceGroup, subscription);
             throw;
         }
     }
