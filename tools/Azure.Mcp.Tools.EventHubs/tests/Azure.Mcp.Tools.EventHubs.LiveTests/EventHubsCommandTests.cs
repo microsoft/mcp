@@ -31,7 +31,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
         // Should contain at least our test namespace
         var namespaceArray = namespaces.EnumerateArray().ToList();
-        Assert.True(namespaceArray.Count >= 1, "Should contain at least our test EventHubs namespace");
+        Assert.True(namespaceArray.Count >= 1, "Should contain at least our test Event Hubs namespace");
 
         // Verify that our test namespace exists
         var testNamespace = namespaceArray.FirstOrDefault(ns =>
@@ -58,7 +58,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_HandleEmptyResourceGroup_Gracefully()
     {
-        // Test with a resource group that doesn't have EventHubs namespaces
+        // Test with a resource group that doesn't have Event Hubs namespaces
         var emptyResourceGroupName = $"empty-rg-{Guid.NewGuid():N}[..10]";
 
         var result = await CallToolAsync(

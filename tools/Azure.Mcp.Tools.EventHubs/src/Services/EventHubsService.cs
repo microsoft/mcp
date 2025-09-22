@@ -35,7 +35,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting EventHubs namespaces. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                "Error getting Event Hubs namespaces. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
                 resourceGroup, subscription);
             throw;
         }
@@ -43,7 +43,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
     private static EventHubsNamespaceInfo ConvertToEventHubsNamespaceInfo(JsonElement item)
     {
-        // Parse the Resource Graph JSON element to extract EventHubs namespace information
+        // Parse the Resource Graph JSON element to extract Event Hubs namespace information
         var name = item.TryGetProperty("name", out var nameElement) ? nameElement.GetString() ?? "Unknown" : "Unknown";
         var id = item.TryGetProperty("id", out var idElement) ? idElement.GetString() ?? "Unknown" : "Unknown";
 
@@ -77,7 +77,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error getting EventHubs namespace. NamespaceName: {NamespaceName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                "Error getting Event Hubs namespace. NamespaceName: {NamespaceName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
                 namespaceName, resourceGroup, subscription);
             throw;
         }

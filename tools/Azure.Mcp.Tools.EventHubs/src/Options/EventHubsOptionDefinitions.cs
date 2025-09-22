@@ -11,7 +11,7 @@ public static class EventHubsOptionDefinitions
         $"--{NamespaceNameName}"
     )
     {
-        Description = "The name of the EventHubs namespace to retrieve. Must be used with --resource-group option.",
+        Description = "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
         Required = false
     };
 }
