@@ -1,10 +1,16 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.  
 // Licensed under the MIT License.
+
+using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.EventHubs.Options;
 
 namespace Azure.Mcp.Tools.EventHubs.Options.Namespace;
 
 public class NamespaceGetOptions : BaseEventHubsOptions
 {
-    // No additional options needed for namespace get beyond base options
-    // ResourceGroup is required and handled by OptionDefinitions.Common.ResourceGroup.AsRequired() in the command
+    [JsonPropertyName(EventHubsOptionDefinitions.NamespaceIdName)]
+    public string? NamespaceId { get; set; }
+
+    [JsonPropertyName(EventHubsOptionDefinitions.NamespaceNameName)]
+    public string? NamespaceName { get; set; }
 }
