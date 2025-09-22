@@ -11,6 +11,12 @@ $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/../../../eng/common/scripts/common.ps1"
 . "$PSScriptRoot/../../../eng/scripts/helpers/TestResourcesHelpers.ps1"
 
+$testSettings.DeploymentOutputs = @{
+    "staticStorageAccountName" = "azuresdktrainingdatatme";
+    "staticResourceGroup" = "static-test-resources";
+    "staticWorkspace" = "monitor-query-ws";
+}
+
 $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
 $storageAccountName = "$($BaseName)mon"

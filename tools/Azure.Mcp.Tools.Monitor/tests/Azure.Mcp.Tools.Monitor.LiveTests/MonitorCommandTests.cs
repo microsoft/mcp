@@ -78,8 +78,8 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     public async Task Should_get_table_contents()
     {
         // Query AzureMetrics table - fastest to propagate and most reliable
-        var workspace = "monitor-query-ws";
-        var resourceGroup = "static-test-resources";
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("staticResourceGroup", "static-test-resources");
+        var workspace = Settings.DeploymentOutputs.GetValueOrDefault("staticWorkspace", "monitor-query-ws");
         await QueryForLogsAsync(
             async args => await CallToolAsync("azmcp_monitor_workspace_log_query", args),
             new()
@@ -104,8 +104,8 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     [Fact]
     public async Task Should_query_monitor_logs()
     {
-        var workspace = "monitor-query-ws";
-        var resourceGroup = "static-test-resources";
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("staticResourceGroup", "static-test-resources");
+        var workspace = Settings.DeploymentOutputs.GetValueOrDefault("staticWorkspace", "monitor-query-ws");
         await QueryForLogsAsync(
             async args => await CallToolAsync("azmcp_monitor_workspace_log_query", args),
             new()
@@ -148,11 +148,11 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     public async Task Should_query_monitor_logs_by_resource_id()
     {
         var subscriptionId = Settings.SubscriptionId;
-        var resourceGroup = "static-test-resources";
-        var storageAccountName = "azuresdktrainingdatatme";
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("staticResourceGroup", "static-test-resources");
+        var storageAccountName = Settings.DeploymentOutputs.GetValueOrDefault("staticStorageAccountName", "azuresdktrainingdatatme");
 
         var storageResourceId = $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}";
-        
+
         await QueryForLogsAsync(
             async args => await CallToolAsync("azmcp_monitor_resource_log_query", args),
             new()
