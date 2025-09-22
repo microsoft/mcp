@@ -203,7 +203,7 @@ public sealed class ClusterListCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
