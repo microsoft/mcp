@@ -277,7 +277,6 @@ public class KeyValueGetCommandTests
     [Theory]
     [InlineData("--account", "account1")] // Missing subscription
     [InlineData("--subscription", "sub123")] // Missing account
-    [InlineData("--subscription", "sub123", "--account", "account1", "--key", "key1", "--key-filter", "keyfilter")] // Key filter and key together
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
         // Arrange
@@ -289,5 +288,23 @@ public class KeyValueGetCommandTests
         // Assert
         Assert.Equal(400, response.Status);
         Assert.Contains("required", response.Message.ToLower());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Returns400_WhenKeyAndKeyFilterAreSpecified()
+    {
+        // Arrange
+        var parseResult = _commandDefinition.Parse([
+            "--subscription", "sub123",
+            "--account", "account1",
+            "--key", "key1",
+            "--key-filter", "keyfilter"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult);
+
+        // Assert
+        Assert.Equal(400, response.Status);
+        Assert.Contains("Cannot specify both --key and --key-filter options together", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

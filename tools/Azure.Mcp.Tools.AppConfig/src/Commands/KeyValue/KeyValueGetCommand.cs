@@ -42,13 +42,14 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger) : Bas
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(AppConfigOptionDefinitions.Key.AsOptional());
+        var optionalKey = AppConfigOptionDefinitions.Key.AsOptional();
+        command.Options.Add(optionalKey);
         command.Options.Add(AppConfigOptionDefinitions.Label);
         command.Options.Add(AppConfigOptionDefinitions.KeyFilter);
         command.Options.Add(AppConfigOptionDefinitions.LabelFilter);
         command.Validators.Add(result =>
         {
-            var key = result.GetValueOrDefault(AppConfigOptionDefinitions.Key);
+            var key = result.GetValueOrDefault(optionalKey);
             var keyFilter = result.GetValueOrDefault(AppConfigOptionDefinitions.KeyFilter);
             if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(keyFilter))
             {
