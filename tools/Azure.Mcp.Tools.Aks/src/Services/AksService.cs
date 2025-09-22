@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -8,6 +9,7 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Aks.Models;
 using Azure.ResourceManager.ContainerService;
+using Azure.ResourceManager.ContainerService.Models;
 
 namespace Azure.Mcp.Tools.Aks.Services;
 
@@ -252,8 +254,9 @@ public sealed class AksService(
         var data = clusterResource.Data;
         var agentPool = data.AgentPoolProfiles?.FirstOrDefault();
 
-        return new Cluster
+        var cluster = new Cluster
         {
+            Id = clusterResource.Id.ToString(),
             Name = data.Name,
             SubscriptionId = clusterResource.Id.SubscriptionId,
             ResourceGroupName = clusterResource.Id.ResourceGroupName,
@@ -266,14 +269,163 @@ public sealed class AksService(
             NodeCount = agentPool?.Count,
             NodeVmSize = agentPool?.VmSize,
             IdentityType = data.Identity?.ManagedServiceIdentityType.ToString(),
+            Identity = new ResourceIdentity
+            {
+                Type = data.Identity?.ManagedServiceIdentityType.ToString(),
+                PrincipalId = data.Identity?.PrincipalId?.ToString(),
+                TenantId = data.Identity?.TenantId?.ToString()
+            },
             EnableRbac = data.EnableRbac,
             NetworkPlugin = data.NetworkProfile?.NetworkPlugin?.ToString(),
             NetworkPolicy = data.NetworkProfile?.NetworkPolicy?.ToString(),
             ServiceCidr = data.NetworkProfile?.ServiceCidr,
             DnsServiceIP = data.NetworkProfile?.DnsServiceIP?.ToString(),
             SkuTier = data.Sku?.Tier?.ToString(),
+            SkuName = data.Sku?.Name?.ToString(),
+            NodeResourceGroup = data.NodeResourceGroup,
+            MaxAgentPools = data.MaxAgentPools,
+            SupportPlan = data.SupportPlan?.ToString(),
+            NetworkProfile = new ClusterNetworkProfile
+            {
+                NetworkPlugin = data.NetworkProfile?.NetworkPlugin?.ToString(),
+                NetworkPluginMode = data.NetworkProfile?.NetworkPluginMode?.ToString(),
+                NetworkPolicy = data.NetworkProfile?.NetworkPolicy?.ToString(),
+                NetworkDataplane = data.NetworkProfile?.NetworkDataplane?.ToString(),
+                LoadBalancerSku = data.NetworkProfile?.LoadBalancerSku?.ToString(),
+                LoadBalancerProfile = data.NetworkProfile?.LoadBalancerProfile is null ? null : new ClusterNetworkLoadBalancerProfile
+                {
+                    ManagedOutboundIPCount = data.NetworkProfile?.LoadBalancerProfile?.ManagedOutboundIPs?.Count,
+                    EffectiveOutboundIPs = data.NetworkProfile?.LoadBalancerProfile?.EffectiveOutboundIPs?.Select(e => new EffectiveOutboundIPReference { Id = e.Id?.ToString() }).ToList(),
+                    BackendPoolType = data.NetworkProfile?.LoadBalancerProfile?.BackendPoolType?.ToString()
+                },
+                PodCidr = data.NetworkProfile?.PodCidr,
+                ServiceCidr = data.NetworkProfile?.ServiceCidr,
+                DnsServiceIP = data.NetworkProfile?.DnsServiceIP?.ToString(),
+                OutboundType = data.NetworkProfile?.OutboundType?.ToString(),
+                PodCidrs = data.NetworkProfile?.PodCidrs?.ToList(),
+                ServiceCidrs = data.NetworkProfile?.ServiceCidrs?.ToList(),
+                IpFamilies = data.NetworkProfile?.IPFamilies?.Select(f => f.ToString()).ToList()
+            },
+            WindowsProfile = data.WindowsProfile is null ? null : new WindowsProfile
+            {
+                AdminUsername = data.WindowsProfile.AdminUsername
+            },
+            ServicePrincipalProfile = data.ServicePrincipalProfile is null ? null : new ServicePrincipalProfile
+            {
+                ClientId = data.ServicePrincipalProfile.ClientId
+            },
+            AutoUpgradeProfile = data.AutoUpgradeProfile is null ? null : new AutoUpgradeProfile
+            {
+                UpgradeChannel = data.AutoUpgradeProfile.UpgradeChannel?.ToString(),
+                NodeOSUpgradeChannel = data.AutoUpgradeProfile.NodeOSUpgradeChannel?.ToString()
+            },
+            // OIDC Issuer Profile
+            OidcIssuerProfile = data.OidcIssuerProfile is null ? null : new OidcIssuerProfile
+            {
+                Enabled = data.OidcIssuerProfile.IsEnabled,
+                IssuerUrl = data.OidcIssuerProfile.IssuerUriInfo
+            },
+            AddonProfiles = data.AddonProfiles?.ToDictionary(
+                kvp => kvp.Key,
+                kvp =>
+                {
+                    IDictionary<string, string> map = new Dictionary<string, string>();
+                    if (kvp.Value != null)
+                    {
+                        if (kvp.Value.Config != null)
+                        {
+                            foreach (var c in kvp.Value.Config)
+                            {
+                                map[$"config.{c.Key}"] = c.Value;
+                            }
+                        }
+                        if (kvp.Value.Identity != null)
+                        {
+                            if (kvp.Value.Identity.ClientId != null)
+                                map.Add("identity.clientId", kvp.Value.Identity.ClientId.ToString()!);
+                            if (kvp.Value.Identity.ObjectId != null)
+                                map.Add("identity.objectId", kvp.Value.Identity.ObjectId.ToString()!);
+                        }
+                    }
+                    return map;
+                }),
+            IdentityProfile = data.IdentityProfile?.ToDictionary(
+                kvp => kvp.Key,
+                kvp => new ManagedIdentityReference
+                {
+                    ResourceId = kvp.Value?.ResourceId?.ToString(),
+                    ClientId = kvp.Value?.ClientId?.ToString(),
+                    ObjectId = kvp.Value?.ObjectId?.ToString()
+                }),
+            DisableLocalAccounts = data.DisableLocalAccounts,
+            // Security Profile
+            SecurityProfile = data.SecurityProfile is null ? null : new ClusterSecurityProfile
+            {
+                AzureKeyVaultKms = data.SecurityProfile.AzureKeyVaultKms is null ? null : new AzureKeyVaultKms
+                {
+                    Enabled = data.SecurityProfile.AzureKeyVaultKms.IsEnabled,
+                    KeyId = data.SecurityProfile.AzureKeyVaultKms.KeyId?.ToString()
+                },
+                Defender = data.SecurityProfile.Defender is null ? null : new DefenderProfile
+                {
+                    LogAnalyticsWorkspaceResourceId = data.SecurityProfile.Defender.LogAnalyticsWorkspaceResourceId?.ToString(),
+                    SecurityMonitoring = new DefenderSecurityMonitoring
+                    {
+                        Enabled = data.SecurityProfile.Defender.IsSecurityMonitoringEnabled
+                    }
+                },
+                ImageCleaner = data.SecurityProfile.ImageCleaner is null ? null : new ImageCleanerProfile
+                {
+                    Enabled = data.SecurityProfile.ImageCleaner.IsEnabled,
+                    IntervalHours = data.SecurityProfile.ImageCleaner.IntervalHours
+                },
+                WorkloadIdentity = data.SecurityProfile.IsWorkloadIdentityEnabled is null
+                    ? null
+                    : new WorkloadIdentityProfile { Enabled = data.SecurityProfile.IsWorkloadIdentityEnabled }
+            },
+            // Storage Profile
+            StorageProfile = data.StorageProfile is null ? null : new ClusterStorageProfile
+            {
+                BlobCSIDriver = data.StorageProfile.IsBlobCsiDriverEnabled is null ? null : new CsiDriverProfile { Enabled = data.StorageProfile.IsBlobCsiDriverEnabled },
+                DiskCSIDriver = data.StorageProfile.IsDiskCsiDriverEnabled is null ? null : new CsiDriverProfile { Enabled = data.StorageProfile.IsDiskCsiDriverEnabled },
+                FileCSIDriver = data.StorageProfile.IsFileCsiDriverEnabled is null ? null : new CsiDriverProfile { Enabled = data.StorageProfile.IsFileCsiDriverEnabled },
+                SnapshotController = data.StorageProfile.IsSnapshotControllerEnabled is null ? null : new SnapshotControllerProfile { Enabled = data.StorageProfile.IsSnapshotControllerEnabled }
+            },
+            // Metrics profile (no 1.2.5 SDK match for our CostAnalysis model)
+            MetricsProfile = null,
+            // Node provisioning and bootstrap profiles are not exposed in SDK 1.2.5
+            NodeProvisioningProfile = null,
+            BootstrapProfile = null,
+            // Workload Auto-scaler profile
+            WorkloadAutoScalerProfile = data.WorkloadAutoScalerProfile is null ? null : new WorkloadAutoScalerProfile
+            {
+                Keda = data.WorkloadAutoScalerProfile.IsKedaEnabled is null ? null : new WorkloadAutoScalerKeda { Enabled = data.WorkloadAutoScalerProfile.IsKedaEnabled },
+                VerticalPodAutoscaler = data.WorkloadAutoScalerProfile.IsVpaEnabled is null ? null : new WorkloadAutoScalerVerticalPodAutoscaler { Enabled = data.WorkloadAutoScalerProfile.IsVpaEnabled }
+            },
+            // AI toolchain operator profile not exposed in SDK 1.2.5
+            AiToolchainOperatorProfile = null,
+            // Unique resource UID
+            ResourceUid = data.ResourceId,
             Tags = data.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
         };
+
+        // Map agent pool profiles from the cluster resource data when available
+        if (data.AgentPoolProfiles is not null)
+        {
+            try
+            {
+                cluster.AgentPoolProfiles = data.AgentPoolProfiles.Select(ConvertToNodePoolModel).ToList();
+            }
+            catch
+            {
+                // If SDK shape differs, fall back to minimal projection
+                cluster.AgentPoolProfiles = data.AgentPoolProfiles
+                    .Select(p => new NodePool { Name = p.Name, Count = p.Count, VmSize = p.VmSize?.ToString(), Mode = p.Mode?.ToString() })
+                    .ToList();
+            }
+        }
+
+        return cluster;
     }
 
     private static NodePool ConvertToNodePoolModel(ContainerServiceAgentPoolResource agentPoolResource)
@@ -306,7 +458,71 @@ public sealed class AksService(
             NodeTaints = data.NodeTaints?.ToList(),
             OsType = data.OSType?.ToString(),
             OsSKU = data.OSSku?.ToString(),
-            NodeImageVersion = data.NodeImageVersion
+            NodeImageVersion = data.NodeImageVersion,
+            Tags = data.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+            SpotMaxPrice = data.SpotMaxPrice,
+            WorkloadRuntime = data.WorkloadRuntime?.ToString(),
+            EnableEncryptionAtHost = data.EnableEncryptionAtHost,
+            UpgradeSettings = data.UpgradeSettings is null ? null : new NodePoolUpgradeSettings
+            {
+                MaxSurge = data.UpgradeSettings.MaxSurge,
+                MaxUnavailable = null
+            },
+            NetworkProfile = data.NetworkProfile is null ? null : new NodePoolNetworkProfile
+            {
+                AllowedHostPorts = data.NetworkProfile.AllowedHostPorts?.Select(p => new PortRange { StartPort = p.PortStart, EndPort = p.PortEnd }).ToList(),
+                ApplicationSecurityGroups = data.NetworkProfile.ApplicationSecurityGroups?.Select(rid => rid.ToString()).ToList(),
+                NodePublicIPTags = data.NetworkProfile.NodePublicIPTags?.Select(t => new IPTag { IpTagType = t.IPTagType, Tag = t.Tag }).ToList()
+            },
+            PodSubnetId = data.PodSubnetId,
+            VnetSubnetId = data.VnetSubnetId
+        };
+    }
+
+    private static NodePool ConvertToNodePoolModel(ManagedClusterAgentPoolProfile profile)
+    {
+        return new NodePool
+        {
+            Name = profile.Name,
+            Count = profile.Count,
+            VmSize = profile.VmSize?.ToString(),
+            OsDiskSizeGB = profile.OSDiskSizeInGB,
+            OsDiskType = profile.OSDiskType?.ToString(),
+            KubeletDiskType = profile.KubeletDiskType?.ToString(),
+            MaxPods = profile.MaxPods,
+            Type = profile.AgentPoolType?.ToString(),
+            MaxCount = profile.MaxCount,
+            MinCount = profile.MinCount,
+            EnableAutoScaling = profile.EnableAutoScaling,
+            ScaleDownMode = profile.ScaleDownMode?.ToString(),
+            ProvisioningState = profile.ProvisioningState?.ToString(),
+            PowerState = profile.PowerStateCode.HasValue ? new NodePoolPowerState { Code = profile.PowerStateCode.Value.ToString() } : null,
+            Mode = profile.Mode?.ToString(),
+            OrchestratorVersion = profile.OrchestratorVersion,
+            CurrentOrchestratorVersion = profile.CurrentOrchestratorVersion,
+            EnableNodePublicIP = profile.EnableNodePublicIP,
+            ScaleSetPriority = profile.ScaleSetPriority?.ToString(),
+            ScaleSetEvictionPolicy = profile.ScaleSetEvictionPolicy?.ToString(),
+            NodeLabels = profile.NodeLabels?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+            NodeTaints = profile.NodeTaints?.ToList(),
+            OsType = profile.OSType?.ToString(),
+            OsSKU = profile.OSSku?.ToString(),
+            NodeImageVersion = profile.NodeImageVersion,
+            Tags = profile.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+            SpotMaxPrice = profile.SpotMaxPrice,
+            WorkloadRuntime = profile.WorkloadRuntime?.ToString(),
+            EnableEncryptionAtHost = profile.EnableEncryptionAtHost,
+            EnableUltraSSD = profile.EnableUltraSsd,
+            EnableFIPS = profile.EnableFips,
+            // Profiles don't expose GPU/Security sub-objects in this API shape
+            NetworkProfile = profile.NetworkProfile is null ? null : new NodePoolNetworkProfile
+            {
+                AllowedHostPorts = profile.NetworkProfile.AllowedHostPorts?.Select(p => new PortRange { StartPort = p.PortStart, EndPort = p.PortEnd }).ToList(),
+                ApplicationSecurityGroups = profile.NetworkProfile.ApplicationSecurityGroups?.Select(rid => rid.ToString()).ToList(),
+                NodePublicIPTags = profile.NetworkProfile.NodePublicIPTags?.Select(t => new IPTag { IpTagType = t.IPTagType, Tag = t.Tag }).ToList()
+            },
+            PodSubnetId = profile.PodSubnetId?.ToString(),
+            VnetSubnetId = profile.VnetSubnetId?.ToString()
         };
     }
 }

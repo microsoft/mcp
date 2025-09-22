@@ -30,7 +30,7 @@ public sealed class KeyValueShowCommand(ILogger<KeyValueShowCommand> logger) : B
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

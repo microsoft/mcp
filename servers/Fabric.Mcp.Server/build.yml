@@ -1,13 +1,17 @@
+parameters:
+- name: PublishTarget
+  type: string
+  values: [ none, internal, public ]
+  default: 'none'
+
 trigger: none
 pr: none
 
 extends:
   template: /eng/pipelines/templates/common.yml
   parameters:
-    # We release signed, manual runs from main and hotfix branches
-    # All other runs get -alpha prerelease labels
-    PublishPackages: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
-    RunLiveTests: true
-    ReleaseRun: ${{ and(eq(variables['Build.Reason'], 'Manual'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startswith(variables['Build.SourceBranch'], 'refs/heads/hotfix/'))) }}
     ServerName: Fabric.Mcp.Server
-    SkipDockerRelease : true
+    PublishTarget: ${{ parameters.PublishTarget }}
+    RunLiveTests: true
+    IncludeDockerRelease : false
+    IncludeNative: false

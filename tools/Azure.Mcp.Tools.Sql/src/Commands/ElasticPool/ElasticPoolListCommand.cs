@@ -32,7 +32,7 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

@@ -114,6 +114,8 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 ### 🗄️ Azure SQL Database
 
+* "List all SQL servers in my subscription"
+* "List all SQL servers in my resource group 'my-resource-group'"
 * "Show me details about my Azure SQL database 'mydb'"
 * "List all databases in my Azure SQL server 'myserver'"
 * "Update the performance tier of my Azure SQL database 'mydb'"
@@ -131,12 +133,8 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "List my Azure storage accounts"
 * "Get details about my storage account 'mystorageaccount'"
 * "Create a new storage account in East US with Data Lake support"
-* "Show me the tables in my Storage account"
 * "Get details about my Storage container"
 * "Upload my file to the blob container"
-* "List paths in my Data Lake file system"
-* "List files and directories in my File Share"
-* "Send a message to my storage queue"
 
 
 ## <a id="currently-supported-tools"></a> 🛠️ Currently Supported Tools
@@ -326,6 +324,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * List Microsoft Entra ID administrators for SQL servers
 * Create new SQL servers
 * Show details and properties of SQL servers
+* List SQL servers in subscription or resource group
 * Delete SQL servers
 
 ### 💾 Azure Storage
@@ -334,10 +333,6 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * Get detailed information about specific Storage accounts
 * Manage blob containers and blobs
 * Upload files to blobs
-* List and query Storage tables
-* List paths in Data Lake file systems
-* Get container properties and metadata
-* List files and directories in File Shares
 
 ### 📋 Azure Subscription
 
