@@ -5,7 +5,7 @@ Microsoft MCP (Model Context Protocol) servers provide AI agents with structured
 
 **Key Components:**
 - **Azure MCP Server**: Complete Azure service integration with 100+ tools
-- **Microsoft Fabric MCP Server**: Fabric workspace and data platform operations  
+- **Microsoft Fabric MCP Server**: Fabric workspace and data platform operations
 - **Core Libraries**: Shared infrastructure for command patterns, authentication, and MCP protocol
 - **Toolsets**: Individual Azure service implementations (Storage, SQL, KeyVault, etc.)
 - **Engineering System**: Build pipelines, testing infrastructure, and deployment automation
@@ -85,7 +85,7 @@ Commands follow the pattern: `azmcp <service> <resource> <operation>`
 ```bash
 # Examples
 azmcp storage account list          # List storage accounts
-azmcp sql database show            # Show SQL database details  
+azmcp sql database show            # Show SQL database details
 azmcp keyvault secret get          # Get Key Vault secret
 azmcp resourcegroup list           # List resource groups
 ```
@@ -201,7 +201,7 @@ az login
 public sealed class StorageAccountListCommand    // ✅ Correct
 public sealed class ListStorageAccountCommand    // ❌ Wrong order
 
-// Options naming: {Resource}{Operation}Options  
+// Options naming: {Resource}{Operation}Options
 public class StorageAccountListOptions          // ✅ Correct
 
 // Test naming: {Command}Tests
@@ -230,7 +230,7 @@ protected override StorageAccountListOptions BindOptions(ParseResult parseResult
 
 ### Parameter Naming Standards
 - **Use `subscription`** (never `subscriptionId`) - supports both IDs and names
-- **Use `resourceGroup`** (not `resourceGroupName`)  
+- **Use `resourceGroup`** (not `resourceGroupName`)
 - **Use singular nouns** for resource names (e.g., `server`, not `serverName`)
 - **Remove unnecessary "-name" suffixes** (e.g., `--account` vs `--account-name`)
 
@@ -315,7 +315,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
 ```csharp
 // All response models must be registered for AOT compatibility
 [JsonSerializable(typeof(StorageAccountListCommand.StorageAccountListCommandResult))]
-[JsonSerializable(typeof(StorageAccount))]  
+[JsonSerializable(typeof(StorageAccount))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true)]
 internal partial class StorageJsonContext : JsonSerializerContext;
 
@@ -338,7 +338,7 @@ tools/Azure.Mcp.Tools.{Service}/
 ├── src/
 │   ├── Options/{Service}OptionDefinitions.cs        # Static option definitions
 │   ├── Options/{Resource}/{Operation}Options.cs     # Command-specific options
-│   ├── Commands/{Resource}/{Resource}{Operation}Command.cs  # Command implementation  
+│   ├── Commands/{Resource}/{Resource}{Operation}Command.cs  # Command implementation
 │   ├── Services/I{Service}Service.cs                # Service interface
 │   ├── Services/{Service}Service.cs                 # Service implementation
 │   └── Commands/{Service}JsonContext.cs             # JSON serialization context
@@ -379,7 +379,7 @@ popd
 {
   "servers": {
     "azure-mcp-server": {
-      "type": "stdio", 
+      "type": "stdio",
       "command": "C:/code/mcp/servers/Azure.Mcp.Server/bin/Debug/net9.0/azmcp.exe",
       "args": ["server", "start"]
     }
@@ -504,7 +504,7 @@ The server supports integration with external MCP servers through registry confi
 ### Namespace-Based Tool Organization
 Commands are organized by Azure service namespace, allowing for fine-grained control over exposed functionality and helping manage VS Code's 128-tool display limit.
 
-### Telemetry and Monitoring  
+### Telemetry and Monitoring
 The server includes comprehensive telemetry integration with proper tag propagation for monitoring tool usage and performance across different deployment scenarios.
 
 ---
