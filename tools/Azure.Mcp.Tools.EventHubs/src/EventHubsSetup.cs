@@ -21,10 +21,10 @@ public class EventHubsSetup : IAreaSetup
 
     public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
     {
-        var eventHubs = new CommandGroup(Name, "Azure EventHubs operations - Commands for managing Azure EventHubs namespaces and event hubs. Includes operations for getting namespaces in resource groups.");
+        var eventHubs = new CommandGroup(Name, "Azure Event Hubs operations - Commands for managing Azure Event Hubs namespaces and event hubs. Includes operations for getting namespaces in resource groups.");
         rootGroup.AddSubGroup(eventHubs);
 
-        var namespaceGroup = new CommandGroup("namespace", "EventHubs namespace operations");
+        var namespaceGroup = new CommandGroup("namespace", "Event Hubs namespace operations");
         eventHubs.AddSubGroup(namespaceGroup);
 
         namespaceGroup.AddCommand("get", new NamespaceGetCommand(loggerFactory.CreateLogger<NamespaceGetCommand>()));
