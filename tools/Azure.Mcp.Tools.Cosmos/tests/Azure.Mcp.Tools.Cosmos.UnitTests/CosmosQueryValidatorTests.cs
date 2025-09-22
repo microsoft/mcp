@@ -254,7 +254,7 @@ public class CosmosQueryValidatorTests
         // Test with a potentially problematic pattern that could cause catastrophic backtracking
         // This shouldn't take more than a few milliseconds due to the timeout
         var potentialReDoSPattern = "SELECT * FROM c WHERE c.field = '" + new string('a', 1000) + new string('b', 1000) + "'";
-        
+
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         CosmosQueryValidator.EnsureReadOnlySelect(potentialReDoSPattern);
         stopwatch.Stop();
