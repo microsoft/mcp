@@ -94,7 +94,7 @@ Microsoft publishes an official Azure MCP Server Docker container on the [Micros
             "-i",
             "--rm",
             "--env-file",
-            "/full/path/to/.env"
+            "/full/path/to/.env",
             "mcr.microsoft.com/azure-sdk/azure-mcp:latest",
           ]
         }
