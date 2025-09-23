@@ -1,14 +1,14 @@
 # Tool Selection Analysis Setup
 
-**Setup completed:** 2025-09-22 18:08:09  
+**Setup completed:** 2025-09-22 20:15:23  
 **Tool count:** 37  
-**Database setup time:** 0.5131657s  
+**Database setup time:** 2.9139055s  
 
 ---
 
 # Tool Selection Analysis Results
 
-**Analysis Date:** 2025-09-22 18:08:10  
+**Analysis Date:** 2025-09-22 20:15:24  
 **Tool count:** 37  
 
 ## Table of Contents
@@ -237,54 +237,40 @@
 - [Test 222: view_azure_storage](#test-222)
 - [Test 223: view_azure_storage](#test-223)
 - [Test 224: view_azure_storage](#test-224)
-- [Test 225: view_azure_storage](#test-225)
-- [Test 226: view_azure_storage](#test-226)
-- [Test 227: view_azure_storage](#test-227)
-- [Test 228: view_azure_storage](#test-228)
-- [Test 229: view_azure_storage](#test-229)
-- [Test 230: view_azure_storage](#test-230)
-- [Test 231: view_azure_storage](#test-231)
-- [Test 232: view_azure_storage](#test-232)
-- [Test 233: edit_azure_storage](#test-233)
-- [Test 234: edit_azure_storage](#test-234)
-- [Test 235: edit_azure_storage](#test-235)
-- [Test 236: edit_azure_storage](#test-236)
-- [Test 237: edit_azure_storage](#test-237)
-- [Test 238: edit_azure_storage](#test-238)
-- [Test 239: edit_azure_storage](#test-239)
-- [Test 240: edit_azure_storage](#test-240)
-- [Test 241: edit_azure_storage](#test-241)
-- [Test 242: edit_azure_storage](#test-242)
-- [Test 243: upload_azure_storage_blobs](#test-243)
-- [Test 244: edit_azure_storage_blob_tiers](#test-244)
-- [Test 245: edit_azure_storage_blob_tiers](#test-245)
-- [Test 246: view_azure_cache_for_redis](#test-246)
-- [Test 247: view_azure_cache_for_redis](#test-247)
-- [Test 248: view_azure_cache_for_redis](#test-248)
-- [Test 249: view_azure_cache_for_redis](#test-249)
-- [Test 250: browse_azure_marketplace_products](#test-250)
-- [Test 251: browse_azure_marketplace_products](#test-251)
-- [Test 252: browse_azure_marketplace_products](#test-252)
-- [Test 253: get_azure_capacity](#test-253)
-- [Test 254: get_azure_capacity](#test-254)
-- [Test 255: get_azure_capacity](#test-255)
-- [Test 256: view_azure_service_bus](#test-256)
-- [Test 257: view_azure_service_bus](#test-257)
-- [Test 258: view_azure_service_bus](#test-258)
-- [Test 259: view_azure_data_explorer_kusto](#test-259)
-- [Test 260: view_azure_data_explorer_kusto](#test-260)
-- [Test 261: view_azure_data_explorer_kusto](#test-261)
-- [Test 262: view_azure_data_explorer_kusto](#test-262)
-- [Test 263: view_azure_data_explorer_kusto](#test-263)
-- [Test 264: view_azure_data_explorer_kusto](#test-264)
-- [Test 265: view_azure_data_explorer_kusto](#test-265)
-- [Test 266: view_azure_data_explorer_kusto](#test-266)
-- [Test 267: create_azure_sql_firewall_rules](#test-267)
-- [Test 268: create_azure_sql_firewall_rules](#test-268)
-- [Test 269: create_azure_sql_firewall_rules](#test-269)
-- [Test 270: delete_azure_sql_firewall_rules](#test-270)
-- [Test 271: delete_azure_sql_firewall_rules](#test-271)
-- [Test 272: delete_azure_sql_firewall_rules](#test-272)
+- [Test 225: edit_azure_storage](#test-225)
+- [Test 226: edit_azure_storage](#test-226)
+- [Test 227: edit_azure_storage](#test-227)
+- [Test 228: edit_azure_storage](#test-228)
+- [Test 229: edit_azure_storage](#test-229)
+- [Test 230: edit_azure_storage](#test-230)
+- [Test 231: upload_azure_storage_blobs](#test-231)
+- [Test 232: view_azure_cache_for_redis](#test-232)
+- [Test 233: view_azure_cache_for_redis](#test-233)
+- [Test 234: view_azure_cache_for_redis](#test-234)
+- [Test 235: view_azure_cache_for_redis](#test-235)
+- [Test 236: browse_azure_marketplace_products](#test-236)
+- [Test 237: browse_azure_marketplace_products](#test-237)
+- [Test 238: browse_azure_marketplace_products](#test-238)
+- [Test 239: get_azure_capacity](#test-239)
+- [Test 240: get_azure_capacity](#test-240)
+- [Test 241: get_azure_capacity](#test-241)
+- [Test 242: view_azure_service_bus](#test-242)
+- [Test 243: view_azure_service_bus](#test-243)
+- [Test 244: view_azure_service_bus](#test-244)
+- [Test 245: view_azure_data_explorer_kusto](#test-245)
+- [Test 246: view_azure_data_explorer_kusto](#test-246)
+- [Test 247: view_azure_data_explorer_kusto](#test-247)
+- [Test 248: view_azure_data_explorer_kusto](#test-248)
+- [Test 249: view_azure_data_explorer_kusto](#test-249)
+- [Test 250: view_azure_data_explorer_kusto](#test-250)
+- [Test 251: view_azure_data_explorer_kusto](#test-251)
+- [Test 252: view_azure_data_explorer_kusto](#test-252)
+- [Test 253: create_azure_sql_firewall_rules](#test-253)
+- [Test 254: create_azure_sql_firewall_rules](#test-254)
+- [Test 255: create_azure_sql_firewall_rules](#test-255)
+- [Test 256: delete_azure_sql_firewall_rules](#test-256)
+- [Test 257: delete_azure_sql_firewall_rules](#test-257)
+- [Test 258: delete_azure_sql_firewall_rules](#test-258)
 
 ---
 
@@ -365,11 +351,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.446518 | `get_azure_health_status` | ❌ |
-| 2 | 0.433372 | `view_azure_app_config_settings` | ❌ |
-| 3 | 0.402337 | `deploy_resources_and_applications_to_azure` | ❌ |
-| 4 | 0.397386 | `get_azure_best_practices` | ❌ |
-| 5 | 0.396113 | `get_azure_capacity` | ❌ |
+| 1 | 0.446562 | `get_azure_health_status` | ❌ |
+| 2 | 0.433294 | `view_azure_app_config_settings` | ❌ |
+| 3 | 0.402181 | `deploy_resources_and_applications_to_azure` | ❌ |
+| 4 | 0.397391 | `get_azure_best_practices` | ❌ |
+| 5 | 0.396149 | `get_azure_capacity` | ❌ |
 
 ---
 
@@ -518,7 +504,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.512070 | `view_azure_data_explorer_kusto` | ❌ |
+| 1 | 0.512472 | `view_azure_data_explorer_kusto` | ❌ |
 | 2 | 0.426382 | `view_azure_databases` | ❌ |
 | 3 | 0.379108 | `browse_azure_marketplace_products` | ❌ |
 | 4 | 0.373125 | `list_azure_resources` | ✅ **EXPECTED** |
@@ -773,11 +759,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.312995 | `get_azure_security_configurations` | ❌ |
-| 2 | 0.260596 | `get_azure_capacity` | ❌ |
-| 3 | 0.252550 | `view_azure_ai_resources` | ❌ |
-| 4 | 0.252193 | `list_azure_resources` | ✅ **EXPECTED** |
-| 5 | 0.246811 | `view_azure_load_testing` | ❌ |
+| 1 | 0.313084 | `get_azure_security_configurations` | ❌ |
+| 2 | 0.260751 | `get_azure_capacity` | ❌ |
+| 3 | 0.252581 | `view_azure_ai_resources` | ❌ |
+| 4 | 0.252393 | `list_azure_resources` | ✅ **EXPECTED** |
+| 5 | 0.246846 | `view_azure_load_testing` | ❌ |
 
 ---
 
@@ -964,7 +950,7 @@
 | 2 | 0.421777 | `view_azure_ai_resources` | ❌ |
 | 3 | 0.417054 | `view_azure_storage` | ❌ |
 | 4 | 0.415764 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.415035 | `view_azure_data_explorer_kusto` | ❌ |
+| 5 | 0.415425 | `view_azure_data_explorer_kusto` | ❌ |
 
 ---
 
@@ -981,7 +967,7 @@
 | 2 | 0.431878 | `browse_azure_marketplace_products` | ❌ |
 | 3 | 0.374112 | `view_azure_databases` | ❌ |
 | 4 | 0.356581 | `view_azure_cache_for_redis` | ❌ |
-| 5 | 0.354091 | `view_azure_app_config_settings` | ❌ |
+| 5 | 0.356402 | `view_azure_data_explorer_kusto` | ❌ |
 
 ---
 
@@ -1028,7 +1014,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.515041 | `view_azure_data_explorer_kusto` | ❌ |
+| 1 | 0.514865 | `view_azure_data_explorer_kusto` | ❌ |
 | 2 | 0.381865 | `view_azure_databases` | ❌ |
 | 3 | 0.348466 | `view_azure_workbooks` | ❌ |
 | 4 | 0.328192 | `view_azure_cache_for_redis` | ❌ |
@@ -1049,7 +1035,7 @@
 | 2 | 0.488696 | `create_azure_workbooks` | ❌ |
 | 3 | 0.448764 | `get_azure_health_status` | ❌ |
 | 4 | 0.442092 | `view_azure_ai_resources` | ❌ |
-| 5 | 0.430269 | `view_azure_data_explorer_kusto` | ❌ |
+| 5 | 0.432058 | `view_azure_data_explorer_kusto` | ❌ |
 
 ---
 
@@ -1081,7 +1067,7 @@
 |------|-------|------|--------|
 | 1 | 0.448536 | `view_azure_cache_for_redis` | ❌ |
 | 2 | 0.325563 | `view_azure_databases` | ❌ |
-| 3 | 0.298164 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.298143 | `view_azure_data_explorer_kusto` | ❌ |
 | 4 | 0.289510 | `view_azure_load_testing` | ❌ |
 | 5 | 0.287692 | `list_azure_resources` | ✅ **EXPECTED** |
 
@@ -1168,7 +1154,7 @@
 | 2 | 0.507116 | `browse_azure_marketplace_products` | ❌ |
 | 3 | 0.411862 | `view_azure_databases` | ❌ |
 | 4 | 0.406435 | `get_azure_capacity` | ❌ |
-| 5 | 0.390929 | `view_azure_cache_for_redis` | ❌ |
+| 5 | 0.392313 | `view_azure_data_explorer_kusto` | ❌ |
 
 ---
 
@@ -1232,7 +1218,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.560403 | `view_azure_data_explorer_kusto` | ❌ |
+| 1 | 0.560513 | `view_azure_data_explorer_kusto` | ❌ |
 | 2 | 0.454270 | `view_azure_databases` | ❌ |
 | 3 | 0.419806 | `view_azure_workbooks` | ❌ |
 | 4 | 0.404684 | `browse_azure_marketplace_products` | ❌ |
@@ -1321,7 +1307,7 @@
 | 2 | 0.479440 | `create_azure_workbooks` | ❌ |
 | 3 | 0.453165 | `get_azure_health_status` | ❌ |
 | 4 | 0.447044 | `view_azure_ai_resources` | ❌ |
-| 5 | 0.420105 | `view_azure_storage` | ❌ |
+| 5 | 0.420693 | `view_azure_data_explorer_kusto` | ❌ |
 
 ---
 
@@ -1389,7 +1375,7 @@
 | 2 | 0.386110 | `view_azure_databases` | ❌ |
 | 3 | 0.360118 | `browse_azure_marketplace_products` | ❌ |
 | 4 | 0.353537 | `list_azure_resources` | ✅ **EXPECTED** |
-| 5 | 0.345995 | `view_azure_data_explorer_kusto` | ❌ |
+| 5 | 0.346465 | `view_azure_data_explorer_kusto` | ❌ |
 
 ---
 
@@ -1474,7 +1460,7 @@
 | 2 | 0.393969 | `list_azure_resources` | ✅ **EXPECTED** |
 | 3 | 0.344909 | `view_azure_ai_resources` | ❌ |
 | 4 | 0.341182 | `view_azure_storage` | ❌ |
-| 5 | 0.335790 | `view_azure_data_explorer_kusto` | ❌ |
+| 5 | 0.336754 | `view_azure_data_explorer_kusto` | ❌ |
 
 ---
 
@@ -1589,11 +1575,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.373400 | `edit_azure_databases` | ❌ |
-| 2 | 0.333852 | `view_azure_app_config_settings` | ❌ |
-| 3 | 0.277448 | `view_azure_databases` | ✅ **EXPECTED** |
-| 4 | 0.272273 | `create_azure_sql_firewall_rules` | ❌ |
-| 5 | 0.246560 | `delete_azure_sql_firewall_rules` | ❌ |
+| 1 | 0.373322 | `edit_azure_databases` | ❌ |
+| 2 | 0.333610 | `view_azure_app_config_settings` | ❌ |
+| 3 | 0.277913 | `view_azure_databases` | ✅ **EXPECTED** |
+| 4 | 0.272289 | `create_azure_sql_firewall_rules` | ❌ |
+| 5 | 0.246423 | `delete_azure_sql_firewall_rules` | ❌ |
 
 ---
 
@@ -1610,7 +1596,7 @@
 | 2 | 0.420211 | `delete_azure_sql_firewall_rules` | ❌ |
 | 3 | 0.415459 | `edit_azure_databases` | ❌ |
 | 4 | 0.413827 | `list_azure_resources` | ❌ |
-| 5 | 0.405860 | `view_azure_data_explorer_kusto` | ❌ |
+| 5 | 0.406042 | `view_azure_data_explorer_kusto` | ❌ |
 
 ---
 
@@ -1640,11 +1626,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.659544 | `create_azure_sql_firewall_rules` | ❌ |
-| 2 | 0.635949 | `delete_azure_sql_firewall_rules` | ❌ |
-| 3 | 0.344890 | `get_azure_security_configurations` | ❌ |
-| 4 | 0.329505 | `edit_azure_databases` | ❌ |
-| 5 | 0.303132 | `view_azure_databases` | ✅ **EXPECTED** |
+| 1 | 0.659620 | `create_azure_sql_firewall_rules` | ❌ |
+| 2 | 0.635972 | `delete_azure_sql_firewall_rules` | ❌ |
+| 3 | 0.344777 | `get_azure_security_configurations` | ❌ |
+| 4 | 0.329550 | `edit_azure_databases` | ❌ |
+| 5 | 0.303012 | `view_azure_databases` | ✅ **EXPECTED** |
 
 ---
 
@@ -1694,7 +1680,7 @@
 | 1 | 0.344674 | `view_azure_databases` | ✅ **EXPECTED** |
 | 2 | 0.321958 | `edit_azure_databases` | ❌ |
 | 3 | 0.252819 | `list_azure_resources` | ❌ |
-| 4 | 0.210141 | `view_azure_data_explorer_kusto` | ❌ |
+| 4 | 0.209993 | `view_azure_data_explorer_kusto` | ❌ |
 | 5 | 0.203815 | `delete_azure_sql_firewall_rules` | ❌ |
 
 ---
@@ -1729,7 +1715,7 @@
 | 2 | 0.319283 | `edit_azure_databases` | ❌ |
 | 3 | 0.246947 | `list_azure_resources` | ❌ |
 | 4 | 0.219312 | `delete_azure_sql_firewall_rules` | ❌ |
-| 5 | 0.209045 | `view_azure_data_explorer_kusto` | ❌ |
+| 5 | 0.208357 | `view_azure_data_explorer_kusto` | ❌ |
 
 ---
 
@@ -1745,8 +1731,8 @@
 | 1 | 0.312364 | `view_azure_databases` | ✅ **EXPECTED** |
 | 2 | 0.295866 | `edit_azure_databases` | ❌ |
 | 3 | 0.228282 | `list_azure_resources` | ❌ |
-| 4 | 0.202562 | `view_azure_data_explorer_kusto` | ❌ |
-| 5 | 0.202386 | `delete_azure_sql_firewall_rules` | ❌ |
+| 4 | 0.202386 | `delete_azure_sql_firewall_rules` | ❌ |
+| 5 | 0.202109 | `view_azure_data_explorer_kusto` | ❌ |
 
 ---
 
@@ -1759,11 +1745,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.458617 | `view_azure_databases` | ✅ **EXPECTED** |
-| 2 | 0.387656 | `list_azure_resources` | ❌ |
-| 3 | 0.338475 | `view_azure_storage` | ❌ |
-| 4 | 0.322161 | `view_azure_cache_for_redis` | ❌ |
-| 5 | 0.320378 | `get_azure_security_configurations` | ❌ |
+| 1 | 0.458501 | `view_azure_databases` | ✅ **EXPECTED** |
+| 2 | 0.387951 | `list_azure_resources` | ❌ |
+| 3 | 0.338321 | `view_azure_storage` | ❌ |
+| 4 | 0.322143 | `view_azure_cache_for_redis` | ❌ |
+| 5 | 0.320373 | `get_azure_security_configurations` | ❌ |
 
 ---
 
@@ -1778,7 +1764,7 @@
 |------|-------|------|--------|
 | 1 | 0.486509 | `view_azure_databases` | ✅ **EXPECTED** |
 | 2 | 0.381311 | `list_azure_resources` | ❌ |
-| 3 | 0.351115 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.351296 | `view_azure_data_explorer_kusto` | ❌ |
 | 4 | 0.340541 | `get_azure_security_configurations` | ❌ |
 | 5 | 0.315964 | `view_azure_storage` | ❌ |
 
@@ -1797,7 +1783,7 @@
 | 2 | 0.358939 | `get_azure_security_configurations` | ❌ |
 | 3 | 0.334656 | `delete_azure_sql_firewall_rules` | ❌ |
 | 4 | 0.293586 | `view_azure_databases` | ✅ **EXPECTED** |
-| 5 | 0.270111 | `view_azure_data_explorer_kusto` | ❌ |
+| 5 | 0.271154 | `view_azure_data_explorer_kusto` | ❌ |
 
 ---
 
@@ -1810,11 +1796,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.388718 | `view_azure_databases` | ✅ **EXPECTED** |
-| 2 | 0.313385 | `edit_azure_databases` | ❌ |
-| 3 | 0.272664 | `view_azure_ai_resources` | ❌ |
-| 4 | 0.231324 | `view_azure_data_explorer_kusto` | ❌ |
-| 5 | 0.229147 | `list_azure_resources` | ❌ |
+| 1 | 0.388567 | `view_azure_databases` | ✅ **EXPECTED** |
+| 2 | 0.313467 | `edit_azure_databases` | ❌ |
+| 3 | 0.272651 | `view_azure_ai_resources` | ❌ |
+| 4 | 0.231844 | `view_azure_data_explorer_kusto` | ❌ |
+| 5 | 0.229019 | `list_azure_resources` | ❌ |
 
 ---
 
@@ -1827,11 +1813,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.349555 | `view_azure_databases` | ✅ **EXPECTED** |
-| 2 | 0.282156 | `edit_azure_databases` | ❌ |
-| 3 | 0.254173 | `view_azure_ai_resources` | ❌ |
-| 4 | 0.223706 | `view_azure_data_explorer_kusto` | ❌ |
-| 5 | 0.213001 | `list_azure_resources` | ❌ |
+| 1 | 0.349769 | `view_azure_databases` | ✅ **EXPECTED** |
+| 2 | 0.282382 | `edit_azure_databases` | ❌ |
+| 3 | 0.254223 | `view_azure_ai_resources` | ❌ |
+| 4 | 0.224900 | `view_azure_data_explorer_kusto` | ❌ |
+| 5 | 0.213026 | `list_azure_resources` | ❌ |
 
 ---
 
@@ -1950,7 +1936,7 @@
 | 2 | 0.336242 | `view_azure_storage` | ❌ |
 | 3 | 0.330914 | `view_azure_cache_for_redis` | ❌ |
 | 4 | 0.329315 | `list_azure_resources` | ❌ |
-| 5 | 0.312877 | `view_azure_data_explorer_kusto` | ❌ |
+| 5 | 0.312386 | `view_azure_data_explorer_kusto` | ❌ |
 
 ---
 
@@ -1964,7 +1950,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.490136 | `view_azure_databases` | ✅ **EXPECTED** |
-| 2 | 0.372472 | `view_azure_data_explorer_kusto` | ❌ |
+| 2 | 0.372280 | `view_azure_data_explorer_kusto` | ❌ |
 | 3 | 0.344055 | `list_azure_resources` | ❌ |
 | 4 | 0.327589 | `view_azure_storage` | ❌ |
 | 5 | 0.323139 | `get_azure_security_configurations` | ❌ |
@@ -1982,7 +1968,7 @@
 |------|-------|------|--------|
 | 1 | 0.382094 | `view_azure_databases` | ✅ **EXPECTED** |
 | 2 | 0.354816 | `edit_azure_databases` | ❌ |
-| 3 | 0.306201 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.306260 | `view_azure_data_explorer_kusto` | ❌ |
 | 4 | 0.266249 | `create_azure_sql_firewall_rules` | ❌ |
 | 5 | 0.251075 | `view_azure_service_bus` | ❌ |
 
@@ -2068,7 +2054,7 @@
 | 1 | 0.398115 | `view_azure_databases` | ✅ **EXPECTED** |
 | 2 | 0.358413 | `edit_azure_databases` | ❌ |
 | 3 | 0.248824 | `list_azure_resources` | ❌ |
-| 4 | 0.242292 | `view_azure_data_explorer_kusto` | ❌ |
+| 4 | 0.241550 | `view_azure_data_explorer_kusto` | ❌ |
 | 5 | 0.210153 | `create_azure_sql_firewall_rules` | ❌ |
 
 ---
@@ -2102,7 +2088,7 @@
 | 1 | 0.363106 | `view_azure_databases` | ✅ **EXPECTED** |
 | 2 | 0.332482 | `edit_azure_databases` | ❌ |
 | 3 | 0.235079 | `list_azure_resources` | ❌ |
-| 4 | 0.228082 | `view_azure_data_explorer_kusto` | ❌ |
+| 4 | 0.227652 | `view_azure_data_explorer_kusto` | ❌ |
 | 5 | 0.203381 | `create_azure_sql_firewall_rules` | ❌ |
 
 ---
@@ -2135,7 +2121,7 @@
 |------|-------|------|--------|
 | 1 | 0.333177 | `view_azure_databases` | ✅ **EXPECTED** |
 | 2 | 0.314466 | `edit_azure_databases` | ❌ |
-| 3 | 0.247624 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.246738 | `view_azure_data_explorer_kusto` | ❌ |
 | 4 | 0.221419 | `get_azure_best_practices` | ❌ |
 | 5 | 0.191119 | `design_azure_architecture` | ❌ |
 
@@ -2152,7 +2138,7 @@
 |------|-------|------|--------|
 | 1 | 0.295092 | `view_azure_databases` | ✅ **EXPECTED** |
 | 2 | 0.284626 | `edit_azure_databases` | ❌ |
-| 3 | 0.237821 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.237224 | `view_azure_data_explorer_kusto` | ❌ |
 | 4 | 0.193763 | `get_azure_best_practices` | ❌ |
 | 5 | 0.185318 | `design_azure_architecture` | ❌ |
 
@@ -2169,7 +2155,7 @@
 |------|-------|------|--------|
 | 1 | 0.393677 | `view_azure_databases` | ✅ **EXPECTED** |
 | 2 | 0.335190 | `edit_azure_databases` | ❌ |
-| 3 | 0.256490 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.255784 | `view_azure_data_explorer_kusto` | ❌ |
 | 4 | 0.232146 | `list_azure_resources` | ❌ |
 | 5 | 0.210444 | `get_azure_security_configurations` | ❌ |
 
@@ -2186,7 +2172,7 @@
 |------|-------|------|--------|
 | 1 | 0.352654 | `view_azure_databases` | ✅ **EXPECTED** |
 | 2 | 0.310370 | `edit_azure_databases` | ❌ |
-| 3 | 0.239868 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.239290 | `view_azure_data_explorer_kusto` | ❌ |
 | 4 | 0.213688 | `list_azure_resources` | ❌ |
 | 5 | 0.188657 | `create_azure_sql_firewall_rules` | ❌ |
 
@@ -2221,7 +2207,7 @@
 | 1 | 0.412957 | `edit_azure_databases` | ❌ |
 | 2 | 0.388671 | `view_azure_databases` | ✅ **EXPECTED** |
 | 3 | 0.376698 | `get_azure_capacity` | ❌ |
-| 4 | 0.324662 | `view_azure_data_explorer_kusto` | ❌ |
+| 4 | 0.324915 | `view_azure_data_explorer_kusto` | ❌ |
 | 5 | 0.310342 | `create_azure_sql_firewall_rules` | ❌ |
 
 ---
@@ -2235,11 +2221,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.657075 | `create_azure_sql_firewall_rules` | ❌ |
-| 2 | 0.595199 | `delete_azure_sql_firewall_rules` | ❌ |
-| 3 | 0.358803 | `edit_azure_databases` | ❌ |
-| 4 | 0.289735 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.274529 | `execute_azure_cli` | ❌ |
+| 1 | 0.657044 | `create_azure_sql_firewall_rules` | ❌ |
+| 2 | 0.595176 | `delete_azure_sql_firewall_rules` | ❌ |
+| 3 | 0.358721 | `edit_azure_databases` | ❌ |
+| 4 | 0.289771 | `get_azure_security_configurations` | ❌ |
+| 5 | 0.274491 | `execute_azure_cli` | ❌ |
 
 ---
 
@@ -2303,11 +2289,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.496845 | `get_azure_health_status` | ✅ **EXPECTED** |
-| 2 | 0.408108 | `view_azure_storage` | ❌ |
-| 3 | 0.405561 | `get_azure_capacity` | ❌ |
-| 4 | 0.402104 | `create_azure_load_testing` | ❌ |
-| 5 | 0.396526 | `view_azure_load_testing` | ❌ |
+| 1 | 0.495763 | `get_azure_health_status` | ✅ **EXPECTED** |
+| 2 | 0.407850 | `view_azure_storage` | ❌ |
+| 3 | 0.405291 | `get_azure_capacity` | ❌ |
+| 4 | 0.400809 | `create_azure_load_testing` | ❌ |
+| 5 | 0.395917 | `view_azure_load_testing` | ❌ |
 
 ---
 
@@ -2407,7 +2393,7 @@
 |------|-------|------|--------|
 | 1 | 0.436208 | `view_azure_databases` | ❌ |
 | 2 | 0.418030 | `view_azure_workbooks` | ❌ |
-| 3 | 0.402435 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.403366 | `view_azure_data_explorer_kusto` | ❌ |
 | 4 | 0.383614 | `create_azure_workbooks` | ❌ |
 | 5 | 0.367059 | `view_azure_storage` | ❌ |
 
@@ -2424,7 +2410,7 @@
 |------|-------|------|--------|
 | 1 | 0.446101 | `view_azure_workbooks` | ❌ |
 | 2 | 0.415147 | `view_azure_databases` | ❌ |
-| 3 | 0.401056 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.402237 | `view_azure_data_explorer_kusto` | ❌ |
 | 4 | 0.398664 | `create_azure_workbooks` | ❌ |
 | 5 | 0.372815 | `list_azure_resources` | ❌ |
 
@@ -2456,11 +2442,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.346196 | `get_azure_health_status` | ✅ **EXPECTED** |
-| 2 | 0.338580 | `view_azure_databases` | ❌ |
-| 3 | 0.269215 | `view_azure_storage` | ❌ |
-| 4 | 0.267003 | `get_azure_capacity` | ❌ |
-| 5 | 0.237729 | `create_azure_load_testing` | ❌ |
+| 1 | 0.346290 | `get_azure_health_status` | ✅ **EXPECTED** |
+| 2 | 0.338751 | `view_azure_databases` | ❌ |
+| 3 | 0.269604 | `view_azure_storage` | ❌ |
+| 4 | 0.267225 | `get_azure_capacity` | ❌ |
+| 5 | 0.237944 | `create_azure_load_testing` | ❌ |
 
 ---
 
@@ -2492,7 +2478,7 @@
 |------|-------|------|--------|
 | 1 | 0.439021 | `view_azure_databases` | ❌ |
 | 2 | 0.423030 | `view_azure_workbooks` | ❌ |
-| 3 | 0.417817 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.418720 | `view_azure_data_explorer_kusto` | ❌ |
 | 4 | 0.387063 | `create_azure_workbooks` | ❌ |
 | 5 | 0.383265 | `get_azure_health_status` | ✅ **EXPECTED** |
 
@@ -2526,7 +2512,7 @@
 |------|-------|------|--------|
 | 1 | 0.579208 | `get_azure_health_status` | ✅ **EXPECTED** |
 | 2 | 0.396734 | `view_azure_workbooks` | ❌ |
-| 3 | 0.357764 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.359201 | `view_azure_data_explorer_kusto` | ❌ |
 | 4 | 0.334046 | `create_azure_workbooks` | ❌ |
 | 5 | 0.331249 | `get_azure_capacity` | ❌ |
 
@@ -2558,11 +2544,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.475764 | `get_azure_health_status` | ✅ **EXPECTED** |
-| 2 | 0.393937 | `view_azure_storage` | ❌ |
-| 3 | 0.376702 | `view_azure_databases` | ❌ |
-| 4 | 0.374608 | `view_azure_workbooks` | ❌ |
-| 5 | 0.360407 | `view_azure_ai_resources` | ❌ |
+| 1 | 0.475303 | `get_azure_health_status` | ✅ **EXPECTED** |
+| 2 | 0.393360 | `view_azure_storage` | ❌ |
+| 3 | 0.376487 | `view_azure_databases` | ❌ |
+| 4 | 0.373881 | `view_azure_workbooks` | ❌ |
+| 5 | 0.360342 | `view_azure_ai_resources` | ❌ |
 
 ---
 
@@ -2577,8 +2563,8 @@
 |------|-------|------|--------|
 | 1 | 0.431117 | `get_azure_health_status` | ✅ **EXPECTED** |
 | 2 | 0.414181 | `view_azure_workbooks` | ❌ |
-| 3 | 0.375709 | `create_azure_workbooks` | ❌ |
-| 4 | 0.375063 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.376953 | `view_azure_data_explorer_kusto` | ❌ |
+| 4 | 0.375709 | `create_azure_workbooks` | ❌ |
 | 5 | 0.338168 | `view_azure_databases` | ❌ |
 
 ---
@@ -2594,7 +2580,7 @@
 |------|-------|------|--------|
 | 1 | 0.462529 | `view_azure_workbooks` | ❌ |
 | 2 | 0.433218 | `view_azure_databases` | ❌ |
-| 3 | 0.428353 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.429584 | `view_azure_data_explorer_kusto` | ❌ |
 | 4 | 0.400018 | `create_azure_workbooks` | ❌ |
 | 5 | 0.378874 | `get_azure_health_status` | ✅ **EXPECTED** |
 
@@ -2796,11 +2782,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.480490 | `edit_azure_app_config_settings` | ✅ **EXPECTED** |
-| 2 | 0.419225 | `lock_unlock_azure_app_config_settings` | ❌ |
-| 3 | 0.399963 | `view_azure_app_config_settings` | ❌ |
-| 4 | 0.236794 | `edit_azure_workbooks` | ❌ |
-| 5 | 0.226127 | `import_azure_key_vault_certificates` | ❌ |
+| 1 | 0.480475 | `edit_azure_app_config_settings` | ✅ **EXPECTED** |
+| 2 | 0.419174 | `lock_unlock_azure_app_config_settings` | ❌ |
+| 3 | 0.399955 | `view_azure_app_config_settings` | ❌ |
+| 4 | 0.236766 | `edit_azure_workbooks` | ❌ |
+| 5 | 0.225988 | `import_azure_key_vault_certificates` | ❌ |
 
 ---
 
@@ -2847,11 +2833,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.552501 | `lock_unlock_azure_app_config_settings` | ✅ **EXPECTED** |
-| 2 | 0.413838 | `view_azure_app_config_settings` | ❌ |
-| 3 | 0.339073 | `edit_azure_app_config_settings` | ❌ |
-| 4 | 0.240520 | `import_azure_key_vault_certificates` | ❌ |
-| 5 | 0.232253 | `get_azure_key_vault` | ❌ |
+| 1 | 0.552583 | `lock_unlock_azure_app_config_settings` | ✅ **EXPECTED** |
+| 2 | 0.413889 | `view_azure_app_config_settings` | ❌ |
+| 3 | 0.339108 | `edit_azure_app_config_settings` | ❌ |
+| 4 | 0.240636 | `import_azure_key_vault_certificates` | ❌ |
+| 5 | 0.232320 | `get_azure_key_vault` | ❌ |
 
 ---
 
@@ -3034,11 +3020,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.542408 | `import_azure_key_vault_certificates` | ❌ |
-| 2 | 0.539243 | `get_azure_key_vault` | ✅ **EXPECTED** |
-| 3 | 0.461491 | `create_azure_key_vault_items` | ❌ |
-| 4 | 0.385604 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.355346 | `view_azure_storage` | ❌ |
+| 1 | 0.542347 | `import_azure_key_vault_certificates` | ❌ |
+| 2 | 0.539144 | `get_azure_key_vault` | ✅ **EXPECTED** |
+| 3 | 0.461400 | `create_azure_key_vault_items` | ❌ |
+| 4 | 0.385576 | `get_azure_security_configurations` | ❌ |
+| 5 | 0.355326 | `view_azure_storage` | ❌ |
 
 ---
 
@@ -3119,11 +3105,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.519357 | `get_azure_key_vault` | ✅ **EXPECTED** |
-| 2 | 0.490684 | `import_azure_key_vault_certificates` | ❌ |
-| 3 | 0.420393 | `create_azure_key_vault_items` | ❌ |
-| 4 | 0.331424 | `view_azure_storage` | ❌ |
-| 5 | 0.319370 | `view_azure_app_config_settings` | ❌ |
+| 1 | 0.519309 | `get_azure_key_vault` | ✅ **EXPECTED** |
+| 2 | 0.490672 | `import_azure_key_vault_certificates` | ❌ |
+| 3 | 0.420402 | `create_azure_key_vault_items` | ❌ |
+| 4 | 0.331426 | `view_azure_storage` | ❌ |
+| 5 | 0.319335 | `view_azure_app_config_settings` | ❌ |
 
 ---
 
@@ -3170,11 +3156,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.577142 | `create_azure_key_vault_items` | ✅ **EXPECTED** |
-| 2 | 0.536999 | `import_azure_key_vault_certificates` | ❌ |
-| 3 | 0.432286 | `get_azure_key_vault` | ❌ |
-| 4 | 0.282337 | `create_azure_workbooks` | ❌ |
-| 5 | 0.253985 | `edit_azure_storage` | ❌ |
+| 1 | 0.577228 | `create_azure_key_vault_items` | ✅ **EXPECTED** |
+| 2 | 0.536615 | `import_azure_key_vault_certificates` | ❌ |
+| 3 | 0.432370 | `get_azure_key_vault` | ❌ |
+| 4 | 0.282142 | `create_azure_workbooks` | ❌ |
+| 5 | 0.254148 | `edit_azure_storage` | ❌ |
 
 ---
 
@@ -3187,11 +3173,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.493911 | `create_azure_key_vault_items` | ✅ **EXPECTED** |
-| 2 | 0.417473 | `import_azure_key_vault_certificates` | ❌ |
-| 3 | 0.344149 | `get_azure_key_vault` | ❌ |
-| 4 | 0.270784 | `edit_azure_storage` | ❌ |
-| 5 | 0.230661 | `create_azure_workbooks` | ❌ |
+| 1 | 0.493930 | `create_azure_key_vault_items` | ✅ **EXPECTED** |
+| 2 | 0.417468 | `import_azure_key_vault_certificates` | ❌ |
+| 3 | 0.344129 | `get_azure_key_vault` | ❌ |
+| 4 | 0.270783 | `edit_azure_storage` | ❌ |
+| 5 | 0.230671 | `create_azure_workbooks` | ❌ |
 
 ---
 
@@ -3204,11 +3190,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.551337 | `create_azure_key_vault_items` | ✅ **EXPECTED** |
-| 2 | 0.385343 | `import_azure_key_vault_certificates` | ❌ |
-| 3 | 0.383659 | `get_azure_key_vault` | ❌ |
-| 4 | 0.301886 | `lock_unlock_azure_app_config_settings` | ❌ |
-| 5 | 0.280085 | `edit_azure_storage` | ❌ |
+| 1 | 0.546911 | `create_azure_key_vault_items` | ✅ **EXPECTED** |
+| 2 | 0.381138 | `import_azure_key_vault_certificates` | ❌ |
+| 3 | 0.380745 | `get_azure_key_vault` | ❌ |
+| 4 | 0.300710 | `lock_unlock_azure_app_config_settings` | ❌ |
+| 5 | 0.279489 | `edit_azure_app_config_settings` | ❌ |
 
 ---
 
@@ -3221,11 +3207,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.660982 | `import_azure_key_vault_certificates` | ✅ **EXPECTED** |
-| 2 | 0.459787 | `create_azure_key_vault_items` | ❌ |
-| 3 | 0.400950 | `get_azure_key_vault` | ❌ |
-| 4 | 0.256701 | `deploy_azure_ai_models` | ❌ |
-| 5 | 0.240543 | `create_azure_sql_firewall_rules` | ❌ |
+| 1 | 0.660888 | `import_azure_key_vault_certificates` | ✅ **EXPECTED** |
+| 2 | 0.459725 | `create_azure_key_vault_items` | ❌ |
+| 3 | 0.400859 | `get_azure_key_vault` | ❌ |
+| 4 | 0.256688 | `deploy_azure_ai_models` | ❌ |
+| 5 | 0.240517 | `create_azure_sql_firewall_rules` | ❌ |
 
 ---
 
@@ -3442,11 +3428,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.618330 | `get_azure_best_practices` | ✅ **EXPECTED** |
-| 2 | 0.496676 | `get_azure_key_vault` | ❌ |
-| 3 | 0.478248 | `create_azure_key_vault_items` | ❌ |
-| 4 | 0.444000 | `import_azure_key_vault_certificates` | ❌ |
-| 5 | 0.423953 | `view_azure_app_config_settings` | ❌ |
+| 1 | 0.618403 | `get_azure_best_practices` | ✅ **EXPECTED** |
+| 2 | 0.496526 | `get_azure_key_vault` | ❌ |
+| 3 | 0.478195 | `create_azure_key_vault_items` | ❌ |
+| 4 | 0.443917 | `import_azure_key_vault_certificates` | ❌ |
+| 5 | 0.423881 | `view_azure_app_config_settings` | ❌ |
 
 ---
 
@@ -3578,11 +3564,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.599651 | `create_azure_load_testing` | ❌ |
-| 2 | 0.486587 | `view_azure_load_testing` | ✅ **EXPECTED** |
-| 3 | 0.457483 | `update_azure_load_testing_configurations` | ❌ |
-| 4 | 0.350434 | `view_azure_storage` | ❌ |
-| 5 | 0.341677 | `get_azure_health_status` | ❌ |
+| 1 | 0.599662 | `create_azure_load_testing` | ❌ |
+| 2 | 0.486542 | `view_azure_load_testing` | ✅ **EXPECTED** |
+| 3 | 0.457473 | `update_azure_load_testing_configurations` | ❌ |
+| 4 | 0.350681 | `view_azure_storage` | ❌ |
+| 5 | 0.341594 | `get_azure_health_status` | ❌ |
 
 ---
 
@@ -3595,11 +3581,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.612800 | `create_azure_load_testing` | ❌ |
-| 2 | 0.508242 | `view_azure_load_testing` | ✅ **EXPECTED** |
-| 3 | 0.421873 | `update_azure_load_testing_configurations` | ❌ |
-| 4 | 0.352176 | `view_azure_storage` | ❌ |
-| 5 | 0.351630 | `get_azure_health_status` | ❌ |
+| 1 | 0.612789 | `create_azure_load_testing` | ❌ |
+| 2 | 0.508236 | `view_azure_load_testing` | ✅ **EXPECTED** |
+| 3 | 0.421878 | `update_azure_load_testing_configurations` | ❌ |
+| 4 | 0.352153 | `view_azure_storage` | ❌ |
+| 5 | 0.351635 | `get_azure_health_status` | ❌ |
 
 ---
 
@@ -3683,7 +3669,7 @@
 | 1 | 0.268668 | `get_azure_best_practices` | ❌ |
 | 2 | 0.255864 | `view_azure_load_testing` | ❌ |
 | 3 | 0.253009 | `view_azure_app_config_settings` | ❌ |
-| 4 | 0.241262 | `view_azure_data_explorer_kusto` | ❌ |
+| 4 | 0.242574 | `view_azure_data_explorer_kusto` | ❌ |
 | 5 | 0.217755 | `view_azure_service_bus` | ❌ |
 
 ---
@@ -3765,11 +3751,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.413456 | `view_azure_ai_resources` | ✅ **EXPECTED** |
-| 2 | 0.282677 | `view_azure_data_explorer_kusto` | ❌ |
-| 3 | 0.280733 | `get_azure_health_status` | ❌ |
-| 4 | 0.279030 | `browse_azure_marketplace_products` | ❌ |
-| 5 | 0.277447 | `view_azure_databases` | ❌ |
+| 1 | 0.413567 | `view_azure_ai_resources` | ✅ **EXPECTED** |
+| 2 | 0.284827 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.280902 | `get_azure_health_status` | ❌ |
+| 4 | 0.279255 | `browse_azure_marketplace_products` | ❌ |
+| 5 | 0.277502 | `view_azure_databases` | ❌ |
 
 ---
 
@@ -3818,7 +3804,7 @@
 |------|-------|------|--------|
 | 1 | 0.419435 | `view_azure_ai_resources` | ✅ **EXPECTED** |
 | 2 | 0.361279 | `view_azure_service_bus` | ❌ |
-| 3 | 0.349084 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.350631 | `view_azure_data_explorer_kusto` | ❌ |
 | 4 | 0.324609 | `view_azure_cache_for_redis` | ❌ |
 | 5 | 0.321910 | `view_azure_databases` | ❌ |
 
@@ -3833,11 +3819,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.474762 | `view_azure_ai_resources` | ✅ **EXPECTED** |
-| 2 | 0.382534 | `view_azure_service_bus` | ❌ |
-| 3 | 0.366167 | `view_azure_databases` | ❌ |
-| 4 | 0.349084 | `view_azure_data_explorer_kusto` | ❌ |
-| 5 | 0.338570 | `view_azure_cache_for_redis` | ❌ |
+| 1 | 0.474756 | `view_azure_ai_resources` | ✅ **EXPECTED** |
+| 2 | 0.382455 | `view_azure_service_bus` | ❌ |
+| 3 | 0.366135 | `view_azure_databases` | ❌ |
+| 4 | 0.350765 | `view_azure_data_explorer_kusto` | ❌ |
+| 5 | 0.338549 | `view_azure_cache_for_redis` | ❌ |
 
 ---
 
@@ -3869,7 +3855,7 @@
 |------|-------|------|--------|
 | 1 | 0.437885 | `view_azure_ai_resources` | ✅ **EXPECTED** |
 | 2 | 0.373160 | `deploy_azure_ai_models` | ❌ |
-| 3 | 0.344329 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.345891 | `view_azure_data_explorer_kusto` | ❌ |
 | 4 | 0.308722 | `get_azure_best_practices` | ❌ |
 | 5 | 0.289972 | `view_azure_databases` | ❌ |
 
@@ -3963,40 +3949,6 @@
 ## Test 217
 
 **Expected Tool:** `view_azure_storage`  
-**Prompt:** List all files and directories in the File Share <share> in the storage account <account>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.452145 | `view_azure_storage` | ✅ **EXPECTED** |
-| 2 | 0.428538 | `list_azure_resources` | ❌ |
-| 3 | 0.377275 | `edit_azure_storage_blob_tiers` | ❌ |
-| 4 | 0.372925 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.370883 | `upload_azure_storage_blobs` | ❌ |
-
----
-
-## Test 218
-
-**Expected Tool:** `view_azure_storage`  
-**Prompt:** List all paths in the Data Lake file system <file_system> in the storage account <account>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.419403 | `list_azure_resources` | ❌ |
-| 2 | 0.402067 | `view_azure_storage` | ✅ **EXPECTED** |
-| 3 | 0.331634 | `get_azure_security_configurations` | ❌ |
-| 4 | 0.315120 | `edit_azure_storage_blob_tiers` | ❌ |
-| 5 | 0.306212 | `upload_azure_storage_blobs` | ❌ |
-
----
-
-## Test 219
-
-**Expected Tool:** `view_azure_storage`  
 **Prompt:** List all storage accounts in my subscription including their location and SKU  
 
 ### Results
@@ -4011,58 +3963,7 @@
 
 ---
 
-## Test 220
-
-**Expected Tool:** `view_azure_storage`  
-**Prompt:** List all tables in the storage account <account>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.464252 | `view_azure_storage` | ✅ **EXPECTED** |
-| 2 | 0.434440 | `list_azure_resources` | ❌ |
-| 3 | 0.393890 | `view_azure_databases` | ❌ |
-| 4 | 0.374447 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.372656 | `edit_azure_storage_blob_tiers` | ❌ |
-
----
-
-## Test 221
-
-**Expected Tool:** `view_azure_storage`  
-**Prompt:** List files with prefix 'report' in the File Share <share> in the storage account <account>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.449031 | `audit_azure_resources_compliance` | ❌ |
-| 2 | 0.428887 | `view_azure_storage` | ✅ **EXPECTED** |
-| 3 | 0.359896 | `list_azure_resources` | ❌ |
-| 4 | 0.356115 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.330769 | `upload_azure_storage_blobs` | ❌ |
-
----
-
-## Test 222
-
-**Expected Tool:** `view_azure_storage`  
-**Prompt:** Recursively list all paths in the Data Lake file system <file_system> in the storage account <account> filtered by <filter_path>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.398550 | `list_azure_resources` | ❌ |
-| 2 | 0.345928 | `view_azure_storage` | ✅ **EXPECTED** |
-| 3 | 0.289028 | `upload_azure_storage_blobs` | ❌ |
-| 4 | 0.285220 | `edit_azure_storage_blob_tiers` | ❌ |
-| 5 | 0.281225 | `view_azure_ai_resources` | ❌ |
-
----
-
-## Test 223
+## Test 218
 
 **Expected Tool:** `view_azure_storage`  
 **Prompt:** Show me my storage accounts with whether hierarchical namespace (HNS) is enabled  
@@ -4079,7 +3980,7 @@
 
 ---
 
-## Test 224
+## Test 219
 
 **Expected Tool:** `view_azure_storage`  
 **Prompt:** Show me the blobs in the blob container <container> in the storage account <account>  
@@ -4096,7 +3997,7 @@
 
 ---
 
-## Test 225
+## Test 220
 
 **Expected Tool:** `view_azure_storage`  
 **Prompt:** Show me the containers in the storage account <account>  
@@ -4113,7 +4014,7 @@
 
 ---
 
-## Test 226
+## Test 221
 
 **Expected Tool:** `view_azure_storage`  
 **Prompt:** Show me the details for my storage account <account>  
@@ -4130,41 +4031,7 @@
 
 ---
 
-## Test 227
-
-**Expected Tool:** `view_azure_storage`  
-**Prompt:** Show me the files in the File Share <share> directory <directory_path> in the storage account <account>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.428690 | `view_azure_storage` | ✅ **EXPECTED** |
-| 2 | 0.347057 | `get_azure_key_vault` | ❌ |
-| 3 | 0.345960 | `edit_azure_storage_blob_tiers` | ❌ |
-| 4 | 0.345175 | `upload_azure_storage_blobs` | ❌ |
-| 5 | 0.325559 | `execute_azure_cli` | ❌ |
-
----
-
-## Test 228
-
-**Expected Tool:** `view_azure_storage`  
-**Prompt:** Show me the paths in the Data Lake file system <file_system> in the storage account <account>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.427328 | `view_azure_storage` | ✅ **EXPECTED** |
-| 2 | 0.395018 | `list_azure_resources` | ❌ |
-| 3 | 0.334921 | `view_azure_data_explorer_kusto` | ❌ |
-| 4 | 0.330273 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.324653 | `view_azure_service_bus` | ❌ |
-
----
-
-## Test 229
+## Test 222
 
 **Expected Tool:** `view_azure_storage`  
 **Prompt:** Show me the properties for blob <blob> in container <container> in storage account <account>  
@@ -4181,7 +4048,7 @@
 
 ---
 
-## Test 230
+## Test 223
 
 **Expected Tool:** `view_azure_storage`  
 **Prompt:** Show me the properties of the storage container <container> in the storage account <account>  
@@ -4198,7 +4065,7 @@
 
 ---
 
-## Test 231
+## Test 224
 
 **Expected Tool:** `view_azure_storage`  
 **Prompt:** Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings  
@@ -4215,41 +4082,7 @@
 
 ---
 
-## Test 232
-
-**Expected Tool:** `view_azure_storage`  
-**Prompt:** Show me the tables in the storage account <account>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.498932 | `view_azure_storage` | ✅ **EXPECTED** |
-| 2 | 0.422521 | `view_azure_databases` | ❌ |
-| 3 | 0.410512 | `list_azure_resources` | ❌ |
-| 4 | 0.390620 | `edit_azure_storage_blob_tiers` | ❌ |
-| 5 | 0.381332 | `get_azure_security_configurations` | ❌ |
-
----
-
-## Test 233
-
-**Expected Tool:** `edit_azure_storage`  
-**Prompt:** Add a message to the queue <queue> in storage account <account> with visibility timeout of 30 seconds  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.520579 | `edit_azure_storage` | ✅ **EXPECTED** |
-| 2 | 0.345666 | `edit_azure_storage_blob_tiers` | ❌ |
-| 3 | 0.336106 | `view_azure_service_bus` | ❌ |
-| 4 | 0.304479 | `upload_azure_storage_blobs` | ❌ |
-| 5 | 0.285743 | `create_azure_sql_firewall_rules` | ❌ |
-
----
-
-## Test 234
+## Test 225
 
 **Expected Tool:** `edit_azure_storage`  
 **Prompt:** Create a new blob container named documents with container public access in storage account <account>  
@@ -4266,24 +4099,7 @@
 
 ---
 
-## Test 235
-
-**Expected Tool:** `edit_azure_storage`  
-**Prompt:** Create a new directory at the path <directory_path> in Data Lake in the storage account <account>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.353706 | `create_azure_key_vault_items` | ❌ |
-| 2 | 0.352343 | `edit_azure_storage` | ✅ **EXPECTED** |
-| 3 | 0.348131 | `upload_azure_storage_blobs` | ❌ |
-| 4 | 0.312818 | `edit_azure_storage_blob_tiers` | ❌ |
-| 5 | 0.280538 | `view_azure_storage` | ❌ |
-
----
-
-## Test 236
+## Test 226
 
 **Expected Tool:** `edit_azure_storage`  
 **Prompt:** Create a new storage account called testaccount123 in East US region  
@@ -4300,7 +4116,7 @@
 
 ---
 
-## Test 237
+## Test 227
 
 **Expected Tool:** `edit_azure_storage`  
 **Prompt:** Create a new storage account with Data Lake Storage Gen2 enabled  
@@ -4317,7 +4133,7 @@
 
 ---
 
-## Test 238
+## Test 228
 
 **Expected Tool:** `edit_azure_storage`  
 **Prompt:** Create a storage account with premium performance and LRS replication  
@@ -4334,7 +4150,7 @@
 
 ---
 
-## Test 239
+## Test 229
 
 **Expected Tool:** `edit_azure_storage`  
 **Prompt:** Create the container using blob public access in storage account <account>  
@@ -4351,7 +4167,7 @@
 
 ---
 
-## Test 240
+## Test 230
 
 **Expected Tool:** `edit_azure_storage`  
 **Prompt:** Create the storage container mycontainer in storage account <account>  
@@ -4368,41 +4184,7 @@
 
 ---
 
-## Test 241
-
-**Expected Tool:** `edit_azure_storage`  
-**Prompt:** Send a message "Hello, World!" to the queue <queue> in storage account <account>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.543584 | `edit_azure_storage` | ✅ **EXPECTED** |
-| 2 | 0.339178 | `view_azure_service_bus` | ❌ |
-| 3 | 0.310892 | `edit_azure_storage_blob_tiers` | ❌ |
-| 4 | 0.309890 | `upload_azure_storage_blobs` | ❌ |
-| 5 | 0.300104 | `view_azure_storage` | ❌ |
-
----
-
-## Test 242
-
-**Expected Tool:** `edit_azure_storage`  
-**Prompt:** Send a message with TTL of 3600 seconds to the queue <queue> in storage account <account>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.547877 | `edit_azure_storage` | ✅ **EXPECTED** |
-| 2 | 0.365199 | `edit_azure_storage_blob_tiers` | ❌ |
-| 3 | 0.326670 | `view_azure_service_bus` | ❌ |
-| 4 | 0.317886 | `upload_azure_storage_blobs` | ❌ |
-| 5 | 0.287949 | `view_azure_storage` | ❌ |
-
----
-
-## Test 243
+## Test 231
 
 **Expected Tool:** `upload_azure_storage_blobs`  
 **Prompt:** Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>  
@@ -4411,49 +4193,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.623181 | `upload_azure_storage_blobs` | ✅ **EXPECTED** |
-| 2 | 0.391160 | `edit_azure_storage_blob_tiers` | ❌ |
-| 3 | 0.368706 | `edit_azure_storage` | ❌ |
-| 4 | 0.340694 | `view_azure_storage` | ❌ |
-| 5 | 0.292612 | `deploy_azure_ai_models` | ❌ |
+| 1 | 0.623227 | `upload_azure_storage_blobs` | ✅ **EXPECTED** |
+| 2 | 0.391474 | `edit_azure_storage_blob_tiers` | ❌ |
+| 3 | 0.368838 | `edit_azure_storage` | ❌ |
+| 4 | 0.341027 | `view_azure_storage` | ❌ |
+| 5 | 0.292977 | `deploy_azure_ai_models` | ❌ |
 
 ---
 
-## Test 244
-
-**Expected Tool:** `edit_azure_storage_blob_tiers`  
-**Prompt:** Change the access tier to Archive for blobs file1.txt and file2.txt in the container <container> in the storage account <account>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.610178 | `edit_azure_storage_blob_tiers` | ✅ **EXPECTED** |
-| 2 | 0.468924 | `upload_azure_storage_blobs` | ❌ |
-| 3 | 0.372642 | `view_azure_storage` | ❌ |
-| 4 | 0.351953 | `edit_azure_storage` | ❌ |
-| 5 | 0.348409 | `lock_unlock_azure_app_config_settings` | ❌ |
-
----
-
-## Test 245
-
-**Expected Tool:** `edit_azure_storage_blob_tiers`  
-**Prompt:** Set access tier to Cool for multiple blobs in the container <container> in the storage account <account>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.635965 | `edit_azure_storage_blob_tiers` | ✅ **EXPECTED** |
-| 2 | 0.477040 | `upload_azure_storage_blobs` | ❌ |
-| 3 | 0.357186 | `edit_azure_storage` | ❌ |
-| 4 | 0.339394 | `lock_unlock_azure_app_config_settings` | ❌ |
-| 5 | 0.339341 | `view_azure_storage` | ❌ |
-
----
-
-## Test 246
+## Test 232
 
 **Expected Tool:** `view_azure_cache_for_redis`  
 **Prompt:** List all access policies in the Redis Cache <cache_name>  
@@ -4470,7 +4218,7 @@
 
 ---
 
-## Test 247
+## Test 233
 
 **Expected Tool:** `view_azure_cache_for_redis`  
 **Prompt:** List all databases in the Redis Cluster <cluster_name>  
@@ -4482,12 +4230,12 @@
 | 1 | 0.371289 | `view_azure_databases` | ❌ |
 | 2 | 0.345844 | `view_azure_cache_for_redis` | ✅ **EXPECTED** |
 | 3 | 0.306734 | `list_azure_resources` | ❌ |
-| 4 | 0.297726 | `view_azure_data_explorer_kusto` | ❌ |
+| 4 | 0.297511 | `view_azure_data_explorer_kusto` | ❌ |
 | 5 | 0.254949 | `get_azure_security_configurations` | ❌ |
 
 ---
 
-## Test 248
+## Test 234
 
 **Expected Tool:** `view_azure_cache_for_redis`  
 **Prompt:** Show me the access policies in the Redis Cache <cache_name>  
@@ -4504,7 +4252,7 @@
 
 ---
 
-## Test 249
+## Test 235
 
 **Expected Tool:** `view_azure_cache_for_redis`  
 **Prompt:** Show me the databases in the Redis Cluster <cluster_name>  
@@ -4515,13 +4263,13 @@
 |------|-------|------|--------|
 | 1 | 0.381246 | `view_azure_databases` | ❌ |
 | 2 | 0.369175 | `view_azure_cache_for_redis` | ✅ **EXPECTED** |
-| 3 | 0.316643 | `view_azure_data_explorer_kusto` | ❌ |
+| 3 | 0.316145 | `view_azure_data_explorer_kusto` | ❌ |
 | 4 | 0.263094 | `list_azure_resources` | ❌ |
 | 5 | 0.237185 | `get_azure_security_configurations` | ❌ |
 
 ---
 
-## Test 250
+## Test 236
 
 **Expected Tool:** `browse_azure_marketplace_products`  
 **Prompt:** Get details about marketplace product <product_name>  
@@ -4538,7 +4286,7 @@
 
 ---
 
-## Test 251
+## Test 237
 
 **Expected Tool:** `browse_azure_marketplace_products`  
 **Prompt:** Search for Microsoft products in the marketplace  
@@ -4555,7 +4303,7 @@
 
 ---
 
-## Test 252
+## Test 238
 
 **Expected Tool:** `browse_azure_marketplace_products`  
 **Prompt:** Show me marketplace products from publisher <publisher_name>  
@@ -4572,7 +4320,7 @@
 
 ---
 
-## Test 253
+## Test 239
 
 **Expected Tool:** `get_azure_capacity`  
 **Prompt:** Check usage information for <resource_type> in region <region>  
@@ -4589,7 +4337,7 @@
 
 ---
 
-## Test 254
+## Test 240
 
 **Expected Tool:** `get_azure_capacity`  
 **Prompt:** Show me the available regions for these resource types <resource_types>  
@@ -4606,7 +4354,7 @@
 
 ---
 
-## Test 255
+## Test 241
 
 **Expected Tool:** `get_azure_capacity`  
 **Prompt:** Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku>  
@@ -4623,7 +4371,7 @@
 
 ---
 
-## Test 256
+## Test 242
 
 **Expected Tool:** `view_azure_service_bus`  
 **Prompt:** Show me the details of service bus <service_bus_name> queue <queue_name>  
@@ -4640,7 +4388,7 @@
 
 ---
 
-## Test 257
+## Test 243
 
 **Expected Tool:** `view_azure_service_bus`  
 **Prompt:** Show me the details of service bus <service_bus_name> subscription <subscription_name>  
@@ -4657,7 +4405,7 @@
 
 ---
 
-## Test 258
+## Test 244
 
 **Expected Tool:** `view_azure_service_bus`  
 **Prompt:** Show me the details of service bus <service_bus_name> topic <topic_name>  
@@ -4674,7 +4422,7 @@
 
 ---
 
-## Test 259
+## Test 245
 
 **Expected Tool:** `view_azure_data_explorer_kusto`  
 **Prompt:** List all databases in the Data Explorer cluster <cluster_name>  
@@ -4683,7 +4431,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.499918 | `view_azure_data_explorer_kusto` | ✅ **EXPECTED** |
+| 1 | 0.499272 | `view_azure_data_explorer_kusto` | ✅ **EXPECTED** |
 | 2 | 0.447129 | `view_azure_databases` | ❌ |
 | 3 | 0.300745 | `list_azure_resources` | ❌ |
 | 4 | 0.274074 | `view_azure_ai_resources` | ❌ |
@@ -4691,7 +4439,7 @@
 
 ---
 
-## Test 260
+## Test 246
 
 **Expected Tool:** `view_azure_data_explorer_kusto`  
 **Prompt:** List all tables in the Data Explorer database <database_name> in cluster <cluster_name>  
@@ -4700,7 +4448,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.479987 | `view_azure_data_explorer_kusto` | ✅ **EXPECTED** |
+| 1 | 0.479173 | `view_azure_data_explorer_kusto` | ✅ **EXPECTED** |
 | 2 | 0.396561 | `view_azure_databases` | ❌ |
 | 3 | 0.291845 | `list_azure_resources` | ❌ |
 | 4 | 0.253560 | `view_azure_workbooks` | ❌ |
@@ -4708,7 +4456,7 @@
 
 ---
 
-## Test 261
+## Test 247
 
 **Expected Tool:** `view_azure_data_explorer_kusto`  
 **Prompt:** Show me a data sample from the Data Explorer table <table_name> in cluster <cluster_name>  
@@ -4717,7 +4465,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.499335 | `view_azure_data_explorer_kusto` | ✅ **EXPECTED** |
+| 1 | 0.498738 | `view_azure_data_explorer_kusto` | ✅ **EXPECTED** |
 | 2 | 0.353150 | `view_azure_databases` | ❌ |
 | 3 | 0.280941 | `view_azure_workbooks` | ❌ |
 | 4 | 0.255517 | `view_azure_cache_for_redis` | ❌ |
@@ -4725,7 +4473,7 @@
 
 ---
 
-## Test 262
+## Test 248
 
 **Expected Tool:** `view_azure_data_explorer_kusto`  
 **Prompt:** Show me all items that contain the word <search_term> in the Data Explorer table <table_name> in cluster <cluster_name>  
@@ -4734,15 +4482,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.395179 | `view_azure_data_explorer_kusto` | ✅ **EXPECTED** |
-| 2 | 0.345753 | `view_azure_databases` | ❌ |
-| 3 | 0.328271 | `view_azure_ai_resources` | ❌ |
-| 4 | 0.264007 | `browse_azure_marketplace_products` | ❌ |
-| 5 | 0.239882 | `list_azure_resources` | ❌ |
+| 1 | 0.395937 | `view_azure_data_explorer_kusto` | ✅ **EXPECTED** |
+| 2 | 0.346045 | `view_azure_databases` | ❌ |
+| 3 | 0.328353 | `view_azure_ai_resources` | ❌ |
+| 4 | 0.263969 | `browse_azure_marketplace_products` | ❌ |
+| 5 | 0.239842 | `list_azure_resources` | ❌ |
 
 ---
 
-## Test 263
+## Test 249
 
 **Expected Tool:** `view_azure_data_explorer_kusto`  
 **Prompt:** Show me the databases in the Data Explorer cluster <cluster_name>  
@@ -4751,7 +4499,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.512447 | `view_azure_data_explorer_kusto` | ✅ **EXPECTED** |
+| 1 | 0.511883 | `view_azure_data_explorer_kusto` | ✅ **EXPECTED** |
 | 2 | 0.456484 | `view_azure_databases` | ❌ |
 | 3 | 0.284469 | `view_azure_workbooks` | ❌ |
 | 4 | 0.281843 | `view_azure_ai_resources` | ❌ |
@@ -4759,7 +4507,7 @@
 
 ---
 
-## Test 264
+## Test 250
 
 **Expected Tool:** `view_azure_data_explorer_kusto`  
 **Prompt:** Show me the details of the Data Explorer cluster <cluster_name>  
@@ -4768,7 +4516,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.502854 | `view_azure_data_explorer_kusto` | ✅ **EXPECTED** |
+| 1 | 0.502600 | `view_azure_data_explorer_kusto` | ✅ **EXPECTED** |
 | 2 | 0.358495 | `view_azure_databases` | ❌ |
 | 3 | 0.312618 | `view_azure_cache_for_redis` | ❌ |
 | 4 | 0.303763 | `get_azure_capacity` | ❌ |
@@ -4776,7 +4524,7 @@
 
 ---
 
-## Test 265
+## Test 251
 
 **Expected Tool:** `view_azure_data_explorer_kusto`  
 **Prompt:** Show me the schema for table <table_name> in the Data Explorer database <database_name> in cluster <cluster_name>  
@@ -4785,15 +4533,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.468959 | `view_azure_data_explorer_kusto` | ✅ **EXPECTED** |
-| 2 | 0.366188 | `view_azure_databases` | ❌ |
-| 3 | 0.251410 | `get_azure_best_practices` | ❌ |
-| 4 | 0.234844 | `edit_azure_databases` | ❌ |
-| 5 | 0.229794 | `view_azure_service_bus` | ❌ |
+| 1 | 0.468439 | `view_azure_data_explorer_kusto` | ✅ **EXPECTED** |
+| 2 | 0.366833 | `view_azure_databases` | ❌ |
+| 3 | 0.252217 | `get_azure_best_practices` | ❌ |
+| 4 | 0.235146 | `edit_azure_databases` | ❌ |
+| 5 | 0.230266 | `view_azure_service_bus` | ❌ |
 
 ---
 
-## Test 266
+## Test 252
 
 **Expected Tool:** `view_azure_data_explorer_kusto`  
 **Prompt:** Show me the tables in the Data Explorer database <database_name> in cluster <cluster_name>  
@@ -4802,7 +4550,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.495389 | `view_azure_data_explorer_kusto` | ✅ **EXPECTED** |
+| 1 | 0.494508 | `view_azure_data_explorer_kusto` | ✅ **EXPECTED** |
 | 2 | 0.422581 | `view_azure_databases` | ❌ |
 | 3 | 0.269662 | `list_azure_resources` | ❌ |
 | 4 | 0.268568 | `view_azure_workbooks` | ❌ |
@@ -4810,7 +4558,7 @@
 
 ---
 
-## Test 267
+## Test 253
 
 **Expected Tool:** `create_azure_sql_firewall_rules`  
 **Prompt:** Add a firewall rule to allow access from IP range <start_ip> to <end_ip> for SQL server <server_name>  
@@ -4819,15 +4567,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.619657 | `create_azure_sql_firewall_rules` | ✅ **EXPECTED** |
-| 2 | 0.497505 | `delete_azure_sql_firewall_rules` | ❌ |
-| 3 | 0.339575 | `edit_azure_databases` | ❌ |
-| 4 | 0.238195 | `edit_azure_storage_blob_tiers` | ❌ |
-| 5 | 0.204598 | `import_azure_key_vault_certificates` | ❌ |
+| 1 | 0.619667 | `create_azure_sql_firewall_rules` | ✅ **EXPECTED** |
+| 2 | 0.497535 | `delete_azure_sql_firewall_rules` | ❌ |
+| 3 | 0.339582 | `edit_azure_databases` | ❌ |
+| 4 | 0.238233 | `edit_azure_storage_blob_tiers` | ❌ |
+| 5 | 0.204653 | `import_azure_key_vault_certificates` | ❌ |
 
 ---
 
-## Test 268
+## Test 254
 
 **Expected Tool:** `create_azure_sql_firewall_rules`  
 **Prompt:** Create a firewall rule for my Azure SQL server <server_name>  
@@ -4836,15 +4584,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.769894 | `create_azure_sql_firewall_rules` | ✅ **EXPECTED** |
-| 2 | 0.659595 | `delete_azure_sql_firewall_rules` | ❌ |
-| 3 | 0.476818 | `edit_azure_databases` | ❌ |
-| 4 | 0.322624 | `execute_azure_cli` | ❌ |
-| 5 | 0.315260 | `view_azure_databases` | ❌ |
+| 1 | 0.769870 | `create_azure_sql_firewall_rules` | ✅ **EXPECTED** |
+| 2 | 0.659555 | `delete_azure_sql_firewall_rules` | ❌ |
+| 3 | 0.476832 | `edit_azure_databases` | ❌ |
+| 4 | 0.322673 | `execute_azure_cli` | ❌ |
+| 5 | 0.315309 | `view_azure_databases` | ❌ |
 
 ---
 
-## Test 269
+## Test 255
 
 **Expected Tool:** `create_azure_sql_firewall_rules`  
 **Prompt:** Create a new firewall rule named <rule_name> for SQL server <server_name>  
@@ -4861,7 +4609,7 @@
 
 ---
 
-## Test 270
+## Test 256
 
 **Expected Tool:** `delete_azure_sql_firewall_rules`  
 **Prompt:** Delete a firewall rule from my Azure SQL server <server_name>  
@@ -4878,7 +4626,7 @@
 
 ---
 
-## Test 271
+## Test 257
 
 **Expected Tool:** `delete_azure_sql_firewall_rules`  
 **Prompt:** Delete firewall rule <rule_name> for SQL server <server_name>  
@@ -4895,7 +4643,7 @@
 
 ---
 
-## Test 272
+## Test 258
 
 **Expected Tool:** `delete_azure_sql_firewall_rules`  
 **Prompt:** Remove the firewall rule <rule_name> from SQL server <server_name>  
@@ -4914,33 +4662,33 @@
 
 ## Summary
 
-**Total Prompts Tested:** 272  
-**Analysis Execution Time:** 29.5333743s  
+**Total Prompts Tested:** 258  
+**Analysis Execution Time:** 34.5876912s  
 
 ### Success Rate Metrics
 
-**Top Choice Success:** 58.1% (158/272 tests)  
+**Top Choice Success:** 57.4% (148/258 tests)  
 
 #### Confidence Level Distribution
 
-**💪 Very High Confidence (≥0.8):** 0.0% (0/272 tests)  
-**🎯 High Confidence (≥0.7):** 2.9% (8/272 tests)  
-**✅ Good Confidence (≥0.6):** 10.7% (29/272 tests)  
-**👍 Fair Confidence (≥0.5):** 27.2% (74/272 tests)  
-**👌 Acceptable Confidence (≥0.4):** 60.7% (165/272 tests)  
-**❌ Low Confidence (<0.4):** 39.3% (107/272 tests)  
+**💪 Very High Confidence (≥0.8):** 0.0% (0/258 tests)  
+**🎯 High Confidence (≥0.7):** 3.1% (8/258 tests)  
+**✅ Good Confidence (≥0.6):** 10.5% (27/258 tests)  
+**👍 Fair Confidence (≥0.5):** 26.7% (69/258 tests)  
+**👌 Acceptable Confidence (≥0.4):** 59.3% (153/258 tests)  
+**❌ Low Confidence (<0.4):** 40.7% (105/258 tests)  
 
 #### Top Choice + Confidence Combinations
 
-**💪 Top Choice + Very High Confidence (≥0.8):** 0.0% (0/272 tests)  
-**🎯 Top Choice + High Confidence (≥0.7):** 2.9% (8/272 tests)  
-**✅ Top Choice + Good Confidence (≥0.6):** 10.7% (29/272 tests)  
-**👍 Top Choice + Fair Confidence (≥0.5):** 23.9% (65/272 tests)  
-**👌 Top Choice + Acceptable Confidence (≥0.4):** 47.4% (129/272 tests)  
+**💪 Top Choice + Very High Confidence (≥0.8):** 0.0% (0/258 tests)  
+**🎯 Top Choice + High Confidence (≥0.7):** 3.1% (8/258 tests)  
+**✅ Top Choice + Good Confidence (≥0.6):** 10.5% (27/258 tests)  
+**👍 Top Choice + Fair Confidence (≥0.5):** 23.3% (60/258 tests)  
+**👌 Top Choice + Acceptable Confidence (≥0.4):** 46.1% (119/258 tests)  
 
 ### Success Rate Analysis
 
 🔴 **Poor** - The tool selection system requires major improvements.
 
-⚠️ **Recommendation:** Tool descriptions need improvement to better match user intent (targets: ≥0.6 good, ≥0.7 high).
+🔧 **Recommendation:** Significant improvements needed in tool descriptions for better semantic matching.
 
