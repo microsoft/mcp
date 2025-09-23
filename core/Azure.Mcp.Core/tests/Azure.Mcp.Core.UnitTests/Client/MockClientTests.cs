@@ -213,7 +213,7 @@ public class MockClientTests
                 Assert.NotNull(result);
                 Assert.True(result.IsError, "Expected error response for non-existent tool");
                 Assert.NotEmpty(result.Content);
-                
+
                 var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
                 Assert.Contains("The tool non_existent_tool was not found", textContent.Text);
             });
