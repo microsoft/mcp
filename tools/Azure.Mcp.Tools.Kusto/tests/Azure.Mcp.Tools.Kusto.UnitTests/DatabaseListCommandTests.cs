@@ -44,14 +44,14 @@ public sealed class DatabaseListCommandTests
         var expectedDatabases = new List<string> { "db1", "db2" };
         if (useClusterUri)
         {
-            _kusto.ListDatabases(
+            _kusto.ListDatabasesAsync(
                 "https://mycluster.kusto.windows.net",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(expectedDatabases);
         }
         else
         {
-            _kusto.ListDatabases(
+            _kusto.ListDatabasesAsync(
                 "sub1", "mycluster", Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(expectedDatabases);
         }
@@ -79,14 +79,14 @@ public sealed class DatabaseListCommandTests
         // Arrange
         if (useClusterUri)
         {
-            _kusto.ListDatabases(
+            _kusto.ListDatabasesAsync(
                 "https://mycluster.kusto.windows.net",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns([]);
         }
         else
         {
-            _kusto.ListDatabases(
+            _kusto.ListDatabasesAsync(
                 "sub1", "mycluster", Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns([]);
         }
@@ -115,14 +115,14 @@ public sealed class DatabaseListCommandTests
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         if (useClusterUri)
         {
-            _kusto.ListDatabases(
+            _kusto.ListDatabasesAsync(
                 "https://mycluster.kusto.windows.net",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(Task.FromException<List<string>>(new Exception("Test error")));
         }
         else
         {
-            _kusto.ListDatabases(
+            _kusto.ListDatabasesAsync(
                 "sub1", "mycluster", Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(Task.FromException<List<string>>(new Exception("Test error")));
         }
