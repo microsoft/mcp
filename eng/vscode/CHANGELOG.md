@@ -11,6 +11,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 - Fixed MCP server hanging on invalid transport arguments. Server now exits gracefully with clear error messages instead of hanging indefinitely. [[#311](https://github.com/microsoft/mcp/issues/311)] [[#511](https://github.com/microsoft/mcp/pull/511)]
+-  Improved description of Load Test commands [[#92](https://github.com/microsoft/mcp/pull/92)]
 
 ### Other Changes
 
