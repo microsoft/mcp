@@ -1,22 +1,28 @@
 parameters:
-- name: PublishPackages
-  type: boolean
-  default: false
-- name: ReleaseRun
-  type: boolean
-  default: false
+- name: ServerName
+  type: string
+  default: ''
+- name: PublishTarget
+  type: string
+  default: none
+  values:
+  - internal
+  - public
+  - none
 - name: RunLiveTests
   type: boolean
   default: false
 - name: IncludeNative
   type: boolean
   default: false
-- name: ServerName
-  type: string
-  default: ''
-- name: SkipDockerRelease
-  type: string
+- name: IncludeDockerRelease
+  type: boolean
   default: false
+- name: IsTestPipeline
+  type: boolean
+  default: false
+  # Test pipelines (e.g. Template.Mcp.Server) can release to public feeds, but they always use prerelease tags and automatically close their version bump PRs
+  # This allows us to run them multiple times from the same commit without hitting github release tag or package deployment conflicts
 
 resources:
   repositories:
@@ -28,7 +34,8 @@ resources:
 extends:
   template: /eng/pipelines/templates/1es-redirect.yml
   parameters:
-    autoBaseline: ${{ and(eq(variables['Build.DefinitionName'], 'azure - mcp'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['System.TeamProject'], 'internal')) }}
+    # We pick a single internal pipeline to use for autoBaseline. This should be a pipeline that runs often on main with normal code paths, i.e. not Template.Mcp.Server
+    autoBaseline: ${{ and(eq(variables['Build.DefinitionName'], 'mcp - Azure.Mcp.Server'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['System.TeamProject'], 'internal')) }}
     stages:
     - stage: Initialize
       pool:
@@ -41,7 +48,7 @@ extends:
       jobs:
       - template: /eng/pipelines/templates/jobs/initialize.yml
         parameters:
-          DynamicPrereleaseVersion: ${{ not(parameters.ReleaseRun) }}
+          DynamicPrereleaseVersion: ${{ or(ne(parameters.PublishTarget, 'public'), parameters.IsTestPipeline) }}
           ServerName: ${{ parameters.ServerName }}
 
     - stage: Build
@@ -86,7 +93,8 @@ extends:
         jobs:
         - template: /eng/pipelines/templates/jobs/live-test.yml
 
-    - ${{ if eq(parameters.PublishPackages, 'true') }}:
+    - ${{ if ne(parameters.PublishTarget, 'none') }}:
+      # We only sign if we're going to publish
       - stage: SignAndPack
         displayName: 'Sign and Pack'
         dependsOn:
@@ -106,7 +114,7 @@ extends:
           parameters:
             ServerName: ${{ parameters.ServerName }}
 
-      - ${{ if eq(parameters.ReleaseRun, 'true') }}:
+      - ${{ if eq(parameters.PublishTarget, 'public') }}:
         - stage: Release
           dependsOn:
           - Initialize
@@ -125,9 +133,10 @@ extends:
             parameters:
               ServerName: ${{ parameters.ServerName }}
               IncludeNative: false
-              SkipDockerRelease: ${{ parameters.SkipDockerRelease }}
+              IncludeDockerRelease: ${{ parameters.IncludeDockerRelease }}
+              IsTestPipeline: ${{ parameters.IsTestPipeline }}
 
-      - ${{ else }}:
+      - ${{ elseif eq(parameters.PublishTarget, 'internal') }}:
         - stage: Integration
           dependsOn:
           - Initialize

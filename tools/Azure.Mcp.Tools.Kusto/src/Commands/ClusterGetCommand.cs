@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Options;
@@ -75,10 +76,10 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseC
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        KeyNotFoundException => 404,
-        RequestFailedException reqEx => reqEx.Status,
+        KeyNotFoundException => HttpStatusCode.NotFound,
+        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
 

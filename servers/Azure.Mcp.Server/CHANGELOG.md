@@ -7,6 +7,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Added support for `azmcp sql server list` command to list SQL servers in a subscription and resource group. [[#503](https://github.com/microsoft/mcp/issues/503)]
+- Added support for Azure App Service database management via the command:
+  - `azmcp_appservice_database_add`: Add a database connection to an App Service web app (does not create the database itself; only adds the connection).
+        This enables prompt-driven addition of database connections for Azure App Service web apps.
 
 ### Breaking Changes
 
@@ -20,6 +23,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Fixed MCP server hanging on invalid transport arguments. Server now exits gracefully with clear error messages instead of hanging indefinitely. [[#311](https://github.com/microsoft/mcp/issues/311)] [[#511](https://github.com/microsoft/mcp/pull/511)]
+
 ### Other Changes
 
 - Refactored Kusto service implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[#528](https://github.com/microsoft/mcp/pull/528)]
@@ -32,7 +37,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ## 0.8.0 (2025-09-18)
 
 ### Features Added
- 
+
 - Added the `--insecure-disable-elicitation` server startup switch. When enabled, the server will bypass user confirmation (elicitation) for tools marked as handling secrets and execute them immediately. This is **INSECURE** and meant only for controlled automation scenarios (e.g., CI or disposable test environments) because it removes a safety barrier that helps prevent accidental disclosure of sensitive data. [[#486](https://github.com/microsoft/mcp/pull/486)]
 - Enhanced Azure authentication with targeted credential selection via the `AZURE_TOKEN_CREDENTIALS` environment variable: [[#56](https://github.com/microsoft/mcp/pull/56)]
   - `"dev"`: Development credentials (Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI)
@@ -56,6 +61,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Redesigned how conditionally required options are handled. Commands now use explicit option registration via extension methods (`.AsRequired()`, `.AsOptional()`) instead of legacy patterns (`UseResourceGroup()`, `RequireResourceGroup()`). [[#452](https://github.com/microsoft/mcp/pull/452)]
 - Removed support for the `AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS` environment variable. Use `AZURE_TOKEN_CREDENTIALS` instead for more flexible credential selection. For migration details, see [Controlling Authentication Methods with AZURE_TOKEN_CREDENTIALS](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#controlling-authentication-methods-with-azure_token_credentials). [[#56](https://github.com/microsoft/mcp/pull/56)]
 - Merged `azmcp_appconfig_kv_lock` and `azmcp_appconfig_kv_unlock` into `azmcp_appconfig_kv_lock_set` which can handle locking or unlocking a key-value based on the `--lock` parameter. [[#485](https://github.com/microsoft/mcp/pull/485)]
+
 
 ### Other Changes
 

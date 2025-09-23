@@ -477,6 +477,8 @@ protected override MyCommandOptions BindOptions(ParseResult parseResult)
 ### 3. Command Class
 
 ```csharp
+using System.Net;
+
 public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Command> logger)
     : Base{Toolset}Command<{Resource}{Operation}Options>
 {
@@ -568,18 +570,18 @@ public sealed class {Resource}{Operation}Command(ILogger<{Resource}{Operation}Co
     // Implementation-specific error handling, only implement if this differs from base class behavior
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Resource not found. Verify the resource exists and you have access.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed accessing the resource. Details: {reqEx.Message}",
         Azure.RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
     // Implementation-specific status code retrieval, only implement if this differs from base class behavior
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => reqEx.Status,
+        Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
 
@@ -870,7 +872,7 @@ public class {Resource}{Operation}CommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.NotNull(response.Results);
@@ -895,7 +897,7 @@ public class {Resource}{Operation}CommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
@@ -918,7 +920,7 @@ public class {Resource}{Operation}CommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -1007,7 +1009,7 @@ public class {Toolset}CommandTests(ITestOutputHelper output)
 
 Guidelines:
 - When validating JSON for an expected property use `JsonElement.AssertProperty`.
-- When validating JSON for a conditional property use `JsonElement.TryGetProperty` in an if-clause. 
+- When validating JSON for a conditional property use `JsonElement.TryGetProperty` in an if-clause.
 
 ### 8. Command Registration
 
@@ -1086,19 +1088,19 @@ Guidelines:
 Commands in Azure MCP follow a standardized error handling approach using the base `HandleException` method inherited from `BaseCommand`. Here are the key aspects:
 
 ### 1. Status Code Mapping
-The base implementation returns 500 for all exceptions by default:
+The base implementation returns InternalServerError for all exceptions by default:
 ```csharp
-protected virtual int GetStatusCode(Exception ex) => 500;
+protected virtual HttpStatusCode GetStatusCode(Exception ex) => HttpStatusCode.InternalServerError;
 ```
 
 Commands should override this to provide appropriate status codes:
 ```csharp
-protected override int GetStatusCode(Exception ex) => ex switch
+protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
 {
-    Azure.RequestFailedException reqEx => reqEx.Status,  // Use Azure-reported status
-    Azure.Identity.AuthenticationFailedException => 401,   // Unauthorized
-    ValidationException => 400,    // Bad request
-    _ => base.GetStatusCode(ex) // Fall back to 500
+    Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,  // Use Azure-reported status
+    Azure.Identity.AuthenticationFailedException => HttpStatusCode.Unauthorized,   // Unauthorized
+    ValidationException => HttpStatusCode.BadRequest,    // Bad request
+    _ => base.GetStatusCode(ex) // Fall back to InternalServerError
 };
 ```
 
@@ -1114,9 +1116,9 @@ protected override string GetErrorMessage(Exception ex) => ex switch
 {
     Azure.Identity.AuthenticationFailedException authEx =>
         $"Authentication failed. Please run 'az login' to sign in. Details: {authEx.Message}",
-    Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+    Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
         "Resource not found. Verify the resource name and that you have access.",
-    Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+    Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
         $"Access denied. Ensure you have appropriate RBAC permissions. Details: {reqEx.Message}",
     Azure.RequestFailedException reqEx => reqEx.Message,
     _ => base.GetErrorMessage(ex)
@@ -1210,7 +1212,7 @@ public async Task ExecuteAsync_ValidatesInput(
     string args, bool shouldSucceed, string expectedError)
 {
     var response = await ExecuteCommand(args);
-    Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+    Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     if (!shouldSucceed)
         Assert.Contains(expectedError, response.Message);
 }
@@ -1226,7 +1228,7 @@ public async Task ExecuteAsync_HandlesServiceError()
     var response = await ExecuteCommand("--param value");
 
     // Assert
-    Assert.Equal(500, response.Status);
+    Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
     Assert.Contains("Test error", response.Message);
     Assert.Contains("troubleshooting", response.Message);
 }
@@ -1433,7 +1435,7 @@ public class {Toolset}CommandTests( ITestOutputHelper output)
             });
 
         // Should return validation error
-        Assert.NotEqual(200, result.Status);
+        Assert.NotEqual(HttpStatusCode.OK, result.Status);
     }
 }
 ```
@@ -1463,7 +1465,7 @@ public async Task Should_HandleAuth(AuthMethod method)
         { "auth-method", method.ToString() }
     });
     // Verify auth worked
-    Assert.Equal(200, result.Status);
+    Assert.Equal(HttpStatusCode.OK, result.Status);
 }
 
 [Theory]
@@ -1472,7 +1474,7 @@ public async Task Should_HandleAuth(AuthMethod method)
 public async Task Should_Return400_ForInvalidInput(string args)
 {
     var result = await CallCommand(args);
-    Assert.Equal(400, result.Status);
+    Assert.Equal(HttpStatusCode.BadRequest, result.Status);
     Assert.Contains("validation", result.Message.ToLower());
 }
 ```
@@ -1705,9 +1707,9 @@ protected override MyOptions BindOptions(ParseResult parseResult)
 ```csharp
 protected override string GetErrorMessage(Exception ex) => ex switch
 {
-    Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+    Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
         "Resource not found. Verify the resource exists and you have access.",
-    Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+    Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
         $"Authorization failed. Details: {reqEx.Message}",
     _ => base.GetErrorMessage(ex)
 };
@@ -1734,9 +1736,9 @@ catch (Exception ex)
    - Handle all exceptions
 
 2. Error Handling:
-   - Return 400 for validation errors
-   - Return 401 for authentication failures
-   - Return 500 for unexpected errors
+   - Return HttpStatusCode.BadRequest for validation errors
+   - Return HttpStatusCode.Unauthorized for authentication failures
+   - Return HttpStatusCode.InternalServerError for unexpected errors
    - Return service-specific status codes from RequestFailedException
    - Add troubleshooting URL to error messages
    - Log errors with context information

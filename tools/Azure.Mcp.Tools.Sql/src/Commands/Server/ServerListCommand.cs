@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
+using System.Net;
 using Azure;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
@@ -96,9 +97,9 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger)
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed listing SQL servers. Verify you have appropriate permissions. Details: {reqEx.Message}",
-        RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "No SQL servers found for the specified resource group. Verify the resource group and subscription.",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)

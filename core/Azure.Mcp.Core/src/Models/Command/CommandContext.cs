@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Azure.Mcp.Core.Models.Command;
@@ -36,7 +37,7 @@ public class CommandContext
         Activity = activity;
         Response = new CommandResponse
         {
-            Status = 200,
+            Status = HttpStatusCode.OK,
             Message = "Success"
         };
     }

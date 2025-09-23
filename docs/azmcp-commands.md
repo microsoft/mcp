@@ -279,6 +279,87 @@ azmcp applicationinsights recommendation list --subscription <subscription>
 # Scope to a specific resource group
 azmcp applicationinsights recommendation list --subscription <subscription> \
                                               --resource-group <resource-group>
+### Azure App Service Operations
+
+```bash
+# Add a database connection to an App Service
+azmcp appservice database add --subscription <subscription> \
+                              --resource-group <resource-group> \
+                              --app <app> \
+                              --database-type <database-type> \
+                              --database-server <database-server> \
+                              --database <database> \
+                              [--connection-string <connection-string>] \
+                              [--tenant <tenant-id>]
+
+# Examples:
+# Add a SQL Server database connection
+azmcp appservice database add --subscription "my-subscription" \
+                              --resource-group "my-rg" \
+                              --app "my-webapp" \
+                              --database-type "SqlServer" \
+                              --database-server "myserver.database.windows.net" \
+                              --database "mydb"
+
+# Add a MySQL database connection with custom connection string
+azmcp appservice database add --subscription "my-subscription" \
+                              --resource-group "my-rg" \
+                              --app "my-webapp" \
+                              --database-type "MySQL" \
+                              --database-server "myserver.mysql.database.azure.com" \
+                              --database "mydb" \
+                              --connection-string "Server=myserver.mysql.database.azure.com;Database=mydb;Uid=myuser;Pwd=mypass;"
+
+# Add a PostgreSQL database connection
+azmcp appservice database add --subscription "my-subscription" \
+                              --resource-group "my-rg" \
+                              --app "my-webapp" \
+                              --database-type "PostgreSQL" \
+                              --database-server "myserver.postgres.database.azure.com" \
+                              --database "mydb"
+
+# Add a Cosmos DB connection
+azmcp appservice database add --subscription "my-subscription" \
+                              --resource-group "my-rg" \
+                              --app "my-webapp" \
+                              --database-type "CosmosDB" \
+                              --database-server "myaccount" \
+                              --database "mydb"
+```
+
+**Database Types Supported:**
+
+-   `SqlServer` - Azure SQL Database
+-   `MySQL` - Azure Database for MySQL
+-   `PostgreSQL` - Azure Database for PostgreSQL
+-   `CosmosDB` - Azure Cosmos DB
+
+**Parameters:**
+
+-   `--subscription`: Azure subscription ID (required)
+-   `--resource-group`: Resource group containing the App Service (required)
+-   `--app`: Name of the App Service web app (required)
+-   `--database-type`: Type of database - SqlServer, MySQL, PostgreSQL, or CosmosDB (required)
+-   `--database-server`: Database server name or endpoint (required)
+-   `--database`: Name of the database (required)
+-   `--connection-string`: Custom connection string (optional - auto-generated if not provided)
+-   `--tenant`: Azure tenant ID for authentication (optional)
+
+### Azure CLI Operations
+
+```bash
+# Execute any Azure CLI command
+azmcp extension az --command "<command>"
+
+# Examples:
+# List resource groups
+azmcp extension az --command "group list"
+
+# Get storage account details
+azmcp extension az --command "storage account show --name <account> --resource-group <resource-group>"
+
+# List virtual machines
+azmcp extension az --command "vm list --resource-group <resource-group>"
 ```
 
 ### Azure Container Registry (ACR) Operations
