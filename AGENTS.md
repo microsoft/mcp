@@ -2,7 +2,7 @@
 
 ## Do
 - Use primary constructors for all C# classes
-- Use `System.Text.Json` over Newtonsoft.Json
+- Use `System.Text.Json`
 - Make command classes sealed unless designed for inheritance
 - Make members static when possible for AOT compatibility
 - Put each class and interface in separate files
@@ -16,9 +16,15 @@
 - Always call `HandleException(context, ex)` in catch blocks
 - Create Bicep templates for Azure service commands (`test-resources.bicep`)
 - Include post-deployment scripts (`test-resources-post.ps1`)
-- Submit one tool per pull request for faster reviews
+- Submit one tool per pull request
 - Use `BaseAzureResourceService` for Resource Graph queries when possible
 - Register all response models in JSON serialization context for AOT safety
+- Use static OptionDefinitions for command options (never readonly fields)
+- Always call `base.RegisterOptions()` and `base.Dispose()` in overrides
+- Use OptionDefinitions constants instead of hardcoded option strings
+- Register all commands in the appropriate Setup.cs file
+- Use concatenated lowercase for command group names (no dashes)
+- Prefer file-scoped changes over project-wide modifications when possible
 - Always review your own code for consistency, maintainability, and testability
 - Always ask for clarifications if the request is ambiguous or lacks sufficient context
 
@@ -106,9 +112,9 @@ Microsoft MCP (Model Context Protocol) servers provide AI agents with structured
 - `CONTRIBUTING.md` - Contribution guidelines and workflows
 
 ### Good examples to follow
-- Command implementation: `tools/Azure.Mcp.Tools.Storage/src/Commands/Account/StorageAccountListCommand.cs`
+- Command implementation: `tools/Azure.Mcp.Tools.Storage/src/Commands/Account/StorageAccountGetCommand.cs`
 - Service pattern: `tools/Azure.Mcp.Tools.Storage/src/Services/StorageService.cs`
-- Unit tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.UnitTests/Account/StorageAccountListCommandTests.cs`
+- Unit tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.UnitTests/Account/StorageAccountGetCommandTests.cs`
 - Live test infrastructure: `tools/Azure.Mcp.Tools.Storage/tests/test-resources.bicep`
 - Option definitions: `tools/Azure.Mcp.Tools.Storage/src/Options/StorageOptionDefinitions.cs`
 
@@ -217,7 +223,7 @@ Azure.Mcp.Tools.{Service}/
 Commands follow the pattern: `azmcp <service> <resource> <operation>`
 ```bash
 # Examples
-azmcp storage account list          # List storage accounts
+azmcp storage account get          # Get storage accounts
 azmcp sql database show            # Show SQL database details
 azmcp keyvault secret get          # Get Key Vault secret
 azmcp resourcegroup list           # List resource groups
@@ -259,7 +265,7 @@ dotnet build
 
 # Run tests from specific directory
 pushd 'tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.UnitTests'
-dotnet test --filter "FullyQualifiedName~StorageAccountListCommandTests"
+dotnet test --filter "FullyQualifiedName~StorageAccountGetCommandTests"
 popd
 ```
 
@@ -331,14 +337,14 @@ az login
 ### File and Class Naming Patterns
 ```csharp
 // Command naming: {Resource}{Operation}Command
-public sealed class StorageAccountListCommand    // ✅ Correct
-public sealed class ListStorageAccountCommand    // ❌ Wrong order
+public sealed class StorageAccountGetCommand    // ✅ Correct
+public sealed class GetStorageAccountCommand    // ❌ Wrong order
 
 // Options naming: {Resource}{Operation}Options
-public class StorageAccountListOptions          // ✅ Correct
+public class StorageAccountGetOptions          // ✅ Correct
 
 // Test naming: {Command}Tests
-public class StorageAccountListCommandTests     // ✅ Correct
+public class StorageAccountGetCommandTests     // ✅ Correct
 ```
 
 ### Option Handling Pattern
@@ -447,13 +453,13 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
 ### JSON Serialization Context (AOT Requirement)
 ```csharp
 // All response models must be registered for AOT compatibility
-[JsonSerializable(typeof(StorageAccountListCommand.StorageAccountListCommandResult))]
+[JsonSerializable(typeof(StorageAccountGetCommand.StorageAccountListCommandResult))]
 [JsonSerializable(typeof(StorageAccount))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true)]
 internal partial class StorageJsonContext : JsonSerializerContext;
 
 // Usage in commands
-context.Response.Results = ResponseResult.Create(new(results), StorageJsonContext.Default.StorageAccountListCommandResult);
+context.Response.Results = ResponseResult.Create(new(results), StorageJsonContext.Default.StorageAccountGetCommandResult);
 ```
 
 ## Adding New Commands and Services
@@ -488,11 +494,11 @@ tools/Azure.Mcp.Tools.{Service}/
 pushd 'eng/tools/ToolDescriptionEvaluator'
 
 # Single prompt validation
-dotnet run -- --validate --tool-description "Lists storage accounts in a subscription" --prompt "show me my storage accounts"
+dotnet run -- --validate --tool-description "Get storage accounts in a subscription" --prompt "show me my storage accounts"
 
 # Multiple prompt validation
 dotnet run -- --validate \
-  --tool-description "Lists storage accounts in a subscription" \
+  --tool-description "Get storage accounts in a subscription" \
   --prompt "show storage accounts" \
   --prompt "list my storage" \
   --prompt "what storage do I have"
@@ -507,8 +513,8 @@ popd
 ## Local Development and Testing
 
 ### Running Azure MCP Server Locally
+mcp.json configuration for local development:
 ```json
-// mcp.json configuration for local development
 {
   "servers": {
     "azure-mcp-server": {
@@ -521,17 +527,24 @@ popd
 ```
 
 ### Server Mode Configurations
+
+**Namespace filtering** (specific services only):
 ```json
-// Namespace filtering (specific services only)
 "args": ["server", "start", "--namespace", "storage", "--namespace", "keyvault"]
+```
 
-// Namespace proxy mode (groups tools, helpful for VS Code 128-tool limit)
+**Namespace proxy mode** (groups tools, helpful for VS Code 128-tool limit):
+```json
 "args": ["server", "start", "--mode", "namespace"]
+```
 
-// Single tool mode (single "azure" tool with internal routing)
+**Single tool mode** (single "azure" tool with internal routing):
+```json
 "args": ["server", "start", "--mode", "single"]
+```
 
-// Combined mode (filter + proxy)
+**Combined mode** (filter + proxy):
+```json
 "args": ["server", "start", "--namespace", "storage", "--mode", "namespace"]
 ```
 
