@@ -6,7 +6,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-- Added `azmcp-keyvault-admin-settings-get` command to retrieve Key Vault Managed HSM account settings.
+- Added `azmcp-keyvault-admin-settings-get` command to retrieve Key Vault Managed HSM account settings.[[358](https://github.com/microsoft/mcp/pull/358)]
 
 ### Breaking Changes
 

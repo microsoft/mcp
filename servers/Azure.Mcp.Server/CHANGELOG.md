@@ -10,7 +10,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added support for Azure App Service database management via the command:
   - `azmcp_appservice_database_add`: Add a database connection to an App Service web app (does not create the database itself; only adds the connection).
         This enables prompt-driven addition of database connections for Azure App Service web apps.
-- Added support for retrieving account settings of an Azure Key Vault Managed HSM via the command `azmcp-keyvault-admin-settings-get`.
+- Added support for retrieving account settings of an Azure Key Vault Managed HSM via the command `azmcp-keyvault-admin-settings-get`. [[#358](https://github.com/microsoft/mcp/pull/358)]
 
 ### Breaking Changes
 

@@ -35,7 +35,7 @@ public class KeyVaultSetup : IAreaSetup
 
         var certificate = new CommandGroup("certificate", "Key Vault certificate operations - Commands for managing and accessing certificates in Azure Key Vault.");
         keyVault.AddSubGroup(certificate);
-        var admin = new CommandGroup("admin", "Key Vault administration operations");
+        var admin = new CommandGroup("admin", "Key Vault administration operations - Commands for administering a Managed HSM in Azure Key Vault.");
         keyVault.AddSubGroup(admin);
 
         keys.AddCommand("list", new KeyListCommand(loggerFactory.CreateLogger<KeyListCommand>()));
