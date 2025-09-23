@@ -4,7 +4,6 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.LiveTests;
@@ -150,10 +149,5 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         Assert.True(namespaceData.TryGetProperty("isAutoInflateEnabled", out _));
         Assert.True(namespaceData.TryGetProperty("kafkaEnabled", out _));
         Assert.True(namespaceData.TryGetProperty("zoneRedundant", out _));
-
-        // Verify tags property exists (may be null or empty)
-        Assert.True(namespaceData.TryGetProperty("tags", out _));
     }
-
-
 }

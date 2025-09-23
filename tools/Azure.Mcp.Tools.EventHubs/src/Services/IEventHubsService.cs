@@ -14,7 +14,7 @@ public interface IEventHubsService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<EventHubsNamespaceDetails?> GetNamespaceAsync(
+    Task<EventHubsNamespaceDetails> GetNamespaceAsync(
         string namespaceName,
         string resourceGroup,
         string subscription,
