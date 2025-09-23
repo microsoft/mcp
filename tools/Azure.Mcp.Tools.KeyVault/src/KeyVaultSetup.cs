@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.KeyVault.Commands.Admin;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 using Azure.Mcp.Tools.KeyVault.Commands.Key;
 using Azure.Mcp.Tools.KeyVault.Commands.Secret;
@@ -31,6 +32,8 @@ public class KeyVaultSetup : IAreaSetup
         services.AddSingleton<CertificateGetCommand>();
         services.AddSingleton<CertificateCreateCommand>();
         services.AddSingleton<CertificateImportCommand>();
+
+        services.AddSingleton<AdminSettingsGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -45,6 +48,9 @@ public class KeyVaultSetup : IAreaSetup
 
         var certificate = new CommandGroup("certificate", "Key Vault certificate operations - Commands for managing and accessing certificates in Azure Key Vault.");
         keyVault.AddSubGroup(certificate);
+
+        var admin = new CommandGroup("admin", "Key Vault administration operations - Commands for administering a Managed HSM in Azure Key Vault.");
+        keyVault.AddSubGroup(admin);
 
         var keyList = serviceProvider.GetRequiredService<KeyListCommand>();
         keys.AddCommand(keyList.Name, keyList);
@@ -68,6 +74,9 @@ public class KeyVaultSetup : IAreaSetup
         certificate.AddCommand(certificateCreate.Name, certificateCreate);
         var certificateImport = serviceProvider.GetRequiredService<CertificateImportCommand>();
         certificate.AddCommand(certificateImport.Name, certificateImport);
+
+        var adminSettingsGet = serviceProvider.GetRequiredService<AdminSettingsGetCommand>();
+        admin.AddCommand(adminSettingsGet.Name, adminSettingsGet);
 
         return keyVault;
     }

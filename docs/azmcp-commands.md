@@ -711,6 +711,10 @@ azmcp keyvault secret get --subscription <subscription> \
 # Lists secrets in a key vault
 azmcp keyvault secret list --subscription <subscription> \
                            --vault <vault-name>
+
+# Gets Key Vault administration settings
+azmcp keyvault admin settings get --subscription <subscription> \
+                                  --vault <vault-name>
 ```
 
 ### Azure Kubernetes Service (AKS) Operations

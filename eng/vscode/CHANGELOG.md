@@ -11,6 +11,7 @@
   - `azmcp_foundry_agents_evaluate`: Evaluate a response from an agent by passing query and response inline
   - `azmcp_foundry_agents_query_and_evaluate`: Connect to an agent in an AI Foundry project, query it, and evaluate the response in one step
 - Enhanced AKS managed cluster information with comprehensive properties. [[#490](https://github.com/microsoft/mcp/pull/490)]
+- Added support retrieving Key Vault Managed HSM account settings via the command `azmcp-keyvault-admin-settings-get`. [[358](https://github.com/microsoft/mcp/pull/358)]
 
 ### Changed
 
