@@ -218,7 +218,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         }
     }
 
-    [Fact]
+    [Fact(Skip = "This test requires a Key Vault Managed HSM")]
     public async Task Should_get_admin_settings_dictionary()
     {
         var result = await CallToolAsync(

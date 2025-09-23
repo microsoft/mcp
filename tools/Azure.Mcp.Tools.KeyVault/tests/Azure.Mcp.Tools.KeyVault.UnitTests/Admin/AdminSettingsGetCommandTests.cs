@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -60,7 +61,7 @@ public class AdminSettingsGetCommandTests
 
         var response = await _command.ExecuteAsync(_context, args);
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Fact]
@@ -80,7 +81,7 @@ public class AdminSettingsGetCommandTests
 
         var response = await _command.ExecuteAsync(_context, args);
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains(expectedError, response.Message);
     }
 }
