@@ -1,5 +1,90 @@
 # AGENTS.md
 
+## Do
+- Use primary constructors for all C# classes
+- Use `System.Text.Json` over Newtonsoft.Json
+- Make command classes sealed unless designed for inheritance
+- Make members static when possible for AOT compatibility
+- Put each class and interface in separate files
+- Use `subscription` parameter (never `subscriptionId`) - supports both IDs and names
+- Use `resourceGroup` (not `resourceGroupName`)
+- Use singular nouns for resource names (e.g., `server`, not `serverName`)
+- Run `dotnet build` after making changes
+- Follow the `{Resource}{Operation}Command` naming pattern
+- Use extension methods `.AsRequired()` and `.AsOptional()` for option handling
+- Use name-based binding with `parseResult.GetValueOrDefault<T>()`
+- Always call `HandleException(context, ex)` in catch blocks
+- Create Bicep templates for Azure service commands (`test-resources.bicep`)
+- Include post-deployment scripts (`test-resources-post.ps1`)
+- Submit one tool per pull request for faster reviews
+- Use `BaseAzureResourceService` for Resource Graph queries when possible
+- Register all response models in JSON serialization context for AOT safety
+- Always review your own code for consistency, maintainability, and testability
+- Always ask for clarifications if the request is ambiguous or lacks sufficient context
+
+## Don't
+- Use `subscriptionId` parameter name
+- Add unnecessary "-name" suffixes (use `--account` vs `--account-name`)
+- Use readonly option fields in commands
+- Skip live test infrastructure for Azure service commands
+- Use `parseResult.GetValue()` without generic type parameter
+- Redefine base class properties in Options classes
+- Skip `base.RegisterOptions()` or `base.Dispose()` calls
+- Use hardcoded option strings
+- Leave commands unregistered
+- Skip error handling or comprehensive tests
+- Use dashes in command group names (use concatenated lowercase)
+- Make project-wide changes when file-scoped changes suffice
+
+## Commands
+
+### File-scoped commands (preferred for faster feedback)
+```powershell
+# Build single project
+dotnet build tools/Azure.Mcp.Tools.Storage/src
+
+# Format specific files
+dotnet format --include="tools/Azure.Mcp.Tools.Storage/**/*.cs"
+
+# Test specific class
+dotnet test --filter "FullyQualifiedName~StorageAccountListCommandTests"
+
+# Type check and validate
+./eng/scripts/Build-Local.ps1 -UsePaths -VerifyNpx
+
+# Note: Don't run local builds to check pipeline YAML files (e.g., files in `eng/pipelines/` with `.yml` extension)
+```
+
+### Project-wide commands (use sparingly)
+```powershell
+# Full build (when explicitly requested)
+dotnet build
+
+# All tests (when needed)
+./eng/scripts/Test-Code.ps1
+
+# AOT compatibility check (for new toolsets)
+./eng/scripts/Build-Local.ps1 -BuildNative
+```
+
+## Safety and Permissions
+
+### Allowed without prompt
+- Read files, list directories
+- Single file builds (`dotnet build path/to/project`)
+- Code formatting (`dotnet format --include="specific/path/**"`)
+- Spelling checks (`.\eng\common\spelling\Invoke-Cspell.ps1`)
+- Unit tests for specific classes
+- Creating/updating documentation
+
+### Ask first
+- Installing new packages or dependencies
+- Running project-wide builds or tests
+- Modifying `.csproj`, `.sln`, or configuration files
+- Deploying test resources (`Deploy-TestResources.ps1`)
+- Making breaking changes to public APIs
+- Adding new toolsets to the solution
+
 ## Project Overview
 Microsoft MCP (Model Context Protocol) servers provide AI agents with structured access to Azure, Microsoft Fabric, and other Microsoft services. This repository contains the core libraries, multiple MCP servers, service-specific tools, and comprehensive testing infrastructure for building agent-integrated Microsoft service interactions.
 
@@ -9,6 +94,30 @@ Microsoft MCP (Model Context Protocol) servers provide AI agents with structured
 - **Core Libraries**: Shared infrastructure for command patterns, authentication, and MCP protocol
 - **Toolsets**: Individual Azure service implementations (Storage, SQL, KeyVault, etc.)
 - **Engineering System**: Build pipelines, testing infrastructure, and deployment automation
+
+## Project Structure
+
+### Key directories
+- `core/Azure.Mcp.Core/` - Azure MCP core library with shared infrastructure
+- `servers/Azure.Mcp.Server/` - Main Azure MCP server implementation
+- `tools/Azure.Mcp.Tools.{Service}/` - Individual service toolsets (Storage, SQL, etc.)
+- `eng/scripts/` - Build, test, and deployment PowerShell scripts
+- `docs/new-command.md` - Implementation guide for new commands
+- `CONTRIBUTING.md` - Contribution guidelines and workflows
+
+### Good examples to follow
+- Command implementation: `tools/Azure.Mcp.Tools.Storage/src/Commands/Account/StorageAccountListCommand.cs`
+- Service pattern: `tools/Azure.Mcp.Tools.Storage/src/Services/StorageService.cs`
+- Unit tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.UnitTests/Account/StorageAccountListCommandTests.cs`
+- Live test infrastructure: `tools/Azure.Mcp.Tools.Storage/tests/test-resources.bicep`
+- Option definitions: `tools/Azure.Mcp.Tools.Storage/src/Options/StorageOptionDefinitions.cs`
+
+### Legacy patterns to avoid
+- Old option handling with readonly fields
+- Commands without proper error handling
+- Missing live test infrastructure for Azure services
+- Hardcoded strings instead of OptionDefinitions
+- Non-sealed command classes
 
 ## Development Environment Setup
 
@@ -37,6 +146,30 @@ dotnet build
 # Run all unit tests
 ./eng/scripts/Test-Code.ps1
 ```
+
+## API Docs and References
+- API documentation: `/docs/azmcp-commands.md` - Complete command reference
+- Implementation guide: `/docs/new-command.md` - Step-by-step command creation
+- Test prompts: `/docs/e2eTestPrompts.md` - Example prompts for testing
+- Contributing guide: `CONTRIBUTING.md` - Development workflow and standards
+- Code guidelines: `.github/copilot-instructions.md` - Specific coding standards
+
+## When Stuck
+- Ask clarifying questions about Azure service requirements or command patterns
+- Propose a short plan before implementing complex features
+- Reference existing commands in similar services as templates
+- Check `/docs/new-command.md` for implementation patterns
+- Use GitHub Copilot Chat with `"create [service] [resource] [operation] command using #new-command.md as a reference"`
+
+## PR Checklist
+- Format and type check: `dotnet format && dotnet build` - all green
+- Unit tests: Add comprehensive tests following existing patterns
+- Live test infrastructure: Include Bicep template and post-deployment script for Azure services
+- Documentation: Update `/docs/azmcp-commands.md` and add test prompts to `/docs/e2eTestPrompts.md`
+- Tool validation: Run `ToolDescriptionEvaluator` for command descriptions (target: top 3 ranking, ≥0.4 confidence)
+- Spelling check: `.\eng\common\spelling\Invoke-Cspell.ps1`
+- Changelog: Update `CHANGELOG.md` with your changes
+- One tool per PR: Submit single toolsets for faster review cycles
 
 ## Architecture and Project Structure
 
