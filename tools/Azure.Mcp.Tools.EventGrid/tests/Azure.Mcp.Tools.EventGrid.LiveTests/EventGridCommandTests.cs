@@ -156,10 +156,11 @@ public class EventGridCommandTests(ITestOutputHelper output)
             source = "/live/test/cloudevents",
             id = Guid.NewGuid().ToString(),
             time = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            data = new { 
-                message = "CloudEvents test from live integration test", 
+            data = new
+            {
+                message = "CloudEvents test from live integration test",
                 testType = "live-test",
-                timestamp = DateTime.UtcNow 
+                timestamp = DateTime.UtcNow
             }
         });
 
@@ -192,14 +193,16 @@ public class EventGridCommandTests(ITestOutputHelper output)
             eventCategory = "OrderProcessed",
             resourcePath = "/orders/live-test",
             occurredAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            details = new {
+            details = new
+            {
                 amount = 125.50m,
                 currency = "USD",
                 items = new[] {
                     new { sku = "LIVE-SKU-001", quantity = 2, price = 50.00m },
                     new { sku = "LIVE-SKU-002", quantity = 1, price = 25.50m }
                 },
-                customer = new {
+                customer = new
+                {
                     id = "CUST-LIVE-001",
                     tier = "premium"
                 }
@@ -281,10 +284,11 @@ public class EventGridCommandTests(ITestOutputHelper output)
             eventType = "LiveTest.ExplicitEventGrid",
             dataVersion = "1.5",
             eventTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            data = new { 
+            data = new
+            {
                 isExplicit = true,
                 schema = "EventGrid",
-                timestamp = DateTime.UtcNow 
+                timestamp = DateTime.UtcNow
             }
         });
 
@@ -316,9 +320,10 @@ public class EventGridCommandTests(ITestOutputHelper output)
             subject = "/live/test/default",
             eventType = "LiveTest.DefaultSchema",
             dataVersion = "1.0",
-            data = new { 
+            data = new
+            {
                 defaultTest = true,
-                timestamp = DateTime.UtcNow 
+                timestamp = DateTime.UtcNow
             }
         });
 

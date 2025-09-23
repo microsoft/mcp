@@ -634,7 +634,7 @@ public class EventsPublishCommandTests
         var subscriptionId = "test-sub";
         var resourceGroup = "test-rg";
         var topicName = "test-topic";
-        
+
         // Create a large data payload
         var largeData = new
         {
