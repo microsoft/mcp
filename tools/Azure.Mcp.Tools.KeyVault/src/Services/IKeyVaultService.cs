@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
+using Azure.Security.KeyVault.Administration;
 using Azure.Security.KeyVault.Certificates;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Secrets;
@@ -171,5 +172,19 @@ public interface IKeyVaultService
         string? password,
         string subscriptionId,
         string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null);
+
+    /// <summary>
+    /// Retrieves account settings for a Key Vault.
+    /// </summary>
+    /// <param name="vaultName">The name of the Key Vault.</param>
+    /// <param name="subscription">The subscription ID or name.</param>
+    /// <param name="tenant">Optional tenant ID for cross-tenant operations.</param>
+    /// <param name="retryPolicy">Optional retry policy for the operation.</param>
+    /// <returns>Structured vault settings.</returns>
+    Task<GetSettingsResult> GetVaultSettings(
+        string vaultName,
+        string subscription,
+        string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 }
