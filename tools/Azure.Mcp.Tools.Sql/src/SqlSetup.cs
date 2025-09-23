@@ -35,6 +35,7 @@ public class SqlSetup : IAreaSetup
         database.AddCommand("list", new DatabaseListCommand(loggerFactory.CreateLogger<DatabaseListCommand>()));
         database.AddCommand("create", new DatabaseCreateCommand(loggerFactory.CreateLogger<DatabaseCreateCommand>()));
         database.AddCommand("update", new DatabaseUpdateCommand(loggerFactory.CreateLogger<DatabaseUpdateCommand>()));
+        database.AddCommand("rename", new DatabaseRenameCommand(loggerFactory.CreateLogger<DatabaseRenameCommand>()));
         database.AddCommand("delete", new DatabaseDeleteCommand(loggerFactory.CreateLogger<DatabaseDeleteCommand>()));
 
         var server = new CommandGroup("server", "SQL server operations");

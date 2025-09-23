@@ -1127,6 +1127,13 @@ azmcp sql db update --subscription <subscription> \
                     [--elastic-pool-name <elastic-pool-name>] \
                     [--zone-redundant <true/false>] \
                     [--read-scale <Enabled|Disabled>]
+
+# Rename an existing SQL database to a new name within the same server
+azmcp sql db rename --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <current-database-name> \
+                    --new-database-name <new-database-name>
 ```
 
 #### Elastic Pool
