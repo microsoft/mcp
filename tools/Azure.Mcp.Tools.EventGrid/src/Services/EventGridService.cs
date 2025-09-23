@@ -139,21 +139,19 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             var publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential);
 
             // Serialize each event individually to JSON using source-generated context and convert to BinaryData
-            var eventsBinaryData = eventGridEventSchemas.Select(eventSchema =>
+            var eventsData = eventGridEventSchemas.Select(eventSchema =>
             {
                 var jsonString = JsonSerializer.Serialize(eventSchema, EventGridJsonContext.Default.EventGridEventSchema);
                 return BinaryData.FromString(jsonString);
             }).ToArray();
 
-            // Get event count for logging (this will materialize the enumerable once)
-            var eventCount = eventsBinaryData.Length;
+            var eventCount = eventsData.Length;
             _logger.LogInformation("Publishing {EventCount} events to topic '{TopicName}' with operation ID: {OperationId}",
                 eventCount, topicName, operationId);
 
             try
             {
-                // Send events using EventGridPublisherClient with BinaryData (AOT-compatible)
-                await publisherClient.SendEventsAsync(eventsBinaryData);
+                await publisherClient.SendEventsAsync(eventsData);
             }
             catch (Exception publishEx)
             {
@@ -207,7 +205,6 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
                 events = new[] { CreateEventGridEventSchemaFromJsonElement(jsonDocument.RootElement, eventSchema) };
             }
 
-            // Force evaluation to validate all events before returning
             var eventsList = events.ToList();
             if (eventsList.Count == 0)
             {
@@ -250,8 +247,6 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             var dataContentType = eventElement.TryGetProperty("datacontenttype", out var dataContentTypeProp)
                 ? dataContentTypeProp.GetString()
                 : "application/json"; // Default per CloudEvents spec
-
-            // Log and validate datacontenttype for debugging and monitoring purposes
 
             if (!string.Equals(dataContentType, "application/json", StringComparison.OrdinalIgnoreCase))
             {
