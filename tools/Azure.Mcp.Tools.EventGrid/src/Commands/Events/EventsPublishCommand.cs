@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Options;
@@ -105,11 +106,11 @@ public sealed class EventsPublishCommand(ILogger<EventsPublishCommand> logger) :
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => reqEx.Status,
-        ArgumentException => 400,
-        System.Text.Json.JsonException => 400,
+        Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
+        ArgumentException => HttpStatusCode.BadRequest,
+        System.Text.Json.JsonException => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)
     };
 
