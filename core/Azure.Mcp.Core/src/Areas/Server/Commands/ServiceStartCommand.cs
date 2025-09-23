@@ -60,6 +60,7 @@ public sealed class ServiceStartCommand : BaseCommand
         command.Options.Add(ServiceOptionDefinitions.ReadOnly);
         command.Options.Add(ServiceOptionDefinitions.Debug);
         command.Options.Add(ServiceOptionDefinitions.EnableInsecureTransports);
+        command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
     }
 
     /// <summary>
@@ -100,6 +101,7 @@ public sealed class ServiceStartCommand : BaseCommand
             ReadOnly = readOnly,
             Debug = debug,
             EnableInsecureTransports = enableInsecureTransports,
+            InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name),
         };
 
         using var host = CreateHost(serverOptions);

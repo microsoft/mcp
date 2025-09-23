@@ -524,7 +524,9 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
 
             // When using a prefix that does not match any files, we should still return a valid response
             // with no result.
-            Assert.Null(result);
+            var files = result.AssertProperty("files");
+            Assert.Equal(JsonValueKind.Array, files.ValueKind);
+            Assert.Equal(0, files.GetArrayLength());
         }
 
         [Fact]
@@ -551,7 +553,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             message.AssertProperty("expirationTime");
             message.AssertProperty("popReceipt");
             message.AssertProperty("nextVisibleTime");
-            Assert.True(message.TryGetProperty("message", out var messageElement));
+            var messageElement = message.AssertProperty("message");
             Assert.Equal("Test message from integration test", messageElement.GetString());
         }
 
@@ -574,7 +576,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             // Assert
             var message = result.AssertProperty("message");
             Assert.Equal(JsonValueKind.Object, message.ValueKind);
-            Assert.True(message.TryGetProperty("message", out var messageElement));
+            var messageElement = message.AssertProperty("message");
             Assert.Equal("Test message with TTL", messageElement.GetString());
         }
 

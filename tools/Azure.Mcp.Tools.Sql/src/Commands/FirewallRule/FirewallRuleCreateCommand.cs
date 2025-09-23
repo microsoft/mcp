@@ -30,9 +30,9 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -77,9 +77,7 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
                 options.EndIpAddress!,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new FirewallRuleCreateResult(firewallRule),
-                SqlJsonContext.Default.FirewallRuleCreateResult);
+            context.Response.Results = ResponseResult.Create(new(firewallRule), SqlJsonContext.Default.FirewallRuleCreateResult);
         }
         catch (Exception ex)
         {

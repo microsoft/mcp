@@ -69,31 +69,31 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
         command.Options.Add(CloudArchitectOptionDefinitions.State);
 
         command.Validators.Add(result =>
+        {
+            // Validate confidence score is between 0.0 and 1.0
+            var confidenceScore = result.GetValue(CloudArchitectOptionDefinitions.ConfidenceScore);
+            if (confidenceScore < 0.0 || confidenceScore > 1.0)
             {
-                // Validate confidence score is between 0.0 and 1.0
-                var confidenceScore = result.GetValue(CloudArchitectOptionDefinitions.ConfidenceScore);
-                if (confidenceScore < 0.0 || confidenceScore > 1.0)
-                {
-                    result.AddError("Confidence score must be between 0.0 and 1.0");
-                    return;
-                }
+                result.AddError("Confidence score must be between 0.0 and 1.0");
+                return;
+            }
 
-                // Validate question number is not negative
-                var questionNumber = result.GetValue(CloudArchitectOptionDefinitions.QuestionNumber);
-                if (questionNumber < 0)
-                {
-                    result.AddError("Question number cannot be negative");
-                    return;
-                }
+            // Validate question number is not negative
+            var questionNumber = result.GetValue(CloudArchitectOptionDefinitions.QuestionNumber);
+            if (questionNumber < 0)
+            {
+                result.AddError("Question number cannot be negative");
+                return;
+            }
 
-                // Validate total questions is not negative
-                var totalQuestions = result.GetValue(CloudArchitectOptionDefinitions.TotalQuestions);
-                if (totalQuestions < 0)
-                {
-                    result.AddError("Total questions cannot be negative");
-                    return;
-                }
-            });
+            // Validate total questions is not negative
+            var totalQuestions = result.GetValue(CloudArchitectOptionDefinitions.TotalQuestions);
+            if (totalQuestions < 0)
+            {
+                result.AddError("Total questions cannot be negative");
+                return;
+            }
+        });
     }
 
     protected override ArchitectureDesignToolOptions BindOptions(ParseResult parseResult)
@@ -113,13 +113,13 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
     {
         if (string.IsNullOrEmpty(stateJson))
         {
-            return new ArchitectureDesignToolState();
+            return new();
         }
 
         try
         {
             var state = JsonSerializer.Deserialize(stateJson, CloudArchitectJsonContext.Default.ArchitectureDesignToolState);
-            return state ?? new ArchitectureDesignToolState();
+            return state ?? new();
         }
         catch (JsonException ex)
         {

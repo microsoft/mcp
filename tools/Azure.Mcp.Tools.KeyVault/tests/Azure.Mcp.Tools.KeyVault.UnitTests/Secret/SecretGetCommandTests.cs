@@ -3,9 +3,9 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Secrets;
@@ -75,7 +75,7 @@ public class SecretGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var retrievedSecret = JsonSerializer.Deserialize<SecretGetResult>(json);
+        var retrievedSecret = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.SecretGetCommandResult);
 
         Assert.NotNull(retrievedSecret);
         Assert.Equal(_knownSecretName, retrievedSecret.Name);
@@ -128,29 +128,5 @@ public class SecretGetCommandTests
         Assert.NotNull(response);
         Assert.Equal(500, response.Status);
         Assert.Contains(expectedError, response.Message);
-    }
-
-    private class SecretGetResult
-    {
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = null!;
-
-        [JsonPropertyName("value")]
-        public string Value { get; set; } = null!;
-
-        [JsonPropertyName("enabled")]
-        public bool? Enabled { get; set; }
-
-        [JsonPropertyName("notBefore")]
-        public DateTimeOffset? NotBefore { get; set; }
-
-        [JsonPropertyName("expiresOn")]
-        public DateTimeOffset? ExpiresOn { get; set; }
-
-        [JsonPropertyName("createdOn")]
-        public DateTimeOffset? CreatedOn { get; set; }
-
-        [JsonPropertyName("updatedOn")]
-        public DateTimeOffset? UpdatedOn { get; set; }
     }
 }

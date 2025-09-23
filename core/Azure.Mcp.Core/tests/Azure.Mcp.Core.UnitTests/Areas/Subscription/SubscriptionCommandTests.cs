@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Commands.Account;
@@ -40,9 +41,8 @@ public class SubscriptionCommandTests
     public void Validate_WithEnvironmentVariableOnly_PassesValidation()
     {
         // Arrange
-        var originalValue = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
-        Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", "env-subs");
-
+        var originalValue = EnvironmentHelpers.GetAzureSubscriptionId();
+        EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
         try
         {
             var parseResult = _commandDefinition.Parse([]);
@@ -53,7 +53,7 @@ public class SubscriptionCommandTests
         finally
         {
             // Cleanup
-            Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", originalValue);
+            EnvironmentHelpers.SetAzureSubscriptionId(originalValue);
         }
     }
 
@@ -61,8 +61,8 @@ public class SubscriptionCommandTests
     public async Task ExecuteAsync_WithEnvironmentVariableOnly_CallsServiceWithCorrectSubscription()
     {
         // Arrange
-        var originalValue = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
-        Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", "env-subs");
+        var originalValue = EnvironmentHelpers.GetAzureSubscriptionId();
+        EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
 
         try
         {
@@ -97,7 +97,7 @@ public class SubscriptionCommandTests
         finally
         {
             // Cleanup
-            Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", originalValue);
+            EnvironmentHelpers.SetAzureSubscriptionId(originalValue);
         }
     }
 
@@ -105,8 +105,8 @@ public class SubscriptionCommandTests
     public async Task ExecuteAsync_WithBothOptionAndEnvironmentVariable_PrefersOption()
     {
         // Arrange
-        var originalValue = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
-        Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", "env-subs");
+        var originalValue = EnvironmentHelpers.GetAzureSubscriptionId();
+        EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
 
         try
         {
@@ -146,7 +146,7 @@ public class SubscriptionCommandTests
         finally
         {
             // Cleanup
-            Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", originalValue);
+            EnvironmentHelpers.SetAzureSubscriptionId(originalValue);
         }
     }
 }

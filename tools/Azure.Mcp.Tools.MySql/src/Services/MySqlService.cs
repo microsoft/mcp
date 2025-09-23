@@ -6,7 +6,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Tools.MySql.Json;
+using Azure.Mcp.Tools.MySql.Commands;
 using Azure.ResourceManager.MySql.FlexibleServers;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
@@ -108,7 +108,7 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         return $"Server={host};Database={database};User ID={user};Password={entraIdAccessToken};SSL Mode=Required;";
     }
 
-    private static void ValidateQuerySafety(string query)
+    internal static void ValidateQuerySafety(string query)
     {
         if (string.IsNullOrWhiteSpace(query))
         {

@@ -36,7 +36,7 @@ public sealed class ModelsListCommand : GlobalCommand<ModelsListOptions>
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -82,11 +82,7 @@ public sealed class ModelsListCommand : GlobalCommand<ModelsListOptions>
                 3,
                 options.RetryPolicy);
 
-            context.Response.Results = models?.Count > 0 ?
-                ResponseResult.Create(
-                    new ModelsListCommandResult(models),
-                    FoundryJsonContext.Default.ModelsListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(models ?? []), FoundryJsonContext.Default.ModelsListCommandResult);
         }
         catch (Exception ex)
         {

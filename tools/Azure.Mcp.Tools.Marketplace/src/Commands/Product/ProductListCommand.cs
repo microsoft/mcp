@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -48,7 +48,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -112,11 +112,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
                 options.RetryPolicy);
 
             // Set results
-            context.Response.Results = results.Items?.Count > 0 ?
-                ResponseResult.Create(
-                    new ProductListCommandResult(results.Items, results.NextCursor),
-                    MarketplaceJsonContext.Default.ProductListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(results.Items ?? [], results.NextCursor), MarketplaceJsonContext.Default.ProductListCommandResult);
         }
         catch (Exception ex)
         {

@@ -78,7 +78,7 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
             var bestPractices = GetBestPracticesText(resourceFileName);
 
             context.Response.Status = 200;
-            context.Response.Results = ResponseResult.Create(new List<string> { bestPractices }, AzureBestPracticesJsonContext.Default.ListString);
+            context.Response.Results = ResponseResult.Create([bestPractices], AzureBestPracticesJsonContext.Default.ListString);
             context.Response.Message = string.Empty;
 
             context.Activity?.AddTag("BestPractices_Resource", options.Resource);

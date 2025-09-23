@@ -29,7 +29,7 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -70,9 +70,7 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
                 options.Tenant,
                 options.RetryPolicy);
             // Set results if any were returned
-            context.Response.Results = results != null ?
-                ResponseResult.Create(new TestRunListCommandResult(results), LoadTestJsonContext.Default.TestRunListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestRunListCommandResult);
         }
         catch (Exception ex)
         {

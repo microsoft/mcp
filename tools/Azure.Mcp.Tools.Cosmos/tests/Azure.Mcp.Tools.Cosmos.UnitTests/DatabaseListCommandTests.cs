@@ -13,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using static Azure.Mcp.Tools.Cosmos.Commands.DatabaseListCommand;
 
 namespace Azure.Mcp.Tools.Cosmos.UnitTests;
 
@@ -63,17 +62,14 @@ public class DatabaseListCommandTests
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DatabaseListCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.DatabaseListCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedDatabases.Count, result.Databases.Count);
         Assert.Equal(expectedDatabases, result.Databases);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoDataBaseExists()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDataBaseExists()
     {
         // Arrange
         _cosmosService.ListDatabases(
@@ -82,7 +78,7 @@ public class DatabaseListCommandTests
             Arg.Any<AuthMethod>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<string>());
+            .Returns([]);
 
         var args = _commandDefinition.Parse([
             "--account", "account123",
@@ -94,7 +90,11 @@ public class DatabaseListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.DatabaseListCommandResult);
+        Assert.NotNull(result);
+        Assert.Empty(result.Databases);
     }
 
     [Fact]

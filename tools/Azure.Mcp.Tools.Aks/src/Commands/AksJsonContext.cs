@@ -13,5 +13,6 @@ namespace Azure.Mcp.Tools.Aks.Commands;
 [JsonSerializable(typeof(NodepoolListCommand.NodepoolListCommandResult))]
 [JsonSerializable(typeof(NodepoolGetCommand.NodepoolGetCommandResult))]
 [JsonSerializable(typeof(Models.NodePool))]
+[JsonSerializable(typeof(Models.NodePoolPowerState))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class AksJsonContext : JsonSerializerContext;

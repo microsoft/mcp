@@ -37,7 +37,7 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -79,11 +79,7 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
                 options.Tenant,
                 options.RetryPolicy);
 
-            var peekedMessages = messages ?? new List<ServiceBusReceivedMessage>();
-
-            context.Response.Results = ResponseResult.Create(
-                new QueuePeekCommandResult(peekedMessages),
-                ServiceBusJsonContext.Default.QueuePeekCommandResult);
+            context.Response.Results = ResponseResult.Create(new(messages ?? []), ServiceBusJsonContext.Default.QueuePeekCommandResult);
         }
         catch (Exception ex)
         {

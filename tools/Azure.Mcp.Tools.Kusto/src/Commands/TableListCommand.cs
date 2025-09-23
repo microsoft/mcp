@@ -28,7 +28,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -68,9 +68,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
                     options.RetryPolicy);
             }
 
-            context.Response.Results = tableNames?.Count > 0 ?
-                ResponseResult.Create(new TableListCommandResult(tableNames), KustoJsonContext.Default.TableListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(tableNames ?? []), KustoJsonContext.Default.TableListCommandResult);
         }
         catch (Exception ex)
         {

@@ -32,9 +32,9 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -73,9 +73,7 @@ public sealed class DirectoryCreateCommand(ILogger<DirectoryCreateCommand> logge
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new DirectoryCreateCommandResult(directory),
-                StorageJsonContext.Default.DirectoryCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(directory), StorageJsonContext.Default.DirectoryCreateCommandResult);
         }
         catch (Exception ex)
         {

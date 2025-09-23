@@ -24,7 +24,7 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -71,7 +71,7 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new CertificateGetCommandResult(
+                new(
                     certificate.Name,
                     certificate.Id,
                     certificate.KeyId,

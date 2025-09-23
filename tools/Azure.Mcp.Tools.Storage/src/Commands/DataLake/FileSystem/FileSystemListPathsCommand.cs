@@ -32,7 +32,7 @@ public sealed class FileSystemListPathsCommand(ILogger<FileSystemListPathsComman
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -74,9 +74,7 @@ public sealed class FileSystemListPathsCommand(ILogger<FileSystemListPathsComman
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new FileSystemListPathsCommandResult(paths ?? []),
-                StorageJsonContext.Default.FileSystemListPathsCommandResult);
+            context.Response.Results = ResponseResult.Create(new(paths ?? []), StorageJsonContext.Default.FileSystemListPathsCommandResult);
         }
         catch (Exception ex)
         {

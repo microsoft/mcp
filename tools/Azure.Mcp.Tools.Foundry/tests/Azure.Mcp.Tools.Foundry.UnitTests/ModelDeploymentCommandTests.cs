@@ -44,19 +44,19 @@ public class ModelDeploymentCommandTests
         };
 
         _foundryService.DeployModel(
-                Arg.Is<string>(s => s == deploymentName),
-                Arg.Is<string>(s => s == modelName),
-                Arg.Is<string>(s => s == modelFormat),
-                Arg.Is<string>(s => s == aiServicesName),
-                Arg.Is<string>(s => s == resourceGroup),
-                Arg.Is<string>(s => s == subscriptionId),
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<int?>(),
-                Arg.Any<string?>(),
-                Arg.Any<int?>(),
-                Arg.Any<RetryPolicyOptions?>())
+            Arg.Is(deploymentName),
+            Arg.Is(modelName),
+            Arg.Is(modelFormat),
+            Arg.Is(aiServicesName),
+            Arg.Is(resourceGroup),
+            Arg.Is(subscriptionId),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<int?>(),
+            Arg.Any<RetryPolicyOptions?>())
             .Returns(expectedResponse);
 
         var command = new ModelDeploymentCommand();
@@ -90,19 +90,19 @@ public class ModelDeploymentCommandTests
         };
 
         _foundryService.DeployModel(
-                Arg.Is<string>(s => s == deploymentName),
-                Arg.Is<string>(s => s == modelName),
-                Arg.Is<string>(s => s == modelFormat),
-                Arg.Is<string>(s => s == aiServicesName),
-                Arg.Is<string>(s => s == resourceGroup),
-                Arg.Is<string>(s => s == subscriptionId),
-                Arg.Is<string?>(s => s == modelVersion),
-                Arg.Is<string?>(s => s == modelSource),
-                Arg.Is<string?>(s => s == skuName),
-                Arg.Is<int?>(s => s == skuCapacity),
-                Arg.Is<string?>(s => s == scaleType),
-                Arg.Is<int?>(s => s == scaleCapacity),
-                Arg.Any<RetryPolicyOptions?>())
+            Arg.Is(deploymentName),
+            Arg.Is(modelName),
+            Arg.Is(modelFormat),
+            Arg.Is(aiServicesName),
+            Arg.Is(resourceGroup),
+            Arg.Is(subscriptionId),
+            Arg.Is<string?>(modelVersion),
+            Arg.Is<string?>(modelSource),
+            Arg.Is<string?>(skuName),
+            Arg.Is<int?>(skuCapacity),
+            Arg.Is<string?>(scaleType),
+            Arg.Is<int?>(scaleCapacity),
+            Arg.Any<RetryPolicyOptions?>())
             .Returns(expectedResponse);
 
         var command = new ModelDeploymentCommand();
@@ -126,19 +126,19 @@ public class ModelDeploymentCommandTests
         var expectedError = "Test error";
 
         _foundryService.DeployModel(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<int?>(),
-                Arg.Any<string>(),
-                Arg.Any<int?>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int?>(),
+            Arg.Any<string>(),
+            Arg.Any<int?>(),
+            Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new ModelDeploymentCommand();

@@ -30,7 +30,7 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -68,11 +68,7 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = map.Count > 0
-                ? ResponseResult.Create(
-                    new RegistryRepositoryListCommandResult(map),
-                    AcrJsonContext.Default.RegistryRepositoryListCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(map ?? []), AcrJsonContext.Default.RegistryRepositoryListCommandResult);
         }
         catch (Exception ex)
         {

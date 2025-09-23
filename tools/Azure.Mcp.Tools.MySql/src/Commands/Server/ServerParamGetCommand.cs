@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Tools.MySql.Json;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Options.Server;
 using Azure.Mcp.Tools.MySql.Services;
@@ -25,7 +24,7 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger)
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -58,9 +57,7 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger)
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
             string paramValue = await mysqlService.GetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!);
             context.Response.Results = !string.IsNullOrEmpty(paramValue) ?
-                ResponseResult.Create(
-                    new ServerParamGetCommandResult(options.Param!, paramValue),
-                    MySqlJsonContext.Default.ServerParamGetCommandResult) :
+                ResponseResult.Create(new(options.Param!, paramValue), MySqlJsonContext.Default.ServerParamGetCommandResult) :
                 null;
         }
         catch (Exception ex)

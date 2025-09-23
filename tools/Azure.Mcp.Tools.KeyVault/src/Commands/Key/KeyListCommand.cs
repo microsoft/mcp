@@ -24,7 +24,7 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -70,11 +70,7 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = keys?.Count > 0 ?
-                ResponseResult.Create(
-                    new KeyListCommandResult(keys),
-                    KeyVaultJsonContext.Default.KeyListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(keys ?? []), KeyVaultJsonContext.Default.KeyListCommandResult);
         }
         catch (Exception ex)
         {

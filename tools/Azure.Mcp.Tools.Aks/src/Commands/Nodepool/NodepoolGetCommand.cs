@@ -30,7 +30,7 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -74,9 +74,7 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
                 options.RetryPolicy);
 
             context.Response.Results = nodePool is null ?
-                null : ResponseResult.Create(
-                    new NodepoolGetCommandResult(nodePool),
-                    AksJsonContext.Default.NodepoolGetCommandResult);
+                null : ResponseResult.Create(new(nodePool), AksJsonContext.Default.NodepoolGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -97,12 +95,6 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
             $"Authorization failed accessing the AKS node pool. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record NodepoolGetCommandResult(Models.NodePool NodePool);

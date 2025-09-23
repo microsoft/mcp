@@ -69,6 +69,13 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
         {
             Assert.False(string.IsNullOrEmpty(stateProperty.GetString()));
         }
+
+        nodePool.AssertProperty("orchestratorVersion");
+        nodePool.AssertProperty("currentOrchestratorVersion");
+        nodePool.AssertProperty("enableAutoScaling");
+        nodePool.AssertProperty("maxPods");
+        nodePool.AssertProperty("osSKU");
+        nodePool.AssertProperty("nodeImageVersion");
     }
 
     [Fact]
@@ -87,8 +94,8 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
         // Should return runtime error details in results
         Assert.True(result.HasValue);
         var errorDetails = result.Value;
-        Assert.True(errorDetails.TryGetProperty("message", out _));
-        Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
+        errorDetails.AssertProperty("message");
+        var typeProperty = errorDetails.AssertProperty("type");
         Assert.Equal("Exception", typeProperty.GetString());
     }
 
@@ -155,8 +162,8 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
 
         Assert.True(result.HasValue);
         var errorDetails = result.Value;
-        Assert.True(errorDetails.TryGetProperty("message", out _));
-        Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
+        errorDetails.AssertProperty("message");
+        var typeProperty = errorDetails.AssertProperty("type");
         Assert.Equal("Exception", typeProperty.GetString());
     }
 
@@ -177,4 +184,3 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
         Assert.False(result.HasValue);
     }
 }
-

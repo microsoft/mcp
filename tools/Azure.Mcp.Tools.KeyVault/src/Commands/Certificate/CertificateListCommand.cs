@@ -24,7 +24,7 @@ public sealed class CertificateListCommand(ILogger<CertificateListCommand> logge
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -69,11 +69,7 @@ public sealed class CertificateListCommand(ILogger<CertificateListCommand> logge
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = certificates?.Count > 0 ?
-                ResponseResult.Create(
-                    new CertificateListCommandResult(certificates),
-                    KeyVaultJsonContext.Default.CertificateListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(certificates ?? []), KeyVaultJsonContext.Default.CertificateListCommandResult);
         }
         catch (Exception ex)
         {

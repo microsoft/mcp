@@ -31,7 +31,7 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : B
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -70,9 +70,7 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : B
                 options.RetryPolicy
             );
 
-            context.Response.Results = containers is { Count: > 0 }
-                ? ResponseResult.Create(new ContainerGetCommandResult(containers), StorageJsonContext.Default.ContainerGetCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(containers ?? []), StorageJsonContext.Default.ContainerGetCommandResult);
             return context.Response;
         }
         catch (Exception ex)

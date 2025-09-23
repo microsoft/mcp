@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Database;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,13 +54,13 @@ public class DatabaseListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DatabaseListResult>(json);
+        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.DatabaseListCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedDatabases, result.Databases);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsMessage_WhenNoDatabasesExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDatabasesExist()
     {
         _mysqlService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns([]);
 
@@ -77,7 +77,12 @@ public class DatabaseListCommandTests
 
         Assert.NotNull(response);
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.DatabaseListCommandResult);
+        Assert.NotNull(result);
+        Assert.Empty(result.Databases);
     }
 
     [Fact]
@@ -112,11 +117,5 @@ public class DatabaseListCommandTests
         Assert.Equal("List MySQL Databases", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
-    }
-
-    private class DatabaseListResult
-    {
-        [JsonPropertyName("Databases")]
-        public List<string> Databases { get; set; } = new List<string>();
     }
 }

@@ -24,7 +24,7 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
     {
         Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = true,
         Secret = false
@@ -81,7 +81,7 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new CertificateImportCommandResult(
+                new(
                     certificate.Name,
                     certificate.Id,
                     certificate.KeyId,

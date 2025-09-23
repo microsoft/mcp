@@ -33,7 +33,7 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -79,9 +79,7 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = functionApps is { Count: > 0 }
-                ? ResponseResult.Create(new(functionApps), FunctionAppJsonContext.Default.FunctionAppGetCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(functionApps ?? []), FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
         }
         catch (Exception ex)
         {

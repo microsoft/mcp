@@ -5,6 +5,7 @@ using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Commands.Blob;
 using Azure.Mcp.Tools.Storage.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -131,14 +132,14 @@ public class BlobGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<BlobGetCommand.BlobGetCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.BlobGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedBlobInfos.Select(b => b.Name), result.Blobs.Select(b => b.Name));
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoBlobs()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoBlobs()
     {
         // Arrange
         _storageService.GetBlobDetails(
@@ -161,7 +162,13 @@ public class BlobGetCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, StorageJsonContext.Default.BlobGetCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Blobs);
     }
 
     [Fact]

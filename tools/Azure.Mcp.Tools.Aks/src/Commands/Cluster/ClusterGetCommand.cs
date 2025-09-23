@@ -30,7 +30,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -71,9 +71,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
                 options.RetryPolicy);
 
             context.Response.Results = cluster is null ?
-                null : ResponseResult.Create(
-                    new ClusterGetCommandResult(cluster),
-                    AksJsonContext.Default.ClusterGetCommandResult);
+                null : ResponseResult.Create(new(cluster), AksJsonContext.Default.ClusterGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -94,12 +92,6 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
             $"Authorization failed accessing the AKS cluster. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record ClusterGetCommandResult(Models.Cluster Cluster);

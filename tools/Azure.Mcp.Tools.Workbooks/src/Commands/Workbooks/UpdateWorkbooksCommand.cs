@@ -31,7 +31,7 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
     {
         Destructive = true,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -73,9 +73,7 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
                 options.RetryPolicy,
                 options.Tenant) ?? throw new InvalidOperationException("Failed to update workbook");
 
-            context.Response.Results = ResponseResult.Create(
-                new UpdateWorkbooksCommandResult(updatedWorkbook),
-                WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
+            context.Response.Results = ResponseResult.Create(new(updatedWorkbook), WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
         }
         catch (Exception ex)
         {

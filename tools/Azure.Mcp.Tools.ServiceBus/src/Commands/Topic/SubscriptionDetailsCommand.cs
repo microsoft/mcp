@@ -35,7 +35,7 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -77,9 +77,7 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new SubscriptionDetailsCommandResult(details),
-                ServiceBusJsonContext.Default.SubscriptionDetailsCommandResult);
+            context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.SubscriptionDetailsCommandResult);
         }
         catch (Exception ex)
         {

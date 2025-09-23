@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Server;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,7 +56,7 @@ public class ServerParamSetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ServerParamSetResult>(json);
+        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.ServerParamSetCommandResult);
         Assert.NotNull(result);
         Assert.Equal("max_connections", result.Parameter);
         Assert.Equal(newValue, result.Value);
@@ -96,14 +96,5 @@ public class ServerParamSetCommandTests
         Assert.Equal("Set MySQL Server Parameter", command.Title);
         Assert.True(command.Metadata.Destructive);
         Assert.False(command.Metadata.ReadOnly);
-    }
-
-    private class ServerParamSetResult
-    {
-        [JsonPropertyName("Parameter")]
-        public string Parameter { get; set; } = string.Empty;
-
-        [JsonPropertyName("Value")]
-        public string Value { get; set; } = string.Empty;
     }
 }

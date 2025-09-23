@@ -32,7 +32,7 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger) : BaseContain
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -72,9 +72,7 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger) : BaseContain
                 options.RetryPolicy
             );
 
-            context.Response.Results = details is { Count: > 0 }
-                ? ResponseResult.Create(new BlobGetCommandResult(details), StorageJsonContext.Default.BlobGetCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(details ?? []), StorageJsonContext.Default.BlobGetCommandResult);
             return context.Response;
         }
         catch (Exception ex)

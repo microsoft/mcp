@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Workbooks.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Services;
@@ -108,7 +109,7 @@ public class ShowWorkbooksCommandTests
         Assert.Equal(200, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ShowWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Workbook);
@@ -416,7 +417,7 @@ public class ShowWorkbooksCommandTests
         Assert.Equal(200, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ShowWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Workbook);
@@ -430,10 +431,5 @@ public class ShowWorkbooksCommandTests
         Assert.Contains("AzureActivity", workbook.SerializedData);
         Assert.Contains("piechart", workbook.SerializedData);
         Assert.Equal("complex-user-id-12345", workbook.UserId);
-    }
-
-    private class ShowWorkbooksCommandResult
-    {
-        public WorkbookInfo Workbook { get; set; } = null!;
     }
 }

@@ -31,7 +31,7 @@ public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand>
     {
         Destructive = true,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -70,9 +70,7 @@ public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand>
                 options.FirewallRuleName!,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new FirewallRuleDeleteResult(deleted, options.FirewallRuleName!),
-                SqlJsonContext.Default.FirewallRuleDeleteResult);
+            context.Response.Results = ResponseResult.Create(new(deleted, options.FirewallRuleName!), SqlJsonContext.Default.FirewallRuleDeleteResult);
         }
         catch (Exception ex)
         {

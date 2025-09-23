@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Commands.Index;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.Mcp.Tools.Search.Services;
@@ -55,18 +56,14 @@ public class IndexGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-        var result = JsonSerializer.Deserialize<IndexGetCommandResult>(json, options);
+        var result = JsonSerializer.Deserialize(json, SearchJsonContext.Default.IndexGetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedIndexes, result.Indexes);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoIndexes()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoIndexes()
     {
         _searchService.GetIndexDetails(
             Arg.Any<string>(),
@@ -82,7 +79,13 @@ public class IndexGetCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, SearchJsonContext.Default.IndexGetCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Indexes);
     }
 
     [Fact]
@@ -135,7 +138,7 @@ public class IndexGetCommandTests
         Assert.Equal(200, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<IndexGetCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, SearchJsonContext.Default.IndexGetCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result?.Indexes);
@@ -145,7 +148,7 @@ public class IndexGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenDefinitionIsNull()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenDefinitionIsNull()
     {
         // Arrange
         var serviceName = "service123";
@@ -164,7 +167,11 @@ public class IndexGetCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, SearchJsonContext.Default.IndexGetCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Indexes);
     }
 
     [Fact]
@@ -176,8 +183,8 @@ public class IndexGetCommandTests
         var indexName = "index1";
 
         _searchService.GetIndexDetails(
-            Arg.Is<string>(s => s == serviceName),
-            Arg.Is<string>(i => i == indexName),
+            Arg.Is(serviceName),
+            Arg.Is(indexName),
             Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Exception(expectedError));
 

@@ -28,7 +28,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -37,7 +37,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup);
     }
 
     protected override TopicListOptions BindOptions(ParseResult parseResult)
@@ -62,11 +62,10 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
             var topics = await eventGridService.GetTopicsAsync(
                 options.Subscription!,
                 options.ResourceGroup,
+                options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = topics?.Count > 0
-                ? ResponseResult.Create(new TopicListCommandResult(topics), EventGridJsonContext.Default.TopicListCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(topics ?? []), EventGridJsonContext.Default.TopicListCommandResult);
         }
         catch (Exception ex)
         {

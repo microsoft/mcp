@@ -32,7 +32,7 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
     {
         Destructive = true,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -67,9 +67,8 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
 
             if (deleted)
             {
-                context.Response.Results = ResponseResult.Create(
-                            new DeleteWorkbooksCommandResult(options.WorkbookId!, "Successfully deleted"),
-                            WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
+                context.Response.Results = ResponseResult.Create(new(options.WorkbookId!, "Successfully deleted"),
+                    WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
             }
             else
             {

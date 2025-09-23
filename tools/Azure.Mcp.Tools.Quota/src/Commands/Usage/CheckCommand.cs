@@ -29,7 +29,7 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -77,11 +77,7 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
 
             _logger.LogInformation("Quota check result: {ToolResult}", toolResult);
 
-            context.Response.Results = toolResult?.Count > 0 ?
-                ResponseResult.Create(
-                    new UsageCheckCommandResult(toolResult),
-                    QuotaJsonContext.Default.UsageCheckCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(toolResult ?? []), QuotaJsonContext.Default.UsageCheckCommandResult);
         }
         catch (Exception ex)
         {

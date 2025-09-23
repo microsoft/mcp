@@ -31,7 +31,7 @@ public sealed class KeyValueListCommand(ILogger<KeyValueListCommand> logger) : B
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -72,11 +72,7 @@ public sealed class KeyValueListCommand(ILogger<KeyValueListCommand> logger) : B
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = settings?.Count > 0 ?
-                ResponseResult.Create(
-                    new KeyValueListCommandResult(settings),
-                    AppConfigJsonContext.Default.KeyValueListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(settings ?? []), AppConfigJsonContext.Default.KeyValueListCommandResult);
         }
         catch (Exception ex)
         {

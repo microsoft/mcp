@@ -34,7 +34,7 @@ public sealed class DatabaseShowCommand(ILogger<DatabaseShowCommand> logger)
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -60,9 +60,7 @@ public sealed class DatabaseShowCommand(ILogger<DatabaseShowCommand> logger)
                 options.Subscription!,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new DatabaseShowResult(database),
-                SqlJsonContext.Default.DatabaseShowResult);
+            context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseShowResult);
         }
         catch (Exception ex)
         {

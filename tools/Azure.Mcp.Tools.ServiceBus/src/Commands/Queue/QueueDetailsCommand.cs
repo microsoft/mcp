@@ -35,7 +35,7 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -74,9 +74,7 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new QueueDetailsCommandResult(details),
-                ServiceBusJsonContext.Default.QueueDetailsCommandResult);
+            context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.QueueDetailsCommandResult);
         }
         catch (Exception ex)
         {

@@ -34,7 +34,7 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -75,9 +75,7 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
                 options.RetryPolicy);
 
             // Set results
-            context.Response.Results = accounts is { Count: > 0 }
-                ? ResponseResult.Create(new AccountGetCommandResult(accounts), StorageJsonContext.Default.AccountGetCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(accounts ?? []), StorageJsonContext.Default.AccountGetCommandResult);
         }
         catch (Exception ex)
         {

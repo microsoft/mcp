@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Workbooks.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -80,7 +81,7 @@ public class DeleteWorkbooksCommandTests
         Assert.Equal(200, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DeleteWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(workbookId, result.WorkbookId);
@@ -289,7 +290,7 @@ public class DeleteWorkbooksCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DeleteWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(validWorkbookId, result.WorkbookId);
@@ -322,7 +323,7 @@ public class DeleteWorkbooksCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DeleteWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(displayName, result.WorkbookId);
@@ -359,11 +360,5 @@ public class DeleteWorkbooksCommandTests
                 options.MaxRetries == 5 &&
                 options.DelaySeconds == 2),
             Arg.Any<string?>());
-    }
-
-    private class DeleteWorkbooksCommandResult
-    {
-        public string WorkbookId { get; set; } = string.Empty;
-        public string Message { get; set; } = string.Empty;
     }
 }

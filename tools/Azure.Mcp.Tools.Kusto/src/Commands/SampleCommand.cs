@@ -42,7 +42,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -85,9 +85,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
                     options.RetryPolicy);
             }
 
-            context.Response.Results = results?.Count > 0 ?
-                ResponseResult.Create(new SampleCommandResult(results), KustoJsonContext.Default.SampleCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(results ?? []), KustoJsonContext.Default.SampleCommandResult);
         }
         catch (Exception ex)
         {

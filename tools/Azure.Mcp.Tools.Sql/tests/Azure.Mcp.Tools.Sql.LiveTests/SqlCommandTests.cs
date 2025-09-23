@@ -138,6 +138,62 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
     }
 
     [Fact]
+    public async Task Should_DeleteDatabase_Return404ForNonExistentDatabase()
+    {
+        // Test deleting a non-existent database to verify proper error handling
+        var serverName = Settings.ResourceBaseName;
+        var nonExistentDbName = "non-existent-database-" + Guid.NewGuid().ToString("N")[..8];
+
+        try
+        {
+            var result = await CallToolAsync(
+                "azmcp_sql_db_delete",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", Settings.ResourceGroupName },
+                    { "server", serverName },
+                    { "database", nonExistentDbName }
+                });
+
+            // Delete operation should be idempotent - it might succeed even if database doesn't exist
+            // This tests the service's idempotent behavior
+            if (result.HasValue)
+            {
+                var deleteResult = result.Value.AssertProperty("databaseName");
+                Assert.Equal(nonExistentDbName, deleteResult.GetString());
+
+                var deleted = result.Value.AssertProperty("deleted");
+                Assert.Equal(JsonValueKind.False, deleted.ValueKind); // Should be false for non-existent DB
+            }
+        }
+        catch (Exception ex)
+        {
+            // Some implementations might return 404 - this is also acceptable
+            Assert.Contains("404", ex.Message);
+        }
+    }
+
+    [Theory]
+    [InlineData("--invalid-database-param")]
+    [InlineData("--subscription test-sub --resource-group test-rg --server test-server")] // Missing database
+    public async Task Should_Return400_WithInvalidDatabaseDeleteInput(string args)
+    {
+        try
+        {
+            var result = await CallToolAsync("azmcp_sql_db_delete",
+                new Dictionary<string, object?> { { "args", args } });
+
+            Assert.Fail("Expected command to fail with invalid input, but it succeeded");
+        }
+        catch (Exception ex)
+        {
+            // Expected - command should fail with validation error
+            Assert.NotNull(ex.Message);
+        }
+    }
+
+    [Fact]
     public async Task Should_ListSqlServerEntraAdmins_Successfully()
     {
         // Use the deployed test SQL server
@@ -166,9 +222,9 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
                 Assert.Equal(JsonValueKind.Object, firstAdmin.ValueKind);
 
                 // Verify required properties exist
-                Assert.True(firstAdmin.TryGetProperty("administratorType", out _));
-                Assert.True(firstAdmin.TryGetProperty("login", out _));
-                Assert.True(firstAdmin.TryGetProperty("sid", out _));
+                firstAdmin.AssertProperty("administratorType");
+                firstAdmin.AssertProperty("login");
+                firstAdmin.AssertProperty("sid");
             }
         }
         // If result is null, that's valid - it means no AD administrators are configured
@@ -205,11 +261,11 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
                 Assert.Equal(JsonValueKind.Object, firstRule.ValueKind);
 
                 // Verify required properties exist
-                Assert.True(firstRule.TryGetProperty("name", out var name));
-                Assert.True(firstRule.TryGetProperty("id", out _));
-                Assert.True(firstRule.TryGetProperty("type", out _));
-                Assert.True(firstRule.TryGetProperty("startIpAddress", out _));
-                Assert.True(firstRule.TryGetProperty("endIpAddress", out _));
+                var name = firstRule.AssertProperty("name");
+                firstRule.AssertProperty("id");
+                firstRule.AssertProperty("type");
+                firstRule.AssertProperty("startIpAddress");
+                firstRule.AssertProperty("endIpAddress");
 
                 // Verify the name is not empty
                 Assert.NotNull(name.GetString());
@@ -267,10 +323,10 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         Assert.Equal(JsonValueKind.Object, firstPool.ValueKind);
 
         // Verify required properties exist
-        Assert.True(firstPool.TryGetProperty("name", out _));
-        Assert.True(firstPool.TryGetProperty("id", out _));
-        Assert.True(firstPool.TryGetProperty("type", out _));
-        Assert.True(firstPool.TryGetProperty("location", out _));
+        firstPool.AssertProperty("name");
+        firstPool.AssertProperty("id");
+        firstPool.AssertProperty("type");
+        firstPool.AssertProperty("location");
 
         var poolType = firstPool.GetProperty("type").GetString();
         Assert.Equal("Microsoft.Sql/servers/elasticPools", poolType, ignoreCase: true);

@@ -68,11 +68,7 @@ public class AvailabilityStatusListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AvailabilityStatusListResult>(json, new JsonSerializerOptions()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, ResourceHealthJsonContext.Default.AvailabilityStatusListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(2, result.Statuses.Count);
@@ -110,11 +106,7 @@ public class AvailabilityStatusListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AvailabilityStatusListResult>(json, new JsonSerializerOptions()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, ResourceHealthJsonContext.Default.AvailabilityStatusListCommandResult);
 
         Assert.NotNull(result);
         Assert.Single(result.Statuses);
@@ -163,6 +155,4 @@ public class AvailabilityStatusListCommandTests
         Assert.Equal(400, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
     }
-
-    private record AvailabilityStatusListResult(IReadOnlyList<AvailabilityStatusModel> Statuses);
 }
