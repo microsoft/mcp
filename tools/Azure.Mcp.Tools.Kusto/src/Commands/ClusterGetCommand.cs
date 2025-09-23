@@ -68,9 +68,9 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseC
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
         KeyNotFoundException => $"Kusto cluster not found. Verify the cluster name, resource group, and that you have access.",
-        RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Kusto cluster not found. Verify the cluster name, resource group, and subscription, and ensure you have access.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed accessing the Kusto cluster. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
