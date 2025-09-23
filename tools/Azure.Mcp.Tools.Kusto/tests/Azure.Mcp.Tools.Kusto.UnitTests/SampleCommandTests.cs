@@ -44,7 +44,7 @@ public sealed class SampleCommandTests
         var expectedJson = JsonDocument.Parse("[{\"foo\":42}]").RootElement.EnumerateArray().Select(e => e.Clone()).ToList();
         if (useClusterUri)
         {
-            _kusto.QueryItems(
+            _kusto.QueryItemsAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1 | sample 10",
@@ -53,7 +53,7 @@ public sealed class SampleCommandTests
         }
         else
         {
-            _kusto.QueryItems(
+            _kusto.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "table1 | sample 10",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(expectedJson);
@@ -85,7 +85,7 @@ public sealed class SampleCommandTests
     {
         if (useClusterUri)
         {
-            _kusto.QueryItems(
+            _kusto.QueryItemsAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1 | sample 10",
@@ -94,7 +94,7 @@ public sealed class SampleCommandTests
         }
         else
         {
-            _kusto.QueryItems(
+            _kusto.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "table1 | sample 10",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns([]);
