@@ -5,10 +5,15 @@ using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.AppConfig.Commands.Account;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
+using Azure.Mcp.Tools.AppConfig.Services.Models;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands;
 
 [JsonSerializable(typeof(AccountListCommand.AccountListCommandResult))]
+[JsonSerializable(typeof(AppConfigStoreData))]
+[JsonSerializable(typeof(AppConfigStoreEncryptionProperties))]
+[JsonSerializable(typeof(AppConfigStoreKeyVaultProperties))]
+[JsonSerializable(typeof(AppConfigStoreProperties))]
 [JsonSerializable(typeof(KeyValueDeleteCommand.KeyValueDeleteCommandResult))]
 [JsonSerializable(typeof(KeyValueListCommand.KeyValueListCommandResult))]
 [JsonSerializable(typeof(KeyValueLockSetCommand.KeyValueLockSetCommandResult))]
