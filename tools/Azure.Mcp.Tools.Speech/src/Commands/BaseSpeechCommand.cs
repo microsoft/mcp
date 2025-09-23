@@ -20,6 +20,26 @@ public abstract class BaseSpeechCommand<
     {
         base.RegisterOptions(command);
         command.Options.Add(_endpointOption);
+
+        // Command-level validation for endpoint
+        command.Validators.Add(commandResult =>
+        {
+            // Validate endpoint is provided
+            if (!commandResult.HasOptionResult(_endpointOption))
+            {
+                commandResult.AddError("Azure AI Services endpoint is required (e.g., https://your-service.cognitiveservices.azure.com/).");
+                return;
+            }
+
+            if (commandResult.TryGetValue(_endpointOption, out var endpointValue) && !string.IsNullOrWhiteSpace(endpointValue))
+            {
+                // Validate endpoint format
+                if (!Uri.TryCreate(endpointValue, UriKind.Absolute, out var endpointUri) || !endpointUri.Host.EndsWith(".cognitiveservices.azure.com", StringComparison.OrdinalIgnoreCase))
+                {
+                    commandResult.AddError("Endpoint must be a valid Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/).");
+                }
+            }
+        });
     }
 
     protected override T BindOptions(ParseResult parseResult)

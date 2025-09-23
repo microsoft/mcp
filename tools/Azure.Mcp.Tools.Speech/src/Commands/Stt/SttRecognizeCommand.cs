@@ -13,10 +13,10 @@ namespace Azure.Mcp.Tools.Speech.Commands.Stt;
 
 public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : BaseSpeechCommand<SttRecognizeOptions>()
 {
+    internal record SttRecognizeCommandResult(ContinuousRecognitionResult Result);
+
     private const string CommandTitle = "Recognize Speech from Audio File";
     private readonly ILogger<SttRecognizeCommand> _logger = logger;
-
-    internal record SttRecognizeCommandResult(SpeechRecognitionResult Result);
 
     public override string Name => "recognize";
 
@@ -54,6 +54,46 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
         command.Options.Add(_phrasesOption);
         command.Options.Add(_formatOption);
         command.Options.Add(_profanityOption);
+
+        // Command-level validation for file-specific options
+        command.Validators.Add(commandResult =>
+        {
+            // Validate file is provided
+            if (!commandResult.HasOptionResult(_fileOption))
+            {
+                commandResult.AddError("Audio file path is required.");
+                return;
+            }
+
+            if (commandResult.TryGetValue(_fileOption, out var fileValue) && !string.IsNullOrWhiteSpace(fileValue))
+            {
+                // Validate file exists
+                if (!File.Exists(fileValue))
+                {
+                    commandResult.AddError($"Audio file not found: {fileValue}");
+                    return;
+                }
+            }
+
+            // Validate format option if provided
+            if (commandResult.TryGetValue(_formatOption, out var formatValue) && !string.IsNullOrEmpty(formatValue))
+            {
+                if (formatValue != "simple" && formatValue != "detailed")
+                {
+                    commandResult.AddError("Format must be 'simple' or 'detailed'.");
+                    return;
+                }
+            }
+
+            // Validate profanity option if provided
+            if (commandResult.TryGetValue(_profanityOption, out var profanityValue) && !string.IsNullOrEmpty(profanityValue))
+            {
+                if (profanityValue != "masked" && profanityValue != "removed" && profanityValue != "raw")
+                {
+                    commandResult.AddError("Profanity filter must be 'masked', 'removed', or 'raw'.");
+                }
+            }
+        });
     }
 
     protected override SttRecognizeOptions BindOptions(ParseResult parseResult)
@@ -100,55 +140,6 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
 
         var options = BindOptions(parseResult);
 
-        // Additional validation
-        if (string.IsNullOrWhiteSpace(options.Endpoint))
-        {
-            context.Response.Message = "Azure AI Services endpoint is required (e.g., https://your-service.cognitiveservices.azure.com/).";
-            context.Response.Status = 400;
-            return context.Response;
-        }
-
-        // Validate endpoint format
-        if (!Uri.TryCreate(options.Endpoint, UriKind.Absolute, out var endpointUri) ||
-            (!endpointUri.Host.EndsWith(".cognitiveservices.azure.com", StringComparison.OrdinalIgnoreCase) &&
-             !endpointUri.Host.EndsWith(".services.ai.azure.com", StringComparison.OrdinalIgnoreCase)))
-        {
-            context.Response.Message = "Endpoint must be a valid Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/).";
-            context.Response.Status = 400;
-            return context.Response;
-        }
-
-        if (string.IsNullOrWhiteSpace(options.File))
-        {
-            context.Response.Message = "Audio file path is required.";
-            context.Response.Status = 400;
-            return context.Response;
-        }
-
-        if (!File.Exists(options.File))
-        {
-            context.Response.Message = $"Audio file not found: {options.File}";
-            context.Response.Status = 400;
-            return context.Response;
-        }
-
-        // Validate format option
-        if (!string.IsNullOrEmpty(options.Format) && options.Format != "simple" && options.Format != "detailed")
-        {
-            context.Response.Message = "Format must be 'simple' or 'detailed'.";
-            context.Response.Status = 400;
-            return context.Response;
-        }
-
-        // Validate profanity option
-        if (!string.IsNullOrEmpty(options.Profanity) &&
-            options.Profanity != "masked" && options.Profanity != "removed" && options.Profanity != "raw")
-        {
-            context.Response.Message = "Profanity filter must be 'masked', 'removed', or 'raw'.";
-            context.Response.Status = 400;
-            return context.Response;
-        }
-
         try
         {
             var speechService = context.GetService<ISpeechService>();
@@ -162,9 +153,10 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
                 options.RetryPolicy);
 
             _logger.LogInformation(
-                "Successfully recognized speech from file: {File}. Text length: {Length}",
+                "Successfully recognized speech from file: {File}. Full text length: {Length}, Segments: {SegmentCount}",
                 options.File,
-                result.Text?.Length ?? 0);
+                result.FullText?.Length ?? 0,
+                result.Segments.Count);
 
             context.Response.Status = 200;
             context.Response.Message = "Speech recognition completed successfully.";

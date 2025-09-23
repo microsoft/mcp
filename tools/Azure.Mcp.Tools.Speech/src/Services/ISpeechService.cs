@@ -7,7 +7,7 @@ namespace Azure.Mcp.Tools.Speech.Services;
 
 public interface ISpeechService
 {
-    Task<Models.SpeechRecognitionResult> RecognizeSpeechFromFile(
+    Task<Models.ContinuousRecognitionResult> RecognizeSpeechFromFile(
         string endpoint,
         string filePath,
         string? language = null,

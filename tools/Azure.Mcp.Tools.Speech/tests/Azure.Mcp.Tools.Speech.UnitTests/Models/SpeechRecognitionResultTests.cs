@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Text.Json;
@@ -17,7 +17,7 @@ public class SpeechRecognitionResultTests
 
         // Assert
         Assert.Null(result.Text);
-        Assert.Null(result.Confidence);
+
         Assert.Null(result.Offset);
         Assert.Null(result.Duration);
         Assert.Null(result.Language);
@@ -32,7 +32,6 @@ public class SpeechRecognitionResultTests
 
         // Act
         result.Text = "Hello world";
-        result.Confidence = 0.95;
         result.Offset = 1000;
         result.Duration = 2000;
         result.Language = "en-US";
@@ -40,7 +39,6 @@ public class SpeechRecognitionResultTests
 
         // Assert
         Assert.Equal("Hello world", result.Text);
-        Assert.Equal(0.95, result.Confidence);
         Assert.Equal((ulong)1000, result.Offset);
         Assert.Equal((ulong)2000, result.Duration);
         Assert.Equal("en-US", result.Language);
@@ -54,7 +52,7 @@ public class SpeechRecognitionResultTests
         var result = new SpeechRecognitionResult
         {
             Text = "Hello world",
-            Confidence = 0.95,
+
             Offset = 1000,
             Duration = 2000,
             Language = "en-US",
@@ -66,7 +64,6 @@ public class SpeechRecognitionResultTests
 
         // Assert
         Assert.Contains("\"text\":\"Hello world\"", json);
-        Assert.Contains("\"confidence\":0.95", json);
         Assert.Contains("\"offset\":1000", json);
         Assert.Contains("\"duration\":2000", json);
         Assert.Contains("\"language\":\"en-US\"", json);
@@ -80,7 +77,6 @@ public class SpeechRecognitionResultTests
         var json = """
         {
             "text": "Hello world",
-            "confidence": 0.95,
             "offset": 1000,
             "duration": 2000,
             "language": "en-US",
@@ -94,7 +90,7 @@ public class SpeechRecognitionResultTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal("Hello world", result.Text);
-        Assert.Equal(0.95, result.Confidence);
+
         Assert.Equal((ulong)1000, result.Offset);
         Assert.Equal((ulong)2000, result.Duration);
         Assert.Equal("en-US", result.Language);
@@ -108,7 +104,6 @@ public class SpeechRecognitionResultTests
         var json = """
         {
             "text": null,
-            "confidence": null,
             "offset": null,
             "duration": null,
             "language": null,
@@ -122,7 +117,7 @@ public class SpeechRecognitionResultTests
         // Assert
         Assert.NotNull(result);
         Assert.Null(result.Text);
-        Assert.Null(result.Confidence);
+
         Assert.Null(result.Offset);
         Assert.Null(result.Duration);
         Assert.Null(result.Language);
@@ -149,25 +144,24 @@ public class DetailedSpeechRecognitionResultTests
         // Arrange
         var nbestResults = new List<NBestResult>
         {
-            new() { Text = "Hello world", Confidence = 0.95 },
-            new() { Text = "Hello word", Confidence = 0.85 }
+            new() { Display = "Hello world",  },
+            new() { Display = "Hello word",  }
         };
 
         // Act
         var result = new DetailedSpeechRecognitionResult
         {
             Text = "Hello world",
-            Confidence = 0.95,
+
             NBest = nbestResults
         };
 
         // Assert
         Assert.Equal("Hello world", result.Text);
-        Assert.Equal(0.95, result.Confidence);
+
         Assert.NotNull(result.NBest);
         Assert.Equal(2, result.NBest.Count);
-        Assert.Equal("Hello world", result.NBest[0].Text);
-        Assert.Equal(0.95, result.NBest[0].Confidence);
+        Assert.Equal("Hello world", result.NBest[0].Display);
     }
 
     [Fact]
@@ -177,11 +171,11 @@ public class DetailedSpeechRecognitionResultTests
         var result = new DetailedSpeechRecognitionResult
         {
             Text = "Hello world",
-            Confidence = 0.95,
+
             NBest = new List<NBestResult>
             {
-                new() { Text = "Hello world", Confidence = 0.95 },
-                new() { Text = "Hello word", Confidence = 0.85 }
+                new() { Display = "Hello world",  },
+                new() { Display = "Hello word",  }
             }
         };
 
@@ -190,10 +184,8 @@ public class DetailedSpeechRecognitionResultTests
 
         // Assert
         Assert.Contains("\"text\":\"Hello world\"", json);
-        Assert.Contains("\"confidence\":0.95", json);
         Assert.Contains("\"nBest\":", json);
         Assert.Contains("\"Hello word\"", json);
-        Assert.Contains("0.85", json);
     }
 
     [Fact]
@@ -203,15 +195,12 @@ public class DetailedSpeechRecognitionResultTests
         var json = """
         {
             "text": "Hello world",
-            "confidence": 0.95,
             "nBest": [
                 {
-                    "text": "Hello world",
-                    "confidence": 0.95
+                    "display": "Hello world"
                 },
                 {
-                    "text": "Hello word",
-                    "confidence": 0.85
+                    "display": "Hello word"
                 }
             ]
         }
@@ -223,13 +212,11 @@ public class DetailedSpeechRecognitionResultTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal("Hello world", result.Text);
-        Assert.Equal(0.95, result.Confidence);
+
         Assert.NotNull(result.NBest);
         Assert.Equal(2, result.NBest.Count);
-        Assert.Equal("Hello world", result.NBest[0].Text);
-        Assert.Equal(0.95, result.NBest[0].Confidence);
-        Assert.Equal("Hello word", result.NBest[1].Text);
-        Assert.Equal(0.85, result.NBest[1].Confidence);
+        Assert.Equal("Hello world", result.NBest[0].Display);
+        Assert.Equal("Hello word", result.NBest[1].Display);
     }
 }
 
@@ -242,8 +229,8 @@ public class NBestResultTests
         var result = new NBestResult();
 
         // Assert
-        Assert.Null(result.Text);
-        Assert.Null(result.Confidence);
+        Assert.Null(result.Display);
+
         Assert.Null(result.Words);
     }
 
@@ -253,25 +240,24 @@ public class NBestResultTests
         // Arrange
         var words = new List<WordResult>
         {
-            new() { Word = "Hello", Confidence = 0.98 },
-            new() { Word = "world", Confidence = 0.92 }
+            new() { Word = "Hello",  },
+            new() { Word = "world",  }
         };
 
         // Act
         var result = new NBestResult
         {
-            Text = "Hello world",
-            Confidence = 0.95,
+            Display = "Hello world",
+
             Words = words
         };
 
         // Assert
-        Assert.Equal("Hello world", result.Text);
-        Assert.Equal(0.95, result.Confidence);
+        Assert.Equal("Hello world", result.Display);
+
         Assert.NotNull(result.Words);
         Assert.Equal(2, result.Words.Count);
         Assert.Equal("Hello", result.Words[0].Word);
-        Assert.Equal(0.98, result.Words[0].Confidence);
     }
 
     [Fact]
@@ -280,12 +266,12 @@ public class NBestResultTests
         // Arrange
         var result = new NBestResult
         {
-            Text = "Hello world",
-            Confidence = 0.95,
+            Display = "Hello world",
+
             Words = new List<WordResult>
             {
-                new() { Word = "Hello", Confidence = 0.98, Offset = 100, Duration = 500 },
-                new() { Word = "world", Confidence = 0.92, Offset = 600, Duration = 400 }
+                new() { Word = "Hello",  Offset = 100, Duration = 500 },
+                new() { Word = "world",  Offset = 600, Duration = 400 }
             }
         };
 
@@ -293,8 +279,7 @@ public class NBestResultTests
         var json = JsonSerializer.Serialize(result);
 
         // Assert
-        Assert.Contains("\"text\":\"Hello world\"", json);
-        Assert.Contains("\"confidence\":0.95", json);
+        Assert.Contains("\"display\":\"Hello world\"", json);
         Assert.Contains("\"words\":", json);
         Assert.Contains("\"Hello\"", json);
         Assert.Contains("\"world\"", json);
@@ -306,18 +291,15 @@ public class NBestResultTests
         // Arrange
         var json = """
         {
-            "text": "Hello world",
-            "confidence": 0.95,
+            "display": "Hello world",
             "words": [
                 {
                     "word": "Hello",
-                    "confidence": 0.98,
                     "offset": 100,
                     "duration": 500
                 },
                 {
                     "word": "world",
-                    "confidence": 0.92,
                     "offset": 600,
                     "duration": 400
                 }
@@ -330,12 +312,11 @@ public class NBestResultTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("Hello world", result.Text);
-        Assert.Equal(0.95, result.Confidence);
+        Assert.Equal("Hello world", result.Display);
+
         Assert.NotNull(result.Words);
         Assert.Equal(2, result.Words.Count);
         Assert.Equal("Hello", result.Words[0].Word);
-        Assert.Equal(0.98, result.Words[0].Confidence);
         Assert.Equal((ulong)100, result.Words[0].Offset);
         Assert.Equal((ulong)500, result.Words[0].Duration);
     }
@@ -353,7 +334,7 @@ public class WordResultTests
         Assert.Null(result.Word);
         Assert.Null(result.Offset);
         Assert.Null(result.Duration);
-        Assert.Null(result.Confidence);
+
     }
 
     [Fact]
@@ -365,14 +346,14 @@ public class WordResultTests
             Word = "Hello",
             Offset = 1000,
             Duration = 500,
-            Confidence = 0.98
+
         };
 
         // Assert
         Assert.Equal("Hello", result.Word);
         Assert.Equal((ulong)1000, result.Offset);
         Assert.Equal((ulong)500, result.Duration);
-        Assert.Equal(0.98, result.Confidence);
+
     }
 
     [Fact]
@@ -384,7 +365,7 @@ public class WordResultTests
             Word = "Hello",
             Offset = 1000,
             Duration = 500,
-            Confidence = 0.98
+
         };
 
         // Act
@@ -394,7 +375,6 @@ public class WordResultTests
         Assert.Contains("\"word\":\"Hello\"", json);
         Assert.Contains("\"offset\":1000", json);
         Assert.Contains("\"duration\":500", json);
-        Assert.Contains("\"confidence\":0.98", json);
     }
 
     [Fact]
@@ -405,8 +385,7 @@ public class WordResultTests
         {
             "word": "Hello",
             "offset": 1000,
-            "duration": 500,
-            "confidence": 0.98
+            "duration": 500
         }
         """;
 
@@ -418,7 +397,7 @@ public class WordResultTests
         Assert.Equal("Hello", result.Word);
         Assert.Equal((ulong)1000, result.Offset);
         Assert.Equal((ulong)500, result.Duration);
-        Assert.Equal(0.98, result.Confidence);
+
     }
 
     [Fact]
@@ -429,8 +408,7 @@ public class WordResultTests
         {
             "word": null,
             "offset": null,
-            "duration": null,
-            "confidence": null
+            "duration": null
         }
         """;
 
@@ -442,6 +420,7 @@ public class WordResultTests
         Assert.Null(result.Word);
         Assert.Null(result.Offset);
         Assert.Null(result.Duration);
-        Assert.Null(result.Confidence);
+
     }
 }
+

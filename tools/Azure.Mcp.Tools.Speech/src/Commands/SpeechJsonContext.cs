@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Speech.Commands.Stt;
 using Azure.Mcp.Tools.Speech.Models;
 
+[JsonSerializable(typeof(ContinuousRecognitionResult))]
 [JsonSerializable(typeof(DetailedSpeechRecognitionResult))]
 [JsonSerializable(typeof(NBestResult))]
 [JsonSerializable(typeof(SpeechRecognitionResult))]

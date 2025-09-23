@@ -1,13 +1,8 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.IO;
-using System.Linq;
 using System.Text.Json;
-using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.LiveTests;
@@ -35,15 +30,17 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         Assert.Null(result);
     }
 
-    [Fact]
-    public async Task Should_recognize_speech_from_real_audio_file()
+    [Theory]
+    [InlineData("test-audio.wav", "By voice is my passport. Verify me.")]
+    [InlineData("TheGreatGatsby.wav", "In my younger and more vulnerable years, my father gave me some advice that I've been turning over in my mind ever since. Whenever you feel like criticizing anyone, he told me, just remember that all the people in this world haven't had the advantages that you've had. He didn't say anymore, but we've always been unusually commutative in a reserved way, and I understood that he meant a great deal more than that. In consequence, I'm inclined to reserve all judgments, a habit that has opened up many curious natures to me.")]
+    public async Task Should_recognize_speech_from_real_audio_file(string fileName, string expectedText)
     {
-        // This test validates complete end-to-end speech recognition with the test-audio.wav file from TestResources
-        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", "test-audio.wav");
+        // This test validates complete end-to-end speech recognition with real audio files of different durations from TestResources
+        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", fileName);
 
         // STRICT REQUIREMENT: The test audio file MUST exist in TestResources
         Assert.True(File.Exists(testAudioFile),
-            $"Test audio file not found at: {testAudioFile}. Please ensure test-audio.wav exists in TestResources folder.");
+            $"Test audio file not found at: {testAudioFile}. Please ensure {fileName} exists in TestResources folder.");
 
         var fileInfo = new FileInfo(testAudioFile);
         Output.WriteLine($"Using test audio file: {testAudioFile}");
@@ -75,43 +72,32 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         Assert.NotEmpty(resultText);
 
         // Parse the JSON result to check the recognition outcome
-        try
+        var jsonResult = JsonDocument.Parse(resultText);
+        var resultObject = jsonResult.RootElement;
+
+        Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
+
+        // Assert that we got the exact expected text from the test audio file
+        Assert.True(resultProperty.TryGetProperty("fullText", out var textProperty));
+        var fullText = textProperty.GetString() ?? "";
+        Output.WriteLine($"Recognition text: '{fullText}'");
+        Assert.Equal(expectedText, fullText);
+
+        Assert.True(resultProperty.TryGetProperty("segments", out var segmentsProperty));
+        var segments = segmentsProperty.EnumerateArray().ToArray();
+        Assert.True(segmentsProperty.GetArrayLength() > 0, $"Expected at least one segment, but got {segments.Length}");
+
+        // Verify each segment has RecognizedSpeech reason
+        for (int i = 0; i < segments.Length; i++)
         {
-            var jsonResult = JsonDocument.Parse(resultText);
-            var resultObject = jsonResult.RootElement;
+            var segment = segments[i];
+            var segmentReason = segment.TryGetProperty("reason", out var segmentReasonProperty)
+                ? segmentReasonProperty.GetString()
+                : "Unknown";
 
-            if (resultObject.TryGetProperty("result", out var resultProperty))
-            {
-                var reason = resultProperty.TryGetProperty("reason", out var reasonProperty)
-                    ? reasonProperty.GetString()
-                    : "Unknown";
-
-                var text = resultProperty.TryGetProperty("text", out var textProperty)
-                    ? textProperty.GetString()
-                    : "";
-
-                Output.WriteLine($"Recognition reason: {reason}");
-                Output.WriteLine($"Recognition text: '{text}'");
-
-                // For a real audio file, we expect the specific recognized text
-                var expectedText = "By voice is my passport. Verify me.";
-
-                // Assert that we got the exact expected text from the test audio file
-                Assert.Equal(expectedText, text);
-
-                Output.WriteLine($"✅ Successfully recognized expected speech: '{text}'");
-            }
-            else
-            {
-                Assert.Fail("Result JSON does not contain expected 'result' property");
-            }
+            Output.WriteLine($"Segment {i + 1} reason: {segmentReason}");
+            Assert.Equal("RecognizedSpeech", segmentReason);
         }
-        catch (JsonException ex)
-        {
-            Assert.Fail($"Failed to parse speech recognition result as JSON: {ex.Message}");
-        }
-
-        Output.WriteLine("✅ Speech recognition completed successfully with real audio file");
     }
 
     [Fact]
@@ -144,25 +130,28 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
 
         Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
 
-        // Detailed format should include additional properties like NBest, offset, or duration
-        var hasNBest = resultProperty.TryGetProperty("NBest", out _) ||
-                      resultProperty.TryGetProperty("nBest", out _);
-        var hasOffset = resultProperty.TryGetProperty("offset", out _);
-        var hasDuration = resultProperty.TryGetProperty("duration", out _);
+        Assert.True(resultProperty.TryGetProperty("segments", out var segmentsProperty));
+        Assert.True(segmentsProperty.GetArrayLength() > 0);
+
+        var firstSegment = segmentsProperty[0];
+        var hasNBest = firstSegment.TryGetProperty("nBest", out _);
+        var hasOffset = firstSegment.TryGetProperty("offset", out _);
+        var hasDuration = firstSegment.TryGetProperty("duration", out _);
 
         Assert.True(hasNBest || hasOffset || hasDuration,
-                   "Detailed format should include NBest, offset, or duration properties");
+                   "Detailed format should include NBest, offset, or duration properties in segments");
 
         Output.WriteLine("✅ Detailed format recognition completed successfully");
     }
 
     [Theory]
-    [InlineData("es-ES")]
-    [InlineData("fr-FR")]
-    [InlineData("de-DE")]
-    public async Task Should_handle_different_languages_gracefully(string language)
+    [InlineData("ar-AE", "ar-rewind-music.wav", "ارجع الموسيقى 20 ثانية.")]
+    [InlineData("es-ES", "es-ES.wav", "Rebobinar la música 20 segundos.")]
+    [InlineData("fr-FR", "fr-FR.wav", "Rembobiner la musique de 20 secondes.")]
+    [InlineData("de-DE", "de-DE.wav", "Treffen heute um 17:00 Uhr.")]
+    public async Task Should_handle_different_languages(string language, string fileName, string expectedText)
     {
-        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", "test-audio.wav");
+        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", fileName);
         Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
 
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
@@ -178,28 +167,48 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                 { "format", "simple" }
             });
 
-        // Even with wrong language, should get a result (might be NoMatch or different text)
         Assert.NotNull(result);
 
         var resultText = result.ToString();
         Assert.NotNull(resultText);
-        Output.WriteLine($"Language {language} result: {resultText}");
 
         // Validate JSON structure is correct
         var jsonResult = JsonDocument.Parse(resultText);
         var resultObject = jsonResult.RootElement;
         Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
 
+        // Validate full text property
+        Assert.True(resultProperty.TryGetProperty("fullText", out var textProperty));
+        var fullText = textProperty.GetString() ?? "";
+        Output.WriteLine($"Recognition text: '{fullText}'");
+        Assert.Equal(expectedText, fullText);
+
+        Assert.True(resultProperty.TryGetProperty("segments", out var segmentsProperty));
+        var segments = segmentsProperty.EnumerateArray().ToArray();
+        Assert.True(segmentsProperty.GetArrayLength() > 0, $"Expected at least one segment, but got {segments.Length}");
+
+        // Verify each segment has RecognizedSpeech reason
+        for (int i = 0; i < segments.Length; i++)
+        {
+            var segment = segments[i];
+            var segmentReason = segment.TryGetProperty("reason", out var segmentReasonProperty)
+                ? segmentReasonProperty.GetString()
+                : "Unknown";
+
+            Output.WriteLine($"Segment {i + 1} reason: {segmentReason}");
+            Assert.Equal("RecognizedSpeech", segmentReason);
+        }
+
         Output.WriteLine($"✅ Language {language} test completed");
     }
 
     [Theory]
-    [InlineData("masked")]
-    [InlineData("removed")]
-    [InlineData("raw")]
-    public async Task Should_apply_profanity_filtering_correctly(string profanityOption)
+    [InlineData("masked", "You don't deserve it, you *******. **** you.")]
+    [InlineData("removed", "You don't deserve it, you .  you.")]
+    [InlineData("raw", "You don't deserve it, you bastard. Fuck you.")]
+    public async Task Should_apply_profanity_filtering_correctly(string profanityOption, string expectedText)
     {
-        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", "test-audio.wav");
+        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", "en-US-with-profanity.wav");
         Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
 
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
@@ -226,13 +235,18 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var resultObject = jsonResult.RootElement;
         Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
 
+        Assert.True(resultProperty.TryGetProperty("fullText", out var textProperty));
+        var fullText = textProperty.GetString() ?? "";
+        Output.WriteLine($"Recognition text: '{fullText}'");
+        Assert.Equal(expectedText, fullText);
+
         Output.WriteLine($"✅ Profanity filtering '{profanityOption}' test completed");
     }
 
     [Fact]
     public async Task Should_use_phrase_hints_effectively()
     {
-        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", "test-audio.wav");
+        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", "en-US-phraselist.wav");
         Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
 
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
@@ -246,7 +260,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                 { "file", testAudioFile },
                 { "language", "en-US" },
                 { "format", "simple" },
-                { "phrases", new[] { "passport", "verify", "voice" } }
+                { "phrases", new[] { "Douzi", "Shitou", "Cheng Dieyi", "Duan Xiaolou" } }
             });
 
         Assert.NotNull(result);
@@ -259,12 +273,12 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var resultObject = jsonResult.RootElement;
         Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
 
-        var text = resultProperty.TryGetProperty("text", out var textProperty)
+        var fullText = resultProperty.TryGetProperty("fullText", out var textProperty)
             ? textProperty.GetString()
             : "";
-
-        // With phrase hints, we should still get the expected text
-        Assert.Contains("passport", text?.ToLower() ?? "");
+        Output.WriteLine($"Recognition text: '{fullText}'");
+        var expectedText = "Years later, Douzi and Shitou have become packing opera stars, taking the names Cheng Dieyi and Duan Xiaolou, respectively.";
+        Assert.Equal(expectedText, fullText);
 
         Output.WriteLine("✅ Phrase hints test completed");
     }
@@ -288,18 +302,12 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                 { "format", "simple" }
             });
 
-        // Should handle error gracefully - either return null or error response
-        if (result != null)
-        {
-            var resultText = result.ToString();
-            Assert.NotNull(resultText);
-            Output.WriteLine($"Invalid endpoint result: {resultText}");
+        Assert.NotNull(result);
+        var resultText = result.ToString();
+        Assert.NotNull(resultText);
+        Output.WriteLine($"Invalid endpoint result: {resultText}");
 
-            // Invalid endpoint might return "NoMatch" or contain "error" - either is acceptable
-            Assert.True(resultText.Contains("error", StringComparison.OrdinalIgnoreCase) ||
-                       resultText.Contains("NoMatch", StringComparison.OrdinalIgnoreCase),
-                       "Result should contain either 'error' or 'NoMatch' for invalid endpoint");
-        }
+        Assert.True(resultText.Contains("Invalid endpoint or connectivity issue.", StringComparison.OrdinalIgnoreCase));
 
         Output.WriteLine("✅ Invalid endpoint error handling test completed");
     }
@@ -307,9 +315,9 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     [Fact]
     public async Task Should_handle_empty_audio_file_gracefully()
     {
-        // Create a temporary empty file
-        var emptyAudioFile = Path.GetTempFileName();
-        File.WriteAllText(emptyAudioFile, ""); // Empty file
+        // Create a valid empty WAV file
+        var emptyWavFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".wav");
+        CreateWavFile(emptyWavFile);
 
         try
         {
@@ -321,31 +329,37 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "endpoint", aiServicesEndpoint },
-                    { "file", emptyAudioFile },
+                    { "file", emptyWavFile },
                     { "language", "en-US" },
                     { "format", "simple" }
                 });
 
             // Should handle empty file gracefully
-            if (result != null)
+            Assert.NotNull(result);
+            var resultText = result.ToString();
+            Assert.NotNull(resultText);
+            Output.WriteLine($"Empty file result: {resultText}");
+
+            // Parse to ensure valid JSON structure
+            var jsonResult = JsonDocument.Parse(resultText);
+            var resultObject = jsonResult.RootElement;
+
+            Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
+
+            Assert.True(resultProperty.TryGetProperty("segments", out var segmentsProperty));
+            var segments = segmentsProperty.EnumerateArray().ToArray();
+            Assert.True(segmentsProperty.GetArrayLength() > 0, $"Expected at least one segment, but got {segments.Length}");
+
+            // Verify each segment has NoMatch reason
+            for (int i = 0; i < segments.Length; i++)
             {
-                var resultText = result.ToString();
-                Assert.NotNull(resultText);
-                Output.WriteLine($"Empty file result: {resultText}");
+                var segment = segments[i];
+                var segmentReason = segment.TryGetProperty("reason", out var segmentReasonProperty)
+                    ? segmentReasonProperty.GetString()
+                    : "Unknown";
 
-                // Parse to ensure valid JSON structure
-                var jsonResult = JsonDocument.Parse(resultText);
-                var resultObject = jsonResult.RootElement;
-
-                if (resultObject.TryGetProperty("result", out var resultProperty))
-                {
-                    var reason = resultProperty.TryGetProperty("reason", out var reasonProperty)
-                        ? reasonProperty.GetString()
-                        : "";
-
-                    // Empty file might result in "NoMatch" or similar
-                    Output.WriteLine($"Empty file recognition reason: {reason}");
-                }
+                Output.WriteLine($"Segment {i + 1} reason: {segmentReason}");
+                Assert.Equal("NoMatch", segmentReason);
             }
 
             Output.WriteLine("✅ Empty file handling test completed");
@@ -353,9 +367,63 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         finally
         {
             // Clean up temporary file
-            if (File.Exists(emptyAudioFile))
+            if (File.Exists(emptyWavFile))
             {
-                File.Delete(emptyAudioFile);
+                File.Delete(emptyWavFile);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Should_handle_broken_file_gracefully()
+    {
+        // Create a temporary empty file
+        var emptyWavFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".wav");
+        File.WriteAllText(emptyWavFile, ""); // Empty content
+
+        try
+        {
+            var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+
+            var result = await CallToolAsync(
+                "azmcp_speech_stt_recognize",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "endpoint", aiServicesEndpoint },
+                    { "file", emptyWavFile },
+                    { "language", "en-US" },
+                    { "format", "simple" }
+                });
+
+            // Should handle empty file gracefully
+            Assert.NotNull(result);
+            var resultText = result.ToString();
+            Assert.NotNull(resultText);
+            Output.WriteLine($"Empty file result: {resultText}");
+
+            // Parse to ensure valid JSON structure
+            var jsonResult = JsonDocument.Parse(resultText);
+            var resultObject = jsonResult.RootElement;
+
+            // Validate Error message for corrupted file
+            Assert.True(resultObject.TryGetProperty("message", out var messageProperty));
+            var message = messageProperty.GetString() ?? "";
+            Assert.True(message.Contains("The audio file appears to be empty or corrupted. Please provide a valid audio file.", StringComparison.OrdinalIgnoreCase));
+
+            // Validate exception type
+            Assert.True(resultObject.TryGetProperty("type", out var exceptionTypeProperty));
+            var exceptionType = exceptionTypeProperty.GetString() ?? "";
+            Assert.True(exceptionType.Contains("InvalidOperationException", StringComparison.OrdinalIgnoreCase));
+
+            Output.WriteLine("✅ Empty file handling test completed");
+        }
+        finally
+        {
+            // Clean up temporary file
+            if (File.Exists(emptyWavFile))
+            {
+                File.Delete(emptyWavFile);
             }
         }
     }
@@ -394,53 +462,9 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         Output.WriteLine("✅ Retry policy test completed");
     }
 
-    [Fact]
-    public async Task Should_handle_large_audio_file_timeout()
-    {
-        // Create a large temporary file to simulate a large audio file
-        var largeAudioFile = Path.GetTempFileName();
-        var largeContent = new string('A', 1000000); // 1MB of content
-        File.WriteAllText(largeAudioFile, largeContent);
-
-        try
-        {
-            var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
-
-            var result = await CallToolAsync(
-                "azmcp_speech_stt_recognize",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "endpoint", aiServicesEndpoint },
-                    { "file", largeAudioFile },
-                    { "language", "en-US" },
-                    { "format", "simple" },
-                    { "retry-network-timeout", 30000 } // 30 second timeout
-                });
-
-            // Should either succeed or handle timeout gracefully
-            if (result != null)
-            {
-                var resultText = result.ToString();
-                Output.WriteLine($"Large file result: {resultText}");
-            }
-
-            Output.WriteLine("✅ Large file timeout handling test completed");
-        }
-        finally
-        {
-            // Clean up temporary file
-            if (File.Exists(largeAudioFile))
-            {
-                File.Delete(largeAudioFile);
-            }
-        }
-    }
-
     [Theory]
-    [InlineData("test-audio.wav", "By voice is my passport. Verify me.")]
-    [InlineData("whatstheweatherlike.mp3", "What's the weather like?")]
-    public async Task Should_recognize_speech_from_different_audio_formats(string fileName, string expectedText)
+    [InlineData("whatstheweatherlike.mp3")]
+    public async Task Should_fail_to_recognize_compressed_audio_without_gstreamer(string fileName)
     {
         // This test validates speech recognition with different audio file formats
         var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", fileName);
@@ -469,55 +493,29 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                 { "format", "simple" }
             });
 
-        // STRICT REQUIREMENT: Speech recognition must return a result
+        // Should handle empty file gracefully
         Assert.NotNull(result);
-
         var resultText = result.ToString();
-        Output.WriteLine($"Speech recognition result: {resultText}");
-
-        // Validate the result structure
         Assert.NotNull(resultText);
-        Assert.NotEmpty(resultText);
+        Output.WriteLine($"Empty file result: {resultText}");
 
-        // Parse the JSON result to check the recognition outcome
-        try
-        {
-            var jsonResult = JsonDocument.Parse(resultText);
-            var resultObject = jsonResult.RootElement;
+        // Parse to ensure valid JSON structure
+        var jsonResult = JsonDocument.Parse(resultText);
+        var resultObject = jsonResult.RootElement;
 
-            if (resultObject.TryGetProperty("result", out var resultProperty))
-            {
-                var reason = resultProperty.TryGetProperty("reason", out var reasonProperty)
-                    ? reasonProperty.GetString()
-                    : "Unknown";
+        // Validate Error message for corrupted file
+        Assert.True(resultObject.TryGetProperty("message", out var messageProperty));
+        var message = messageProperty.GetString() ?? "";
+        Assert.True(message.Contains("Cannot process compressed audio file", StringComparison.OrdinalIgnoreCase));
+        Assert.True(message.Contains("because GStreamer is not properly installed or configured.", StringComparison.OrdinalIgnoreCase));
 
-                var text = resultProperty.TryGetProperty("text", out var textProperty)
-                    ? textProperty.GetString()
-                    : "";
-
-                Output.WriteLine($"Recognition reason: {reason}");
-                Output.WriteLine($"Recognition text: '{text}'");
-
-                // Assert that we got the expected text from the test audio file
-                Assert.Equal(expectedText, text);
-
-                Output.WriteLine($"✅ Successfully recognized expected speech from {Path.GetExtension(fileName)} format: '{text}'");
-            }
-            else
-            {
-                Assert.Fail("Result JSON does not contain expected 'result' property");
-            }
-        }
-        catch (JsonException ex)
-        {
-            Assert.Fail($"Failed to parse speech recognition result as JSON: {ex.Message}");
-        }
-
-        Output.WriteLine($"✅ Speech recognition completed successfully with {Path.GetExtension(fileName)} audio file");
+        // Validate exception type
+        Assert.True(resultObject.TryGetProperty("type", out var exceptionTypeProperty));
+        var exceptionType = exceptionTypeProperty.GetString() ?? "";
+        Assert.True(exceptionType.Contains("InvalidOperationException", StringComparison.OrdinalIgnoreCase));
     }
 
-    [Theory]
-    [InlineData("test-audio.wav")]
+    [Theory(Skip = "Requires GStreamer installed to handle compressed audio formats (e.g., MP3). Skipped if GStreamer is not available.")]
     [InlineData("whatstheweatherlike.mp3")]
     public async Task Should_handle_detailed_format_with_different_audio_formats(string fileName)
     {
@@ -548,20 +546,22 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
 
         Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
 
-        // Detailed format should include additional properties like NBest, offset, or duration
-        var hasNBest = resultProperty.TryGetProperty("NBest", out _) ||
-                      resultProperty.TryGetProperty("nBest", out _);
-        var hasOffset = resultProperty.TryGetProperty("offset", out _);
-        var hasDuration = resultProperty.TryGetProperty("duration", out _);
+        // With ContinuousRecognitionResult, detailed format properties are in the segments
+        Assert.True(resultProperty.TryGetProperty("segments", out var segmentsProperty));
+        Assert.True(segmentsProperty.GetArrayLength() > 0);
+
+        var firstSegment = segmentsProperty[0];
+        var hasNBest = firstSegment.TryGetProperty("nBest", out _);
+        var hasOffset = firstSegment.TryGetProperty("offset", out _);
+        var hasDuration = firstSegment.TryGetProperty("duration", out _);
 
         Assert.True(hasNBest || hasOffset || hasDuration,
-                   "Detailed format should include NBest, offset, or duration properties");
+                   "Detailed format should include NBest, offset, or duration properties in segments");
 
         Output.WriteLine($"✅ Detailed format recognition completed successfully for {Path.GetExtension(fileName)}");
     }
 
-    [Theory]
-    [InlineData("test-audio.wav")]
+    [Theory(Skip = "Requires GStreamer installed to handle compressed audio formats (e.g., MP3). Skipped if GStreamer is not available.")]
     [InlineData("whatstheweatherlike.mp3")]
     public async Task Should_apply_phrase_hints_with_different_audio_formats(string fileName)
     {
@@ -597,7 +597,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var resultObject = jsonResult.RootElement;
         Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
 
-        var text = resultProperty.TryGetProperty("text", out var textProperty)
+        var text = resultProperty.TryGetProperty("fullText", out var textProperty)
             ? textProperty.GetString()
             : "";
 
@@ -608,54 +608,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         Output.WriteLine($"✅ Phrase hints test completed for {Path.GetExtension(fileName)}");
     }
 
-    [Fact]
-    public async Task Should_handle_large_mp3_file_timeout()
-    {
-        // Create a large temporary MP3 file to simulate a large audio file
-        var largeMp3File = Path.GetTempFileName();
-        var largeMp3FilePath = Path.ChangeExtension(largeMp3File, ".mp3");
-        File.Move(largeMp3File, largeMp3FilePath);
-
-        var largeContent = new string('A', 1000000); // 1MB of content
-        File.WriteAllText(largeMp3FilePath, largeContent);
-
-        try
-        {
-            var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
-
-            var result = await CallToolAsync(
-                "azmcp_speech_stt_recognize",
-                new()
-                {
-                    { "subscription", Settings.SubscriptionId },
-                    { "endpoint", aiServicesEndpoint },
-                    { "file", largeMp3FilePath },
-                    { "language", "en-US" },
-                    { "format", "simple" },
-                    { "retry-network-timeout", 30000 } // 30 second timeout
-                });
-
-            // Should either succeed or handle timeout gracefully
-            if (result != null)
-            {
-                var resultText = result.ToString();
-                Output.WriteLine($"Large MP3 file result: {resultText}");
-            }
-
-            Output.WriteLine("✅ Large MP3 file timeout handling test completed");
-        }
-        finally
-        {
-            // Clean up temporary file
-            if (File.Exists(largeMp3FilePath))
-            {
-                File.Delete(largeMp3FilePath);
-            }
-        }
-    }
-
-    [Theory]
-    [InlineData("test-audio.wav")]
+    [Theory(Skip = "Requires GStreamer installed to handle compressed audio formats (e.g., MP3). Skipped if GStreamer is not available.")]
     [InlineData("whatstheweatherlike.mp3")]
     public async Task Should_handle_profanity_filtering_with_different_formats(string fileName)
     {
@@ -691,4 +644,46 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
 
         Output.WriteLine($"✅ Profanity filtering test completed for {Path.GetExtension(fileName)}");
     }
+
+    /// <summary>
+    /// Create a WAV file with given duration (seconds). 
+    /// If durationSeconds = 0, generates an empty WAV file with header only.
+    /// </summary>
+    private static void CreateWavFile(string filePath, int durationSeconds = 0)
+    {
+        int sampleRate = 16000;    // 16kHz
+        short bitsPerSample = 16;  // 16-bit
+        short channels = 1;        // mono
+        int totalSamples = sampleRate * durationSeconds;
+        int byteRate = sampleRate * channels * (bitsPerSample / 8);
+
+        using var fs = new FileStream(filePath, FileMode.Create);
+        using var writer = new BinaryWriter(fs);
+
+        // RIFF header
+        writer.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"));
+        writer.Write(36 + totalSamples * 2); // RIFF size
+        writer.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"));
+
+        // fmt chunk
+        writer.Write(System.Text.Encoding.ASCII.GetBytes("fmt "));
+        writer.Write(16);          // PCM chunk size
+        writer.Write((short)1);    // PCM format
+        writer.Write(channels);    // channels
+        writer.Write(sampleRate);  // sample rate
+        writer.Write(byteRate);    // byte rate
+        writer.Write((short)(channels * bitsPerSample / 8)); // block align
+        writer.Write(bitsPerSample);
+
+        // data chunk
+        writer.Write(System.Text.Encoding.ASCII.GetBytes("data"));
+        writer.Write(totalSamples * 2); // data chunk size
+
+        // Write silence (zeros) for the specified duration
+        for (int i = 0; i < totalSamples; i++)
+        {
+            writer.Write((short)0);
+        }
+    }
 }
+

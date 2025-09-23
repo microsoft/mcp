@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.CommandLine;
@@ -109,12 +109,7 @@ public class SttRecognizeCommandTests
         var testFile = "test-audio.wav";
         await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
 
-        var expectedResult = new SpeechRecognitionResult
-        {
-            Text = "Hello world",
-            Confidence = 0.95,
-            Reason = "RecognizedSpeech"
-        };
+        var expectedResult = CreateContinuousRecognitionResult("Hello world", "RecognizedSpeech");
 
         _speechService.RecognizeSpeechFromFile(
             Arg.Any<string>(),
@@ -137,10 +132,10 @@ public class SttRecognizeCommandTests
             Assert.Equal(200, response.Status);
             Assert.NotNull(response.Results);
 
-            var result = JsonSerializer.Deserialize<SttRecognizeCommand.SttRecognizeCommandResult>(
+            var result = JsonSerializer.Deserialize(
                 JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
             Assert.NotNull(result);
-            Assert.Equal("Hello world", result.Result.Text);
+            Assert.Equal("Hello world", result.Result.FullText);
         }
         finally
         {
@@ -225,12 +220,7 @@ public class SttRecognizeCommandTests
         var testFile = "test-audio.wav";
         await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
 
-        var expectedResult = new SpeechRecognitionResult
-        {
-            Text = "Test result",
-            Confidence = 0.9,
-            Reason = "RecognizedSpeech"
-        };
+        var expectedResult = CreateContinuousRecognitionResult("Test result", "RecognizedSpeech");
 
         _speechService.RecognizeSpeechFromFile(
             Arg.Any<string>(),
@@ -269,17 +259,7 @@ public class SttRecognizeCommandTests
         var testFile = "test-audio-detailed.wav";
         await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
 
-        var expectedResult = new DetailedSpeechRecognitionResult
-        {
-            Text = "Hello world",
-            Confidence = 0.95,
-            Reason = "RecognizedSpeech",
-            NBest = new List<NBestResult>
-            {
-                new() { Text = "Hello world", Confidence = 0.95 },
-                new() { Text = "Hello word", Confidence = 0.85 }
-            }
-        };
+        var expectedResult = CreateContinuousRecognitionResult("Hello world", "RecognizedSpeech", true);
 
         _speechService.RecognizeSpeechFromFile(
             Arg.Any<string>(),
@@ -302,16 +282,17 @@ public class SttRecognizeCommandTests
             Assert.Equal(200, response.Status);
             Assert.NotNull(response.Results);
 
-            var result = JsonSerializer.Deserialize<SttRecognizeCommand.SttRecognizeCommandResult>(
+            var result = JsonSerializer.Deserialize(
                 JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
             Assert.NotNull(result);
-            Assert.Equal("Hello world", result.Result.Text);
+            Assert.Equal("Hello world", result.Result.FullText);
 
             // Verify it's a detailed result
-            Assert.IsType<DetailedSpeechRecognitionResult>(result.Result);
-            var detailedResult = (DetailedSpeechRecognitionResult)result.Result;
+            Assert.Single(result.Result.Segments);
+            Assert.IsType<DetailedSpeechRecognitionResult>(result.Result.Segments[0]);
+            var detailedResult = (DetailedSpeechRecognitionResult)result.Result.Segments[0];
             Assert.NotNull(detailedResult.NBest);
-            Assert.Equal(2, detailedResult.NBest.Count);
+            Assert.Single(detailedResult.NBest);
         }
         finally
         {
@@ -333,12 +314,7 @@ public class SttRecognizeCommandTests
         var testFile = "test-audio-profanity.wav";
         await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
 
-        var expectedResult = new SpeechRecognitionResult
-        {
-            Text = "Filtered text",
-            Confidence = 0.90,
-            Reason = "RecognizedSpeech"
-        };
+        var expectedResult = CreateContinuousRecognitionResult("Filtered text", "RecognizedSpeech");
 
         _speechService.RecognizeSpeechFromFile(
             Arg.Any<string>(),
@@ -387,12 +363,7 @@ public class SttRecognizeCommandTests
         var testFile = "test-audio-phrases.wav";
         await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
 
-        var expectedResult = new SpeechRecognitionResult
-        {
-            Text = "Azure cognitive services",
-            Confidence = 0.95,
-            Reason = "RecognizedSpeech"
-        };
+        var expectedResult = CreateContinuousRecognitionResult("Azure cognitive services", "RecognizedSpeech");
 
         // Capture what phrases are actually passed for verification
         string[]? capturedPhrases = null;
@@ -464,12 +435,7 @@ public class SttRecognizeCommandTests
         var testFile = "test-audio-language.wav";
         await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
 
-        var expectedResult = new SpeechRecognitionResult
-        {
-            Text = "Recognized text",
-            Confidence = 0.90,
-            Reason = "RecognizedSpeech"
-        };
+        var expectedResult = CreateContinuousRecognitionResult("Recognized text", "RecognizedSpeech");
 
         _speechService.RecognizeSpeechFromFile(
             Arg.Any<string>(),
@@ -518,12 +484,7 @@ public class SttRecognizeCommandTests
         var testFile = "test-audio-retry.wav";
         await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
 
-        var expectedResult = new SpeechRecognitionResult
-        {
-            Text = "Retry succeeded",
-            Confidence = 0.88,
-            Reason = "RecognizedSpeech"
-        };
+        var expectedResult = CreateContinuousRecognitionResult("Retry succeeded", "RecognizedSpeech");
 
         _speechService.RecognizeSpeechFromFile(
             Arg.Any<string>(),
@@ -623,12 +584,7 @@ public class SttRecognizeCommandTests
         var testFile = "empty-audio.wav";
         await File.WriteAllTextAsync(testFile, "", TestContext.Current.CancellationToken); // Empty file
 
-        var expectedResult = new SpeechRecognitionResult
-        {
-            Text = "",
-            Confidence = 0.0,
-            Reason = "NoMatch"
-        };
+        var expectedResult = CreateContinuousRecognitionResult("", "NoMatch");
 
         _speechService.RecognizeSpeechFromFile(
             Arg.Any<string>(),
@@ -654,8 +610,8 @@ public class SttRecognizeCommandTests
             var result = JsonSerializer.Deserialize<SttRecognizeCommand.SttRecognizeCommandResult>(
                 JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
             Assert.NotNull(result);
-            Assert.Equal("", result.Result.Text);
-            Assert.Equal("NoMatch", result.Result.Reason);
+            Assert.Equal("", result.Result.FullText);
+            Assert.Equal("NoMatch", result.Result.Segments[0].Reason);
         }
         finally
         {
@@ -675,12 +631,7 @@ public class SttRecognizeCommandTests
         var largeContent = new string('A', 10000); // Create a large file
         await File.WriteAllTextAsync(testFile, largeContent, TestContext.Current.CancellationToken);
 
-        var expectedResult = new SpeechRecognitionResult
-        {
-            Text = "Long audio content recognition result",
-            Confidence = 0.85,
-            Reason = "RecognizedSpeech"
-        };
+        var expectedResult = CreateContinuousRecognitionResult("Long audio content recognition result", "RecognizedSpeech");
 
         _speechService.RecognizeSpeechFromFile(
             Arg.Any<string>(),
@@ -719,12 +670,7 @@ public class SttRecognizeCommandTests
         var testFile = "test-audio-semicolon-phrases.wav";
         await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
 
-        var expectedResult = new SpeechRecognitionResult
-        {
-            Text = "Azure cognitive services",
-            Confidence = 0.95,
-            Reason = "RecognizedSpeech"
-        };
+        var expectedResult = CreateContinuousRecognitionResult("Azure cognitive services", "RecognizedSpeech");
 
         // Capture what phrases are actually passed for verification
         string[]? capturedPhrases = null;
@@ -782,12 +728,7 @@ public class SttRecognizeCommandTests
         var testFile = "test-audio-comma-phrases.wav";
         await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
 
-        var expectedResult = new SpeechRecognitionResult
-        {
-            Text = "Azure cognitive services",
-            Confidence = 0.95,
-            Reason = "RecognizedSpeech"
-        };
+        var expectedResult = CreateContinuousRecognitionResult("Azure cognitive services", "RecognizedSpeech");
 
         // Capture what phrases are actually passed for verification
         string[]? capturedPhrases = null;
@@ -842,12 +783,7 @@ public class SttRecognizeCommandTests
         var testFile = "test-audio-mixed-phrases.wav";
         await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
 
-        var expectedResult = new SpeechRecognitionResult
-        {
-            Text = "Azure cognitive services machine learning",
-            Confidence = 0.95,
-            Reason = "RecognizedSpeech"
-        };
+        var expectedResult = CreateContinuousRecognitionResult("Azure cognitive services machine learning", "RecognizedSpeech");
 
         // Capture what phrases are actually passed for verification
         string[]? capturedPhrases = null;
@@ -923,12 +859,7 @@ public class SttRecognizeCommandTests
         // Arrange
         await File.WriteAllTextAsync(fileName, "test audio content", TestContext.Current.CancellationToken);
 
-        var expectedResult = new SpeechRecognitionResult
-        {
-            Text = "Hello world",
-            Confidence = 0.95,
-            Reason = "RecognizedSpeech"
-        };
+        var expectedResult = CreateContinuousRecognitionResult("Hello world", "RecognizedSpeech");
 
         _speechService.RecognizeSpeechFromFile(
             Arg.Any<string>(),
@@ -954,7 +885,7 @@ public class SttRecognizeCommandTests
             var result = JsonSerializer.Deserialize<SttRecognizeCommand.SttRecognizeCommandResult>(
                 JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
             Assert.NotNull(result);
-            Assert.Equal("Hello world", result.Result.Text);
+            Assert.Equal("Hello world", result.Result.FullText);
 
             // Verify the service was called with the correct file path
             await _speechService.Received(1).RecognizeSpeechFromFile(
@@ -1024,12 +955,7 @@ public class SttRecognizeCommandTests
         var largeContent = new string('A', 10_000_000); // 10MB of content
         await File.WriteAllTextAsync(largeFileName, largeContent, TestContext.Current.CancellationToken);
 
-        var expectedResult = new SpeechRecognitionResult
-        {
-            Text = "Large file processed",
-            Confidence = 0.85,
-            Reason = "RecognizedSpeech"
-        };
+        var expectedResult = CreateContinuousRecognitionResult("Large file processed", "RecognizedSpeech");
 
         _speechService.RecognizeSpeechFromFile(
             Arg.Any<string>(),
@@ -1055,7 +981,7 @@ public class SttRecognizeCommandTests
             var result = JsonSerializer.Deserialize<SttRecognizeCommand.SttRecognizeCommandResult>(
                 JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
             Assert.NotNull(result);
-            Assert.Equal("Large file processed", result.Result.Text);
+            Assert.Equal("Large file processed", result.Result.FullText);
         }
         finally
         {
@@ -1066,4 +992,30 @@ public class SttRecognizeCommandTests
             }
         }
     }
+
+    private static ContinuousRecognitionResult CreateContinuousRecognitionResult(string text, string reason, bool isDetailed = false)
+    {
+        var segment = isDetailed
+            ? new DetailedSpeechRecognitionResult
+            {
+                Text = text,
+                Reason = reason,
+                NBest = new List<NBestResult>
+                {
+                    new NBestResult { Display = text, Confidence = 0.95 }
+                }
+            }
+            : new SpeechRecognitionResult
+            {
+                Text = text,
+                Reason = reason
+            };
+
+        return new ContinuousRecognitionResult
+        {
+            FullText = text,
+            Segments = new List<SpeechRecognitionResult> { segment }
+        };
+    }
 }
+
