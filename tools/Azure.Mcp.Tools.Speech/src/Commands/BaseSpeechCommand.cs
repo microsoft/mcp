@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Speech.Options;
 
 namespace Azure.Mcp.Tools.Speech.Commands;
@@ -14,30 +15,43 @@ public abstract class BaseSpeechCommand<
     : SubscriptionCommand<T>
     where T : BaseSpeechOptions, new()
 {
-    protected readonly Option<string> _endpointOption = SpeechOptionDefinitions.Endpoint;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_endpointOption);
-
-        // Command-level validation for endpoint
+        var endpointOption = SpeechOptionDefinitions.Endpoint.AsRequired();
+        command.Options.Add(endpointOption);
         command.Validators.Add(commandResult =>
         {
-            // Validate endpoint is provided
-            if (!commandResult.HasOptionResult(_endpointOption))
+            // Validate endpoint option
+            var endpointValue = commandResult.GetValueOrDefault(endpointOption);
+            if (string.IsNullOrEmpty(endpointValue))
             {
-                commandResult.AddError("Azure AI Services endpoint is required (e.g., https://your-service.cognitiveservices.azure.com/).");
+                commandResult.AddError($"Missing required option: --{endpointOption.Name}");
                 return;
             }
 
-            if (commandResult.TryGetValue(_endpointOption, out var endpointValue) && !string.IsNullOrWhiteSpace(endpointValue))
+            if (!Uri.TryCreate(endpointValue, UriKind.Absolute, out var uri))
             {
-                // Validate endpoint format
-                if (!Uri.TryCreate(endpointValue, UriKind.Absolute, out var endpointUri) || !endpointUri.Host.EndsWith(".cognitiveservices.azure.com", StringComparison.OrdinalIgnoreCase))
-                {
-                    commandResult.AddError("Endpoint must be a valid Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/).");
-                }
+                commandResult.AddError($"Invalid endpoint URL: {endpointValue}");
+                return;
+            }
+
+            if (uri.Scheme != Uri.UriSchemeHttps)
+            {
+                commandResult.AddError($"Endpoint must use HTTPS: {endpointValue}");
+                return;
+            }
+
+            if (!uri.Host.EndsWith(".cognitiveservices.azure.com", StringComparison.OrdinalIgnoreCase))
+            {
+                commandResult.AddError($"Endpoint must be a valid Azure AI Services endpoint. Host must end with '.cognitiveservices.azure.com': {uri.Host}");
+                return;
+            }
+
+            var subdomain = uri.Host.Replace(".cognitiveservices.azure.com", "", StringComparison.OrdinalIgnoreCase);
+            if (string.IsNullOrWhiteSpace(subdomain))
+            {
+                commandResult.AddError($"Endpoint must include a valid service name before '.cognitiveservices.azure.com'");
             }
         });
     }
@@ -45,7 +59,7 @@ public abstract class BaseSpeechCommand<
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValueOrDefault(_endpointOption);
+        options.Endpoint = parseResult.GetValueOrDefault<string>(SpeechOptionDefinitions.Endpoint.Name);
         return options;
     }
 }

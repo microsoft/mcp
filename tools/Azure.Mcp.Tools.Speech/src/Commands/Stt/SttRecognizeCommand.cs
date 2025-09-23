@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Options;
 using Azure.Mcp.Tools.Speech.Options.Stt;
@@ -40,43 +42,61 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
         Secret = false
     };
 
-    private readonly Option<string> _fileOption = SpeechOptionDefinitions.File;
-    private readonly Option<string?> _languageOption = SpeechOptionDefinitions.Language;
-    private readonly Option<string[]?> _phrasesOption = SpeechOptionDefinitions.Phrases;
-    private readonly Option<string?> _formatOption = SpeechOptionDefinitions.Format;
-    private readonly Option<string?> _profanityOption = SpeechOptionDefinitions.Profanity;
-
     protected override void RegisterOptions(Command command)
     {
+        _logger.LogDebug("RegisterOptions");
+
         base.RegisterOptions(command);
-        command.Options.Add(_fileOption);
-        command.Options.Add(_languageOption);
-        command.Options.Add(_phrasesOption);
-        command.Options.Add(_formatOption);
-        command.Options.Add(_profanityOption);
+
+        var fileOption = SpeechOptionDefinitions.File.AsRequired();
+        command.Options.Add(fileOption);
+        var languageOption = SpeechOptionDefinitions.Language.AsOptional();
+        command.Options.Add(languageOption);
+        var phrasesOption = SpeechOptionDefinitions.Phrases.AsOptional();
+        command.Options.Add(phrasesOption);
+        var formatOption = SpeechOptionDefinitions.Format.AsOptional();
+        command.Options.Add(formatOption);
+        var profanityOption = SpeechOptionDefinitions.Profanity.AsOptional();
+        command.Options.Add(profanityOption);
 
         // Command-level validation for file-specific options
         command.Validators.Add(commandResult =>
         {
             // Validate file is provided
-            if (!commandResult.HasOptionResult(_fileOption))
+            if (!commandResult.HasOptionResult(SpeechOptionDefinitions.File.Name))
             {
-                commandResult.AddError("Audio file path is required.");
+                commandResult.AddError("Missing Required options: --file");
                 return;
             }
 
-            if (commandResult.TryGetValue(_fileOption, out var fileValue) && !string.IsNullOrWhiteSpace(fileValue))
+            // Validate file path is not empty
+            var fileValue = commandResult.GetValueOrDefault(fileOption);
+            if (string.IsNullOrWhiteSpace(fileValue))
             {
-                // Validate file exists
-                if (!File.Exists(fileValue))
-                {
-                    commandResult.AddError($"Audio file not found: {fileValue}");
-                    return;
-                }
+                commandResult.AddError("Audio file path cannot be empty.");
+                return;
             }
 
+            // Validate file exists
+            if (!File.Exists(fileValue))
+            {
+                commandResult.AddError($"Audio file not found: {fileValue}");
+                return;
+            }
+
+            // Validate file extension
+            var extension = Path.GetExtension(fileValue).ToLowerInvariant();
+            var supportedExtensions = new[] { ".wav", ".mp3", ".ogg", ".flac", ".alaw", ".mulaw", ".mp4", ".m4a", ".aac" };
+            if (!supportedExtensions.Contains(extension))
+            {
+                commandResult.AddError($"Unsupported audio file format: {extension}. Only {string.Join(", ", supportedExtensions)} are supported.");
+                return;
+            }
+
+
             // Validate format option if provided
-            if (commandResult.TryGetValue(_formatOption, out var formatValue) && !string.IsNullOrEmpty(formatValue))
+            var formatValue = commandResult.GetValueOrDefault<string?>(formatOption);
+            if (!string.IsNullOrEmpty(formatValue))
             {
                 if (formatValue != "simple" && formatValue != "detailed")
                 {
@@ -86,7 +106,8 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
             }
 
             // Validate profanity option if provided
-            if (commandResult.TryGetValue(_profanityOption, out var profanityValue) && !string.IsNullOrEmpty(profanityValue))
+            var profanityValue = commandResult.GetValueOrDefault<string?>(profanityOption);
+            if (!string.IsNullOrEmpty(profanityValue))
             {
                 if (profanityValue != "masked" && profanityValue != "removed" && profanityValue != "raw")
                 {
@@ -95,15 +116,14 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
             }
         });
     }
-
     protected override SttRecognizeOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.File = parseResult.GetValueOrDefault(_fileOption);
-        options.Language = parseResult.GetValueOrDefault(_languageOption);
+        options.File = parseResult.GetValueOrDefault<string>(SpeechOptionDefinitions.File.Name);
+        options.Language = parseResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Language.Name);
 
         // Process phrases to support comma-separated values
-        var rawPhrases = parseResult.GetValueOrDefault(_phrasesOption);
+        var rawPhrases = parseResult.GetValueOrDefault<string[]?>(SpeechOptionDefinitions.Phrases.Name);
         if (rawPhrases != null && rawPhrases.Length > 0)
         {
             var processedPhrases = new List<string>();
@@ -126,8 +146,9 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
             options.Phrases = rawPhrases;
         }
 
-        options.Format = parseResult.GetValueOrDefault(_formatOption);
-        options.Profanity = parseResult.GetValueOrDefault(_profanityOption);
+        options.Format = parseResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Format.Name);
+        options.Profanity = parseResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Profanity.Name);
+
         return options;
     }
 
@@ -158,7 +179,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
                 result.FullText?.Length ?? 0,
                 result.Segments.Count);
 
-            context.Response.Status = 200;
+            context.Response.Status = HttpStatusCode.OK;
             context.Response.Message = "Speech recognition completed successfully.";
             context.Response.Results = ResponseResult.Create(
                 new SttRecognizeCommandResult(result),
@@ -181,14 +202,14 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        ArgumentException => 400,
-        FileNotFoundException => 404,
-        UnauthorizedAccessException => 401,
-        HttpRequestException => 503,
-        TimeoutException => 504,
-        InvalidOperationException => 500,
+        ArgumentException => HttpStatusCode.BadRequest,
+        FileNotFoundException => HttpStatusCode.NotFound,
+        UnauthorizedAccessException => HttpStatusCode.Unauthorized,
+        HttpRequestException => HttpStatusCode.ServiceUnavailable,
+        TimeoutException => HttpStatusCode.GatewayTimeout,
+        InvalidOperationException => HttpStatusCode.InternalServerError,
         _ => base.GetStatusCode(ex)
     };
 }

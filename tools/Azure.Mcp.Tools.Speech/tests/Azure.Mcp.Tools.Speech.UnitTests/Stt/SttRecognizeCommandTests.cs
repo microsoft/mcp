@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -84,11 +85,11 @@ public class SttRecognizeCommandTests
 
             if (shouldSucceed)
             {
-                Assert.Equal(200, response.Status);
+                Assert.Equal(HttpStatusCode.OK, response.Status);
             }
             else
             {
-                Assert.NotEqual(200, response.Status);
+                Assert.NotEqual(HttpStatusCode.OK, response.Status);
                 Assert.Contains(expectedError, response.Message, StringComparison.OrdinalIgnoreCase);
             }
         }
@@ -129,7 +130,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
 
             var result = JsonSerializer.Deserialize(
@@ -172,7 +173,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(401, response.Status);
+            Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
             Assert.Contains("Access denied", response.Message);
         }
         finally
@@ -200,7 +201,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(400, response.Status);
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
             Assert.Contains("must be a valid Azure AI Services endpoint", response.Message);
         }
         finally
@@ -240,7 +241,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
         }
         finally
         {
@@ -279,7 +280,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
 
             var result = JsonSerializer.Deserialize(
@@ -334,7 +335,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
 
             // Verify the service was called with correct profanity option
             await _speechService.Received(1).RecognizeSpeechFromFile(
@@ -392,7 +393,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
 
             // Verify that phrases were captured and contain expected values
             Assert.NotNull(capturedPhrases);
@@ -455,7 +456,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
 
             // Verify the service was called with correct language
             await _speechService.Received(1).RecognizeSpeechFromFile(
@@ -504,7 +505,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
 
             // Verify the service was called with retry policy
             await _speechService.Received(1).RecognizeSpeechFromFile(
@@ -527,11 +528,11 @@ public class SttRecognizeCommandTests
     }
 
     [Theory]
-    [InlineData("HttpRequestException", 503, "Http request failed")]
-    [InlineData("TimeoutException", 504, "Speech recognition timed out")]
-    [InlineData("InvalidOperationException", 500, "Invalid operation")]
-    [InlineData("ArgumentException", 400, "Invalid argument")]
-    public async Task ExecuteAsync_HandlesSpecificExceptions(string exceptionType, int expectedStatus, string expectedMessage)
+    [InlineData("HttpRequestException", HttpStatusCode.ServiceUnavailable, "Http request failed")]
+    [InlineData("TimeoutException", HttpStatusCode.GatewayTimeout, "Speech recognition timed out")]
+    [InlineData("InvalidOperationException", HttpStatusCode.InternalServerError, "Invalid operation")]
+    [InlineData("ArgumentException", HttpStatusCode.BadRequest, "Invalid argument")]
+    public async Task ExecuteAsync_HandlesSpecificExceptions(string exceptionType, HttpStatusCode expectedStatus, string expectedMessage)
     {
         // Arrange
         var testFile = "test-audio-exception.wav";
@@ -604,7 +605,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
 
             var result = JsonSerializer.Deserialize<SttRecognizeCommand.SttRecognizeCommandResult>(
@@ -651,7 +652,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
         }
         finally
         {
@@ -698,7 +699,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
 
             // Check what phrases were actually captured
             Assert.NotNull(capturedPhrases);
@@ -756,7 +757,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
 
             // Check what phrases were actually captured
             Assert.NotNull(capturedPhrases);
@@ -812,7 +813,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
 
             // Check what phrases were actually captured
             Assert.NotNull(capturedPhrases);
@@ -879,7 +880,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
 
             var result = JsonSerializer.Deserialize<SttRecognizeCommand.SttRecognizeCommandResult>(
@@ -919,13 +920,13 @@ public class SttRecognizeCommandTests
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file \"{fileName}\"";
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {fileName}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert - The command should return validation error for invalid file extensions
-            Assert.Equal(400, response.Status);
-            Assert.NotNull(response.Message);
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+            Assert.Contains("Unsupported audio file format", response.Message);
 
             // Verify the service was NOT called with invalid file extensions
             await _speechService.DidNotReceive().RecognizeSpeechFromFile(
@@ -975,7 +976,7 @@ public class SttRecognizeCommandTests
             var response = await _command.ExecuteAsync(_context, parseResult);
 
             // Assert
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
 
             var result = JsonSerializer.Deserialize<SttRecognizeCommand.SttRecognizeCommandResult>(
