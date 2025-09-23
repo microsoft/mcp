@@ -43,7 +43,7 @@ public class StorageService(
         ValidateRequiredParameters(subscription);
 
         var accounts = new List<StorageAccountInfo>();
-        
+
         if (string.IsNullOrEmpty(account))
         {
             // List all accounts
@@ -59,8 +59,7 @@ public class StorageService(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,
-                    "Error listing Storage Accounts in Subscription: {Subscription}",  subscription);
+                _logger.LogError(ex, "Error listing Storage Accounts in Subscription: {Subscription}", subscription);
                 throw;
             }
         }
