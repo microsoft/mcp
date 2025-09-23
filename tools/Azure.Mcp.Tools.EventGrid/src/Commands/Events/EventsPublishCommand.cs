@@ -10,10 +10,10 @@ using Azure.Mcp.Tools.EventGrid.Services;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Events;
 
-public sealed class EventsPublishCommand(ILogger<EventsPublishCommand> logger) : BaseEventGridCommand<EventsPublishOptions>
+public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> logger) : BaseEventGridCommand<EventsPublishOptions>
 {
     private const string CommandTitle = "Publish Events to Event Grid Topic";
-    private readonly ILogger<EventsPublishCommand> _logger = logger;
+    private readonly ILogger<EventGridPublishCommand> _logger = logger;
 
     public override string Name => "publish";
 
@@ -77,8 +77,8 @@ public sealed class EventsPublishCommand(ILogger<EventsPublishCommand> logger) :
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new EventsPublishCommandResult(result),
-                EventGridJsonContext.Default.EventsPublishCommandResult);
+                new EventGridPublishCommandResult(result),
+                EventGridJsonContext.Default.EventGridPublishCommandResult);
         }
         catch (Exception ex)
         {
@@ -93,11 +93,11 @@ public sealed class EventsPublishCommand(ILogger<EventsPublishCommand> logger) :
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Event Grid topic not found. Please verify the topic name and resource group exist.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             "Access denied to Event Grid topic. Please verify you have Event Grid Data Sender permissions.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 400 =>
+        Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
             "Invalid event data or schema format. Please verify the event data is valid JSON and matches the expected schema.",
         ArgumentException argEx when argEx.Message.Contains("schema") =>
             "Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom.",
@@ -114,5 +114,5 @@ public sealed class EventsPublishCommand(ILogger<EventsPublishCommand> logger) :
         _ => base.GetStatusCode(ex)
     };
 
-    internal record EventsPublishCommandResult(EventPublishResult Result);
+    internal record EventGridPublishCommandResult(EventPublishResult Result);
 }

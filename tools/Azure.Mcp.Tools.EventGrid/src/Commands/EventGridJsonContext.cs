@@ -10,7 +10,7 @@ using Azure.Mcp.Tools.EventGrid.Models;
 namespace Azure.Mcp.Tools.EventGrid.Commands;
 
 // JsonSerializable attributes for all types used in EventGrid command responses and event serialization
-[JsonSerializable(typeof(EventsPublishCommand.EventsPublishCommandResult))]
+[JsonSerializable(typeof(EventGridPublishCommand.EventGridPublishCommandResult))]
 [JsonSerializable(typeof(SubscriptionListCommand.SubscriptionListCommandResult))]
 [JsonSerializable(typeof(TopicListCommand.TopicListCommandResult))]
 [JsonSerializable(typeof(EventGridSubscriptionInfo))]

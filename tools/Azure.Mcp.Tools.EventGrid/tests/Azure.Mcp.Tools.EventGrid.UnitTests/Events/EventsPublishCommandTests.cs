@@ -23,15 +23,15 @@ public class EventsPublishCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IEventGridService _eventGridService;
-    private readonly ILogger<EventsPublishCommand> _logger;
-    private readonly EventsPublishCommand _command;
+    private readonly ILogger<EventGridPublishCommand> _logger;
+    private readonly EventGridPublishCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
 
     public EventsPublishCommandTests()
     {
         _eventGridService = Substitute.For<IEventGridService>();
-        _logger = Substitute.For<ILogger<EventsPublishCommand>>();
+        _logger = Substitute.For<ILogger<EventGridPublishCommand>>();
 
         var collection = new ServiceCollection().AddSingleton(_eventGridService);
 
@@ -103,7 +103,7 @@ public class EventsPublishCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventsPublishCommandResult);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventGridPublishCommandResult);
         Assert.NotNull(result);
         Assert.Equal("Success", result!.Result.Status);
         Assert.Equal(1, result.Result.PublishedEventCount);
@@ -161,7 +161,7 @@ public class EventsPublishCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventsPublishCommandResult);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventGridPublishCommandResult);
         Assert.NotNull(result);
         Assert.Equal("Success", result!.Result.Status);
         Assert.Equal(2, result.Result.PublishedEventCount);
@@ -322,7 +322,7 @@ public class EventsPublishCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventsPublishCommandResult);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventGridPublishCommandResult);
         Assert.NotNull(result);
         Assert.Equal("Success", result!.Result.Status);
         Assert.Equal(1, result.Result.PublishedEventCount);
@@ -372,7 +372,7 @@ public class EventsPublishCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventsPublishCommandResult);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventGridPublishCommandResult);
         Assert.NotNull(result);
         Assert.Equal("Success", result!.Result.Status);
         Assert.Equal(1, result.Result.PublishedEventCount);
@@ -421,7 +421,7 @@ public class EventsPublishCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventsPublishCommandResult);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventGridPublishCommandResult);
         Assert.NotNull(result);
         Assert.Equal("Success", result!.Result.Status);
         Assert.Equal(1, result.Result.PublishedEventCount);
@@ -925,7 +925,7 @@ public class EventsPublishCommandTests
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         var json = JsonSerializer.Serialize(response.Results!);
-        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventsPublishCommandResult);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventGridPublishCommandResult);
         Assert.Equal(2, result!.Result.PublishedEventCount);
     }
 }

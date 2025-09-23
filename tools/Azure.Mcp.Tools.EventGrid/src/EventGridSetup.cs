@@ -39,7 +39,7 @@ public class EventGridSetup : IAreaSetup
         eventGrid.AddSubGroup(subscriptions);
 
         // Register Events commands
-        events.AddCommand("publish", new EventsPublishCommand(loggerFactory.CreateLogger<EventsPublishCommand>()));
+        events.AddCommand("publish", new EventGridPublishCommand(loggerFactory.CreateLogger<EventGridPublishCommand>()));
 
         // Register Topic commands
         var listCommand = serviceProvider.GetRequiredService<TopicListCommand>();
