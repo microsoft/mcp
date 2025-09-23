@@ -13,9 +13,8 @@ class Program
 {
     private static readonly HttpClient HttpClient = new();
 
-    private const string CommandPrefix = "azmcp ";
     private const string SpaceReplacement = "_";
-    private const string TestToolIdPrefix = $"azmcp{SpaceReplacement}test{SpaceReplacement}tool{SpaceReplacement}";
+    private const string TestToolIdPrefix = $"test{SpaceReplacement}tool{SpaceReplacement}";
 
     static async Task Main(string[] args)
     {
@@ -689,7 +688,7 @@ class Program
                     continue;
                 }
 
-                // Parse table rows: | azmcp_tool_name | Test prompt |
+                // Parse table rows. For example: | tool_name | Test prompt |
                 if (trimmedLine.StartsWith("|") && trimmedLine.Contains("|"))
                 {
                     var parts = trimmedLine.Split('|', StringSplitOptions.RemoveEmptyEntries);
@@ -700,10 +699,6 @@ class Program
 
                         // Skip empty entries
                         if (string.IsNullOrWhiteSpace(toolName) || string.IsNullOrWhiteSpace(prompt))
-                            continue;
-
-                        // Ensure we have a valid tool name (starts with azmcp_)
-                        if (!toolName.StartsWith("azmcp_"))
                             continue;
 
                         if (!prompts.ContainsKey(toolName))
@@ -830,11 +825,6 @@ class Program
             {
                 // Convert command to tool name format (spaces to underscores)
                 toolName = tool.Command?.Replace(" ", SpaceReplacement) ?? tool.Name;
-
-                if (!string.IsNullOrEmpty(toolName) && !toolName.StartsWith($"{CommandPrefix.Trim()}-"))
-                {
-                    toolName = $"azmcp{SpaceReplacement}{toolName}";
-                }
             }
 
             var vector = await embeddingService.CreateEmbeddingsAsync(input);
