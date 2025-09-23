@@ -138,25 +138,29 @@ public class StorageService(
                 StorageJsonContext.Default.StorageAccountCreateOrUpdateContent);
             if (!result.HasData)
             {
-                return new StorageAccountResult
-                {
-                    HasData = false
-                }; 
+                return new StorageAccountResult(
+                    HasData: false,
+                    Id: null,
+                    Name: null,
+                    Type: null,
+                    Location: null,
+                    SkuName: null,
+                    SkuTier: null,
+                    Kind: null,
+                    Properties: null);
             }
             else
             {
-                return new StorageAccountResult
-                {
-                    HasData = true,
-                    Id = result.Data.Id.ToString(),
-                    Name = result.Data.Name,
-                    Type = result.Data.ResourceType.ToString(),
-                    Location = result.Data.Location,
-                    SkuName = result.Data.Sku?.Name,
-                    SkuTier = result.Data.Sku?.Tier,
-                    Kind = result.Data.Kind,
-                    Properties = result.Data.Properties?.ToObjectFromJson(StorageJsonContext.Default.IDictionaryStringObject)
-                };
+                return new StorageAccountResult(
+                    HasData: true,
+                    Id: result.Data.Id.ToString(),
+                    Name: result.Data.Name,
+                    Type: result.Data.ResourceType.ToString(),
+                    Location: result.Data.Location,
+                    SkuName: result.Data.Sku?.Name,
+                    SkuTier: result.Data.Sku?.Tier,
+                    Kind: result.Data.Kind,
+                    Properties: result.Data.Properties?.ToObjectFromJson(StorageJsonContext.Default.IDictionaryStringObject));
             }
         }
         catch (Exception ex)
