@@ -19,10 +19,8 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
     public override string Name => "list";
     public override string Description =>
         $"""
-        Updates the metadata and display properties of a completed or in-progress load test run execution.
-        This command allows you to modify descriptive information for better organization, documentation, and identification of test runs without affecting the actual test execution or results. 
-        This will only update a test run for the selected test in the load test resource. It does not help in changing the test plan configuration. 
-        This will NOT create a test and also NOT update a test resource. Only for the specified test, it will update a test run.
+        Retrieves a comprehensive list of all test run executions for a specific load test. We get the test ID from the user and all the associated test runs are fetched. It is a one to many relationship.
+        Each test run only stores data corresponding to that particular run associated for that test. This does NOT return the test configuration or plan. For that use the test command. This is only for testruns.
         """;
     public override string Title => _commandTitle;
 

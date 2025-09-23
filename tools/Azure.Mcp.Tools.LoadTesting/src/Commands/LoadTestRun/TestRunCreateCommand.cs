@@ -19,8 +19,7 @@ public sealed class TestRunCreateCommand(ILogger<TestRunCreateCommand> logger)
     public override string Name => "create";
     public override string Description =>
         $"""
-        This will only create a test run for the selected test in the load test resource. It does not help in changing the test plan configuration. 
-        This will NOT create a test and also NOT create a test resource. Only for the specified test, it will trigger/create a test run.
+        Creates a test run for a specified test in the selected load testing resource. This command triggers a new test run and does not modify the test plan or create a new test or resource. Use this to execute performance or functional tests based on an existing test configuration.
         """;
     public override string Title => _commandTitle;
 
