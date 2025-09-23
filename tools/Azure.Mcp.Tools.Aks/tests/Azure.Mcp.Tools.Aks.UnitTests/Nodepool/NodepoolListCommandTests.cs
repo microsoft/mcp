@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -56,8 +57,8 @@ public sealed class NodepoolListCommandTests
         {
             var testNodePools = new List<Models.NodePool>
             {
-                new() { Name = "np1", NodeCount = 3, NodeVmSize = "Standard_DS2_v2" },
-                new() { Name = "np2", NodeCount = 5, NodeVmSize = "Standard_D4s_v5" }
+                new() { Name = "np1", Count = 3, VmSize = "Standard_DS2_v2" },
+                new() { Name = "np2", Count = 5, VmSize = "Standard_D4s_v5" }
             };
             _aksService.ListNodePools(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(testNodePools);
@@ -70,7 +71,7 @@ public sealed class NodepoolListCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.NotNull(response.Results);
@@ -88,8 +89,77 @@ public sealed class NodepoolListCommandTests
         // Arrange
         var expectedNodePools = new List<Models.NodePool>
         {
-            new() { Name = "systempool", NodeCount = 3, NodeVmSize = "Standard_DS2_v2", Mode = "System" },
-            new() { Name = "userpool", NodeCount = 5, NodeVmSize = "Standard_D4s_v5", Mode = "User" }
+            new()
+            {
+                Name = "systempool",
+                Count = 3,
+                VmSize = "Standard_DS2_v2",
+                OsDiskSizeGB = 128,
+                OsDiskType = "Managed",
+                KubeletDiskType = "OS",
+                MaxPods = 110,
+                Type = "VirtualMachineScaleSets",
+                MaxCount = 5,
+                MinCount = 1,
+                EnableAutoScaling = true,
+                ScaleDownMode = "Delete",
+                ProvisioningState = "Succeeded",
+                PowerState = new Models.NodePoolPowerState { Code = "Running" },
+                OrchestratorVersion = "1.33.1",
+                CurrentOrchestratorVersion = "1.33.1",
+                EnableNodePublicIP = false,
+                ScaleSetPriority = "Regular",
+                ScaleSetEvictionPolicy = null,
+                NodeLabels = new Dictionary<string, string> { { "pool", "system" } },
+                NodeTaints = [],
+                Mode = "System",
+                OsType = "Linux",
+                OsSKU = "Ubuntu",
+                NodeImageVersion = "AKSUbuntu-2204gen2containerd-202508.20.1",
+                Tags = new Dictionary<string,string> { ["env"] = "test" },
+                SpotMaxPrice = -1,
+                WorkloadRuntime = "OCIContainer",
+                EnableEncryptionAtHost = true,
+                UpgradeSettings = new Models.NodePoolUpgradeSettings { MaxSurge = "10%", MaxUnavailable = "0" },
+                SecurityProfile = new Models.NodePoolSecurityProfile { EnableVTPM = false, EnableSecureBoot = false },
+                GpuProfile = new Models.NodePoolGpuProfile { Driver = "Install" },
+                NetworkProfile = new Models.NodePoolNetworkProfile
+                {
+                    AllowedHostPorts = new List<Models.PortRange> { new() { StartPort = 80, EndPort = 80 } },
+                    ApplicationSecurityGroups = new List<string> { "/subscriptions/s/rg/r/providers/Microsoft.Network/applicationSecurityGroups/asg1" },
+                    NodePublicIPTags = new List<Models.IPTag> { new() { IpTagType = "FirstPartyUsage", Tag = "foo" } }
+                },
+                PodSubnetId = "/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/podsubnet",
+                VnetSubnetId = "/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/nodesubnet"
+            },
+            new()
+            {
+                Name = "userpool",
+                Count = 5,
+                VmSize = "Standard_D4s_v5",
+                OsDiskSizeGB = 256,
+                OsDiskType = "Ephemeral",
+                KubeletDiskType = "OS",
+                MaxPods = 110,
+                Type = "VirtualMachineScaleSets",
+                MaxCount = 10,
+                MinCount = 1,
+                EnableAutoScaling = true,
+                ScaleDownMode = "Delete",
+                ProvisioningState = "Succeeded",
+                PowerState = new Models.NodePoolPowerState { Code = "Running" },
+                OrchestratorVersion = "1.33.2",
+                CurrentOrchestratorVersion = "1.33.2",
+                EnableNodePublicIP = false,
+                ScaleSetPriority = "Spot",
+                ScaleSetEvictionPolicy = "Delete",
+                NodeLabels = new Dictionary<string, string> { { "kubernetes.azure.com/scalesetpriority", "spot" } },
+                NodeTaints = ["kubernetes.azure.com/scalesetpriority=spot:NoSchedule"],
+                Mode = "User",
+                OsType = "Linux",
+                OsSKU = "Ubuntu",
+                NodeImageVersion = "AKSUbuntu-2204gen2containerd-202508.20.1"
+            }
         };
         _aksService.ListNodePools(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedNodePools);
@@ -101,7 +171,7 @@ public sealed class NodepoolListCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the mock was called
@@ -112,17 +182,48 @@ public sealed class NodepoolListCommandTests
 
         Assert.NotNull(result);
         Assert.Equal(expectedNodePools.Count, result.NodePools.Count);
+
+        // Validate enriched fields for first pool
         Assert.Equal(expectedNodePools[0].Name, result.NodePools[0].Name);
-        Assert.Equal(expectedNodePools[0].NodeCount, result.NodePools[0].NodeCount);
-        Assert.Equal(expectedNodePools[0].NodeVmSize, result.NodePools[0].NodeVmSize);
+        Assert.Equal(expectedNodePools[0].Count, result.NodePools[0].Count);
+        Assert.Equal(expectedNodePools[0].VmSize, result.NodePools[0].VmSize);
+        Assert.Equal(expectedNodePools[0].OsDiskSizeGB, result.NodePools[0].OsDiskSizeGB);
+        Assert.Equal(expectedNodePools[0].OsDiskType, result.NodePools[0].OsDiskType);
+        Assert.Equal(expectedNodePools[0].KubeletDiskType, result.NodePools[0].KubeletDiskType);
+        Assert.Equal(expectedNodePools[0].MaxPods, result.NodePools[0].MaxPods);
+        Assert.Equal(expectedNodePools[0].Type, result.NodePools[0].Type);
+        Assert.Equal(expectedNodePools[0].MaxCount, result.NodePools[0].MaxCount);
+        Assert.Equal(expectedNodePools[0].MinCount, result.NodePools[0].MinCount);
+        Assert.Equal(expectedNodePools[0].EnableAutoScaling, result.NodePools[0].EnableAutoScaling);
+        Assert.Equal(expectedNodePools[0].ScaleDownMode, result.NodePools[0].ScaleDownMode);
+        Assert.Equal(expectedNodePools[0].ProvisioningState, result.NodePools[0].ProvisioningState);
+        Assert.Equal(expectedNodePools[0].PowerState?.Code, result.NodePools[0].PowerState?.Code);
+        Assert.Equal(expectedNodePools[0].OrchestratorVersion, result.NodePools[0].OrchestratorVersion);
+        Assert.Equal(expectedNodePools[0].CurrentOrchestratorVersion, result.NodePools[0].CurrentOrchestratorVersion);
+        Assert.Equal(expectedNodePools[0].EnableNodePublicIP, result.NodePools[0].EnableNodePublicIP);
+        Assert.Equal(expectedNodePools[0].ScaleSetPriority, result.NodePools[0].ScaleSetPriority);
+        Assert.Equal(expectedNodePools[0].ScaleSetEvictionPolicy, result.NodePools[0].ScaleSetEvictionPolicy);
+        Assert.Equal(expectedNodePools[0].NodeLabels!["pool"], result.NodePools[0].NodeLabels!["pool"]);
+        Assert.Equal(expectedNodePools[0].NodeTaints!.Count, result.NodePools[0].NodeTaints!.Count);
+        Assert.Equal(expectedNodePools[0].Mode, result.NodePools[0].Mode);
+        Assert.Equal(expectedNodePools[0].OsType, result.NodePools[0].OsType);
+        Assert.Equal(expectedNodePools[0].OsSKU, result.NodePools[0].OsSKU);
+        Assert.Equal(expectedNodePools[0].NodeImageVersion, result.NodePools[0].NodeImageVersion);
+        Assert.Equal("test", result.NodePools[0].Tags!["env"]);
+        Assert.Equal(-1, result.NodePools[0].SpotMaxPrice);
+        Assert.True(result.NodePools[0].EnableEncryptionAtHost);
+        Assert.Equal("Install", result.NodePools[0].GpuProfile?.Driver);
+        Assert.Equal(1, result.NodePools[0].NetworkProfile?.AllowedHostPorts?.Count);
+        Assert.Equal("/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/podsubnet", result.NodePools[0].PodSubnetId);
+        Assert.Equal("/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/nodesubnet", result.NodePools[0].VnetSubnetId);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNullWhenNoNodePools()
+    public async Task ExecuteAsync_ReturnsEmptyWhenNoNodePools()
     {
         // Arrange
         _aksService.ListNodePools(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<Models.NodePool>());
+            .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --cluster c1");
@@ -131,8 +232,14 @@ public sealed class NodepoolListCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AksJsonContext.Default.NodepoolListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.NodePools);
     }
 
     [Fact]
@@ -149,7 +256,7 @@ public sealed class NodepoolListCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }

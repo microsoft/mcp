@@ -22,7 +22,7 @@ jobs:
     displayName: 'Download signed packages'
     inputs:
       buildType: 'current'
-      artifactName: $(PipelineArtifactName)_signed
+      artifactName: binaries_signed
       targetPath: $(Build.ArtifactStagingDirectory)
 
   - task: CopyFiles@2
@@ -48,7 +48,7 @@ jobs:
   - task: 1ES.PublishPipelineArtifact@1
     inputs:
       path: $(Build.ArtifactStagingDirectory)
-      artifact: docker_drops
+      artifact: docker_staged
 
 - job: PublishACR
   displayName: "Publish to ACR"
@@ -61,8 +61,8 @@ jobs:
   templateContext:
     inputs:
     - input: pipelineArtifact
-      artifactName: docker_drops
-      targetPath: $(Pipeline.Workspace)/docker_drops
+      artifactName: docker_staged
+      targetPath: $(Pipeline.Workspace)/docker_staged
 
     outputs:
     - output: containerImage
@@ -91,7 +91,7 @@ jobs:
   - task: 1ES.BuildContainerImage@1
     displayName: Build Docker Image
     inputs:
-      path: '$(Pipeline.Workspace)/docker_drops'
+      path: '$(Pipeline.Workspace)/docker_staged'
       image: image:tag
       buildArguments: |
         --build-arg PUBLISH_DIR="Azure.Mcp.Server/linux-x64/dist"

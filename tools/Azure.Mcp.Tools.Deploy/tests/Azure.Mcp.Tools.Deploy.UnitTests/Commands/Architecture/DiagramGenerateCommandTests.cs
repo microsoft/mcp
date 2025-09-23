@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Deploy.Commands.Architecture;
@@ -35,7 +36,7 @@ public class DiagramGenerateCommandTests
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Contains("No service detected", response.Message);
     }
 
@@ -47,7 +48,7 @@ public class DiagramGenerateCommandTests
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Invalid JSON format", response.Message);
     }
 
@@ -59,18 +60,18 @@ public class DiagramGenerateCommandTests
         {
             WorkspaceFolder = "testWorkspace",
             ProjectName = "testProject",
-            Services = new ServiceConfig[]
-            {
+            Services =
+            [
                 new ServiceConfig
                 {
                     Name = "website",
                     AzureComputeHost = "appservice",
                     Language = "dotnet",
                     Port = "80",
-                    Dependencies = new DependencyConfig[]
-                    {
+                    Dependencies =
+                    [
                         new DependencyConfig { Name = "store", ConnectionType = "system-identity", ServiceType = "azurestorageaccount" }
-                    },
+                    ],
                 },
                 new ServiceConfig
                 {
@@ -79,10 +80,10 @@ public class DiagramGenerateCommandTests
                     AzureComputeHost = "containerapp",
                     Language = "js",
                     Port = "8080",
-                    Dependencies = new DependencyConfig[]
-                    {
+                    Dependencies =
+                    [
                         new DependencyConfig { Name = "backend", ConnectionType = "http", ServiceType = "containerapp" }
-                    }
+                    ]
                 },
                 new ServiceConfig
                 {
@@ -91,11 +92,11 @@ public class DiagramGenerateCommandTests
                     AzureComputeHost = "containerapp",
                     Language = "python",
                     Port = "3000",
-                    Dependencies = new DependencyConfig[]
-                    {
+                    Dependencies =
+                    [
                         new DependencyConfig { Name = "db", ConnectionType = "secret", ServiceType = "azurecosmosdb" },
                         new DependencyConfig { Name = "secretStore", ConnectionType = "system-identity", ServiceType = "azurekeyvault" }
-                    }
+                    ]
                 },
                 new ServiceConfig
                 {
@@ -104,10 +105,10 @@ public class DiagramGenerateCommandTests
                     AzureComputeHost = "aks",
                     Language = "ts",
                     Port = "3001",
-                    Dependencies = new DependencyConfig[]
-                    {
+                    Dependencies =
+                    [
                         new DependencyConfig { Name = "backendservice", ConnectionType = "user-identity", ServiceType = "aks"}
-                    }
+                    ]
                 },
                 new ServiceConfig
                 {
@@ -116,19 +117,19 @@ public class DiagramGenerateCommandTests
                     AzureComputeHost = "aks",
                     Language = "python",
                     Port = "3000",
-                    Dependencies = new DependencyConfig[]
-                    {
+                    Dependencies =
+                    [
                         new DependencyConfig { Name = "database", ConnectionType = "user-identity", ServiceType = "azurecacheforredis" }
-                    }
+                    ]
                 }
-            }
+            ]
         };
 
         var args = command.GetCommand().Parse(["--raw-mcp-tool-input", JsonSerializer.Serialize(appTopology)]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         // Extract the URL from the response message
         var graphStartPattern = "```mermaid";
         var graphStartIndex = response.Message.IndexOf(graphStartPattern);

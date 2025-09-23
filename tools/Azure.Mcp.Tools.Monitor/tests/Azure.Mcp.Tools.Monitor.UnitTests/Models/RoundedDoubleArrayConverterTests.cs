@@ -66,7 +66,7 @@ public class RoundedDoubleArrayConverterTests
     public void Serialize_WithEmptyArray_WritesEmptyArray()
     {
         // Arrange
-        var model = new TestModel { Values = new double[0] };
+        var model = new TestModel { Values = [] };
 
         // Act
         var json = JsonSerializer.Serialize(model, _options);
@@ -79,7 +79,7 @@ public class RoundedDoubleArrayConverterTests
     public void Serialize_WithNegativeZero_FormatsAsZero()
     {
         // Arrange
-        var model = new TestModel { Values = new double[] { -0.0 } };
+        var model = new TestModel { Values = [-0.0] };
 
         // Act
         var json = JsonSerializer.Serialize(model, _options);
@@ -361,7 +361,7 @@ public class RoundedDoubleArrayConverterTests
     public void RoundTrip_WithEmptyArray_PreservesEmptyArray()
     {
         // Arrange
-        var model = new TestModel { Values = new double[0] };
+        var model = new TestModel { Values = [] };
 
         // Act
         var json = JsonSerializer.Serialize(model, _options);
@@ -479,7 +479,7 @@ public class RoundedDoubleArrayConverterTests
     public void Serialize_WithSingleValue_WorksCorrectly()
     {
         // Arrange
-        var model = new TestModel { Values = new double[] { 42.123456 } };
+        var model = new TestModel { Values = [42.123456] };
 
         // Act
         var json = JsonSerializer.Serialize(model, _options);

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.FirewallRule;
@@ -29,7 +30,7 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -54,11 +55,7 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
                 options.Subscription!,
                 options.RetryPolicy);
 
-            context.Response.Results = firewallRules?.Count > 0
-                ? ResponseResult.Create(
-                    new FirewallRuleListResult(firewallRules),
-                    SqlJsonContext.Default.FirewallRuleListResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(firewallRules ?? []), SqlJsonContext.Default.FirewallRuleListResult);
         }
         catch (Exception ex)
         {
@@ -73,18 +70,12 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "SQL server not found. Verify the server name, resource group, and that you have access.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed accessing the SQL server. Verify you have appropriate permissions. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record FirewallRuleListResult(List<SqlServerFirewallRule> FirewallRules);

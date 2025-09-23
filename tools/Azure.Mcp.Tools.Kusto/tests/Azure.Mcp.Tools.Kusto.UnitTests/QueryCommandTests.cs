@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -70,7 +70,7 @@ public sealed class QueryCommandTests
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<QueryResult>(json);
+        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.QueryCommandResult);
         Assert.NotNull(result);
         Assert.NotNull(result.Items);
         Assert.Single(result.Items);
@@ -81,7 +81,7 @@ public sealed class QueryCommandTests
 
     [Theory]
     [MemberData(nameof(QueryArgumentMatrix))]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoResults(string cliArgs, bool useClusterUri)
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoResults(string cliArgs, bool useClusterUri)
     {
         if (useClusterUri)
         {
@@ -90,14 +90,14 @@ public sealed class QueryCommandTests
                 "db1",
                 "StormEvents | take 1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
-                .Returns(new List<JsonElement>());
+                .Returns([]);
         }
         else
         {
             _kusto.QueryItems(
                 "sub1", "mycluster", "db1", "StormEvents | take 1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
-                .Returns(new List<JsonElement>());
+                .Returns([]);
         }
         var command = new QueryCommand(_logger);
 
@@ -107,7 +107,11 @@ public sealed class QueryCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.QueryCommandResult);
+        Assert.NotNull(result);
+        Assert.Empty(result.Items);
     }
 
     [Theory]
@@ -139,7 +143,7 @@ public sealed class QueryCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
     }
 
@@ -154,13 +158,7 @@ public sealed class QueryCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Either --cluster-uri must be provided", response.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private sealed class QueryResult
-    {
-        [JsonPropertyName("items")]
-        public List<JsonElement> Items { get; set; } = new();
     }
 }

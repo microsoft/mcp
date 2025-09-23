@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.ResourceManager.CognitiveServices.Models;
+using Azure.ResourceManager.Resources.Models;
 
 namespace Azure.Mcp.Tools.Foundry.Models;
 
@@ -21,11 +21,12 @@ public record ModelDeploymentResult
     public string? Type { get; init; }
 
     [JsonPropertyName("sku")]
-    public CognitiveServicesSku? Sku { get; init; }
+    public ResourcesSku? Sku { get; init; }
 
     [JsonPropertyName("tags")]
     public IDictionary<string, string>? Tags { get; init; }
 
     [JsonPropertyName("properties")]
-    public CognitiveServicesAccountDeploymentProperties? Properties { get; init; }
+    public IDictionary<string, object>? Properties { get; init; }
 }
+

@@ -6,7 +6,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Security.KeyVault.Keys;
 using Xunit;
 
@@ -30,7 +29,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         Assert.NotEmpty(keys.EnumerateArray());
     }
 
-    [Fact(Skip = "Test temporarily disabled")]
+    [Fact]
     public async Task Should_get_key()
     {
         // Created in keyvault.bicep.

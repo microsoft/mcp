@@ -2,13 +2,6 @@
 
 The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services.  Azure MCP Server can be used alone or with the [GitHub Copilot for Azure extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-github-copilot) in VS Code.  This project is in Public Preview and implementation may significantly change prior to our General Availability.
 
-
->[!WARNING]
->**Deprecation Notice: SSE transport mode has been removed in version [0.4.0 (2025-07-15)](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/CHANGELOG.md#040-2025-07-15).**
->
-> SSE was deprecated in MCP `2025-03-26` due to [security vulnerabilities and architectural limitations](https://blog.fka.dev/blog/2025-06-06-why-mcp-deprecated-sse-and-go-with-streamable-http/). Users must discontinue use of SSE transport mode and upgrade to version `0.4.0` or newer to maintain compatibility with current MCP clients.
-
-
 ## Table of Contents
 - Install
     - [VS Code Install Guide (Recommended)](#vs-code-install-guide-recommended)
@@ -105,7 +98,11 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * "List all Event Grid topics in subscription 'my-subscription'"
 * "Show me the Event Grid topics in my subscription"
-* "List all Event Grid topics in resource group 'my-resource-group' in my subscription"
+* "List all Event Grid topics in resource group 'my-resourcegroup' in my subscription"
+* "List Event Grid subscriptions for topic 'my-topic' in resource group 'my-resourcegroup'"
+* "List Event Grid subscriptions for topic 'my-topic' in subscription 'my-subscription'"
+* "List Event Grid Subscriptions in subscription 'my-subscription'"
+* "List Event Grid subscriptions for topic 'my-topic' in location 'my-location'"
 
 ### ⚡ Azure Managed Lustre
 
@@ -124,8 +121,11 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 ### 🗄️ Azure SQL Database
 
+* "List all SQL servers in my subscription"
+* "List all SQL servers in my resource group 'my-resource-group'"
 * "Show me details about my Azure SQL database 'mydb'"
 * "List all databases in my Azure SQL server 'myserver'"
+* "Update the performance tier of my Azure SQL database 'mydb'"
 * "List all firewall rules for my Azure SQL server 'myserver'"
 * "Create a firewall rule for my Azure SQL server 'myserver'"
 * "Delete a firewall rule from my Azure SQL server 'myserver'"
@@ -140,12 +140,8 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "List my Azure storage accounts"
 * "Get details about my storage account 'mystorageaccount'"
 * "Create a new storage account in East US with Data Lake support"
-* "Show me the tables in my Storage account"
 * "Get details about my Storage container"
 * "Upload my file to the blob container"
-* "List paths in my Data Lake file system"
-* "List files and directories in my File Share"
-* "Send a message to my storage queue"
 
 
 ## <a id="currently-supported-tools"></a> 🛠️ Currently Supported Tools
@@ -169,6 +165,10 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * Manage key-value pairs
 * Handle labeled configurations
 * Lock/unlock configuration settings
+
+### 🖥️ Azure App Service (Database Management)
+
+* Add a database connection for an App Service web app
 
 ### 🛡️ Azure Best Practices
 
@@ -222,6 +222,8 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * List Event Grid topics in subscription or resource group
 * View topic configuration and status information
 * Access endpoint and key details for event publishing
+* List Event Grid subscriptions with filtering by topic name, resource group, and location
+* View subscription details including destination endpoints and retry policies
 
 ### 🧮 Azure Foundry
 
@@ -327,6 +329,9 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 
 * Show database details and properties
 * List the details and properties of all databases
+* Create a SQL database
+* Update a SQL database configuration
+* Delete a SQL database
 * List SQL server firewall rules
 * Create SQL server firewall rules
 * Delete SQL server firewall rules
@@ -334,6 +339,7 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * List Microsoft Entra ID administrators for SQL servers
 * Create new SQL servers
 * Show details and properties of SQL servers
+* List SQL servers in subscription or resource group
 * Delete SQL servers
 
 ### 💾 Azure Storage
@@ -342,10 +348,6 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * Get detailed information about specific Storage accounts
 * Manage blob containers and blobs
 * Upload files to blobs
-* List and query Storage tables
-* List paths in Data Lake file systems
-* Get container properties and metadata
-* List files and directories in File Shares
 
 ### 📋 Azure Subscription
 

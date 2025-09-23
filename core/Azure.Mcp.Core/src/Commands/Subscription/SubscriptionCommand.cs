@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 
@@ -11,21 +13,16 @@ public abstract class SubscriptionCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : GlobalCommand<TOptions>
     where TOptions : SubscriptionOptions, new()
 {
-
-    protected readonly Option<string> _subscriptionOption = OptionDefinitions.Common.Subscription;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_subscriptionOption);
+        command.Options.Add(OptionDefinitions.Common.Subscription);
 
         // Command-level validation for presence: allow either --subscription or AZURE_SUBSCRIPTION_ID
         // This mirrors the prior behavior that preferred the explicit option but fell back to env var.
         command.Validators.Add(commandResult =>
         {
-            var hasOption = commandResult.HasOptionResult(_subscriptionOption);
-            var hasEnv = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID"));
-            if (!hasOption && !hasEnv)
+            if (!HasSubscriptionAvailable(commandResult))
             {
                 commandResult.AddError("Missing Required options: --subscription");
             }
@@ -37,13 +34,9 @@ public abstract class SubscriptionCommand<
         var options = base.BindOptions(parseResult);
 
         // Get subscription from command line option or fallback to environment variable
-        string? subscriptionValue;
-        if (!parseResult.CommandResult.TryGetValue(_subscriptionOption, out subscriptionValue))
-        {
-            subscriptionValue = null;
-        }
+        var subscriptionValue = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Subscription.Name);
 
-        var envSubscription = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
+        var envSubscription = EnvironmentHelpers.GetAzureSubscriptionId();
         options.Subscription = (string.IsNullOrEmpty(subscriptionValue)
             || IsPlaceholder(subscriptionValue))
             && !string.IsNullOrEmpty(envSubscription)
@@ -51,6 +44,18 @@ public abstract class SubscriptionCommand<
             : subscriptionValue;
 
         return options;
+    }
+
+    /// <summary>
+    /// Checks if a subscription is available either from the command option or AZURE_SUBSCRIPTION_ID environment variable.
+    /// </summary>
+    /// <param name="commandResult">The command result to check for the subscription option.</param>
+    /// <returns>True if a subscription is available, false otherwise.</returns>
+    protected static bool HasSubscriptionAvailable(CommandResult commandResult)
+    {
+        var hasOption = commandResult.HasOptionResult(OptionDefinitions.Common.Subscription);
+        var hasEnv = !string.IsNullOrEmpty(EnvironmentHelpers.GetAzureSubscriptionId());
+        return hasOption || hasEnv;
     }
 
     private static bool IsPlaceholder(string value)

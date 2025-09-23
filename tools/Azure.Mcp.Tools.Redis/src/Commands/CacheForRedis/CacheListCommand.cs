@@ -32,7 +32,7 @@ public sealed class CacheListCommand(ILogger<CacheListCommand> logger) : Subscri
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -56,11 +56,7 @@ public sealed class CacheListCommand(ILogger<CacheListCommand> logger) : Subscri
                 options.AuthMethod,
                 options.RetryPolicy);
 
-            context.Response.Results = caches.Any() ?
-                ResponseResult.Create(
-                    new CacheListCommandResult(caches),
-                    RedisJsonContext.Default.CacheListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(caches ?? []), RedisJsonContext.Default.CacheListCommandResult);
         }
         catch (Exception ex)
         {

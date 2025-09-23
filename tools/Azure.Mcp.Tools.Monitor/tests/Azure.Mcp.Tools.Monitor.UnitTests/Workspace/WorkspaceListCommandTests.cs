@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -65,7 +66,7 @@ public sealed class WorkspaceListCommandTests
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.NotNull(response.Results);
@@ -94,7 +95,7 @@ public sealed class WorkspaceListCommandTests
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription}"));
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the mock was called
@@ -112,18 +113,24 @@ public sealed class WorkspaceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNullWhenNoWorkspaces()
+    public async Task ExecuteAsync_ReturnsEmptyWhenNoWorkspaces()
     {
         // Arrange
         _monitorService.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<WorkspaceInfo>());
+            .Returns([]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription}"));
 
         // Assert
-        Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, MonitorJsonContext.Default.WorkspaceListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Workspaces);
     }
 
     [Fact]
@@ -137,7 +144,7 @@ public sealed class WorkspaceListCommandTests
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription}"));
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }

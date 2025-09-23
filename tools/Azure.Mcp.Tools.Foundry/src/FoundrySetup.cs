@@ -43,5 +43,13 @@ public class FoundrySetup : IAreaSetup
 
         index.AddCommand("list", new KnowledgeIndexListCommand());
         index.AddCommand("schema", new KnowledgeIndexSchemaCommand());
+
+        var agents = new CommandGroup("agents", "Foundry agents operations - Commands for listing, querying, and evaluating agents in AI Foundry.");
+        foundry.AddSubGroup(agents);
+
+        agents.AddCommand("list", new AgentsListCommand());
+        agents.AddCommand("connect", new AgentsConnectCommand());
+        agents.AddCommand("query-and-evaluate", new AgentsQueryAndEvaluateCommand());
+        agents.AddCommand("evaluate", new AgentsEvaluateCommand());
     }
 }

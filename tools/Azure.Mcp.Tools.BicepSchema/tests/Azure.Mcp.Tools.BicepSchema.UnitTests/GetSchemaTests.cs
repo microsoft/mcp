@@ -147,7 +147,7 @@ public class GetSchemaTests
         SchemaGenerator.ConfigureServices(serviceCollection);
         IServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
 
-        ResourceVisitor visitor = new ResourceVisitor(serviceProvider.GetRequiredService<ITypeLoader>());
+        ResourceVisitor visitor = new(serviceProvider.GetRequiredService<ITypeLoader>());
         TypesDefinitionResult result = visitor.LoadSingleResource($"{resourceProvider}/{resourceType}", apiVersion);
 
         Assert.Equal(resourceProvider, result.ResourceProvider);
@@ -288,7 +288,7 @@ public class GetSchemaTests
                 "name": "Microsoft.ApiManagement/service/diagnostics/loggers"
               },
               "writableScopes": "ResourceGroup",
-              "readableScopes": "ResourceGroup",
+              "readableScopes": "None",
               "name": "Microsoft.ApiManagement/service/diagnostics/loggers@2018-01-01"
             }
           ]

@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.AzureManagedLustre.Commands;
 using Azure.Mcp.Tools.AzureManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.AzureManagedLustre.Models;
 using Azure.Mcp.Tools.AzureManagedLustre.Services;
@@ -56,7 +57,7 @@ public class FileSystemListCommandTests
         // Arrange
         var expected = new List<LustreFileSystem>
         {
-            new LustreFileSystem(
+            new(
                 "fs1",
                 _knownResourceIdRg1,
                 "rg1",
@@ -71,7 +72,7 @@ public class FileSystemListCommandTests
                 "Monday",
                 "01:00"
             ),
-            new LustreFileSystem(
+            new(
                 "fs2",
                 _knownResourceIdRg2,
                 "rg2",
@@ -107,7 +108,7 @@ public class FileSystemListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<FileSystemListResultJson>(json);
+        var result = JsonSerializer.Deserialize(json, AzureManagedLustreJsonContext.Default.FileSystemListResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result!.FileSystems);
@@ -127,7 +128,7 @@ public class FileSystemListCommandTests
         {
             var expected = new List<LustreFileSystem>
             {
-                new LustreFileSystem(
+                new(
                     "fs1",
                     _knownResourceIdRg1,
                     "rg1",
@@ -159,14 +160,14 @@ public class FileSystemListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.NotNull(response.Results);
             Assert.Equal("Success", response.Message);
 
             var json = JsonSerializer.Serialize(response.Results);
-            var result = JsonSerializer.Deserialize<FileSystemListResultJson>(json);
+            var result = JsonSerializer.Deserialize(json, AzureManagedLustreJsonContext.Default.FileSystemListResult);
             Assert.NotNull(result!.FileSystems);
             Assert.NotNull(result.FileSystems[0].Name);
             Assert.Equal("fs1", result.FileSystems[0].Name);
@@ -179,7 +180,7 @@ public class FileSystemListCommandTests
 
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoItems()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoItems()
     {
         // Arrange
         _amlfsService.ListFileSystemsAsync(
@@ -198,7 +199,13 @@ public class FileSystemListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AzureManagedLustreJsonContext.Default.FileSystemListResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.FileSystems);
     }
 
     [Fact]
@@ -207,13 +214,13 @@ public class FileSystemListCommandTests
         // Arrange - 404 Not Found
         _amlfsService.ListFileSystemsAsync(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-            .ThrowsAsync(new RequestFailedException(404, "not found"));
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "not found"));
 
         var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(404, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not found", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -223,34 +230,13 @@ public class FileSystemListCommandTests
         // Arrange - 403 Forbidden
         _amlfsService.ListFileSystemsAsync(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-            .ThrowsAsync(new RequestFailedException(403, "forbidden"));
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "forbidden"));
 
         var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(403, response.Status);
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("forbidden", response.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private class FileSystemListResultJson
-    {
-        [JsonPropertyName("fileSystems")]
-        public List<LustreFileSystemJson> FileSystems { get; set; } = [];
-    }
-
-    private class LustreFileSystemJson
-    {
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = string.Empty;
-
-        [JsonPropertyName("id")]
-        public string Id { get; set; } = string.Empty;
-
-        [JsonPropertyName("resourceGroupName")]
-        public string ResourceGroupName { get; set; } = string.Empty;
-
-        [JsonPropertyName("subscriptionId")]
-        public string SubscriptionId { get; set; } = string.Empty;
     }
 }

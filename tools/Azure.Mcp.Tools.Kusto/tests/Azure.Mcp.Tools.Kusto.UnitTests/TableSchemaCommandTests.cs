@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using System.Net;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -67,7 +67,7 @@ public sealed class TableSchemaCommandTests
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         var json = System.Text.Json.JsonSerializer.Serialize(response.Results);
-        var result = System.Text.Json.JsonSerializer.Deserialize<TableSchemaResult>(json);
+        var result = System.Text.Json.JsonSerializer.Deserialize(json, KustoJsonContext.Default.TableSchemaCommandResult);
         Assert.NotNull(result);
         Assert.NotNull(result.Schema);
 
@@ -106,7 +106,7 @@ public sealed class TableSchemaCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
     }
 
@@ -138,7 +138,7 @@ public sealed class TableSchemaCommandTests
 
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
     }
 
@@ -152,12 +152,6 @@ public sealed class TableSchemaCommandTests
 
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
-    }
-
-    private sealed class TableSchemaResult
-    {
-        [JsonPropertyName("schema")]
-        public string Schema { get; set; } = string.Empty;
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 }

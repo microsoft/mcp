@@ -4,7 +4,6 @@
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
@@ -69,7 +68,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
             var skus = result.AssertProperty("skus");
             foreach (var sku in skus.EnumerateArray())
             {
-                Assert.True(sku.TryGetProperty("supportsZones", out var supportsZones), "Property 'supportsZones' is missing.");
+                var supportsZones = sku.AssertProperty("supportsZones");
                 Assert.True(supportsZones.GetBoolean(), "'supportsZones' must be true.");
             }
         }
@@ -89,10 +88,9 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
             Assert.Equal(JsonValueKind.Array, skus.ValueKind);
             foreach (var sku in skus.EnumerateArray())
             {
-                Assert.True(sku.TryGetProperty("supportsZones", out var supportsZones), "Property 'supportsZones' is missing.");
+                var supportsZones = sku.AssertProperty("supportsZones");
                 Assert.False(supportsZones.GetBoolean(), "'supportsZones' must be false.");
             }
         }
-
     }
 }
