@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
 using Azure.Mcp.Tools.FunctionApp.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.FunctionApp;
 
@@ -17,21 +16,19 @@ public class FunctionAppSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IFunctionAppService, FunctionAppService>();
+
+        services.AddSingleton<FunctionAppGetCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var functionApp = new CommandGroup(Name, "Function App operations - Commands for managing and accessing Azure Function App resources.");
-        rootGroup.AddSubGroup(functionApp);
 
-        functionApp.AddCommand("list", new FunctionAppListCommand(
-            loggerFactory.CreateLogger<FunctionAppListCommand>()));
+        var getCommand = serviceProvider.GetRequiredService<FunctionAppGetCommand>();
+        functionApp.AddCommand(getCommand.Name, getCommand);
+        var createCommand = serviceProvider.GetRequiredService<FunctionAppCreateCommand>();
+        functionApp.AddCommand(createCommand.Name, createCommand);
 
-        functionApp.AddCommand("get", new FunctionAppGetCommand(
-            loggerFactory.CreateLogger<FunctionAppGetCommand>()));
-
-        functionApp.AddCommand("create", new FunctionAppCreateCommand(
-            loggerFactory.CreateLogger<FunctionAppCreateCommand>()));
-        functionApp.AddCommand("get", new FunctionAppGetCommand(loggerFactory.CreateLogger<FunctionAppGetCommand>()));
+        return functionApp;
     }
 }
