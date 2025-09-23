@@ -34,7 +34,7 @@ $deploymentOutputs = @{
     "OpenAIAccountResourceGroup" = "static-test-resources"
 }
 
-$testSettings.Add("DeploymentOutputs", $deploymentOutputs)
+$testSettings["DeploymentOutputs"] = $deploymentOutputs
 
 # Update the test settings file with the additional properties
 $testSettingsPath = Join-Path -Path $PSScriptRoot -ChildPath ".testsettings.json"
