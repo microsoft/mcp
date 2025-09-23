@@ -74,4 +74,74 @@ public class EventGridCommandTests(ITestOutputHelper output)
         Assert.Equal(JsonValueKind.Array, subscriptions.ValueKind);
         // Note: subscriptions array might be empty if no Event Grid subscriptions exist in the resource group
     }
+
+    [Fact]
+    public async Task Should_publish_events_to_eventgrid_topic()
+    {
+        // Create test event data
+        var eventData = JsonSerializer.Serialize(new
+        {
+            subject = "/test/subject",
+            eventType = "TestEvent",
+            dataVersion = "1.0",
+            data = new { message = "Test event from integration test", timestamp = DateTime.UtcNow }
+        });
+
+        var result = await CallToolAsync(
+            "azmcp_eventgrid_events_publish",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "topic", Settings.ResourceBaseName },
+                { "event-data", eventData }
+            });
+
+        var publishResult = result.AssertProperty("result");
+        var status = publishResult.AssertProperty("status").GetString();
+        var publishedEventCount = publishResult.AssertProperty("publishedEventCount").GetInt32();
+
+        Assert.Equal("Success", status);
+        Assert.Equal(1, publishedEventCount);
+    }
+
+    [Fact]
+    public async Task Should_publish_multiple_events_to_eventgrid_topic()
+    {
+        // Create test event data array
+        var eventData = JsonSerializer.Serialize(new[]
+        {
+            new
+            {
+                subject = "/test/subject1",
+                eventType = "TestEvent",
+                dataVersion = "1.0",
+                data = new { message = "Test event 1", timestamp = DateTime.UtcNow }
+            },
+            new
+            {
+                subject = "/test/subject2",
+                eventType = "TestEvent",
+                dataVersion = "1.0",
+                data = new { message = "Test event 2", timestamp = DateTime.UtcNow }
+            }
+        });
+
+        var result = await CallToolAsync(
+            "azmcp_eventgrid_events_publish",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "topic", Settings.ResourceBaseName },
+                { "event-data", eventData }
+            });
+
+        var publishResult = result.AssertProperty("result");
+        var status = publishResult.AssertProperty("status").GetString();
+        var publishedEventCount = publishResult.AssertProperty("publishedEventCount").GetInt32();
+
+        Assert.Equal("Success", status);
+        Assert.Equal(2, publishedEventCount);
+    }
 }

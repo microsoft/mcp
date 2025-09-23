@@ -624,6 +624,48 @@ azmcp eventgrid subscription list --subscription <subscription> \
                                   [--resource-group <resource-group>] \
                                   [--topic <topic>]
                                   [--location <location>]
+
+# Publish custom events to Event Grid topics
+azmcp eventgrid events publish --subscription <subscription> \
+                               --topic <topic-name> \
+                               --event-data <json-event-data> \
+                               [--resource-group <resource-group>] \
+                               [--event-schema <schema-type>]
+```
+
+**Examples:**
+
+```bash
+# Publish a single event to an Event Grid topic (with resource group)
+azmcp eventgrid events publish --subscription "my-subscription" \
+                               --resource-group "my-rg" \
+                               --topic "my-topic" \
+                               --event-data '{"subject": "/orders/123", "eventType": "OrderCreated", "dataVersion": "1.0", "data": {"orderId": "123", "amount": 99.99}}'
+
+# Publish event without specifying resource group (searches across all resource groups)
+azmcp eventgrid events publish --subscription "my-subscription" \
+                               --topic "my-unique-topic" \
+                               --event-data '{"subject": "/notifications/456", "eventType": "UserRegistered", "dataVersion": "1.0", "data": {"userId": "456"}}'
+
+# Publish multiple events as an array
+azmcp eventgrid events publish --subscription "my-subscription" \
+                               --resource-group "my-rg" \
+                               --topic "my-topic" \
+                               --event-data '[{"subject": "/orders/123", "eventType": "OrderCreated", "dataVersion": "1.0", "data": {"orderId": "123"}}, {"subject": "/orders/124", "eventType": "OrderCreated", "dataVersion": "1.0", "data": {"orderId": "124"}}]'
+
+# Publish with CloudEvents schema
+azmcp eventgrid events publish --subscription "my-subscription" \
+                               --resource-group "my-rg" \
+                               --topic "my-topic" \
+                               --event-data '{"specversion": "1.0", "type": "com.example.order.created", "source": "/orders", "id": "123", "time": "2023-01-01T12:00:00Z", "data": {"orderId": "123"}}' \
+                               --event-schema "CloudEvents"
+
+# Publish with custom schema
+azmcp eventgrid events publish --subscription "my-subscription" \
+                               --resource-group "my-rg" \
+                               --topic "my-topic" \
+                               --event-data '{"customField": "value", "timestamp": "2023-01-01T12:00:00Z"}' \
+                               --event-schema "Custom"
 ```
 
 ### Azure Function App Operations

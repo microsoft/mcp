@@ -178,6 +178,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_eventgrid_subscription_list | List all Event Grid subscriptions in subscription <subscription> |
 | azmcp_eventgrid_subscription_list | Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription> |
 | azmcp_eventgrid_subscription_list | List Event Grid subscriptions for subscription <subscription> in location <location> |
+| azmcp_eventgrid_events_publish | Publish an event with data to Event Grid topic <topic_name> |
+| azmcp_eventgrid_events_publish | Publish custom event data to Event Grid topic <topic_name> in resource group <resource_group_name> |
+| azmcp_eventgrid_events_publish | Send event data {"subject": "/orders/123", "eventType": "OrderCreated", "data": {"orderId": "123", "amount": 99.99}} to Event Grid topic <topic_name> |
+| azmcp_eventgrid_events_publish | Publish CloudEvents schema event to Event Grid topic <topic_name> with custom event data |
+| azmcp_eventgrid_events_publish | Send structured event to Event Grid topic <topic_name> for event-driven architecture |
+| azmcp_eventgrid_events_publish | Publish event to topic <topic_name> across all resource groups in subscription |
 
 ## Azure Function App
 
