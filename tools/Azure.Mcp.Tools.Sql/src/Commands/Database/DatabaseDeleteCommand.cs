@@ -1,12 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
+using System.Net;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Tools.Sql.Commands;
 using Azure.Mcp.Tools.Sql.Options.Database;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.Logging;
@@ -34,7 +30,7 @@ public sealed class DatabaseDeleteCommand(ILogger<DatabaseDeleteCommand> logger)
     {
         Destructive = true,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -60,9 +56,7 @@ public sealed class DatabaseDeleteCommand(ILogger<DatabaseDeleteCommand> logger)
                 options.Subscription!,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new DatabaseDeleteResult(deleted, options.Database!),
-                SqlJsonContext.Default.DatabaseDeleteResult);
+            context.Response.Results = ResponseResult.Create(new(deleted, options.Database!), SqlJsonContext.Default.DatabaseDeleteResult);
         }
         catch (Exception ex)
         {
@@ -77,9 +71,9 @@ public sealed class DatabaseDeleteCommand(ILogger<DatabaseDeleteCommand> logger)
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "SQL server or database not found. Verify the server name, database name, resource group, and that you have access.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed deleting the SQL database. Verify you have appropriate permissions. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)

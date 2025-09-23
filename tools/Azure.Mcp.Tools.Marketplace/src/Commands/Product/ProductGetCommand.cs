@@ -32,7 +32,7 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -99,9 +99,7 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
 
             // Set results
             context.Response.Results = result != null ?
-                ResponseResult.Create(
-                    new ProductGetCommandResult(result),
-                    MarketplaceJsonContext.Default.ProductGetCommandResult) :
+                ResponseResult.Create(new(result), MarketplaceJsonContext.Default.ProductGetCommandResult) :
                 null;
         }
         catch (Exception ex)
@@ -128,10 +126,10 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        HttpRequestException httpEx => (int)httpEx.StatusCode.GetValueOrDefault(HttpStatusCode.InternalServerError),
-        ArgumentException => 400,
+        HttpRequestException httpEx => httpEx.StatusCode.GetValueOrDefault(HttpStatusCode.InternalServerError),
+        ArgumentException => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)
     };
 

@@ -5,11 +5,12 @@
   <ItemGroup>
     <PackageVersion Include="Azure.Containers.ContainerRegistry" Version="1.2.0" />
     <PackageVersion Include="Azure.AI.Projects" Version="1.0.0-beta.9" />
+    <PackageVersion Include="Azure.AI.Agents.Persistent" Version="1.2.0-beta.4" />
+    <PackageVersion Include="Azure.AI.OpenAI" Version="2.3.0-beta.2" />
     <PackageVersion Include="Azure.Bicep.Types" Version="0.6.1" />
     <PackageVersion Include="Azure.Core" Version="1.48.0" />
     <PackageVersion Include="Azure.Data.AppConfiguration" Version="1.6.1" />
     <PackageVersion Include="Azure.Identity" Version="1.16.0" />
-    <PackageVersion Include="Azure.Data.Tables" Version="12.11.0" />
     <PackageVersion Include="Azure.Developer.LoadTesting" Version="1.0.2" />
     <PackageVersion Include="Azure.Identity.Broker" Version="1.3.0" />
     <PackageVersion Include="Azure.Messaging.ServiceBus" Version="7.20.1" />
@@ -44,10 +45,6 @@
     <PackageVersion Include="Azure.Security.KeyVault.Secrets" Version="4.7.0" />
     <PackageVersion Include="Azure.Security.KeyVault.Certificates" Version="4.7.0" />
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.24.0" />
-    <PackageVersion Include="Azure.Storage.Blobs.Batch" Version="12.21.0" />
-    <PackageVersion Include="Azure.Storage.Files.DataLake" Version="12.22.0" />
-    <PackageVersion Include="Azure.Storage.Files.Shares" Version="12.22.0" />
-    <PackageVersion Include="Azure.Storage.Queues" Version="12.22.0" />
     <PackageVersion Include="Azure.ResourceManager.StorageCache" Version="1.3.2" />
     <PackageVersion Include="Azure.ResourceManager.Datadog" Version="1.0.0-beta.6" />
     <PackageVersion Include="Azure.ResourceManager.CosmosDB" Version="1.4.0-beta.13" />
@@ -58,6 +55,10 @@
     <PackageVersion Include="Azure.ResourceManager.ResourceGraph" Version="1.1.0-beta.4" />
     <PackageVersion Include="Microsoft.Azure.Kusto.Data" Version="13.0.2" />
     <PackageVersion Include="Microsoft.Identity.Client.Broker" Version="4.72.1" />
+    <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="9.8.0" />
+    <PackageVersion Include="Microsoft.Extensions.AI.Evaluation" Version="9.8.0" />
+    <PackageVersion Include="Microsoft.Extensions.AI.Evaluation.Quality" Version="9.8.0" />
+    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="9.8.0-preview.1.25412.6" />
     <PackageVersion Include="ModelContextProtocol" Version="0.3.0-preview.4" />
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.4" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.6" />

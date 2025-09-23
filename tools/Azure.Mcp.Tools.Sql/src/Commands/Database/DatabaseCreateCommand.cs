@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Tools.Sql.Commands;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options;
 using Azure.Mcp.Tools.Sql.Options.Database;
@@ -35,7 +32,7 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
     {
         Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -96,9 +93,7 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
                 options.ReadScale,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new DatabaseCreateResult(database),
-                SqlJsonContext.Default.DatabaseCreateResult);
+            context.Response.Results = ResponseResult.Create(new(database), SqlJsonContext.Default.DatabaseCreateResult);
         }
         catch (Exception ex)
         {
@@ -113,13 +108,13 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 409 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "Database already exists with the specified name. Choose a different database name or use the update command.",
-        RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "SQL server not found. Verify the server name, resource group, and that you have access.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed creating the SQL database. Verify you have appropriate permissions. Details: {reqEx.Message}",
-        RequestFailedException reqEx when reqEx.Status == 400 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
             $"Invalid database configuration. Check your SKU, size, and other parameters. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)

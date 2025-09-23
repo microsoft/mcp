@@ -48,8 +48,8 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
         // Verify basic properties exist
         foreach (var workbook in workbooksArray)
         {
-            Assert.True(workbook.TryGetProperty("WorkbookId", out _));
-            Assert.True(workbook.TryGetProperty("DisplayName", out _));
+            workbook.AssertProperty("WorkbookId");
+            workbook.AssertProperty("DisplayName");
         }
     }
 
@@ -71,7 +71,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
 
         // Use the first workbook
         var firstWorkbook = workbooksArray[0];
-        Assert.True(firstWorkbook.TryGetProperty("WorkbookId", out var workbookId));
+        var workbookId = firstWorkbook.AssertProperty("WorkbookId");
 
         // Now get the detailed workbook
         var result = await CallToolAsync(
@@ -82,11 +82,11 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
             });
 
         var workbook = result.AssertProperty("Workbook");
-        Assert.True(workbook.TryGetProperty("WorkbookId", out _));
-        Assert.True(workbook.TryGetProperty("DisplayName", out var displayName));
+        workbook.AssertProperty("WorkbookId");
+        workbook.AssertProperty("DisplayName");
 
         // SerializedData property must be present (but may be null due to Azure API limitation)
-        Assert.True(workbook.TryGetProperty("SerializedData", out _));
+        workbook.AssertProperty("SerializedData");
     }
 
     [Fact]
@@ -110,11 +110,11 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
                 });
 
             var createdWorkbook = createResult.AssertProperty("Workbook");
-            Assert.True(createdWorkbook.TryGetProperty("WorkbookId", out var workbookIdProperty));
+            var workbookIdProperty = createdWorkbook.AssertProperty("WorkbookId");
             workbookId = workbookIdProperty.GetString();
             Assert.NotNull(workbookId);
 
-            Assert.True(createdWorkbook.TryGetProperty("DisplayName", out var displayNameProperty));
+            var displayNameProperty = createdWorkbook.AssertProperty("DisplayName");
             Assert.Equal(workbookName, displayNameProperty.GetString());
 
             // UPDATE
@@ -128,7 +128,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
                 });
 
             var updatedWorkbook = updateResult.AssertProperty("Workbook");
-            Assert.True(updatedWorkbook.TryGetProperty("DisplayName", out var updatedDisplayName));
+            var updatedDisplayName = updatedWorkbook.AssertProperty("DisplayName");
             Assert.Equal(updatedName, updatedDisplayName.GetString());
 
             // READ (verify exists)
@@ -140,8 +140,8 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
                 });
 
             var shownWorkbook = showResult.AssertProperty("Workbook");
-            Assert.True(shownWorkbook.TryGetProperty("WorkbookId", out _));
-            Assert.True(shownWorkbook.TryGetProperty("DisplayName", out var shownDisplayName));
+            shownWorkbook.AssertProperty("WorkbookId");
+            var shownDisplayName = shownWorkbook.AssertProperty("DisplayName");
             Assert.Equal(updatedName, shownDisplayName.GetString());
         }
         finally
@@ -165,7 +165,6 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
     public async Task Should_delete_workbook()
     {
         var workbookName = $"Delete Test Workbook {Guid.NewGuid():N}";
-        string? workbookId = null;
 
         // Create a workbook to delete
         var createResult = await CallToolAsync(
@@ -180,8 +179,8 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
             });
 
         var createdWorkbook = createResult.AssertProperty("Workbook");
-        Assert.True(createdWorkbook.TryGetProperty("WorkbookId", out var workbookIdProperty));
-        workbookId = workbookIdProperty.GetString();
+        var workbookIdProperty = createdWorkbook.AssertProperty("WorkbookId");
+        string? workbookId = workbookIdProperty.GetString();
         Assert.NotNull(workbookId);
 
         // Delete the workbook
@@ -194,9 +193,9 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
 
         // Verify delete operation succeeded
         Assert.NotNull(deleteResult);
-        Assert.True(deleteResult.Value.TryGetProperty("WorkbookId", out var deletedWorkbookId));
+        var deletedWorkbookId = deleteResult.AssertProperty("WorkbookId");
         Assert.Equal(workbookId, deletedWorkbookId.GetString());
-        Assert.True(deleteResult.Value.TryGetProperty("Message", out var deleteMessage));
+        var deleteMessage = deleteResult.AssertProperty("Message");
         Assert.Equal("Successfully deleted", deleteMessage.GetString());
 
         // Verify workbook no longer exists by trying to show it (should return error)
@@ -209,8 +208,8 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
 
         // Should return an error response (500) since workbook was deleted
         Assert.NotNull(showResult);
-        Assert.True(showResult.Value.TryGetProperty("message", out var errorMessage));
-        Assert.True(showResult.Value.TryGetProperty("type", out var errorType));
+        var errorMessage = showResult.AssertProperty("message");
+        var errorType = showResult.AssertProperty("type");
         Assert.Equal("Exception", errorType.GetString());
         Assert.Contains("not found", errorMessage.GetString(), StringComparison.OrdinalIgnoreCase);
     }

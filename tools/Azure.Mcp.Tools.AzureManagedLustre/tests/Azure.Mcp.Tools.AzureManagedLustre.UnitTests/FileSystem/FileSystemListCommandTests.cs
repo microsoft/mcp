@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -159,7 +160,7 @@ public class FileSystemListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.NotNull(response.Results);
@@ -213,13 +214,13 @@ public class FileSystemListCommandTests
         // Arrange - 404 Not Found
         _amlfsService.ListFileSystemsAsync(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-            .ThrowsAsync(new RequestFailedException(404, "not found"));
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "not found"));
 
         var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(404, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not found", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -229,13 +230,13 @@ public class FileSystemListCommandTests
         // Arrange - 403 Forbidden
         _amlfsService.ListFileSystemsAsync(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-            .ThrowsAsync(new RequestFailedException(403, "forbidden"));
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "forbidden"));
 
         var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(403, response.Status);
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("forbidden", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

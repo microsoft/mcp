@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
@@ -37,7 +38,7 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -79,11 +80,7 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
                 options.Tenant,
                 options.RetryPolicy);
 
-            var peekedMessages = messages ?? new List<ServiceBusReceivedMessage>();
-
-            context.Response.Results = ResponseResult.Create(
-                new QueuePeekCommandResult(peekedMessages),
-                ServiceBusJsonContext.Default.QueuePeekCommandResult);
+            context.Response.Results = ResponseResult.Create(new(messages ?? []), ServiceBusJsonContext.Default.QueuePeekCommandResult);
         }
         catch (Exception ex)
         {
@@ -101,9 +98,9 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        ServiceBusException sbEx when sbEx.Reason == ServiceBusFailureReason.MessagingEntityNotFound => 404,
+        ServiceBusException sbEx when sbEx.Reason == ServiceBusFailureReason.MessagingEntityNotFound => HttpStatusCode.NotFound,
         _ => base.GetStatusCode(ex)
     };
 

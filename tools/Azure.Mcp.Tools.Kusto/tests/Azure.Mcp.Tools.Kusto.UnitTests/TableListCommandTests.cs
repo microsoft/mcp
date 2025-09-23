@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -67,7 +67,7 @@ public sealed class TableListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TablesListResult>(json);
+        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.TableListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(2, result?.Tables?.Count);
@@ -102,7 +102,7 @@ public sealed class TableListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TablesListResult>(json);
+        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.TableListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Tables!);
@@ -135,7 +135,7 @@ public sealed class TableListCommandTests
 
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
     }
 
@@ -149,12 +149,6 @@ public sealed class TableListCommandTests
 
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
-    }
-
-    private sealed class TablesListResult
-    {
-        [JsonPropertyName("tables")]
-        public List<string>? Tables { get; set; }
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 }

@@ -30,8 +30,7 @@ public class MySqlServiceTests
     [Fact]
     public void Constructor_WithNullResourceGroupService_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() =>
-            new MySqlService(null!, _tenantService, _logger));
+        Assert.Throws<ArgumentNullException>(() => new MySqlService(null!, _tenantService, _logger));
     }
 
     [Fact]

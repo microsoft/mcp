@@ -147,6 +147,29 @@ The `azmcp server start` command supports the following options:
 ### Azure AI Foundry Operations
 
 ```bash
+
+# Connect to an agent in an AI Foundry project and query it
+azmcp foundry agents connect --agent-id <agent-id> \
+                             --query <query> \
+                             --endpoint <endpoint>
+
+# Evaluate a response from an agent by passing query and response inline
+azmcp foundry agents evaluate --agent-id <agent-id> \
+                                        --query <query> \
+                                        --response <response> \
+                                        --evaluator <evaluator> \
+                                        --azure-openai-endpoint <azure-openai-endpoint> \
+                                        --azure-openai-deployment <azure-openai-deployment> \
+                                        [--tool-definitions <tool-definitions>]
+
+# Query and evaluate an agent in one command
+azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
+                                        --query <query> \
+                                        --endpoint <endpoint> \
+                                        --azure-openai-endpoint <azure-openai-endpoint> \
+                                        --azure-openai-deployment <azure-openai-deployment> \
+                                        [--evaluators <evaluators>]
+
 # List knowledge indexes in an AI Foundry project
 azmcp foundry knowledge index list --endpoint <endpoint>
 
@@ -243,6 +266,100 @@ azmcp applens resource diagnose --subscription <subscription> \
                                 --question <question> \
                                 --resource-type <resource-type> \
                                 --resource <resource>
+```
+
+### Azure Application Insights Operations
+
+#### Code Optimization Recommendations
+
+```bash
+# List code optimization recommendations across all Application Insights components in a subscription
+azmcp applicationinsights recommendation list --subscription <subscription>
+
+# Scope to a specific resource group
+azmcp applicationinsights recommendation list --subscription <subscription> \
+                                              --resource-group <resource-group>
+### Azure App Service Operations
+
+```bash
+# Add a database connection to an App Service
+azmcp appservice database add --subscription <subscription> \
+                              --resource-group <resource-group> \
+                              --app <app> \
+                              --database-type <database-type> \
+                              --database-server <database-server> \
+                              --database <database> \
+                              [--connection-string <connection-string>] \
+                              [--tenant <tenant-id>]
+
+# Examples:
+# Add a SQL Server database connection
+azmcp appservice database add --subscription "my-subscription" \
+                              --resource-group "my-rg" \
+                              --app "my-webapp" \
+                              --database-type "SqlServer" \
+                              --database-server "myserver.database.windows.net" \
+                              --database "mydb"
+
+# Add a MySQL database connection with custom connection string
+azmcp appservice database add --subscription "my-subscription" \
+                              --resource-group "my-rg" \
+                              --app "my-webapp" \
+                              --database-type "MySQL" \
+                              --database-server "myserver.mysql.database.azure.com" \
+                              --database "mydb" \
+                              --connection-string "Server=myserver.mysql.database.azure.com;Database=mydb;Uid=myuser;Pwd=mypass;"
+
+# Add a PostgreSQL database connection
+azmcp appservice database add --subscription "my-subscription" \
+                              --resource-group "my-rg" \
+                              --app "my-webapp" \
+                              --database-type "PostgreSQL" \
+                              --database-server "myserver.postgres.database.azure.com" \
+                              --database "mydb"
+
+# Add a Cosmos DB connection
+azmcp appservice database add --subscription "my-subscription" \
+                              --resource-group "my-rg" \
+                              --app "my-webapp" \
+                              --database-type "CosmosDB" \
+                              --database-server "myaccount" \
+                              --database "mydb"
+```
+
+**Database Types Supported:**
+
+-   `SqlServer` - Azure SQL Database
+-   `MySQL` - Azure Database for MySQL
+-   `PostgreSQL` - Azure Database for PostgreSQL
+-   `CosmosDB` - Azure Cosmos DB
+
+**Parameters:**
+
+-   `--subscription`: Azure subscription ID (required)
+-   `--resource-group`: Resource group containing the App Service (required)
+-   `--app`: Name of the App Service web app (required)
+-   `--database-type`: Type of database - SqlServer, MySQL, PostgreSQL, or CosmosDB (required)
+-   `--database-server`: Database server name or endpoint (required)
+-   `--database`: Name of the database (required)
+-   `--connection-string`: Custom connection string (optional - auto-generated if not provided)
+-   `--tenant`: Azure tenant ID for authentication (optional)
+
+### Azure CLI Operations
+
+```bash
+# Execute any Azure CLI command
+azmcp extension az --command "<command>"
+
+# Examples:
+# List resource groups
+azmcp extension az --command "group list"
+
+# Get storage account details
+azmcp extension az --command "storage account show --name <account> --resource-group <resource-group>"
+
+# List virtual machines
+azmcp extension az --command "vm list --resource-group <resource-group>"
 ```
 
 ### Azure Container Registry (ACR) Operations
@@ -554,6 +671,11 @@ azmcp keyvault key create --subscription <subscription> \
                           --key <key-name> \
                           --key-type <key-type>
 
+# Get a key in a key vault
+azmcp keyvault key get --subscription <subscription> \
+                       --vault <vault-name> \
+                       --key <key-name>
+
 # Lists keys in a key vault
 azmcp keyvault key list --subscription <subscription> \
                         --vault <vault-name> \
@@ -562,12 +684,12 @@ azmcp keyvault key list --subscription <subscription> \
 
 #### Secrets
 
-Tools that handle sensitive data such as secrets, credentials, or keys require user consent before execution through a security mechanism called **elicitation**. When you run commands that access sensitive information, the MCP client will prompt you to confirm the operation before proceeding.
+Tools that handle sensitive data such as secrets require user consent before execution through a security mechanism called **elicitation**. When you run commands that access sensitive information, the MCP client will prompt you to confirm the operation before proceeding.
 
 > **🛡️ Elicitation (user confirmation) Security Feature:**
 > 
 > Elicitation prompts appear when tools may expose sensitive information like:
-> - Key Vault secrets and keys
+> - Key Vault secrets
 > - Connection strings and passwords
 > - Certificate private keys
 > - Other confidential data
@@ -580,6 +702,11 @@ azmcp keyvault secret create --subscription <subscription> \
                              --vault <vault-name> \
                              --name <secret-name> \
                              --value <secret-value>
+
+# Get a secret in a key vault (will prompt for user consent)
+azmcp keyvault secret get --subscription <subscription> \
+                          --vault <vault-name> \
+                          --secret <secret-name>
 
 # Lists secrets in a key vault
 azmcp keyvault secret list --subscription <subscription> \
@@ -959,6 +1086,26 @@ azmcp servicebus topic subscription details --subscription <subscription> \
 #### Database
 
 ```bash
+# Create a SQL database (supports optional performance and configuration parameters)
+azmcp sql db create --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name> \
+                    [--sku-name <sku-name>] \
+                    [--sku-tier <sku-tier>] \
+                    [--sku-capacity <capacity>] \
+                    [--collation <collation>] \
+                    [--max-size-bytes <bytes>] \
+                    [--elastic-pool-name <elastic-pool-name>] \
+                    [--zone-redundant <true/false>] \
+                    [--read-scale <Enabled|Disabled>]
+
+# Delete a SQL database (idempotent – succeeds even if the database does not exist)
+azmcp sql db delete --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name>
+
 # Gets a list of all databases in a SQL server
 azmcp sql db list --subscription <subscription> \
                   --resource-group <resource-group> \
@@ -969,6 +1116,20 @@ azmcp sql db show --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name> \
                   --database <database>
+
+# Update an existing SQL database (applies only the provided configuration changes)
+azmcp sql db update --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name> \
+                    [--sku-name <sku-name>] \
+                    [--sku-tier <sku-tier>] \
+                    [--sku-capacity <capacity>] \
+                    [--collation <collation>] \
+                    [--max-size-bytes <bytes>] \
+                    [--elastic-pool-name <elastic-pool-name>] \
+                    [--zone-redundant <true/false>] \
+                    [--read-scale <Enabled|Disabled>]
 ```
 
 #### Elastic Pool
@@ -998,40 +1159,6 @@ azmcp sql server entra-admin list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
 
-# Create a SQL database (supports optional performance and configuration parameters)
-azmcp sql db create --subscription <subscription> \
-                    --resource-group <resource-group> \
-                    --server <server-name> \
-                    --database <database-name> \
-                    [--sku-name <sku-name>] \
-                    [--sku-tier <sku-tier>] \
-                    [--sku-capacity <capacity>] \
-                    [--collation <collation>] \
-                    [--max-size-bytes <bytes>] \
-                    [--elastic-pool-name <elastic-pool-name>] \
-                    [--zone-redundant <true/false>] \
-                    [--read-scale <Enabled|Disabled>]
-
-# Update an existing SQL database (applies only the provided configuration changes)
-azmcp sql db update --subscription <subscription> \
-                    --resource-group <resource-group> \
-                    --server <server-name> \
-                    --database <database-name> \
-                    [--sku-name <sku-name>] \
-                    [--sku-tier <sku-tier>] \
-                    [--sku-capacity <capacity>] \
-                    [--collation <collation>] \
-                    [--max-size-bytes <bytes>] \
-                    [--elastic-pool-name <elastic-pool-name>] \
-                    [--zone-redundant <true/false>] \
-                    [--read-scale <Enabled|Disabled>]
-
-# Delete a SQL database (idempotent – succeeds even if the database does not exist)
-azmcp sql db delete --subscription <subscription> \
-                    --resource-group <resource-group> \
-                    --server <server-name> \
-                    --database <database-name>
-
 # Create a firewall rule for a SQL server
 azmcp sql server firewall-rule create --subscription <subscription> \
                                       --resource-group <resource-group> \
@@ -1050,6 +1177,10 @@ azmcp sql server firewall-rule delete --subscription <subscription> \
 azmcp sql server firewall-rule list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
+
+# List SQL servers in a resource group
+azmcp sql server list --subscription <subscription> \
+                      --resource-group <resource-group>
 
 # Delete a SQL server
 azmcp sql server delete --subscription <subscription> \
@@ -1085,13 +1216,6 @@ azmcp storage account get --subscription <subscription> \
 #### Blob Storage
 
 ```bash
-# Set access tier for multiple blobs in a batch operation
-azmcp storage blob batch set-tier --subscription <subscription> \
-                                  --account <account> \
-                                  --container <container> \
-                                  --tier <tier> \
-                                  --blobs <blob-name1> <blob-name2> ... <blob-nameN>
-
 # Create a blob container with optional public access
 azmcp storage blob container create --subscription <subscription> \
                                     --account <account> \
@@ -1114,53 +1238,6 @@ azmcp storage blob upload --subscription <subscription> \
                           --container <container> \
                           --blob <blob> \
                           --local-file-path <path-to-local-file>
-```
-
-#### DataLake
-
-```bash
-# Create a directory in DataLake using a specific path
-azmcp storage datalake directory create --subscription <subscription> \
-                                        --account <account> \
-                                        --directory-path <directory-path>
-
-# List paths in a Data Lake file system
-azmcp storage datalake file-system list-paths --subscription <subscription> \
-                                              --account <account> \
-                                              --file-system <file-system> \
-                                              [--filter-path <filter-path>] \
-                                              [--recursive]
-```
-
-#### Files
-
-```bash
-# List files and directories in a File Share directory
-azmcp storage share file list --subscription <subscription> \
-                              --account <account> \
-                              --share <share> \
-                              --directory-path <directory-path> \
-                              [--prefix <prefix>]
-```
-
-#### Tables
-```bash
-
-# List tables in a Storage account
-azmcp storage table list --subscription <subscription> \
-                         --account <account>
-```
-
-#### Queues
-
-```bash
-# Send a message to a Storage queue
-azmcp storage queue message send --subscription <subscription> \
-                                 --account <account> \
-                                 --queue <queue> \
-                                 --message "<message>" \
-                                 [--time-to-live-in-seconds <seconds>] \
-                                 [--visibility-timeout-in-seconds <seconds>]
 ```
 
 ### Azure Subscription Management

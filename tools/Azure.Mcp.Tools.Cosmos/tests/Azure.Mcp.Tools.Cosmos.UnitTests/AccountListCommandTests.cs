@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -12,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using static Azure.Mcp.Tools.Cosmos.Commands.AccountListCommand;
 
 namespace Azure.Mcp.Tools.Cosmos.UnitTests;
 
@@ -57,10 +57,7 @@ public class AccountListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccountListCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-        });
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.AccountListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedAccounts, result.Accounts);
@@ -83,10 +80,7 @@ public class AccountListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccountListCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-        });
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.AccountListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Accounts);
@@ -99,7 +93,7 @@ public class AccountListCommandTests
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse([]));
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("required", response.Message.ToLower());
     }
 
@@ -120,7 +114,7 @@ public class AccountListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
     }
 
@@ -138,7 +132,7 @@ public class AccountListCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(503, response.Status);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);
         Assert.Contains("Service Unavailable", response.Message);
     }
 }

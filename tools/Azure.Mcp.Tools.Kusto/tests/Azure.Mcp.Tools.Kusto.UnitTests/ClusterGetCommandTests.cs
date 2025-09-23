@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Kusto.Commands;
@@ -67,14 +67,8 @@ public sealed class ClusterGetCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.ClusterGetCommandResult);
 
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        };
-
-        var result = JsonSerializer.Deserialize<ClusterGetResult>(json, options);
         Assert.NotNull(result);
         Assert.NotNull(result.Cluster);
         Assert.Equal("clusterA", result.Cluster.ClusterName);
@@ -94,7 +88,7 @@ public sealed class ClusterGetCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Null(response.Results);
     }
 
@@ -113,13 +107,7 @@ public sealed class ClusterGetCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
-    }
-
-    private sealed class ClusterGetResult
-    {
-        [JsonPropertyName("cluster")]
-        public KustoClusterResourceProxy? Cluster { get; set; }
     }
 }

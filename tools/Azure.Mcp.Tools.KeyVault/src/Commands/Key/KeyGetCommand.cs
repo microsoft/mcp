@@ -24,7 +24,7 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -71,7 +71,7 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new KeyGetCommandResult(
+                new(
                     key.Name,
                     key.KeyType.ToString(),
                     key.Properties.Enabled,

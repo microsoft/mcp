@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureManagedLustre.Options;
@@ -72,7 +73,7 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
 
                 if (commandResponse != null)
                 {
-                    commandResponse.Status = 400;
+                    commandResponse.Status = HttpStatusCode.BadRequest;
                     commandResponse.Message = result.ErrorMessage!;
                 }
             }
@@ -97,7 +98,7 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
                 options.Tenant,
                 options.RetryPolicy
                 );
-            context.Response.Results = ResponseResult.Create(new FileSystemSubnetSizeResult(result), AzureManagedLustreJsonContext.Default.FileSystemSubnetSizeResult);
+            context.Response.Results = ResponseResult.Create(new(result), AzureManagedLustreJsonContext.Default.FileSystemSubnetSizeResult);
         }
         catch (Exception ex)
         {

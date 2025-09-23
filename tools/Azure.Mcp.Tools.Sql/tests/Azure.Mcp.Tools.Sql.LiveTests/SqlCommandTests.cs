@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
@@ -170,7 +171,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         catch (Exception ex)
         {
             // Some implementations might return 404 - this is also acceptable
-            Assert.Contains("404", ex.Message);
+            Assert.Contains(((int)HttpStatusCode.NotFound).ToString(), ex.Message);
         }
     }
 
@@ -222,9 +223,9 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
                 Assert.Equal(JsonValueKind.Object, firstAdmin.ValueKind);
 
                 // Verify required properties exist
-                Assert.True(firstAdmin.TryGetProperty("administratorType", out _));
-                Assert.True(firstAdmin.TryGetProperty("login", out _));
-                Assert.True(firstAdmin.TryGetProperty("sid", out _));
+                firstAdmin.AssertProperty("administratorType");
+                firstAdmin.AssertProperty("login");
+                firstAdmin.AssertProperty("sid");
             }
         }
         // If result is null, that's valid - it means no AD administrators are configured
@@ -261,11 +262,11 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
                 Assert.Equal(JsonValueKind.Object, firstRule.ValueKind);
 
                 // Verify required properties exist
-                Assert.True(firstRule.TryGetProperty("name", out var name));
-                Assert.True(firstRule.TryGetProperty("id", out _));
-                Assert.True(firstRule.TryGetProperty("type", out _));
-                Assert.True(firstRule.TryGetProperty("startIpAddress", out _));
-                Assert.True(firstRule.TryGetProperty("endIpAddress", out _));
+                var name = firstRule.AssertProperty("name");
+                firstRule.AssertProperty("id");
+                firstRule.AssertProperty("type");
+                firstRule.AssertProperty("startIpAddress");
+                firstRule.AssertProperty("endIpAddress");
 
                 // Verify the name is not empty
                 Assert.NotNull(name.GetString());
@@ -323,10 +324,10 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         Assert.Equal(JsonValueKind.Object, firstPool.ValueKind);
 
         // Verify required properties exist
-        Assert.True(firstPool.TryGetProperty("name", out _));
-        Assert.True(firstPool.TryGetProperty("id", out _));
-        Assert.True(firstPool.TryGetProperty("type", out _));
-        Assert.True(firstPool.TryGetProperty("location", out _));
+        firstPool.AssertProperty("name");
+        firstPool.AssertProperty("id");
+        firstPool.AssertProperty("type");
+        firstPool.AssertProperty("location");
 
         var poolType = firstPool.GetProperty("type").GetString();
         Assert.Equal("Microsoft.Sql/servers/elasticPools", poolType, ignoreCase: true);

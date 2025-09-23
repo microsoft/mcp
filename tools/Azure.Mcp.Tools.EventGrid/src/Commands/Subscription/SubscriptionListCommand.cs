@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
+using System.Net;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Core.Options;
-using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Mcp.Tools.EventGrid.Options;
 using Azure.Mcp.Tools.EventGrid.Options.Subscription;
 using Azure.Mcp.Tools.EventGrid.Services;
@@ -21,8 +20,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
     public override string Description =>
         """
-        List event subscriptions for topics with filtering and endpoint configuration. This tool shows all active 
-        subscriptions including webhook endpoints, event filters, and delivery retry policies. Returns subscription 
+        List event subscriptions for topics with filtering and endpoint configuration. This tool shows all active
+        subscriptions including webhook endpoints, event filters, and delivery retry policies. Returns subscription
         details as JSON array. Requires either --topic (bare topic name) OR --subscription. If only --topic is provided
         the tool searches all accessible subscriptions for a topic with that name. Optional --resource-group/--location
         may only be used alongside --subscription or --topic.
@@ -34,7 +33,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -75,7 +74,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
             if (commandResponse != null)
             {
-                commandResponse.Status = 400;
+                commandResponse.Status = HttpStatusCode.BadRequest;
                 commandResponse.Message = result.ErrorMessage;
             }
         }
@@ -87,7 +86,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
             if (commandResponse != null)
             {
-                commandResponse.Status = 400;
+                commandResponse.Status = HttpStatusCode.BadRequest;
                 commandResponse.Message = result.ErrorMessage;
             }
         }
@@ -117,7 +116,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
             if (crossSubscriptionSearch)
             {
                 // Iterate all subscriptions and aggregate
-                var subscriptionService = context.GetService<Azure.Mcp.Core.Services.Azure.Subscription.ISubscriptionService>();
+                var subscriptionService = context.GetService<ISubscriptionService>();
                 var allSubs = await subscriptionService.GetSubscriptions(null, options.RetryPolicy);
                 var aggregate = new List<EventGridSubscriptionInfo>();
                 foreach (var sub in allSubs)
@@ -142,9 +141,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                         continue;
                     }
                 }
-                context.Response.Results = ResponseResult.Create<SubscriptionListCommandResult>(
-                    new SubscriptionListCommandResult(aggregate),
-                    EventGridJsonContext.Default.SubscriptionListCommandResult);
+                context.Response.Results = ResponseResult.Create(new(aggregate), EventGridJsonContext.Default.SubscriptionListCommandResult);
             }
             else
             {
@@ -156,9 +153,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                     options.Tenant,
                     options.RetryPolicy);
 
-                context.Response.Results = ResponseResult.Create<SubscriptionListCommandResult>(
-                    new SubscriptionListCommandResult(subscriptions ?? []),
-                    EventGridJsonContext.Default.SubscriptionListCommandResult);
+                context.Response.Results = ResponseResult.Create(new(subscriptions ?? []), EventGridJsonContext.Default.SubscriptionListCommandResult);
             }
         }
         catch (Exception ex)

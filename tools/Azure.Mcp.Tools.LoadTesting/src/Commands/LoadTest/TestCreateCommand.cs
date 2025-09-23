@@ -28,7 +28,7 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
     {
         Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -90,7 +90,7 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
 
             // Set results if any were returned
             context.Response.Results = results != null ?
-                ResponseResult.Create(new TestCreateCommandResult(results), LoadTestJsonContext.Default.TestCreateCommandResult) :
+                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestCreateCommandResult) :
                 null;
         }
         catch (Exception ex)

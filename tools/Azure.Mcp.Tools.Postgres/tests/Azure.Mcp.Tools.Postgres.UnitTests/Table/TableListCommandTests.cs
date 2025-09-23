@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.TestUtilities;
+using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Table;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,12 +44,12 @@ public class TableListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TableListResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.TableListCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedTables, result.Tables);
     }
@@ -64,12 +65,12 @@ public class TableListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TableListResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.TableListCommandResult);
         Assert.NotNull(result);
         Assert.Empty(result.Tables);
     }
@@ -95,13 +96,7 @@ public class TableListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
-    }
-
-    private class TableListResult
-    {
-        [JsonPropertyName("Tables")]
-        public List<string> Tables { get; set; } = [];
     }
 }

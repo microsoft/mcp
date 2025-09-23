@@ -1,6 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -84,7 +85,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
@@ -128,7 +129,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
@@ -143,7 +144,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("required", response.Message.ToLower());
     }
 
@@ -173,7 +174,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
@@ -204,7 +205,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
     }
 
@@ -250,7 +251,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
@@ -300,7 +301,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the response contains the NextCursor by checking the serialized result
@@ -350,7 +351,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the response contains null NextCursor
@@ -398,7 +399,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 }
