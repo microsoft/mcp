@@ -10,6 +10,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added support for Azure App Service database management via the command:
   - `azmcp_appservice_database_add`: Add a database connection to an App Service web app (does not create the database itself; only adds the connection).
         This enables prompt-driven addition of database connections for Azure App Service web apps.
+- Update `IAreaSetup` API so the area's command tree is returned rather than modifying an existing object and more DI-testing friendly. [[#478](https://github.com/microsoft/mcp/pull/478)]
+- Update `CommandFactory.GetServiceArea` to check for a tool's service area using with or without root `azmcp` prefix. [[#478](https://github.com/microsoft/mcp/pull/478)]
 
 ### Breaking Changes
 
@@ -26,6 +28,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Fixed MCP server hanging on invalid transport arguments. Server now exits gracefully with clear error messages instead of hanging indefinitely. [[#311](https://github.com/microsoft/mcp/issues/311)] [[#511](https://github.com/microsoft/mcp/pull/511)]
 
 ### Other Changes
+
+- Refactored Kusto service implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[#528](https://github.com/microsoft/mcp/pull/528)]
+
+#### Dependency Updates
+
+- Removed the following dependencies:
+  - Azure.ResourceManager.Kusto [[#528](https://github.com/microsoft/mcp/pull/528)]
 
 ## 0.8.0 (2025-09-18)
 

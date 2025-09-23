@@ -49,7 +49,7 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger) : Bas
 
             if (UseClusterUri(options))
             {
-                tableSchema = await kusto.GetTableSchema(
+                tableSchema = await kusto.GetTableSchemaAsync(
                     options.ClusterUri!,
                     options.Database!,
                     options.Table!,
@@ -59,7 +59,7 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger) : Bas
             }
             else
             {
-                tableSchema = await kusto.GetTableSchema(
+                tableSchema = await kusto.GetTableSchemaAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Database!,

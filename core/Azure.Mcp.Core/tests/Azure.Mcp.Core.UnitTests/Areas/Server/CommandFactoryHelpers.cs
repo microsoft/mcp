@@ -20,13 +20,6 @@ internal class CommandFactoryHelpers
 {
     public static CommandFactory CreateCommandFactory(IServiceProvider? serviceProvider = default)
     {
-        IServiceProvider services = serviceProvider ?? new ServiceCollection()
-            .AddLogging()
-            .BuildServiceProvider();
-
-        var logger = services.GetRequiredService<ILogger<CommandFactory>>();
-        var telemetryService = services.GetService<ITelemetryService>() ?? new NoOpTelemetryService();
-
         IAreaSetup[] areaSetups = [
             new SubscriptionSetup(),
             new KeyVaultSetup(),
@@ -35,9 +28,39 @@ internal class CommandFactoryHelpers
             new AppConfigSetup()
         ];
 
+        var services = serviceProvider ?? CreateDefaultServiceProvider();
+        var logger = services.GetRequiredService<ILogger<CommandFactory>>();
+        var telemetryService = services.GetService<ITelemetryService>() ?? new NoOpTelemetryService();
         var commandFactory = new CommandFactory(services, areaSetups, telemetryService, logger);
 
         return commandFactory;
+    }
+
+    public static IServiceProvider CreateDefaultServiceProvider()
+    {
+        return SetupCommonServices().BuildServiceProvider();
+    }
+
+    public static IServiceCollection SetupCommonServices()
+    {
+        IAreaSetup[] areaSetups = [
+            new SubscriptionSetup(),
+            new KeyVaultSetup(),
+            new StorageSetup(),
+            new DeploySetup(),
+            new AppConfigSetup()
+        ];
+
+        var builder = new ServiceCollection()
+            .AddLogging()
+            .AddSingleton<ITelemetryService, NoOpTelemetryService>();
+
+        foreach (var area in areaSetups)
+        {
+            area.ConfigureServices(builder);
+        }
+
+        return builder;
     }
 
     public class NoOpTelemetryService : ITelemetryService
