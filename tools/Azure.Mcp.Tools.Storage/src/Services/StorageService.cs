@@ -1,21 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Models;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
+using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services.Models;
 using Azure.ResourceManager;
-using Azure.ResourceManager.Resources;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Azure.Mcp.Tools.Storage.Commands;
 
 namespace Azure.Mcp.Tools.Storage.Services;
 
@@ -114,7 +114,7 @@ public class StorageService(
             ResourceIdentifier accountId = new ResourceIdentifier($"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{account}");
             var createContent = new StorageAccountCreateOrUpdateContent
             {
-                Sku = new StorageAccountSku
+                Sku = new ResourceSku
                 {
                     Name = string.IsNullOrEmpty(sku) ? "Standard_LRS" : ParseStorageSkuName(sku),
                     Tier = "Standard"

@@ -22,7 +22,8 @@ namespace Azure.Mcp.Tools.Storage.Commands;
 [JsonSerializable(typeof(ContainerInfo))]
 [JsonSerializable(typeof(StorageAccountData))]
 [JsonSerializable(typeof(StorageAccountCreateOrUpdateContent))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSerializable(typeof(System.Text.Json.JsonElement))]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
 internal sealed partial class StorageJsonContext : JsonSerializerContext
 {
 }
