@@ -326,4 +326,605 @@ public class EventsPublishCommandTests
         Assert.Equal("Success", result!.Result.Status);
         Assert.Equal(1, result.Result.PublishedEventCount);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_WithCloudEventsSchema_ReturnsSuccess()
+    {
+        // Arrange
+        var subscriptionId = "test-sub";
+        var resourceGroup = "test-rg";
+        var topicName = "test-topic";
+        var eventData = JsonSerializer.Serialize(new
+        {
+            specversion = "1.0",
+            type = "com.example.CloudEventTest",
+            source = "/test/cloudevents",
+            id = "cloud-event-123",
+            time = "2025-01-15T10:00:00Z",
+            data = new { message = "Hello CloudEvents!" }
+        });
+
+        var expectedResult = new EventPublishResult(
+            Status: "Success",
+            Message: $"Successfully published 1 event(s) to topic '{topicName}'.",
+            PublishedEventCount: 1,
+            OperationId: Guid.NewGuid().ToString(),
+            PublishedAt: DateTime.UtcNow);
+
+        _eventGridService.PublishEventsAsync(
+            Arg.Is(subscriptionId),
+            Arg.Is(resourceGroup),
+            Arg.Is(topicName),
+            Arg.Any<string>(),
+            Arg.Is("CloudEvents"), // Verify CloudEvents schema is passed
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(Task.FromResult(expectedResult));
+
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", "CloudEvents"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(200, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventsPublishCommandResult);
+        Assert.NotNull(result);
+        Assert.Equal("Success", result!.Result.Status);
+        Assert.Equal(1, result.Result.PublishedEventCount);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithCustomSchema_ReturnsSuccess()
+    {
+        // Arrange
+        var subscriptionId = "test-sub";
+        var resourceGroup = "test-rg";
+        var topicName = "test-topic";
+        var eventData = JsonSerializer.Serialize(new
+        {
+            orderNumber = "ORD-12345",
+            eventCategory = "OrderPlaced",
+            resourcePath = "/orders/12345",
+            occurredAt = "2025-01-15T10:00:00Z",
+            details = new { amount = 99.99, currency = "USD" }
+        });
+
+        var expectedResult = new EventPublishResult(
+            Status: "Success",
+            Message: $"Successfully published 1 event(s) to topic '{topicName}'.",
+            PublishedEventCount: 1,
+            OperationId: Guid.NewGuid().ToString(),
+            PublishedAt: DateTime.UtcNow);
+
+        _eventGridService.PublishEventsAsync(
+            Arg.Is(subscriptionId),
+            Arg.Is(resourceGroup),
+            Arg.Is(topicName),
+            Arg.Any<string>(),
+            Arg.Is("Custom"), // Verify Custom schema is passed
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(Task.FromResult(expectedResult));
+
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", "Custom"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(200, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventsPublishCommandResult);
+        Assert.NotNull(result);
+        Assert.Equal("Success", result!.Result.Status);
+        Assert.Equal(1, result.Result.PublishedEventCount);
+    }
+
+    [Theory]
+    [InlineData("EventGrid")]
+    [InlineData("CloudEvents")]
+    [InlineData("Custom")]
+    public async Task ExecuteAsync_WithDifferentSchemas_PassesSchemaCorrectly(string schema)
+    {
+        // Arrange
+        var subscriptionId = "test-sub";
+        var resourceGroup = "test-rg";
+        var topicName = "test-topic";
+        var eventData = schema switch
+        {
+            "CloudEvents" => JsonSerializer.Serialize(new
+            {
+                specversion = "1.0",
+                type = "test.event",
+                source = "/test",
+                id = "test-123"
+            }),
+            "EventGrid" => JsonSerializer.Serialize(new
+            {
+                id = "test-123",
+                subject = "/test",
+                eventType = "TestEvent",
+                dataVersion = "1.0"
+            }),
+            _ => JsonSerializer.Serialize(new
+            {
+                customField = "customValue",
+                id = "test-123"
+            })
+        };
+
+        var expectedResult = new EventPublishResult(
+            Status: "Success",
+            Message: $"Successfully published 1 event(s) to topic '{topicName}'.",
+            PublishedEventCount: 1,
+            OperationId: Guid.NewGuid().ToString(),
+            PublishedAt: DateTime.UtcNow);
+
+        _eventGridService.PublishEventsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is(schema), // Verify the schema parameter is passed correctly
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(Task.FromResult(expectedResult));
+
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", schema]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(200, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithoutEventSchema_DefaultsToEventGrid()
+    {
+        // Arrange
+        var subscriptionId = "test-sub";
+        var resourceGroup = "test-rg";
+        var topicName = "test-topic";
+        var eventData = JsonSerializer.Serialize(new
+        {
+            subject = "/test/subject",
+            eventType = "TestEvent",
+            dataVersion = "1.0"
+        });
+
+        var expectedResult = new EventPublishResult(
+            Status: "Success",
+            Message: $"Successfully published 1 event(s) to topic '{topicName}'.",
+            PublishedEventCount: 1,
+            OperationId: Guid.NewGuid().ToString(),
+            PublishedAt: DateTime.UtcNow);
+
+        _eventGridService.PublishEventsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is<string?>(schema => schema == null), // Should be null when not specified
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(Task.FromResult(expectedResult));
+
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(200, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithAccessDenied_Returns403()
+    {
+        // Arrange
+        var subscriptionId = "test-sub";
+        var resourceGroup = "test-rg";
+        var topicName = "test-topic";
+        var eventData = JsonSerializer.Serialize(new
+        {
+            subject = "/test/subject",
+            eventType = "TestEvent",
+            dataVersion = "1.0"
+        });
+
+        _eventGridService.PublishEventsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Azure.RequestFailedException(403, "Access denied to Event Grid topic"));
+
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(403, response.Status);
+        Assert.Contains("Access denied", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithInvalidEventSchema_Returns400()
+    {
+        // Arrange
+        var subscriptionId = "test-sub";
+        var resourceGroup = "test-rg";
+        var topicName = "test-topic";
+        var eventData = JsonSerializer.Serialize(new
+        {
+            subject = "/test/subject",
+            eventType = "TestEvent",
+            dataVersion = "1.0"
+        });
+
+        _eventGridService.PublishEventsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new ArgumentException("Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom."));
+
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", "InvalidSchema"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(400, response.Status);
+        Assert.Contains("Invalid event schema", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithBadRequestError_Returns400()
+    {
+        // Arrange
+        var subscriptionId = "test-sub";
+        var resourceGroup = "test-rg";
+        var topicName = "test-topic";
+        var eventData = JsonSerializer.Serialize(new
+        {
+            subject = "/test/subject",
+            eventType = "TestEvent",
+            dataVersion = "1.0"
+        });
+
+        _eventGridService.PublishEventsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Azure.RequestFailedException(400, "Invalid event data or schema format"));
+
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(400, response.Status);
+        Assert.Contains("Invalid event data", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithLargeEventPayload_ReturnsSuccess()
+    {
+        // Arrange
+        var subscriptionId = "test-sub";
+        var resourceGroup = "test-rg";
+        var topicName = "test-topic";
+        
+        // Create a large data payload
+        var largeData = new
+        {
+            largeArray = Enumerable.Range(1, 100).Select(i => new { id = i, value = $"item-{i}" }).ToArray(),
+            largeString = new string('x', 1000),
+            nestedObject = new
+            {
+                level1 = new
+                {
+                    level2 = new
+                    {
+                        level3 = new { data = "deep nested data" }
+                    }
+                }
+            }
+        };
+
+        var eventData = JsonSerializer.Serialize(new
+        {
+            subject = "/test/large",
+            eventType = "LargeEvent",
+            dataVersion = "1.0",
+            data = largeData
+        });
+
+        var expectedResult = new EventPublishResult(
+            Status: "Success",
+            Message: $"Successfully published 1 event(s) to topic '{topicName}'.",
+            PublishedEventCount: 1,
+            OperationId: Guid.NewGuid().ToString(),
+            PublishedAt: DateTime.UtcNow);
+
+        _eventGridService.PublishEventsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(Task.FromResult(expectedResult));
+
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(200, response.Status);
+        Assert.NotNull(response.Results);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithCloudEventsMinimalFields_ReturnsSuccess()
+    {
+        // Arrange - Test CloudEvents with only required fields
+        var subscriptionId = "test-sub";
+        var resourceGroup = "test-rg";
+        var topicName = "test-topic";
+        var eventData = JsonSerializer.Serialize(new
+        {
+            specversion = "1.0",
+            type = "com.example.minimal",
+            source = "/minimal/source",
+            id = "minimal-cloud-event"
+            // Missing optional fields: time, subject, data
+        });
+
+        var expectedResult = new EventPublishResult(
+            Status: "Success",
+            Message: $"Successfully published 1 event(s) to topic '{topicName}'.",
+            PublishedEventCount: 1,
+            OperationId: Guid.NewGuid().ToString(),
+            PublishedAt: DateTime.UtcNow);
+
+        _eventGridService.PublishEventsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is("CloudEvents"),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(Task.FromResult(expectedResult));
+
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", "CloudEvents"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(200, response.Status);
+        Assert.NotNull(response.Results);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithCloudEventsDataContentType_ReturnsSuccess()
+    {
+        // Arrange - Test CloudEvents with datacontenttype field
+        var subscriptionId = "test-sub";
+        var resourceGroup = "test-rg";
+        var topicName = "test-topic";
+        var eventData = JsonSerializer.Serialize(new
+        {
+            specversion = "1.0",
+            type = "com.example.data.structured",
+            source = "/datatype/test",
+            id = "datacontent-test-123",
+            time = "2025-01-15T10:00:00Z",
+            datacontenttype = "application/xml",
+            subject = "data/content/type/test",
+            data = new { message = "XML structured data", format = "xml" }
+        });
+
+        var expectedResult = new EventPublishResult(
+            Status: "Success",
+            Message: $"Successfully published 1 event(s) to topic '{topicName}'.",
+            PublishedEventCount: 1,
+            OperationId: Guid.NewGuid().ToString(),
+            PublishedAt: DateTime.UtcNow);
+
+        _eventGridService.PublishEventsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is("CloudEvents"),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(Task.FromResult(expectedResult));
+
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", "CloudEvents"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(200, response.Status);
+        Assert.NotNull(response.Results);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithMixedSchemaFields_ReturnsSuccess()
+    {
+        // Arrange - Test Custom schema with mixed EventGrid and CloudEvents fields
+        var subscriptionId = "test-sub";
+        var resourceGroup = "test-rg";
+        var topicName = "test-topic";
+        var eventData = JsonSerializer.Serialize(new
+        {
+            id = "mixed-event-123",
+            type = "MixedEvent", // CloudEvents field name
+            subject = "/mixed/subject", // EventGrid field name
+            dataVersion = "1.5", // EventGrid field name
+            time = "2025-01-15T13:00:00Z", // CloudEvents field name
+            data = new { mixed = "event data" }
+        });
+
+        var expectedResult = new EventPublishResult(
+            Status: "Success",
+            Message: $"Successfully published 1 event(s) to topic '{topicName}'.",
+            PublishedEventCount: 1,
+            OperationId: Guid.NewGuid().ToString(),
+            PublishedAt: DateTime.UtcNow);
+
+        _eventGridService.PublishEventsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is("Custom"),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(Task.FromResult(expectedResult));
+
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", "Custom"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(200, response.Status);
+        Assert.NotNull(response.Results);
+    }
+
+    [Theory]
+    [InlineData("cloudevents")]
+    [InlineData("CLOUDEVENTS")]
+    [InlineData("CloudEvents")]
+    [InlineData("eventgrid")]
+    [InlineData("EVENTGRID")]
+    [InlineData("EventGrid")]
+    [InlineData("custom")]
+    [InlineData("CUSTOM")]
+    [InlineData("Custom")]
+    public async Task ExecuteAsync_WithSchemaNameCaseInsensitive_ReturnsSuccess(string schema)
+    {
+        // Arrange - Test that schema names are case insensitive
+        var subscriptionId = "test-sub";
+        var resourceGroup = "test-rg";
+        var topicName = "test-topic";
+        var eventData = JsonSerializer.Serialize(new
+        {
+            id = "case-test",
+            subject = "/test/case",
+            eventType = "CaseTest",
+            dataVersion = "1.0"
+        });
+
+        var expectedResult = new EventPublishResult(
+            Status: "Success",
+            Message: $"Successfully published 1 event(s) to topic '{topicName}'.",
+            PublishedEventCount: 1,
+            OperationId: Guid.NewGuid().ToString(),
+            PublishedAt: DateTime.UtcNow);
+
+        _eventGridService.PublishEventsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is(schema),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(Task.FromResult(expectedResult));
+
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", schema]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(200, response.Status);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithArrayOfMixedSchemaEvents_ReturnsSuccess()
+    {
+        // Arrange - Test array with mixed event formats in Custom schema
+        var subscriptionId = "test-sub";
+        var resourceGroup = "test-rg";
+        var topicName = "test-topic";
+        var eventData = JsonSerializer.Serialize(new object[]
+        {
+            new // EventGrid-style fields
+            {
+                id = "event-1",
+                subject = "/test/1",
+                eventType = "TestEvent1",
+                dataVersion = "1.0",
+                eventTime = "2025-01-15T10:00:00Z",
+                data = new { index = 1 }
+            },
+            new // CloudEvents-style fields
+            {
+                id = "event-2",
+                source = "/test/2",
+                type = "TestEvent2",
+                specversion = "1.0",
+                time = "2025-01-15T11:00:00Z",
+                data = new { index = 2 }
+            }
+        });
+
+        var expectedResult = new EventPublishResult(
+            Status: "Success",
+            Message: $"Successfully published 2 event(s) to topic '{topicName}'.",
+            PublishedEventCount: 2,
+            OperationId: Guid.NewGuid().ToString(),
+            PublishedAt: DateTime.UtcNow);
+
+        _eventGridService.PublishEventsAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is("Custom"),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(Task.FromResult(expectedResult));
+
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", "Custom"]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(200, response.Status);
+        var json = JsonSerializer.Serialize(response.Results!);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.EventsPublishCommandResult);
+        Assert.Equal(2, result!.Result.PublishedEventCount);
+    }
 }

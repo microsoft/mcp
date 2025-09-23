@@ -99,7 +99,7 @@ public sealed class EventsPublishCommand(ILogger<EventsPublishCommand> logger) :
         Azure.RequestFailedException reqEx when reqEx.Status == 400 =>
             "Invalid event data or schema format. Please verify the event data is valid JSON and matches the expected schema.",
         ArgumentException argEx when argEx.Message.Contains("schema") =>
-            "Invalid event schema specified. Supported schemas are: CloudEvents, EventGridEvent, or Custom.",
+            "Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom.",
         System.Text.Json.JsonException jsonEx =>
             $"Invalid JSON format in event data: {jsonEx.Message}",
         _ => base.GetErrorMessage(ex)

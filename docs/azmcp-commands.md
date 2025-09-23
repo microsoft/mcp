@@ -657,7 +657,7 @@ azmcp eventgrid events publish --subscription "my-subscription" \
 azmcp eventgrid events publish --subscription "my-subscription" \
                                --resource-group "my-rg" \
                                --topic "my-topic" \
-                               --event-data '{"specversion": "1.0", "type": "com.example.order.created", "source": "/orders", "id": "123", "time": "2023-01-01T12:00:00Z", "data": {"orderId": "123"}}' \
+                               --event-data '{"specversion": "1.0", "type": "com.example.order.created", "source": "/orders", "id": "123", "time": "2023-01-01T12:00:00Z", "datacontenttype": "application/json", "data": {"orderId": "123"}}' \
                                --event-schema "CloudEvents"
 
 # Publish with custom schema

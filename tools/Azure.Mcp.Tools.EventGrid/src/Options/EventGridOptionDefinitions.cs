@@ -35,6 +35,6 @@ public static class EventGridOptionDefinitions
         $"--{EventSchemaParam}"
     )
     {
-        Description = "The event schema type (CloudEvents, EventGridEvent, or Custom). Defaults to EventGridEvent."
+        Description = "The event schema type (CloudEvents, EventGrid, or Custom). Defaults to EventGrid."
     };
 }
