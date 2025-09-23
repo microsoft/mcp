@@ -311,8 +311,9 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(serverName, databaseName, newDatabaseName, resourceGroup, subscription);
-
+        ValidateRequiredParameters(serverName, databaseName, resourceGroup, subscription);
+        if (string.IsNullOrWhiteSpace(newDatabaseName))
+            throw new ArgumentException("New database name cannot be null or empty.", nameof(newDatabaseName));
         try
         {
             var armClient = await CreateArmClientAsync(null, retryPolicy);
