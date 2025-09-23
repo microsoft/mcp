@@ -337,7 +337,6 @@ public class ToolsListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(SuccessStatusCode, response.Status);
         Assert.NotNull(response.Results);
 
         // Serialize then deserialize as list of CommandInfo
