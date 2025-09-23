@@ -36,7 +36,7 @@ public sealed class ClusterListCommandTests
     {
         // Arrange
         var expectedClusters = new List<string> { "clusterA", "clusterB" };
-        _kusto.ListClusters(
+        _kusto.ListClustersAsync(
             "sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedClusters);
 
@@ -63,7 +63,7 @@ public sealed class ClusterListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoClustersExist()
     {
         // Arrange
-        _kusto.ListClusters("sub123", null, null)
+        _kusto.ListClustersAsync("sub123", null, null)
             .Returns([]);
 
         var command = new ClusterListCommand(_logger);
@@ -92,7 +92,7 @@ public sealed class ClusterListCommandTests
         var subscriptionId = "sub123";
 
         // Arrange
-        _kusto.ListClusters(subscriptionId, null, Arg.Any<RetryPolicyOptions>())
+        _kusto.ListClustersAsync(subscriptionId, null, Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<List<string>>(new Exception("Test error")));
 
         var command = new ClusterListCommand(_logger);
