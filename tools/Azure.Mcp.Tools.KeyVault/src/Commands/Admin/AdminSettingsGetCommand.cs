@@ -11,7 +11,7 @@ namespace Azure.Mcp.Tools.KeyVault.Commands.Admin;
 
 public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> logger) : SubscriptionCommand<BaseKeyVaultOptions>
 {
-    private const string CommandTitle = "Get Key Vault Account Settings";
+    private const string CommandTitle = "Get Key Vault Managed HSM Account Settings";
     private readonly ILogger<AdminSettingsGetCommand> _logger = logger;
     private readonly Option<string> _vaultOption = KeyVaultOptionDefinitions.VaultName;
 
@@ -20,7 +20,7 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
     public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
 
     public override string Description =>
-        "Retrieves all Key Vault account settings for a given vault. This includes settings such as purge protection and soft-delete retention days.";
+        "Retrieves all Key Vault Managed HSM account settings for a given vault. This includes settings such as purge protection and soft-delete retention days. This tool ONLY applies to Managed HSM vaults.";
 
     protected override void RegisterOptions(Command command)
     {

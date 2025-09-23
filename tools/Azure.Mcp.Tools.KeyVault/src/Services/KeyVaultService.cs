@@ -297,22 +297,18 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        // For administration client we only need vault URI + credential.
         ValidateRequiredParameters(vaultName, subscription);
-
         var credential = await GetCredential(tenantId);
-        var vaultUri = new Uri($"https://{vaultName}.vault.azure.net");
-
+        var hsmUri = new Uri($"https://{vaultName}.managedhsm.azure.net");
         try
         {
-            var settingsClient = new KeyVaultSettingsClient(vaultUri, credential);
-
-            var settingsResponse = await settingsClient.GetSettingsAsync();
-            return settingsResponse.Value;
+            var hsmClient = new KeyVaultSettingsClient(hsmUri, credential);
+            var hsmResponse = await hsmClient.GetSettingsAsync();
+            return hsmResponse.Value;
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving Key Vault administration settings for '{vaultName}': {ex.Message}", ex);
+            throw new Exception($"Error retrieving Managed HSM administration settings for '{vaultName}': {ex.Message}", ex);
         }
     }
 }
