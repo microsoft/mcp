@@ -26,7 +26,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
 
         var keys = result.AssertProperty("keys");
         Assert.Equal(JsonValueKind.Array, keys.ValueKind);
-        Assert.NotEmpty(keys.EnumerateArray());
+        Assert.NotEmpty(keys.EnumerateArray())
     }
 
     [Fact]
