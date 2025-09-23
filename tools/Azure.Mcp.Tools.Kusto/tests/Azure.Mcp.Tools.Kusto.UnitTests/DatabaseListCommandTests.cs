@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
@@ -43,14 +44,14 @@ public sealed class DatabaseListCommandTests
         var expectedDatabases = new List<string> { "db1", "db2" };
         if (useClusterUri)
         {
-            _kusto.ListDatabases(
+            _kusto.ListDatabasesAsync(
                 "https://mycluster.kusto.windows.net",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(expectedDatabases);
         }
         else
         {
-            _kusto.ListDatabases(
+            _kusto.ListDatabasesAsync(
                 "sub1", "mycluster", Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(expectedDatabases);
         }
@@ -78,14 +79,14 @@ public sealed class DatabaseListCommandTests
         // Arrange
         if (useClusterUri)
         {
-            _kusto.ListDatabases(
+            _kusto.ListDatabasesAsync(
                 "https://mycluster.kusto.windows.net",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns([]);
         }
         else
         {
-            _kusto.ListDatabases(
+            _kusto.ListDatabasesAsync(
                 "sub1", "mycluster", Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns([]);
         }
@@ -114,14 +115,14 @@ public sealed class DatabaseListCommandTests
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         if (useClusterUri)
         {
-            _kusto.ListDatabases(
+            _kusto.ListDatabasesAsync(
                 "https://mycluster.kusto.windows.net",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(Task.FromException<List<string>>(new Exception("Test error")));
         }
         else
         {
-            _kusto.ListDatabases(
+            _kusto.ListDatabasesAsync(
                 "sub1", "mycluster", Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(Task.FromException<List<string>>(new Exception("Test error")));
         }
@@ -135,7 +136,7 @@ public sealed class DatabaseListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
     }
 
@@ -150,7 +151,7 @@ public sealed class DatabaseListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Either --cluster-uri must be provided", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -165,7 +166,7 @@ public sealed class DatabaseListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Either --cluster-uri must be provided", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 }

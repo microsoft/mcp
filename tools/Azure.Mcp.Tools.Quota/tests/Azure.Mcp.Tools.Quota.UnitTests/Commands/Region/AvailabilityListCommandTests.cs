@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Quota.Commands;
@@ -76,7 +77,7 @@ public sealed class AvailabilityListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
         // Verify the service was called with the correct parameters
@@ -146,7 +147,7 @@ public sealed class AvailabilityListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
         // Verify the service was called with the correct parameters
@@ -192,7 +193,7 @@ public sealed class AvailabilityListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(400, result.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, result.Status);
         Assert.Contains("Missing Required options: --resource-types", result.Message);
 
         // Verify the service was not called
@@ -232,7 +233,7 @@ public sealed class AvailabilityListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(500, result.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
         Assert.Contains("Service error occurred", result.Message);
     }
 
@@ -269,7 +270,7 @@ public sealed class AvailabilityListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
 
         // Verify the service was called with correctly parsed resource types
         await _quotaService.Received(1).GetAvailableRegionsForResourceTypesAsync(
@@ -311,7 +312,7 @@ public sealed class AvailabilityListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results); // Should be empty when no regions are found
 
         var json = JsonSerializer.Serialize(result.Results);
@@ -356,7 +357,7 @@ public sealed class AvailabilityListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
 
         // Verify the service was called with all cognitive service parameters
         await _quotaService.Received(1).GetAvailableRegionsForResourceTypesAsync(
@@ -388,7 +389,7 @@ public sealed class AvailabilityListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(400, result.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, result.Status);
         Assert.Contains("Missing Required options: --resource-types", result.Message);
 
         // Verify the service was not called
@@ -433,7 +434,7 @@ public sealed class AvailabilityListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
 
         // Verify the service was called with resource types preserving original casing
         await _quotaService.Received(1).GetAvailableRegionsForResourceTypesAsync(
@@ -491,7 +492,7 @@ public sealed class AvailabilityListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
         // Verify the service was called with all 50 resource types

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTestRun;
@@ -62,7 +63,7 @@ public class TestRunUpdateCommandTests
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Fact]
@@ -83,6 +84,6 @@ public class TestRunUpdateCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 }

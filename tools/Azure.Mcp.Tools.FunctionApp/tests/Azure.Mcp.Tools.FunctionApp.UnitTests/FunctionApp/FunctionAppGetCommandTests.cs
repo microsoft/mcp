@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -64,7 +65,7 @@ public sealed class FunctionAppGetCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.NotNull(response.Results);
@@ -100,7 +101,7 @@ public sealed class FunctionAppGetCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the mock was called
@@ -144,7 +145,7 @@ public sealed class FunctionAppGetCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
@@ -168,7 +169,7 @@ public sealed class FunctionAppGetCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -199,7 +200,7 @@ public sealed class FunctionAppGetCommandTests
 
         var response = await _command.ExecuteAsync(context, parseResult);
 
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     }
 
     [Fact]
@@ -214,7 +215,7 @@ public sealed class FunctionAppGetCommandTests
 
         var response = await _command.ExecuteAsync(context, parseResult);
 
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
@@ -235,7 +236,7 @@ public sealed class FunctionAppGetCommandTests
 
         var response = await _command.ExecuteAsync(context, parseResult);
 
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);

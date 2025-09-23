@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Core.Areas.Tools.Commands;
 
 [HiddenCommand]
-public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCommand()
+public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCommand<EmptyOptions>
 {
     private const string CommandTitle = "List Available Tools";
 
@@ -32,6 +32,8 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         LocalRequired = false,
         Secret = false
     };
+
+    protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {

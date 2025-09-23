@@ -19,9 +19,8 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
     public override string Name => "get";
     public override string Description =>
         $"""
-        Retrieve the configuration for a load test (Test ID) defined in a Load Testing resource.
-        Returns only the test definition and configuration (duration, ramp-up, virtual users, endpoint, etc.).
-        Does NOT return any test runs or run-level data. To get run details (status, metrics, artifacts), use the testrun command NOT this one.
+        Get the Azure Load Testing test configuration for the specified load test id in the specified load test resource.
+        This command retrieves the details of a specific load test configuration, including its parameters and settings. Based on this we can see what all parameters were set for the test configuration.
         """;
     public override string Title => _commandTitle;
 

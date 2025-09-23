@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Sql.Models;
@@ -98,21 +99,21 @@ public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 409 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "A SQL server with this name already exists. Choose a different server name.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed creating the SQL server. Verify you have appropriate permissions. Details: {reqEx.Message}",
-        RequestFailedException reqEx when reqEx.Status == 400 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
             $"Invalid request parameters for SQL server creation: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         ArgumentException argEx => $"Invalid parameter: {argEx.Message}",
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        RequestFailedException reqEx => reqEx.Status,
-        ArgumentException => 400,
+        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
+        ArgumentException => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)
     };
 

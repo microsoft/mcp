@@ -19,9 +19,9 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
     public override string Name => "list";
     public override string Description =>
         $"""
-        List all test runs for a give test id. Each test can have multiple test runs.
-        Use this to retrieve the list of runs created for a specific test. Returns run-level metadata for each run (run id, display name, status, start/end times, duration, brief metrics summary). 
-        Does NOT return the test. To get full details for a single run use the testrun get command NOT this one.
+        Retrieves a comprehensive list of all test run executions for a specific load test configuration.
+        This command provides an overview of test execution history, allowing you to track performance
+        trends, compare results across multiple runs, and analyze testing patterns over time.
         """;
     public override string Title => _commandTitle;
 

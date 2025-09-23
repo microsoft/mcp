@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Aks.Options.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
@@ -65,9 +66,9 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Bas
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Subscription not found. Verify the subscription ID and you have access.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed accessing AKS clusters. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)

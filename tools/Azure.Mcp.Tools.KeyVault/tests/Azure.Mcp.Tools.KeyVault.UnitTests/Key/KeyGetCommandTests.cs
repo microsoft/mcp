@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -82,7 +83,7 @@ public class KeyGetCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
@@ -108,7 +109,7 @@ public class KeyGetCommandTests
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("required", response.Message.ToLower());
     }
 
@@ -137,7 +138,7 @@ public class KeyGetCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
     }
 }
