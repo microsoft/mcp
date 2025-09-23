@@ -135,10 +135,9 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             // Parse and validate event data directly to EventGridEventSchema
             var eventGridEventSchemas = ParseAndValidateEventData(eventData, eventSchema ?? "EventGridEvent");
 
-            // Use EventGridPublisherClient with BinaryData for AOT-compatible publishing
             var publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential);
 
-            // Serialize each event individually to JSON using source-generated context and convert to BinaryData
+            // Serialize each event individually to JSON using source-generated context
             var eventsData = eventGridEventSchemas.Select(eventSchema =>
             {
                 var jsonString = JsonSerializer.Serialize(eventSchema, EventGridJsonContext.Default.EventGridEventSchema);
@@ -608,6 +607,4 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             }
         }
     }
-
-
 }
