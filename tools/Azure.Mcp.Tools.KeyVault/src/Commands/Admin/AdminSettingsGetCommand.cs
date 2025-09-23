@@ -3,6 +3,8 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.Logging;
@@ -13,11 +15,18 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
 {
     private const string CommandTitle = "Get Key Vault Managed HSM Account Settings";
     private readonly ILogger<AdminSettingsGetCommand> _logger = logger;
-    private readonly Option<string> _vaultOption = KeyVaultOptionDefinitions.VaultName;
 
     public override string Name => "get";
     public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        OpenWorld = true,        // Command queries Azure resources (vault settings)
+        Destructive = false,     // Command only reads settings, no modifications
+        Idempotent = true,       // Same call produces same result
+        ReadOnly = true,         // Only reads data, no state changes
+        Secret = false,          // Returns configuration settings, not secrets
+        LocalRequired = false    // Pure Azure API call, no local resources needed
+    };
 
     public override string Description =>
         "Retrieves all Key Vault Managed HSM account settings for a given vault. This includes settings such as purge protection and soft-delete retention days. This tool ONLY applies to Managed HSM vaults.";
@@ -25,13 +34,13 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_vaultOption);
+        command.Options.Add(KeyVaultOptionDefinitions.VaultName.AsRequired());
     }
 
     protected override BaseKeyVaultOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValue(_vaultOption);
+        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
         return options;
     }
 
