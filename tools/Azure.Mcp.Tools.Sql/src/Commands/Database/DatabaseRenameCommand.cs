@@ -32,7 +32,7 @@ public sealed class DatabaseRenameCommand(ILogger<DatabaseRenameCommand> logger)
     {
         Destructive = true,
         Idempotent = false,
-        OpenWorld = false,
+        OpenWorld = true,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
