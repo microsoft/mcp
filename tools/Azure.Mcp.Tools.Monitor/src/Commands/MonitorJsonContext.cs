@@ -12,14 +12,14 @@ using Azure.Mcp.Tools.Monitor.Commands.Workspace;
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
 [JsonSerializable(typeof(List<JsonNode>))]
-[JsonSerializable(typeof(WorkspaceListCommand.WorkspaceListCommandResult))]
+[JsonSerializable(typeof(MetricsDefinitionsCommand.MetricsDefinitionsCommandResult))]
+[JsonSerializable(typeof(MetricsQueryCommand.MetricsQueryCommandResult))]
 [JsonSerializable(typeof(TableListCommand.TableListCommandResult))]
 [JsonSerializable(typeof(TableTypeListCommand.TableTypeListCommandResult))]
-[JsonSerializable(typeof(MetricsQueryCommand.MetricsQueryCommandResult))]
-[JsonSerializable(typeof(MetricsDefinitionsCommand.MetricsDefinitionsCommandResult))]
-[JsonSerializable(typeof(WebTestsListCommand.WebTestsListCommandResult))]
-[JsonSerializable(typeof(WebTestsGetCommand.WebTestsGetCommandResult))]
 [JsonSerializable(typeof(WebTestsCreateOrUpdateCommand.WebTestsCreateCommandResult))]
+[JsonSerializable(typeof(WebTestsGetCommand.WebTestsGetCommandResult))]
+[JsonSerializable(typeof(WebTestsListCommand.WebTestsListCommandResult))]
+[JsonSerializable(typeof(WorkspaceListCommand.WorkspaceListCommandResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class MonitorJsonContext : JsonSerializerContext
 {

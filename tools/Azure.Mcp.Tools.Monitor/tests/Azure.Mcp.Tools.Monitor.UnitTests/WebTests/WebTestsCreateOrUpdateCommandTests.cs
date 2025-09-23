@@ -73,8 +73,12 @@ public class WebTestsCreateOrUpdateCommandTests
     public void Metadata_IsConfiguredCorrectly()
     {
         var metadata = _command.Metadata;
-        Assert.False(metadata.Destructive);
+        Assert.True(metadata.Destructive);
+        Assert.True(metadata.Idempotent);
         Assert.False(metadata.ReadOnly);
+        Assert.False(metadata.OpenWorld);
+        Assert.False(metadata.LocalRequired);
+        Assert.False(metadata.Secret);
     }
 
     #endregion
@@ -272,8 +276,8 @@ public class WebTestsCreateOrUpdateCommandTests
             "--request-url", "https://example.com",
             "--timeout", timeoutInSeconds.ToString()
         };
-        var parseResult = _commandDefinition.Parse(args);
 
+        var parseResult = _commandDefinition.Parse(args);
         if (shouldBeValid)
         {
             var expectedResult = new WebTestDetailedInfo

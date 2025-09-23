@@ -74,7 +74,11 @@ public class WebTestsListCommandTests
     {
         var metadata = _command.Metadata;
         Assert.False(metadata.Destructive);
+        Assert.True(metadata.Idempotent);
         Assert.True(metadata.ReadOnly);
+        Assert.False(metadata.OpenWorld);
+        Assert.False(metadata.LocalRequired);
+        Assert.False(metadata.Secret);
     }
 
     #endregion
@@ -226,7 +230,10 @@ public class WebTestsListCommandTests
 
         // Assert
         Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+
+        var results = GetResult(response.Results);
+        Assert.NotNull(results);
+        Assert.Empty(results);
         Assert.Equal("Success", response.Message);
     }
 

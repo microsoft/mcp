@@ -478,11 +478,11 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
 
         foreach (var webTest in webTests)
         {
-            Assert.True(webTest.TryGetProperty("resourceName", out var resourceName));
+            var resourceName = webTest.AssertProperty("resourceName");
             Assert.Equal(JsonValueKind.String, resourceName.ValueKind);
             Assert.False(string.IsNullOrEmpty(resourceName.GetString()));
 
-            Assert.True(webTest.TryGetProperty("location", out var location));
+            var location = webTest.AssertProperty("location");
             Assert.Equal(JsonValueKind.String, location.ValueKind);
             Assert.False(string.IsNullOrEmpty(location.GetString()));
         }

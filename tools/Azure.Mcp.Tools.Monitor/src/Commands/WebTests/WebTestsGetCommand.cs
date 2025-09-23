@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Monitor.Models.WebTests;
@@ -14,12 +13,9 @@ namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 
 public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : BaseMonitorWebTestsCommand<WebTestsGetOptions>
 {
-    private const string _commandTitle = "Get details of a specific web test";
-    private const string _commandName = "get";
+    private const string CommandTitle = "Get details of a specific web test";
 
-    private readonly Option<string> _webTestResourceNameOption = MonitorOptionDefinitions.WebTest.WebTestResourceName;
-
-    public override string Name => _commandName;
+    public override string Name => "get";
 
     public override string Description =>
          $"""
@@ -27,38 +23,45 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
         Returns detailed information about a single web test.
         """;
 
-    public override string Title => _commandTitle;
+    public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     private readonly ILogger<WebTestsGetCommand> _logger = logger;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_webTestResourceNameOption);
+        command.Options.Add(MonitorOptionDefinitions.WebTest.WebTestResourceName);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
     }
 
     protected override WebTestsGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceName = parseResult.GetValueOrDefault(_webTestResourceNameOption);
+        options.ResourceName = parseResult.GetValueOrDefault(MonitorOptionDefinitions.WebTest.WebTestResourceName);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        var options = BindOptions(parseResult);
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
 
+        var options = BindOptions(parseResult);
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var monitorWebTestService = context.GetService<IMonitorWebTestService>();
             var webTest = await monitorWebTestService.GetWebTest(
                 options.Subscription!,

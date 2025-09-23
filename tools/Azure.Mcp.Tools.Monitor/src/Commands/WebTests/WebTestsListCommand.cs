@@ -12,10 +12,11 @@ namespace Azure.Mcp.Tools.Monitor.Commands.WebTests;
 
 public sealed class WebTestsListCommand(ILogger<WebTestsListCommand> logger) : BaseMonitorWebTestsCommand<WebTestsListOptions>
 {
-    private const string _commandTitle = "List all web tests in a subscription or resource group";
-    private const string _commandName = "list";
+    private const string CommandTitle = "List all web tests in a subscription or resource group";
 
-    public override string Name => _commandName;
+    private readonly ILogger<WebTestsListCommand> _logger = logger;
+
+    public override string Name => "list";
 
     public override string Description =>
          $"""
@@ -23,11 +24,17 @@ public sealed class WebTestsListCommand(ILogger<WebTestsListCommand> logger) : B
         Returns a list of web tests.
         """;
 
-    public override string Title => _commandTitle;
+    public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
-
-    private readonly ILogger<WebTestsListCommand> _logger = logger;
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
@@ -44,23 +51,20 @@ public sealed class WebTestsListCommand(ILogger<WebTestsListCommand> logger) : B
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        var options = BindOptions(parseResult);
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
 
+        var options = BindOptions(parseResult);
         try
         {
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             var monitorWebTestService = context.GetService<IMonitorWebTestService>();
             var webTests = options.ResourceGroup == null
                 ? await monitorWebTestService.ListWebTests(options.Subscription!, options.Tenant, options.RetryPolicy)
                 : await monitorWebTestService.ListWebTests(options.Subscription!, options.ResourceGroup, options.Tenant, options.RetryPolicy);
 
-            context.Response.Results = webTests?.Count > 0 ?
-                ResponseResult.Create(new WebTestsListCommandResult(webTests), MonitorJsonContext.Default.WebTestsListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(webTests ?? []), MonitorJsonContext.Default.WebTestsListCommandResult);
         }
         catch (Exception ex)
         {

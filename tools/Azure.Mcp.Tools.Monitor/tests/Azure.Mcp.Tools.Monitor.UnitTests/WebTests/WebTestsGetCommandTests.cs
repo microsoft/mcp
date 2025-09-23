@@ -74,7 +74,11 @@ public class WebTestsGetCommandTests
     {
         var metadata = _command.Metadata;
         Assert.False(metadata.Destructive);
+        Assert.True(metadata.Idempotent);
         Assert.True(metadata.ReadOnly);
+        Assert.False(metadata.OpenWorld);
+        Assert.False(metadata.LocalRequired);
+        Assert.False(metadata.Secret);
     }
 
     #endregion
