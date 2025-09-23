@@ -34,11 +34,16 @@ $deploymentOutputs = @{
     "OpenAIAccountResourceGroup" = "static-test-resources"
 }
 
-$testSettings["DeploymentOutputs"] = $deploymentOutputs
+# Create a new hashtable with all the original settings plus DeploymentOutputs
+$updatedSettings = @{}
+foreach ($key in $testSettings.Keys) {
+    $updatedSettings[$key] = $testSettings[$key]
+}
+$updatedSettings["DeploymentOutputs"] = $deploymentOutputs
 
 # Update the test settings file with the additional properties
 $testSettingsPath = Join-Path -Path $PSScriptRoot -ChildPath ".testsettings.json"
-$testSettingsJson = $testSettings | ConvertTo-Json -Depth 3
+$testSettingsJson = $updatedSettings | ConvertTo-Json -Depth 3
 Write-Host "Updating test settings file at $testSettingsPath with OpenAI configuration"
 $testSettingsJson | Set-Content -Path $testSettingsPath -Force -NoNewLine
 
