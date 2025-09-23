@@ -89,7 +89,7 @@ public class RegistryServerProviderTests
         var exception = await Assert.ThrowsAsync<HttpRequestException>(
             () => provider.CreateClientAsync(new McpClientOptions()));
 
-        Assert.Contains("404", exception.Message);
+        Assert.Contains(((int)HttpStatusCode.NotFound).ToString(), exception.Message);
     }
 
     [Fact]
@@ -216,11 +216,11 @@ internal sealed class MockHttpTestServer : IDisposable
                     var context = await _listener.GetContextAsync();
                     if (context.Request.Url?.AbsolutePath == "/mcp")
                     {
-                        context.Response.StatusCode = 404;
+                        context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                     }
                     else
                     {
-                        context.Response.StatusCode = 400;
+                        context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                     }
                     context.Response.Close();
                 }

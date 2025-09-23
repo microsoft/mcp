@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.Server;
@@ -95,7 +96,7 @@ public class ServerCreateCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.Equal("Success", response.Message);
@@ -143,7 +144,7 @@ public class ServerCreateCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
@@ -197,7 +198,7 @@ public class ServerCreateCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
 
         await _service.Received(1).CreateServerAsync(
@@ -237,7 +238,7 @@ public class ServerCreateCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.NotEqual(200, response.Status);
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
         Assert.Contains("error", response.Message.ToLower());
     }
 
@@ -245,7 +246,7 @@ public class ServerCreateCommandTests
     public async Task ExecuteAsync_WhenServerAlreadyExists_Returns409StatusCode()
     {
         // Arrange
-        var requestException = new RequestFailedException(409, "Conflict: Server already exists");
+        var requestException = new RequestFailedException((int)HttpStatusCode.Conflict, "Conflict: Server already exists");
 
         _service.CreateServerAsync(
             Arg.Any<string>(),
@@ -267,7 +268,7 @@ public class ServerCreateCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(409, response.Status);
+        Assert.Equal(HttpStatusCode.Conflict, response.Status);
         Assert.Contains("server with this name already exists", response.Message.ToLower());
     }
 }

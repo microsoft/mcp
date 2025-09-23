@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Deploy.Commands.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,7 +46,7 @@ public class GuidanceGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("Run \"azd pipeline config\" to help the user create a deployment pipeline.", result.Message);
     }
@@ -67,7 +68,7 @@ public class GuidanceGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("Help the user to set up a CI/CD pipeline", result.Message);
         Assert.Contains("test-org", result.Message);
@@ -88,7 +89,7 @@ public class GuidanceGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("Help the user to set up a CI/CD pipeline", result.Message);
         Assert.Contains("Github Actions workflow", result.Message);
@@ -108,7 +109,7 @@ public class GuidanceGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("Help the user to set up a CI/CD pipeline", result.Message);
         Assert.Contains("{$organization-of-repo}", result.Message);
@@ -131,7 +132,7 @@ public class GuidanceGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains($"User is deploying to subscription {guidSubscriptionId}", result.Message);
     }
@@ -150,7 +151,7 @@ public class GuidanceGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("az account show --query id -o tsv", result.Message);
     }
@@ -169,7 +170,7 @@ public class GuidanceGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.Contains("az ad sp create-for-rbac", result.Message);
         Assert.Contains("federated-credential create", result.Message);

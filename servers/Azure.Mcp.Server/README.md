@@ -155,6 +155,10 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * Handle labeled configurations
 * Lock/unlock configuration settings
 
+### 🖥️ Azure App Service (Database Management)
+
+* Add a database connection for an App Service web app
+
 ### 🛡️ Azure Best Practices
 
 * Get secure, production-grade Azure SDK best practices for effective code generation.

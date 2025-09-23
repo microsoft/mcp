@@ -235,7 +235,7 @@ public class WorkbooksService(ISubscriptionService _subscriptionService, ITenant
 
             // Create the workbook
             var workbookCollection = resourceGroupResource.Value.GetApplicationInsightsWorkbooks();
-            var createOperation = await workbookCollection.CreateOrUpdateAsync(Azure.WaitUntil.Completed, workbookName, workbookData);
+            var createOperation = await workbookCollection.CreateOrUpdateAsync(WaitUntil.Completed, workbookName, workbookData);
             var createdWorkbook = createOperation.Value;
 
             _logger.LogInformation("Successfully created workbook with name: {WorkbookName} in resource group: {ResourceGroup}", workbookName, resourceGroupName);
@@ -275,7 +275,7 @@ public class WorkbooksService(ISubscriptionService _subscriptionService, ITenant
             var workbookResource = armClient.GetApplicationInsightsWorkbookResource(workbookResourceId) ?? throw new Exception($"Workbook with ID '{workbookId}' not found");
 
             // Delete the workbook
-            var response = await workbookResource.DeleteAsync(Azure.WaitUntil.Completed);
+            var response = await workbookResource.DeleteAsync(WaitUntil.Completed);
 
             _logger.LogInformation("Successfully deleted workbook with ID: {WorkbookId}", workbookId);
             return true;

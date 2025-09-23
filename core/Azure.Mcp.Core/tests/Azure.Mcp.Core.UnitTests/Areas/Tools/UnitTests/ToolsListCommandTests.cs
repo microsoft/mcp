@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Areas.Tools.Commands;
@@ -18,8 +19,6 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Tools.UnitTests;
 
 public class ToolsListCommandTests
 {
-    private const int SuccessStatusCode = 200;
-    private const int ErrorStatusCode = 500;
     private const int MinimumExpectedCommands = 3;
 
     private readonly IServiceProvider _serviceProvider;
@@ -195,7 +194,7 @@ public class ToolsListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(ErrorStatusCode, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("cannot be null", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -219,7 +218,7 @@ public class ToolsListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(ErrorStatusCode, response.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
         Assert.Contains("Corrupted command factory", response.Message);
     }
 
@@ -345,7 +344,7 @@ public class ToolsListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(SuccessStatusCode, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var result = DeserializeResults(response.Results!);
 

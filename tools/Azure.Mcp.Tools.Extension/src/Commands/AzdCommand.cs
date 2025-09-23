@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Commands;
@@ -118,7 +119,7 @@ public sealed class AzdCommand(ILogger<AzdCommand> logger, int processTimeoutSec
             if (options.Learn && string.IsNullOrWhiteSpace(options.Command))
             {
                 context.Response.Message = s_bestPracticesText;
-                context.Response.Status = 200;
+                context.Response.Status = HttpStatusCode.OK;
                 return context.Response;
             }
 
@@ -140,7 +141,7 @@ public sealed class AzdCommand(ILogger<AzdCommand> logger, int processTimeoutSec
                     terminalCommand += $" -e {options.Environment}";
                 }
 
-                context.Response.Status = 400;
+                context.Response.Status = HttpStatusCode.BadRequest;
                 context.Response.Message =
                     $"""
                     The requested command is a long-running command and is better suited to be run in a terminal.
@@ -292,7 +293,7 @@ public sealed class AzdCommand(ILogger<AzdCommand> logger, int processTimeoutSec
 
     private static CommandResponse HandleError(ProcessResult result, CommandResponse response)
     {
-        response.Status = 500;
+        response.Status = HttpStatusCode.InternalServerError;
         response.Message = result.Error;
 
         var contentResults = new List<string>

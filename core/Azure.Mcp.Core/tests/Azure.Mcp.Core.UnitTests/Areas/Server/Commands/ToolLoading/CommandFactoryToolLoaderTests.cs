@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Commands;
@@ -62,7 +63,7 @@ public class CommandFactoryToolLoaderTests
             Assert.NotNull(tool.Name);
             Assert.NotEmpty(tool.Name);
             Assert.NotNull(tool.Description);
-            Assert.True(tool.InputSchema.ValueKind != System.Text.Json.JsonValueKind.Null, "InputSchema should not be null");
+            Assert.True(tool.InputSchema.ValueKind != JsonValueKind.Null, "InputSchema should not be null");
 
             // Verify this tool corresponds to a command from the factory
             var correspondingCommand = visibleCommands.FirstOrDefault(kvp => kvp.Key == tool.Name);
@@ -104,7 +105,7 @@ public class CommandFactoryToolLoaderTests
         // Try to filter by a specific service/group - using a common Azure service name
         var filteredOptions = new ToolLoaderOptions
         {
-            Namespace = new[] { "storage" }  // Assuming there's a storage service group
+            Namespace = ["storage"]  // Assuming there's a storage service group
         };
         var (toolLoader, _) = CreateToolLoader(filteredOptions);
         var request = CreateRequest();
@@ -143,7 +144,7 @@ public class CommandFactoryToolLoaderTests
         // Try to filter by multiple real service/group names from the codebase
         var multiServiceOptions = new ToolLoaderOptions
         {
-            Namespace = new[] { "storage", "appconfig", "search" }  // Real Azure service groups from the codebase
+            Namespace = ["storage", "appconfig", "search"]  // Real Azure service groups from the codebase
         };
         var (toolLoader, commandFactory) = CreateToolLoader(multiServiceOptions);
         var request = CreateRequest();
@@ -297,7 +298,7 @@ public class CommandFactoryToolLoaderTests
     {
         var filteredOptions = new ToolLoaderOptions
         {
-            Namespace = new[] { "deploy" }  // Assuming there's a deploy service group
+            Namespace = ["deploy"]  // Assuming there's a deploy service group
         };
         var (toolLoader, _) = CreateToolLoader(filteredOptions);
         var request = CreateRequest();
@@ -503,7 +504,7 @@ public class CommandFactoryToolLoaderTests
         fakeCommand.Title.Returns("Fake Secret Get");
         fakeCommand.Metadata.Returns(new ToolMetadata { Secret = true });
         fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>())
-                   .Returns(new CommandResponse { Status = 200, Message = "Secret test response" });
+                   .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Secret test response" });
 
         // Add our fake command to the internal command map using reflection
         var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -543,7 +544,7 @@ public class CommandFactoryToolLoaderTests
         fakeCommand.Title.Returns("Fake Non-Secret Get");
         fakeCommand.Metadata.Returns(new ToolMetadata { Secret = false }); // Not secret
         fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>())
-                   .Returns(new CommandResponse { Status = 200, Message = "Test response" });
+                   .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Test response" });
 
         // Add our fake command to the internal command map using reflection
         var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -585,7 +586,7 @@ public class CommandFactoryToolLoaderTests
         fakeCommand.Title.Returns("Fake Secret Get");
         fakeCommand.Metadata.Returns(new ToolMetadata { Secret = true });
         fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>())
-                   .Returns(new CommandResponse { Status = 200, Message = "Secret test response" });
+                   .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Secret test response" });
 
         // Add our fake command to the internal command map using reflection
         var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -612,7 +613,7 @@ public class CommandFactoryToolLoaderTests
         Assert.False(result.IsError);
         var responseText = ((TextContentBlock)result.Content.First()).Text;
         var response = JsonSerializer.Deserialize<CommandResponse>(responseText);
-        Assert.Equal(200, response!.Status);
+        Assert.Equal(HttpStatusCode.OK, response!.Status);
         Assert.Equal("Secret test response", response.Message);
     }
 
@@ -630,7 +631,7 @@ public class CommandFactoryToolLoaderTests
         fakeCommand.Title.Returns("Fake Secret Get");
         fakeCommand.Metadata.Returns(new ToolMetadata { Secret = true });
         fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>())
-                   .Returns(new CommandResponse { Status = 200, Message = "Secret test response" });
+                   .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Secret test response" });
 
         // Add our fake command to the internal command map using reflection
         var commandMapField = typeof(CommandFactory).GetField("_commandMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);

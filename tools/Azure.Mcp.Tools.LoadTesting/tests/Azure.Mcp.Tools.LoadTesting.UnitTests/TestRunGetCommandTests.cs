@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -63,7 +64,7 @@ public class TestRunGetCommandTests
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, LoadTestJsonContext.Default.TestRunGetCommandResult);
@@ -88,7 +89,7 @@ public class TestRunGetCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 
     [Fact]
@@ -109,7 +110,7 @@ public class TestRunGetCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }

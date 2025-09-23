@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
@@ -105,20 +106,20 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
 
             if (result.ExitCode != 0)
             {
-                response.Status = 500;
+                response.Status = HttpStatusCode.InternalServerError;
                 response.Message = result.Error;
                 return response;
             }
 
             if (!File.Exists(xlsxReportFilePath) && !File.Exists(jsonReportFilePath))
             {
-                response.Status = 500;
+                response.Status = HttpStatusCode.InternalServerError;
                 response.Message = $"Report file '{xlsxReportFilePath}' and '{jsonReportFilePath}' were not found after azqr execution.";
                 return response;
             }
             var resultObj = new AzqrReportResult(xlsxReportFilePath, jsonReportFilePath, result.Output);
             response.Results = ResponseResult.Create(resultObj, ExtensionJsonContext.Default.AzqrReportResult);
-            response.Status = 200;
+            response.Status = HttpStatusCode.OK;
             response.Message = "azqr report generated successfully.";
             return response;
         }

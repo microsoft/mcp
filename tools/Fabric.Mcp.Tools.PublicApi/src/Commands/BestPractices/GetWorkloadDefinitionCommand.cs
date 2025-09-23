@@ -1,6 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Fabric.Mcp.Tools.PublicApi.Options;
@@ -67,7 +68,7 @@ public sealed class GetWorkloadDefinitionCommand(ILogger<GetWorkloadDefinitionCo
         catch (ArgumentException argEx)
         {
             _logger.LogError(argEx, "Invalid argument for workload {}", options.WorkloadType);
-            context.Response.Status = 404;
+            context.Response.Status = HttpStatusCode.NotFound;
             context.Response.Message = $"No item definition found for workload {options.WorkloadType}.";
         }
         catch (Exception ex)

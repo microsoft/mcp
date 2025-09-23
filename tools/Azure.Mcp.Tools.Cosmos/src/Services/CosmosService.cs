@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -136,7 +137,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         }
         catch (Exception ex) when (
             authMethod == AuthMethod.Credential &&
-            (ex.Message.Contains("401") || ex.Message.Contains("403")))
+            (ex.Message.Contains(((int)HttpStatusCode.Unauthorized).ToString()) || ex.Message.Contains(((int)HttpStatusCode.Forbidden).ToString())))
         {
             // If credential auth fails with 401/403, try key auth
             cosmosClient = await CreateCosmosClientWithAuth(

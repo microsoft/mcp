@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
+
 namespace Azure.Mcp.Core.Exceptions;
 
 /// <summary>
@@ -11,7 +13,7 @@ public class CommandValidationException : Exception
 {
     public CommandValidationException(
         string message,
-        int statusCode = 400,
+        HttpStatusCode statusCode = HttpStatusCode.InternalServerError,
         string? code = null,
         IReadOnlyList<string>? missingOptions = null) : base(message)
     {
@@ -21,9 +23,9 @@ public class CommandValidationException : Exception
     }
 
     /// <summary>
-    /// HTTP-like status code to return in the response. Defaults to 400.
+    /// HTTP status code to return in the response. Defaults to InternalServerError (500).
     /// </summary>
-    public int StatusCode { get; }
+    public HttpStatusCode StatusCode { get; }
 
     /// <summary>
     /// Optional machine-readable error code.

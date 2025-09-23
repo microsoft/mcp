@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
@@ -74,7 +75,7 @@ public class EntityGetHealthCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
         await _monitorHealthService.Received(1).GetEntityHealth(
@@ -97,7 +98,7 @@ public class EntityGetHealthCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(400, result.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, result.Status);
         Assert.Contains("required", result.Message, StringComparison.OrdinalIgnoreCase);
 
         // Verify service was not called
@@ -133,7 +134,7 @@ public class EntityGetHealthCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(404, result.Status);
+        Assert.Equal(HttpStatusCode.NotFound, result.Status);
         Assert.Contains("not found", result.Message, StringComparison.OrdinalIgnoreCase);
 
         await _monitorHealthService.Received(1).GetEntityHealth(
@@ -168,7 +169,7 @@ public class EntityGetHealthCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(400, result.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, result.Status);
         Assert.Contains("Invalid argument", result.Message);
 
         await _monitorHealthService.Received(1).GetEntityHealth(
@@ -204,7 +205,7 @@ public class EntityGetHealthCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(500, result.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
         Assert.Contains(expectedError, result.Message);
 
         await _monitorHealthService.Received(1).GetEntityHealth(
@@ -242,7 +243,7 @@ public class EntityGetHealthCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
 
         await _monitorHealthService.Received(1).GetEntityHealth(
             TestEntity,
@@ -280,7 +281,7 @@ public class EntityGetHealthCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
 
         await _monitorHealthService.Received(1).GetEntityHealth(
             TestEntity,

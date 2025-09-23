@@ -3,6 +3,7 @@
 
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.VirtualDesktop.Options;
@@ -53,7 +54,7 @@ public abstract class BaseHostPoolCommand<
             result.ErrorMessage = "Either --hostpool or --hostpool-resource-id must be provided.";
             if (commandResponse != null)
             {
-                commandResponse.Status = 400;
+                commandResponse.Status = HttpStatusCode.BadRequest;
                 commandResponse.Message = result.ErrorMessage;
             }
             return result;
@@ -65,7 +66,7 @@ public abstract class BaseHostPoolCommand<
             result.ErrorMessage = "Cannot specify both --hostpool and --hostpool-resource-id. Use only one.";
             if (commandResponse != null)
             {
-                commandResponse.Status = 400;
+                commandResponse.Status = HttpStatusCode.BadRequest;
                 commandResponse.Message = result.ErrorMessage;
             }
             return result;

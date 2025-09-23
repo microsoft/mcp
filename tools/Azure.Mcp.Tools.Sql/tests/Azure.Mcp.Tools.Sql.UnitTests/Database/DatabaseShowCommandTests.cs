@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.Database;
@@ -86,7 +87,7 @@ public class DatabaseShowCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
     }
@@ -110,7 +111,7 @@ public class DatabaseShowCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -134,7 +135,7 @@ public class DatabaseShowCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(404, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not found", response.Message);
     }
 
@@ -142,7 +143,7 @@ public class DatabaseShowCommandTests
     public async Task ExecuteAsync_HandlesRequestFailedException()
     {
         // Arrange
-        var requestException = new RequestFailedException(404, "Database not found");
+        var requestException = new RequestFailedException((int)HttpStatusCode.NotFound, "Database not found");
         _sqlService.GetDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -158,7 +159,7 @@ public class DatabaseShowCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(404, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("Database or server not found", response.Message);
     }
 }
