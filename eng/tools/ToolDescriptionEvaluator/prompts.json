@@ -43,8 +43,9 @@
     "List all key-value settings in App Configuration store <app_config_store_name>",
     "Show me the key-value settings in App Configuration store <app_config_store_name>"
   ],
-  "azmcp_appconfig_kv_lock": [
-    "Lock the key <key_name> in App Configuration store <app_config_store_name>"
+  "azmcp_appconfig_kv_lock_set": [
+    "Lock the key <key_name> in App Configuration store <app_config_store_name>",
+    "Unlock the key <key_name> in App Configuration store <app_config_store_name>"
   ],
   "azmcp_appconfig_kv_set": [
     "Set the key <key_name> in App Configuration store <app_config_store_name> to <value>"
@@ -52,18 +53,10 @@
   "azmcp_appconfig_kv_show": [
     "Show the content for the key <key_name> in App Configuration store <app_config_store_name>"
   ],
-  "azmcp_appconfig_kv_unlock": [
-    "Unlock the key <key_name> in App Configuration store <app_config_store_name>"
-  ],
   "azmcp_applens_resource_diagnose": [
     "Please help me diagnose issues with my app using app lens",
     "Use app lens to check why my app is slow?",
     "What does app lens say is wrong with my service?"
-  ],
-  "azmcp_extension_az": [
-    "Create a Storage account with name <storage_account_name>",
-    "List all virtual machines in my subscription",
-    "Show me the details of the storage account <account_name>"
   ],
   "azmcp_acr_registry_list": [
     "List all Azure Container Registries in my subscription",
@@ -175,10 +168,6 @@
   "azmcp_postgres_table_schema_get": [
     "Show me the schema of table <table> in the PostgreSQL database <database> in server <server>"
   ],
-  "azmcp_extension_azd": [
-    "Create a To-Do list web application that uses NodeJS and MongoDB",
-    "Deploy my web application to Azure App Service"
-  ],
   "azmcp_deploy_app_logs_get": [
     "Show me the log of the application deployed by azd"
   ],
@@ -254,15 +243,15 @@
     "Show me my Azure Kubernetes Service clusters",
     "What AKS clusters do I have?"
   ],
-  "azmcp_aks_nodepool_list": [
-    "List nodepools for AKS cluster <cluster-name> in <resource-group>",
-    "Show me the nodepool list for AKS cluster <cluster-name> in <resource-group>",
-    "What nodepools do I have for AKS cluster <cluster-name> in <resource-group>"
-  ],
   "azmcp_aks_nodepool_get": [
     "Get details for nodepool <nodepool-name> in AKS cluster <cluster-name> in <resource-group>",
     "Show me the configuration for nodepool <nodepool-name> in AKS cluster <cluster-name> in resource group <resource-group>",
     "What is the setup of nodepool <nodepool-name> for AKS cluster <cluster-name> in <resource-group>?"
+  ],
+  "azmcp_aks_nodepool_list": [
+    "List nodepools for AKS cluster <cluster-name> in <resource-group>",
+    "Show me the nodepool list for AKS cluster <cluster-name> in <resource-group>",
+    "What nodepools do I have for AKS cluster <cluster-name> in <resource-group>"
   ],
   "azmcp_loadtesting_test_create": [
     "Create a basic URL test using the following endpoint URL <test-url> that runs for 30 minutes with 45 virtual users. The test name is <sample-name> with the test id <test-id> and the load testing resource is <load-test-resource> in the resource group <resource-group> in my subscription"

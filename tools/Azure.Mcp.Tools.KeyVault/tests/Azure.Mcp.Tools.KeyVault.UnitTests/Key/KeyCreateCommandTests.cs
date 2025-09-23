@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Key;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Keys;
@@ -87,7 +88,7 @@ public class KeyCreateCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var retrievedKey = JsonSerializer.Deserialize<KeyCreateResult>(json);
+        var retrievedKey = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.KeyCreateCommandResult);
 
         Assert.NotNull(retrievedKey);
         Assert.Equal(_knownKeyName, retrievedKey.Name);
@@ -110,7 +111,7 @@ public class KeyCreateCommandTests
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("required", response.Message.ToLower());
     }
 
@@ -141,31 +142,7 @@ public class KeyCreateCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
-    }
-
-    private class KeyCreateResult
-    {
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = null!;
-
-        [JsonPropertyName("keyType")]
-        public string KeyType { get; set; } = null!;
-
-        [JsonPropertyName("enabled")]
-        public bool? Enabled { get; set; }
-
-        [JsonPropertyName("notBefore")]
-        public DateTimeOffset? NotBefore { get; set; }
-
-        [JsonPropertyName("expiresOn")]
-        public DateTimeOffset? ExpiresOn { get; set; }
-
-        [JsonPropertyName("createdOn")]
-        public DateTimeOffset? CreatedOn { get; set; }
-
-        [JsonPropertyName("updatedOn")]
-        public DateTimeOffset? UpdatedOn { get; set; }
     }
 }

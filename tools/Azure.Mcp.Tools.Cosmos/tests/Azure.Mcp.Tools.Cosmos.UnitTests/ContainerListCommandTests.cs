@@ -1,7 +1,8 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
@@ -13,7 +14,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using static Azure.Mcp.Tools.Cosmos.Commands.ContainerListCommand;
 
 namespace Azure.Mcp.Tools.Cosmos.UnitTests;
 
@@ -65,10 +65,7 @@ public class ContainerListCommandTests
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ContainerListCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.ContainerListCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedContainers.Count, result.Containers.Count);
         Assert.Equal(expectedContainers, result.Containers);
@@ -100,10 +97,7 @@ public class ContainerListCommandTests
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ContainerListCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.ContainerListCommandResult);
         Assert.NotNull(result);
         Assert.Empty(result.Containers);
     }
@@ -129,12 +123,12 @@ public class ContainerListCommandTests
             "--subscription", "sub123"
         ]);
 
-        // Act 
+        // Act
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
     }
 
@@ -144,11 +138,11 @@ public class ContainerListCommandTests
     [InlineData("--subscription", "sub123", "--account", "account123")] // Missing database-name
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
-        // Arrange & Act 
+        // Arrange & Act
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("required", response.Message.ToLower());
     }
 }

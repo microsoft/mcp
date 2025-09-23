@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
@@ -29,7 +30,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -47,7 +48,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
         try
         {
             var kusto = context.GetService<IKustoService>();
-            var clusterNames = await kusto.ListClusters(
+            var clusterNames = await kusto.ListClustersAsync(
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy);

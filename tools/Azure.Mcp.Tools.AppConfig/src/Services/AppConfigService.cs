@@ -136,14 +136,11 @@ public class AppConfigService(ISubscriptionService subscriptionService, ITenantS
         };
     }
 
-    public async Task LockKeyValue(string accountName, string key, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, string? label = null)
+    public async Task SetKeyValueLockState(string accountName, string key, bool locked, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, string? label = null)
     {
-        await SetKeyValueReadOnlyState(accountName, key, subscription, tenant, retryPolicy, label, true);
-    }
-
-    public async Task UnlockKeyValue(string accountName, string key, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, string? label = null)
-    {
-        await SetKeyValueReadOnlyState(accountName, key, subscription, tenant, retryPolicy, label, false);
+        ValidateRequiredParameters(accountName, key, subscription);
+        var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy);
+        await client.SetReadOnlyAsync(key, label, locked, cancellationToken: default);
     }
 
     public async Task SetKeyValue(string accountName, string key, string value, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, string? label = null, string? contentType = null, string[]? tags = null)

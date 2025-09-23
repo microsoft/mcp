@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Subscription.Commands;
 using Azure.Mcp.Core.Models;
@@ -63,7 +64,7 @@ public class SubscriptionListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
         var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(result.Results));
@@ -98,7 +99,7 @@ public class SubscriptionListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         await _subscriptionService.Received(1).GetSubscriptions(
             Arg.Is<string>(x => x == tenantId),
             Arg.Any<RetryPolicyOptions>());
@@ -119,7 +120,7 @@ public class SubscriptionListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.Null(result.Results);
     }
 
@@ -139,7 +140,7 @@ public class SubscriptionListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(500, result.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
         Assert.Contains(expectedError, result.Message);
     }
 
@@ -159,7 +160,7 @@ public class SubscriptionListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         await _subscriptionService.Received(1).GetSubscriptions(
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>());

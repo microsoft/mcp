@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Serialization;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.AzureIsv.Commands.Datadog;
 using Azure.Mcp.Tools.AzureIsv.Services;
@@ -58,7 +58,7 @@ public class MonitoredResourcesListCommandTests
     {
         // Arrange
         _datadogService.ListMonitoredResources("rg1", "sub123", "datadog1")
-            .Returns(new List<string>());
+            .Returns([]);
 
         var command = new MonitoredResourcesListCommand(_logger);
         var args = command.GetCommand().Parse($"--subscription sub123 --resource-group rg1 --datadog-resource datadog1");
@@ -88,13 +88,7 @@ public class MonitoredResourcesListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
-    }
-
-    private class MonitoredResourcesListResult
-    {
-        [JsonPropertyName("resources")]
-        public List<string> Resources { get; set; } = new();
     }
 }

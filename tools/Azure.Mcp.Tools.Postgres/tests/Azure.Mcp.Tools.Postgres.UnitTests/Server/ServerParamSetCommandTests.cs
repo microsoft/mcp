@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.TestUtilities;
+using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Server;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,12 +44,12 @@ public class ServerParamSetCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ServerParamSetResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.ServerParamSetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedMessage, result.Message);
@@ -66,7 +67,7 @@ public class ServerParamSetCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.Null(response.Results);
     }
@@ -94,7 +95,7 @@ public class ServerParamSetCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
     }
 
@@ -111,17 +112,5 @@ public class ServerParamSetCommandTests
         await command.ExecuteAsync(context, args);
 
         await _postgresService.Received(1).SetServerParameterAsync("sub123", "rg1", "user1", "server123", "max_connections", "200");
-    }
-
-    private class ServerParamSetResult
-    {
-        [JsonPropertyName("Message")]
-        public string Message { get; set; } = string.Empty;
-
-        [JsonPropertyName("Parameter")]
-        public string Parameter { get; set; } = string.Empty;
-
-        [JsonPropertyName("Value")]
-        public string Value { get; set; } = string.Empty;
     }
 }

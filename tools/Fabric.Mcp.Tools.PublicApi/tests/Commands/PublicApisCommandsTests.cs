@@ -64,13 +64,13 @@ public class PublicApisCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), Array.Empty<string>());
+        var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
         await fabricService.Received(1).ListWorkloadsAsync();
     }
@@ -90,13 +90,13 @@ public class PublicApisCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), Array.Empty<string>());
+        var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(500, result.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
         Assert.NotEmpty(result.Message);
     }
 
@@ -148,13 +148,13 @@ public class PublicApisCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), Array.Empty<string>());
+        var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
         await fabricService.Received(1).GetWorkloadPublicApis("platform");
     }
@@ -174,13 +174,13 @@ public class PublicApisCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), Array.Empty<string>());
+        var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(500, result.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
         Assert.NotEmpty(result.Message);
     }
 
@@ -233,13 +233,13 @@ public class PublicApisCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), new[] { "--workload-type", "notebook" });
+        var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
         await fabricService.Received(1).GetWorkloadPublicApis("notebook");
     }
@@ -257,13 +257,13 @@ public class PublicApisCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), Array.Empty<string>());
+        var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, result.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, result.Status);
         Assert.Equal("Missing Required options: --workload-type", result.Message);
         await fabricService.DidNotReceive().GetWorkloadPublicApis(Arg.Any<string>());
     }
@@ -281,13 +281,13 @@ public class PublicApisCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), new[] { "--workload-type", "common" });
+        var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "common"]);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(404, result.Status);
+        Assert.Equal(HttpStatusCode.NotFound, result.Status);
         Assert.Contains("No workload of type 'common' exists", result.Message);
         Assert.Contains("Did you mean 'platform'?", result.Message);
         await fabricService.DidNotReceive().GetWorkloadPublicApis(Arg.Any<string>());
@@ -309,13 +309,13 @@ public class PublicApisCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), new[] { "--workload-type", "invalid-workload" });
+        var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "invalid-workload"]);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(404, result.Status);
+        Assert.Equal(HttpStatusCode.NotFound, result.Status);
         Assert.Contains("No workload of type 'invalid-workload' exists", result.Message);
         Assert.Contains("discover-workloads command", result.Message);
     }
@@ -336,13 +336,13 @@ public class PublicApisCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), new[] { "--workload-type", "notebook" });
+        var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(503, result.Status);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, result.Status);
         Assert.Equal("Service unavailable", result.Message);
     }
 
@@ -361,13 +361,13 @@ public class PublicApisCommandsTests
         var serviceProvider = services.BuildServiceProvider();
 
         var context = new CommandContext(serviceProvider);
-        var parseResult = CreateParseResult(command.GetCommand(), new[] { "--workload-type", "notebook" });
+        var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
         var result = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(500, result.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
         Assert.NotEmpty(result.Message);
     }
 

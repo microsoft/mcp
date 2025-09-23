@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Server;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,12 +52,12 @@ public class ServerParamSetCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ServerParamSetResult>(json);
+        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.ServerParamSetCommandResult);
         Assert.NotNull(result);
         Assert.Equal("max_connections", result.Parameter);
         Assert.Equal(newValue, result.Value);
@@ -82,7 +83,7 @@ public class ServerParamSetCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Parameter 'invalid_param' not found", response.Message);
     }
 
@@ -96,14 +97,5 @@ public class ServerParamSetCommandTests
         Assert.Equal("Set MySQL Server Parameter", command.Title);
         Assert.True(command.Metadata.Destructive);
         Assert.False(command.Metadata.ReadOnly);
-    }
-
-    private class ServerParamSetResult
-    {
-        [JsonPropertyName("Parameter")]
-        public string Parameter { get; set; } = string.Empty;
-
-        [JsonPropertyName("Value")]
-        public string Value { get; set; } = string.Empty;
     }
 }

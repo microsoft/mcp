@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -73,7 +74,7 @@ public sealed class NodepoolGetCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.Equal("Success", response.Message);
@@ -110,11 +111,26 @@ public sealed class NodepoolGetCommandTests
             ScaleSetPriority = "Spot",
             ScaleSetEvictionPolicy = "Delete",
             NodeLabels = new Dictionary<string, string> { { "kubernetes.azure.com/scalesetpriority", "spot" } },
-            NodeTaints = new List<string> { "kubernetes.azure.com/scalesetpriority=spot:NoSchedule" },
+            NodeTaints = ["kubernetes.azure.com/scalesetpriority=spot:NoSchedule"],
             Mode = "User",
             OsType = "Linux",
             OsSKU = "Ubuntu",
-            NodeImageVersion = "AKSUbuntu-2204gen2containerd-202508.20.1"
+            NodeImageVersion = "AKSUbuntu-2204gen2containerd-202508.20.1",
+            Tags = new Dictionary<string, string> { ["gc_skip"] = "true" },
+            SpotMaxPrice = -1,
+            WorkloadRuntime = "OCIContainer",
+            EnableEncryptionAtHost = false,
+            UpgradeSettings = new Models.NodePoolUpgradeSettings { MaxSurge = "10%", MaxUnavailable = "0" },
+            SecurityProfile = new Models.NodePoolSecurityProfile { EnableVTPM = false, EnableSecureBoot = false },
+            GpuProfile = new Models.NodePoolGpuProfile { Driver = "Install" },
+            NetworkProfile = new Models.NodePoolNetworkProfile
+            {
+                AllowedHostPorts = new List<Models.PortRange> { new() { StartPort = 8080, EndPort = 8080 } },
+                ApplicationSecurityGroups = new List<string> { "/subscriptions/s/rg/r/providers/Microsoft.Network/applicationSecurityGroups/asg1" },
+                NodePublicIPTags = new List<Models.IPTag> { new() { IpTagType = "FirstPartyUsage", Tag = "foo" } }
+            },
+            PodSubnetId = "/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/podsubnet",
+            VnetSubnetId = "/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/nodesubnet"
         };
         _aksService.GetNodePool(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedNodePool);
@@ -126,7 +142,7 @@ public sealed class NodepoolGetCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         await _aksService.Received(1).GetNodePool(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
@@ -160,6 +176,14 @@ public sealed class NodepoolGetCommandTests
         Assert.Equal(expectedNodePool.OsType, result.NodePool.OsType);
         Assert.Equal(expectedNodePool.OsSKU, result.NodePool.OsSKU);
         Assert.Equal(expectedNodePool.NodeImageVersion, result.NodePool.NodeImageVersion);
+        Assert.Equal("true", result.NodePool.Tags!["gc_skip"]);
+        Assert.Equal(-1, result.NodePool.SpotMaxPrice);
+        Assert.Equal("OCIContainer", result.NodePool.WorkloadRuntime);
+        Assert.False(result.NodePool.EnableEncryptionAtHost!.Value);
+        Assert.Equal("Install", result.NodePool.GpuProfile?.Driver);
+        Assert.Equal(1, result.NodePool.NetworkProfile?.AllowedHostPorts?.Count);
+        Assert.Equal("/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/podsubnet", result.NodePool.PodSubnetId);
+        Assert.Equal("/subscriptions/s/rg/r/providers/Microsoft.Network/virtualNetworks/vnet/subnets/nodesubnet", result.NodePool.VnetSubnetId);
     }
 
     [Fact]
@@ -176,7 +200,7 @@ public sealed class NodepoolGetCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Null(response.Results);
     }
 
@@ -194,7 +218,7 @@ public sealed class NodepoolGetCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }

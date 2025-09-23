@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Options;
@@ -33,7 +34,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -81,7 +82,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
 
                 if (commandResponse != null)
                 {
-                    commandResponse.Status = 400;
+                    commandResponse.Status = HttpStatusCode.BadRequest;
                     commandResponse.Message = result.ErrorMessage!;
                 }
             }
@@ -97,7 +98,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
 
                     if (commandResponse != null)
                     {
-                        commandResponse.Status = 400;
+                        commandResponse.Status = HttpStatusCode.BadRequest;
                         commandResponse.Message = result.ErrorMessage!;
                     }
                 }
@@ -165,7 +166,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
                                                  $"increase the interval size (e.g., use PT1H instead of PT5M), " +
                                                  $"or increase the --max-buckets parameter.";
 
-                            context.Response.Status = 400;
+                            context.Response.Status = HttpStatusCode.BadRequest;
                             context.Response.Message = errorMessage;
 
                             _logger.LogWarning("Bucket limit exceeded. Metric: {MetricName}, BucketCount: {BucketCount}, MaxBuckets: {MaxBuckets}",
@@ -178,11 +179,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
             }
 
             // Set results
-            context.Response.Results = results?.Count > 0 ?
-                ResponseResult.Create(
-                    new MetricsQueryCommandResult(results),
-                    MonitorJsonContext.Default.MetricsQueryCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(results ?? []), MonitorJsonContext.Default.MetricsQueryCommandResult);
         }
         catch (Exception ex)
         {            // Log error with all relevant context

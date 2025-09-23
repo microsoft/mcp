@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
@@ -30,7 +31,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -71,9 +72,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
                 options.RetryPolicy);
 
             context.Response.Results = cluster is null ?
-                null : ResponseResult.Create(
-                    new ClusterGetCommandResult(cluster),
-                    AksJsonContext.Default.ClusterGetCommandResult);
+                null : ResponseResult.Create(new(cluster), AksJsonContext.Default.ClusterGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -88,9 +87,9 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "AKS cluster not found. Verify the cluster name, resource group, and subscription, and ensure you have access.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed accessing the AKS cluster. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)

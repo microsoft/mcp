@@ -28,7 +28,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -51,7 +51,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
 
             if (UseClusterUri(options))
             {
-                databasesNames = await kusto.ListDatabases(
+                databasesNames = await kusto.ListDatabasesAsync(
                     options.ClusterUri!,
                     options.Tenant,
                     options.AuthMethod,
@@ -59,7 +59,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
             }
             else
             {
-                databasesNames = await kusto.ListDatabases(
+                databasesNames = await kusto.ListDatabasesAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Tenant,

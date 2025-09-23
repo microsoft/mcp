@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.Quota.Commands;
 using Azure.Mcp.Tools.Quota.Commands.Usage;
 using Azure.Mcp.Tools.Quota.Services;
 using Azure.Mcp.Tools.Quota.Services.Util;
@@ -87,7 +89,7 @@ public sealed class CheckCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
         // Verify the service was called with the correct parameters
@@ -101,13 +103,8 @@ public sealed class CheckCommandTests
 
         // Verify the response structure
         var json = JsonSerializer.Serialize(result.Results);
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        };
+        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.UsageCheckCommandResult);
 
-        var response = JsonSerializer.Deserialize<CheckCommand.UsageCheckCommandResult>(json, options);
         Assert.NotNull(response);
         Assert.NotNull(response.UsageInfo);
         Assert.Equal(2, response.UsageInfo.Count);
@@ -154,7 +151,7 @@ public sealed class CheckCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(400, result.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, result.Status);
     }
 
     [Fact]
@@ -185,7 +182,7 @@ public sealed class CheckCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(500, result.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
         Assert.Contains("Service error occurred", result.Message);
     }
 
@@ -227,7 +224,7 @@ public sealed class CheckCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
 
         // Verify the service was called with correctly parsed resource types
         await _quotaService.Received(1).GetAzureQuotaAsync(
@@ -267,17 +264,12 @@ public sealed class CheckCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results); // Should be empty when no quotas are found
 
         var json = JsonSerializer.Serialize(result.Results);
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        };
+        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.UsageCheckCommandResult);
 
-        var response = JsonSerializer.Deserialize<CheckCommand.UsageCheckCommandResult>(json, options);
         Assert.NotNull(response);
         Assert.Empty(response.UsageInfo);
     }
@@ -303,7 +295,7 @@ public sealed class CheckCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(400, result.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, result.Status);
     }
 
     [Fact]
@@ -344,7 +336,7 @@ public sealed class CheckCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
         // Verify the service was called with the correct casing preserved
@@ -398,7 +390,7 @@ public sealed class CheckCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
         // Verify the service was called with the correct parameters
@@ -411,13 +403,8 @@ public sealed class CheckCommandTests
 
         // Verify the response structure
         var json = JsonSerializer.Serialize(result.Results);
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        };
+        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.UsageCheckCommandResult);
 
-        var response = JsonSerializer.Deserialize<CheckCommand.UsageCheckCommandResult>(json, options);
         Assert.NotNull(response);
         Assert.NotNull(response.UsageInfo);
         Assert.True(response.UsageInfo.ContainsKey("Microsoft.UnsupportedProvider/resourceType"));
@@ -447,10 +434,10 @@ public sealed class CheckCommandTests
         var expectedQuotaInfo = new Dictionary<string, List<UsageInfo>>();
         foreach (var resourceType in resourceTypesList)
         {
-            expectedQuotaInfo.Add(resourceType, new List<UsageInfo>
-            {
+            expectedQuotaInfo.Add(resourceType,
+            [
                 new($"Resource{resourceType.Split('/')[1]}", 100, 10, "Count")
-            });
+            ]);
         }
 
         _quotaService.GetAzureQuotaAsync(
@@ -472,7 +459,7 @@ public sealed class CheckCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
         // Verify the service was called with all 50 resource types
@@ -483,13 +470,8 @@ public sealed class CheckCommandTests
 
         // Verify the response contains all expected resource types
         var json = JsonSerializer.Serialize(result.Results);
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        };
+        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.UsageCheckCommandResult);
 
-        var response = JsonSerializer.Deserialize<CheckCommand.UsageCheckCommandResult>(json, options);
         Assert.NotNull(response);
         Assert.NotNull(response.UsageInfo);
         Assert.Equal(50, response.UsageInfo.Count);
@@ -535,7 +517,7 @@ public sealed class CheckCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
         // Verify the service was called with the correct parameters
@@ -548,13 +530,8 @@ public sealed class CheckCommandTests
 
         // Verify the response structure contains descriptive error in Description
         var json = JsonSerializer.Serialize(result.Results);
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        };
+        var response = JsonSerializer.Deserialize(json, QuotaJsonContext.Default.UsageCheckCommandResult);
 
-        var response = JsonSerializer.Deserialize<CheckCommand.UsageCheckCommandResult>(json, options);
         Assert.NotNull(response);
         Assert.NotNull(response.UsageInfo);
         Assert.True(response.UsageInfo.ContainsKey("Microsoft.Storage/storageAccounts"));

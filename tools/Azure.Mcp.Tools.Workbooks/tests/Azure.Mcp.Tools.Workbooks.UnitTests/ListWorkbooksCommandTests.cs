@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Workbooks.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Services;
@@ -124,10 +126,10 @@ public class ListWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ListWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedWorkbooks.Count, result.Workbooks.Count);
@@ -170,10 +172,10 @@ public class ListWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ListWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Workbooks);
@@ -205,10 +207,10 @@ public class ListWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ListWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Workbooks);
@@ -238,7 +240,7 @@ public class ListWorkbooksCommandTests
         var response = await _command.ExecuteAsync(context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Service error", response.Message);
         Assert.Contains("troubleshooting", response.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -358,7 +360,7 @@ public class ListWorkbooksCommandTests
         var response = await _command.ExecuteAsync(context, args);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("resource", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -419,7 +421,7 @@ public class ListWorkbooksCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ListWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.Single(result.Workbooks);
@@ -474,7 +476,7 @@ public class ListWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).ListWorkbooks(
             "sub123",
@@ -527,7 +529,7 @@ public class ListWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).ListWorkbooks(
             "sub123",
@@ -581,7 +583,7 @@ public class ListWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).ListWorkbooks(
             "sub123",
@@ -637,7 +639,7 @@ public class ListWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).ListWorkbooks(
             "sub123",
@@ -693,7 +695,7 @@ public class ListWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).ListWorkbooks(
             "sub123",
@@ -745,7 +747,7 @@ public class ListWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).ListWorkbooks(
             "sub123",
@@ -782,7 +784,7 @@ public class ListWorkbooksCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).ListWorkbooks(
             "sub123",
@@ -821,7 +823,7 @@ public class ListWorkbooksCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).ListWorkbooks(
             "sub123",
@@ -829,10 +831,5 @@ public class ListWorkbooksCommandTests
             Arg.Is<WorkbookFilters?>(f => f != null && f.Category == category),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>());
-    }
-
-    private class ListWorkbooksCommandResult
-    {
-        public List<WorkbookInfo> Workbooks { get; set; } = [];
     }
 }

@@ -30,13 +30,13 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
         {
             Assert.Equal(JsonValueKind.Object, functionApp.ValueKind);
 
-            Assert.True(functionApp.TryGetProperty("name", out var nameProperty));
+            var nameProperty = functionApp.GetProperty("name");
             Assert.False(string.IsNullOrEmpty(nameProperty.GetString()));
 
-            Assert.True(functionApp.TryGetProperty("resourceGroupName", out var rgProperty));
+            var rgProperty = functionApp.GetProperty("resourceGroupName");
             Assert.False(string.IsNullOrEmpty(rgProperty.GetString()));
 
-            Assert.True(functionApp.TryGetProperty("appServicePlanName", out var aspProperty));
+            var aspProperty = functionApp.GetProperty("appServicePlanName");
             Assert.False(string.IsNullOrEmpty(aspProperty.GetString()));
 
             if (functionApp.TryGetProperty("location", out var locationProperty))
@@ -76,17 +76,15 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
 
         Assert.True(result.HasValue);
         var errorDetails = result.Value;
-        Assert.True(errorDetails.TryGetProperty("message", out _));
-        Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
+        errorDetails.AssertProperty("message");
+        var typeProperty = errorDetails.AssertProperty("type");
         Assert.Equal("Exception", typeProperty.GetString());
     }
 
     [Fact]
     public async Task Should_validate_required_subscription_parameter()
     {
-        var result = await CallToolAsync(
-            "azmcp_functionapp_get",
-            new Dictionary<string, object?>());
+        var result = await CallToolAsync("azmcp_functionapp_get", []);
 
         Assert.False(result.HasValue);
     }
@@ -148,8 +146,8 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
 
         Assert.True(result.HasValue);
         var errorDetails = result.Value;
-        Assert.True(errorDetails.TryGetProperty("message", out _));
-        Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
+        errorDetails.AssertProperty("message");
+        var typeProperty = errorDetails.AssertProperty("type");
         Assert.Equal("Exception", typeProperty.GetString());
     }
 

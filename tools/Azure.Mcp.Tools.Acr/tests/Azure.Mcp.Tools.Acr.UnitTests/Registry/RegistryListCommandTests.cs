@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Acr.Commands;
@@ -52,7 +54,7 @@ public class RegistryListCommandTests
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Ensure environment variable fallback does not interfere with validation tests
-        Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", null);
+        EnvironmentHelpers.SetAzureSubscriptionId(null);
         // Arrange
         if (shouldSucceed)
         {
@@ -70,7 +72,7 @@ public class RegistryListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.NotNull(response.Results);
@@ -94,7 +96,7 @@ public class RegistryListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -113,7 +115,7 @@ public class RegistryListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         await _service.Received(1).ListRegistries("sub", "rg", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
     }
@@ -131,7 +133,7 @@ public class RegistryListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
@@ -155,7 +157,7 @@ public class RegistryListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 }

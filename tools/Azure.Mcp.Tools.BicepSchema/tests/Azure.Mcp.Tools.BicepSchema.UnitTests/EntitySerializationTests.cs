@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tools.BicepSchema.Commands;
 using Azure.Mcp.Tools.BicepSchema.Services.ResourceProperties.Entities;
 using Xunit;
 
@@ -88,7 +89,7 @@ public class EntitySerializationTests
         """;
 
         // Deserialize
-        ComplexType? result = JsonSerializer.Deserialize<ComplexType>(expectedJson);
+        ComplexType? result = JsonSerializer.Deserialize(expectedJson, BicepSchemaJsonContext.Default.ComplexType);
 
         // Assert deserialized object
         Assert.NotNull(result);
@@ -187,7 +188,7 @@ public class EntitySerializationTests
         """;
 
         // Deserialize
-        ComplexType? deserialized = JsonSerializer.Deserialize<ComplexType>(input);
+        ComplexType? deserialized = JsonSerializer.Deserialize(input, BicepSchemaJsonContext.Default.ComplexType);
         Assert.IsType<ResourceTypeEntity>(deserialized);
 
         // Assert deserialized object
@@ -262,7 +263,7 @@ public class EntitySerializationTests
           """;
 
         // Deserialize
-        ComplexType? deserialized = JsonSerializer.Deserialize<ComplexType>(input);
+        ComplexType? deserialized = JsonSerializer.Deserialize(input, BicepSchemaJsonContext.Default.ComplexType);
         Assert.IsType<ObjectTypeEntity>(deserialized);
 
 
@@ -479,7 +480,7 @@ public class EntitySerializationTests
           """;
 
         // Deserialize
-        ComplexType? deserialized = JsonSerializer.Deserialize<ComplexType>(input);
+        ComplexType? deserialized = JsonSerializer.Deserialize(input, BicepSchemaJsonContext.Default.ComplexType);
         Assert.IsType<DiscriminatedObjectTypeEntity>(deserialized);
 
         // Assert deserialized object

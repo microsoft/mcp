@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Models;
 using Azure.Mcp.Tools.AppConfig.Services;
@@ -13,7 +15,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using static Azure.Mcp.Tools.AppConfig.Commands.KeyValue.KeyValueShowCommand;
 
 namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue;
 
@@ -72,15 +73,11 @@ public class KeyValueShowCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<KeyValueShowResult>(json, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-
+        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueShowResult);
         Assert.NotNull(result);
         Assert.Equal("my-key", result.Setting.Key);
         Assert.Equal("my-value", result.Setting.Value);
@@ -118,14 +115,11 @@ public class KeyValueShowCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<KeyValueShowResult>(json, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueShowResult);
 
         Assert.NotNull(result);
         Assert.Equal("my-key", result.Setting.Key);
@@ -155,7 +149,7 @@ public class KeyValueShowCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Setting not found", response.Message);
     }
 
@@ -172,7 +166,7 @@ public class KeyValueShowCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("required", response.Message.ToLower());
     }
 }

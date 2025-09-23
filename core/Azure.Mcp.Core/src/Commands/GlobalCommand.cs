@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Mcp.Core.Models.Option;
@@ -12,7 +13,7 @@ using Azure.Mcp.Core.Options;
 namespace Azure.Mcp.Core.Commands;
 
 public abstract class GlobalCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : BaseCommand
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : BaseCommand<TOptions>
     where TOptions : GlobalOptions, new()
 {
     protected override void RegisterOptions(Command command)
@@ -67,7 +68,7 @@ public abstract class GlobalCommand<
 
         return commandPath;
     }
-    protected virtual TOptions BindOptions(ParseResult parseResult)
+    protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = new TOptions
         {
@@ -76,7 +77,7 @@ public abstract class GlobalCommand<
         };
 
         // Create a RetryPolicyOptions capturing only explicitly provided values so unspecified settings remain SDK defaults
-        var hasAnyRetry = Azure.Mcp.Core.Options.ParseResultExtensions.HasAnyRetryOptions(parseResult);
+        var hasAnyRetry = Options.ParseResultExtensions.HasAnyRetryOptions(parseResult);
         if (hasAnyRetry)
         {
             var policy = new RetryPolicyOptions();
@@ -127,11 +128,11 @@ public abstract class GlobalCommand<
         _ => ex.Message  // Just return the actual exception message
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        AuthenticationFailedException => 401,
-        RequestFailedException rfEx => rfEx.Status,
-        HttpRequestException => 503,
-        _ => 500
+        AuthenticationFailedException => HttpStatusCode.Unauthorized,
+        RequestFailedException rfEx => (HttpStatusCode)rfEx.Status,
+        HttpRequestException => HttpStatusCode.ServiceUnavailable,
+        _ => HttpStatusCode.InternalServerError
     };
 }

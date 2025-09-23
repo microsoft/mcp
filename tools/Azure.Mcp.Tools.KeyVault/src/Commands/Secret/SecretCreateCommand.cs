@@ -22,9 +22,9 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger) : S
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = true
@@ -74,7 +74,7 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger) : S
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new SecretCreateCommandResult(
+                new(
                     secret.Name,
                     secret.Value,
                     secret.Properties.Enabled,

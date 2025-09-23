@@ -11,13 +11,22 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
-/// A custom token credential that chains DefaultAzureCredential with a broker-enabled instance of
+/// A custom token credential that chains multiple Azure credentials with a broker-enabled instance of
 /// InteractiveBrowserCredential to provide a seamless authentication experience.
 /// </summary>
 /// <remarks>
-/// This credential attempts authentication in the following order:
-/// 1. DefaultAzureCredential chain (environment variables, managed identity, CLI, etc.)
-/// 2. Interactive browser authentication with Identity Broker (supporting Windows Hello, biometrics, etc.)
+/// The credential chain behavior can be controlled via the AZURE_TOKEN_CREDENTIALS environment variable:
+/// - "dev": Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI
+/// - "prod": Environment → Workload Identity → Managed Identity
+/// - Specific credential name (e.g., "AzureCliCredential"): Only that credential
+/// - Not set or empty: Development chain (Environment → Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI)
+/// 
+/// By default, production credentials (Workload Identity and Managed Identity) are excluded unless explicitly requested via AZURE_TOKEN_CREDENTIALS="prod".
+/// 
+/// Special behavior: When running in VS Code context (VSCODE_PID environment variable is set) and AZURE_TOKEN_CREDENTIALS is not explicitly specified,
+/// Visual Studio Code credential is automatically prioritized first in the chain.
+/// 
+/// After the credential chain, Interactive Browser Authentication with Identity Broker is always added as the final fallback.
 /// </remarks>
 public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null) : TokenCredential
 {
@@ -40,7 +49,7 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
     private const string BrowserAuthenticationTimeoutEnvVarName = "AZURE_MCP_BROWSER_AUTH_TIMEOUT_SECONDS";
     private const string OnlyUseBrokerCredentialEnvVarName = "AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL";
     private const string ClientIdEnvVarName = "AZURE_MCP_CLIENT_ID";
-    private const string IncludeProductionCredentialEnvVarName = "AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS";
+    private const string TokenCredentialsEnvVarName = "AZURE_TOKEN_CREDENTIALS";
 
     private static bool ShouldUseOnlyBrokerCredential()
     {
@@ -64,25 +73,25 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
         }
 
         var creds = new List<TokenCredential>();
-        var vsCodeCred = CreateVsCodeBrokerCredential(tenantId, logger);
 
         // Check if we are running in a VS Code context. VSCODE_PID is set by VS Code when launching processes, and is a reliable indicator for VS Code-hosted processes.
         bool isVsCodeContext = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VSCODE_PID"));
 
-        if (isVsCodeContext && vsCodeCred != null)
+        // Check if AZURE_TOKEN_CREDENTIALS is explicitly set
+        string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
+        bool hasExplicitCredentialSetting = !string.IsNullOrEmpty(tokenCredentials);
+
+        if (isVsCodeContext && !hasExplicitCredentialSetting)
         {
-            logger?.LogDebug("VS Code context detected (VSCODE_PID set). Prioritizing VS Code Broker Credential in chain.");
-            creds.Add(vsCodeCred);
-            creds.Add(CreateDefaultCredential(tenantId));
+            logger?.LogDebug("VS Code context detected (VSCODE_PID set). Prioritizing VS Code Credential in chain.");
+            creds.Add(CreateVsCodePrioritizedCredential(tenantId));
         }
         else
         {
+            // Use the default credential chain (respects AZURE_TOKEN_CREDENTIALS if set)
             creds.Add(CreateDefaultCredential(tenantId));
-            if (vsCodeCred != null)
-            {
-                creds.Add(vsCodeCred);
-            }
         }
+
         creds.Add(CreateBrowserCredential(tenantId, authRecord));
         return new ChainedTokenCredential([.. creds]);
     }
@@ -123,83 +132,217 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
         return new TimeoutTokenCredential(browserCredential, TimeSpan.FromSeconds(timeoutSeconds));
     }
 
-    private static DefaultAzureCredential CreateDefaultCredential(string? tenantId)
+    private static ChainedTokenCredential CreateDefaultCredential(string? tenantId)
     {
-        var includeProdCreds = EnvironmentHelpers.GetEnvironmentVariableAsBool(IncludeProductionCredentialEnvVarName);
+        string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
+        var credentials = new List<TokenCredential>();
 
-        var defaultCredentialOptions = new DefaultAzureCredentialOptions
+        // Handle specific credential targeting
+        if (!string.IsNullOrEmpty(tokenCredentials))
         {
-            ExcludeWorkloadIdentityCredential = !includeProdCreds,
-            ExcludeManagedIdentityCredential = !includeProdCreds
-        };
-
-        if (!string.IsNullOrEmpty(tenantId))
-        {
-            defaultCredentialOptions.TenantId = tenantId;
-        }
-
-        return new DefaultAzureCredential(defaultCredentialOptions);
-    }
-
-    private static TokenCredential? CreateVsCodeBrokerCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null)
-    {
-        const string vsCodeClientId = "aebc6443-996d-45c2-90f0-388ff96faa56";
-        string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        if (string.IsNullOrEmpty(userProfile))
-        {
-            logger?.LogDebug("VS Code Broker Credential -> User profile directory is null or empty. Cannot locate VS Code authRecord.json.");
-            return null;
-        }
-        string authRecordPath = Path.Combine(userProfile, ".azure", "ms-azuretools.vscode-azureresourcegroups", "authRecord.json");
-        if (!File.Exists(authRecordPath))
-        {
-            // Try .Azure if .azure is not present
-            authRecordPath = Path.Combine(userProfile, ".Azure", "ms-azuretools.vscode-azureresourcegroups", "authRecord.json");
-            if (!File.Exists(authRecordPath))
+            switch (tokenCredentials.ToLowerInvariant())
             {
-                logger?.LogDebug("VS Code Broker Credential -> authRecord.json not found in either .azure or .Azure directory.");
-                return null;
+                case "dev":
+                    // Dev chain: VS -> VSCode -> CLI -> PowerShell -> AzD
+                    AddVisualStudioCredential(credentials, tenantId);
+                    AddVisualStudioCodeCredential(credentials, tenantId);
+                    AddAzureCliCredential(credentials, tenantId);
+                    AddAzurePowerShellCredential(credentials, tenantId);
+                    AddAzureDeveloperCliCredential(credentials, tenantId);
+                    break;
+
+                case "prod":
+                    // Prod chain: Environment -> WorkloadIdentity -> ManagedIdentity
+                    AddEnvironmentCredential(credentials);
+                    AddWorkloadIdentityCredential(credentials, tenantId);
+                    AddManagedIdentityCredential(credentials);
+                    break;
+
+                case "environmentcredential":
+                    AddEnvironmentCredential(credentials);
+                    break;
+
+                case "workloadidentitycredential":
+                    AddWorkloadIdentityCredential(credentials, tenantId);
+                    break;
+
+                case "managedidentitycredential":
+                    AddManagedIdentityCredential(credentials);
+                    break;
+
+                case "visualstudiocredential":
+                    AddVisualStudioCredential(credentials, tenantId);
+                    break;
+
+                case "visualstudiocodecredential":
+                    AddVisualStudioCodeCredential(credentials, tenantId);
+                    break;
+
+                case "azureclicredential":
+                    AddAzureCliCredential(credentials, tenantId);
+                    break;
+
+                case "azurepowershellcredential":
+                    AddAzurePowerShellCredential(credentials, tenantId);
+                    break;
+
+                case "azuredeveloperclicredential":
+                    AddAzureDeveloperCliCredential(credentials, tenantId);
+                    break;
+
+                default:
+                    // Unknown value, fall back to default chain
+                    AddDefaultCredentialChain(credentials, tenantId);
+                    break;
             }
         }
+        else
+        {
+            // No AZURE_TOKEN_CREDENTIALS specified, use default chain
+            AddDefaultCredentialChain(credentials, tenantId);
+        }
 
-        AuthenticationRecord? authRecord;
+        return new ChainedTokenCredential([.. credentials]);
+    }
+
+    private static void AddDefaultCredentialChain(List<TokenCredential> credentials, string? tenantId)
+    {
+        // Default chain: Environment -> VS -> VSCode -> CLI -> PowerShell -> AzD (excludes production credentials by default)
+        AddEnvironmentCredential(credentials);
+        AddVisualStudioCredential(credentials, tenantId);
+        AddVisualStudioCodeCredential(credentials, tenantId);
+        AddAzureCliCredential(credentials, tenantId);
+        AddAzurePowerShellCredential(credentials, tenantId);
+        AddAzureDeveloperCliCredential(credentials, tenantId);
+    }
+
+    private static void AddEnvironmentCredential(List<TokenCredential> credentials)
+    {
+        credentials.Add(new SafeTokenCredential(new EnvironmentCredential(), "EnvironmentCredential"));
+    }
+
+    private static void AddWorkloadIdentityCredential(List<TokenCredential> credentials, string? tenantId)
+    {
+        var workloadOptions = new WorkloadIdentityCredentialOptions();
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            workloadOptions.TenantId = tenantId;
+        }
+        credentials.Add(new SafeTokenCredential(new WorkloadIdentityCredential(workloadOptions), "WorkloadIdentityCredential"));
+    }
+
+    private static void AddManagedIdentityCredential(List<TokenCredential> credentials)
+    {
+        credentials.Add(new SafeTokenCredential(new ManagedIdentityCredential(), "ManagedIdentityCredential"));
+    }
+
+    private static void AddVisualStudioCredential(List<TokenCredential> credentials, string? tenantId)
+    {
+        var vsOptions = new VisualStudioCredentialOptions();
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            vsOptions.TenantId = tenantId;
+        }
+        credentials.Add(new SafeTokenCredential(new VisualStudioCredential(vsOptions), "VisualStudioCredential"));
+    }
+
+    private static void AddVisualStudioCodeCredential(List<TokenCredential> credentials, string? tenantId)
+    {
+        var vscodeOptions = new VisualStudioCodeCredentialOptions();
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            vscodeOptions.TenantId = tenantId;
+        }
+        credentials.Add(new SafeTokenCredential(new VisualStudioCodeCredential(vscodeOptions), "VisualStudioCodeCredential"));
+    }
+
+    private static void AddAzureCliCredential(List<TokenCredential> credentials, string? tenantId)
+    {
+        var cliOptions = new AzureCliCredentialOptions();
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            cliOptions.TenantId = tenantId;
+        }
+        credentials.Add(new SafeTokenCredential(new AzureCliCredential(cliOptions), "AzureCliCredential"));
+    }
+
+    private static void AddAzurePowerShellCredential(List<TokenCredential> credentials, string? tenantId)
+    {
+        var psOptions = new AzurePowerShellCredentialOptions();
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            psOptions.TenantId = tenantId;
+        }
+        credentials.Add(new SafeTokenCredential(new AzurePowerShellCredential(psOptions), "AzurePowerShellCredential"));
+    }
+
+    private static void AddAzureDeveloperCliCredential(List<TokenCredential> credentials, string? tenantId)
+    {
+        var azdOptions = new AzureDeveloperCliCredentialOptions();
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            azdOptions.TenantId = tenantId;
+        }
+        credentials.Add(new SafeTokenCredential(new AzureDeveloperCliCredential(azdOptions), "AzureDeveloperCliCredential"));
+    }
+
+    private static ChainedTokenCredential CreateVsCodePrioritizedCredential(string? tenantId)
+    {
+        var credentials = new List<TokenCredential>();
+
+        // VS Code first, then the rest of the default chain (excluding VS Code to avoid duplication)
+        AddVisualStudioCodeCredential(credentials, tenantId);
+        AddEnvironmentCredential(credentials);
+        AddVisualStudioCredential(credentials, tenantId);
+        // Skip VS Code credential here since it's already first
+        AddAzureCliCredential(credentials, tenantId);
+        AddAzurePowerShellCredential(credentials, tenantId);
+        AddAzureDeveloperCliCredential(credentials, tenantId);
+
+        return new ChainedTokenCredential([.. credentials]);
+    }
+
+
+}
+
+/// <summary>
+/// A wrapper that converts any exception from the underlying credential into a CredentialUnavailableException
+/// to ensure proper chaining behavior in ChainedTokenCredential.
+/// </summary>
+internal class SafeTokenCredential(TokenCredential innerCredential, string credentialName) : TokenCredential
+{
+    private readonly TokenCredential _innerCredential = innerCredential;
+    private readonly string _credentialName = credentialName;
+
+    public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
+    {
         try
         {
-            using var stream = File.OpenRead(authRecordPath);
-            authRecord = AuthenticationRecord.Deserialize(stream);
+            return _innerCredential.GetToken(requestContext, cancellationToken);
+        }
+        catch (CredentialUnavailableException)
+        {
+            throw; // Re-throw CredentialUnavailableException as-is
         }
         catch (Exception ex)
         {
-            logger?.LogDebug(ex, "VS Code Broker Credential -> Failed to deserialize VS Code authRecord.json");
-            return null;
+            throw new CredentialUnavailableException($"{_credentialName} is not available: {ex.Message}", ex);
         }
+    }
 
-        if (authRecord is null)
+    public override async ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
+    {
+        try
         {
-            logger?.LogDebug("VS Code Broker Credential -> Deserialized VS Code AuthenticationRecord is null.");
-            return null;
+            return await _innerCredential.GetTokenAsync(requestContext, cancellationToken);
         }
-
-        // Validate client ID
-        if (!string.Equals(authRecord.ClientId, vsCodeClientId, StringComparison.OrdinalIgnoreCase))
+        catch (CredentialUnavailableException)
         {
-            logger?.LogDebug("VS Code Broker Credential -> VS Code AuthenticationRecord clientId mismatch. Expected {Expected}", vsCodeClientId);
-            return null;
+            throw; // Re-throw CredentialUnavailableException as-is
         }
-
-        // Prefer explicit tenantId, else use from auth record
-        string effectiveTenantId = !string.IsNullOrEmpty(tenantId)
-            ? tenantId
-            : authRecord.TenantId;
-
-        var options = new InteractiveBrowserCredentialBrokerOptions(0)
+        catch (Exception ex)
         {
-            ClientId = vsCodeClientId,
-            TenantId = effectiveTenantId,
-            AuthenticationRecord = authRecord
-        };
-
-        logger?.LogDebug("VS Code Broker Credential -> Successfully created VS Code Broker Credential");
-        return new InteractiveBrowserCredential(options);
+            throw new CredentialUnavailableException($"{_credentialName} is not available: {ex.Message}", ex);
+        }
     }
 }
