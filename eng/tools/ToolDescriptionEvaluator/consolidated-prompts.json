@@ -265,42 +265,27 @@
     "Get the details about blob <blob> in the container <container> in storage account <account>",
     "List all blob containers in the storage account <account>",
     "List all blobs in the blob container <container> in the storage account <account>",
-    "List all files and directories in the File Share <share> in the storage account <account>",
-    "List all paths in the Data Lake file system <file_system> in the storage account <account>",
     "List all storage accounts in my subscription including their location and SKU",
-    "List all tables in the storage account <account>",
-    "List files with prefix 'report' in the File Share <share> in the storage account <account>",
-    "Recursively list all paths in the Data Lake file system <file_system> in the storage account <account> filtered by <filter_path>",
     "Show me my storage accounts with whether hierarchical namespace (HNS) is enabled",
     "Show me the blobs in the blob container <container> in the storage account <account>",
     "Show me the containers in the storage account <account>",
     "Show me the details for my storage account <account>",
-    "Show me the files in the File Share <share> directory <directory_path> in the storage account <account>",
-    "Show me the paths in the Data Lake file system <file_system> in the storage account <account>",
     "Show me the properties for blob <blob> in container <container> in storage account <account>",
     "Show me the properties of the storage container <container> in the storage account <account>",
-    "Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings",
-    "Show me the tables in the storage account <account>"
+    "Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings"
   ],
   "edit_azure_storage": [
-    "Add a message to the queue <queue> in storage account <account> with visibility timeout of 30 seconds",
     "Create a new blob container named documents with container public access in storage account <account>",
-    "Create a new directory at the path <directory_path> in Data Lake in the storage account <account>",
     "Create a new storage account called testaccount123 in East US region",
     "Create a new storage account with Data Lake Storage Gen2 enabled",
     "Create a storage account with premium performance and LRS replication",
     "Create the container using blob public access in storage account <account>",
-    "Create the storage container mycontainer in storage account <account>",
-    "Send a message \"Hello, World!\" to the queue <queue> in storage account <account>",
-    "Send a message with TTL of 3600 seconds to the queue <queue> in storage account <account>"
+    "Create the storage container mycontainer in storage account <account>"
   ],
   "upload_azure_storage_blobs": [
     "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>"
   ],
-  "edit_azure_storage_blob_tiers": [
-    "Change the access tier to Archive for blobs file1.txt and file2.txt in the container <container> in the storage account <account>",
-    "Set access tier to Cool for multiple blobs in the container <container> in the storage account <account>"
-  ],
+  "edit_azure_storage_blob_tiers": [],
   "view_azure_cache_for_redis": [
     "List all access policies in the Redis Cache <cache_name>",
     "List all databases in the Redis Cluster <cluster_name>",
