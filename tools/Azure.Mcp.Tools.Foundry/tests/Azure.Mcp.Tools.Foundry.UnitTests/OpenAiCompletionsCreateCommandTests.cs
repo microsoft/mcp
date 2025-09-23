@@ -176,7 +176,7 @@ public class OpenAiCompletionsCreateCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(500, (int)response.Status);
         Assert.StartsWith(expectedError, response.Message);
     }
 
