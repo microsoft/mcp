@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Storage.Commands.Account;
 using Azure.Mcp.Tools.Storage.Commands.Blob;
@@ -22,7 +23,7 @@ namespace Azure.Mcp.Tools.Storage.Commands;
 [JsonSerializable(typeof(ContainerInfo))]
 [JsonSerializable(typeof(StorageAccountData))]
 [JsonSerializable(typeof(StorageAccountCreateOrUpdateContent))]
-[JsonSerializable(typeof(System.Text.Json.JsonElement))]
+[JsonSerializable(typeof(JsonElement))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
 internal sealed partial class StorageJsonContext : JsonSerializerContext
 {
