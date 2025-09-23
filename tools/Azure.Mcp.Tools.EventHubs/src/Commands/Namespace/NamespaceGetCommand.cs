@@ -119,6 +119,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
 
     protected override int GetStatusCode(Exception ex) => ex switch
     {
+        KeyNotFoundException => 404,
         RequestFailedException reqEx => reqEx.Status,
         Identity.AuthenticationFailedException => 401,
         ArgumentException => 400,
@@ -127,6 +128,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        KeyNotFoundException => $"Event Hubs namespace not found. Verify the namespace name, resource group, and that you have access.",
         Identity.AuthenticationFailedException authEx =>
             "Authentication failed. Please ensure your Azure credentials are properly configured and have not expired.",
         RequestFailedException reqEx when reqEx.Status == 403 =>
@@ -139,6 +141,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
             "Invalid subscription. Please provide a valid subscription ID or name.",
         _ => base.GetErrorMessage(ex)
     };
+
     internal record NamespaceGetCommandResult(List<Models.EventHubsNamespaceInfo> Namespaces);
     internal record NamespaceGetSingleCommandResult(Models.EventHubsNamespaceDetails Namespace);
 }
