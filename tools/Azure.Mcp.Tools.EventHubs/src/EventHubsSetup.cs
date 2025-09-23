@@ -27,6 +27,7 @@ public class EventHubsSetup : IAreaSetup
         var namespaceGroup = new CommandGroup("namespace", "Event Hubs namespace operations");
         eventHubs.AddSubGroup(namespaceGroup);
 
-        namespaceGroup.AddCommand("get", new NamespaceGetCommand(loggerFactory.CreateLogger<NamespaceGetCommand>()));
+        var getCommand = new NamespaceGetCommand(loggerFactory.CreateLogger<NamespaceGetCommand>());
+        namespaceGroup.AddCommand(getCommand.Name, getCommand);
     }
 }
