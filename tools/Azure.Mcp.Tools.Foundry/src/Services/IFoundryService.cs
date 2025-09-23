@@ -63,7 +63,7 @@ public interface IFoundryService
         double? temperature = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
-        
+
     Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null);
 

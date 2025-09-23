@@ -3,9 +3,9 @@
 
 using System.ClientModel;
 using System.Text;
-using Azure;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
+using Azure;
 using Azure.AI.Agents.Persistent;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
@@ -19,12 +19,12 @@ using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Services.Models;
 using Azure.ResourceManager;
-using Microsoft.Extensions.AI;
-using Microsoft.Extensions.AI.Evaluation;
-using Microsoft.Extensions.AI.Evaluation.Quality;
 using Azure.ResourceManager.CognitiveServices;
 using Azure.ResourceManager.CognitiveServices.Models;
 using Azure.ResourceManager.Resources;
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.AI.Evaluation;
+using Microsoft.Extensions.AI.Evaluation.Quality;
 using OpenAI.Chat;
 
 #pragma warning disable AIEVAL001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
@@ -425,7 +425,7 @@ public class FoundryService(
 
         return new CompletionResult(completionText, usageInfo);
     }
-    
+
     public async Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters(endpoint);

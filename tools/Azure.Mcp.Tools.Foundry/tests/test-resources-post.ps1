@@ -27,14 +27,19 @@ $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 # For example, you might want to configure resources or run additional scripts.
 
 # $DeploymentOutputs keys are from the Bicep outputs
-# Add DeploymentOutputs to the test settings
-$testSettings.DeploymentOutputs = @{
+# Add DeploymentOutputs as a nested dictionary to match LiveTestSettings structure
+$deploymentOutputs = @{
     "OpenAIAccount" = "azmcp-test"
     "OpenAIDeploymentName" = "gpt-4o-mini"
     "OpenAIAccountResourceGroup" = "static-test-resources"
 }
 
-# Save the updated test settings
-Set-TestSettings -TestSettings $testSettings -OutputPath $PSScriptRoot
+$testSettings.Add("DeploymentOutputs", $deploymentOutputs)
+
+# Update the test settings file with the additional properties
+$testSettingsPath = Join-Path -Path $PSScriptRoot -ChildPath ".testsettings.json"
+$testSettingsJson = $testSettings | ConvertTo-Json -Depth 3
+Write-Host "Updating test settings file at $testSettingsPath with OpenAI configuration"
+$testSettingsJson | Set-Content -Path $testSettingsPath -Force -NoNewLine
 
 
