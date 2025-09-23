@@ -828,8 +828,8 @@ class Program
             }
             else
             {
-                // Convert command to tool name format (spaces to dashes)
-                toolName = tool.Command?.Replace(CommandPrefix, "")?.Replace(" ", SpaceReplacement) ?? tool.Name;
+                // Convert command to tool name format (spaces to underscores)
+                toolName = tool.Command?.Replace(" ", SpaceReplacement) ?? tool.Name;
 
                 if (!string.IsNullOrEmpty(toolName) && !toolName.StartsWith($"{CommandPrefix.Trim()}-"))
                 {
@@ -1437,14 +1437,8 @@ class Program
 
 internal static class UnicodeChars
 {
-    public const string SingleQuote = "\u0027";
     public const string LeftSingleQuote = "\u2018";
     public const string RightSingleQuote = "\u2019";
-    public const string DoubleQuote = "\u0022";
     public const string LeftDoubleQuote = "\u201C";
     public const string RightDoubleQuote = "\u201D";
-    public const string LessThan = "\u003C";
-    public const string GreaterThan = "\u003E";
-    public const string Ampersand = "\u0026";
-    public const string Backtick = "\u0060";
 }
