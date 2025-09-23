@@ -2,12 +2,13 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.EventGrid.Commands;
+using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Messaging.EventGrid;
 using Azure.ResourceManager.EventGrid;
-using System.Net.Http;
-using System.Text;
 using Azure.ResourceManager.EventGrid.Models;
 using Azure.ResourceManager.Resources;
 
@@ -131,62 +132,28 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             // Get credential using standardized method from base class for Azure AD authentication
             var credential = await GetCredential(tenant);
 
-            // Parse and validate event data
-            var events = ParseAndValidateEventData(eventData, eventSchema ?? "EventGridEvent");
+            // Parse and validate event data directly to EventGridEventSchema
+            var eventGridEventSchemas = ParseAndValidateEventData(eventData, eventSchema ?? "EventGridEvent");
 
-            // Use raw HTTP approach to completely avoid AOT serialization issues
-            using var httpClient = new HttpClient();
-            
-            // Create events as raw JSON strings using lazy evaluation
-            var eventJsonStrings = events.Select(evt =>
+            // Use EventGridPublisherClient with BinaryData for AOT-compatible publishing
+            var publisherClient = new EventGridPublisherClient(topic.Data.Endpoint, credential);
+
+            // Serialize each event individually to JSON using source-generated context and convert to BinaryData
+            var eventsBinaryData = eventGridEventSchemas.Select(eventSchema =>
             {
-                // Manually escape JSON strings to avoid JsonSerializer
-                var escapedSubject = EscapeJsonString(evt.Subject);
-                var escapedEventType = EscapeJsonString(evt.EventType);
-                var escapedId = EscapeJsonString(evt.Id);
-                var escapedDataVersion = EscapeJsonString(evt.DataVersion);
-                var formattedEventTime = evt.EventTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
-
-                return $$"""
-                {
-                    "id": "{{escapedId}}",
-                    "subject": "{{escapedSubject}}",
-                    "eventType": "{{escapedEventType}}",
-                    "dataVersion": "{{escapedDataVersion}}",
-                    "eventTime": "{{formattedEventTime}}",
-                    "data": {{evt.Data ?? "{}"}}
-                }
-                """;
-            });
-
-            var jsonPayload = $"[{string.Join(",", eventJsonStrings)}]";
+                var jsonString = JsonSerializer.Serialize(eventSchema, EventGridJsonContext.Default.EventGridEventSchema);
+                return BinaryData.FromString(jsonString);
+            }).ToArray();
 
             // Get event count for logging (this will materialize the enumerable once)
-            var eventCount = events.Count();
+            var eventCount = eventsBinaryData.Length;
             _logger.LogInformation("Publishing {EventCount} events to topic '{TopicName}' with operation ID: {OperationId}",
                 eventCount, topicName, operationId);
 
             try
             {
-                // Send the events using raw HTTP POST to avoid EventGridPublisherClient AOT issues
-                var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-                
-                // Get access token for Event Grid using Azure AD authentication
-                var tokenRequestContext = new TokenRequestContext(new[] { "https://eventgrid.azure.net/.default" });
-                var tokenResult = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
-                
-                // Add Authorization header with Bearer token for Azure AD authentication
-                httpClient.DefaultRequestHeaders.Authorization = 
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokenResult.Token);
-                
-                var response = await httpClient.PostAsync(topic.Data.Endpoint, content);
-                
-                if (!response.IsSuccessStatusCode)
-                {
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    throw new HttpRequestException(
-                        $"Event Grid returned status code {response.StatusCode}. Response: {responseContent}");
-                }
+                // Send events using EventGridPublisherClient with BinaryData (AOT-compatible)
+                await publisherClient.SendEventsAsync(eventsBinaryData);
             }
             catch (Exception publishEx)
             {
@@ -219,25 +186,25 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    private static IEnumerable<EventData> ParseAndValidateEventData(string eventData, string eventSchema)
+    private static IEnumerable<EventGridEventSchema> ParseAndValidateEventData(string eventData, string eventSchema)
     {
         try
         {
             // Parse the JSON data
             var jsonDocument = JsonDocument.Parse(eventData);
 
-            IEnumerable<EventData> events;
+            IEnumerable<EventGridEventSchema> events;
 
             if (jsonDocument.RootElement.ValueKind == JsonValueKind.Array)
             {
                 // Handle array of events - use lazy evaluation
                 events = jsonDocument.RootElement.EnumerateArray()
-                    .Select(eventElement => CreateEventDataFromJsonElement(eventElement, eventSchema));
+                    .Select(eventElement => CreateEventGridEventSchemaFromJsonElement(eventElement, eventSchema));
             }
             else
             {
                 // Handle single event - return single item enumerable
-                events = new[] { CreateEventDataFromJsonElement(jsonDocument.RootElement, eventSchema) };
+                events = new[] { CreateEventGridEventSchemaFromJsonElement(jsonDocument.RootElement, eventSchema) };
             }
 
             // Force evaluation to validate all events before returning
@@ -255,47 +222,97 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    private static EventData CreateEventDataFromJsonElement(JsonElement eventElement, string eventSchema)
+    private static EventGridEventSchema CreateEventGridEventSchemaFromJsonElement(JsonElement eventElement, string eventSchema)
     {
-        // Extract required properties
-        var eventType = eventElement.TryGetProperty("eventType", out var eventTypeProp) ? eventTypeProp.GetString() :
+        string? eventType, subject, dataVersion;
+        DateTimeOffset eventTime;
+
+        // Extract event ID early for logging purposes
+        var id = eventElement.TryGetProperty("id", out var idProp) ? idProp.GetString() : Guid.NewGuid().ToString();
+
+        if (eventSchema.Equals("CloudEvents", StringComparison.OrdinalIgnoreCase))
+        {
+            // CloudEvents spec handling (v1.0)
+            eventType = eventElement.TryGetProperty("type", out var typeProp) ? typeProp.GetString() : "CustomEvent";
+
+            // CloudEvents uses "source" field, but we can fall back to "subject" for compatibility
+            subject = eventElement.TryGetProperty("source", out var sourceProp) ? sourceProp.GetString() :
+                     eventElement.TryGetProperty("subject", out var subjectProp) ? subjectProp.GetString() : "/default/subject";
+
+            // CloudEvents uses "specversion" for schema version
+            dataVersion = eventElement.TryGetProperty("specversion", out var specProp) ? specProp.GetString() : "1.0";
+
+            // CloudEvents uses "time" field
+            eventTime = eventElement.TryGetProperty("time", out var timeProp) && timeProp.TryGetDateTimeOffset(out var timeValue)
+                       ? timeValue : DateTimeOffset.UtcNow;
+
+            // Handle datacontenttype - CloudEvents v1.0 spec field for content type of data payload
+            var dataContentType = eventElement.TryGetProperty("datacontenttype", out var dataContentTypeProp)
+                ? dataContentTypeProp.GetString()
+                : "application/json"; // Default per CloudEvents spec
+
+            // Log and validate datacontenttype for debugging and monitoring purposes
+
+            if (!string.Equals(dataContentType, "application/json", StringComparison.OrdinalIgnoreCase))
+            {
+                // Log when non-JSON content types are used - this helps with debugging
+                // Note: EventGrid will accept the event regardless of datacontenttype,
+                // but subscribers should handle non-JSON content types appropriately
+                // Common non-JSON types: application/xml, text/plain, application/octet-stream
+
+                // For now, we'll just validate that it's a recognized MIME type format
+                if (string.IsNullOrWhiteSpace(dataContentType) || !dataContentType.Contains('/'))
+                {
+                    throw new ArgumentException($"Invalid datacontenttype '{dataContentType}' in CloudEvent with id '{id}'. Must be a valid MIME type (e.g., 'application/xml', 'text/plain').");
+                }
+            }
+        }
+        else if (eventSchema.Equals("EventGrid", StringComparison.OrdinalIgnoreCase))
+        {
+            // EventGrid spec handling
+            eventType = eventElement.TryGetProperty("eventType", out var eventTypeProp) ? eventTypeProp.GetString() : "CustomEvent";
+            subject = eventElement.TryGetProperty("subject", out var subjectProp) ? subjectProp.GetString() : "/default/subject";
+            dataVersion = eventElement.TryGetProperty("dataVersion", out var dataVersionProp) ? dataVersionProp.GetString() : "1.0";
+            eventTime = eventElement.TryGetProperty("eventTime", out var timeProp) && timeProp.TryGetDateTimeOffset(out var eventTimeValue)
+                       ? eventTimeValue : DateTimeOffset.UtcNow;
+        }
+        else // Custom schema
+        {
+            // For custom schema, try both CloudEvents and EventGrid field names for flexibility
+            eventType = eventElement.TryGetProperty("eventType", out var eventTypeProp) ? eventTypeProp.GetString() :
                        eventElement.TryGetProperty("type", out var typeProp) ? typeProp.GetString() : "CustomEvent";
 
-        var subject = eventElement.TryGetProperty("subject", out var subjectProp) ? subjectProp.GetString() : "/default/subject";
+            subject = eventElement.TryGetProperty("subject", out var subjectProp) ? subjectProp.GetString() :
+                     eventElement.TryGetProperty("source", out var sourceProp) ? sourceProp.GetString() : "/default/subject";
 
-        var dataVersion = eventElement.TryGetProperty("dataVersion", out var dataVersionProp) ? dataVersionProp.GetString() : "1.0";
+            dataVersion = eventElement.TryGetProperty("dataVersion", out var dataVersionProp) ? dataVersionProp.GetString() :
+                         eventElement.TryGetProperty("specversion", out var specProp) ? specProp.GetString() : "1.0";
 
-        // Extract data payload as raw JSON string for AOT compatibility
-        string? data = null;
-        if (eventElement.TryGetProperty("data", out var dataProp))
-        {
-            data = dataProp.GetRawText();
+            eventTime = eventElement.TryGetProperty("eventTime", out var eventTimeProp) && eventTimeProp.TryGetDateTimeOffset(out var eventTimeValue) ? eventTimeValue :
+                       eventElement.TryGetProperty("time", out var timeProp) && timeProp.TryGetDateTimeOffset(out var timeValue) ? timeValue : DateTimeOffset.UtcNow;
         }
 
-        var id = eventElement.TryGetProperty("id", out var idProp) ? idProp.GetString() : Guid.NewGuid().ToString();
-        var eventTime = eventElement.TryGetProperty("eventTime", out var timeProp) && timeProp.TryGetDateTimeOffset(out var eventTimeValue)
-                       ? eventTimeValue : DateTimeOffset.UtcNow;
+        // Extract data payload and parse as JsonNode for AOT compatibility
+        JsonNode? data = null;
+        if (eventElement.TryGetProperty("data", out var dataProp))
+        {
+            data = JsonNode.Parse(dataProp.GetRawText());
+        }
 
-        // Create a simple event data structure
-        return new EventData(
-            Id: id ?? Guid.NewGuid().ToString(),
-            Subject: subject ?? "/default/subject",
-            EventType: eventType ?? "CustomEvent",
-            DataVersion: dataVersion ?? "1.0",
-            Data: data,
-            EventTime: eventTime,
-            Schema: eventSchema);
+        // For CloudEvents schema, we've already captured datacontenttype above for validation/logging
+        // The EventGrid schema doesn't have a direct equivalent, so we don't persist it in the final event
+
+        // Create EventGridEventSchema directly
+        return new EventGridEventSchema
+        {
+            Id = id ?? Guid.NewGuid().ToString(),
+            Subject = subject ?? "/default/subject",
+            EventType = eventType ?? "CustomEvent",
+            DataVersion = dataVersion ?? "1.0",
+            Data = data,
+            EventTime = eventTime
+        };
     }
-
-    // Simple record to hold event data for validation
-    private record EventData(
-        string Id,
-        string Subject,
-        string EventType,
-        string DataVersion,
-        string? Data,
-        DateTimeOffset EventTime,
-        string Schema);
 
     private async Task GetSubscriptionsForSpecificTopic(
         SubscriptionResource subscriptionResource,
@@ -597,52 +614,5 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    // Helper method to escape JSON strings manually to avoid JsonSerializer AOT issues
-    private static string EscapeJsonString(string input)
-    {
-        if (string.IsNullOrEmpty(input))
-            return string.Empty;
 
-        var result = new StringBuilder(input.Length + 10);
-        
-        foreach (char c in input)
-        {
-            switch (c)
-            {
-                case '"':
-                    result.Append("\\\"");
-                    break;
-                case '\\':
-                    result.Append("\\\\");
-                    break;
-                case '\b':
-                    result.Append("\\b");
-                    break;
-                case '\f':
-                    result.Append("\\f");
-                    break;
-                case '\n':
-                    result.Append("\\n");
-                    break;
-                case '\r':
-                    result.Append("\\r");
-                    break;
-                case '\t':
-                    result.Append("\\t");
-                    break;
-                default:
-                    if (char.IsControl(c))
-                    {
-                        result.Append($"\\u{(int)c:x4}");
-                    }
-                    else
-                    {
-                        result.Append(c);
-                    }
-                    break;
-            }
-        }
-        
-        return result.ToString();
-    }
 }
