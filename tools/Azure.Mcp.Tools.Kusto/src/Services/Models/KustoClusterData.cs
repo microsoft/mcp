@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Services.Azure.Models;
 using Azure.Mcp.Tools.Kusto.Commands;
 
 namespace Azure.Mcp.Tools.Kusto.Services.Models;
@@ -23,9 +24,9 @@ internal sealed class KustoClusterData
     /// <summary> The location of the resource. </summary>
     public string? Location { get; set; }
     /// <summary> The SKU of the resource. </summary>
-    public KustoSku? Sku { get; set; }
+    public ResourceSku? Sku { get; set; }
     /// <summary> The identity of the cluster, if configured. </summary>
-    public KustoManagedServiceIdentity? Identity { get; set; }
+    public ManagedServiceIdentity? Identity { get; set; }
     /// <summary> The availability zones of the cluster. </summary>
     public IList<string>? Zones { get; set; }
     /// <summary> A unique read-only string that changes whenever the resource is updated. </summary>
