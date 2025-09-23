@@ -5,10 +5,7 @@ parameters:
 - name: PublishTarget
   type: string
   default: none
-  values:
-  - internal
-  - public
-  - none
+  values: [none, internal, public ]
 - name: RunLiveTests
   type: boolean
   default: false

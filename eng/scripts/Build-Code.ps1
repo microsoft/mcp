@@ -14,6 +14,7 @@ param(
     [switch] $BuildNative,
     [string] $ServerName,
     [Parameter(Mandatory=$true, ParameterSetName='SpecificPlatform')]
+    [Alias('OS')]
     [ValidateSet('windows','linux','macOS')]
     [string] $OperatingSystem,
     [Parameter(Mandatory=$true, ParameterSetName='SpecificPlatform')]
@@ -86,30 +87,6 @@ function BuildServer($serverName) {
 
     New-Item -Path $serverOutputDirectory -ItemType Directory -Force | Out-Null
 
-    $wrapperPackage = [ordered]@{
-        name = $packageName
-        version = $version
-        description = $description
-        author = 'Microsoft'
-        homepage = $readmeUrl
-        license = 'MIT'
-        keywords = $keywords
-        bugs = @{ url = "https://github.com/microsoft/mcp/issues" }
-        repository = @{ type = 'git'; url = 'https://github.com/microsoft/mcp.git' }
-        engines = @{ node = '>=20.0.0' }
-        bin = @{ $cliName = './index.js' }
-        os = @()
-        cpu = @()
-        optionalDependencies = @{}
-        scripts = @{ postinstall = "node ./scripts/post-install-script.js" }
-    }
-
-    $wrapperPackage | ConvertTo-Json | Out-File -FilePath "$serverOutputDirectory/wrapper.json" -Encoding utf8
-    Write-Host "Created wrapper.json in $serverOutputDirectory" -ForegroundColor Yellow
-
-    Copy-Item "$serverDirectory/README.md" -Destination $serverOutputDirectory -Force
-    Write-Host "Copied README.md to $serverOutputDirectory" -ForegroundColor Yellow
-
     foreach ($os in $operatingSystems) {
         foreach ($arch in $architectures) {
             switch($os) {
@@ -130,9 +107,9 @@ function BuildServer($serverName) {
 
             # Clear and recreate the package output directory
             Remove-Item -Path $outputDir -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
-            New-Item -Path "$outputDir/dist" -ItemType Directory -Force | Out-Null
+            New-Item -Path $outputDir -ItemType Directory -Force | Out-Null
 
-            $command = "dotnet publish '$projectFile' --runtime '$os-$arch' --output '$outputDir/dist' /p:Version=$version /p:Configuration=$configuration"
+            $command = "dotnet publish '$projectFile' --runtime '$os-$arch' --output $outputDir /p:Version=$version /p:Configuration=$configuration"
 
             if($SelfContained) {
                 $command += " --self-contained"
@@ -155,29 +132,6 @@ function BuildServer($serverName) {
             }
 
             Invoke-LoggedCommand $command -GroupOutput
-
-            $package = [ordered]@{
-                name = "$packageName-$node_os-$arch"
-                version = $version
-                description = "$description, for $node_os on $arch"
-                author = 'Microsoft'
-                homepage = $readmeUrl
-                license = 'MIT'
-                keywords = $properties.NpmPackageKeywords -split ','
-                bugs = @{ url = "https://github.com/microsoft/mcp/issues" }
-                repository = @{ type = 'git'; url = 'https://github.com/microsoft/mcp.git' }
-                engines = @{ node = '>=20.0.0' }
-                main = './index.js'
-                bin = @{ "$cliName-$node_os-$arch" = "./dist/$cliName$extension" }
-                os = @($node_os)
-                cpu = @($arch)
-            }
-
-            $package
-            | ConvertTo-Json
-            | Out-File -FilePath "$outputDir/package.json" -Encoding utf8
-
-            Write-Host "Created package.json in $outputDir" -ForegroundColor Yellow
 
             Write-Host "`nBuild completed successfully!" -ForegroundColor Green
         }

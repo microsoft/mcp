@@ -142,4 +142,3 @@ jobs:
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)
       ArtifactName: build_$(System.JobName)
-      SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
