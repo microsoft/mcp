@@ -27,7 +27,7 @@ public class KeyCreateCommandTests
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
 
-    private const string _knownSubscriptionId = "knownSubscription";
+    private const string _knownSubscriptionId = "knownSubscription"
     private const string _knownVaultName = "knownVaultName";
     private const string _knownKeyName = "knownKeyName";
     private readonly KeyType _knownKeyType = KeyType.Rsa;

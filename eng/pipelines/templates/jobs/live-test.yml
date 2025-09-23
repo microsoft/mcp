@@ -33,7 +33,7 @@ jobs:
 
   - pwsh: |
       ./eng/scripts/Build-Local.ps1 -VerifyNpx
-    displayName: "Build local package"
+    displayName: "Verify npm package"
     workingDirectory: $(Build.SourcesDirectory)
 
   - template: /eng/common/TestResources/build-test-resource-config.yml

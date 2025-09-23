@@ -23,7 +23,7 @@ internal class Program
         {
             Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand.ConfigureServices = ConfigureServices;
 
-            ServiceCollection services = new()
+            ServiceCollection services = new();
             ConfigureServices(services);
 
             services.AddLogging(builder =>
