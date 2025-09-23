@@ -64,7 +64,7 @@ public class AdminSettingsGetCommandTests
         var response = await _command.ExecuteAsync(_context, args);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(response.Results); 
+        Assert.NotNull(response.Results);
 
         // Deserialize the wrapped result to verify structure and empty settings dictionary
         var json = JsonSerializer.Serialize(response.Results);
