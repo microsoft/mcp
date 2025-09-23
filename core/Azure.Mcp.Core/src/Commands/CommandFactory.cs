@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Net;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json.Serialization;
@@ -186,7 +187,7 @@ public class CommandFactory
                 if (!validation.IsValid)
                 {
                     Console.WriteLine(JsonSerializer.Serialize(cmdContext.Response, _srcGenWithOptions.CommandResponse));
-                    return cmdContext.Response.Status;
+                    return (int)cmdContext.Response.Status;
                 }
 
                 var response = await implementation.ExecuteAsync(cmdContext, parseResult);
@@ -195,7 +196,7 @@ public class CommandFactory
                 var endTime = DateTime.UtcNow;
                 response.Duration = (long)(endTime - startTime).TotalMilliseconds;
 
-                if (response.Status == 200 && response.Results == null)
+                if (response.Status == HttpStatusCode.OK && response.Results == null)
                 {
                     response.Results = ResponseResult.Create(new List<string>(), JsonSourceGenerationContext.Default.ListString);
                 }
@@ -206,13 +207,12 @@ public class CommandFactory
                     Console.WriteLine(JsonSerializer.Serialize(response, _srcGenWithOptions.CommandResponse));
                 }
 
-                var status = response.Status;
-                if (status < 200 || status >= 300)
+                if (response.Status < HttpStatusCode.OK || response.Status >= HttpStatusCode.Ambiguous)
                 {
                     activity?.SetStatus(ActivityStatusCode.Error).AddTag(TagName.ErrorDetails, response.Message);
                 }
 
-                return status;
+                return (int)response.Status;
             }
             catch (Exception ex)
             {

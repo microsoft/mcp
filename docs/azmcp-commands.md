@@ -147,6 +147,29 @@ The `azmcp server start` command supports the following options:
 ### Azure AI Foundry Operations
 
 ```bash
+
+# Connect to an agent in an AI Foundry project and query it
+azmcp foundry agents connect --agent-id <agent-id> \
+                             --query <query> \
+                             --endpoint <endpoint>
+
+# Evaluate a response from an agent by passing query and response inline
+azmcp foundry agents evaluate --agent-id <agent-id> \
+                                        --query <query> \
+                                        --response <response> \
+                                        --evaluator <evaluator> \
+                                        --azure-openai-endpoint <azure-openai-endpoint> \
+                                        --azure-openai-deployment <azure-openai-deployment> \
+                                        [--tool-definitions <tool-definitions>]
+
+# Query and evaluate an agent in one command
+azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
+                                        --query <query> \
+                                        --endpoint <endpoint> \
+                                        --azure-openai-endpoint <azure-openai-endpoint> \
+                                        --azure-openai-deployment <azure-openai-deployment> \
+                                        [--evaluators <evaluators>]
+
 # List knowledge indexes in an AI Foundry project
 azmcp foundry knowledge index list --endpoint <endpoint>
 
@@ -256,6 +279,87 @@ azmcp applicationinsights recommendation list --subscription <subscription>
 # Scope to a specific resource group
 azmcp applicationinsights recommendation list --subscription <subscription> \
                                               --resource-group <resource-group>
+### Azure App Service Operations
+
+```bash
+# Add a database connection to an App Service
+azmcp appservice database add --subscription <subscription> \
+                              --resource-group <resource-group> \
+                              --app <app> \
+                              --database-type <database-type> \
+                              --database-server <database-server> \
+                              --database <database> \
+                              [--connection-string <connection-string>] \
+                              [--tenant <tenant-id>]
+
+# Examples:
+# Add a SQL Server database connection
+azmcp appservice database add --subscription "my-subscription" \
+                              --resource-group "my-rg" \
+                              --app "my-webapp" \
+                              --database-type "SqlServer" \
+                              --database-server "myserver.database.windows.net" \
+                              --database "mydb"
+
+# Add a MySQL database connection with custom connection string
+azmcp appservice database add --subscription "my-subscription" \
+                              --resource-group "my-rg" \
+                              --app "my-webapp" \
+                              --database-type "MySQL" \
+                              --database-server "myserver.mysql.database.azure.com" \
+                              --database "mydb" \
+                              --connection-string "Server=myserver.mysql.database.azure.com;Database=mydb;Uid=myuser;Pwd=mypass;"
+
+# Add a PostgreSQL database connection
+azmcp appservice database add --subscription "my-subscription" \
+                              --resource-group "my-rg" \
+                              --app "my-webapp" \
+                              --database-type "PostgreSQL" \
+                              --database-server "myserver.postgres.database.azure.com" \
+                              --database "mydb"
+
+# Add a Cosmos DB connection
+azmcp appservice database add --subscription "my-subscription" \
+                              --resource-group "my-rg" \
+                              --app "my-webapp" \
+                              --database-type "CosmosDB" \
+                              --database-server "myaccount" \
+                              --database "mydb"
+```
+
+**Database Types Supported:**
+
+-   `SqlServer` - Azure SQL Database
+-   `MySQL` - Azure Database for MySQL
+-   `PostgreSQL` - Azure Database for PostgreSQL
+-   `CosmosDB` - Azure Cosmos DB
+
+**Parameters:**
+
+-   `--subscription`: Azure subscription ID (required)
+-   `--resource-group`: Resource group containing the App Service (required)
+-   `--app`: Name of the App Service web app (required)
+-   `--database-type`: Type of database - SqlServer, MySQL, PostgreSQL, or CosmosDB (required)
+-   `--database-server`: Database server name or endpoint (required)
+-   `--database`: Name of the database (required)
+-   `--connection-string`: Custom connection string (optional - auto-generated if not provided)
+-   `--tenant`: Azure tenant ID for authentication (optional)
+
+### Azure CLI Operations
+
+```bash
+# Execute any Azure CLI command
+azmcp extension az --command "<command>"
+
+# Examples:
+# List resource groups
+azmcp extension az --command "group list"
+
+# Get storage account details
+azmcp extension az --command "storage account show --name <account> --resource-group <resource-group>"
+
+# List virtual machines
+azmcp extension az --command "vm list --resource-group <resource-group>"
 ```
 
 ### Azure Container Registry (ACR) Operations
@@ -1075,6 +1179,10 @@ azmcp sql server firewall-rule list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
 
+# List SQL servers in a resource group
+azmcp sql server list --subscription <subscription> \
+                      --resource-group <resource-group>
+
 # Delete a SQL server
 azmcp sql server delete --subscription <subscription> \
                         --resource-group <resource-group> \
@@ -1109,13 +1217,6 @@ azmcp storage account get --subscription <subscription> \
 #### Blob Storage
 
 ```bash
-# Set access tier for multiple blobs in a batch operation
-azmcp storage blob batch set-tier --subscription <subscription> \
-                                  --account <account> \
-                                  --container <container> \
-                                  --tier <tier> \
-                                  --blobs <blob-name1> <blob-name2> ... <blob-nameN>
-
 # Create a blob container with optional public access
 azmcp storage blob container create --subscription <subscription> \
                                     --account <account> \
@@ -1138,53 +1239,6 @@ azmcp storage blob upload --subscription <subscription> \
                           --container <container> \
                           --blob <blob> \
                           --local-file-path <path-to-local-file>
-```
-
-#### DataLake
-
-```bash
-# Create a directory in DataLake using a specific path
-azmcp storage datalake directory create --subscription <subscription> \
-                                        --account <account> \
-                                        --directory-path <directory-path>
-
-# List paths in a Data Lake file system
-azmcp storage datalake file-system list-paths --subscription <subscription> \
-                                              --account <account> \
-                                              --file-system <file-system> \
-                                              [--filter-path <filter-path>] \
-                                              [--recursive]
-```
-
-#### Files
-
-```bash
-# List files and directories in a File Share directory
-azmcp storage share file list --subscription <subscription> \
-                              --account <account> \
-                              --share <share> \
-                              --directory-path <directory-path> \
-                              [--prefix <prefix>]
-```
-
-#### Tables
-```bash
-
-# List tables in a Storage account
-azmcp storage table list --subscription <subscription> \
-                         --account <account>
-```
-
-#### Queues
-
-```bash
-# Send a message to a Storage queue
-azmcp storage queue message send --subscription <subscription> \
-                                 --account <account> \
-                                 --queue <queue> \
-                                 --message "<message>" \
-                                 [--time-to-live-in-seconds <seconds>] \
-                                 [--visibility-timeout-in-seconds <seconds>]
 ```
 
 ### Azure Subscription Management

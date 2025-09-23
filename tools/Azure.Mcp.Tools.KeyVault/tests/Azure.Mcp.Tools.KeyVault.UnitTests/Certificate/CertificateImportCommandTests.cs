@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
@@ -75,7 +76,7 @@ public class CertificateImportCommandTests
             _knownSubscription,
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>());
-        Assert.Equal(500, response.Status); // due to forced exception
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status); // due to forced exception
     }
 
     public static IEnumerable<object[]> RequiredArgumentCases()
@@ -116,7 +117,7 @@ public class CertificateImportCommandTests
         // Assert
         if (shouldPassValidation)
         {
-            Assert.NotEqual(400, response.Status); // could be 500 due to forced exception, but not a validation failure
+            Assert.NotEqual(HttpStatusCode.BadRequest, response.Status); // could be 500 due to forced exception, but not a validation failure
             await _keyVaultService.Received(1).ImportCertificate(
                 _knownVault,
                 _knownCertName,
@@ -128,7 +129,7 @@ public class CertificateImportCommandTests
         }
         else
         {
-            Assert.Equal(400, response.Status);
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         }
     }
 
@@ -154,7 +155,7 @@ public class CertificateImportCommandTests
 
         var response = await _command.ExecuteAsync(_context, args);
 
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expected, response.Message);
     }
 
@@ -193,7 +194,7 @@ public class CertificateImportCommandTests
             _knownSubscription,
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>());
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
     }
 
     [Fact]
@@ -229,7 +230,7 @@ public class CertificateImportCommandTests
             _knownSubscription,
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>());
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
     }
 
     [Fact]
@@ -266,7 +267,7 @@ public class CertificateImportCommandTests
                 _knownSubscription,
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions>());
-            Assert.Equal(500, response.Status);
+            Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         }
         finally
         {
@@ -303,7 +304,7 @@ public class CertificateImportCommandTests
 
         var response = await _command.ExecuteAsync(_context, args);
 
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(errorMessage, response.Message);
     }
 
@@ -334,7 +335,7 @@ public class CertificateImportCommandTests
 
         var response = await _command.ExecuteAsync(_context, args);
 
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(mismatchMessage, response.Message);
     }
 }

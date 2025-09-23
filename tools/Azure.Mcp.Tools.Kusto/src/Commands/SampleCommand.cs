@@ -42,7 +42,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -65,7 +65,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
 
             if (UseClusterUri(options))
             {
-                results = await kusto.QueryItems(
+                results = await kusto.QueryItemsAsync(
                     options.ClusterUri!,
                     options.Database!,
                     query,
@@ -75,7 +75,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
             }
             else
             {
-                results = await kusto.QueryItems(
+                results = await kusto.QueryItemsAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Database!,

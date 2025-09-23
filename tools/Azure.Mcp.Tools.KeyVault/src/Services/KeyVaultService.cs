@@ -260,9 +260,9 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
             else
             {
                 // Try base64, fallback to file path if exists
-                if (System.IO.File.Exists(certificateData))
+                if (File.Exists(certificateData))
                 {
-                    bytes = await System.IO.File.ReadAllBytesAsync(certificateData);
+                    bytes = await File.ReadAllBytesAsync(certificateData);
                 }
                 else
                 {

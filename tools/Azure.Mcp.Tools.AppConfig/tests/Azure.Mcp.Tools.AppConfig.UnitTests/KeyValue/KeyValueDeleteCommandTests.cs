@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -53,7 +54,7 @@ public class KeyValueDeleteCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         await _appConfigService.Received(1).DeleteKeyValue(
             "account1",
             "my-key",
@@ -84,7 +85,7 @@ public class KeyValueDeleteCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         await _appConfigService.Received(1).DeleteKeyValue(
             "account1",
             "my-key",
@@ -123,7 +124,7 @@ public class KeyValueDeleteCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Failed to delete key-value", response.Message);
     }
 
@@ -140,7 +141,7 @@ public class KeyValueDeleteCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("required", response.Message.ToLower());
     }
 }

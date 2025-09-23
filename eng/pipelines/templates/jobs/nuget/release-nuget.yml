@@ -17,7 +17,7 @@ jobs:
     isProduction: true
     inputs:
     - input: pipelineArtifact
-      artifactName: 'nuget_$(PipelineArtifactName)_packed'
+      artifactName: 'packages_nuget_signed'
       targetPath: $(Pipeline.Workspace)/drop
   environment: package-publish
   timeoutInMinutes: 120
