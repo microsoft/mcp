@@ -95,5 +95,5 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
     }
 
     // Strongly-typed result record
-    internal record AccountGetCommandResult([property: JsonPropertyName("accounts")] List<AccountInfo> Accounts);
+    internal record AccountGetCommandResult([property: JsonPropertyName("accounts")] List<StorageAccountInfo> Accounts);
 }

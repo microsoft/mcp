@@ -45,7 +45,7 @@ public class AccountGetCommandTests
     {
         // Arrange
         var subscription = "sub123";
-        var expectedAccounts = new List<Models.AccountInfo>
+        var expectedAccounts = new List<Models.StorageAccountInfo>
         {
             new("account1", "eastus", "StorageV2", "Standard_LRS", "Standard", true, true, true),
             new("account2", "westus", "StorageV2", "Standard_GRS", "Standard", false, false, true)
@@ -159,7 +159,7 @@ public class AccountGetCommandTests
 
             if (shouldSucceed)
             {
-                var expectedAccount = new List<Models.AccountInfo> {
+                var expectedAccount = new List<Models.StorageAccountInfo> {
                     new ("mystorageaccount", "eastus", "StorageV2", "Standard_LRS", "Standard", true, true, true)
                 };
 
@@ -198,7 +198,7 @@ public class AccountGetCommandTests
         // Arrange
         var account = "mystorageaccount";
         var subscription = "sub123";
-        var expectedAccount = new List<Models.AccountInfo> {
+        var expectedAccount = new List<Models.StorageAccountInfo> {
             new (account, "eastus", "StorageV2", "Standard_LRS", "Standard", true, true, true)
         };
 

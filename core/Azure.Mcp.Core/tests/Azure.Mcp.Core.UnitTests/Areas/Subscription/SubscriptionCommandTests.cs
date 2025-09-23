@@ -66,7 +66,7 @@ public class SubscriptionCommandTests
 
         try
         {
-            var expectedAccounts = new List<Mcp.Tools.Storage.Models.AccountInfo>
+            var expectedAccounts = new List<Mcp.Tools.Storage.Models.StorageAccountInfo>
             {
                 new("account1", null, null, null, null, null, null, null),
                 new("account2", null, null, null, null, null, null, null)
@@ -110,7 +110,7 @@ public class SubscriptionCommandTests
 
         try
         {
-            var expectedAccounts = new List<Mcp.Tools.Storage.Models.AccountInfo>
+            var expectedAccounts = new List<Mcp.Tools.Storage.Models.StorageAccountInfo>
             {
                 new("account1", null, null, null, null, null, null, null),
                 new("account2", null, null, null, null, null, null, null)

@@ -62,7 +62,7 @@ public class AccountCreateCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            var expectedAccount = new AccountInfo(
+            var expectedAccount = new StorageAccountInfo(
                 "testaccount",
                 "eastus",
                 "StorageV2",
@@ -207,7 +207,7 @@ public class AccountCreateCommandTests
             Arg.Any<bool?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromException<AccountInfo>(new Exception("Test error")));
+            .Returns(Task.FromException<StorageAccountInfo>(new Exception("Test error")));
 
         var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
 
@@ -224,7 +224,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
     {
         // Arrange
-        var expectedAccount = new AccountInfo(
+        var expectedAccount = new StorageAccountInfo(
             "testaccount",
             "eastus",
             "StorageV2",
