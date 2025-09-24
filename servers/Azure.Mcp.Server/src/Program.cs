@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
+using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -34,6 +35,10 @@ internal class Program
             });
 
             var serviceProvider = services.BuildServiceProvider();
+
+            // Perform any initialization before starting the service.
+            var telemetryService = serviceProvider.GetRequiredService<ITelemetryService>();
+            await telemetryService.InitializeAsync();
 
             var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
             var rootCommand = commandFactory.RootCommand;
