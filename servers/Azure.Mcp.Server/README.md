@@ -31,11 +31,11 @@ remove-section: end
 
 insert-chunk is used to insert a chunk of text into a line for a specified package type. 
 e.g.
-insert-chunk: nuget;vsix;npm {{Text to be inserted}}
+insert-section: nuget;vsix;npm {{Text to be inserted}}
 
 Remember to wrap each annotation in markdown comments
 -->
-# <!-- remove-section: start nuget;vsix --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end -->Azure MCP Server <!-- insert-chunk: nuget;vsix;npm {{ToolTitle}} -->
+# <!-- remove-section: start nuget;vsix --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end -->Azure MCP Server <!-- insert-section: nuget;vsix;npm {{ToolTitle}} -->
 
 All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the GitHub Copilot for Azure extension in a supported IDE. This project is in Public Preview and implementation may significantly change prior to our General Availability.
 
@@ -130,7 +130,7 @@ You can configure the Azure MCP Server by installing the appropriate extension /
 - Custom client configuration by updating the `mcp.json` file.
     <!-- remove-section: start nuget;npm --><details>
     <summary><b>Find mcp.json file for your IDE</b></summary><!-- remove-section: end -->
-    <!-- insert-chunk: nuget;npm {{#### Find mcp.json file for your IDE}} -->
+    <!-- insert-section: nuget;npm {{#### Find mcp.json file for your IDE}} -->
     - Open GitHub Copilot in your IDE. `View > Chat` for VS code<!-- remove-section: start vsix -->, `Tools > GitHub Copilot > Open Chat` for IntelliJ IDEA<!-- remove-section: end -->
     - Switch to Agent Mode then click on the Tools Configuration button
   
@@ -141,7 +141,7 @@ You can configure the Azure MCP Server by installing the appropriate extension /
     <!-- remove-section: start vsix;npm -->
     <!-- remove-section: start nuget --><details>
     <summary><b>Configure Azure MCP Server using .NET Tool</b></summary><!-- remove-section: end -->
-    <!-- insert-chunk: nuget {{#### Configure Azure MCP Server in mcp.json}} -->
+    <!-- insert-section: nuget {{#### Configure Azure MCP Server in mcp.json}} -->
 
     To use the latest version enter the following snippet in your `mcp.json`
     ```json
@@ -190,7 +190,7 @@ You can configure the Azure MCP Server by installing the appropriate extension /
     <!-- remove-section: start vsix;nuget -->
     <!-- remove-section: start npm --><details>
     <summary><b>Configure Azure MCP Server using node tool</b></summary><!-- remove-section: end -->
-    <!-- insert-chunk: npm {{#### Configure Azure MCP Server in mcp.json}} -->
+    <!-- insert-section: npm {{#### Configure Azure MCP Server in mcp.json}} -->
 
     To use the latest version enter the following snippet in your mcp.json
 
@@ -227,7 +227,7 @@ You can configure the Azure MCP Server by installing the appropriate extension /
     <!-- remove-section: end -->
     <!-- remove-section: start npm;nuget;vsix --><details>
     <summary><b>Start (or Auto-Start) the MCP Server</b></summary><!-- remove-section: end -->
-    <!-- insert-chunk: npm;nuget;vsix {{#### Start (or Auto-Start) the MCP Server}} -->
+    <!-- insert-section: npm;nuget;vsix {{#### Start (or Auto-Start) the MCP Server}} -->
 
     | | Enable Auto-Start | | Manual Start (if autostart is off) |
     | -- | -- | -- | -- |

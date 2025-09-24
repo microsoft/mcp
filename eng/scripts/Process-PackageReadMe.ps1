@@ -73,10 +73,10 @@ foreach($line in $readMeText) {
     }
 
     # insert-chunk: start marks chunk insertion for the package type
-    # e.g. <!-- insert-chunk: nuget;vsix;npm {{ToolTitle}} -->
+    # e.g. <!-- insert-section: nuget;vsix;npm {{ToolTitle}} -->
     # ToolTitle will be inserted from the InsertPayload hashtable
-    $insertChunkPattern = "(?i)<!--\s*insert-chunk:\s+([^{}]+?)\s*\{\{([\s\S]*?)\}\}\s*-->"
-    $matches = [regex]::Matches($lineToAppend, $insertChunkPattern)
+    $insertSectionPattern = "(?i)<!--\s*insert-section:\s+([^{}]+?)\s*\{\{([\s\S]*?)\}\}\s*-->"
+    $matches = [regex]::Matches($lineToAppend, $insertSectionPattern)
 
     foreach ($match in $matches) {
         $pkgTypeInfo = $match.Groups[1].Value
