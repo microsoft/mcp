@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Speech.Commands.Stt;
 using Azure.Mcp.Tools.Speech.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Speech;
 
@@ -17,9 +16,10 @@ public class SpeechSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ISpeechService, SpeechService>();
+        services.AddSingleton<SttRecognizeCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var speech = new CommandGroup(Name,
             """
@@ -38,9 +38,10 @@ public class SpeechSetup : IAreaSetup
             name: "stt",
             description: "Speech-to-text operations - Commands for converting spoken audio to text using Azure AI Services Speech recognition.");
 
-        stt.AddCommand("recognize", new SttRecognizeCommand(loggerFactory.CreateLogger<SttRecognizeCommand>()));
+        var sttRecognize = serviceProvider.GetRequiredService<SttRecognizeCommand>();
+        stt.AddCommand(sttRecognize.Name, sttRecognize);
 
         speech.AddSubGroup(stt);
-        rootGroup.AddSubGroup(speech);
+        return speech;
     }
 }

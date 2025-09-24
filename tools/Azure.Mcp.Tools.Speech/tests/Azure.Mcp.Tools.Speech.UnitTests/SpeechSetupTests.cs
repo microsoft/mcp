@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Microsoft.Extensions.Logging.Abstractions;
+using Azure.Mcp.Core.Services.Azure.Tenant;
+using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.UnitTests;
@@ -24,26 +26,24 @@ public class SpeechSetupTests
     {
         // Arrange
         var setup = new SpeechSetup();
-        var rootGroup = new CommandGroup("root", "Root command group");
-        var loggerFactory = new NullLoggerFactory();
+        var services = CreateServiceProvider(setup);
 
         // Act & Assert (should not throw)
-        setup.RegisterCommands(rootGroup, loggerFactory);
+        var result = setup.RegisterCommands(services);
+        Assert.NotNull(result);
     }
 
     [Fact]
-    public void RegisterCommands_ShouldAddSpeechGroup()
+    public void RegisterCommands_ShouldReturnSpeechGroup()
     {
         // Arrange
         var setup = new SpeechSetup();
-        var rootGroup = new CommandGroup("root", "Root command group");
-        var loggerFactory = new NullLoggerFactory();
+        var services = CreateServiceProvider(setup);
 
         // Act
-        setup.RegisterCommands(rootGroup, loggerFactory);
+        var speechGroup = setup.RegisterCommands(services);
 
         // Assert
-        var speechGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "speech");
         Assert.NotNull(speechGroup);
         Assert.Equal("speech", speechGroup.Name);
         Assert.NotNull(speechGroup.Description);
@@ -55,14 +55,12 @@ public class SpeechSetupTests
     {
         // Arrange
         var setup = new SpeechSetup();
-        var rootGroup = new CommandGroup("root", "Root command group");
-        var loggerFactory = new NullLoggerFactory();
+        var services = CreateServiceProvider(setup);
 
         // Act
-        setup.RegisterCommands(rootGroup, loggerFactory);
+        var speechGroup = setup.RegisterCommands(services);
 
         // Assert
-        var speechGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "speech");
         Assert.NotNull(speechGroup);
         Assert.Contains("Azure AI Services Speech", speechGroup.Description);
     }
@@ -72,14 +70,12 @@ public class SpeechSetupTests
     {
         // Arrange
         var setup = new SpeechSetup();
-        var rootGroup = new CommandGroup("root", "Root command group");
-        var loggerFactory = new NullLoggerFactory();
+        var services = CreateServiceProvider(setup);
 
         // Act
-        setup.RegisterCommands(rootGroup, loggerFactory);
+        var speechGroup = setup.RegisterCommands(services);
 
         // Assert
-        var speechGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "speech");
         Assert.NotNull(speechGroup);
 
         var sttGroup = speechGroup.SubGroup.FirstOrDefault(g => g.Name == "stt");
@@ -93,14 +89,12 @@ public class SpeechSetupTests
     {
         // Arrange
         var setup = new SpeechSetup();
-        var rootGroup = new CommandGroup("root", "Root command group");
-        var loggerFactory = new NullLoggerFactory();
+        var services = CreateServiceProvider(setup);
 
         // Act
-        setup.RegisterCommands(rootGroup, loggerFactory);
+        var speechGroup = setup.RegisterCommands(services);
 
         // Assert
-        var speechGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "speech");
         Assert.NotNull(speechGroup);
 
         var sttGroup = speechGroup.SubGroup.FirstOrDefault(g => g.Name == "stt");
@@ -112,14 +106,13 @@ public class SpeechSetupTests
     }
 
     [Fact]
-    public void RegisterCommands_WithNullRootGroup_ShouldThrow()
+    public void RegisterCommands_WithNullServiceProvider_ShouldThrow()
     {
         // Arrange
         var setup = new SpeechSetup();
-        var loggerFactory = new NullLoggerFactory();
 
         // Act & Assert
-        Assert.Throws<NullReferenceException>(() => setup.RegisterCommands(null!, loggerFactory));
+        Assert.Throws<ArgumentNullException>(() => setup.RegisterCommands(null!));
     }
 
     [Fact]
@@ -137,9 +130,20 @@ public class SpeechSetupTests
         var constructors = type.GetConstructors();
         Assert.NotEmpty(constructors);
 
-        // Verify it has the RegisterCommands method
-        var registerMethod = type.GetMethod("RegisterCommands");
+        // Verify it has the RegisterCommands method with the correct signature
+        var registerMethod = type.GetMethod("RegisterCommands", new[] { typeof(IServiceProvider) });
         Assert.NotNull(registerMethod);
         Assert.True(registerMethod.IsPublic);
+        Assert.Equal(typeof(CommandGroup), registerMethod.ReturnType);
+    }
+
+    private static IServiceProvider CreateServiceProvider(SpeechSetup setup)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        // Add required dependencies
+        services.AddSingleton(Substitute.For<ITenantService>());
+        setup.ConfigureServices(services);
+        return services.BuildServiceProvider();
     }
 }
