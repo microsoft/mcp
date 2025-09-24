@@ -31,10 +31,7 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
     };
 
     public override string Description =>
-        """
-        List all keys in an Azure Key Vault. This command retrieves and displays the names of all keys
-        stored in the specified vault.
-        """;
+        "List/show/enumerate all keys in an Azure Key Vault";
 
     protected override void RegisterOptions(Command command)
     {
