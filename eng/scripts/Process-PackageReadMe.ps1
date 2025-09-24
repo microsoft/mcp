@@ -21,6 +21,14 @@ enum ActionType {
 $actionStack = [System.Collections.Generic.Stack[ActionType]]::new()
 $actionStack.Push([ActionType]::Append)
 
+function AppendLine ([string]$Line) {
+    if([string]::IsNullOrWhiteSpace($Line) -and $processedReadMe.Count -gt 0 -and [string]::IsNullOrWhiteSpace($processedReadMe[-1])) {
+        return
+    }
+    $script:processedReadMe += $Line
+} 
+
+
 # Remove leading comment block if present
 if ($readMeText[0] -eq "<!--") {
     for ($i = 0; $i -lt $readMeText.Count; $i++) {
@@ -33,7 +41,7 @@ if ($readMeText[0] -eq "<!--") {
 
 foreach($line in $readMeText) {
     if ([string]::IsNullOrWhiteSpace($line) -and $actionStack.Peek() -eq [ActionType]::Append) {
-        $processedReadMe += ''
+        AppendLine -Line ""
         continue
     }
 
@@ -91,7 +99,7 @@ foreach($line in $readMeText) {
     }
 
     if ($actionStack.Peek() -eq [ActionType]::Append) {
-        $processedReadMe += $lineToAppend
+        AppendLine -Line $lineToAppend
     }
 }
 Set-Content -Path "$OutputDirectory/README$PackageType.md" -Value $processedReadMe -Force
