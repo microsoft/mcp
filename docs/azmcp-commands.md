@@ -155,12 +155,12 @@ azmcp foundry agents connect --agent-id <agent-id> \
 
 # Evaluate a response from an agent by passing query and response inline
 azmcp foundry agents evaluate --agent-id <agent-id> \
-                                        --query <query> \
-                                        --response <response> \
-                                        --evaluator <evaluator> \
-                                        --azure-openai-endpoint <azure-openai-endpoint> \
-                                        --azure-openai-deployment <azure-openai-deployment> \
-                                        [--tool-definitions <tool-definitions>]
+                              --query <query> \
+                              --response <response> \
+                              --evaluator <evaluator> \
+                              --azure-openai-endpoint <azure-openai-endpoint> \
+                              --azure-openai-deployment <azure-openai-deployment> \
+                              [--tool-definitions <tool-definitions>]
 
 # Query and evaluate an agent in one command
 azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
@@ -637,6 +637,14 @@ azmcp functionapp get --subscription <subscription> \
 
 ### Azure Key Vault Operations
 
+#### Administration
+
+```bash
+# Gets Key Vault administration settings
+azmcp keyvault admin settings get --subscription <subscription> \
+                                  --vault <vault-name>
+```
+
 #### Certificates
 
 ```bash
@@ -711,10 +719,6 @@ azmcp keyvault secret get --subscription <subscription> \
 # Lists secrets in a key vault
 azmcp keyvault secret list --subscription <subscription> \
                            --vault <vault-name>
-
-# Gets Key Vault administration settings
-azmcp keyvault admin settings get --subscription <subscription> \
-                                  --vault <vault-name>
 ```
 
 ### Azure Kubernetes Service (AKS) Operations
@@ -1186,14 +1190,14 @@ azmcp sql server firewall-rule list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
 
-# List SQL servers in a resource group
-azmcp sql server list --subscription <subscription> \
-                      --resource-group <resource-group>
-
 # Delete a SQL server
 azmcp sql server delete --subscription <subscription> \
                         --resource-group <resource-group> \
                         --server <server-name>
+
+# List SQL servers in a resource group
+azmcp sql server list --subscription <subscription> \
+                      --resource-group <resource-group>
 
 # Show details of a specific SQL server
 azmcp sql server show --subscription <subscription> \
