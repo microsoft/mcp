@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net.Mime;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Net.Mime;
 using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.ResourceManager.EventGrid;
 using Azure.ResourceManager.EventGrid.Models;
@@ -170,25 +170,25 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    private static IEnumerable<EventGridEventSchema> ParseAndValidateEventData(string eventData, string eventSchema)
+    private static IEnumerable<Models.EventGridEventSchema> ParseAndValidateEventData(string eventData, string eventSchema)
     {
         try
         {
             // Parse the JSON data
             var jsonDocument = JsonDocument.Parse(eventData);
 
-            IEnumerable<EventGridEventSchema> events;
+            IEnumerable<Models.EventGridEventSchema> events;
 
             if (jsonDocument.RootElement.ValueKind == JsonValueKind.Array)
             {
                 // Handle array of events - use lazy evaluation
                 events = jsonDocument.RootElement.EnumerateArray()
-                    .Select(eventElement => CreateEventGridEventSchemaFromJsonElement(eventElement, eventSchema));
+                    .Select(eventElement => CreateEventGridEventFromJsonElement(eventElement, eventSchema));
             }
             else
             {
                 // Handle single event - return single item enumerable
-                events = new[] { CreateEventGridEventSchemaFromJsonElement(jsonDocument.RootElement, eventSchema) };
+                events = new[] { CreateEventGridEventFromJsonElement(jsonDocument.RootElement, eventSchema) };
             }
 
             var eventsList = events.ToList();
@@ -205,94 +205,68 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    private static EventGridEventSchema CreateEventGridEventSchemaFromJsonElement(JsonElement eventElement, string eventSchema)
+    private static Models.EventGridEventSchema CreateEventGridEventFromJsonElement(JsonElement eventElement, string eventSchema)
     {
-        string? eventType, subject, dataVersion;
-        DateTimeOffset eventTime;
-
-        // Extract event ID early for logging purposes
-        var id = eventElement.TryGetProperty("id", out var idProp) ? idProp.GetString() : Guid.NewGuid().ToString();
+        var eventJson = eventElement.GetRawText();
 
         if (eventSchema.Equals("CloudEvents", StringComparison.OrdinalIgnoreCase))
         {
-            // CloudEvents spec handling (v1.0)
-            eventType = eventElement.TryGetProperty("type", out var typeProp) ? typeProp.GetString() : "CustomEvent";
+            var cloudEvent = JsonSerializer.Deserialize(eventJson, EventGridJsonContext.Default.CloudEvent);
+            if (cloudEvent == null)
+                throw new ArgumentException("Failed to deserialize CloudEvent");
 
-            // CloudEvents uses "source" field, but we can fall back to "subject" for compatibility
-            subject = eventElement.TryGetProperty("source", out var sourceProp) ? sourceProp.GetString() :
-                     eventElement.TryGetProperty("subject", out var subjectProp) ? subjectProp.GetString() : "/default/subject";
-
-            // CloudEvents uses "specversion" for schema version
-            dataVersion = eventElement.TryGetProperty("specversion", out var specProp) ? specProp.GetString() : "1.0";
-
-            // CloudEvents uses "time" field
-            eventTime = eventElement.TryGetProperty("time", out var timeProp) && timeProp.TryGetDateTimeOffset(out var timeValue)
-                       ? timeValue : DateTimeOffset.UtcNow;
-
-            // Handle datacontenttype - CloudEvents v1.0 spec field for content type of data payload
-            var dataContentType = eventElement.TryGetProperty("datacontenttype", out var dataContentTypeProp)
-                ? dataContentTypeProp.GetString()
-                : MediaTypeNames.Application.Json; 
-
+            // Validate datacontenttype for CloudEvents
+            var dataContentType = cloudEvent.DataContentType ?? MediaTypeNames.Application.Json;
             if (!string.Equals(dataContentType, MediaTypeNames.Application.Json, StringComparison.OrdinalIgnoreCase))
             {
-                // Log when non-JSON content types are used - this helps with debugging
-                // Note: EventGrid will accept the event regardless of datacontenttype,
-                // but subscribers should handle non-JSON content types appropriately
-                // Common non-JSON types: application/xml, text/plain, application/octet-stream
-
-                // For now, we'll just validate that it's a recognized MIME type format
                 if (string.IsNullOrWhiteSpace(dataContentType) || !dataContentType.Contains('/'))
                 {
-                    throw new ArgumentException($"Invalid datacontenttype '{dataContentType}' in CloudEvent with id '{id}'. Must be a valid MIME type (e.g., 'application/xml', 'text/plain').");
+                    throw new ArgumentException($"Invalid datacontenttype '{dataContentType}' in CloudEvent with id '{cloudEvent.Id}'. Must be a valid MIME type (e.g., 'application/xml', 'text/plain').");
                 }
             }
+
+            return new Models.EventGridEventSchema
+            {
+                Id = cloudEvent.Id ?? Guid.NewGuid().ToString(),
+                Subject = cloudEvent.Source ?? cloudEvent.Subject ?? "/default/subject",
+                EventType = cloudEvent.Type ?? "CustomEvent",
+                DataVersion = cloudEvent.SpecVersion ?? "1.0",
+                Data = cloudEvent.Data.HasValue ? JsonNode.Parse(cloudEvent.Data.Value.GetRawText()) : null,
+                EventTime = cloudEvent.Time ?? DateTimeOffset.UtcNow
+            };
         }
         else if (eventSchema.Equals("EventGrid", StringComparison.OrdinalIgnoreCase))
         {
-            // EventGrid spec handling
-            eventType = eventElement.TryGetProperty("eventType", out var eventTypeProp) ? eventTypeProp.GetString() : "CustomEvent";
-            subject = eventElement.TryGetProperty("subject", out var subjectProp) ? subjectProp.GetString() : "/default/subject";
-            dataVersion = eventElement.TryGetProperty("dataVersion", out var dataVersionProp) ? dataVersionProp.GetString() : "1.0";
-            eventTime = eventElement.TryGetProperty("eventTime", out var timeProp) && timeProp.TryGetDateTimeOffset(out var eventTimeValue)
-                       ? eventTimeValue : DateTimeOffset.UtcNow;
+            var eventGridEvent = JsonSerializer.Deserialize(eventJson, EventGridJsonContext.Default.EventGridEventInput);
+            if (eventGridEvent == null)
+                throw new ArgumentException("Failed to deserialize EventGrid event");
+
+            return new Models.EventGridEventSchema
+            {
+                Id = eventGridEvent.Id ?? Guid.NewGuid().ToString(),
+                Subject = eventGridEvent.Subject ?? "/default/subject",
+                EventType = eventGridEvent.EventType ?? "CustomEvent",
+                DataVersion = eventGridEvent.DataVersion ?? "1.0",
+                Data = eventGridEvent.Data.HasValue ? JsonNode.Parse(eventGridEvent.Data.Value.GetRawText()) : null,
+                EventTime = eventGridEvent.EventTime ?? DateTimeOffset.UtcNow
+            };
         }
-        else // Custom schema
+        else // Custom schema - try both CloudEvents and EventGrid field names
         {
-            // For custom schema, try both CloudEvents and EventGrid field names for flexibility
-            eventType = eventElement.TryGetProperty("eventType", out var eventTypeProp) ? eventTypeProp.GetString() :
-                       eventElement.TryGetProperty("type", out var typeProp) ? typeProp.GetString() : "CustomEvent";
+            var flexibleEvent = JsonSerializer.Deserialize(eventJson, EventGridJsonContext.Default.CustomEvent);
+            if (flexibleEvent == null)
+                throw new ArgumentException("Failed to deserialize custom event");
 
-            subject = eventElement.TryGetProperty("subject", out var subjectProp) ? subjectProp.GetString() :
-                     eventElement.TryGetProperty("source", out var sourceProp) ? sourceProp.GetString() : "/default/subject";
-
-            dataVersion = eventElement.TryGetProperty("dataVersion", out var dataVersionProp) ? dataVersionProp.GetString() :
-                         eventElement.TryGetProperty("specversion", out var specProp) ? specProp.GetString() : "1.0";
-
-            eventTime = eventElement.TryGetProperty("eventTime", out var eventTimeProp) && eventTimeProp.TryGetDateTimeOffset(out var eventTimeValue) ? eventTimeValue :
-                       eventElement.TryGetProperty("time", out var timeProp) && timeProp.TryGetDateTimeOffset(out var timeValue) ? timeValue : DateTimeOffset.UtcNow;
+            return new Models.EventGridEventSchema
+            {
+                Id = flexibleEvent.Id ?? Guid.NewGuid().ToString(),
+                Subject = flexibleEvent.Subject ?? flexibleEvent.Source ?? "/default/subject",
+                EventType = flexibleEvent.EventType ?? flexibleEvent.Type ?? "CustomEvent",
+                DataVersion = flexibleEvent.DataVersion ?? flexibleEvent.SpecVersion ?? "1.0",
+                Data = flexibleEvent.Data.HasValue ? JsonNode.Parse(flexibleEvent.Data.Value.GetRawText()) : null,
+                EventTime = flexibleEvent.EventTime ?? flexibleEvent.Time ?? DateTimeOffset.UtcNow
+            };
         }
-
-        // Extract data payload and parse as JsonNode for AOT compatibility
-        JsonNode? data = null;
-        if (eventElement.TryGetProperty("data", out var dataProp))
-        {
-            data = JsonNode.Parse(dataProp.GetRawText());
-        }
-
-        // For CloudEvents schema, we've already captured datacontenttype above for validation/logging
-        // The EventGrid schema doesn't have a direct equivalent, so we don't persist it in the final event
-
-        // Create EventGridEventSchema directly
-        return new EventGridEventSchema
-        {
-            Id = id ?? Guid.NewGuid().ToString(),
-            Subject = subject ?? "/default/subject",
-            EventType = eventType ?? "CustomEvent",
-            DataVersion = dataVersion ?? "1.0",
-            Data = data,
-            EventTime = eventTime
-        };
     }
 
     private async Task GetSubscriptionsForSpecificTopic(
