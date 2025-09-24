@@ -200,6 +200,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_keyvault_admin_settings_get | Get the account settings for my key vault <key_vault_account_name> |
+| azmcp_keyvault_admin_settings_get | Show me the account settings for managed HSM keyvault <key_vault_account_name> |
+| azmcp_keyvault_admin_settings_get | What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name> |
 | azmcp_keyvault_certificate_create | Create a new certificate called <certificate_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_get | Show me the certificate <certificate_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_get | Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name> |
@@ -399,6 +402,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_db_delete | Delete the database called <database_name> on server <server_name> |
 | azmcp_sql_db_list | List all databases in the Azure SQL server <server_name> |
 | azmcp_sql_db_list | Show me all the databases configuration details in the Azure SQL server <server_name> |
+| azmcp_sql_db_rename | Rename the SQL database <database_name> on server <server_name> to <new_database_name> |
+| azmcp_sql_db_rename | Rename my Azure SQL database <database_name> to <new_database_name> on server <server_name> |
 | azmcp_sql_db_show | Get the configuration details for the SQL database <database_name> on server <server_name> |
 | azmcp_sql_db_show | Show me the details of SQL database <database_name> in server <server_name> |
 | azmcp_sql_db_update | Update the performance tier of SQL database <database_name> on server <server_name> |

@@ -155,12 +155,12 @@ azmcp foundry agents connect --agent-id <agent-id> \
 
 # Evaluate a response from an agent by passing query and response inline
 azmcp foundry agents evaluate --agent-id <agent-id> \
-                                        --query <query> \
-                                        --response <response> \
-                                        --evaluator <evaluator> \
-                                        --azure-openai-endpoint <azure-openai-endpoint> \
-                                        --azure-openai-deployment <azure-openai-deployment> \
-                                        [--tool-definitions <tool-definitions>]
+                              --query <query> \
+                              --response <response> \
+                              --evaluator <evaluator> \
+                              --azure-openai-endpoint <azure-openai-endpoint> \
+                              --azure-openai-deployment <azure-openai-deployment> \
+                              [--tool-definitions <tool-definitions>]
 
 # Query and evaluate an agent in one command
 azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
@@ -637,6 +637,14 @@ azmcp functionapp get --subscription <subscription> \
 
 ### Azure Key Vault Operations
 
+#### Administration
+
+```bash
+# Gets Key Vault administration settings
+azmcp keyvault admin settings get --subscription <subscription> \
+                                  --vault <vault-name>
+```
+
 #### Certificates
 
 ```bash
@@ -1107,6 +1115,13 @@ azmcp sql db delete --subscription <subscription> \
 azmcp sql db list --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name>
+                  
+# Rename an existing SQL database to a new name within the same server
+azmcp sql db rename --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <current-database-name> \
+                    --new-database-name <new-database-name>
 
 # Show details of a specific SQL database
 azmcp sql db show --subscription <subscription> \
@@ -1175,14 +1190,14 @@ azmcp sql server firewall-rule list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
 
-# List SQL servers in a resource group
-azmcp sql server list --subscription <subscription> \
-                      --resource-group <resource-group>
-
 # Delete a SQL server
 azmcp sql server delete --subscription <subscription> \
                         --resource-group <resource-group> \
                         --server <server-name>
+
+# List SQL servers in a resource group
+azmcp sql server list --subscription <subscription> \
+                      --resource-group <resource-group>
 
 # Show details of a specific SQL server
 azmcp sql server show --subscription <subscription> \

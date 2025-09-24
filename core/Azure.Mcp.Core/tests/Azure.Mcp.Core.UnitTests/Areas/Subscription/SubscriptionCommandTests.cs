@@ -66,17 +66,18 @@ public class SubscriptionCommandTests
 
         try
         {
-            var expectedAccounts = new List<Mcp.Tools.Storage.Models.AccountInfo>
+            var expectedAccounts = new List<Mcp.Tools.Storage.Models.StorageAccountInfo>
             {
-                new("account1", null, null, null, null, null, null, null),
-                new("account2", null, null, null, null, null, null, null)
+                new("account1", null, null, null, null, null, null, null, null, null),
+                new("account2", null, null, null, null, null, null, null, null, null)
             };
 
             _storageService.GetAccountDetails(
                 Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
                 Arg.Is("env-subs"),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(expectedAccounts));
 
             var parseResult = _commandDefinition.Parse([]);
@@ -92,7 +93,8 @@ public class SubscriptionCommandTests
                 Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
                 "env-subs",
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>());
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>());
         }
         finally
         {
@@ -110,17 +112,18 @@ public class SubscriptionCommandTests
 
         try
         {
-            var expectedAccounts = new List<Mcp.Tools.Storage.Models.AccountInfo>
+            var expectedAccounts = new List<Mcp.Tools.Storage.Models.StorageAccountInfo>
             {
-                new("account1", null, null, null, null, null, null, null),
-                new("account2", null, null, null, null, null, null, null)
+                new("account1", null, null, null, null, null, null, null, null, null),
+                new("account2", null, null, null, null, null, null, null, null, null)
             };
 
             _storageService.GetAccountDetails(
                 Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
                 Arg.Is("option-subs"),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(expectedAccounts));
 
             var parseResult = _commandDefinition.Parse(["--subscription", "option-subs"]);
@@ -136,12 +139,14 @@ public class SubscriptionCommandTests
                 Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
                 "option-subs",
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>());
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>());
             _ = _storageService.DidNotReceive().GetAccountDetails(
                 Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
                 "env-subs",
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>());
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>());
         }
         finally
         {
