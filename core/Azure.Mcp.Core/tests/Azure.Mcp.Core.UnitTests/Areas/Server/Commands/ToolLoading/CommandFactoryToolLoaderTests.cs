@@ -13,16 +13,17 @@ using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.ToolLoading;
 
-public class ConfigurableToolLoaderTests
+public class CommandFactoryToolLoaderTests
 {
-    private static (ConfigurableToolLoader toolLoader, CommandFactory commandFactory) CreateToolLoader(ToolLoaderOptions? options = null)
+    private static (CommandFactoryToolLoader toolLoader, CommandFactory commandFactory) CreateToolLoader(ToolLoaderOptions? options = null)
     {
         var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
-        var logger = loggerFactory.CreateLogger<ConfigurableToolLoader>();
+        var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
 
-        var toolLoader = new ConfigurableToolLoader(serviceProvider, commandFactory, options ?? new ToolLoaderOptions(), logger);
+        var optionsWrapper = Microsoft.Extensions.Options.Options.Create(options ?? new ToolLoaderOptions());
+        var toolLoader = new CommandFactoryToolLoader(serviceProvider, commandFactory, optionsWrapper, logger);
         return (toolLoader, commandFactory);
     }
 

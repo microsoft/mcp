@@ -50,7 +50,7 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(provider.GetService<RegistryDiscoveryStrategy>());
 
         // Verify base tool loaders
-        Assert.NotNull(provider.GetService<ConfigurableToolLoader>());
+        Assert.NotNull(provider.GetService<CommandFactoryToolLoader>());
         Assert.NotNull(provider.GetService<RegistryToolLoader>());
 
         // Verify runtime
@@ -259,8 +259,8 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(provider.GetService<IToolLoader>());
         Assert.IsType<CompositeToolLoader>(provider.GetService<IToolLoader>());
 
-        // Verify the presence of ConfigurableToolLoader which replaces CommandFactoryToolLoader
-        Assert.NotNull(provider.GetService<ConfigurableToolLoader>());
+        // Verify the presence of CommandFactoryToolLoader
+        Assert.NotNull(provider.GetService<CommandFactoryToolLoader>());
 
         // Verify runtime
         Assert.NotNull(provider.GetService<IMcpRuntime>());
@@ -413,8 +413,8 @@ public class ServiceCollectionExtensionsTests
         // Assert
         var provider = services.BuildServiceProvider();
 
-        // Get the ConfigurableToolLoader from the service provider
-        var configurableLoader = provider.GetService<ConfigurableToolLoader>();
+        // Get the CommandFactoryToolLoader from the service provider
+        var configurableLoader = provider.GetService<CommandFactoryToolLoader>();
         Assert.NotNull(configurableLoader);
 
         // Verify that subscription tools (core infrastructure) are available through the loader

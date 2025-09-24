@@ -7,9 +7,12 @@ using System.Reflection;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Models.Elicitation;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
@@ -23,16 +26,16 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 /// <param name="commandFactory">The command factory containing all available commands.</param>
 /// <param name="options">The tool loader options for configuration.</param>
 /// <param name="logger">The logger for diagnostic information.</param>
-public sealed class ConfigurableToolLoader(
+public sealed class CommandFactoryToolLoader(
     IServiceProvider serviceProvider,
     CommandFactory commandFactory,
-    ToolLoaderOptions options,
-    ILogger<ConfigurableToolLoader> logger) : IToolLoader
+    IOptions<ToolLoaderOptions> options,
+    ILogger<CommandFactoryToolLoader> logger) : IToolLoader
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     private readonly CommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
-    private readonly ToolLoaderOptions _options = options ?? throw new ArgumentNullException(nameof(options));
-    private readonly ILogger<ConfigurableToolLoader> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IOptions<ToolLoaderOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
+    private readonly ILogger<CommandFactoryToolLoader> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private IReadOnlyDictionary<string, IBaseCommand>? _toolCommands;
 
     public const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
@@ -96,17 +99,78 @@ public sealed class ConfigurableToolLoader(
             };
         }
 
+        // Check if this tool requires elicitation for sensitive data
+        var metadata = command.Metadata;
+        if (metadata.Secret)
+        {
+            // Check if elicitation is disabled by insecure option
+            if (_options.Value.InsecureDisableElicitation)
+            {
+                _logger.LogWarning("Tool '{Tool}' handles sensitive data but elicitation is disabled via --insecure-disable-elicitation. Proceeding without user consent (INSECURE).", toolName);
+            }
+            else
+            {
+                // If client doesn't support elicitation, treat as rejected and don't execute
+                if (!request.Server.SupportsElicitation())
+                {
+                    _logger.LogWarning("Tool '{Tool}' handles sensitive data but client does not support elicitation. Operation rejected.", toolName);
+                    return new CallToolResult
+                    {
+                        Content = [new TextContentBlock { Text = "This tool handles sensitive data and requires user consent, but the client does not support elicitation. Operation rejected for security." }],
+                        IsError = true
+                    };
+                }
+
+                try
+                {
+                    _logger.LogInformation("Tool '{Tool}' handles sensitive data. Requesting user confirmation via elicitation.", toolName);
+
+                    // Create the elicitation request using our custom model
+                    var elicitationRequest = new ElicitationRequestParams
+                    {
+                        Message = $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
+                        RequestedSchema = ElicitationSchema.CreateSecretSchema("confirmation", "Confirm Action", "Type 'yes' to confirm you want to proceed with this sensitive operation", true)
+                    };
+
+                    // Use our extension method to handle the elicitation
+                    var elicitationResponse = await request.Server.RequestElicitationAsync(elicitationRequest, cancellationToken);
+
+                    if (elicitationResponse.Action != ElicitationAction.Accept)
+                    {
+                        _logger.LogInformation("User {Action} the elicitation for tool '{Tool}'. Operation not executed.",
+                            elicitationResponse.Action.ToString().ToLower(), toolName);
+                        return new CallToolResult
+                        {
+                            Content = [new TextContentBlock { Text = $"Operation cancelled by user ({elicitationResponse.Action.ToString().ToLower()})." }],
+                            IsError = true
+                        };
+                    }
+
+                    _logger.LogInformation("User accepted elicitation for tool '{Tool}'. Proceeding with execution.", toolName);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error during elicitation for tool '{Tool}': {Error}", toolName, ex.Message);
+                    return new CallToolResult
+                    {
+                        Content = [new TextContentBlock { Text = $"Elicitation failed for sensitive tool '{toolName}': {ex.Message}. Operation not executed for security." }],
+                        IsError = true
+                    };
+                }
+            }
+        }
+
         var commandContext = new CommandContext(_serviceProvider, Activity.Current);
         var realCommand = command.GetCommand();
         ParseResult? commandOptions = null;
 
         if (realCommand.Options.Count == 1 && IsRawMcpToolInputOption(realCommand.Options[0]))
         {
-            commandOptions = realCommand.ParseFromRawMcpToolInput(request.Params.Arguments);
+            commandOptions = realCommand.ParseFromRawMcpToolInput(request.Params!.Arguments);
         }
         else
         {
-            commandOptions = realCommand.ParseFromDictionary(request.Params.Arguments);
+            commandOptions = realCommand.ParseFromDictionary(request.Params!.Arguments);
         }
 
         _logger.LogTrace("Invoking '{Tool}'.", realCommand.Name);
@@ -123,29 +187,25 @@ public sealed class ConfigurableToolLoader(
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
-            var callToolResult = new CallToolResult
+            return new CallToolResult
             {
-                Content = [new TextContentBlock { Text = jsonResponse }],
-                IsError = isError,
+                Content = [
+                    new TextContentBlock {
+                        Text = jsonResponse
+                    }
+                ],
+                IsError = isError
             };
-
-            _logger.LogTrace("Tool '{Tool}' executed successfully.", realCommand.Name);
-            return callToolResult;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error executing tool: {ToolName}", toolName);
+            _logger.LogError(ex, "An exception occurred running '{Tool}'. ", realCommand.Name);
 
-            var content = new TextContentBlock
-            {
-                Text = $"Error executing tool '{toolName}': {ex.Message}",
-            };
-
-            return new CallToolResult
-            {
-                Content = [content],
-                IsError = true,
-            };
+            throw;
+        }
+        finally
+        {
+            _logger.LogTrace("Finished executing '{Tool}'.", realCommand.Name);
         }
     }
 
@@ -261,8 +321,8 @@ public sealed class ConfigurableToolLoader(
         // Include extensions if:
         // 1. No namespace specified (all mode)
         // 2. "extension" namespace explicitly requested
-        return _options.Namespace == null ||
-               _options.Namespace.Contains("extension", StringComparer.OrdinalIgnoreCase);
+        return _options.Value.Namespace == null ||
+               _options.Value.Namespace.Contains("extension", StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -271,14 +331,14 @@ public sealed class ConfigurableToolLoader(
     private bool ShouldIncludeBasedOnNamespace(string commandName)
     {
         // If no namespace filtering is applied, include all commands
-        if (_options.Namespace == null || _options.Namespace.Length == 0)
+        if (_options.Value.Namespace == null || _options.Value.Namespace.Length == 0)
         {
             return true;
         }
 
         // Check if the command belongs to any of the specified namespaces
         // Command names are in format: azmcp_{namespace}_{resource}_{action}
-        foreach (var nameSpace in _options.Namespace)
+        foreach (var nameSpace in _options.Value.Namespace)
         {
             if (commandName.Contains($"_{nameSpace}_", StringComparison.OrdinalIgnoreCase))
             {
@@ -294,7 +354,7 @@ public sealed class ConfigurableToolLoader(
     /// </summary>
     private bool ShouldIncludeBasedOnReadOnly(IBaseCommand command)
     {
-        if (!_options.ReadOnly)
+        if (!_options.Value.ReadOnly)
         {
             return true; // Not in ReadOnly mode, include all commands
         }

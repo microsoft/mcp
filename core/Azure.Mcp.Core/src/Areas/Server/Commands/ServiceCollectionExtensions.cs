@@ -93,8 +93,8 @@ public static class AzureMcpServiceCollectionExtensions
             });
         }
 
-        // Register ConfigurableToolLoader with simple attribute-based filtering
-        services.AddSingleton<ConfigurableToolLoader>();
+        // Register CommandFactoryToolLoader with attribute-based filtering
+        services.AddSingleton<CommandFactoryToolLoader>();
 
         // Configure tool loading based on mode
         if (serviceStartOptions.Mode == ModeTypes.SingleToolProxy)
@@ -109,7 +109,7 @@ public static class AzureMcpServiceCollectionExtensions
                 var toolLoaders = new List<IToolLoader>
                 {
                     sp.GetRequiredService<ServerToolLoader>(),
-                    sp.GetRequiredService<ConfigurableToolLoader>()
+                    sp.GetRequiredService<CommandFactoryToolLoader>()
                 };
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
@@ -124,7 +124,7 @@ public static class AzureMcpServiceCollectionExtensions
                 var toolLoaders = new List<IToolLoader>
                 {
                     sp.GetRequiredService<RegistryToolLoader>(),
-                    sp.GetRequiredService<ConfigurableToolLoader>(),
+                    sp.GetRequiredService<CommandFactoryToolLoader>(),
                 };
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());

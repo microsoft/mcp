@@ -9,6 +9,6 @@ namespace Azure.Mcp.Tools.Deploy.Options.Architecture;
 
 public class DiagramGenerateOptions : GlobalOptions
 {
-    [JsonPropertyName(ConfigurableToolLoader.RawMcpToolInputOptionName)]
+    [JsonPropertyName(CommandFactoryToolLoader.RawMcpToolInputOptionName)]
     public string? RawMcpToolInput { get; set; }
 }
