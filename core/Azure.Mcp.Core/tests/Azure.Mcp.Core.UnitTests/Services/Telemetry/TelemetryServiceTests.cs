@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
@@ -24,6 +25,7 @@ public class TelemetryServiceTests
     private readonly IOptions<AzureMcpServerConfiguration> _mockOptions;
     private readonly IMachineInformationProvider _mockInformationProvider;
     private readonly IOptions<ServiceStartOptions> _mockServiceOptions;
+    private readonly ILogger<TelemetryService> _logger;
 
     public TelemetryServiceTests()
     {
@@ -35,19 +37,21 @@ public class TelemetryServiceTests
         _mockInformationProvider = Substitute.For<IMachineInformationProvider>();
         _mockInformationProvider.GetMacAddressHash().Returns(Task.FromResult(TestMacAddressHash));
         _mockInformationProvider.GetOrCreateDeviceId().Returns(Task.FromResult<string?>(TestDeviceId));
+
+        _logger = Substitute.For<ILogger<TelemetryService>>();
     }
 
     [Fact]
-    public async Task StartActivity_WhenTelemetryDisabled_ShouldReturnNull()
+    public void StartActivity_WhenTelemetryDisabled_ShouldReturnNull()
     {
         // Arrange
         _testConfiguration.IsTelemetryEnabled = false;
-        using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions);
+        using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger);
         const string activityId = "test-activity";
 
         // Act
-        var activity = await service.StartActivity(activityId);
-        var defaultTags = await service.GetDefaultTags();
+        var activity = service.StartActivity(activityId);
+        var defaultTags = service.GetDefaultTags();
 
         // Assert
         Assert.Null(activity);
@@ -56,11 +60,11 @@ public class TelemetryServiceTests
     }
 
     [Fact]
-    public async Task StartActivity_WithClientInfo_WhenTelemetryDisabled_ShouldReturnNull()
+    public void StartActivity_WithClientInfo_WhenTelemetryDisabled_ShouldReturnNull()
     {
         // Arrange
         _testConfiguration.IsTelemetryEnabled = false;
-        using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions);
+        using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger);
         const string activityId = "test-activity";
         var clientInfo = new Implementation
         {
@@ -69,7 +73,7 @@ public class TelemetryServiceTests
         };
 
         // Act
-        var activity = await service.StartActivity(activityId, clientInfo);
+        using var activity = service.StartActivity(activityId, clientInfo);
 
         // Assert
         Assert.Null(activity);
@@ -79,7 +83,7 @@ public class TelemetryServiceTests
     public void Dispose_WithNullLogForwarder_ShouldNotThrow()
     {
         // Arrange
-        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions);
+        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger);
 
         // Act & Assert
         var exception = Record.Exception(() => service.Dispose());
@@ -90,7 +94,7 @@ public class TelemetryServiceTests
     public void Constructor_WithNullOptions_ShouldThrowArgumentNullException()
     {
         // Arrange, Act & Assert
-        Assert.Throws<NullReferenceException>(() => new TelemetryService(_mockInformationProvider, null!, _mockServiceOptions));
+        Assert.Throws<NullReferenceException>(() => new TelemetryService(_mockInformationProvider, null!, _mockServiceOptions, _logger));
     }
 
     [Fact]
@@ -101,11 +105,11 @@ public class TelemetryServiceTests
         mockOptions.Value.Returns((AzureMcpServerConfiguration)null!);
 
         // Act & Assert
-        Assert.Throws<NullReferenceException>(() => new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions));
+        Assert.Throws<NullReferenceException>(() => new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger));
     }
 
     [Fact]
-    public async Task Constructor_SetsDefaultTags()
+    public void Constructor_SetsDefaultTags()
     {
         // Arrange
         var serviceStartOptions = new ServiceStartOptions
@@ -118,8 +122,8 @@ public class TelemetryServiceTests
         _mockServiceOptions.Value.Returns(serviceStartOptions);
 
         // Act & Assert
-        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions);
-        var tags = await service.GetDefaultTags();
+        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger);
+        var tags = service.GetDefaultTags();
 
         AssertDefaultTags(tags, serviceStartOptions);
     }
@@ -140,10 +144,12 @@ public class TelemetryServiceTests
         var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
-        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions);
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger);
+
+        await service.InitializeAsync();
 
         // Act
-        var activity = await service.StartActivity(activityId);
+        var activity = service.StartActivity(activityId);
 
         // Assert
         // ActivitySource.StartActivity typically handles null/empty names gracefully
@@ -151,6 +157,63 @@ public class TelemetryServiceTests
         if (activity != null)
         {
             activity.Dispose();
+        }
+    }
+
+    [Fact]
+    public void StartActivity_WithoutInitialization_Throws()
+    {
+        // Arrange
+        var configuration = new AzureMcpServerConfiguration
+        {
+            Name = "TestService",
+            Version = "1.0.0",
+            IsTelemetryEnabled = true
+        };
+
+        var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
+        mockOptions.Value.Returns(configuration);
+
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger);
+
+        // Act & Assert
+        // Test both overloads.
+        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id"));
+
+        var implementation = new Implementation
+        {
+            Name = "Foo-Bar-MCP",
+            Version = "1.0.0",
+            Title = "Test MCP server"
+        };
+        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", implementation));
+    }
+
+    [Fact]
+    public async Task StartActivity_ReturnsActivityWhenEnabled()
+    {
+        // Arrange
+        var configuration = new AzureMcpServerConfiguration
+        {
+            Name = "TestService",
+            Version = "1.0.0",
+            IsTelemetryEnabled = true
+        };
+        var operationName = "an-activity-id";
+        var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
+        mockOptions.Value.Returns(configuration);
+
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger);
+
+        await service.InitializeAsync();
+
+        // Act
+        var activity = service.StartActivity(operationName);
+
+        // Assert
+        if (activity != null)
+        {
+            Assert.Equal(operationName, activity.OperationName);
         }
     }
 
