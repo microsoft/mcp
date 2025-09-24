@@ -10,9 +10,7 @@ namespace Azure.Mcp.Tools.EventHubs.LiveTests;
 
 public class EventHubsCommandTests(ITestOutputHelper output)
     : CommandTestsBase(output)
-
 {
-
     [Fact]
     public async Task Should_ListNamespaces_Successfully()
     {
@@ -73,8 +71,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         if (result.HasValue && result.Value.TryGetProperty("namespaces", out var namespaces))
         {
             Assert.Equal(JsonValueKind.Array, namespaces.ValueKind);
-            var namespaceArray = namespaces.EnumerateArray().ToList();
-            Assert.Empty(namespaceArray);
+            Assert.Empty(namespaces.EnumerateArray());
         }
         // If it returns an error instead, that's also acceptable behavior
     }
@@ -111,24 +108,24 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
         // Verify comprehensive metadata fields are present
         Assert.True(namespaceData.TryGetProperty("location", out var location));
-        Assert.NotNull(location.GetString());
+        Assert.False(string.IsNullOrEmpty(location.GetString()));
         Assert.False(string.IsNullOrEmpty(location.GetString()));
 
         Assert.True(namespaceData.TryGetProperty("status", out var status));
-        Assert.NotNull(status.GetString());
+        Assert.False(string.IsNullOrEmpty(status.GetString()));
 
         Assert.True(namespaceData.TryGetProperty("provisioningState", out var provisioningState));
-        Assert.NotNull(provisioningState.GetString());
+        Assert.False(string.IsNullOrEmpty(provisioningState.GetString()));
 
         // Verify SKU information is present and detailed
         Assert.True(namespaceData.TryGetProperty("sku", out var sku));
         Assert.Equal(JsonValueKind.Object, sku.ValueKind);
 
         Assert.True(sku.TryGetProperty("name", out var skuName));
-        Assert.NotNull(skuName.GetString());
+        Assert.False(string.IsNullOrEmpty(skuName.GetString()));
 
         Assert.True(sku.TryGetProperty("tier", out var skuTier));
-        Assert.NotNull(skuTier.GetString());
+        Assert.False(string.IsNullOrEmpty(skuTier.GetString()));
 
         // Verify timestamps are present
         Assert.True(namespaceData.TryGetProperty("creationTime", out var creationTime));
@@ -136,12 +133,12 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
         // Verify service endpoint is present
         Assert.True(namespaceData.TryGetProperty("serviceBusEndpoint", out var serviceBusEndpoint));
-        Assert.NotNull(serviceBusEndpoint.GetString());
+        Assert.False(string.IsNullOrEmpty(serviceBusEndpoint.GetString()));
         Assert.Contains(".servicebus.windows.net", serviceBusEndpoint.GetString());
 
         // Verify metric ID is present
         Assert.True(namespaceData.TryGetProperty("metricId", out var metricId));
-        Assert.NotNull(metricId.GetString());
+        Assert.False(string.IsNullOrEmpty(metricId.GetString()));
         Assert.Contains(Settings.SubscriptionId, metricId.GetString());
         Assert.Contains(Settings.ResourceBaseName, metricId.GetString());
 

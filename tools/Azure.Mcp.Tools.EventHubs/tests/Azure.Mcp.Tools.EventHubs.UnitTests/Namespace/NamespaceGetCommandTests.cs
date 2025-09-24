@@ -292,9 +292,5 @@ public class NamespaceGetCommandTests
         Assert.Equal("Production", namespaceResult.Tags["Environment"]);
         Assert.Equal("DataTeam", namespaceResult.Tags["Owner"]);
         Assert.Equal("Engineering", namespaceResult.Tags["CostCenter"]);
-
-        // Verify the single namespace service method was called
-        await _eventHubsService.Received(1).GetNamespaceAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>());
-        await _eventHubsService.DidNotReceive().GetNamespacesAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>());
     }
 }

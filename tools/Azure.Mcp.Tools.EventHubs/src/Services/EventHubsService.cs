@@ -35,7 +35,9 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
     {
         Models.EventHubsNamespaceData? eventHubsNamespace = Models.EventHubsNamespaceData.FromJson(item);
         if (eventHubsNamespace == null)
+        {
             throw new InvalidOperationException("Failed to parse EventHubs namespace data");
+        }
 
         if (string.IsNullOrEmpty(eventHubsNamespace.ResourceId))
             throw new InvalidOperationException("Resource ID is missing");

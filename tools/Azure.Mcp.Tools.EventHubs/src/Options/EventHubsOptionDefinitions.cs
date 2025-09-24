@@ -5,7 +5,7 @@ namespace Azure.Mcp.Tools.EventHubs.Options;
 
 public static class EventHubsOptionDefinitions
 {
-    public const string NamespaceNameName = "namespace-name";
+    public const string NamespaceNameName = "namespace";
 
     public static readonly Option<string> NamespaceName = new(
         $"--{NamespaceNameName}"
