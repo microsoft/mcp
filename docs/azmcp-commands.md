@@ -1111,6 +1111,13 @@ azmcp sql db delete --subscription <subscription> \
 azmcp sql db list --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name>
+                  
+# Rename an existing SQL database to a new name within the same server
+azmcp sql db rename --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <current-database-name> \
+                    --new-database-name <new-database-name>
 
 # Show details of a specific SQL database
 azmcp sql db show --subscription <subscription> \
