@@ -88,15 +88,6 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
             }
             else
             {
-                // List all namespaces in resource group
-                if (string.IsNullOrEmpty(options.ResourceGroup))
-                {
-                    // For backward compatibility, still require resource group for list operations
-                    context.Response.Status = 400;
-                    context.Response.Message = "Resource group is required when not specifying a specific namespace name.";
-                    return context.Response;
-                }
-
                 var namespaces = await eventHubsService.GetNamespacesAsync(
                     options.ResourceGroup!,
                     options.Subscription!,
