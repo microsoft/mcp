@@ -6,7 +6,9 @@ using System.Text;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
+using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading.Filters;
 using Azure.Mcp.Core.Areas.Server.Options;
+using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -60,17 +62,8 @@ public static class AzureMcpServiceCollectionExtensions
         services.AddSingleton(defaultToolLoaderOptions);
         services.AddSingleton(Options.Create(defaultToolLoaderOptions));
 
-        // Register tool loader strategies
-        services.AddSingleton<CommandFactoryToolLoader>();
-        services.AddSingleton(sp =>
-        {
-            return new RegistryToolLoader(
-                sp.GetRequiredService<RegistryDiscoveryStrategy>(),
-                sp.GetRequiredService<IOptions<ToolLoaderOptions>>(),
-                sp.GetRequiredService<ILogger<RegistryToolLoader>>()
-            );
-        });
-
+        // Register other tool loaders
+        services.AddSingleton<RegistryToolLoader>();
         services.AddSingleton<SingleProxyToolLoader>();
         services.AddSingleton<CompositeToolLoader>();
         services.AddSingleton<ServerToolLoader>();
@@ -103,6 +96,35 @@ public static class AzureMcpServiceCollectionExtensions
             });
         }
 
+        // Register ConfigurableToolLoader with proper filter chain
+        services.AddSingleton(sp =>
+        {
+            var serviceProvider = sp.GetRequiredService<IServiceProvider>();
+            var commandFactory = sp.GetRequiredService<CommandFactory>();
+            var logger = sp.GetRequiredService<ILogger<ConfigurableToolLoader>>();
+
+            // Build filter chain for Azure command factory tools
+            var filters = new List<ICommandFilter>
+            {
+                // Core infrastructure filter - always include core tools (subscription, group)
+                new CoreInfrastructureFilter()
+            };
+
+            // Extension filter - include/exclude extension tools based on configuration
+            var includeExtensions = serviceStartOptions.Mode == ModeTypes.All ||
+                                  (serviceStartOptions.Mode == ModeTypes.NamespaceProxy &&
+                                   defaultToolLoaderOptions.Namespace?.Contains("extension") == true);
+            filters.Add(new ExtensionFilter(includeExtensions));
+
+            // ReadOnly filter - enforce ReadOnly mode restrictions if enabled
+            filters.Add(new ReadOnlyFilter(defaultToolLoaderOptions.ReadOnly));
+
+            // Visibility filter - apply existing CommandFactory visibility rules
+            filters.Add(new VisibilityFilter());
+
+            return new ConfigurableToolLoader(serviceProvider, commandFactory, filters, logger);
+        });
+
         // Configure tool loading based on mode
         if (serviceStartOptions.Mode == ModeTypes.SingleToolProxy)
         {
@@ -116,13 +138,8 @@ public static class AzureMcpServiceCollectionExtensions
                 var toolLoaders = new List<IToolLoader>
                 {
                     sp.GetRequiredService<ServerToolLoader>(),
+                    sp.GetRequiredService<ConfigurableToolLoader>()
                 };
-
-                // Append extension commands when no other namespaces are specified.
-                if (defaultToolLoaderOptions.Namespace?.SequenceEqual(["extension"]) == true)
-                {
-                    toolLoaders.Add(sp.GetRequiredService<CommandFactoryToolLoader>());
-                }
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });
@@ -136,7 +153,7 @@ public static class AzureMcpServiceCollectionExtensions
                 var toolLoaders = new List<IToolLoader>
                 {
                     sp.GetRequiredService<RegistryToolLoader>(),
-                    sp.GetRequiredService<CommandFactoryToolLoader>(),
+                    sp.GetRequiredService<ConfigurableToolLoader>(),
                 };
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());

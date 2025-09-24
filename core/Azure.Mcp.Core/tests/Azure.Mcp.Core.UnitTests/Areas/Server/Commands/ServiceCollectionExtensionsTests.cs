@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Xunit;
 
@@ -49,7 +50,7 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(provider.GetService<RegistryDiscoveryStrategy>());
 
         // Verify base tool loaders
-        Assert.NotNull(provider.GetService<CommandFactoryToolLoader>());
+        Assert.NotNull(provider.GetService<ConfigurableToolLoader>());
         Assert.NotNull(provider.GetService<RegistryToolLoader>());
 
         // Verify runtime
@@ -258,8 +259,8 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(provider.GetService<IToolLoader>());
         Assert.IsType<CompositeToolLoader>(provider.GetService<IToolLoader>());
 
-        // Verify the presence of CommandFactoryToolLoader which is used for service areas
-        Assert.NotNull(provider.GetService<CommandFactoryToolLoader>());
+        // Verify the presence of ConfigurableToolLoader which replaces CommandFactoryToolLoader
+        Assert.NotNull(provider.GetService<ConfigurableToolLoader>());
 
         // Verify runtime
         Assert.NotNull(provider.GetService<IMcpRuntime>());
@@ -392,5 +393,44 @@ public class ServiceCollectionExtensionsTests
         Assert.Contains("Azure MCP server usage rules:", instructions);
         Assert.Contains("Use Azure Code Gen Best Practices:", instructions);
         Assert.Contains("Use Azure SWA Best Practices:", instructions);
+    }
+
+    [Fact]
+    public void AddAzureMcpServer_WithNamespaceProxy_IncludesSubscriptionToolsViaConfigurableLoader()
+    {
+        // Arrange
+        var services = SetupBaseServices();
+        var options = new ServiceStartOptions
+        {
+            Transport = StdioTransport,
+            Mode = "namespace",
+            Namespace = ["storage"] // Namespace mode with specific namespace
+        };
+
+        // Act
+        services.AddAzureMcpServer(options);
+
+        // Assert
+        var provider = services.BuildServiceProvider();
+
+        // Get the ConfigurableToolLoader from the service provider
+        var configurableLoader = provider.GetService<ConfigurableToolLoader>();
+        Assert.NotNull(configurableLoader);
+
+        // Verify that the ConfigurableToolLoader has the correct filters
+        var filters = configurableLoader.Filters;
+        Assert.Contains(filters, f => f.GetType().Name == "CoreInfrastructureFilter");
+        Assert.Contains(filters, f => f.GetType().Name == "ExtensionFilter");
+        Assert.Contains(filters, f => f.GetType().Name == "ReadOnlyFilter");
+        Assert.Contains(filters, f => f.GetType().Name == "VisibilityFilter");
+
+        // Verify that subscription tools are available through the loader by checking the command factory
+        var commandFactory = configurableLoader.CommandFactory;
+        Assert.NotNull(commandFactory);
+
+        // Verify all commands include subscription tools
+        var allCommands = commandFactory.AllCommands;
+        Assert.NotEmpty(allCommands);
+        Assert.Contains(allCommands, kvp => kvp.Key.Contains("subscription"));
     }
 }
