@@ -28,7 +28,7 @@ The original architecture filtered commands purely by namespace (service area), 
 
 ```
 - subscription (subscription management)
-- group (resource group management)  
+- group (resource group management)
 - storage (Azure Storage operations)
 - keyvault (Azure Key Vault operations)
 - [60+ other service namespaces]
@@ -87,7 +87,7 @@ Commands marked with `[Essential]` are always included regardless of namespace f
 public sealed class EssentialAttribute : Attribute
 {
     public string? Description { get; set; }
-    
+
     public EssentialAttribute() { }
     public EssentialAttribute(string description) => Description = description;
 }
@@ -98,7 +98,7 @@ public sealed class EssentialAttribute : Attribute
 [Essential("Subscription management commands are essential for Azure operations")]
 public abstract class SubscriptionCommand<TOptions> : GlobalCommand<TOptions>
 
-[Essential("Resource group management commands are essential for Azure operations")]  
+[Essential("Resource group management commands are essential for Azure operations")]
 public sealed class GroupListCommand : SubscriptionCommand<BaseGroupOptions>
 ```
 
@@ -111,7 +111,7 @@ public sealed class ExtensionAttribute : Attribute
 {
     public string? Category { get; set; }
     public string? Description { get; set; }
-    
+
     public ExtensionAttribute() { }
     public ExtensionAttribute(string category) => Category = category;
 }
@@ -210,7 +210,7 @@ azmcp server start
 azmcp server start --namespace storage --namespace keyvault
 ```
 - **Essential Commands**: ✅ Included (always available)
-- **Extension Commands**: ❌ Excluded (not in namespace list)  
+- **Extension Commands**: ❌ Excluded (not in namespace list)
 - **Service Commands**: ✅ Included (only storage and keyvault)
 
 ### Extension Mode (Include Extensions)
@@ -244,7 +244,7 @@ Commands that provide fundamental Azure infrastructure operations:
 - Provide fundamental Azure platform capabilities
 - Cross-cutting concerns that span all service areas
 
-### Extension Commands  
+### Extension Commands
 Commands that provide additional tooling and integrations:
 
 | Command | Category | Description |
@@ -274,7 +274,7 @@ The Essential Attribute Architecture uses .NET attributes to declaratively mark 
 
 ### Attribute-Based Classification
 - **Metadata Nature**: Command categorization is metadata, not behavior
-- **Co-location**: Command definition and categorization stay together  
+- **Co-location**: Command definition and categorization stay together
 - **Compile-Time Safety**: Attribute typos caught at compile time
 - **Discoverability**: Attributes are visible at compile-time and in IntelliSense
 
@@ -316,7 +316,7 @@ public void ShouldIncludeCommand_EssentialAttribute_AlwaysIncluded()
     // Test that essential commands are included regardless of namespace filtering
 }
 
-[Fact]  
+[Fact]
 public void ShouldIncludeCommand_ExtensionAttribute_IncludedWhenExtensionNamespace()
 {
     // Test that extension commands are included only when extension namespace specified
@@ -335,7 +335,7 @@ End-to-end testing of server modes:
 ```csharp
 [Theory]
 [InlineData("--namespace storage", true, false, true)]  // Essential, Extension, Storage
-[InlineData("--namespace extension", true, true, false)] // Essential, Extension, No Storage  
+[InlineData("--namespace extension", true, true, false)] // Essential, Extension, No Storage
 [InlineData("", true, true, true)]                       // All commands
 public async Task ServerMode_ProducesExpectedToolSet(string args, bool hasEssential, bool hasExtension, bool hasStorage)
 {
@@ -345,7 +345,7 @@ public async Task ServerMode_ProducesExpectedToolSet(string args, bool hasEssent
 
 ### Manual Testing Scenarios
 1. **Namespace Mode**: Verify essential commands present in filtered views
-2. **Extension Mode**: Verify extension tools appear only when requested  
+2. **Extension Mode**: Verify extension tools appear only when requested
 3. **ReadOnly Mode**: Verify attribute and ReadOnly metadata interaction
 4. **Combined Modes**: Test complex combinations of filtering options
 
@@ -356,7 +356,7 @@ Structured logging for attribute-based filtering decisions:
 
 ```csharp
 _logger.LogTrace("Including essential command: {CommandName}", commandName);
-_logger.LogTrace("Excluding extension command: {CommandName}", commandName);  
+_logger.LogTrace("Excluding extension command: {CommandName}", commandName);
 _logger.LogTrace("Including service command: {CommandName}", commandName);
 _logger.LogInformation("Attribute filtering produced {FilteredCount} commands from {TotalCount} total commands",
     filteredCommands.Count, baseCommands.Count);
@@ -396,7 +396,7 @@ Potential future attributes for enhanced command categorization:
 [Preview("Preview functionality subject to change")]
 public sealed class SqlManagedInstanceCommand { }
 
-[Deprecated("Use sql_database_* commands instead", "2024-12-01")]  
+[Deprecated("Use sql_database_* commands instead", "2024-12-01")]
 public sealed class LegacySqlCommand { }
 
 [RequiresFeature("advanced-networking")]
@@ -433,7 +433,7 @@ The Essential Attribute Architecture successfully resolves the original subscrip
 
 - **Clear Intent**: Command categorization is self-documenting
 - **Simple Implementation**: Minimal code complexity with maximum clarity
-- **Robust Behavior**: Consistent filtering across all server modes  
+- **Robust Behavior**: Consistent filtering across all server modes
 - **Future Flexibility**: Extensible foundation for additional categorization needs
 
 The architectural choice to prefer simplicity over flexibility has proven effective, providing a solution that is easy to understand, maintain, and extend while solving the core problem completely.
@@ -458,9 +458,9 @@ The architectural choice to prefer simplicity over flexibility has proven effect
 | Extension | ✅ | ✅ | ❌*** | Applied to all |
 | ReadOnly | ✅**** | ✅**** | ✅**** | Only ReadOnly=true |
 
-*Unless "extension" namespace specified  
-**Only specified namespaces  
-***Unless other namespaces also specified  
+*Unless "extension" namespace specified
+**Only specified namespaces
+***Unless other namespaces also specified
 ****Only if command.Metadata.ReadOnly == true
 
 ### Implementation Files
