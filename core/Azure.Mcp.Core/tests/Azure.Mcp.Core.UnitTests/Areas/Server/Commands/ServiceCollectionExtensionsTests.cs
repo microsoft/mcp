@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Reflection;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
@@ -9,7 +10,6 @@ using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Xunit;
 
@@ -417,20 +417,21 @@ public class ServiceCollectionExtensionsTests
         var configurableLoader = provider.GetService<ConfigurableToolLoader>();
         Assert.NotNull(configurableLoader);
 
-        // Verify that the ConfigurableToolLoader has the correct filters
-        var filters = configurableLoader.Filters;
-        Assert.Contains(filters, f => f.GetType().Name == "CoreInfrastructureFilter");
-        Assert.Contains(filters, f => f.GetType().Name == "ExtensionFilter");
-        Assert.Contains(filters, f => f.GetType().Name == "ReadOnlyFilter");
-        Assert.Contains(filters, f => f.GetType().Name == "VisibilityFilter");
-
-        // Verify that subscription tools are available through the loader by checking the command factory
+        // Verify that subscription tools (core infrastructure) are available through the loader
         var commandFactory = configurableLoader.CommandFactory;
         Assert.NotNull(commandFactory);
 
-        // Verify all commands include subscription tools
+        // Verify subscription commands exist and have EssentialAttribute
         var allCommands = commandFactory.AllCommands;
         Assert.NotEmpty(allCommands);
-        Assert.Contains(allCommands, kvp => kvp.Key.Contains("subscription"));
+
+        var subscriptionCommands = allCommands.Where(kvp => kvp.Key.Contains("subscription")).ToList();
+        Assert.NotEmpty(subscriptionCommands);
+
+        // At least one subscription command should have the EssentialAttribute
+        var hasAttributedCommand = subscriptionCommands.Any(kvp =>
+            kvp.Value.GetType().GetCustomAttribute<EssentialAttribute>() != null ||
+            kvp.Value.GetType().BaseType?.GetCustomAttribute<EssentialAttribute>() != null);
+        Assert.True(hasAttributedCommand, "At least one subscription command should have EssentialAttribute");
     }
 }

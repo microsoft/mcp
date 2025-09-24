@@ -6,13 +6,10 @@ using System.Text;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
-using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading.Filters;
 using Azure.Mcp.Core.Areas.Server.Options;
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands;
@@ -96,34 +93,8 @@ public static class AzureMcpServiceCollectionExtensions
             });
         }
 
-        // Register ConfigurableToolLoader with proper filter chain
-        services.AddSingleton(sp =>
-        {
-            var serviceProvider = sp.GetRequiredService<IServiceProvider>();
-            var commandFactory = sp.GetRequiredService<CommandFactory>();
-            var logger = sp.GetRequiredService<ILogger<ConfigurableToolLoader>>();
-
-            // Build filter chain for Azure command factory tools
-            var filters = new List<ICommandFilter>
-            {
-                // Core infrastructure filter - always include core tools (subscription, group)
-                new CoreInfrastructureFilter()
-            };
-
-            // Extension filter - include/exclude extension tools based on configuration
-            var includeExtensions = serviceStartOptions.Mode == ModeTypes.All ||
-                                  (serviceStartOptions.Mode == ModeTypes.NamespaceProxy &&
-                                   defaultToolLoaderOptions.Namespace?.Contains("extension") == true);
-            filters.Add(new ExtensionFilter(includeExtensions));
-
-            // ReadOnly filter - enforce ReadOnly mode restrictions if enabled
-            filters.Add(new ReadOnlyFilter(defaultToolLoaderOptions.ReadOnly));
-
-            // Visibility filter - apply existing CommandFactory visibility rules
-            filters.Add(new VisibilityFilter());
-
-            return new ConfigurableToolLoader(serviceProvider, commandFactory, filters, logger);
-        });
+        // Register ConfigurableToolLoader with simple attribute-based filtering
+        services.AddSingleton<ConfigurableToolLoader>();
 
         // Configure tool loading based on mode
         if (serviceStartOptions.Mode == ModeTypes.SingleToolProxy)

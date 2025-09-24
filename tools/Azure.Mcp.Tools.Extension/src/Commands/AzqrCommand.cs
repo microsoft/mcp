@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
+[Extension("analysis", Description = "Azure Quick Review CLI for Azure resource analysis and recommendations")]
 public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutSeconds = 300) : SubscriptionCommand<AzqrOptions>()
 {
     private const string CommandTitle = "Azure Quick Review CLI Command";

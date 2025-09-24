@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Options;
 
 namespace Azure.Mcp.Core.Commands.Subscription;
 
+[Essential("Subscription management commands are essential for Azure operations")]
 public abstract class SubscriptionCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : GlobalCommand<TOptions>
     where TOptions : SubscriptionOptions, new()

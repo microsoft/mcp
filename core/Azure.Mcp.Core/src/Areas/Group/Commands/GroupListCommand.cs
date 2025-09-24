@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Areas.Group.Commands;
 
+[Essential("Resource group management commands are essential for Azure operations")]
 public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : SubscriptionCommand<BaseGroupOptions>()
 {
     private const string CommandTitle = "List Resource Groups";

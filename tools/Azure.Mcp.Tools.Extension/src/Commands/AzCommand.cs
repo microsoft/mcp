@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
+[Extension("cli", Description = "Azure CLI command execution for direct Azure operations")]
 public sealed class AzCommand(ILogger<AzCommand> logger, int processTimeoutSeconds = 300) : GlobalCommand<AzOptions>()
 {
     private const string CommandTitle = "Azure CLI Command";
