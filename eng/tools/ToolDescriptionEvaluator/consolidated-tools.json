@@ -36,7 +36,7 @@
       ]
     },
     {
-      "name": "get_application_platform_details",
+      "name": "get_azure_app_resource_details",
       "description": "Get details about Azure application platform services, such as Azure Functions.",
       "parameters": {
         "intent": {
@@ -71,7 +71,7 @@
     },
     {
       "name": "get_azure_databases_details",
-      "description": "View and query Azure database resources, including MySQL, PostgreSQL, SQL Database, and Cosmos DB.",
+      "description": "Comprehensive Azure database management tool for MySQL, PostgreSQL, SQL Database, and Cosmos DB. List and query databases, retrieve server configurations and parameters, explore table schemas, execute database queries, manage Cosmos DB containers and items, and view database server details across all Azure database services.",
       "parameters": {
         "intent": {
             "type": "string",
@@ -159,7 +159,7 @@
     },
     {
       "name": "get_azure_resource_and_app_health_status",
-      "description": "Get Azure resource and application health status. Query Log Analytics, list Log Analytics workspaces, get the current availability status of Azure resources, list Grafana instances, and view Datadog monitored resources.",
+      "description": "Get Azure resource and application health status and metrics and availability. Query Log Analytics, list Log Analytics workspaces, get the current availability status of Azure resources, list Grafana instances, and view Datadog monitored resources.",
       "parameters": {
         "intent": {
             "type": "string",
@@ -204,7 +204,7 @@
     },
     {
       "name": "deploy_resources_and_applications_to_azure", 
-      "description": "Deploy resources and applications to Azure. Retrieve application logs, access Infrastructure as Code (IaC) rules, get CI/CD pipeline guidance, and generate deployment plans.",
+      "description": "Deploy resources and applications to Azure. Retrieve application logs, access Bicep and Terraform rules, get CI/CD pipeline guidance, and generate deployment plans.",
       "parameters": {
         "intent": {
             "type": "string",
@@ -345,7 +345,7 @@
       ]
     },
     {
-      "name": "set_azure_app_config_settings_lock_state",
+      "name": "lock_unlock_azure_app_config_settings",
       "description": "Lock and unlock Azure App Configuration settings",
       "parameters": {
         "intent": {
@@ -729,7 +729,7 @@
     },
     {
       "name": "design_azure_architecture",
-      "description": "Azure architecture design and deployment diagram generation",
+      "description": "Comprehensive Azure architecture design and visualization tool. Provide cloud architecture consulting and recommend optimal Azure solutions following Well-Architected Framework principles. Also generates visual Mermaid diagrams from application topologies.",
       "parameters": {
         "intent": {
             "type": "string",
@@ -906,7 +906,7 @@
     },
     {
       "name": "get_azure_ai_resources_details",
-      "description": "Get details about Azure AI resources including listing and querying AI Search services, AI Foundry resources, and related AI infrastructure.",
+      "description": "Get details about Azure AI resources including listing and querying AI Search services, listing models available to be deployed and models deployed already and knowledge index schema by AI Foundry and related AI infrastructure.",
       "parameters": {
         "intent": {
             "type": "string",
@@ -980,7 +980,7 @@
     },
     {
       "name": "get_azure_storage_details",
-      "description": "Get details about Azure Storage resources including Storage accounts, blob containers, blob data, and Azure Managed Lustre filesystem information.",
+      "description": "Get details about Azure Storage resources including Storage accounts, blob containers, blob data, and Azure Managed Lustre filesystem information, but not health status.",
       "parameters": {
         "intent": {
             "type": "string",
@@ -1158,7 +1158,7 @@
     },
     {
       "name": "get_azure_capacity",
-      "description": "Check Azure resource capacity, quotas, usage limits, and high-performance computing infrastructure",
+      "description": "Check Azure resource capacity, quotas, available regions, usage limits, and high-performance computing infrastructure",
       "parameters": {
         "intent": {
             "type": "string",
@@ -1271,7 +1271,7 @@
       ]
     },
     {
-      "name": "create_azure_sql_firewall_rules",
+      "name": "create_azure_database_admin_configurations",
       "description": "Create Azure SQL Server firewall rules",
       "parameters": {
         "intent": {
@@ -1305,7 +1305,7 @@
       ]
     },
     {
-      "name": "delete_azure_sql_firewall_rules",
+      "name": "delete_azure_database_admin_configurations",
       "description": "Delete Azure SQL Server firewall rules",
       "parameters": {
         "intent": {
@@ -1339,8 +1339,8 @@
       ]
     },
     {
-      "name": "get_azure_sql_server_details",
-      "description": "Get details about Azure SQL Server configurations including elastic pools, Entra admin assignments, and firewall rules.",
+      "name": "get_azure_database_admin_configuration_details",
+      "description": "Get details about Azure SQL Server Administration configurations including elastic pools, Entra admin assignments, and firewall rules.",
       "parameters": {
         "intent": {
             "type": "string",

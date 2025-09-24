@@ -99,9 +99,7 @@
     "Get the latest Azure Functions deployment best practices",
     "Get the latest Azure Functions best practices",
     "Get the latest Azure Static Web Apps best practices",
-    "What are azure function best practices?",
-    "Create the plan for creating a simple HTTP-triggered function app in javascript that returns a random compliment from a predefined list in a JSON response. And deploy it to azure eventually. But don't create any code until I confirm.",
-    "Create the plan for creating a to-do list app. And deploy it to azure as a container app. But don't create any code until I confirm."
+    "What are azure function best practices?"
   ],
   "azmcp_bicepschema_get": [
     "How can I use Bicep to create an Azure OpenAI service?"

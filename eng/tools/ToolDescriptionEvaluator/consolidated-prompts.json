@@ -8,7 +8,7 @@
     "What is my current subscription?",
     "What subscriptions do I have?"
   ],
-  "get_application_platform_details": [
+  "get_azure_app_resource_details": [
     "Describe the function app <function_app_name> in resource group <resource_group_name>",
     "Get configuration for function app <function_app_name>",
     "Get function app status for <function_app_name>",
@@ -111,7 +111,7 @@
     "Delete the key <key_name> in App Configuration store <app_config_store_name>",
     "Set the key <key_name> in App Configuration store <app_config_store_name> to <value>"
   ],
-  "set_azure_app_config_settings_lock_state": [
+  "lock_unlock_azure_app_config_settings": [
     "Lock the key <key_name> in App Configuration store <app_config_store_name>",
     "Unlock the key <key_name> in App Configuration store <app_config_store_name>"
   ],
@@ -158,8 +158,6 @@
     "Import the certificate in file <file_path> into the key vault <key_vault_account_name>"
   ],
   "get_azure_best_practices": [
-    "Create the plan for creating a simple HTTP-triggered function app in javascript that returns a random compliment from a predefined list in a JSON response. And deploy it to azure eventually. But don't create any code until I confirm.",
-    "Create the plan for creating a to-do list app. And deploy it to azure as a container app. But don't create any code until I confirm.",
     "Fetch the Azure Terraform best practices",
     "Get the latest Azure best practices",
     "Get the latest Azure code generation best practices",
@@ -292,17 +290,17 @@
     "Show me the schema for table <table_name> in the Data Explorer database <database_name> in cluster <cluster_name>",
     "Show me the tables in the Data Explorer database <database_name> in cluster <cluster_name>"
   ],
-  "create_azure_sql_firewall_rules": [
+  "create_azure_database_admin_configurations": [
     "Add a firewall rule to allow access from IP range <start_ip> to <end_ip> for SQL server <server_name>",
     "Create a firewall rule for my Azure SQL server <server_name>",
     "Create a new firewall rule named <rule_name> for SQL server <server_name>"
   ],
-  "delete_azure_sql_firewall_rules": [
+  "delete_azure_database_admin_configurations": [
     "Delete a firewall rule from my Azure SQL server <server_name>",
     "Delete firewall rule <rule_name> for SQL server <server_name>",
     "Remove the firewall rule <rule_name> from SQL server <server_name>"
   ],
-  "get_azure_sql_server_details": [
+  "get_azure_database_admin_configuration_details": [
     "List all elastic pools in SQL server <server_name>",
     "List all firewall rules for SQL server <server_name>",
     "List Microsoft Entra ID administrators for SQL server <server_name>",
