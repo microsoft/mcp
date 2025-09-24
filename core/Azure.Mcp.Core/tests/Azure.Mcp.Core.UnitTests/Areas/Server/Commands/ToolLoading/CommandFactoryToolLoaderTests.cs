@@ -102,13 +102,13 @@ public class CommandFactoryToolLoaderTests
         // Simple namespace filtering should include storage commands if they exist
         var allCommands = commandFactory.AllCommands;
         var storageCommands = allCommands.Where(kvp => kvp.Key.Contains("storage")).ToList();
-        
+
         if (storageCommands.Any())
         {
             var hasStorageCommand = result.Tools.Any(t => t.Name.Contains("storage"));
             Assert.True(hasStorageCommand, "Should include storage commands when storage namespace is specified");
         }
-        
+
         // Should have some commands (either storage commands or all commands if no namespace filtering applies)
         Assert.NotEmpty(result.Tools);
     }
@@ -131,7 +131,7 @@ public class CommandFactoryToolLoaderTests
         // Simple namespace filtering should include extension commands if they exist
         var allCommands = commandFactory.AllCommands;
         var extensionCommands = allCommands.Where(kvp => kvp.Key.Contains("extension")).ToList();
-        
+
         if (extensionCommands.Any())
         {
             var hasExtensionCommand = result.Tools.Any(t => t.Name.Contains("extension"));
@@ -328,7 +328,7 @@ public class CommandFactoryToolLoaderTests
         var allCommands = commandFactory.AllCommands;
         Assert.NotEmpty(allCommands);
         Assert.NotEmpty(result.Tools);
-        
+
         // All returned tools should exist in the command factory
         foreach (var tool in result.Tools)
         {
