@@ -17,6 +17,7 @@ public class EventHubsSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IEventHubsService, EventHubsService>();
+        services.AddSingleton<NamespaceGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)

@@ -26,7 +26,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
         """
         Get Event Hubs namespaces from Azure. This command can either:
         1. List all Event Hubs namespaces in a resource group (when only --resource-group is provided)
-        2. Get a single namespace by name (using --namespace-name with --resource-group)
+        2. Get a single namespace by name (using --namespace with --resource-group)
         
         When retrieving a single namespace, detailed information including SKU, settings, and metadata 
         is returned. When listing namespaces, basic information (name, id, resource group) is returned 
