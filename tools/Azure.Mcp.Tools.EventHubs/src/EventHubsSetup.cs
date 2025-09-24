@@ -19,15 +19,16 @@ public class EventHubsSetup : IAreaSetup
         services.AddSingleton<IEventHubsService, EventHubsService>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var eventHubs = new CommandGroup(Name, "Azure Event Hubs operations - Commands for managing Azure Event Hubs namespaces and event hubs. Includes operations for getting namespaces in resource groups.");
-        rootGroup.AddSubGroup(eventHubs);
 
         var namespaceGroup = new CommandGroup("namespace", "Event Hubs namespace operations");
         eventHubs.AddSubGroup(namespaceGroup);
 
-        var getCommand = new NamespaceGetCommand(loggerFactory.CreateLogger<NamespaceGetCommand>());
-        namespaceGroup.AddCommand(getCommand.Name, getCommand);
+        var namespaceGetCommand = serviceProvider.GetRequiredService<NamespaceGetCommand>();
+        namespaceGroup.AddCommand(namespaceGetCommand.Name, namespaceGetCommand);
+
+        return eventHubs;
     }
 }

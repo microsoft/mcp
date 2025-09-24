@@ -10,8 +10,5 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Tools.EventHubs.Commands;
 
 public abstract class BaseEventHubsCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>(ILogger<BaseEventHubsCommand<TOptions>> logger)
-    : SubscriptionCommand<TOptions> where TOptions : BaseEventHubsOptions, new()
-{
-    protected readonly ILogger<BaseEventHubsCommand<TOptions>> _logger = logger;
-}
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
+    : SubscriptionCommand<TOptions> where TOptions : BaseEventHubsOptions, new();
