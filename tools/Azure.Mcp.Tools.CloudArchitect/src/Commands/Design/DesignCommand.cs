@@ -24,19 +24,16 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
     public override string Name => "design";
 
     public override string Description => """
-        Azure architecture design tool that gathers requirements through guided questions and recommends optimal solutions.
-
-        Key parameters: question, questionNumber, confidenceScore (0.0-1.0, present architecture when ≥0.7), totalQuestions, answer, nextQuestionNeeded, architectureComponent, architectureTier, state.
-
-        Process:
-        1. Ask about user role, business goals (1-2 questions at a time)
-        2. Track confidence and update requirements (explicit/implicit/assumed)
-        3. When confident enough, present architecture with table format, visual organization, ASCII diagrams
-        4. Follow Azure Well-Architected Framework principles
-        5. Cover all tiers: infrastructure, platform, application, data, security, operations
-        6. Provide actionable advice and high-level overview
-
-        State tracks components, requirements by category, and confidence factors. Be conservative with suggestions.
+        Design Azure architecture for a large-scale file upload, storage, and retrieval service; cloud service serving as ATM for users; cloud app 
+        for ordering groceries; cloud service that will store and present (stream/play back) videos for users. Iteratively gather functional + 
+        non-functional requirements; when confidenceScore >=0.7 emit Well-Architected multi-tier reference architecture (ingest/API, processing, storage, 
+        metadata/index, security/compliance, delivery/ops). File workloads: high-throughput parallel/chunked uploads, virus scanning, metadata indexing, 
+        lifecycle tiering (hot->cool->archive), geo-redundant object/blob storage, secure low-latency retrieval. Video workloads: upload, transcoding 
+        (adaptive bitrate), rendition storage, CDN/edge delivery, playback, analytics, cost optimization. Also supports transactional banking (ATM/banking app), 
+        retail & grocery ordering, e-commerce, SaaS. Required: none. Optional: question, answer, questionNumber, totalQuestions, nextQuestionNeeded (bool), 
+        confidenceScore (0-1), architectureComponent, architectureTier (frontend|api|processing|data|security|ops), state (JSON). Returns: components, 
+        dataFlows, azureServices, rationale, assumptions, risks, NFRs, securityCompliance, costLevers, nextSteps, asciiDiagram. 
+        Examples: design --question "Peak upload rate?" --confidenceScore 0.37; design --confidenceScore 0.72 (final). Not for deployment, pipelines, or IaC.
         """;
 
     public override string Title => CommandTitle;
