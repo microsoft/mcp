@@ -152,6 +152,13 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **TYPE**: `Local`
 - **INSTALL**: [MSSQL MCP Server](https://aka.ms/MssqlMcp)
 
+### 💻 NuGet MCP Server
+- **REPOSITORY**: [NuGet/Home](https://github.com/NuGet/Home)
+- **DESCRIPTION**: This is a Model Context Protocol (MCP) server for NuGet, enabling advanced tooling and automation scenarios for NuGet package management.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `Local`
+- **INSTALL**: [Nuget MCP Server](https://www.nuget.org/packages/NuGet.Mcp.Server)
+
 ### 🎭 Playwright
 - **REPOSITORY**: [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp)
 - **DESCRIPTION**: This server enables LLMs to interact with web pages through structured accessibility snapshots, bypassing the need for screenshots or visually-tuned models.
@@ -162,12 +169,6 @@ This repository contains core libraries, test frameworks, engineering systems, p
 
 ## 🏗️ Looking for starter templates that use MCP? 
 Check out the [Azure Developer CLI (azd) templates](https://azure.github.io/awesome-azd/?tags=mcp) tagged with MCP.
-
-### 💻 NuGet MCP Server
-- **Repository**: [NuGet/Home](https://github.com/NuGet/Home)
-- **Description**: This is a Model Context Protocol (MCP) server for NuGet, enabling advanced tooling and automation scenarios for NuGet package management.
-
----
 
 ## 📎 Related Resources
 - [Microsoft MCP Resources](https://github.com/microsoft/mcp/tree/main/Resources)
