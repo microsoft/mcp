@@ -19,6 +19,7 @@ public class EventGridSetup : IAreaSetup
         services.AddSingleton<IEventGridService, EventGridService>();
         services.AddSingleton<TopicListCommand>();
         services.AddSingleton<SubscriptionListCommand>();
+        services.AddSingleton<EventGridPublishCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -39,14 +40,16 @@ public class EventGridSetup : IAreaSetup
         eventGrid.AddSubGroup(subscriptions);
 
         // Register Events commands
-        events.AddCommand("publish", new EventGridPublishCommand(loggerFactory.CreateLogger<EventGridPublishCommand>()));
+        var eventsPublish = serviceProvider.GetRequiredService<EventGridPublishCommand>();
+        events.AddCommand(eventsPublish.Name, eventsPublish);
 
         // Register Topic commands
-        var listCommand = serviceProvider.GetRequiredService<TopicListCommand>();
-        topics.AddCommand(listCommand.Name, listCommand);
+        var topicList = serviceProvider.GetRequiredService<TopicListCommand>();
+        topics.AddCommand(topicList.Name, topicList);
 
         // Register Subscription commands
-        subscriptions.AddCommand("list", serviceProvider.GetRequiredService<SubscriptionListCommand>());
+        var subscriptionList = serviceProvider.GetRequiredService<SubscriptionListCommand>();
+        subscriptions.AddCommand(subscriptionList.Name, subscriptionList);
 
         return eventGrid;
     }
