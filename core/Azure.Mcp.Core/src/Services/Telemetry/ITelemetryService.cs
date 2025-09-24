@@ -8,7 +8,9 @@ namespace Azure.Mcp.Core.Services.Telemetry;
 
 public interface ITelemetryService : IDisposable
 {
-    ValueTask<Activity?> StartActivity(string activityName);
+    Activity? StartActivity(string activityName);
 
-    ValueTask<Activity?> StartActivity(string activityName, Implementation? clientInfo);
+    Activity? StartActivity(string activityName, Implementation? clientInfo);
+
+    ValueTask InitializeAsync();
 }
