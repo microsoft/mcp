@@ -39,10 +39,10 @@ public class NamespaceGetCommandTests
 
     [Theory]
     [InlineData("", false)]
-    [InlineData("--subscription test-sub", false)]
+    [InlineData("--subscription test-sub", true)]
     [InlineData("--subscription 00000000-0000-0000-0000-000000000000 --resource-group test-rg", true)]
     [InlineData("--subscription production-subscription --resource-group rg-eventhubs-prod", true)]
-    [InlineData("--subscription test-sub --namespace-name myns --resource-group myrg", true)]
+    [InlineData("--subscription test-sub --namespace myns --resource-group myrg", true)]
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
     {
         // Arrange
@@ -50,7 +50,7 @@ public class NamespaceGetCommandTests
         if (shouldSucceed)
         {
             // Set up appropriate service method based on arguments
-            if (args.Contains("--namespace-name") && args.Contains("--resource-group"))
+            if (args.Contains("--namespace") && args.Contains("--resource-group"))
             {
                 // Single namespace request
                 var namespaceDetails = new EventHubsNamespaceDetails(
@@ -216,7 +216,7 @@ public class NamespaceGetCommandTests
         var namespaceName = "eh-prod-comprehensive";
         var resourceGroup = "rg-prod";
         var namespaceId = "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-prod/providers/Microsoft.EventHub/namespaces/eh-prod-comprehensive";
-        var parseResult = _command.GetCommand().Parse($"--subscription test-sub --resource-group {resourceGroup} --namespace-name {namespaceName}");
+        var parseResult = _command.GetCommand().Parse($"--subscription test-sub --resource-group {resourceGroup} --namespace {namespaceName}");
 
         var expectedCreationTime = DateTimeOffset.UtcNow.AddDays(-45);
         var expectedUpdateTime = DateTimeOffset.UtcNow.AddDays(-2);
