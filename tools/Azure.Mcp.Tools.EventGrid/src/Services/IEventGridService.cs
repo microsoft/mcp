@@ -19,7 +19,7 @@ public interface IEventGridService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<EventPublishResult> PublishEventsAsync(
+    Task<EventPublishResult> PublishEventAsync(
         string subscription,
         string? resourceGroup,
         string topicName,

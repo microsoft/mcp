@@ -55,7 +55,7 @@ public class EventsPublishCommandTests
         var metadata = _command.Metadata;
         Assert.False(metadata.Destructive);
         Assert.False(metadata.Idempotent);
-        Assert.True(metadata.OpenWorld);
+        Assert.False(metadata.OpenWorld);
         Assert.False(metadata.ReadOnly);
         Assert.False(metadata.LocalRequired);
         Assert.False(metadata.Secret);
@@ -83,7 +83,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Is(topicName),
@@ -93,7 +93,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedResult));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -141,7 +141,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Is(topicName),
@@ -151,7 +151,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedResult));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -176,7 +176,7 @@ public class EventsPublishCommandTests
         var topicName = "test-topic";
         var invalidEventData = "invalid-json";
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -186,7 +186,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new System.Text.Json.JsonException("Invalid JSON format"));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", invalidEventData]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", invalidEventData]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -211,7 +211,7 @@ public class EventsPublishCommandTests
             data = new { message = "Hello World" }
         });
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -221,7 +221,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new InvalidOperationException($"Event Grid topic '{topicName}' not found in resource group '{resourceGroup}'."));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -237,8 +237,8 @@ public class EventsPublishCommandTests
     [InlineData("--subscription test-sub --resource-group test-rg", false)]
     [InlineData("--subscription test-sub --topic test-topic", false)]
     [InlineData("--subscription test-sub --resource-group test-rg --topic test-topic", false)]
-    [InlineData("--subscription test-sub --topic test-topic --event-data '{\"subject\":\"test\"}'", true)]
-    [InlineData("--subscription test-sub --resource-group test-rg --topic test-topic --event-data '{\"subject\":\"test\"}'", true)]
+    [InlineData("--subscription test-sub --topic test-topic --data '{\"subject\":\"test\"}'", true)]
+    [InlineData("--subscription test-sub --resource-group test-rg --topic test-topic --data '{\"subject\":\"test\"}'", true)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         // Arrange
@@ -251,7 +251,7 @@ public class EventsPublishCommandTests
                 OperationId: Guid.NewGuid().ToString(),
                 PublishedAt: DateTime.UtcNow);
 
-            _eventGridService.PublishEventsAsync(
+            _eventGridService.PublishEventAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -302,7 +302,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Is(subscriptionId),
             Arg.Is<string?>(resourceGroup => resourceGroup == null), // Resource group should be null
             Arg.Is(topicName),
@@ -312,7 +312,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedResult));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--topic", topicName, "--event-data", eventData]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--topic", topicName, "--data", eventData]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -352,7 +352,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Is(topicName),
@@ -362,7 +362,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedResult));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", "CloudEvents"]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "CloudEvents"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -401,7 +401,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Is(subscriptionId),
             Arg.Is(resourceGroup),
             Arg.Is(topicName),
@@ -411,7 +411,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedResult));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", "Custom"]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "Custom"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -467,7 +467,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -477,7 +477,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedResult));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", schema]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", schema]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -507,7 +507,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -517,7 +517,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedResult));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -540,7 +540,7 @@ public class EventsPublishCommandTests
             dataVersion = "1.0"
         });
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -550,7 +550,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Azure.RequestFailedException(403, "Access denied to Event Grid topic"));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -574,7 +574,7 @@ public class EventsPublishCommandTests
             dataVersion = "1.0"
         });
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -584,7 +584,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new ArgumentException("Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom."));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", "InvalidSchema"]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "InvalidSchema"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -608,7 +608,7 @@ public class EventsPublishCommandTests
             dataVersion = "1.0"
         });
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -618,7 +618,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Azure.RequestFailedException(400, "Invalid event data or schema format"));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -668,7 +668,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -678,7 +678,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedResult));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -711,7 +711,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -721,7 +721,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedResult));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", "CloudEvents"]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "CloudEvents"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -757,7 +757,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -767,7 +767,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedResult));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", "CloudEvents"]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "CloudEvents"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -801,7 +801,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -811,7 +811,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedResult));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", "Custom"]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "Custom"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -852,7 +852,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -862,7 +862,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedResult));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", schema]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", schema]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -907,7 +907,7 @@ public class EventsPublishCommandTests
             OperationId: Guid.NewGuid().ToString(),
             PublishedAt: DateTime.UtcNow);
 
-        _eventGridService.PublishEventsAsync(
+        _eventGridService.PublishEventAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -917,7 +917,7 @@ public class EventsPublishCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromResult(expectedResult));
 
-        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--event-data", eventData, "--event-schema", "Custom"]);
+        var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "Custom"]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);

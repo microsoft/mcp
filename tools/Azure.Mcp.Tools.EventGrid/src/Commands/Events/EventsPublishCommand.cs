@@ -21,7 +21,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         """
         Publish custom events to Event Grid topics for event-driven architectures. This tool sends structured event data to 
         Event Grid topics with schema validation and delivery guarantees for downstream subscribers. Returns publish operation 
-        status. Requires topic, event-data, and optional event-schema.
+        status. Requires topic, data, and optional schema.
         """;
 
     public override string Title => CommandTitle;
@@ -30,7 +30,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
     {
         Destructive = false,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -39,10 +39,10 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(EventGridOptionDefinitions.TopicName.AsRequired());
-        command.Options.Add(EventGridOptionDefinitions.EventData.AsRequired());
-        command.Options.Add(EventGridOptionDefinitions.EventSchema.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup);
+        command.Options.Add(EventGridOptionDefinitions.TopicName);
+        command.Options.Add(EventGridOptionDefinitions.EventData);
+        command.Options.Add(EventGridOptionDefinitions.EventSchema);
     }
 
     protected override EventsPublishOptions BindOptions(ParseResult parseResult)
@@ -67,7 +67,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         try
         {
             var eventGridService = context.GetService<IEventGridService>();
-            var result = await eventGridService.PublishEventsAsync(
+            var result = await eventGridService.PublishEventAsync(
                 options.Subscription!,
                 options.ResourceGroup,
                 options.TopicName!,
@@ -77,7 +77,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new EventGridPublishCommandResult(result),
+                new(result),
                 EventGridJsonContext.Default.EventGridPublishCommandResult);
         }
         catch (Exception ex)

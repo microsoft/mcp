@@ -94,7 +94,7 @@ public class EventGridCommandTests(ITestOutputHelper output)
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "topic", Settings.ResourceBaseName },
-                { "event-data", eventData }
+                { "data", eventData }
             });
 
         var publishResult = result.AssertProperty("result");
@@ -134,7 +134,7 @@ public class EventGridCommandTests(ITestOutputHelper output)
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "topic", Settings.ResourceBaseName },
-                { "event-data", eventData }
+                { "data", eventData }
             });
 
         var publishResult = result.AssertProperty("result");
@@ -171,8 +171,8 @@ public class EventGridCommandTests(ITestOutputHelper output)
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "topic", Settings.ResourceBaseName },
-                { "event-data", eventData },
-                { "event-schema", "CloudEvents" }
+                { "data", eventData },
+                { "schema", "CloudEvents" }
             });
 
         var publishResult = result.AssertProperty("result");
@@ -216,8 +216,8 @@ public class EventGridCommandTests(ITestOutputHelper output)
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "topic", Settings.ResourceBaseName },
-                { "event-data", eventData },
-                { "event-schema", "Custom" }
+                { "data", eventData },
+                { "schema", "Custom" }
             });
 
         var publishResult = result.AssertProperty("result");
@@ -261,8 +261,8 @@ public class EventGridCommandTests(ITestOutputHelper output)
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "topic", Settings.ResourceBaseName },
-                { "event-data", eventData },
-                { "event-schema", "Custom" }
+                { "data", eventData },
+                { "schema", "Custom" }
             });
 
         var publishResult = result.AssertProperty("result");
@@ -299,8 +299,8 @@ public class EventGridCommandTests(ITestOutputHelper output)
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "topic", Settings.ResourceBaseName },
-                { "event-data", eventData },
-                { "event-schema", "EventGrid" }
+                { "data", eventData },
+                { "schema", "EventGrid" }
             });
 
         var publishResult = result.AssertProperty("result");
@@ -334,8 +334,7 @@ public class EventGridCommandTests(ITestOutputHelper output)
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "topic", Settings.ResourceBaseName },
-                { "event-data", eventData }
-                // Note: No event-schema parameter - should default to EventGrid
+                { "data", eventData }
             });
 
         var publishResult = result.AssertProperty("result");

@@ -3,7 +3,7 @@
 
 namespace Azure.Mcp.Tools.EventGrid.Models;
 
-public record EventPublishResult(
+public sealed record EventPublishResult(
     string Status,
     string Message,
     int PublishedEventCount,

@@ -3,11 +3,8 @@
 
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Azure.Core;
-using Azure.Mcp.Core.Options;
+using System.Net.Mime;
 using Azure.Mcp.Tools.EventGrid.Commands;
-using Azure.Mcp.Tools.EventGrid.Models;
-using Azure.Messaging.EventGrid;
 using Azure.ResourceManager.EventGrid;
 using Azure.ResourceManager.EventGrid.Models;
 using Azure.ResourceManager.Resources;
@@ -86,7 +83,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         return subscriptions;
     }
 
-    public async Task<EventPublishResult> PublishEventsAsync(
+    public async Task<EventPublishResult> PublishEventAsync(
         string subscription,
         string? resourceGroup,
         string topicName,
@@ -109,24 +106,14 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             {
                 var errorMessage = $"Event Grid topic '{topicName}' not found in resource group '{resourceGroup}'. Make sure the topic exists and you have access to it.";
                 _logger.LogError(errorMessage);
-                return new EventPublishResult(
-                    Status: "Failed",
-                    Message: errorMessage,
-                    PublishedEventCount: 0,
-                    OperationId: operationId,
-                    PublishedAt: DateTime.UtcNow);
+                throw new InvalidOperationException("Publishing failed with the following error message: " + errorMessage);
             }
 
             if (topic.Data.Endpoint == null)
             {
                 var errorMessage = $"Event Grid topic '{topicName}' does not have a valid endpoint.";
                 _logger.LogError(errorMessage);
-                return new EventPublishResult(
-                    Status: "Failed",
-                    Message: errorMessage,
-                    PublishedEventCount: 0,
-                    OperationId: operationId,
-                    PublishedAt: DateTime.UtcNow);
+                throw new InvalidOperationException("Publishing failed with the following error message: " + errorMessage);
             }
 
             // Get credential using standardized method from base class for Azure AD authentication
@@ -245,9 +232,9 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
             // Handle datacontenttype - CloudEvents v1.0 spec field for content type of data payload
             var dataContentType = eventElement.TryGetProperty("datacontenttype", out var dataContentTypeProp)
                 ? dataContentTypeProp.GetString()
-                : "application/json"; // Default per CloudEvents spec
+                : MediaTypeNames.Application.Json; 
 
-            if (!string.Equals(dataContentType, "application/json", StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(dataContentType, MediaTypeNames.Application.Json, StringComparison.OrdinalIgnoreCase))
             {
                 // Log when non-JSON content types are used - this helps with debugging
                 // Note: EventGrid will accept the event regardless of datacontenttype,
