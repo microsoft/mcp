@@ -45,17 +45,18 @@ public class AccountGetCommandTests
     {
         // Arrange
         var subscription = "sub123";
-        var expectedAccounts = new List<Models.AccountInfo>
+        var expectedAccounts = new List<Models.StorageAccountInfo>
         {
-            new("account1", "eastus", "StorageV2", "Standard_LRS", "Standard", true, true, true),
-            new("account2", "westus", "StorageV2", "Standard_GRS", "Standard", false, false, true)
+            new("account1", "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true),
+            new("account2", "westus", "StorageV2", "Standard_GRS", "Standard", false, "Succeeded", DateTimeOffset.UtcNow, false, true)
         };
 
         _storageService.GetAccountDetails(
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedAccounts));
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
@@ -86,7 +87,8 @@ public class AccountGetCommandTests
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
@@ -116,7 +118,8 @@ public class AccountGetCommandTests
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is(subscription),
             null,
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
@@ -159,12 +162,12 @@ public class AccountGetCommandTests
 
             if (shouldSucceed)
             {
-                var expectedAccount = new List<Models.AccountInfo> {
-                    new ("mystorageaccount", "eastus", "StorageV2", "Standard_LRS", "Standard", true, true, true)
+                var expectedAccount = new List<Models.StorageAccountInfo> {
+                    new ("mystorageaccount", "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true)
                 };
 
                 _storageService.GetAccountDetails(
-                    Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+                    Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                     .Returns(Task.FromResult(expectedAccount));
             }
 
@@ -198,12 +201,12 @@ public class AccountGetCommandTests
         // Arrange
         var account = "mystorageaccount";
         var subscription = "sub123";
-        var expectedAccount = new List<Models.AccountInfo> {
-            new (account, "eastus", "StorageV2", "Standard_LRS", "Standard", true, true, true)
+        var expectedAccount = new List<Models.StorageAccountInfo> {
+            new (account, "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true)
         };
 
         _storageService.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedAccount));
 
         var args = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
@@ -235,7 +238,7 @@ public class AccountGetCommandTests
         var subscription = "sub123";
 
         _storageService.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
@@ -257,7 +260,7 @@ public class AccountGetCommandTests
         var subscription = "sub123";
 
         _storageService.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "Storage account not found"));
 
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
@@ -278,7 +281,7 @@ public class AccountGetCommandTests
         var subscription = "sub123";
 
         _storageService.GetAccountDetails(
-            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            Arg.Is(account), Arg.Is(subscription), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed"));
 
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
