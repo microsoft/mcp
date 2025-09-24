@@ -175,12 +175,11 @@ public sealed class ConfigurableToolLoader(
 
         try
         {
-            // Get base commands based on namespace filtering
-            var baseCommands = (_options.Namespace?.Length > 0)
-                ? _commandFactory.GroupCommands(_options.Namespace)
-                : _commandFactory.AllCommands;
+            // Always start with ALL commands, then filter based on attributes and namespace logic
+            // Essential commands should always be considered regardless of namespace filtering
+            var baseCommands = _commandFactory.AllCommands;
 
-            _logger.LogDebug("Filtering {CommandCount} commands using attributes", baseCommands.Count);
+            _logger.LogDebug("Filtering {CommandCount} commands using attributes and namespace logic", baseCommands.Count);
 
             var filteredCommands = new Dictionary<string, IBaseCommand>();
 
@@ -220,8 +219,9 @@ public sealed class ConfigurableToolLoader(
 
         var commandType = command.GetType();
 
-        // Always include essential commands
-        if (commandType.GetCustomAttribute<EssentialAttribute>() != null)
+        // Always include essential commands (check both class and base class)
+        if (commandType.GetCustomAttribute<EssentialAttribute>() != null ||
+            commandType.BaseType?.GetCustomAttribute<EssentialAttribute>() != null)
         {
             _logger.LogTrace("Including essential command: {CommandName}", commandName);
             return ShouldIncludeBasedOnReadOnly(command);
@@ -240,9 +240,17 @@ public sealed class ConfigurableToolLoader(
             return ShouldIncludeBasedOnReadOnly(command);
         }
 
-        // For regular service commands, include them based on namespace and ReadOnly mode
-        _logger.LogTrace("Including service command: {CommandName}", commandName);
-        return ShouldIncludeBasedOnReadOnly(command);
+        // For regular service commands, include them based on namespace filtering and ReadOnly mode
+        if (ShouldIncludeBasedOnNamespace(commandName))
+        {
+            _logger.LogTrace("Including service command: {CommandName}", commandName);
+            return ShouldIncludeBasedOnReadOnly(command);
+        }
+        else
+        {
+            _logger.LogTrace("Excluding service command due to namespace filtering: {CommandName}", commandName);
+            return false;
+        }
     }
 
     /// <summary>
@@ -255,6 +263,30 @@ public sealed class ConfigurableToolLoader(
         // 2. "extension" namespace explicitly requested
         return _options.Namespace == null ||
                _options.Namespace.Contains("extension", StringComparer.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Determines if a command should be included based on namespace filtering.
+    /// </summary>
+    private bool ShouldIncludeBasedOnNamespace(string commandName)
+    {
+        // If no namespace filtering is applied, include all commands
+        if (_options.Namespace == null || _options.Namespace.Length == 0)
+        {
+            return true;
+        }
+
+        // Check if the command belongs to any of the specified namespaces
+        // Command names are in format: azmcp_{namespace}_{resource}_{action}
+        foreach (var nameSpace in _options.Namespace)
+        {
+            if (commandName.Contains($"_{nameSpace}_", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
