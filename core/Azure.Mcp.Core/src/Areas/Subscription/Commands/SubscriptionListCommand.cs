@@ -17,11 +17,9 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
     public override string Name => "list";
 
-    public override string Description =>
-        $"""
-        List all Azure subscriptions accessible to your account. Optionally specify {OptionDefinitions.Common.TenantName}
-        and {OptionDefinitions.Common.AuthMethodName}. Results include subscription names and IDs, returned as a JSON array.
-        """;
+public override string Description => """
+List all subscriptions for my account (your account); inspect subscription metadata/status; enumerate scopes for governance, policy, access, or cost management; or discover further subscription-level commands (policies, access, settings) in multi-subscription scenarios. Azure subscription operations router. A subscription is the billing and administrative boundary above resource groups and resources. Invocation: set "command" plus its arguments inside "parameters"; set "learn=true" to list available sub-commands and their required parameters. Returns only subscriptions you are permitted to view. Not for: resource group or individual resource CRUD, tenant-wide AAD tasks, billing account administration, or directory policy management. Shows subscriptionId, displayName, state, tenantId, isDefault (current/default) to help choose a working scope.
+""";
 
     public override string Title => CommandTitle;
 
