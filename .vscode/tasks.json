@@ -24,6 +24,25 @@
 				"/consoleloggerparameters:NoSummary"
 			],
 			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "spell check",
+			"command": "pwsh",
+			"type": "shell",
+			"args": [
+				"-File",
+				"${workspaceFolder}/eng/common/spelling/Invoke-Cspell.ps1"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"problemMatcher": []
 		}
 	]
 }
