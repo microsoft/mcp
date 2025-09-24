@@ -13,4 +13,16 @@ public interface IApplicationInsightsService
         string? resourceGroup = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    /// <summary>
+    /// List Application Insights trace metadata (placeholder until full trace retrieval is implemented).
+    /// Currently returns basic component information that can be used to scope future trace queries.
+    /// </summary>
+    Task<IEnumerable<JsonNode>> GetAppTracesAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        DateTime? startDateTimeUtc = null,
+        DateTime? endDateTimeUtc = null);
 }

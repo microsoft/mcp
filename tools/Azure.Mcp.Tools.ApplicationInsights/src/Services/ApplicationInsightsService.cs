@@ -33,6 +33,54 @@ public class ApplicationInsightsService(
         return results.Take(MaxRecommendations);
     }
 
+    /// <summary>
+    /// Retrieves trace metadata for Application Insights components. This is an initial implementation that surfaces
+    /// component identifiers which can be used by future enhancements to query detailed trace/span data.
+    /// </summary>
+    public async Task<IEnumerable<JsonNode>> GetAppTracesAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        DateTime? startDateTimeUtc = null,
+        DateTime? endDateTimeUtc = null)
+    {
+        ValidateRequiredParameters(subscription);
+        List<JsonNode> results = [];
+
+        try
+        {
+            List<ApplicationInsightsComponentResource> components = await GetApplicationInsightsComponentsAsync(subscription, resourceGroup, tenant, retryPolicy).ConfigureAwait(false);
+
+            startDateTimeUtc ??= DateTime.UtcNow.AddHours(-1);
+            endDateTimeUtc ??= DateTime.UtcNow;
+
+            foreach (var component in components)
+            {
+                JsonObject traceMetadata = new()
+                {
+                    ["componentId"] = component.Id.ToString(),
+                    ["appId"] = component.Data.AppId,
+                    ["name"] = component.Data.Name,
+                    ["location"] = component.Data.Location.ToString(),
+                    ["resourceGroup"] = component.Id.ResourceGroupName,
+                    ["subscriptionId"] = component.Id.SubscriptionId,
+                    ["startTimeUtc"] = startDateTimeUtc.Value.ToString("o"),
+                    ["endTimeUtc"] = endDateTimeUtc.Value.ToString("o"),
+                    ["note"] = "Trace listing currently returns component metadata. Future versions may query detailed traces via Log Analytics or data plane APIs."
+                };
+                results.Add(traceMetadata);
+            }
+        }
+        catch (Exception ex) when (ex is not ArgumentNullException)
+        {
+            _logger.LogError(ex, "Error retrieving Application Insights trace metadata");
+            throw;
+        }
+
+        return results;
+    }
+
     private async Task<IEnumerable<JsonNode>> GetProfilerInsightsImpAsync(string subscription, string? resourceGroup, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
