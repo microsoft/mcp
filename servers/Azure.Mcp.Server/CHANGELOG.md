@@ -32,6 +32,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Refactored Kusto service implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[#528](https://github.com/microsoft/mcp/pull/528)]
+- Refactored Storage service implementation [[#539](https://github.com/microsoft/mcp/pull/539)]
+  - Replaced direct ARM API calls in `azmcp_storage_account_get` with Azure Resource Graph queries.
+  - Updated `azmcp_storage_account_create` to use the GenericResource approach instead of direct ARM API calls.
 
 #### Dependency Updates
 
