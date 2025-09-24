@@ -34,9 +34,12 @@ public sealed class CommandFactoryToolLoader(
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     private readonly CommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
-    private readonly IOptions<ToolLoaderOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
-    private readonly ILogger<CommandFactoryToolLoader> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private IReadOnlyDictionary<string, IBaseCommand>? _toolCommands;
+    private readonly IOptions<ToolLoaderOptions> _options = options;
+    private IReadOnlyDictionary<string, IBaseCommand> _toolCommands =
+        (options.Value.Namespace == null || options.Value.Namespace.Length == 0)
+            ? commandFactory.AllCommands
+            : commandFactory.GroupCommands(options.Value.Namespace);
+    private readonly ILogger<CommandFactoryToolLoader> _logger = logger;
 
     public const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
 
@@ -48,14 +51,14 @@ public sealed class CommandFactoryToolLoader(
     /// <returns>A result containing the list of available tools.</returns>
     public ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
-        var filteredCommands = GetFilteredCommands();
-        var tools = CommandFactory.GetVisibleCommands(filteredCommands)
+        var tools = CommandFactory.GetVisibleCommands(_toolCommands)
             .Select(kvp => GetTool(kvp.Key, kvp.Value))
+            .Where(tool => !_options.Value.ReadOnly || (tool.Annotations?.ReadOnlyHint == true))
             .ToList();
 
         var listToolsResult = new ListToolsResult { Tools = tools };
 
-        _logger.LogInformation("Listing {NumberOfTools} tools using attribute filtering.", tools.Count);
+        _logger.LogInformation("Listing {NumberOfTools} tools.", tools.Count);
 
         return ValueTask.FromResult(listToolsResult);
     }
@@ -83,8 +86,7 @@ public sealed class CommandFactoryToolLoader(
         }
 
         var toolName = request.Params.Name;
-        var filteredCommands = GetFilteredCommands();
-        var command = filteredCommands.GetValueOrDefault(toolName);
+        var command = _toolCommands.GetValueOrDefault(toolName);
         if (command == null)
         {
             var content = new TextContentBlock
@@ -210,12 +212,13 @@ public sealed class CommandFactoryToolLoader(
     }
 
     /// <summary>
-    /// Disposes of the tool loader resources.
+    /// Disposes resources owned by this tool loader.
+    /// CommandFactoryToolLoader doesn't own external resources that need disposal.
     /// </summary>
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        // No resources to dispose currently
-        return ValueTask.CompletedTask;
+        // CommandFactoryToolLoader doesn't create or manage disposable resources
+        await ValueTask.CompletedTask;
     }
 
     /// <summary>
@@ -223,145 +226,7 @@ public sealed class CommandFactoryToolLoader(
     /// </summary>
     public CommandFactory CommandFactory => _commandFactory;
 
-    /// <summary>
-    /// Gets the filtered commands based on attributes, building them on first access.
-    /// </summary>
-    private IReadOnlyDictionary<string, IBaseCommand> GetFilteredCommands()
-    {
-        if (_toolCommands != null)
-        {
-            return _toolCommands;
-        }
 
-        try
-        {
-            // Always start with ALL commands, then filter based on attributes and namespace logic
-            // Essential commands should always be considered regardless of namespace filtering
-            var baseCommands = _commandFactory.AllCommands;
-
-            _logger.LogDebug("Filtering {CommandCount} commands using attributes and namespace logic", baseCommands.Count);
-
-            var filteredCommands = new Dictionary<string, IBaseCommand>();
-
-            foreach (var kvp in baseCommands)
-            {
-                var commandName = kvp.Key;
-                var command = kvp.Value;
-
-                if (ShouldIncludeCommand(commandName, command))
-                {
-                    filteredCommands[commandName] = command;
-                }
-            }
-
-            _logger.LogInformation("Attribute filtering produced {FilteredCount} commands from {TotalCount} total commands",
-                filteredCommands.Count, baseCommands.Count);
-
-            _toolCommands = filteredCommands.AsReadOnly();
-            return _toolCommands;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error filtering commands by attributes");
-            throw;
-        }
-    }
-
-    /// <summary>
-    /// Determines if a command should be included based on its attributes and current configuration.
-    /// </summary>
-    private bool ShouldIncludeCommand(string commandName, IBaseCommand command)
-    {
-        if (string.IsNullOrWhiteSpace(commandName) || command == null)
-        {
-            return false;
-        }
-
-        var commandType = command.GetType();
-
-        // Always include essential commands (check both class and base class)
-        if (commandType.GetCustomAttribute<EssentialAttribute>() != null ||
-            commandType.BaseType?.GetCustomAttribute<EssentialAttribute>() != null)
-        {
-            _logger.LogTrace("Including essential command: {CommandName}", commandName);
-            return ShouldIncludeBasedOnReadOnly(command);
-        }
-
-        // Handle extension commands
-        if (commandType.GetCustomAttribute<ExtensionAttribute>() != null)
-        {
-            var shouldIncludeExtensions = ShouldIncludeExtensions();
-            if (!shouldIncludeExtensions)
-            {
-                _logger.LogTrace("Excluding extension command: {CommandName}", commandName);
-                return false;
-            }
-            _logger.LogTrace("Including extension command: {CommandName}", commandName);
-            return ShouldIncludeBasedOnReadOnly(command);
-        }
-
-        // For regular service commands, include them based on namespace filtering and ReadOnly mode
-        if (ShouldIncludeBasedOnNamespace(commandName))
-        {
-            _logger.LogTrace("Including service command: {CommandName}", commandName);
-            return ShouldIncludeBasedOnReadOnly(command);
-        }
-        else
-        {
-            _logger.LogTrace("Excluding service command due to namespace filtering: {CommandName}", commandName);
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Determines if extension commands should be included based on configuration.
-    /// </summary>
-    private bool ShouldIncludeExtensions()
-    {
-        // Include extensions if:
-        // 1. No namespace specified (all mode)
-        // 2. "extension" namespace explicitly requested
-        return _options.Value.Namespace == null ||
-               _options.Value.Namespace.Contains("extension", StringComparer.OrdinalIgnoreCase);
-    }
-
-    /// <summary>
-    /// Determines if a command should be included based on namespace filtering.
-    /// </summary>
-    private bool ShouldIncludeBasedOnNamespace(string commandName)
-    {
-        // If no namespace filtering is applied, include all commands
-        if (_options.Value.Namespace == null || _options.Value.Namespace.Length == 0)
-        {
-            return true;
-        }
-
-        // Check if the command belongs to any of the specified namespaces
-        // Command names are in format: azmcp_{namespace}_{resource}_{action}
-        foreach (var nameSpace in _options.Value.Namespace)
-        {
-            if (commandName.Contains($"_{nameSpace}_", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Applies ReadOnly mode filtering if enabled.
-    /// </summary>
-    private bool ShouldIncludeBasedOnReadOnly(IBaseCommand command)
-    {
-        if (!_options.Value.ReadOnly)
-        {
-            return true; // Not in ReadOnly mode, include all commands
-        }
-
-        // In ReadOnly mode, only include commands marked as ReadOnly
-        return command.Metadata.ReadOnly;
-    }
 
     /// <summary>
     /// Converts a command to an MCP tool with proper metadata.

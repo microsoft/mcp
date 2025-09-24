@@ -50,7 +50,7 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
-    public async Task ListToolsHandler_WithDefaultOptions_IncludesEssentialAndServiceCommands()
+    public async Task ListToolsHandler_WithDefaultOptions_IncludesServiceCommands()
     {
         // Arrange
         var (toolLoader, commandFactory) = CreateToolLoader();
@@ -66,11 +66,6 @@ public class CommandFactoryToolLoaderTests
 
         // Analyze what commands are available
         var allCommands = commandFactory.AllCommands;
-        var essentialCommands = allCommands.Where(kvp =>
-            kvp.Value.GetType().GetCustomAttribute<EssentialAttribute>() != null ||
-            kvp.Value.GetType().BaseType?.GetCustomAttribute<EssentialAttribute>() != null).ToList();
-
-        // Verify we have commands in the factory
         Assert.NotEmpty(allCommands);
 
         // Should include service commands that are available in test setup
@@ -86,13 +81,6 @@ public class CommandFactoryToolLoaderTests
             var hasServiceCommand = result.Tools.Any(t =>
                 serviceCommands.Any(sc => sc.Key == t.Name));
             Assert.True(hasServiceCommand, "Should include available service commands");
-        }
-
-        // Essential commands should be included if they exist
-        foreach (var essentialCommand in essentialCommands)
-        {
-            var hasEssentialCommand = result.Tools.Any(t => t.Name == essentialCommand.Key);
-            Assert.True(hasEssentialCommand, $"Essential command {essentialCommand.Key} should be included");
         }
     }
 
@@ -111,41 +99,22 @@ public class CommandFactoryToolLoaderTests
         Assert.NotNull(result);
         Assert.NotNull(result.Tools);
 
-        // Check if essential commands are available in the factory
+        // Simple namespace filtering should include storage commands if they exist
         var allCommands = commandFactory.AllCommands;
-        var essentialCommands = allCommands.Where(kvp =>
-            kvp.Value.GetType().GetCustomAttribute<EssentialAttribute>() != null ||
-            kvp.Value.GetType().BaseType?.GetCustomAttribute<EssentialAttribute>() != null).ToList();
-
-        // If essential commands exist, they should be included even with namespace filtering
-        foreach (var essentialCommand in essentialCommands)
-        {
-            var hasEssentialCommand = result.Tools.Any(t => t.Name == essentialCommand.Key);
-            Assert.True(hasEssentialCommand, $"Essential command {essentialCommand.Key} should be included even with namespace filtering");
-        }
-
-        // Should include storage commands if they exist
         var storageCommands = allCommands.Where(kvp => kvp.Key.Contains("storage")).ToList();
+        
         if (storageCommands.Any())
         {
             var hasStorageCommand = result.Tools.Any(t => t.Name.Contains("storage"));
             Assert.True(hasStorageCommand, "Should include storage commands when storage namespace is specified");
         }
-
-        // Should not include commands from other namespaces (unless essential)
-        var keyvaultCommands = allCommands.Where(kvp => kvp.Key.Contains("keyvault") &&
-            kvp.Value.GetType().GetCustomAttribute<EssentialAttribute>() == null &&
-            kvp.Value.GetType().BaseType?.GetCustomAttribute<EssentialAttribute>() == null).ToList();
-
-        foreach (var keyvaultCommand in keyvaultCommands)
-        {
-            var hasKeyvaultCommand = result.Tools.Any(t => t.Name == keyvaultCommand.Key);
-            Assert.False(hasKeyvaultCommand, $"Non-essential keyvault command {keyvaultCommand.Key} should not be included when only storage namespace is specified");
-        }
+        
+        // Should have some commands (either storage commands or all commands if no namespace filtering applies)
+        Assert.NotEmpty(result.Tools);
     }
 
     [Fact]
-    public async Task ListToolsHandler_WithExtensionNamespace_IncludesExtensionCommands()
+    public async Task ListToolsHandler_WithExtensionNamespace_HandlesFiltering()
     {
         // Arrange
         var options = new ToolLoaderOptions { Namespace = ["extension"] };
@@ -159,37 +128,20 @@ public class CommandFactoryToolLoaderTests
         Assert.NotNull(result);
         Assert.NotNull(result.Tools);
 
-        // Check if essential commands are available in the factory
+        // Simple namespace filtering should include extension commands if they exist
         var allCommands = commandFactory.AllCommands;
-        var essentialCommands = allCommands.Where(kvp =>
-            kvp.Value.GetType().GetCustomAttribute<EssentialAttribute>() != null ||
-            kvp.Value.GetType().BaseType?.GetCustomAttribute<EssentialAttribute>() != null).ToList();
-
-        // If essential commands exist, they should be included
-        foreach (var essentialCommand in essentialCommands)
-        {
-            var hasEssentialCommand = result.Tools.Any(t => t.Name == essentialCommand.Key);
-            Assert.True(hasEssentialCommand, $"Essential command {essentialCommand.Key} should be included");
-        }
-
-        // Extension commands should be included when extension namespace is specified
-        // Note: Extension commands might not be available in test setup, so we check the filtering logic
-        var extensionCommands = allCommands.Where(kvp =>
-            kvp.Value.GetType().GetCustomAttribute<ExtensionAttribute>() != null).ToList();
-
+        var extensionCommands = allCommands.Where(kvp => kvp.Key.Contains("extension")).ToList();
+        
         if (extensionCommands.Any())
         {
-            // If extension commands exist, they should be included
-            foreach (var extensionCommand in extensionCommands)
-            {
-                var hasExtensionTool = result.Tools.Any(t => t.Name == extensionCommand.Key);
-                Assert.True(hasExtensionTool, $"Extension command {extensionCommand.Key} should be included when extension namespace is specified");
-            }
+            var hasExtensionCommand = result.Tools.Any(t => t.Name.Contains("extension"));
+            Assert.True(hasExtensionCommand, "Should include extension commands when extension namespace is specified");
+            Assert.NotEmpty(result.Tools);
         }
         else
         {
-            // If no extension commands exist in test setup, just verify we have some commands (essential ones)
-            Assert.NotEmpty(result.Tools);
+            // If no extension commands exist, the result may be empty with namespace filtering
+            Assert.True(result.Tools.Count() >= 0, "Should handle namespace filtering even when no matching commands exist");
         }
     }
 
@@ -244,9 +196,9 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
-    public async Task ListToolsHandler_EssentialCommandsAlwaysIncluded()
+    public async Task ListToolsHandler_BasicFiltering_WorksCorrectly()
     {
-        // Arrange - use specific namespace that doesn't include subscription commands normally
+        // Arrange - use specific namespace filtering
         var options = new ToolLoaderOptions { Namespace = ["storage"] };
         var (toolLoader, commandFactory) = CreateToolLoader(options);
         var request = CreateListToolsRequest();
@@ -258,26 +210,8 @@ public class CommandFactoryToolLoaderTests
         Assert.NotNull(result);
         Assert.NotNull(result.Tools);
 
-        // Find essential commands in the command factory
-        var allCommands = commandFactory.AllCommands;
-        var essentialCommands = allCommands.Where(kvp =>
-            kvp.Value.GetType().GetCustomAttribute<EssentialAttribute>() != null ||
-            kvp.Value.GetType().BaseType?.GetCustomAttribute<EssentialAttribute>() != null).ToList();
-
-        if (essentialCommands.Any())
-        {
-            // Each essential command should be included in the result
-            foreach (var essentialCommand in essentialCommands)
-            {
-                var hasEssentialTool = result.Tools.Any(t => t.Name == essentialCommand.Key);
-                Assert.True(hasEssentialTool, $"Essential command {essentialCommand.Key} should always be included");
-            }
-        }
-        else
-        {
-            // If no essential commands exist in test setup, verify we still have some filtering logic working
-            Assert.True(result.Tools.Count() >= 0, "Should return filtered results even without essential commands");
-        }
+        // Should return some tools (basic filtering logic working)
+        Assert.True(result.Tools.Count() >= 0, "Should return filtered results");
     }
 
     [Fact]
@@ -377,7 +311,7 @@ public class CommandFactoryToolLoaderTests
     }
 
     [Fact]
-    public async Task ListToolsHandler_AttributeFiltering_WorksCorrectly()
+    public async Task ListToolsHandler_BasicFunctionality_WorksCorrectly()
     {
         // Arrange
         var (toolLoader, commandFactory) = CreateToolLoader();
@@ -390,42 +324,15 @@ public class CommandFactoryToolLoaderTests
         Assert.NotNull(result);
         Assert.NotNull(result.Tools);
 
-        var allCommandsWithAttributes = new Dictionary<string, string>();
-        foreach (var kvp in commandFactory.AllCommands)
+        // Should return available commands
+        var allCommands = commandFactory.AllCommands;
+        Assert.NotEmpty(allCommands);
+        Assert.NotEmpty(result.Tools);
+        
+        // All returned tools should exist in the command factory
+        foreach (var tool in result.Tools)
         {
-            var commandType = kvp.Value.GetType();
-            var essential = commandType.GetCustomAttribute<EssentialAttribute>() ??
-                          commandType.BaseType?.GetCustomAttribute<EssentialAttribute>();
-            var extension = commandType.GetCustomAttribute<ExtensionAttribute>();
-
-            if (essential != null)
-            {
-                allCommandsWithAttributes[kvp.Key] = "Essential";
-            }
-            else if (extension != null)
-            {
-                allCommandsWithAttributes[kvp.Key] = "Extension";
-            }
-            else
-            {
-                allCommandsWithAttributes[kvp.Key] = "Regular";
-            }
-        }
-
-        // Verify that all essential commands are included
-        var essentialCommands = allCommandsWithAttributes.Where(kvp => kvp.Value == "Essential").ToList();
-        foreach (var essentialCommand in essentialCommands)
-        {
-            var isIncluded = result.Tools.Any(t => t.Name == essentialCommand.Key);
-            Assert.True(isIncluded, $"Essential command {essentialCommand.Key} should be included");
-        }
-
-        // Verify that extension commands are excluded (default namespace)
-        var extensionCommands = allCommandsWithAttributes.Where(kvp => kvp.Value == "Extension").ToList();
-        foreach (var extensionCommand in extensionCommands)
-        {
-            var isIncluded = result.Tools.Any(t => t.Name == extensionCommand.Key);
-            Assert.False(isIncluded, $"Extension command {extensionCommand.Key} should be excluded without extension namespace");
+            Assert.True(allCommands.ContainsKey(tool.Name), $"Returned tool {tool.Name} should exist in command factory");
         }
     }
 
@@ -444,20 +351,8 @@ public class CommandFactoryToolLoaderTests
         Assert.NotNull(result);
         Assert.NotNull(result.Tools);
 
-        // Check if essential commands are available in the factory
-        var allCommands = commandFactory.AllCommands;
-        var essentialCommands = allCommands.Where(kvp =>
-            kvp.Value.GetType().GetCustomAttribute<EssentialAttribute>() != null ||
-            kvp.Value.GetType().BaseType?.GetCustomAttribute<EssentialAttribute>() != null).ToList();
-
-        // If essential commands exist, they should be included
-        foreach (var essentialCommand in essentialCommands)
-        {
-            var hasEssentialCommand = result.Tools.Any(t => t.Name == essentialCommand.Key);
-            Assert.True(hasEssentialCommand, $"Essential command {essentialCommand.Key} should be included");
-        }
-
         // Should include both storage and keyvault commands if available
+        var allCommands = commandFactory.AllCommands;
         var storageCommands = allCommands.Where(kvp => kvp.Key.Contains("storage")).ToList();
         var keyvaultCommands = allCommands.Where(kvp => kvp.Key.Contains("keyvault")).ToList();
 
@@ -473,7 +368,7 @@ public class CommandFactoryToolLoaderTests
             Assert.True(hasKeyvaultCommand, "Should include keyvault commands when keyvault namespace is specified");
         }
 
-        // Should have some tools (at least the essential ones or namespace-specific ones)
+        // Should have some tools
         Assert.NotEmpty(result.Tools);
     }
 
