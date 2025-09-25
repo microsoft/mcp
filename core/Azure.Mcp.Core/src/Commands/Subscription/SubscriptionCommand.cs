@@ -12,7 +12,6 @@ public abstract class SubscriptionCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : GlobalCommand<TOptions>
     where TOptions : SubscriptionOptions, new()
 {
-    protected virtual bool SubscriptionRequired => true;
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
