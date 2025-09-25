@@ -1,5 +1,39 @@
 #!/bin/env pwsh
 #Requires -Version 7
+<#
+## Instructions
+
+This script is used to generate a package-specific README.md from a project README in the repository,
+using special comment annotations to mark sections of the markdown that should be conditionally excluded or replaced.
+
+## Usage
+
+To generate a README tailored for a specific package type, run:
+
+eng\scripts\Process-PackageReadMe.ps1 -InputReadMePath "<path to readme>" -OutputDirectory "<output directory>" -PackageType "<nuget|npm|vsix>"
+
+## Supported Annotations
+
+### 1. Section Removal
+
+**Purpose:** Remove one or more lines, or parts of a line of markdown for specified package types.
+
+**Syntax:**
+<!-- remove-section: start packageType1;packageType2 -->
+
+e.g.
+<!-- remove-section: start nuget;vsix;npm -->
+......
+various markdown lines
+.....
+<!-- remove-section: end -->
+
+### 1. Insert Section
+
+insert-section is used to insert a chunk of text into a line for a specified package type. 
+e.g.
+<!-- insert-section: nuget;vsix;npm {{Text to be inserted}} -->
+#>
 
 param(
     [Parameter(Mandatory=$true)]

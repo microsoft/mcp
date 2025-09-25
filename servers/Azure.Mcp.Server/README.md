@@ -1,39 +1,5 @@
 <!--
-# README Processing Instructions
-
-This `README.md` file serves as a shared template for multiple package repositories. To generate a package-specific README, use special comment annotations to mark sections of the markdown that should be conditionally, excluded, or replaced. The script `eng\scripts\Process-PackageReadMe.ps1` automates this processing.
-
-## Usage
-
-To generate a README tailored for a specific package type, run:
-
-eng\scripts\Process-PackageReadMe.ps1 -InputReadMePath "<path to this readme>" -OutputDirectory "<output directory>" -PackageType "<nuget|npm|vsix>"
-
-## Supported Annotations
-
-All annotations must be wrapped in markdown comments . The following annotations are supported:
-
-### 1. Section Removal
-
-**Purpose:** Remove one or more lines, or parts of a line of markdown for specified package types.
-
-**Syntax:**
-remove-section: start packageType1;packageType2
-
-e.g.
-remove-section: start nuget;vsix;npm
-......
-various markdown lines
-.....
-remove-section: end
-
-### 1. Insert Chunk
-
-insert-chunk is used to insert a chunk of text into a line for a specified package type. 
-e.g.
-insert-section: nuget;vsix;npm {{Text to be inserted}}
-
-Remember to wrap each annotation in markdown comments
+See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to anotate this README.md for package specific output
 -->
 # <!-- remove-section: start nuget;vsix --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end -->Azure MCP Server <!-- insert-section: nuget;vsix;npm {{ToolTitle}} -->
 
