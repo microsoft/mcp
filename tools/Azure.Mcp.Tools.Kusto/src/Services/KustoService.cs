@@ -180,7 +180,10 @@ public sealed class KustoService(
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(clusterUri, databaseName, tableName);
+        ValidateRequiredParameters(
+            (nameof(clusterUri), clusterUri),
+            (nameof(databaseName), databaseName),
+            (nameof(tableName), tableName));
 
         var kustoClient = await GetOrCreateKustoClientAsync(clusterUri, tenant);
         var kustoResult = await kustoClient.ExecuteQueryCommandAsync(

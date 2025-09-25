@@ -187,12 +187,15 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     /// <exception cref="ArgumentException">Thrown when any parameter is null or empty</exception>
     protected static void ValidateRequiredParameters(params (string name, string? value)[] namedParameters)
     {
-        foreach (var (name, value) in namedParameters)
+        var missingParams = namedParameters
+            .Where(param => string.IsNullOrEmpty(param.value))
+            .Select(param => param.name)
+            .ToArray();
+
+        if (missingParams.Length > 0)
         {
-            if (string.IsNullOrEmpty(value))
-            {
-                throw new ArgumentException($"Parameter '{name}' is null or empty", name);
-            }
+            throw new ArgumentException(
+                $"Required parameter{(missingParams.Length > 1 ? "s are" : " is")} null or empty: {string.Join(", ", missingParams)}");
         }
     }
 }
