@@ -64,7 +64,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
 
             if (UseClusterUri(options))
             {
-                results = await kusto.QueryItems(
+                results = await kusto.QueryItemsAsync(
                     options.ClusterUri!,
                     options.Database!,
                     options.Query!,
@@ -74,7 +74,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
             }
             else
             {
-                results = await kusto.QueryItems(
+                results = await kusto.QueryItemsAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Database!,

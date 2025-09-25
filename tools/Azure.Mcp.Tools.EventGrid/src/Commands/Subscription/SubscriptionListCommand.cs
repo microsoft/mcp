@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
+using System.Net;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Options;
@@ -19,8 +20,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
     public override string Description =>
         """
-        List event subscriptions for topics with filtering and endpoint configuration. This tool shows all active 
-        subscriptions including webhook endpoints, event filters, and delivery retry policies. Returns subscription 
+        List event subscriptions for topics with filtering and endpoint configuration. This tool shows all active
+        subscriptions including webhook endpoints, event filters, and delivery retry policies. Returns subscription
         details as JSON array. Requires either --topic (bare topic name) OR --subscription. If only --topic is provided
         the tool searches all accessible subscriptions for a topic with that name. Optional --resource-group/--location
         may only be used alongside --subscription or --topic.
@@ -73,7 +74,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
             if (commandResponse != null)
             {
-                commandResponse.Status = 400;
+                commandResponse.Status = HttpStatusCode.BadRequest;
                 commandResponse.Message = result.ErrorMessage;
             }
         }
@@ -85,7 +86,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
             if (commandResponse != null)
             {
-                commandResponse.Status = 400;
+                commandResponse.Status = HttpStatusCode.BadRequest;
                 commandResponse.Message = result.ErrorMessage;
             }
         }

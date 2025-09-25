@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
@@ -33,9 +34,9 @@ public abstract class BaseCosmosCommand<
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        CosmosException cosmosEx => (int)cosmosEx.StatusCode,
+        CosmosException cosmosEx => cosmosEx.StatusCode,
         _ => base.GetStatusCode(ex)
     };
 }

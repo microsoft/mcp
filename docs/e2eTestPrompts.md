@@ -53,6 +53,19 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applens_resource_diagnose | Please help me diagnose issues with my app using app lens |
 | azmcp_applens_resource_diagnose | Use app lens to check why my app is slow? |
 | azmcp_applens_resource_diagnose | What does app lens say is wrong with my service? |
+## Azure App Service
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_appservice_database_add | Add a database connection to my app service <app_name> in resource group <resource_group> |
+| azmcp_appservice_database_add | Configure a SQL Server database for app service <app_name> |
+| azmcp_appservice_database_add | Add a MySQL database to app service <app_name> |
+| azmcp_appservice_database_add | Add a PostgreSQL database to app service <app_name> |
+| azmcp_appservice_database_add | Add a CosmosDB database to app service <app_name> |
+| azmcp_appservice_database_add | Add database <database_name> on server <database_server> to app service <app_name> |
+| azmcp_appservice_database_add | Set connection string for database <database_name> in app service <app_name> |
+| azmcp_appservice_database_add | Configure tenant <tenant> for database <database_name> in app service <app_name> |
+| azmcp_appservice_database_add | Add database <database_name> with retry policy to app service <app_name> |
 
 ## Azure Application Insights
 
@@ -187,6 +200,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_keyvault_admin_settings_get | Get the account settings for my key vault <key_vault_account_name> |
+| azmcp_keyvault_admin_settings_get | Show me the account settings for managed HSM keyvault <key_vault_account_name> |
+| azmcp_keyvault_admin_settings_get | What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name> |
 | azmcp_keyvault_certificate_create | Create a new certificate called <certificate_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_get | Show me the certificate <certificate_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_get | Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name> |
@@ -386,6 +402,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_db_delete | Delete the database called <database_name> on server <server_name> |
 | azmcp_sql_db_list | List all databases in the Azure SQL server <server_name> |
 | azmcp_sql_db_list | Show me all the databases configuration details in the Azure SQL server <server_name> |
+| azmcp_sql_db_rename | Rename the SQL database <database_name> on server <server_name> to <new_database_name> |
+| azmcp_sql_db_rename | Rename my Azure SQL database <database_name> to <new_database_name> on server <server_name> |
 | azmcp_sql_db_show | Get the configuration details for the SQL database <database_name> on server <server_name> |
 | azmcp_sql_db_show | Show me the details of SQL database <database_name> in server <server_name> |
 | azmcp_sql_db_update | Update the performance tier of SQL database <database_name> on server <server_name> |
@@ -421,6 +439,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_server_firewall-rule_list | List all firewall rules for SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_list | Show me the firewall rules for SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_list | What firewall rules are configured for my SQL server <server_name>? |
+| azmcp_sql_server_list | List all Azure SQL servers in resource group <resource_group_name> |
+| azmcp_sql_server_list | Show me every SQL server available in resource group <resource_group_name> |
 | azmcp_sql_server_show | Show me the details of Azure SQL server <server_name> in resource group <resource_group_name> |
 | azmcp_sql_server_show | Get the configuration details for SQL server <server_name> |
 | azmcp_sql_server_show | Display the properties of SQL server <server_name> |
@@ -437,8 +457,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_storage_account_get | List all storage accounts in my subscription including their location and SKU |
 | azmcp_storage_account_get | Show me my storage accounts with whether hierarchical namespace (HNS) is enabled |
 | azmcp_storage_account_get | Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings |
-| azmcp_storage_blob_batch_set-tier | Set access tier to Cool for multiple blobs in the container <container> in the storage account <account> |
-| azmcp_storage_blob_batch_set-tier | Change the access tier to Archive for blobs file1.txt and file2.txt in the container <container> in the storage account <account> |
 | azmcp_storage_blob_container_create | Create the storage container mycontainer in storage account <account> |
 | azmcp_storage_blob_container_create | Create the container using blob public access in storage account <account> |
 | azmcp_storage_blob_container_create | Create a new blob container named documents with container public access in storage account <account> |
@@ -450,18 +468,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_storage_blob_get | List all blobs in the blob container <container> in the storage account <account> |
 | azmcp_storage_blob_get | Show me the blobs in the blob container <container> in the storage account <account> |
 | azmcp_storage_blob_upload | Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account> |
-| azmcp_storage_datalake_directory_create | Create a new directory at the path <directory_path> in Data Lake in the storage account <account> |
-| azmcp_storage_datalake_file-system_list-paths | List all paths in the Data Lake file system <file_system> in the storage account <account> |
-| azmcp_storage_datalake_file-system_list-paths | Show me the paths in the Data Lake file system <file_system> in the storage account <account> |
-| azmcp_storage_datalake_file-system_list-paths | Recursively list all paths in the Data Lake file system <file_system> in the storage account <account> filtered by <filter_path> |
-| azmcp_storage_queue_message_send | Send a message "Hello, World!" to the queue <queue> in storage account <account> |
-| azmcp_storage_queue_message_send | Send a message with TTL of 3600 seconds to the queue <queue> in storage account <account> |
-| azmcp_storage_queue_message_send | Add a message to the queue <queue> in storage account <account> with visibility timeout of 30 seconds |
-| azmcp_storage_share_file_list | List all files and directories in the File Share <share> in the storage account <account> |
-| azmcp_storage_share_file_list | Show me the files in the File Share <share> directory <directory_path> in the storage account <account> |
-| azmcp_storage_share_file_list | List files with prefix 'report' in the File Share <share> in the storage account <account> |
-| azmcp_storage_table_list | List all tables in the storage account <account> |
-| azmcp_storage_table_list | Show me the tables in the storage account <account> |
 
 ## Azure Subscription Management
 

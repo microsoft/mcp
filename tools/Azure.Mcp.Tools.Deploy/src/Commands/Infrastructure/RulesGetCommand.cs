@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
 
 public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
-    : BaseCommand()
+    : BaseCommand<RulesGetOptions>
 {
     private const string CommandTitle = "Get Iac(Infrastructure as Code) Rules";
     private readonly ILogger<RulesGetCommand> _logger = logger;
@@ -42,7 +42,7 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
         command.Options.Add(DeployOptionDefinitions.IaCRules.ResourceTypes);
     }
 
-    private RulesGetOptions BindOptions(ParseResult parseResult)
+    protected override RulesGetOptions BindOptions(ParseResult parseResult)
     {
         var options = new RulesGetOptions();
         options.DeploymentTool = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.IaCRules.DeploymentTool.Name) ?? string.Empty;

@@ -96,6 +96,26 @@ public interface ISqlService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Renames an existing SQL database to a new name.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server hosting the database</param>
+    /// <param name="databaseName">The current database name</param>
+    /// <param name="newDatabaseName">The desired new database name</param>
+    /// <param name="resourceGroup">The resource group name</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="retryPolicy">Optional retry policy options</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The renamed SQL database information</returns>
+    Task<SqlDatabase> RenameDatabaseAsync(
+        string serverName,
+        string databaseName,
+        string newDatabaseName,
+        string resourceGroup,
+        string subscription,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets a list of databases for a SQL server.
     /// </summary>
     /// <param name="serverName">The name of the SQL server</param>
@@ -255,6 +275,20 @@ public interface ISqlService
     /// <exception cref="KeyNotFoundException">Thrown when the server is not found</exception>
     Task<SqlServer> GetServerAsync(
         string serverName,
+        string resourceGroup,
+        string subscription,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Lists SQL servers in a resource group.
+    /// </summary>
+    /// <param name="resourceGroup">The name of the resource group</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="retryPolicy">Optional retry policy options</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>A list of SQL servers</returns>
+    Task<List<SqlServer>> ListServersAsync(
         string resourceGroup,
         string subscription,
         RetryPolicyOptions? retryPolicy,
