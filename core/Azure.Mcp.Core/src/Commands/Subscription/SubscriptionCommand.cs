@@ -13,16 +13,16 @@ public abstract class SubscriptionCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : GlobalCommand<TOptions>
     where TOptions : SubscriptionOptions, new()
 {
+    protected virtual bool SubscriptionRequired => true;
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.Subscription);
-
-        // Command-level validation for presence: allow either --subscription or AZURE_SUBSCRIPTION_ID
-        // This mirrors the prior behavior that preferred the explicit option but fell back to env var.
         command.Validators.Add(commandResult =>
         {
-            if (!HasSubscriptionAvailable(commandResult))
+            // Command-level validation for presence: allow either --subscription or AZURE_SUBSCRIPTION_ID
+            // This mirrors the prior behavior that preferred the explicit option but fell back to env var.
+            if (SubscriptionRequired && !HasSubscriptionAvailable(commandResult))
             {
                 commandResult.AddError("Missing Required options: --subscription");
             }
@@ -37,8 +37,7 @@ public abstract class SubscriptionCommand<
         var subscriptionValue = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Subscription.Name);
 
         var envSubscription = EnvironmentHelpers.GetAzureSubscriptionId();
-        options.Subscription = (string.IsNullOrEmpty(subscriptionValue)
-            || IsPlaceholder(subscriptionValue))
+        options.Subscription = (string.IsNullOrEmpty(subscriptionValue) || IsPlaceholder(subscriptionValue))
             && !string.IsNullOrEmpty(envSubscription)
             ? envSubscription
             : subscriptionValue;

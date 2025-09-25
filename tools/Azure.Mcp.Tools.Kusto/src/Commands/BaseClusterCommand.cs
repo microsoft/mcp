@@ -14,6 +14,7 @@ public abstract class BaseClusterCommand<
     [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
     : SubscriptionCommand<TOptions> where TOptions : BaseClusterOptions, new()
 {
+    protected override bool SubscriptionRequired => false;
     protected static bool UseClusterUri(BaseClusterOptions options) => !string.IsNullOrEmpty(options.ClusterUri);
 
     protected override void RegisterOptions(Command command)

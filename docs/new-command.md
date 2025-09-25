@@ -436,6 +436,8 @@ protected override MyCommandOptions BindOptions(ParseResult parseResult)
     var options = base.BindOptions(parseResult);
     options.Account = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Account.Name);
     options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+    options.EitherThis = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.EitherThis.Name);
+    options.OrThat = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.OrThat.Name);
     return options;
 }
 ```
