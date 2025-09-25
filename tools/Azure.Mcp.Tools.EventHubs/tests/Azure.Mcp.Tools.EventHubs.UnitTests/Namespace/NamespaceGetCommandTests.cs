@@ -162,7 +162,7 @@ public class NamespaceGetCommandTests
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription 12345678-1234-1234-1234-123456789012 --resource-group rg-empty");
         _eventHubsService.GetNamespacesAsync("rg-empty", "12345678-1234-1234-1234-123456789012", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-            .Returns(new List<EventHubsNamespaceInfo>());
+            .Returns([]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
