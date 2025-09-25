@@ -85,7 +85,6 @@ Deploying$($AsJob ? ' in background job' : ''):
 "@ -ForegroundColor Yellow
 
     if($AsJob) {
-        Write-Host "Starting background job for '$Path'..." -ForegroundColor Yellow
         Start-Job -ScriptBlock {
             param($RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $testResourcesDirectory, $DeleteAfterHours)
 
@@ -99,7 +98,6 @@ Deploying$($AsJob ? ' in background job' : ''):
 
         } -ArgumentList $RepoRoot, $SubscriptionId, $ResourceGroupName, $BaseName, $TestResourcesDirectory, $DeleteAfterHours
     } else {
-        Write-Host "Deploying resources for '$Path'..." -ForegroundColor Yellow
         & "$RepoRoot/eng/common/TestResources/New-TestResources.ps1" `
             -SubscriptionId $SubscriptionId `
             -ResourceGroupName $ResourceGroupName `
