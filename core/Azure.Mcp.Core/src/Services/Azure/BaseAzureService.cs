@@ -183,7 +183,7 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     /// <summary>
     /// Validates that the provided named parameters are not null or empty
     /// </summary>
-    /// <param name="namedParameters">Dictionary of parameter names and values to validate</param>
+    /// <param name="namedParameters">Array of tuples containing parameter names and values to validate</param>
     /// <exception cref="ArgumentException">Thrown when any parameter is null or empty</exception>
     protected static void ValidateRequiredParameters(params (string name, string? value)[] namedParameters)
     {
