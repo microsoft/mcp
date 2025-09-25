@@ -167,9 +167,9 @@ Replace `/full/path/to/.env` with your actual .env file path. Alternatively, use
 1. We're building this in the open. Your feedback is much appreciated, and will help us shape the future of the Azure MCP server
     - 👉 [Open an issue in the public repository](https://github.com/microsoft/mcp/issues/new/choose)
 
-## <a id="what-can-you-do-with-the-azure-mcp-server"></a> ✨ What can you do with the Azure MCP Server?
+## What can you do with the Azure MCP Server?
 
-The Azure MCP Server supercharges your agents with Azure context. Here are some cool prompts you can try:
+✨ The Azure MCP Server supercharges your agents with Azure context. Here are some cool prompts you can try:
 
 ### 🧮 Azure AI Foundry
 
