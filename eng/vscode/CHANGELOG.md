@@ -1,5 +1,11 @@
 # Release History
 
+## 0.8.2 (2025-09-25)
+
+### Fixed
+
+- Fixed `azmcp_subscription_list` to return empty enumerable instead of `null` when no subscriptions are found. [[#508](https://github.com/microsoft/mcp/pull/508)]
+
 ## 0.8.1 (2025-09-23)
 
 ### Added
