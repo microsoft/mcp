@@ -3,7 +3,9 @@ parameters:
   type: string
 - name: IncludeNative
   type: boolean
-- name: SkipDockerRelease
+- name: IncludeDockerRelease
+  type: boolean
+- name: IsTestPipeline
   type: boolean
 
 jobs:
@@ -47,7 +49,7 @@ jobs:
     ServerName: ${{ parameters.ServerName }}
     DependsOn: TagRepository
 
-- ${{ if ne(parameters.SkipDockerRelease, 'true') }}:
+- ${{ if parameters.IncludeDockerRelease }}:
   - template: /eng/pipelines/templates/jobs/docker/release-docker.yml
     parameters:
       ContainerRegistry: 'azuresdkimages'
@@ -77,6 +79,4 @@ jobs:
       CommitMsg: "Increment package version after release"
       PRTitle: "Increment version after release"
       RepoOwner: microsoft
-      # For CloseAfterOpenForTesting, create-pull-request.yml expects a bool as a string  and adds `$` to the front for
-      # powershell. We pass an environment variable reference and omit the `$`
-      CloseAfterOpenForTesting: env:SETDEVVERSION
+      CloseAfterOpenForTesting: ${{ parameters.IsTestPipeline }}

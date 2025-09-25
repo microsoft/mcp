@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.VirtualDesktop.Models;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
@@ -92,9 +93,9 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException rfEx when rfEx.Status == 404 =>
+        RequestFailedException rfEx when rfEx.Status == (int)HttpStatusCode.NotFound =>
             "Session host or hostpool not found. Verify the names and that you have access to them.",
-        RequestFailedException rfEx when rfEx.Status == 403 =>
+        RequestFailedException rfEx when rfEx.Status == (int)HttpStatusCode.Forbidden =>
             "Access denied. Verify you have the necessary permissions to access the session host and hostpool.",
         RequestFailedException rfEx => rfEx.Message,
         _ => base.GetErrorMessage(ex)

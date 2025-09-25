@@ -50,7 +50,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
 
             if (UseClusterUri(options))
             {
-                tableNames = await kusto.ListTables(
+                tableNames = await kusto.ListTablesAsync(
                     options.ClusterUri!,
                     options.Database!,
                     options.Tenant,
@@ -59,7 +59,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
             }
             else
             {
-                tableNames = await kusto.ListTables(
+                tableNames = await kusto.ListTablesAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Database!,

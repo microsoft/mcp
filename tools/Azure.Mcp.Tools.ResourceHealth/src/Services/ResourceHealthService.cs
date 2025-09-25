@@ -32,7 +32,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
         {
             var credential = await GetCredential();
             var token = await credential.GetTokenAsync(
-                new TokenRequestContext(new[] { $"{AzureManagementBaseUrl}/.default" }),
+                new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
                 CancellationToken.None);
 
             using var client = _httpClientService.CreateClient(new Uri(AzureManagementBaseUrl));
@@ -78,7 +78,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 
             var credential = await GetCredential();
             var token = await credential.GetTokenAsync(
-                new TokenRequestContext(new[] { $"{AzureManagementBaseUrl}/.default" }),
+                new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
                 CancellationToken.None);
 
             using var client = _httpClientService.CreateClient(new Uri(AzureManagementBaseUrl));
@@ -131,7 +131,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 
             var credential = await GetCredential();
             var token = await credential.GetTokenAsync(
-                new TokenRequestContext(new[] { $"{AzureManagementBaseUrl}/.default" }),
+                new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
                 CancellationToken.None);
 
             using var client = _httpClientService.CreateClient(new Uri(AzureManagementBaseUrl));

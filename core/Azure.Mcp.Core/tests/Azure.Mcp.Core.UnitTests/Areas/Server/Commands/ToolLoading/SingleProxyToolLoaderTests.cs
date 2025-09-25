@@ -17,7 +17,7 @@ public class SingleProxyToolLoaderTests
 {
     private static (SingleProxyToolLoader toolLoader, IMcpDiscoveryStrategy discoveryStrategy) CreateToolLoader(bool useRealDiscovery = true)
     {
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<SingleProxyToolLoader>();
 

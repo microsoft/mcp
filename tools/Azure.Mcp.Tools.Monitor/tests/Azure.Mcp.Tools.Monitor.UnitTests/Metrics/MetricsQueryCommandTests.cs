@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -221,12 +222,12 @@ public class MetricsQueryCommandTests
         {
             Assert.NotNull(result.Message);
             Assert.Contains("Invalid format for --metric-names", result.Message);
-            Assert.Equal(400, result.Status);
+            Assert.Equal(HttpStatusCode.BadRequest, result.Status);
         }
         else
         {
             Assert.Equal("Success", result.Message);
-            Assert.Equal(200, result.Status); // Default status should remain unchanged for valid cases
+            Assert.Equal(HttpStatusCode.OK, result.Status); // Default status should remain unchanged for valid cases
         }
     }
 
@@ -285,7 +286,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
 
@@ -326,7 +327,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         var results = GetResult(response.Results);
@@ -397,7 +398,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.NotEmpty(response.Message);
         Assert.Null(response.Results);
     }
@@ -453,7 +454,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("exceeds the maximum allowed limit of 50", response.Message);
         Assert.Contains("CPU", response.Message);
         Assert.Contains("51 time buckets", response.Message);
@@ -507,7 +508,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("exceeds the maximum allowed limit of 25", response.Message);
         Assert.Contains("Memory", response.Message);
         Assert.Contains("26 time buckets", response.Message);
@@ -584,7 +585,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("exceeds the maximum allowed limit", response.Message);
     }
 
@@ -635,7 +636,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
@@ -726,7 +727,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Service unavailable", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -826,7 +827,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Memory", response.Message);
         Assert.Contains("51 time buckets", response.Message);
     }
@@ -878,7 +879,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("CPU", response.Message);
         Assert.Contains("51 time buckets", response.Message);
     }
@@ -930,7 +931,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
@@ -961,7 +962,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 

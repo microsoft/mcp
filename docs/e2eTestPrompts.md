@@ -54,6 +54,19 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applens_resource_diagnose | Please help me diagnose issues with my app using app lens |
 | azmcp_applens_resource_diagnose | Use app lens to check why my app is slow? |
 | azmcp_applens_resource_diagnose | What does app lens say is wrong with my service? |
+## Azure App Service
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_appservice_database_add | Add a database connection to my app service <app_name> in resource group <resource_group> |
+| azmcp_appservice_database_add | Configure a SQL Server database for app service <app_name> |
+| azmcp_appservice_database_add | Add a MySQL database to app service <app_name> |
+| azmcp_appservice_database_add | Add a PostgreSQL database to app service <app_name> |
+| azmcp_appservice_database_add | Add a CosmosDB database to app service <app_name> |
+| azmcp_appservice_database_add | Add database <database_name> on server <database_server> to app service <app_name> |
+| azmcp_appservice_database_add | Set connection string for database <database_name> in app service <app_name> |
+| azmcp_appservice_database_add | Configure tenant <tenant> for database <database_name> in app service <app_name> |
+| azmcp_appservice_database_add | Add database <database_name> with retry policy to app service <app_name> |
 
 ## Azure Application Insights
 
@@ -188,6 +201,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_keyvault_admin_settings_get | Get the account settings for my key vault <key_vault_account_name> |
+| azmcp_keyvault_admin_settings_get | Show me the account settings for managed HSM keyvault <key_vault_account_name> |
+| azmcp_keyvault_admin_settings_get | What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name> |
 | azmcp_keyvault_certificate_create | Create a new certificate called <certificate_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_get | Show me the certificate <certificate_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_get | Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name> |
@@ -387,6 +403,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_db_delete | Delete the database called <database_name> on server <server_name> |
 | azmcp_sql_db_list | List all databases in the Azure SQL server <server_name> |
 | azmcp_sql_db_list | Show me all the databases configuration details in the Azure SQL server <server_name> |
+| azmcp_sql_db_rename | Rename the SQL database <database_name> on server <server_name> to <new_database_name> |
+| azmcp_sql_db_rename | Rename my Azure SQL database <database_name> to <new_database_name> on server <server_name> |
 | azmcp_sql_db_show | Get the configuration details for the SQL database <database_name> on server <server_name> |
 | azmcp_sql_db_show | Show me the details of SQL database <database_name> in server <server_name> |
 | azmcp_sql_db_update | Update the performance tier of SQL database <database_name> on server <server_name> |

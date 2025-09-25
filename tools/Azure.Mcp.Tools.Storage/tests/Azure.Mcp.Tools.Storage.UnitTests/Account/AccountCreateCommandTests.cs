@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -61,15 +62,24 @@ public class AccountCreateCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            var expectedAccount = new AccountInfo(
-                "testaccount",
-                "eastus",
-                "StorageV2",
-                "Standard_LRS",
-                "Standard",
-                false,
-                false,
-                true);
+            var properties = new Dictionary<string, object>
+            {
+                { "hnsEnabled", false },
+                { "provisioningState", "Succeeded" },
+                { "creationTime", DateTimeOffset.UtcNow.ToString("o") },
+                { "allowBlobPublicAccess", false },
+                { "enableHttpsTrafficOnly", true }
+            };
+            var expectedAccount = new StorageAccountResult(
+                HasData: true,
+                Id: "/subscriptions/sub123/resourceGroups/testrg/providers/Microsoft.Storage/storageAccounts/testaccount",
+                Name: "testaccount",
+                Type: "Microsoft.Storage/storageAccounts",
+                Location: "eastus",
+                SkuName: "Standard_LRS",
+                SkuTier: "Standard",
+                Kind: "StorageV2",
+                Properties: properties);
 
             _storageService.CreateStorageAccount(
                 Arg.Any<string>(),
@@ -90,7 +100,7 @@ public class AccountCreateCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.NotNull(response.Results);
@@ -112,7 +122,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesStorageAccountNameAlreadyExists()
     {
         // Arrange
-        var conflictException = new RequestFailedException(409, "Storage account name already exists");
+        var conflictException = new RequestFailedException((int)HttpStatusCode.Conflict, "Storage account name already exists");
 
         _storageService.CreateStorageAccount(
             Arg.Any<string>(),
@@ -132,7 +142,7 @@ public class AccountCreateCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(409, response.Status);
+        Assert.Equal(HttpStatusCode.Conflict, response.Status);
         Assert.Contains("already exists", response.Message);
     }
 
@@ -140,7 +150,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesResourceGroupNotFound()
     {
         // Arrange
-        var notFoundException = new RequestFailedException(404, "Resource group not found");
+        var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Resource group not found");
 
         _storageService.CreateStorageAccount(
             Arg.Any<string>(),
@@ -160,7 +170,7 @@ public class AccountCreateCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(404, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not found", response.Message);
     }
 
@@ -168,7 +178,7 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_HandlesAuthorizationFailure()
     {
         // Arrange
-        var authException = new RequestFailedException(403, "Authorization failed");
+        var authException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
 
         _storageService.CreateStorageAccount(
             Arg.Any<string>(),
@@ -188,7 +198,7 @@ public class AccountCreateCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(403, response.Status);
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
     }
 
@@ -206,7 +216,7 @@ public class AccountCreateCommandTests
             Arg.Any<bool?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromException<AccountInfo>(new Exception("Test error")));
+            .Returns(Task.FromException<StorageAccountResult>(new Exception("Test error")));
 
         var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
 
@@ -214,7 +224,7 @@ public class AccountCreateCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -223,15 +233,24 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
     {
         // Arrange
-        var expectedAccount = new AccountInfo(
-            "testaccount",
-            "eastus",
-            "StorageV2",
-            "Standard_GRS",
-            "Standard",
-            true,
-            false,
-            true);
+        var properties = new Dictionary<string, object>
+            {
+                { "hnsEnabled", true },
+                { "provisioningState", "Succeeded" },
+                { "creationTime", DateTimeOffset.UtcNow.ToString("o") },
+                { "allowBlobPublicAccess", false },
+                { "enableHttpsTrafficOnly", true }
+            };
+        var expectedAccount = new StorageAccountResult(
+            HasData: true,
+            Id: "/subscriptions/sub123/resourceGroups/testrg/providers/Microsoft.Storage/storageAccounts/testaccount",
+            Name: "testaccount",
+            Type: "Microsoft.Storage/storageAccounts",
+            Location: "eastus",
+            SkuName: "Standard_GRS",
+            SkuTier: "Standard",
+            Kind: "StorageV2",
+            Properties: properties);
 
         _storageService.CreateStorageAccount(
             "testaccount",
@@ -259,7 +278,7 @@ public class AccountCreateCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         await _storageService.Received(1).CreateStorageAccount(
             "testaccount",
             "testrg",
