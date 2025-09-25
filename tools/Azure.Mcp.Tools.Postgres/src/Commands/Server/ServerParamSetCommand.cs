@@ -16,7 +16,7 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
     public override string Name => "set";
 
     public override string Description =>
-        "Configures PostgreSQL server parameters by setting them to specified values for an Azure PostgreSQL server.";
+        "Configures PostgreSQL server settings including replication, connection limits, and other parameters.";
 
     public override string Title => CommandTitle;
 
