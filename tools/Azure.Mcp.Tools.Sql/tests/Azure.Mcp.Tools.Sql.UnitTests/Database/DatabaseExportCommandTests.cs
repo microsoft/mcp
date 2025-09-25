@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.Database;
@@ -98,11 +99,11 @@ public class DatabaseExportCommandTests
         // Assert
         Assert.NotNull(response);
         // Debug: Add detailed error info
-        if (response.Status != 200)
+        if (response.Status != HttpStatusCode.OK)
         {
-            throw new Exception($"Expected 200 but got {response.Status}. Message: {response.Message}");
+            throw new Exception($"Expected OK but got {response.Status}. Message: {response.Message}");
         }
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
     }
@@ -143,7 +144,7 @@ public class DatabaseExportCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Database not found", response.Message);
     }
 
@@ -167,7 +168,7 @@ public class DatabaseExportCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("subscription", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -191,7 +192,7 @@ public class DatabaseExportCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Missing Required options: --storage-uri", response.Message);
     }
 
@@ -201,7 +202,7 @@ public class DatabaseExportCommandTests
         // Arrange
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription",
-            "--resource-group", "test-rg", 
+            "--resource-group", "test-rg",
             "--server", "test-server",
             "--database", "test-db",
             "--storage-uri", "invalid-uri",
@@ -216,7 +217,7 @@ public class DatabaseExportCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Storage URI must be a valid absolute URI", response.Message);
     }
 
@@ -231,7 +232,7 @@ public class DatabaseExportCommandTests
             "--database", "test-db",
             "--storage-uri", "https://storage.blob.core.windows.net/container/export.bacpac",
             "--storage-key", "storagekey123",
-            "--storage-key-type", "InvalidType",
+            "--storage-key-type", "ManagedIdentity", // This is now invalid for storage key type
             "--admin-user", "admin",
             "--admin-password", "password123",
             "--auth-type", "SQL"
@@ -241,8 +242,8 @@ public class DatabaseExportCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(400, response.Status);
-        Assert.Contains("Invalid storage key type", response.Message);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Invalid storage key type 'ManagedIdentity'. Valid values are: StorageAccessKey, SharedAccessKey", response.Message);
     }
 
     [Fact]
@@ -266,7 +267,7 @@ public class DatabaseExportCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Invalid authentication type", response.Message);
     }
 
@@ -336,7 +337,6 @@ public class DatabaseExportCommandTests
     [Theory]
     [InlineData("StorageAccessKey")]
     [InlineData("SharedAccessKey")]
-    [InlineData("ManagedIdentity")]
     public async Task ExecuteAsync_WithValidStorageKeyTypes_ExecutesSuccessfully(string storageKeyType)
     {
         // Arrange
@@ -384,7 +384,7 @@ public class DatabaseExportCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Theory]
@@ -438,7 +438,7 @@ public class DatabaseExportCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Fact]
@@ -461,7 +461,7 @@ public class DatabaseExportCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Missing Required options: --admin-user", response.Message);
     }
 
@@ -485,7 +485,7 @@ public class DatabaseExportCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Missing Required options: --admin-password", response.Message);
     }
 }

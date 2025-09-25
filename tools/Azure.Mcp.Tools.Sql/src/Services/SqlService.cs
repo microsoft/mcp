@@ -402,19 +402,19 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
             var databaseResource = await sqlServerResource.Value.GetSqlDatabases().GetAsync(databaseName);
 
-            // Parse storage key type
             if (!Enum.TryParse<ResourceManager.Sql.Models.StorageKeyType>(storageKeyType, true, out var storageKeyTypeEnum))
             {
-                throw new ArgumentException($"Invalid storage key type: {storageKeyType}. Valid values are: StorageAccessKey, SharedAccessKey, ManagedIdentity");
+                throw new ArgumentException($"Invalid storage key type: {storageKeyType}. Valid values are: StorageAccessKey, SharedAccessKey");
             }
 
             var exportDefinition = new ResourceManager.Sql.Models.DatabaseExportDefinition(
                 storageKeyTypeEnum,
                 storageKey,
                 new Uri(storageUri),
-                adminUser)
+                adminUser,
+                adminPassword)
             {
-                AdministratorLoginPassword = adminPassword
+                AuthenticationType = !string.IsNullOrEmpty(authType) ? authType : "Sql"
             };
 
             var operation = await databaseResource.Value.ExportAsync(
@@ -428,7 +428,6 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 "Successfully started SQL database export. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, OperationId: {OperationId}",
                 serverName, databaseName, resourceGroup, result?.Id?.ToString());
 
-            // Convert string times to DateTimeOffset if possible
             DateTimeOffset? queuedTime = null;
             DateTimeOffset? lastModifiedTime = null;
 
