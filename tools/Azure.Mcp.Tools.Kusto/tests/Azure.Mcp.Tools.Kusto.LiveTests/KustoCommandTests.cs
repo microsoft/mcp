@@ -93,7 +93,6 @@ public class KustoCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_list_tables_with_direct_uri()
     {
-        // First get the cluster URI
         var clusterInfo = await CallToolAsync(
             "azmcp_kusto_cluster_get",
             new()
@@ -105,7 +104,6 @@ public class KustoCommandTests(ITestOutputHelper output)
         var clusterUri = clusterInfo.AssertProperty("cluster").AssertProperty("clusterUri").GetString();
         Assert.NotNull(clusterUri);
 
-        // Then list tables using the direct URI
         var result = await CallToolAsync(
             "azmcp_kusto_table_list",
             new()
@@ -141,7 +139,6 @@ public class KustoCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_get_table_schema_with_direct_uri()
     {
-        // First get the cluster URI
         var clusterInfo = await CallToolAsync(
             "azmcp_kusto_cluster_get",
             new()
@@ -153,7 +150,6 @@ public class KustoCommandTests(ITestOutputHelper output)
         var clusterUri = clusterInfo.AssertProperty("cluster").AssertProperty("clusterUri").GetString();
         Assert.NotNull(clusterUri);
 
-        // Then get the schema using the direct URI
         var result = await CallToolAsync(
             "azmcp_kusto_table_schema",
             new()
