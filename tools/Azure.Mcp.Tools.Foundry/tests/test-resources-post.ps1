@@ -25,13 +25,3 @@ $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
 # Add your post deployment steps here
 # For example, you might want to configure resources or run additional scripts.
-
-# $DeploymentOutputs keys are from the Bicep outputs and are all UPPERCASE
-# Add DeploymentOutputs as a nested dictionary to match LiveTestSettings structure
-$testSettings["DeploymentOutputs"] = @{
-    "OpenAIAccount" = $DeploymentOutputs.OPENAIOACCOUNT
-    "OpenAIDeploymentName" = $DeploymentOutputs.OPENAIDEPLOYMENTNAME
-    "OpenAIAccountResourceGroup" = $DeploymentOutputs.OPENAIACCOUNTRESOURCEGROUP
-}
-
-
