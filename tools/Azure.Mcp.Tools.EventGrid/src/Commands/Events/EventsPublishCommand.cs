@@ -106,8 +106,6 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
             "Access denied to Event Grid topic. Please verify you have Event Grid Data Sender permissions.",
         Azure.RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
             "Invalid event data or schema format. Please verify the event data is valid JSON and matches the expected schema.",
-        ArgumentException argEx when argEx.Message.Contains("schema") =>
-            "Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom.",
         System.Text.Json.JsonException jsonEx =>
             $"Invalid JSON format in event data: {jsonEx.Message}",
         _ => base.GetErrorMessage(ex)
