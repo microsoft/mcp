@@ -37,6 +37,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         Secret = false
     };
 
+    protected override bool SubscriptionRequired => false;
+
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
