@@ -25,6 +25,7 @@ resource aiServices 'Microsoft.CognitiveServices/accounts@2023-10-01-preview' = 
       defaultAction: 'Allow'
     }
     publicNetworkAccess: 'Enabled'
+    disableLocalAuth: true
   }
 }
 
@@ -40,7 +41,7 @@ resource appAiServicesRoleAssignment 'Microsoft.Authorization/roleAssignments@20
   properties: {
     roleDefinitionId: aiServicesRoleDefinition.id
     principalId: testApplicationOid
-    principalType: 'User'
+    description: 'Cognitive Services User for testApplicationOid'
   }
 }
 

@@ -24,11 +24,6 @@ public abstract class BaseSpeechCommand<
         {
             // Validate endpoint option
             var endpointValue = commandResult.GetValueOrDefault(endpointOption);
-            if (string.IsNullOrEmpty(endpointValue))
-            {
-                commandResult.AddError($"Missing required option: --{endpointOption.Name}");
-                return;
-            }
 
             if (!Uri.TryCreate(endpointValue, UriKind.Absolute, out var uri))
             {

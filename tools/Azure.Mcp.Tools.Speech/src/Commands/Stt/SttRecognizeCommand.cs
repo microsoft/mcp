@@ -44,33 +44,19 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
 
     protected override void RegisterOptions(Command command)
     {
-        _logger.LogDebug("RegisterOptions");
-
         base.RegisterOptions(command);
 
-        var fileOption = SpeechOptionDefinitions.File.AsRequired();
-        command.Options.Add(fileOption);
-        var languageOption = SpeechOptionDefinitions.Language.AsOptional();
-        command.Options.Add(languageOption);
-        var phrasesOption = SpeechOptionDefinitions.Phrases.AsOptional();
-        command.Options.Add(phrasesOption);
-        var formatOption = SpeechOptionDefinitions.Format.AsOptional();
-        command.Options.Add(formatOption);
-        var profanityOption = SpeechOptionDefinitions.Profanity.AsOptional();
-        command.Options.Add(profanityOption);
+        command.Options.Add(SpeechOptionDefinitions.File);
+        command.Options.Add(SpeechOptionDefinitions.Language);
+        command.Options.Add(SpeechOptionDefinitions.Phrases);
+        command.Options.Add(SpeechOptionDefinitions.Format);
+        command.Options.Add(SpeechOptionDefinitions.Profanity);
 
         // Command-level validation for file-specific options
         command.Validators.Add(commandResult =>
         {
-            // Validate file is provided
-            if (!commandResult.HasOptionResult(SpeechOptionDefinitions.File.Name))
-            {
-                commandResult.AddError("Missing Required options: --file");
-                return;
-            }
-
             // Validate file path is not empty
-            var fileValue = commandResult.GetValueOrDefault(fileOption);
+            var fileValue = commandResult.GetValueOrDefault(SpeechOptionDefinitions.File);
             if (string.IsNullOrWhiteSpace(fileValue))
             {
                 commandResult.AddError("Audio file path cannot be empty.");
@@ -95,7 +81,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
 
 
             // Validate format option if provided
-            var formatValue = commandResult.GetValueOrDefault<string?>(formatOption);
+            var formatValue = commandResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Format);
             if (!string.IsNullOrEmpty(formatValue))
             {
                 if (formatValue != "simple" && formatValue != "detailed")
@@ -106,7 +92,7 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
             }
 
             // Validate profanity option if provided
-            var profanityValue = commandResult.GetValueOrDefault<string?>(profanityOption);
+            var profanityValue = commandResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Profanity);
             if (!string.IsNullOrEmpty(profanityValue))
             {
                 if (profanityValue != "masked" && profanityValue != "removed" && profanityValue != "raw")
