@@ -2,15 +2,17 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.8.2 (Unreleased)
+## 0.8.3 (Unreleased)
 
 ### Features Added
 
 - Added support for Azure Developer CLI (azd) MCP tools when azd CLI is installed locally - [[#566](https://github.com/microsoft/mcp/issues/566)]
 
+## 0.8.2 (2025-09-25)
+
 ### Bugs Fixed
 
-### Other Changes
+- Fixed `azmcp_subscription_list` to return empty enumerable instead of `null` when no subscriptions are found. [[#508](https://github.com/microsoft/mcp/pull/508)]
 
 ## 0.8.1 (2025-09-23)
 

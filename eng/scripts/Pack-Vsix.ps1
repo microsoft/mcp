@@ -9,6 +9,7 @@ $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 $sourcePath = "$RepoRoot/eng/vscode"
+$readMeProcessingScript = "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1"
 
 $buildId = $env:BUILD_BUILDID
 $setDevVersion = $env:SETDEVVERSION -eq "true" # spellchecker: ignore SETDEVVERSION
@@ -60,6 +61,9 @@ try {
         $version = $serverJson.version
         $serverDirectory = $serverJsonFile.Directory
         $serverName = $serverDirectory.Name
+
+        & $readMeProcessingScript -InputReadMePath "$tempPath/README.md" `
+            -OutputDirectory $tempPath -PackageType "vsix" -InsertPayload @{ ToolTitle = 'Extension for Visual Studio Code' }
 
         if($setDevVersion -and $buildId) {
             <#
