@@ -14,6 +14,8 @@
     <!-- dnx/nuget settings -->
     <DnxPackageId>Azure.Mcp</DnxPackageId>
     <DnxToolCommandName>$(CliName)</DnxToolCommandName>
+    <DnxPackageTags>azure,mcp</DnxPackageTags>
+
     <!-- vsix settings -->
     <VsixPackagePrefix>vscode-azure-mcp</VsixPackagePrefix>
   </PropertyGroup>
@@ -48,13 +50,8 @@
 
   <!-- Properties for the root (RID-less) .NET Tool package -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
-    <PackageDescription>Azure MCP Server - Model Context Protocol implementation for Azure.</PackageDescription>
-    <PackageTags>azure;mcp;</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
-  <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
-    <None Include="../README.md" Pack="true" PackagePath="./README.md" />
-  </ItemGroup>
   <!-- Properties for the RID-specific .NET Tool packages -->
   <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
     <PackageDescription>Azure MCP Server - Model Context Protocol implementation for Azure. Internal

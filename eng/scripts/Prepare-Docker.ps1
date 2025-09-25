@@ -5,12 +5,14 @@
 param(
     [string] $ArtifactsPath,
     [string] $BuildInfoPath,
-    [string] $OutputPath,
-    [switch] $IgnoreMissingArtifacts # When running locally, ignore missing artifacts instead of failing
+    [string] $OutputPath
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
+
+# When running locally, ignore missing artifacts instead of failing
+$ignoreMissingArtifacts = $env:TF_BUILD -ne 'true'
 
 if(!$ArtifactsPath) {
     $ArtifactsPath = "$RepoRoot/.work/build"
@@ -58,7 +60,7 @@ try {
 
         $platformArtifactPath = "$ArtifactsPath/$($platform.artifactPath)"
         if(!(Test-Path $platformArtifactPath)) {
-            if ($IgnoreMissingArtifacts) {
+            if ($ignoreMissingArtifacts) {
                 Write-Warning "Artifact path $platformArtifactPath does not exist. Skipping $($server.name)."
                 Write-Warning "To build, run 'eng/scripts/Build-Code.ps1 -ServerName $($server.name) -OS linux -Architecture x64'"
                 continue

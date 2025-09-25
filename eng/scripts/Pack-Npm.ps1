@@ -6,8 +6,7 @@ param(
     [string] $ArtifactsPath,
     [string] $BuildInfoPath,
     [string] $OutputPath,
-    [switch] $UsePaths,
-    [switch] $IgnoreMissingArtifacts # When running locally, ignore missing artifacts instead of failing
+    [switch] $UsePaths
 )
 
 $ErrorActionPreference = "Stop"
@@ -16,6 +15,9 @@ $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 $wrapperSourcePath = "$RepoRoot/eng/npm/wrapper"
 $platformSourcePath = "$RepoRoot/eng/npm/platform"
+
+# When running locally, ignore missing artifacts instead of failing
+$ignoreMissingArtifacts = $env:TF_BUILD -ne 'true'
 
 if(!$ArtifactsPath) {
     $ArtifactsPath = "$RepoRoot/.work/build"
@@ -36,6 +38,8 @@ if(!$BuildInfoPath) {
     return
 }
 
+$buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+
 if(!$OutputPath) {
     $OutputPath = "$RepoRoot/.work/packages_npm"
 }
@@ -47,16 +51,22 @@ $tempFolder = "$RepoRoot/.work/temp"
 
 function BuildServerPackages([hashtable] $server, [bool] $native) {
     $serverDirectory = "$ArtifactsPath/$($server.artifactPath)"
-    if(!(Test-Path $serverDirectory)) {
-        if ($IgnoreMissingArtifacts) {
-            Write-Warning "Server directory $serverDirectory does not exist."
-            continue
-        }
 
-        Write-Error "Server directory $serverDirectory does not exist."
+    if(!(Test-Path $serverDirectory)) {
+        $message = "Server directory $serverDirectory does not exist."
+        if ($ignoreMissingArtifacts) {
+            Write-Warning $message
+        } else {
+            Write-Error $message
+        }
         return
     }
 
+    $filteredPlatforms = $server.platforms | Where-Object { $_.native -eq $native }
+    if ($filteredPlatforms.Count -eq 0) {
+        Write-Host "No platforms to build for server $($server.name) with native=$native"
+        return
+    }
 
     $serverOutputPath = "$OutputPath/$($server.artifactPath)"
 
@@ -96,15 +106,17 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
     }
 
     # Build the project
-    foreach ($platform in $server.platforms) {
+    foreach ($platform in $filteredPlatforms) {
         $platformDirectory = "$ArtifactsPath/$($platform.artifactPath)"
+
         if(!(Test-Path $platformDirectory)) {
-            if ($IgnoreMissingArtifacts) {
-                Write-Warning "Platform directory $platformDirectory does not exist."
+            $errorMessage = "Platform directory $platformDirectory does not exist."
+            if ($ignoreMissingArtifacts) {
+                Write-Warning $errorMessage
                 continue
             }
 
-            Write-Error "Platform directory $platformDirectory does not exist."
+            Write-Error $errorMessage
             return
         }
 
@@ -212,7 +224,6 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
 
 Push-Location $RepoRoot
 try {
-    $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
     foreach($server in $buildInfo.servers) {
         BuildServerPackages $server -native $false
         if($server.platforms | Where-Object { $_.native }) {

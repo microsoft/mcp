@@ -65,13 +65,8 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         }
 
         var clientTransport = new StdioClientTransport(transportOptions);
-        try
-        {
-            Client = await McpClientFactory.CreateAsync(clientTransport);
-        }
-        catch (IOException ex) when (ex.InnerException)
-        {
-        }
+        Client = await McpClientFactory.CreateAsync(clientTransport);
+
         Output.WriteLine("MCP client initialized successfully");
     }
 

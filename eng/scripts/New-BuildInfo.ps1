@@ -17,7 +17,7 @@ param(
 . "$PSScriptRoot/../common/scripts/common.ps1"
 . "$PSScriptRoot/helpers/PathHelpers.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
-$inPipelineRun = $env:TF_BUILD -eq "True"
+$isPipelineRun = $env:TF_BUILD -eq 'true'
 
 if(!$OutputPath) {
     $OutputPath = "$RepoRoot/.work/build_info.json"
@@ -27,11 +27,38 @@ $serverDirectories = Get-ChildItem "$RepoRoot/servers" -Directory
 $toolDirectories = Get-ChildItem "$RepoRoot/tools" -Directory
 $coreDirectories = Get-ChildItem "$RepoRoot/core" -Directory
 
+$architectures = @('x64', 'arm64')
+
+$operatingSystems = @(
+    @{ name = 'linux'; nodeName = 'linux'; dotnetName = 'linux'; extension = '' }
+    @{ name = 'macos'; nodeName = 'darwin'; dotnetName = 'osx'; extension = '' }
+    @{ name = 'windows'; nodeName = 'win32'; dotnetName = 'win'; extension = '.exe' }
+)
+
+# We don't currently have pipeline support for building native on linux-arm64
+$excludedPlatforms = @('linux-arm64-native')
+
 # Public releases always use the version from the repo without a dynamic prerelease suffix, except for test pipelines
 # which always use a dynamic prerelease suffix to allow for multiple releases from the same commit
 $dynamicPrereleaseVersion = $PublishTarget -ne 'public' -or $TestPipeline
 
+function CheckVariable($name) {
+    $value = [Environment]::GetEnvironmentVariable($name)
+    if (-not $value) {
+        if ($isPipelineRun) {
+            Write-Error "Environment variable $name is not set."
+            exit 1
+        }
+        $substitute = "Missing-$name"
+        Write-Host "WARNING: Environment variable $name is not set. Using substitute value '$substitute'." -ForegroundColor Yellow
+        return $substitute
+    }
+    return $value
+}
+
 function Get-PathsToTest {
+    Write-Host "Getting paths to test"
+
     # When "core" is modified, include storage and keyVault as the canary service tools.
     # TODO: These should be sources from csproj files
     $canaryPaths = @{
@@ -52,7 +79,7 @@ function Get-PathsToTest {
     # Otherwise, all tools in the tools/ directory are in scope
 
     $paths = if ($ServerName) {
-        Write-Host "Getting list of project references for $serverName"
+        Write-Host "Filtering list of test paths using project references for $serverName"
         $serverProject = "$RepoRoot/servers/$ServerName/src/$ServerName.csproj"
         if (-not (Test-Path $serverProject)) {
             Write-Error "No project for $ServerName found at $serverProject"
@@ -62,9 +89,9 @@ function Get-PathsToTest {
         $projectReferences = (dotnet build $serverProject -getItem:ProjectReference | ConvertFrom-Json).Items.ProjectReference.FullPath
 
         # We can put full paths here because they'll be reduced to relative project directory paths in the "reduce down" step below
-        @($serverProject, $projectReferences)
+        @() + $serverProject + $projectReferences
     } else {
-        @($coreDirectories + $serverDirectories + $toolDirectories)
+        @() + $coreDirectories + $serverDirectories + $toolDirectories
     }
 
     # Reduce down to paths like:
@@ -189,22 +216,18 @@ function Get-TestMatrix {
 }
 
 function Get-ServerDetails {
-    $serverProjects = $serverDirectories | Get-ChildItem -Filter "src/*.csproj"
+    Write-Host "Getting server details"
+    $searchDirectories = $serverDirectories
 
     if ($ServerName) {
-        $serverProjects = $serverProjects | Where-Object { $_.Directory.Name -ieq $ServerName }
-        if ($serverProjects.Count -eq 0) {
+        $searchDirectories = $serverDirectories | Where-Object { $_.Name -ieq $ServerName }
+        if ($searchDirectories.Count -eq 0) {
             Write-Error "No server directory found with name $ServerName in $RepoRoot/servers."
             exit 1
         }
     }
 
-    $architectures = @('x64', 'arm64')
-    $operatingSystems = @(
-        @{ name = 'linux'; nodeName = 'linux'; dotnetName = 'linux'; extension = '' }
-        @{ name = 'macos'; nodeName = 'darwin'; dotnetName = 'osx'; extension = '' }
-        @{ name = 'windows'; nodeName = 'win32'; dotnetName = 'win'; extension = '.exe' }
-    )
+    $serverProjects = $searchDirectories | Get-ChildItem -Filter "src/*.csproj"
 
     $serverProperties = @()
 
@@ -223,23 +246,25 @@ function Get-ServerDetails {
         foreach ($os in $operatingSystems) {
             foreach ($arch in $architectures) {
                 $name = "$($os.name)-$arch"
+                $nativeName = "$name-native"
 
-                $platforms += [ordered]@{
-                    name = $name
-                    artifactPath = "$serverName/$name"
-                    operatingSystem = $os.name
-                    nodeOs = $os.nodeName
-                    dotnetOs = $os.dotnetName
-                    architecture = $arch
-                    extension = $os.extension
-                    native = $false
-                }
-
-                if($IncludeNative -and $props.IsAotCompatible -eq 'true') {
-                    $name = "$($os.name)-$arch-native"
+                if ($excludedPlatforms -notcontains $name) {
                     $platforms += [ordered]@{
                         name = $name
                         artifactPath = "$serverName/$name"
+                        operatingSystem = $os.name
+                        nodeOs = $os.nodeName
+                        dotnetOs = $os.dotnetName
+                        architecture = $arch
+                        extension = $os.extension
+                        native = $false
+                    }
+                }
+
+                if($IncludeNative -and $props.IsAotCompatible -eq 'true' -and $excludedPlatforms -notcontains $nativeName) {
+                    $platforms += [ordered]@{
+                        name = $nativeName
+                        artifactPath = "$serverName/$nativeName"
                         operatingSystem = $os.name
                         nodeOs = $os.nodeName
                         dotnetOs = $os.dotnetName
@@ -278,10 +303,64 @@ function Get-ServerDetails {
     return $serverProperties
 }
 
+function Get-BuildMatrices {
+    param($servers)
+
+    Write-Host "Forming build matrices"
+    $matrices = [ordered]@{}
+
+    $windowsPool = CheckVariable 'WINDOWSPOOL'
+    $linuxPool = CheckVariable 'LINUXPOOL'
+    $macPool = CheckVariable 'MACPOOL'
+
+    $windowsVmImage = CheckVariable 'WINDOWSVMIMAGE'
+    $linuxVmImage = CheckVariable 'LINUXVMIMAGE'
+    $macVmImage = CheckVariable 'MACVMIMAGE'
+
+    foreach ($os in $operatingSystems.name) {
+        $matrix = [ordered]@{}
+
+        $supportedPlatforms = $servers.platforms
+        | Where-Object { $_.operatingSystem -eq $os }
+        | Sort-Object { "$($_.architecture)-$(!$_.native)" } -Unique -Descending # x64 before arm64, non-native before native
+
+        foreach($platform in $supportedPlatforms) {
+            $arch = $platform.architecture
+            $legName = $platform.name -replace '\W', '_' # e.g. linux-arm64 or windows-x64-native
+
+            if ($excludedPlatforms -contains $platform.name) {
+                Write-Host "Excluding build leg $legName"
+                continue
+            }
+
+            $matrix[$legName] = [ordered]@{
+                Pool = switch($os) {
+                    'windows' { $windowsPool }
+                    'linux' { $linuxPool }
+                    'macos' { $macPool }
+                }
+                OSVmImage = switch($os) {
+                    'windows' { $windowsVmImage }
+                    'linux' { $linuxVmImage }
+                    'macos' { $macVmImage }
+                }
+                Architecture = $arch
+                Native = $platform.native
+                RunUnitTests = $arch -eq 'x64' -and -not $platform.native
+            }
+        }
+
+        $matrices[$os] = $matrix
+    }
+
+    return $matrices
+}
+
 Push-Location $RepoRoot
 try {
     $serverDetails = Get-ServerDetails
     $pathsToTest = Get-PathsToTest
+    $buildMatrices = Get-BuildMatrices $serverDetails
     $unitTestMatrix = Get-TestMatrix $pathsToTest -TestType 'Unit'
     $liveTestMatrix = Get-TestMatrix $pathsToTest -TestType 'Live'
 
@@ -291,6 +370,7 @@ try {
         dynamicPrereleaseVersion = $dynamicPrereleaseVersion
         servers = $serverDetails
         pathsToTest = $pathsToTest
+        buildMatrices = $buildMatrices
         unitTestMatrix = $unitTestMatrix
         liveTestMatrix = $liveTestMatrix
     }
@@ -301,12 +381,12 @@ try {
 
     $buildInfo | ConvertTo-Json -Depth 5 | Out-File -FilePath $OutputPath -Encoding utf8 -Force
 
-    if($inPipelineRun) {
-        # Set DevOps variables for test matrices
-        Write-Host "##vso[task.setvariable variable=LiveTestMatrix;isOutput=true]$(ConvertTo-Json $liveTestMatrix -Compress)"
-        Write-Host "##vso[task.setvariable variable=HasLiveTestPaths;isOutput=true]$($liveTestMatrix.Count -gt 0)"
-        Write-Host "##vso[task.setvariable variable=UnitTestMatrix;isOutput=true]$(ConvertTo-Json $unitTestMatrix -Compress)"
-        Write-Host "##vso[task.setvariable variable=HasUnitTestPaths;isOutput=true]$($unitTestMatrix.Count -gt 0)"
+    if ($isPipelineRun) {
+        Write-Host "##vso[task.setvariable variable=WindowsBuildMatrix;isOutput=true]$($buildMatrices.windows | ConvertTo-Json -Compress)"
+        Write-Host "##vso[task.setvariable variable=LinuxBuildMatrix;isOutput=true]$($buildMatrices.linux | ConvertTo-Json -Compress)"
+        Write-Host "##vso[task.setvariable variable=MacOsBuildMatrix;isOutput=true]$($buildMatrices.macos | ConvertTo-Json -Compress)"
+        Write-Host "##vso[task.setvariable variable=UnitTestMatrix;isOutput=true]$($unitTestMatrix | ConvertTo-Json -Compress)"
+        Write-Host "##vso[task.setvariable variable=LiveTestMatrix;isOutput=true]$($liveTestMatrix | ConvertTo-Json -Compress)"
     }
 }
 finally {

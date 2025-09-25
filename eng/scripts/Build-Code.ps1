@@ -3,8 +3,8 @@
 
 [CmdletBinding(DefaultParameterSetName='none')]
 param(
+    [string] $BuildInfoPath,
     [string] $OutputPath,
-    [string] $VersionSuffix,
     [switch] $SelfContained,
     [switch] $SingleFile,
     [switch] $ReadyToRun,
@@ -13,103 +13,123 @@ param(
     [switch] $CleanBuild,
     [switch] $BuildNative,
     [string] $ServerName,
-    [Parameter(Mandatory=$true, ParameterSetName='SpecificPlatform')]
+
+    [Parameter(Mandatory, ParameterSetName='SpecificPlatform')]
     [Alias('OS')]
     [ValidateSet('windows','linux','macOS')]
-    [string] $OperatingSystem,
-    [Parameter(Mandatory=$true, ParameterSetName='SpecificPlatform')]
+    [string[]] $OperatingSystem,
+
+    [Parameter(Mandatory, ParameterSetName='SpecificPlatform')]
     [ValidateSet('x64','arm64')]
-    [string] $Architecture,
+    [string[]] $Architecture,
+
     [Parameter(ParameterSetName='AllPlatforms')]
     [switch] $AllPlatforms
 )
 
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Continue'
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
+
+$exitCode = 0
 
 if (!$OutputPath) {
     $OutputPath = "$RepoRoot/.work/build"
 }
 
-if($AllPlatforms -and $BuildNative) {
-    Write-Warning "Native Builds do not support Cross OS builds. Only building for the current OS."
+if(!$BuildInfoPath) {
+    $BuildInfoPath = "$RepoRoot/.work/build_info.json"
 }
 
-#normalize OperatingSystem and Architecture
-$runtime = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier.Split('-')
-if($OperatingSystem) {
-    switch($OperatingSystem) {
-        'windows' { $operatingSystems = @('win') }
-        'linux' { $operatingSystems = @('linux') }
-        'macos' { $operatingSystems = @('osx') }
-        default { Write-Error "Unsupported operating system: $OperatingSystem"; return }
+if (!(Test-Path $BuildInfoPath)) {
+    if ($env:TF_BUILD -ne 'true') {
+        & "$PSScriptRoot/New-BuildInfo.ps1" -PublishTarget none -BuildId 12345 -OutputPath $BuildInfoPath
+    } else {
+        LogError "Build info file $BuildInfoPath does not exist. Run eng/scripts/New-BuildInfo.ps1 to create it."
+        $exitCode = 1
     }
+}
+
+# normalize OperatingSystem and Architecture
+$runtime = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier.Split('-')
+
+if($OperatingSystem) {
+    $OperatingSystem = $OperatingSystem | Select-Object -Unique
 } else {
-    $operatingSystems = ($AllPlatforms -and !$BuildNative) ? @('win', 'linux', 'osx') : @($runtime[0])
+    if($AllPlatforms -and $BuildNative) {
+        LogWarning "Native Builds do not support Cross OS builds. Only building for the current OS."
+    }
+
+    if ($AllPlatforms -and !$BuildNative) {
+        $OperatingSystem = @('windows', 'linux', 'macOS')
+    } else {
+        if ($IsWindows) {
+            $OperatingSystem = @('windows')
+        } elseif ($IsLinux) {
+            $OperatingSystem = @('linux')
+        } elseif ($IsMacOS) {
+            $OperatingSystem = @('macOS')
+        } else {
+            LogError "Unsupported OS detected. Supported OS are Windows, Linux and macOS."
+            $exitCode = 1
+        }
+    }
 }
 
 if($Architecture) {
-    if ($Architecture -notin @('x64', 'arm64')) {
-        Write-Error "Unsupported architecture: $Architecture"
-        return
-    }
-    $architectures = $($Architecture)
+    $Architecture = $Architecture | Select-Object -Unique
 } else {
-    $architectures = $AllPlatforms ? @('x64', 'arm64') : @($runtime[1])
+    $Architecture = $AllPlatforms ? @('x64', 'arm64') : @($runtime[1])
 }
 
-function BuildServer($serverName) {
-    $serverDirectory = "$RepoRoot/servers/$serverName"
-    $projectFile = Get-Item "$serverDirectory/src/$serverName.csproj"
+$buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+if (!$?) {
+    LogError "Failed to read build info from $BuildInfoPath"
+    $exitCode = 1
+}
 
-    if(!$projectFile) {
-        Write-Error "No project file found for $serverName"
+function BuildServer($server) {
+    $serverName = $server.name
+
+    if(!(Test-Path $server.path)) {
+        LogError "No project file found for $serverName"
+        $script:exitCode = 1
         return
     }
 
-    $properties = & "$PSScriptRoot/Get-ProjectProperties.ps1" -ProjectName $projectFile.Name
+    $projectPath = $server.path
+    $version = $server.version
 
-    $cliName = $properties.CliName
-    $version = "$($properties.Version)$VersionSuffix"
-    $description = $properties.Description
-    $packageName = $properties.NpmPackageName
-    $keywords = $properties.NpmPackageKeywords -split ','
-    $readmeUrl = $properties.ReadmeUrl
-
-    $serverOutputDirectory = "$OutputPath/$serverName"
-
-    if ($BuildNative) {
-        $packageName += '-native'
-        $serverOutputDirectory += '-native'
-    }
+    $serverOutputDirectory = "$OutputPath/$($server.artifactPath)"
 
     New-Item -Path $serverOutputDirectory -ItemType Directory -Force | Out-Null
 
-    foreach ($os in $operatingSystems) {
-        foreach ($arch in $architectures) {
-            switch($os) {
-                'win' { $node_os = 'win32'; $extension = '.exe' }
-                'osx' { $node_os = 'darwin'; $extension = '' }
-                default { $node_os = $os; $extension = '' }
-            }
+    foreach ($os in $OperatingSystem) {
+        foreach ($arch in $Architecture) {
+            $platform = $server.platforms
+            | Where-Object {
+                ($_.operatingSystem -eq $os) -and
+                ($_.architecture -eq $arch) -and
+                ($_.native -eq $BuildNative) }
 
-            $outputDir = "$serverOutputDirectory/$os-$arch"
-            Write-Host "Building version $version, $os-$arch in $outputDir" -ForegroundColor Green
-
+            $dotnetOs = $platform.dotnetOs
+            $runtime = "$dotnetOs-$arch"
             $configuration = if ($DebugBuild) { 'Debug' } else { 'Release' }
+
+            $outputDir = "$OutputPath/$($platform.artifactPath)"
+            Write-Host "Building $configuration $runtime, version $version in $outputDir" -ForegroundColor Green
 
             if ($CleanBuild) {
                 # Clean up any previous build artifacts.
-                Invoke-LoggedCommand "dotnet clean '$projectFile' --configuration $configuration" -GroupOutput
+                Invoke-LoggedCommand "dotnet clean '$projectPath' --configuration $configuration" -GroupOutput
             }
 
             # Clear and recreate the package output directory
             Remove-Item -Path $outputDir -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
             New-Item -Path $outputDir -ItemType Directory -Force | Out-Null
 
-            $command = "dotnet publish '$projectFile' --runtime '$os-$arch' --output $outputDir /p:Version=$version /p:Configuration=$configuration"
+            $command = "dotnet publish '$projectPath' --runtime '$runtime' --output '$outputDir' /p:Version=$version /p:Configuration=$configuration"
 
             if($SelfContained) {
                 $command += " --self-contained"
@@ -138,19 +158,19 @@ function BuildServer($serverName) {
     }
 }
 
+# Exit early if there were parameter errors
+if($exitCode -ne 0) {
+    exit $exitCode
+}
 
 Push-Location $RepoRoot
 try {
-    $serverNames = @(if($ServerName) {
-        $ServerName
-    } else {
-        Get-ChildItem -Path "$RepoRoot/servers" -Directory | Select-Object -ExpandProperty Name
-    })
-
-    foreach ($serverName in $serverNames) {
-        BuildServer $serverName
+    foreach ($server in $buildInfo.servers) {
+        BuildServer $server
     }
 }
 finally {
     Pop-Location
 }
+
+exit $exitCode

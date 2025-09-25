@@ -17,7 +17,7 @@
     <AssemblyName>$(CliName)</AssemblyName>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!-- Publishing settings -->
-    <IsAotCompatible>true</IsAotCompatible>
+    <IsAotCompatible>false</IsAotCompatible>
     <PublishSingleFile>false</PublishSingleFile>
     <SelfContained>false</SelfContained>
     <PublishReadyToRun>false</PublishReadyToRun>
