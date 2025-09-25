@@ -11,6 +11,7 @@ public static class AppConfigOptionDefinitions
     public const string LabelName = "label";
     public const string ContentTypeName = "content-type";
     public const string TagsName = "tags";
+    public const string LockName = "lock";
 
     public static readonly Option<string> Account = new(
         $"--{AccountName}"
@@ -59,6 +60,12 @@ public static class AppConfigOptionDefinitions
         Description = "The tags to associate with the configuration key. Tags should be in the format 'key=value'. Multiple tags can be specified.",
         Required = false,
         AllowMultipleArgumentsPerToken = true
+    };
+
+    public static readonly Option<bool> Lock = new($"--{LockName}")
+    {
+        Description = "Whether a key-value will be locked (set to read-only) or unlocked (read-only removed).",
+        Required = false
     };
 
     public static class KeyValueList

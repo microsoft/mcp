@@ -3,16 +3,18 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Security.KeyVault.Administration;
 using Azure.Security.KeyVault.Certificates;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Secrets;
-using Azure.Core;
-using Azure.Core.Pipeline;
 
 namespace Azure.Mcp.Tools.KeyVault.Services;
 
-public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
+public sealed class KeyVaultService(ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IKeyVaultService
 {
+    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     public async Task<List<string>> ListKeys(
         string vaultName,
         bool includeManagedKeys,
@@ -23,7 +25,7 @@ public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
         ValidateRequiredParameters(vaultName, subscriptionId);
 
         var credential = await GetCredential(tenantId);
-        var client = CreateKeyClient(vaultName, credential, retryPolicy);
+        var client = new KeyClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
         var keys = new List<string>();
 
         try
@@ -51,7 +53,7 @@ public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
         ValidateRequiredParameters(vaultName, keyName, subscriptionId);
 
         var credential = await GetCredential(tenantId);
-        var client = CreateKeyClient(vaultName, credential, retryPolicy);
+        var client = new KeyClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
 
         try
         {
@@ -75,7 +77,7 @@ public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
 
         var type = new KeyType(keyType);
         var credential = await GetCredential(tenantId);
-        var client = CreateKeyClient(vaultName, credential, retryPolicy);
+        var client = new KeyClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
 
         try
         {
@@ -96,7 +98,7 @@ public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
         ValidateRequiredParameters(vaultName, subscriptionId);
 
         var credential = await GetCredential(tenantId);
-        var client = CreateSecretClient(vaultName, credential, retryPolicy);
+        var client = new SecretClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
         var secrets = new List<string>();
 
         try
@@ -125,7 +127,7 @@ public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
         ValidateRequiredParameters(vaultName, secretName, secretValue, subscriptionId);
 
         var credential = await GetCredential(tenantId);
-        var client = CreateSecretClient(vaultName, credential, retryPolicy);
+        var client = new SecretClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
 
         try
         {
@@ -147,7 +149,7 @@ public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
         ValidateRequiredParameters(vaultName, secretName, subscriptionId);
 
         var credential = await GetCredential(tenantId);
-        var client = CreateSecretClient(vaultName, credential, retryPolicy);
+        var client = new SecretClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
 
         try
         {
@@ -169,7 +171,7 @@ public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
         ValidateRequiredParameters(vaultName, subscriptionId);
 
         var credential = await GetCredential(tenantId);
-        var client = CreateCertificateClient(vaultName, credential, retryPolicy);
+        var client = new CertificateClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
         var certificates = new List<string>();
 
         try
@@ -197,7 +199,7 @@ public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
         ValidateRequiredParameters(vaultName, certificateName, subscriptionId);
 
         var credential = await GetCredential(tenantId);
-        var client = CreateCertificateClient(vaultName, credential, retryPolicy);
+        var client = new CertificateClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
 
         try
         {
@@ -219,7 +221,7 @@ public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
         ValidateRequiredParameters(vaultName, certificateName, subscriptionId);
 
         var credential = await GetCredential(tenantId);
-        var client = CreateCertificateClient(vaultName, credential, retryPolicy);
+        var client = new CertificateClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
 
         try
         {
@@ -243,7 +245,7 @@ public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
         ValidateRequiredParameters(vaultName, certificateName, certificateData, subscriptionId);
 
         var credential = await GetCredential(tenantId);
-        var client = CreateCertificateClient(vaultName, credential, retryPolicy);
+        var client = new CertificateClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
 
         try
         {
@@ -258,9 +260,9 @@ public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
             else
             {
                 // Try base64, fallback to file path if exists
-                if (System.IO.File.Exists(certificateData))
+                if (File.Exists(certificateData))
                 {
-                    bytes = await System.IO.File.ReadAllBytesAsync(certificateData);
+                    bytes = await File.ReadAllBytesAsync(certificateData);
                 }
                 else
                 {
@@ -289,55 +291,24 @@ public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
         }
     }
 
-    // --- Client creation helpers with minimal redirect support ---
-    private static KeyClient CreateKeyClient(string vaultName, TokenCredential credential, RetryPolicyOptions? retry)
+    public async Task<GetSettingsResult> GetVaultSettings(
+        string vaultName,
+        string subscription,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null)
     {
-        var options = BuildClientOptions(new KeyClientOptions(), retry, vaultName);
-        return new KeyClient(BuildVaultUri(vaultName), credential, options);
-    }
-
-    private static SecretClient CreateSecretClient(string vaultName, TokenCredential credential, RetryPolicyOptions? retry)
-    {
-        var options = BuildClientOptions(new SecretClientOptions(), retry, vaultName);
-        return new SecretClient(BuildVaultUri(vaultName), credential, options);
-    }
-
-    private static CertificateClient CreateCertificateClient(string vaultName, TokenCredential credential, RetryPolicyOptions? retry)
-    {
-        var options = BuildClientOptions(new CertificateClientOptions(), retry, vaultName);
-        return new CertificateClient(BuildVaultUri(vaultName), credential, options);
-    }
-
-    private static Uri BuildVaultUri(string vaultName) => new($"https://{vaultName}.vault.azure.net");
-
-    private static TOptions BuildClientOptions<TOptions>(TOptions options, RetryPolicyOptions? retry, string vaultName)
-        where TOptions : ClientOptions
-    {
-        options = AddDefaultPolicies(options);
-        options = ConfigureRetryPolicy(options, retry);
-
-        var proxyUrl = Environment.GetEnvironmentVariable("TEST_PROXY_URL");
-        if (!string.IsNullOrWhiteSpace(proxyUrl) && Uri.TryCreate(proxyUrl, UriKind.Absolute, out var proxyUri))
+        ValidateRequiredParameters(vaultName, subscription);
+        var credential = await GetCredential(tenantId);
+        var hsmUri = new Uri($"https://{vaultName}.managedhsm.azure.net");
+        try
         {
-            options.AddPolicy(new RecordingRedirectPolicy(proxyUri), HttpPipelinePosition.PerRetry);
-
-            // When rewriting the request host to a proxy (e.g. localhost), the Key Vault challenge validation
-            // (ensuring the challenged resource matches the original host *.vault.azure.net) will fail unless disabled.
-            // Disable only under proxy rewrite conditions.
-            if (options is KeyClientOptions kco)
-            {
-                kco.DisableChallengeResourceVerification = true;
-            }
-            else if (options is SecretClientOptions sco)
-            {
-                sco.DisableChallengeResourceVerification = true;
-            }
-            else if (options is CertificateClientOptions cco)
-            {
-                cco.DisableChallengeResourceVerification = true;
-            }
+            var hsmClient = new KeyVaultSettingsClient(hsmUri, credential);
+            var hsmResponse = await hsmClient.GetSettingsAsync();
+            return hsmResponse.Value;
         }
-
-        return options;
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving Managed HSM administration settings for '{vaultName}': {ex.Message}", ex);
+        }
     }
 }

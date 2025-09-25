@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
@@ -97,19 +98,19 @@ public class MetricsDefinitionsCommandTests
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>())
-                .Returns(new List<MetricDefinition>
-                {
+                .Returns(
+                [
                     new()
                     {
                         Name = "CPU",
                         Description = "CPU Percentage",
                         Category = "Performance",
                         Unit = "Percent",
-                        SupportedAggregationTypes = new List<string> { "Average", "Maximum", "Minimum" },
+                        SupportedAggregationTypes = ["Average", "Maximum", "Minimum"],
                         IsDimensionRequired = true,
-                        Dimensions = new List<string> { "Instance" }
+                        Dimensions = ["Instance"]
                     }
-                });
+                ]);
         }
 
         var context = new CommandContext(_serviceProvider);
@@ -119,7 +120,7 @@ public class MetricsDefinitionsCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.NotNull(response.Results);
@@ -146,9 +147,9 @@ public class MetricsDefinitionsCommandTests
                 Description = "Average CPU usage",
                 Category = "Performance",
                 Unit = "Percent",
-                SupportedAggregationTypes = new List<string> { "Average" },
+                SupportedAggregationTypes = ["Average"],
                 IsDimensionRequired = false,
-                Dimensions = new List<string>()
+                Dimensions = []
             }
         };
 
@@ -171,7 +172,7 @@ public class MetricsDefinitionsCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("All 1 metric definitions returned.", response.Message);
         await _service.Received(1).ListMetricDefinitionsAsync(
@@ -198,8 +199,8 @@ public class MetricsDefinitionsCommandTests
             "cpu",
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
-            .Returns(new List<MetricDefinition>
-            {
+            .Returns(
+            [
                 new()
                 {
                     Name = "CPU Percentage",
@@ -207,7 +208,7 @@ public class MetricsDefinitionsCommandTests
                     Category = "Performance",
                     Unit = "Percent"
                 }
-            });
+            ]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --search-string cpu");
@@ -216,7 +217,7 @@ public class MetricsDefinitionsCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the service was called with the search string
@@ -265,7 +266,7 @@ public class MetricsDefinitionsCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("All 1 metric definitions returned.", response.Message);
         await _service.Received(1).ListMetricDefinitionsAsync(
@@ -305,7 +306,7 @@ public class MetricsDefinitionsCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -333,7 +334,7 @@ public class MetricsDefinitionsCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         _logger.Received(1).Log(
             LogLevel.Error,
             Arg.Any<EventId>(),
@@ -358,9 +359,9 @@ public class MetricsDefinitionsCommandTests
                 Description = "Average CPU usage",
                 Category = "Performance",
                 Unit = "Percent",
-                SupportedAggregationTypes = new List<string> { "Average", "Maximum" },
+                SupportedAggregationTypes = ["Average", "Maximum"],
                 IsDimensionRequired = false,
-                Dimensions = new List<string>()
+                Dimensions = []
             },
             new()
             {
@@ -368,9 +369,9 @@ public class MetricsDefinitionsCommandTests
                 Description = "Memory usage in bytes",
                 Category = "Memory",
                 Unit = "Bytes",
-                SupportedAggregationTypes = new List<string> { "Average", "Maximum", "Total" },
+                SupportedAggregationTypes = ["Average", "Maximum", "Total"],
                 IsDimensionRequired = true,
-                Dimensions = new List<string> { "Instance", "Role" }
+                Dimensions = ["Instance", "Role"]
             }
         };
 
@@ -392,7 +393,7 @@ public class MetricsDefinitionsCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("All 2 metric definitions returned.", response.Message);
     }
@@ -410,7 +411,7 @@ public class MetricsDefinitionsCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
-            .Returns(new List<MetricDefinition>());
+            .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
@@ -419,7 +420,7 @@ public class MetricsDefinitionsCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Null(response.Results);
     }
 
@@ -445,7 +446,7 @@ public class MetricsDefinitionsCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Null(response.Results);
     }
 
@@ -477,7 +478,7 @@ public class MetricsDefinitionsCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         // Verify that results were truncated - message should indicate truncation
         Assert.Contains("Results truncated to 10 of 15", response.Message);
@@ -510,7 +511,7 @@ public class MetricsDefinitionsCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         // Verify that results were truncated to the custom limit
         Assert.Contains("Results truncated to 5 of 20", response.Message);
@@ -543,7 +544,7 @@ public class MetricsDefinitionsCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         // Verify that the message indicates truncation with correct counts
         Assert.Contains("Results truncated to 8 of 25", response.Message);
@@ -576,7 +577,7 @@ public class MetricsDefinitionsCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         // Verify that all results are returned without truncation
         Assert.Equal("All 3 metric definitions returned.", response.Message);
@@ -622,7 +623,7 @@ public class MetricsDefinitionsCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("All 1 metric definitions returned.", response.Message);
         await _service.Received(1).ListMetricDefinitionsAsync(
@@ -651,9 +652,9 @@ public class MetricsDefinitionsCommandTests
                 Description = $"Description for metric {i}",
                 Category = "Performance",
                 Unit = "Count",
-                SupportedAggregationTypes = new List<string> { "Average" },
+                SupportedAggregationTypes = ["Average"],
                 IsDimensionRequired = false,
-                Dimensions = new List<string>()
+                Dimensions = []
             });
         }
         return definitions;

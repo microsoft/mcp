@@ -7,6 +7,7 @@ public static class SqlOptionDefinitions
 {
     public const string ServerName = "server";
     public const string DatabaseName = "database";
+    public const string NewDatabaseName = "new-database-name";
     public const string FirewallRuleName = "firewall-rule-name";
     public const string StartIpAddress = "start-ip-address";
     public const string EndIpAddress = "end-ip-address";
@@ -16,6 +17,14 @@ public static class SqlOptionDefinitions
     public const string Version = "version";
     public const string PublicNetworkAccess = "public-network-access";
     public const string Force = "force";
+    public const string SkuName = "sku-name";
+    public const string SkuTier = "sku-tier";
+    public const string SkuCapacity = "sku-capacity";
+    public const string Collation = "collation";
+    public const string MaxSizeBytes = "max-size-bytes";
+    public const string ElasticPoolName = "elastic-pool-name";
+    public const string ZoneRedundant = "zone-redundant";
+    public const string ReadScale = "read-scale";
 
     public static readonly Option<string> Server = new(
         $"--{ServerName}"
@@ -30,6 +39,14 @@ public static class SqlOptionDefinitions
     )
     {
         Description = "The Azure SQL Database name.",
+        Required = true
+    };
+
+    public static readonly Option<string> NewDatabaseNameOption = new(
+        $"--{NewDatabaseName}"
+    )
+    {
+        Description = "The new name for the Azure SQL Database.",
         Required = true
     };
 
@@ -102,6 +119,70 @@ public static class SqlOptionDefinitions
     )
     {
         Description = "Force delete the server without confirmation prompts.",
+        Required = false
+    };
+
+    public static readonly Option<string> SkuNameOption = new(
+        $"--{SkuName}"
+    )
+    {
+        Description = "The SKU name for the database (e.g., Basic, S0, P1, GP_Gen5_2).",
+        Required = false
+    };
+
+    public static readonly Option<string> SkuTierOption = new(
+        $"--{SkuTier}"
+    )
+    {
+        Description = "The SKU tier for the database (e.g., Basic, Standard, Premium, GeneralPurpose).",
+        Required = false
+    };
+
+    public static readonly Option<int> SkuCapacityOption = new(
+        $"--{SkuCapacity}"
+    )
+    {
+        Description = "The SKU capacity (DTU or vCore count) for the database.",
+        Required = false
+    };
+
+    public static readonly Option<string> CollationOption = new(
+        $"--{Collation}"
+    )
+    {
+        Description = "The collation for the database (e.g., SQL_Latin1_General_CP1_CI_AS).",
+        Required = false
+    };
+
+    public static readonly Option<long> MaxSizeBytesOption = new(
+        $"--{MaxSizeBytes}"
+    )
+    {
+        Description = "The maximum size of the database in bytes.",
+        Required = false
+    };
+
+    public static readonly Option<string> ElasticPoolNameOption = new(
+        $"--{ElasticPoolName}"
+    )
+    {
+        Description = "The name of the elastic pool to assign the database to.",
+        Required = false
+    };
+
+    public static readonly Option<bool> ZoneRedundantOption = new(
+        $"--{ZoneRedundant}"
+    )
+    {
+        Description = "Whether the database should be zone redundant.",
+        Required = false
+    };
+
+    public static readonly Option<string> ReadScaleOption = new(
+        $"--{ReadScale}"
+    )
+    {
+        Description = "Read scale option for the database (Enabled or Disabled).",
         Required = false
     };
 }

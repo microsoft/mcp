@@ -31,7 +31,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -55,11 +55,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
                 options.AuthMethod,
                 options.RetryPolicy);
 
-            context.Response.Results = clusters.Any() ?
-                ResponseResult.Create(
-                    new ClusterListCommandResult(clusters),
-                    RedisJsonContext.Default.ClusterListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(clusters ?? []), RedisJsonContext.Default.ClusterListCommandResult);
         }
         catch (Exception ex)
         {

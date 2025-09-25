@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Grafana.Commands;
 using Azure.Mcp.Tools.Grafana.Commands.Workspace;
 using Azure.Mcp.Tools.Grafana.Models.Workspace;
 using Azure.Mcp.Tools.Grafana.Services;
@@ -91,11 +93,11 @@ public sealed class WorkspaceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoWorkspacesExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoWorkspacesExist()
     {
         // Arrange
         _grafana.ListWorkspacesAsync("sub123", null, Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<Workspace>());
+            .Returns([]);
 
         var command = new WorkspaceListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
@@ -106,7 +108,13 @@ public sealed class WorkspaceListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, GrafanaJsonContext.Default.WorkspaceListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Workspaces);
     }
 
     [Fact]
@@ -157,7 +165,7 @@ public sealed class WorkspaceListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
     }
 }

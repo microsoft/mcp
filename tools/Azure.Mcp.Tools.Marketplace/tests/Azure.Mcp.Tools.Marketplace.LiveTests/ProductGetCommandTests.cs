@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Xunit;
@@ -75,8 +74,6 @@ public class ProductGetCommandTests : CommandTestsBase
     [Trait("Category", "Live")]
     public async Task Should_get_marketplace_product_with_market_option()
     {
-
-
         var result = await CallToolAsync(
             "azmcp_marketplace_product_get",
             new()
@@ -98,7 +95,6 @@ public class ProductGetCommandTests : CommandTestsBase
     [Trait("Category", "Live")]
     public async Task Should_get_marketplace_product_with_multiple_options()
     {
-
         var result = await CallToolAsync(
             "azmcp_marketplace_product_get",
             new()

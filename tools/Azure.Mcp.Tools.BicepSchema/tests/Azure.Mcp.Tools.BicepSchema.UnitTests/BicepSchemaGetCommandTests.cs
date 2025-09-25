@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.BicepSchema.Commands;
 using Azure.Mcp.Tools.BicepSchema.Services;
@@ -48,7 +47,7 @@ public class BicepSchemaGetCommandTests
 
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<BicepSchemaResultWrapper>(json);
+        var result = JsonSerializer.Deserialize(json, BicepSchemaJsonContext.Default.BicepSchemaGetCommandResult);
         var name = result?.BicepSchemaResult.FirstOrDefault()?.Name;
 
         Assert.Contains("Microsoft.Sql/servers/databases/schemas@2023-08-01", name);
@@ -64,24 +63,6 @@ public class BicepSchemaGetCommandTests
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
-
-        var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<BicepSchemaResultWrapper>(json);
-        Assert.Contains("Resource type Microsoft.Unknown/virtualRandom not found.", result?.message);
+        Assert.Contains("Resource type Microsoft.Unknown/virtualRandom not found.", response.Message);
     }
-
-    private class BicepSchemaResultWrapper
-    {
-        [JsonPropertyName("BicepSchemaResult")]
-        public List<BicepSchemaItem> BicepSchemaResult { get; set; } = new();
-
-        public string? message { get; set; } = string.Empty;
-    }
-
-    private class BicepSchemaItem
-    {
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = string.Empty;
-    }
-
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using Azure.Mcp.Core.Commands;
@@ -12,14 +13,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureBestPractices.Commands;
 
-public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : BaseCommand
+public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) : BaseCommand<BestPracticesOptions>
 {
     private const string CommandTitle = "Get Azure Best Practices";
     private readonly ILogger<BestPracticesCommand> _logger = logger;
     private static readonly Dictionary<string, string> s_bestPracticesCache = new();
-
-    private readonly Option<string> _resourceOption = BestPracticesOptionDefinitions.Resource;
-    private readonly Option<string> _actionOption = BestPracticesOptionDefinitions.Action;
 
     public override string Name => "get";
 
@@ -46,16 +44,16 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
 
     protected override void RegisterOptions(Command command)
     {
-        command.Options.Add(_resourceOption);
-        command.Options.Add(_actionOption);
+        command.Options.Add(BestPracticesOptionDefinitions.Resource);
+        command.Options.Add(BestPracticesOptionDefinitions.Action);
     }
 
-    private BestPracticesOptions BindOptions(ParseResult parseResult)
+    protected override BestPracticesOptions BindOptions(ParseResult parseResult)
     {
         return new BestPracticesOptions
         {
-            Resource = parseResult.CommandResult.GetValue(BestPracticesOptionDefinitions.Resource),
-            Action = parseResult.CommandResult.GetValue(BestPracticesOptionDefinitions.Action)
+            Resource = parseResult.GetValueOrDefault<string>(BestPracticesOptionDefinitions.Resource.Name),
+            Action = parseResult.GetValueOrDefault<string>(BestPracticesOptionDefinitions.Action.Name)
         };
     }
 
@@ -72,7 +70,7 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         {
             if (string.IsNullOrEmpty(options.Resource) || string.IsNullOrEmpty(options.Action))
             {
-                context.Response.Status = 400;
+                context.Response.Status = HttpStatusCode.BadRequest;
                 context.Response.Message = "Both resource and action parameters are required.";
                 return Task.FromResult(context.Response);
             }
@@ -80,8 +78,8 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
             var resourceFileName = GetResourceFileName(options.Resource, options.Action);
             var bestPractices = GetBestPracticesText(resourceFileName);
 
-            context.Response.Status = 200;
-            context.Response.Results = ResponseResult.Create(new List<string> { bestPractices }, AzureBestPracticesJsonContext.Default.ListString);
+            context.Response.Status = HttpStatusCode.OK;
+            context.Response.Results = ResponseResult.Create([bestPractices], AzureBestPracticesJsonContext.Default.ListString);
             context.Response.Message = string.Empty;
 
             context.Activity?.AddTag("BestPractices_Resource", options.Resource);
@@ -134,7 +132,7 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
 
         if (!result.IsValid && commandResponse != null)
         {
-            commandResponse.Status = 400;
+            commandResponse.Status = HttpStatusCode.BadRequest;
             commandResponse.Message = result.ErrorMessage!;
         }
 

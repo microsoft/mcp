@@ -1,6 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Fabric.Mcp.Tools.PublicApi.Options;
@@ -15,14 +16,13 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
     private const string CommandTitle = "Get API Examples";
 
     private readonly ILogger<GetBestPracticesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly Option<string> _topicOption = FabricOptionDefinitions.Topic;
 
     public override string Name => "get";
 
     public override string Description =>
         """
         Retrieves embedded best practice documentation and guidance for a specific Microsoft Fabric topic.
-        Use this command when you need detailed recommendations, guidelines, or best practices for 
+        Use this command when you need detailed recommendations, guidelines, or best practices for
         implementing or working with specific Fabric features, APIs, or development patterns.
         The topic parameter should match available embedded resource names for Fabric best practices.
         """;
@@ -42,13 +42,13 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_topicOption);
+        command.Options.Add(FabricOptionDefinitions.Topic);
     }
 
     protected override GetBestPracticesOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Topic = parseResult.GetValueOrDefault(_topicOption);
+        options.Topic = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Topic.Name);
         return options;
     }
 
@@ -71,7 +71,7 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
         catch (ArgumentException argEx)
         {
             _logger.LogError(argEx, "No best practice resources found for {}", options.Topic);
-            context.Response.Status = 404;
+            context.Response.Status = HttpStatusCode.NotFound;
             context.Response.Message = $"No best practice resources found for {options.Topic}";
         }
         catch (Exception ex)

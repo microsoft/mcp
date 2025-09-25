@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Workbooks.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Services;
@@ -72,7 +74,7 @@ public class ListWorkbooksCommandTests
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>
         {
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1",
                 DisplayName: "Test Workbook 1",
                 Description: "Test Description 1",
@@ -86,7 +88,7 @@ public class ListWorkbooksCommandTests
                 UserId: "user1",
                 SourceId: "azure monitor"
             ),
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook2",
                 DisplayName: "Test Workbook 2",
                 Description: "Test Description 2",
@@ -111,10 +113,10 @@ public class ListWorkbooksCommandTests
             .Returns(expectedWorkbooks);
 
         var args = _command.GetCommand().Parse([
-                    "--subscription", "sub123",
+            "--subscription", "sub123",
             "--resource-group", "rg123",
             "--tenant", "tenant123"
-                ]);
+        ]);
 
         var context = new CommandContext(_serviceProvider);
 
@@ -124,10 +126,10 @@ public class ListWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ListWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedWorkbooks.Count, result.Workbooks.Count);
@@ -145,7 +147,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNullResults_WhenNoWorkbooksExist()
+    public async Task ExecuteAsync_ReturnsEmptyResults_WhenNoWorkbooksExist()
     {
         // Arrange
         _service.ListWorkbooks(
@@ -154,7 +156,7 @@ public class ListWorkbooksCommandTests
             Arg.Any<WorkbookFilters?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>())
-            .Returns(new List<WorkbookInfo>());
+            .Returns([]);
 
         var args = _command.GetCommand().Parse([
             "--subscription", "sub123",
@@ -169,12 +171,18 @@ public class ListWorkbooksCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.NotNull(response.Results);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Workbooks);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNullResults_WhenServiceReturnsNull()
+    public async Task ExecuteAsync_ReturnsEmptyResults_WhenServiceReturnsNull()
     {
         // Arrange
         _service.ListWorkbooks(
@@ -198,8 +206,14 @@ public class ListWorkbooksCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.NotNull(response.Results);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Workbooks);
     }
 
     [Fact]
@@ -226,7 +240,7 @@ public class ListWorkbooksCommandTests
         var response = await _command.ExecuteAsync(context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Service error", response.Message);
         Assert.Contains("troubleshooting", response.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -346,7 +360,7 @@ public class ListWorkbooksCommandTests
         var response = await _command.ExecuteAsync(context, args);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("resource", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -368,7 +382,7 @@ public class ListWorkbooksCommandTests
 
         var expectedWorkbooks = new List<WorkbookInfo>
         {
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/complex",
                 DisplayName: "Complex Test Workbook",
                 Description: "A workbook with complex data",
@@ -407,7 +421,7 @@ public class ListWorkbooksCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ListWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.Single(result.Workbooks);
@@ -425,7 +439,7 @@ public class ListWorkbooksCommandTests
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>
         {
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1",
                 DisplayName: "Shared Workbook",
                 Description: "A shared workbook",
@@ -462,7 +476,7 @@ public class ListWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).ListWorkbooks(
             "sub123",
@@ -478,7 +492,7 @@ public class ListWorkbooksCommandTests
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>
         {
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1",
                 DisplayName: "Sentinel Workbook",
                 Description: "A sentinel workbook",
@@ -515,7 +529,7 @@ public class ListWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).ListWorkbooks(
             "sub123",
@@ -532,7 +546,7 @@ public class ListWorkbooksCommandTests
         var sourceId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/components/myapp";
         var expectedWorkbooks = new List<WorkbookInfo>
         {
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1",
                 DisplayName: "App Insights Workbook",
                 Description: "A workbook linked to App Insights",
@@ -569,7 +583,7 @@ public class ListWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).ListWorkbooks(
             "sub123",
@@ -586,7 +600,7 @@ public class ListWorkbooksCommandTests
         var sourceId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/components/myapp";
         var expectedWorkbooks = new List<WorkbookInfo>
         {
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1",
                 DisplayName: "Filtered Workbook",
                 Description: "A workbook with multiple filters",
@@ -625,7 +639,7 @@ public class ListWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).ListWorkbooks(
             "sub123",
@@ -642,7 +656,7 @@ public class ListWorkbooksCommandTests
         var sourceId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/components/myapp";
         var expectedWorkbooks = new List<WorkbookInfo>
         {
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1",
                 DisplayName: "Filtered Workbook",
                 Description: "A workbook with multiple filters",
@@ -681,7 +695,7 @@ public class ListWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).ListWorkbooks(
             "sub123",
@@ -697,7 +711,7 @@ public class ListWorkbooksCommandTests
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>
         {
-            new WorkbookInfo(
+            new(
                 WorkbookId: "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1",
                 DisplayName: "Unfiltered Workbook",
                 Description: "A workbook without filters",
@@ -733,7 +747,7 @@ public class ListWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).ListWorkbooks(
             "sub123",
@@ -770,7 +784,7 @@ public class ListWorkbooksCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).ListWorkbooks(
             "sub123",
@@ -809,7 +823,7 @@ public class ListWorkbooksCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).ListWorkbooks(
             "sub123",
@@ -817,10 +831,5 @@ public class ListWorkbooksCommandTests
             Arg.Is<WorkbookFilters?>(f => f != null && f.Category == category),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<string?>());
-    }
-
-    private class ListWorkbooksCommandResult
-    {
-        public List<WorkbookInfo> Workbooks { get; set; } = [];
     }
 }

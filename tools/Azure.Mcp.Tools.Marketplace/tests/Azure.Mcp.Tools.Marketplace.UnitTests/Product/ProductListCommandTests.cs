@@ -1,7 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -29,7 +29,7 @@ public class ProductListCommandTests
         _marketplaceService = Substitute.For<IMarketplaceService>();
         _logger = Substitute.For<ILogger<ProductListCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton<IMarketplaceService>(_marketplaceService);
+        var collection = new ServiceCollection().AddSingleton(_marketplaceService);
         _serviceProvider = collection.BuildServiceProvider();
 
         _command = new(_logger);
@@ -85,7 +85,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
@@ -129,7 +129,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
@@ -144,7 +144,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("required", response.Message.ToLower());
     }
 
@@ -153,7 +153,6 @@ public class ProductListCommandTests
     {
         // Arrange
         var subscriptionId = "test-sub";
-        var emptyProducts = new List<ProductSummary>();
 
         _marketplaceService.ListProducts(
             Arg.Is(subscriptionId),
@@ -166,7 +165,7 @@ public class ProductListCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
-            .Returns(new ProductListResponseWithNextCursor { Items = emptyProducts });
+            .Returns(new ProductListResponseWithNextCursor { Items = [] });
 
         var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
 
@@ -175,8 +174,8 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
     }
 
     [Fact]
@@ -206,7 +205,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
     }
 
@@ -252,7 +251,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
@@ -302,7 +301,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the response contains the NextCursor by checking the serialized result
@@ -352,7 +351,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the response contains null NextCursor
@@ -400,7 +399,7 @@ public class ProductListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 }

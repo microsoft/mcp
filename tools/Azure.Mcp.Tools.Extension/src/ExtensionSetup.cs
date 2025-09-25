@@ -5,7 +5,6 @@ using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Extension.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Extension;
 
@@ -15,17 +14,19 @@ public sealed class ExtensionSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        // No additional services needed for Extension area
+        services.AddSingleton<AzqrCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var extension = new CommandGroup(Name, "Extension commands for additional Azure tooling functionality. Includes operations for Azure Quick Review (azqr) commands directly from the MCP server to extend capabilities beyond native Azure service operations.");
-        rootGroup.AddSubGroup(extension);
 
         // Azure CLI and Azure Developer CLI tools are hidden
         // extension.AddCommand("az", new AzCommand(loggerFactory.CreateLogger<AzCommand>()));
         // extension.AddCommand("azd", new AzdCommand(loggerFactory.CreateLogger<AzdCommand>()));
-        extension.AddCommand("azqr", new AzqrCommand(loggerFactory.CreateLogger<AzqrCommand>()));
+        var azqr = serviceProvider.GetRequiredService<AzqrCommand>();
+        extension.AddCommand(azqr.Name, azqr);
+
+        return extension;
     }
 }

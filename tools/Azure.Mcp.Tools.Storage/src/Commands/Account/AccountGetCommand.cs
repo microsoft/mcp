@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Options;
 using Azure.Mcp.Tools.Storage.Options.Account;
@@ -17,8 +18,6 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
 {
     private const string CommandTitle = "Get Storage Account Details";
     private readonly ILogger<AccountGetCommand> _logger = logger;
-
-    private readonly Option<string> _optionalAccountOption = StorageOptionDefinitions.OptionalAccount;
 
     public override string Name => "get";
 
@@ -35,7 +34,7 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -44,13 +43,13 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_optionalAccountOption);
+        command.Options.Add(StorageOptionDefinitions.Account.AsOptional());
     }
 
     protected override AccountGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Account = parseResult.GetValueOrDefault(_optionalAccountOption);
+        options.Account = parseResult.GetValueOrDefault<string>(StorageOptionDefinitions.Account.Name);
         return options;
     }
 
@@ -76,9 +75,7 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
                 options.RetryPolicy);
 
             // Set results
-            context.Response.Results = accounts is { Count: > 0 }
-                ? ResponseResult.Create(new AccountGetCommandResult(accounts), StorageJsonContext.Default.AccountGetCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(accounts ?? []), StorageJsonContext.Default.AccountGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -98,5 +95,5 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
     }
 
     // Strongly-typed result record
-    internal record AccountGetCommandResult([property: JsonPropertyName("accounts")] List<AccountInfo> Accounts);
+    internal record AccountGetCommandResult([property: JsonPropertyName("accounts")] List<StorageAccountInfo> Accounts);
 }

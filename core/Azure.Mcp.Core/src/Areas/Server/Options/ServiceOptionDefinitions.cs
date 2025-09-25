@@ -11,6 +11,7 @@ public static class ServiceOptionDefinitions
     public const string ReadOnlyName = "read-only";
     public const string DebugName = "debug";
     public const string EnableInsecureTransportsName = "enable-insecure-transports";
+    public const string InsecureDisableElicitationName = "insecure-disable-elicitation";
 
     public static readonly Option<string> Transport = new($"--{TransportName}")
     {
@@ -60,6 +61,14 @@ public static class ServiceOptionDefinitions
         Required = false,
         Hidden = true,
         Description = "Enable insecure transport",
+        DefaultValueFactory = _ => false
+    };
+
+    public static readonly Option<bool> InsecureDisableElicitation = new(
+        $"--{InsecureDisableElicitationName}")
+    {
+        Required = false,
+        Description = "Disable elicitation (user confirmation) before allowing high risk commands to run, such as returning Secrets (passwords) from KeyVault.",
         DefaultValueFactory = _ => false
     };
 }

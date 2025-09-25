@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Foundry.Commands;
@@ -40,12 +40,12 @@ public class ModelsListCommandTests
         };
 
         _foundryService.ListModels(
-                Arg.Any<bool>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Any<bool>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<RetryPolicyOptions>())
             .Returns(expectedModels);
 
         var command = new ModelsListCommand();
@@ -57,7 +57,7 @@ public class ModelsListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ModelsListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, FoundryJsonContext.Default.ModelsListCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Models);
@@ -77,12 +77,12 @@ public class ModelsListCommandTests
         };
 
         _foundryService.ListModels(
-                Arg.Any<bool>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Any<bool>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<RetryPolicyOptions>())
             .Returns(expectedModels);
 
         var command = new ModelsListCommand();
@@ -94,7 +94,7 @@ public class ModelsListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ModelsListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, FoundryJsonContext.Default.ModelsListCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Models);
@@ -105,13 +105,13 @@ public class ModelsListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoModels()
     {
         _foundryService.ListModels(
-                Arg.Any<bool>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<ModelInformation>());
+            Arg.Any<bool>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns([]);
 
         var command = new ModelsListCommand();
         var args = command.GetCommand().Parse("");
@@ -119,7 +119,13 @@ public class ModelsListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, FoundryJsonContext.Default.ModelsListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Models);
     }
 
     [Fact]
@@ -128,12 +134,12 @@ public class ModelsListCommandTests
         var expectedError = "Test error";
 
         _foundryService.ListModels(
-                Arg.Any<bool>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Any<bool>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new ModelsListCommand();
@@ -142,13 +148,7 @@ public class ModelsListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
-    }
-
-    private class ModelsListCommandResult
-    {
-        [JsonPropertyName("models")]
-        public IEnumerable<ModelInformation> Models { get; set; } = [];
     }
 }

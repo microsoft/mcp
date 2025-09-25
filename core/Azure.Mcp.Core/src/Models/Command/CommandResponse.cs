@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
@@ -9,7 +10,8 @@ namespace Azure.Mcp.Core.Models.Command;
 public class CommandResponse
 {
     [JsonPropertyName("status")]
-    public int Status { get; set; }
+    [JsonConverter(typeof(HttpStatusCodeConverter))]
+    public HttpStatusCode Status { get; set; } = HttpStatusCode.OK;
 
     [JsonPropertyName("message")]
     public string Message { get; set; } = string.Empty;
@@ -56,5 +58,22 @@ internal class ResultConverter : JsonConverter<ResponseResult>
     public override void Write(Utf8JsonWriter writer, ResponseResult? value, JsonSerializerOptions options)
     {
         value?.Write(writer);
+    }
+}
+
+internal class HttpStatusCodeConverter : JsonConverter<HttpStatusCode>
+{
+    public override HttpStatusCode Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Number)
+        {
+            return (HttpStatusCode)reader.GetInt32();
+        }
+        throw new JsonException("Expected a number for HttpStatusCode.");
+    }
+
+    public override void Write(Utf8JsonWriter writer, HttpStatusCode value, JsonSerializerOptions options)
+    {
+        writer.WriteNumberValue((int)value);
     }
 }

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.MySql.Json;
 using Azure.Mcp.Tools.MySql.Options.Server;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
@@ -23,7 +22,7 @@ public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logge
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -43,9 +42,7 @@ public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logge
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
             string config = await mysqlService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!);
             context.Response.Results = !string.IsNullOrEmpty(config) ?
-                ResponseResult.Create(
-                    new ServerConfigGetCommandResult(config),
-                    MySqlJsonContext.Default.ServerConfigGetCommandResult) :
+                ResponseResult.Create(new(config), MySqlJsonContext.Default.ServerConfigGetCommandResult) :
                 null;
         }
         catch (Exception ex)
