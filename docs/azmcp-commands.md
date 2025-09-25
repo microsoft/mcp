@@ -272,7 +272,7 @@ azmcp appconfig kv list --subscription <subscription> \
                         [--key <key>] \
                         [--label <label>]
 
-# Lock (make it read-only) or unlock (remove read-only) a key-value setting 
+# Lock (make it read-only) or unlock (remove read-only) a key-value setting
 azmcp appconfig kv lock set --subscription <subscription> \
                             --account <account> \
                             --key <key> \
@@ -738,7 +738,7 @@ azmcp keyvault key list --subscription <subscription> \
 Tools that handle sensitive data such as secrets require user consent before execution through a security mechanism called **elicitation**. When you run commands that access sensitive information, the MCP client will prompt you to confirm the operation before proceeding.
 
 > **🛡️ Elicitation (user confirmation) Security Feature:**
-> 
+>
 > Elicitation prompts appear when tools may expose sensitive information like:
 > - Key Vault secrets
 > - Connection strings and passwords
@@ -1158,7 +1158,7 @@ azmcp sql db delete --subscription <subscription> \
 azmcp sql db list --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name>
-                  
+
 # Rename an existing SQL database to a new name within the same server
 azmcp sql db rename --subscription <subscription> \
                     --resource-group <resource-group> \
@@ -1193,7 +1193,7 @@ azmcp sql db export --subscription <subscription> \
                     --database <database-name> \
                     --storage-uri <storage-uri> \
                     --storage-key <storage-key> \
-                    --storage-key-type <StorageAccessKey|SharedAccessKey|ManagedIdentity> \
+                    --storage-key-type <StorageAccessKey|SharedAccessKey> \
                     --admin-user <admin-user> \
                     --admin-password <admin-password> \
                     [--auth-type <SQL|ADPassword|ManagedIdentity>]

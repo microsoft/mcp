@@ -212,7 +212,7 @@ public static class SqlOptionDefinitions
         $"--{StorageKeyType}"
     )
     {
-        Description = "The storage key type (StorageAccessKey, SharedAccessKey, or ManagedIdentity).",
+        Description = "The storage key type (StorageAccessKey or SharedAccessKey).",
         Required = true
     };
 

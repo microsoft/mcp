@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Command;
@@ -37,7 +38,7 @@ public sealed class DatabaseExportCommand(ILogger<DatabaseExportCommand> logger)
         Destructive = false,
         Idempotent = false,
         OpenWorld = false,
-        ReadOnly = true,
+        ReadOnly = false,
         LocalRequired = false,
         Secret = true
     };
@@ -77,63 +78,60 @@ public sealed class DatabaseExportCommand(ILogger<DatabaseExportCommand> logger)
         // Additional validation for export-specific parameters
         if (string.IsNullOrEmpty(options.StorageUri))
         {
-            context.Response.Status = 400;
+            context.Response.Status = HttpStatusCode.BadRequest;
             context.Response.Message = "Storage URI is required for database export.";
             return context.Response;
         }
 
         if (string.IsNullOrEmpty(options.StorageKey))
         {
-            context.Response.Status = 400;
+            context.Response.Status = HttpStatusCode.BadRequest;
             context.Response.Message = "Storage key is required for database export.";
             return context.Response;
         }
 
         if (string.IsNullOrEmpty(options.StorageKeyType))
         {
-            context.Response.Status = 400;
+            context.Response.Status = HttpStatusCode.BadRequest;
             context.Response.Message = "Storage key type is required for database export.";
             return context.Response;
         }
 
         if (string.IsNullOrEmpty(options.AdminUser))
         {
-            context.Response.Status = 400;
+            context.Response.Status = HttpStatusCode.BadRequest;
             context.Response.Message = "Administrator user is required for database export.";
             return context.Response;
         }
 
         if (string.IsNullOrEmpty(options.AdminPassword))
         {
-            context.Response.Status = 400;
+            context.Response.Status = HttpStatusCode.BadRequest;
             context.Response.Message = "Administrator password is required for database export.";
             return context.Response;
         }
 
-        // Validate storage key type
-        var validStorageKeyTypes = new[] { "StorageAccessKey", "SharedAccessKey", "ManagedIdentity" };
+        var validStorageKeyTypes = new[] { "StorageAccessKey", "SharedAccessKey" };
         if (!validStorageKeyTypes.Contains(options.StorageKeyType, StringComparer.OrdinalIgnoreCase))
         {
-            context.Response.Status = 400;
+            context.Response.Status = HttpStatusCode.BadRequest;
             context.Response.Message = $"Invalid storage key type '{options.StorageKeyType}'. Valid values are: {string.Join(", ", validStorageKeyTypes)}";
             return context.Response;
         }
 
-        // Validate storage URI format
         if (!Uri.TryCreate(options.StorageUri, UriKind.Absolute, out _))
         {
-            context.Response.Status = 400;
+            context.Response.Status = HttpStatusCode.BadRequest;
             context.Response.Message = "Storage URI must be a valid absolute URI.";
             return context.Response;
         }
 
-        // Validate authentication type if provided
         if (!string.IsNullOrEmpty(options.AuthType))
         {
             var validAuthTypes = new[] { "SQL", "ADPassword", "ManagedIdentity" };
             if (!validAuthTypes.Contains(options.AuthType, StringComparer.OrdinalIgnoreCase))
             {
-                context.Response.Status = 400;
+                context.Response.Status = HttpStatusCode.BadRequest;
                 context.Response.Message = $"Invalid authentication type '{options.AuthType}'. Valid values are: {string.Join(", ", validAuthTypes)}";
                 return context.Response;
             }
@@ -173,11 +171,11 @@ public sealed class DatabaseExportCommand(ILogger<DatabaseExportCommand> logger)
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "SQL database or server not found. Verify the database name, server name, resource group, and that you have access.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed exporting the SQL database. Verify you have appropriate permissions and the storage account is accessible. Details: {reqEx.Message}",
-        RequestFailedException reqEx when reqEx.Status == 400 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
             $"Invalid export parameters. Check your storage URI, credentials, and database configuration. Details: {reqEx.Message}",
         ArgumentException argEx =>
             $"Invalid argument: {argEx.Message}",

@@ -25,6 +25,7 @@ public class SqlSetup : IAreaSetup
         services.AddSingleton<DatabaseListCommand>();
         services.AddSingleton<DatabaseCreateCommand>();
         services.AddSingleton<DatabaseRenameCommand>();
+        services.AddSingleton<DatabaseExportCommand>();
         services.AddSingleton<DatabaseUpdateCommand>();
         services.AddSingleton<DatabaseDeleteCommand>();
 
