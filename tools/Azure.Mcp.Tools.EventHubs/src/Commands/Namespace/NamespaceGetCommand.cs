@@ -37,7 +37,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
 
     public override ToolMetadata Metadata => new()
     {
-        OpenWorld = true,      // Queries Azure resources - unpredictable domain
+        OpenWorld = false,
         Destructive = false,   // Safe read-only operation
         Idempotent = true,     // Same parameters produce same results
         ReadOnly = true,       // Only reads data, no modifications
