@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Services;
@@ -74,10 +76,10 @@ public class TestCreateCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TestCreateCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, LoadTestJsonContext.Default.TestCreateCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expected.TestId, result.Test.TestId);
@@ -104,7 +106,7 @@ public class TestCreateCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 
     [Fact]
@@ -133,13 +135,8 @@ public class TestCreateCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
-    }
-
-    private class TestCreateCommandResult
-    {
-        public Test Test { get; set; } = new();
     }
 }

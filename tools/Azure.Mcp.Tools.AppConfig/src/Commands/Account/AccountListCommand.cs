@@ -29,7 +29,7 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -52,11 +52,7 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = accounts?.Count > 0 ?
-                ResponseResult.Create(
-                    new AccountListCommandResult(accounts),
-                    AppConfigJsonContext.Default.AccountListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(accounts ?? []), AppConfigJsonContext.Default.AccountListCommandResult);
         }
         catch (Exception ex)
         {

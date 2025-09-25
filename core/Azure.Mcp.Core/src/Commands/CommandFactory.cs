@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Net;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Services.Telemetry;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
@@ -99,10 +99,8 @@ public class CommandFactory
 
     private void RegisterCommandGroup()
     {
-        var loggerFactory = _serviceProvider.GetRequiredService<ILoggerFactory>();
-
         // Register area command groups
-        var existingGroups = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var existingAreaNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var area in _serviceAreas)
         {
@@ -115,10 +113,10 @@ public class CommandFactory
                 throw error;
             }
 
-            if (!existingGroups.Add(area.Name))
+            if (!existingAreaNames.Add(area.Name))
             {
                 var matchingAreaTypes = _serviceAreas
-                    .Where(x => x.Name == area.Name)
+                    .Where(x => string.Equals(x.Name, area.Name, StringComparison.OrdinalIgnoreCase))
                     .Select(a => a.GetType().FullName);
 
                 var error = new ArgumentException("Cannot have multiple IAreaSetup with the same Name.");
@@ -130,23 +128,27 @@ public class CommandFactory
                 throw error;
             }
 
-            // Create a temporary root node to register all the area's subgroups to.
-            // Use the root to map commands back to their area.
-            var tempRoot = new CommandGroup(RootCommandGroupName, string.Empty);
+            // Get the commands for the IAreaSetup and register it to the root node.
+            var commandTree = area.RegisterCommands(_serviceProvider);
+            _rootGroup.AddSubGroup(commandTree);
 
-            area.RegisterCommands(tempRoot, loggerFactory);
+            // Create a temporary root node to register all the area's subgroups and commands to.
+            // Use this to create the mapping of all commands to that area.
+            var tempRoot = new CommandGroup(RootCommandGroupName, string.Empty);
+            tempRoot.AddSubGroup(commandTree);
 
             var commandDictionary = CreateCommandDictionary(tempRoot, string.Empty);
+
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("Registered commands for area '{AreaName}' are: {AllCommands}.",
+                    area.Name, string.Join(", ", commandDictionary.Keys));
+            }
+
             foreach (var item in commandDictionary)
             {
                 _commandNamesToArea.Add(item.Key, area);
             }
-
-            foreach (var group in tempRoot.SubGroup)
-            {
-                _rootGroup.SubGroup.Add(group);
-            }
-
         }
     }
 
@@ -186,7 +188,7 @@ public class CommandFactory
                 if (!validation.IsValid)
                 {
                     Console.WriteLine(JsonSerializer.Serialize(cmdContext.Response, _srcGenWithOptions.CommandResponse));
-                    return cmdContext.Response.Status;
+                    return (int)cmdContext.Response.Status;
                 }
 
                 var response = await implementation.ExecuteAsync(cmdContext, parseResult);
@@ -195,7 +197,7 @@ public class CommandFactory
                 var endTime = DateTime.UtcNow;
                 response.Duration = (long)(endTime - startTime).TotalMilliseconds;
 
-                if (response.Status == 200 && response.Results == null)
+                if (response.Status == HttpStatusCode.OK && response.Results == null)
                 {
                     response.Results = ResponseResult.Create(new List<string>(), JsonSourceGenerationContext.Default.ListString);
                 }
@@ -206,13 +208,12 @@ public class CommandFactory
                     Console.WriteLine(JsonSerializer.Serialize(response, _srcGenWithOptions.CommandResponse));
                 }
 
-                var status = response.Status;
-                if (status < 200 || status >= 300)
+                if (response.Status < HttpStatusCode.OK || response.Status >= HttpStatusCode.Ambiguous)
                 {
                     activity?.SetStatus(ActivityStatusCode.Error).AddTag(TagName.ErrorDetails, response.Message);
                 }
 
-                return status;
+                return (int)response.Status;
             }
             catch (Exception ex)
             {
@@ -273,18 +274,32 @@ public class CommandFactory
     }
 
     /// <summary>
-    /// Gets the service area given the full command name (i.e. 'storage_account_list' would return 'storage').
+    /// Gets the service area given the full command name (i.e. 'storage_account_list' or 'azmcp_storage_account_list' would return 'storage').
     /// </summary>
-    /// <param name="tokenizedName">Name of the command with prefixes.</param>
-    public string? GetServiceArea(string tokenizedName)
+    /// <param name="fullCommandName">Name of the command.</param>
+    public string? GetServiceArea(string fullCommandName)
     {
-        if (string.IsNullOrEmpty(tokenizedName))
+        if (string.IsNullOrEmpty(fullCommandName))
         {
             return null;
         }
 
-        return _commandNamesToArea.TryGetValue(tokenizedName, out var area)
-            ? area.Name
+        if (_commandNamesToArea.TryGetValue(fullCommandName, out var area))
+        {
+            return area.Name;
+        }
+
+        // If it starts with azmcp, then it is already the full command name.
+        if (fullCommandName.StartsWith(RootCommandGroupName, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        // Else, it means that the command could be from namespace mode where the IAreaSetup.Name 
+        // is the root of the command tree.
+        var rootPrefixAppended = string.Join(Separator, RootCommandGroupName, fullCommandName);
+        return _commandNamesToArea.TryGetValue(rootPrefixAppended, out var area2)
+            ? area2.Name
             : null;
     }
 

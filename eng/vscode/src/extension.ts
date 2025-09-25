@@ -5,6 +5,23 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 
+function isMcpAutoStartEnabled(): boolean {
+    const config = vscode.workspace.getConfiguration('chat.mcp');
+    const autostart = config.get<string>('autostart');
+    return autostart === 'newAndOutdated' || autostart === 'all';
+}
+
+function showMcpManualStartNotification() {
+    const message = 'Azure MCP Server settings changed. Please restart the server manually: Command Palette → MCP: List Servers → Azure MCP → Start';
+    const openCommandPalette = 'Open Command Palette';
+
+    void vscode.window.showInformationMessage(message, openCommandPalette).then(selection => {
+        if (selection === openCommandPalette) {
+            void vscode.commands.executeCommand('workbench.action.quickOpen', '>MCP: List Servers');
+        }
+    });
+}
+
 export function activate(context: vscode.ExtensionContext) {
     const didChangeEmitter = new vscode.EventEmitter<void>();
 
@@ -104,6 +121,12 @@ export function activate(context: vscode.ExtensionContext) {
                 event.affectsConfiguration('azureMcp.serverMode') ||
                 event.affectsConfiguration('azureMcp.readOnly')
             ) {
+                // Check if MCP autostart is enabled
+                if (!isMcpAutoStartEnabled()) {
+                    // Show toast notification to guide user to manually start the server
+                    showMcpManualStartNotification();
+                }
+
                 didChangeEmitter.fire();
             }
         })

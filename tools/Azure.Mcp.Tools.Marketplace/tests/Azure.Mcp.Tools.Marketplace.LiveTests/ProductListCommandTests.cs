@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Text.Json;
@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Xunit;
@@ -46,8 +45,8 @@ public class ProductListCommandTests : CommandTestsBase
         var productArray = products.EnumerateArray().ToArray();
         Assert.NotEmpty(productArray);
         var product = productArray[0];
-        Assert.True(product.TryGetProperty("uniqueProductId", out _));
-        Assert.True(product.TryGetProperty("displayName", out _));
+        product.AssertProperty("uniqueProductId");
+        product.AssertProperty("displayName");
     }
 
     [Fact]
@@ -108,8 +107,8 @@ public class ProductListCommandTests : CommandTestsBase
 
         var productArray = products.EnumerateArray().ToArray();
         var product = productArray[0];
-        Assert.True(product.TryGetProperty("uniqueProductId", out _));
-        Assert.True(product.TryGetProperty("displayName", out _));
+        product.AssertProperty("uniqueProductId");
+        product.AssertProperty("displayName");
     }
 
     [Fact]
@@ -129,8 +128,8 @@ public class ProductListCommandTests : CommandTestsBase
 
         var productArray = products.EnumerateArray().ToArray();
         var product = productArray[0];
-        Assert.True(product.TryGetProperty("uniqueProductId", out _));
-        Assert.True(product.TryGetProperty("displayName", out _));
+        product.AssertProperty("uniqueProductId");
+        product.AssertProperty("displayName");
     }
 
     [Fact]
@@ -214,9 +213,9 @@ public class ProductListCommandTests : CommandTestsBase
         // Verify selected properties are present
         Assert.NotEmpty(productArray);
         var product = productArray[0];
-        Assert.True(product.TryGetProperty("uniqueProductId", out _));
-        Assert.True(product.TryGetProperty("displayName", out _));
-        Assert.True(product.TryGetProperty("publisherDisplayName", out _));
+        product.AssertProperty("uniqueProductId");
+        product.AssertProperty("displayName");
+        product.AssertProperty("publisherDisplayName");
     }
 
     [Fact]
@@ -240,8 +239,7 @@ public class ProductListCommandTests : CommandTestsBase
         var productArray = products.EnumerateArray().ToArray();
         Assert.NotEmpty(productArray);
         var product = productArray[0];
-        Assert.True(product.TryGetProperty("uniqueProductId", out _));
-        Assert.True(product.TryGetProperty("displayName", out _));
-
+        product.AssertProperty("uniqueProductId");
+        product.AssertProperty("displayName");
     }
 }

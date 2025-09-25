@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.TestUtilities;
+using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Database;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,12 +46,12 @@ public class DatabaseListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DatabaseListResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.DatabaseListCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedDatabases, result.Databases);
     }
@@ -58,7 +59,7 @@ public class DatabaseListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsMessage_WhenNoDatabasesExist()
     {
-        _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns(new List<string>());
+        _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns([]);
 
         var command = new DatabaseListCommand(_logger);
         var args = command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --user user1 --server server1");
@@ -67,9 +68,14 @@ public class DatabaseListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.DatabaseListCommandResult);
+        Assert.NotNull(result);
+        Assert.Empty(result.Databases);
     }
 
     [Fact]
@@ -83,7 +89,7 @@ public class DatabaseListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test exception", response.Message);
     }
 
@@ -106,14 +112,7 @@ public class DatabaseListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
-    }
-
-
-    private class DatabaseListResult
-    {
-        [JsonPropertyName("Databases")]
-        public List<string> Databases { get; set; } = new List<string>();
     }
 }

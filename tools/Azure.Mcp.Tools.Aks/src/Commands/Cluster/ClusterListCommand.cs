@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Aks.Options.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
@@ -27,7 +28,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Bas
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -50,11 +51,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Bas
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = clusters?.Count > 0 ?
-                ResponseResult.Create(
-                    new ClusterListCommandResult(clusters),
-                    AksJsonContext.Default.ClusterListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(clusters ?? []), AksJsonContext.Default.ClusterListCommandResult);
         }
         catch (Exception ex)
         {
@@ -69,18 +66,12 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Bas
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Subscription not found. Verify the subscription ID and you have access.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed accessing AKS clusters. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record ClusterListCommandResult(List<Models.Cluster> Clusters);

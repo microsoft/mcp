@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Azure.Security.KeyVault.Secrets;
@@ -73,11 +74,11 @@ public class SecretCreateCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var retrievedSecret = JsonSerializer.Deserialize<SecretCreateResult>(json);
+        var retrievedSecret = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.SecretCreateCommandResult);
 
         Assert.NotNull(retrievedSecret);
         Assert.Equal(_knownSecretName, retrievedSecret.Name);
@@ -99,7 +100,7 @@ public class SecretCreateCommandTests
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("required", response.Message.ToLower());
     }
 
@@ -130,31 +131,7 @@ public class SecretCreateCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
-    }
-
-    private class SecretCreateResult
-    {
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = null!;
-
-        [JsonPropertyName("value")]
-        public string Value { get; set; } = null!;
-
-        [JsonPropertyName("enabled")]
-        public bool? Enabled { get; set; }
-
-        [JsonPropertyName("notBefore")]
-        public DateTimeOffset? NotBefore { get; set; }
-
-        [JsonPropertyName("expiresOn")]
-        public DateTimeOffset? ExpiresOn { get; set; }
-
-        [JsonPropertyName("createdOn")]
-        public DateTimeOffset? CreatedOn { get; set; }
-
-        [JsonPropertyName("updatedOn")]
-        public DateTimeOffset? UpdatedOn { get; set; }
     }
 }

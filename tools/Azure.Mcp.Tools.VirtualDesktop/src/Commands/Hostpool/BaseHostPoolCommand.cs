@@ -3,6 +3,7 @@
 
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.VirtualDesktop.Options;
@@ -15,21 +16,19 @@ public abstract class BaseHostPoolCommand<
     : BaseVirtualDesktopCommand<T>
     where T : BaseHostPoolOptions, new()
 {
-    protected readonly Option<string> _hostPoolOption = VirtualDesktopOptionDefinitions.HostPool;
-    protected readonly Option<string> _hostPoolResourceIdOption = VirtualDesktopOptionDefinitions.HostPoolResourceIdOption;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_hostPoolOption);
-        command.Options.Add(_hostPoolResourceIdOption);
+        command.Options.Add(VirtualDesktopOptionDefinitions.HostPool);
+        command.Options.Add(VirtualDesktopOptionDefinitions.HostPoolResourceIdOption);
     }
 
     protected override T BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.HostPoolName = parseResult.GetValueOrDefault(_hostPoolOption);
-        options.HostPoolResourceId = parseResult.GetValueOrDefault(_hostPoolResourceIdOption);
+        options.HostPoolName = parseResult.GetValueOrDefault<string>(VirtualDesktopOptionDefinitions.HostPool.Name);
+        options.HostPoolResourceId = parseResult.GetValueOrDefault<string>(VirtualDesktopOptionDefinitions.HostPoolResourceIdOption.Name);
         return options;
     }
 
@@ -42,8 +41,8 @@ public abstract class BaseHostPoolCommand<
         }
 
         // Retrieve values once and infer presence from non-empty values
-        commandResult.TryGetValue(_hostPoolOption, out string? hostPoolName);
-        commandResult.TryGetValue(_hostPoolResourceIdOption, out string? hostPoolResourceId);
+        commandResult.TryGetValue(VirtualDesktopOptionDefinitions.HostPool, out string? hostPoolName);
+        commandResult.TryGetValue(VirtualDesktopOptionDefinitions.HostPoolResourceIdOption, out string? hostPoolResourceId);
 
         var hasHostPool = !string.IsNullOrWhiteSpace(hostPoolName);
         var hasHostPoolResourceId = !string.IsNullOrWhiteSpace(hostPoolResourceId);
@@ -55,7 +54,7 @@ public abstract class BaseHostPoolCommand<
             result.ErrorMessage = "Either --hostpool or --hostpool-resource-id must be provided.";
             if (commandResponse != null)
             {
-                commandResponse.Status = 400;
+                commandResponse.Status = HttpStatusCode.BadRequest;
                 commandResponse.Message = result.ErrorMessage;
             }
             return result;
@@ -67,7 +66,7 @@ public abstract class BaseHostPoolCommand<
             result.ErrorMessage = "Cannot specify both --hostpool and --hostpool-resource-id. Use only one.";
             if (commandResponse != null)
             {
-                commandResponse.Status = 400;
+                commandResponse.Status = HttpStatusCode.BadRequest;
                 commandResponse.Message = result.ErrorMessage;
             }
             return result;

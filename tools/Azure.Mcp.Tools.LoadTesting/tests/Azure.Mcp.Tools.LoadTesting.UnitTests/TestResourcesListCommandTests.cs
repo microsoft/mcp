@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Commands.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
 using Azure.Mcp.Tools.LoadTesting.Services;
@@ -45,7 +47,7 @@ public class TestResourceListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsLoadTests_FromResourceGroup()
     {
-        var expectedLoadTests = new List<TestResource> { new TestResource { Id = "Id1", Name = "loadTest1" }, new TestResource { Id = "Id2", Name = "loadTest2" } };
+        var expectedLoadTests = new List<TestResource> { new() { Id = "Id1", Name = "loadTest1" }, new() { Id = "Id2", Name = "loadTest2" } };
         _service.GetLoadTestResourcesAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is((string?)null), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedLoadTests);
 
@@ -61,7 +63,7 @@ public class TestResourceListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TestResourceListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, LoadTestJsonContext.Default.TestResourceListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedLoadTests.Count, result.LoadTest.Count);
@@ -74,7 +76,7 @@ public class TestResourceListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsLoadTests_FromTestResource()
     {
-        var expectedLoadTests = new List<TestResource> { new TestResource { Id = "Id1", Name = "loadTest1" } };
+        var expectedLoadTests = new List<TestResource> { new() { Id = "Id1", Name = "loadTest1" } };
         _service.GetLoadTestResourcesAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is("testResourceName"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedLoadTests);
 
@@ -91,7 +93,7 @@ public class TestResourceListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TestResourceListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, LoadTestJsonContext.Default.TestResourceListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedLoadTests.Count, result.LoadTest.Count);
@@ -103,7 +105,7 @@ public class TestResourceListCommandTests
     public async Task ExecuteAsync_ReturnsLoadTests_WhenLoadTestsNotExist()
     {
         _service.GetLoadTestResourcesAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is("loadTestName"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
-             .Returns(new List<TestResource>());
+             .Returns([]);
 
         var command = new TestResourceListCommand(_logger);
         var args = command.GetCommand().Parse([
@@ -117,7 +119,7 @@ public class TestResourceListCommandTests
         Assert.NotNull(response);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TestResourceListCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, LoadTestJsonContext.Default.TestResourceListCommandResult);
 
         Assert.Empty(result!.LoadTest);
     }
@@ -136,13 +138,8 @@ public class TestResourceListCommandTests
             "--tenant", "tenant123"
         ]);
         var response = await _command.ExecuteAsync(context, parseResult);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
-    }
-
-    private class TestResourceListCommandResult
-    {
-        public List<TestResource> LoadTest { get; set; } = [];
     }
 }

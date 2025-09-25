@@ -6,7 +6,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
-using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Security.KeyVault.Keys;
 using Xunit;
 
@@ -30,7 +29,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         Assert.NotEmpty(keys.EnumerateArray());
     }
 
-    [Fact(Skip = "Test temporarily disabled")]
+    [Fact]
     public async Task Should_get_key()
     {
         // Created in keyvault.bicep.
@@ -154,6 +153,28 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     }
 
     [Fact]
+    public async Task Should_create_certificate()
+    {
+        var certificateName = Settings.ResourceBaseName + Random.Shared.NextInt64();
+        var result = await CallToolAsync(
+            "azmcp_keyvault_certificate_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "vault", Settings.ResourceBaseName },
+                { "certificate", certificateName}
+            });
+
+        var createdCertificateName = result.AssertProperty("name");
+        Assert.Equal(JsonValueKind.String, createdCertificateName.ValueKind);
+        Assert.Equal(certificateName, createdCertificateName.GetString());
+
+        // Verify that the certificate has some expected properties
+        ValidateCertificate(result);
+    }
+
+
+    [Fact]
     public async Task Should_import_certificate()
     {
         // Generate a self-signed certificate and export to a temporary PFX file with a password
@@ -195,6 +216,26 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                 File.Delete(tempPath);
             }
         }
+    }
+
+    [Fact(Skip = "This test requires a Key Vault Managed HSM")]
+    public async Task Should_get_admin_settings_dictionary()
+    {
+        var result = await CallToolAsync(
+            "azmcp_keyvault_admin_settings_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "vault", Settings.ResourceBaseName }
+            });
+
+        var name = result.AssertProperty("name");
+        Assert.Equal(JsonValueKind.String, name.ValueKind);
+        Assert.Equal(Settings.ResourceBaseName, name.GetString());
+
+        var settings = result.AssertProperty("settings");
+        Assert.Equal(JsonValueKind.Object, settings.ValueKind);
+        Assert.True(settings.EnumerateObject().Any(), "Expected at least one admin setting returned.");
     }
 
     private void ValidateCertificate(JsonElement? result)

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -43,7 +43,7 @@ public sealed class TableListCommandTests
         var expectedTables = new List<string> { "table1", "table2" };
         if (useClusterUri)
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
@@ -51,7 +51,7 @@ public sealed class TableListCommandTests
         }
         else
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "sub1", "mycluster", "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(expectedTables);
@@ -67,7 +67,7 @@ public sealed class TableListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<TablesListResult>(json);
+        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.TableListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(2, result?.Tables?.Count);
@@ -75,22 +75,22 @@ public sealed class TableListCommandTests
 
     [Theory]
     [MemberData(nameof(TableListArgumentMatrix))]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoTables(string cliArgs, bool useClusterUri)
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoTables(string cliArgs, bool useClusterUri)
     {
         if (useClusterUri)
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
-                .Returns(new List<string>());
+                .Returns([]);
         }
         else
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "sub1", "mycluster", "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
-                .Returns(new List<string>());
+                .Returns([]);
         }
         var command = new TableListCommand(_logger);
 
@@ -99,7 +99,13 @@ public sealed class TableListCommandTests
 
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, KustoJsonContext.Default.TableListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Tables!);
     }
 
     [Theory]
@@ -109,7 +115,7 @@ public sealed class TableListCommandTests
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         if (useClusterUri)
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
@@ -117,7 +123,7 @@ public sealed class TableListCommandTests
         }
         else
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "sub1", "mycluster", "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(Task.FromException<List<string>>(new Exception("Test error")));
@@ -129,7 +135,7 @@ public sealed class TableListCommandTests
 
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
     }
 
@@ -143,12 +149,6 @@ public sealed class TableListCommandTests
 
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
-    }
-
-    private sealed class TablesListResult
-    {
-        [JsonPropertyName("tables")]
-        public List<string>? Tables { get; set; }
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 }

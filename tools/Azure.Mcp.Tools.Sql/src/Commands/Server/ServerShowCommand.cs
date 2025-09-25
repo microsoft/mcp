@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.Server;
 using Azure.Mcp.Tools.Sql.Services;
@@ -19,8 +19,8 @@ public sealed class ServerShowCommand(ILogger<ServerShowCommand> logger)
 
     public override string Description =>
         """
-        Retrieves detailed information about an Azure SQL server including its configuration, 
-        status, and properties such as the fully qualified domain name, version, 
+        Retrieves detailed information about an Azure SQL server including its configuration,
+        status, and properties such as the fully qualified domain name, version,
         administrator login, and network access settings.
         """;
 
@@ -30,7 +30,7 @@ public sealed class ServerShowCommand(ILogger<ServerShowCommand> logger)
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -55,9 +55,7 @@ public sealed class ServerShowCommand(ILogger<ServerShowCommand> logger)
                 options.Subscription!,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new ServerShowResult(server),
-                SqlJsonContext.Default.ServerShowResult);
+            context.Response.Results = ResponseResult.Create(new(server), SqlJsonContext.Default.ServerShowResult);
         }
         catch (Exception ex)
         {
@@ -74,20 +72,20 @@ public sealed class ServerShowCommand(ILogger<ServerShowCommand> logger)
     {
         KeyNotFoundException =>
             "SQL server not found in the specified resource group. Verify the server name and resource group.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "SQL server not found in the specified resource group. Verify the server name and resource group.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed retrieving the SQL server. Verify you have appropriate permissions. Details: {reqEx.Message}",
-        Azure.RequestFailedException reqEx => reqEx.Message,
+        RequestFailedException reqEx => reqEx.Message,
         ArgumentException argEx => $"Invalid parameter: {argEx.Message}",
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        KeyNotFoundException => 404,
-        Azure.RequestFailedException reqEx => reqEx.Status,
-        ArgumentException => 400,
+        KeyNotFoundException => HttpStatusCode.NotFound,
+        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
+        ArgumentException => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)
     };
 

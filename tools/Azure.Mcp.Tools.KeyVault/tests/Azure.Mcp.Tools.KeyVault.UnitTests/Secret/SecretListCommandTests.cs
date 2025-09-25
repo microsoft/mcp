@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -68,14 +69,14 @@ public class SecretListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<SecretListResult>(json);
+        var result = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.SecretListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedSecrets, result.Secrets);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoSecrets()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoSecrets()
     {
         // Arrange
         _keyVaultService.ListSecrets(
@@ -95,7 +96,13 @@ public class SecretListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.SecretListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Secrets);
     }
 
     [Fact]
@@ -121,13 +128,7 @@ public class SecretListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
-    }
-
-    private class SecretListResult
-    {
-        [JsonPropertyName("secrets")]
-        public List<string> Secrets { get; set; } = [];
     }
 }

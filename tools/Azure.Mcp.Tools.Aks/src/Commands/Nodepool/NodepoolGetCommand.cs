@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Aks.Options;
 using Azure.Mcp.Tools.Aks.Options.Nodepool;
 using Azure.Mcp.Tools.Aks.Services;
@@ -13,9 +16,6 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
 {
     private const string CommandTitle = "Get AKS Node Pool";
     private readonly ILogger<NodepoolGetCommand> _logger = logger;
-
-    private readonly Option<string> _clusterNameOption = AksOptionDefinitions.Cluster;
-    private readonly Option<string> _nodepoolNameOption = AksOptionDefinitions.Nodepool;
 
     public override string Name => "get";
 
@@ -31,7 +31,7 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -40,16 +40,17 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        RequireResourceGroup();
-        command.Options.Add(_clusterNameOption);
-        command.Options.Add(_nodepoolNameOption);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(AksOptionDefinitions.Cluster);
+        command.Options.Add(AksOptionDefinitions.Nodepool);
     }
 
     protected override NodepoolGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ClusterName = parseResult.GetValue(_clusterNameOption);
-        options.NodepoolName = parseResult.GetValue(_nodepoolNameOption);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.ClusterName = parseResult.GetValueOrDefault<string>(AksOptionDefinitions.Cluster.Name);
+        options.NodepoolName = parseResult.GetValueOrDefault<string>(AksOptionDefinitions.Nodepool.Name);
         return options;
     }
 
@@ -74,9 +75,7 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
                 options.RetryPolicy);
 
             context.Response.Results = nodePool is null ?
-                null : ResponseResult.Create(
-                    new NodepoolGetCommandResult(nodePool),
-                    AksJsonContext.Default.NodepoolGetCommandResult);
+                null : ResponseResult.Create(new(nodePool), AksJsonContext.Default.NodepoolGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -91,18 +90,12 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "AKS node pool not found. Verify the node pool name, cluster, resource group, and subscription, and ensure you have access.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed accessing the AKS node pool. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record NodepoolGetCommandResult(Models.NodePool NodePool);

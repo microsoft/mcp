@@ -4,7 +4,6 @@
 using Azure.Mcp.Core.Areas.Subscription.Commands;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Areas.Subscription;
 
@@ -14,15 +13,19 @@ public class SubscriptionSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<SubscriptionListCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Subscription command group
         var subscription = new CommandGroup(Name, "Azure subscription operations - Commands for listing and managing Azure subscriptions accessible to your account.");
-        rootGroup.AddSubGroup(subscription);
 
         // Register Subscription commands
-        subscription.AddCommand("list", new SubscriptionListCommand(loggerFactory.CreateLogger<SubscriptionListCommand>()));
+        var subscriptionListCommand = serviceProvider.GetRequiredService<SubscriptionListCommand>();
+        subscription.AddCommand(subscriptionListCommand.Name, subscriptionListCommand);
+
+        return subscription;
     }
 }
