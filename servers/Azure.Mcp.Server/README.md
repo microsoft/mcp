@@ -435,15 +435,18 @@ MCP as a phenomenon is very novel and cutting-edge. As with all new technology s
 
 ## Data Collection
 
+<!-- remove-section: start vsix -->
 The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft's [privacy statement](https://www.microsoft.com/privacy/privacystatement). You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
+<!-- remove-section: end -->
+<!-- insert-section: vsix {{The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry by following the instructions [here](https://code.visualstudio.com/docs/configure/telemetry#_disable-telemetry-reporting).}} -->
 
+<!-- remove-section: start vsix -->
 ### Telemetry Configuration
 
 Telemetry collection is on by default.
 
 To opt out, set the environment variable `AZURE_MCP_COLLECT_TELEMETRY` to `false` in your environment.
-
-
+<!-- remove-section: end -->
 
 ## <!-- remove-section: start nuget;vsix --><a id="contributing"></a> 👥 <!-- remove-section: end -->Contributing
 
