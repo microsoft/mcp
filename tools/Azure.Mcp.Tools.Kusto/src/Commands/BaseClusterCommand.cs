@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
-using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
@@ -23,41 +21,23 @@ public abstract class BaseClusterCommand<
         base.RegisterOptions(command);
         command.Options.Add(KustoOptionDefinitions.ClusterUri);
         command.Options.Add(KustoOptionDefinitions.Cluster);
-    }
-
-    public override ValidationResult Validate(CommandResult parseResult, CommandResponse? commandResponse = null)
-    {
-        var validationResult = new ValidationResult { IsValid = true };
-
-        parseResult.TryGetValue(KustoOptionDefinitions.ClusterUri, out string? clusterUri);
-        parseResult.TryGetValue(KustoOptionDefinitions.Cluster, out string? clusterName);
-        parseResult.TryGetValue(OptionDefinitions.Common.Subscription, out string? subscription);
-
-        if (!string.IsNullOrEmpty(clusterUri))
+        command.Validators.Add(commandResult =>
         {
-            // If clusterUri is provided, subscription becomes optional
-            return validationResult;
-        }
-        else
-        {
+            if (commandResult.TryGetValue(KustoOptionDefinitions.ClusterUri, out string? clusterUri) && !string.IsNullOrEmpty(clusterUri))
+            {
+                // If clusterUri is provided, subscription becomes optional
+                return;
+            }
+
+            commandResult.TryGetValue(KustoOptionDefinitions.Cluster, out string? clusterName);
+            commandResult.TryGetValue(OptionDefinitions.Common.Subscription, out string? subscription);
+
             // clusterUri not provided, require both subscription and clusterName
             if (string.IsNullOrEmpty(subscription) || string.IsNullOrEmpty(clusterName))
             {
-                validationResult.IsValid = false;
-                validationResult.ErrorMessage = $"Either {KustoOptionDefinitions.ClusterUri.Name} must be provided, or both {OptionDefinitions.Common.Subscription.Name} and {KustoOptionDefinitions.Cluster.Name} must be provided.";
-
-                if (commandResponse != null)
-                {
-                    commandResponse.Status = HttpStatusCode.BadRequest;
-                    commandResponse.Message = validationResult.ErrorMessage;
-                }
+                commandResult.AddError($"Either {KustoOptionDefinitions.ClusterUri.Name} must be provided, or both {OptionDefinitions.Common.Subscription.Name} and {KustoOptionDefinitions.Cluster.Name} must be provided.");
             }
-        }
-
-        if (validationResult.IsValid)
-            return base.Validate(parseResult, commandResponse);
-
-        return validationResult;
+        });
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
-using System.Net;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Options;
@@ -45,6 +43,25 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         command.Options.Add(OptionDefinitions.Common.ResourceGroup);
         command.Options.Add(EventGridOptionDefinitions.TopicName);
         command.Options.Add(EventGridOptionDefinitions.Location);
+        command.Validators.Add(commandResult =>
+        {
+            var hasSubscription = HasSubscriptionAvailable(commandResult);
+            var hasTopicOption = commandResult.HasOptionResult(EventGridOptionDefinitions.TopicName);
+            var hasRg = commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup);
+            var hasLocation = commandResult.HasOptionResult(EventGridOptionDefinitions.Location);
+
+            // Either topic or subscription is mandatory
+            if (!hasSubscription && !hasTopicOption)
+            {
+                commandResult.AddError("Either --subscription or --topic is required.");
+            }
+            // Location and resource-group can only be used with subscription or topic
+            else if ((hasRg || hasLocation) && !hasSubscription && !hasTopicOption)
+            {
+                // Can this case even be reached?
+                commandResult.AddError("Either --subscription or --topic is required when using --resource-group or --location.");
+            }
+        });
     }
 
     protected override SubscriptionListOptions BindOptions(ParseResult parseResult)
@@ -54,44 +71,6 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         options.TopicName = parseResult.GetValueOrDefault<string>(EventGridOptionDefinitions.TopicName.Name);
         options.Location = parseResult.GetValueOrDefault<string>(EventGridOptionDefinitions.Location.Name);
         return options;
-    }
-
-    public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
-    {
-        // Skip the base validation that requires subscription and implement custom validation
-        var result = new ValidationResult { IsValid = true };
-
-        var hasSubscription = HasSubscriptionAvailable(commandResult);
-        var hasTopicOption = commandResult.HasOptionResult(EventGridOptionDefinitions.TopicName);
-        var hasRg = commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup);
-        var hasLocation = commandResult.HasOptionResult(EventGridOptionDefinitions.Location);
-
-        // Either topic or subscription is mandatory
-        if (!hasSubscription && !hasTopicOption)
-        {
-            result.IsValid = false;
-            result.ErrorMessage = "Either --subscription or --topic is required.";
-
-            if (commandResponse != null)
-            {
-                commandResponse.Status = HttpStatusCode.BadRequest;
-                commandResponse.Message = result.ErrorMessage;
-            }
-        }
-        // Location and resource-group can only be used with subscription or topic
-        else if ((hasRg || hasLocation) && !hasSubscription && !hasTopicOption)
-        {
-            result.IsValid = false;
-            result.ErrorMessage = "Either --subscription or --topic is required when using --resource-group or --location.";
-
-            if (commandResponse != null)
-            {
-                commandResponse.Status = HttpStatusCode.BadRequest;
-                commandResponse.Message = result.ErrorMessage;
-            }
-        }
-
-        return result;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
