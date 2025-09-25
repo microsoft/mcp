@@ -21,8 +21,8 @@ $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 $mcpServerjson = "$RepoRoot/eng/dnx/.mcp/server.json"
 $nuspecSourcePath = "$RepoRoot/eng/dnx/nuspec"
+$azureIconPath = "$RepoRoot/eng/images/azureicon.png"
 $projectPropertiesScript = "$RepoRoot/eng/scripts/Get-ProjectProperties.ps1"
-$readMeProcessingScript = "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1"
 
 if(!$ArtifactsPath) {
 	$ArtifactsPath = "$RepoRoot/.work/build"
@@ -51,10 +51,6 @@ try {
 		$serverProjectProperties = & "$projectPropertiesScript" -ProjectName "$serverName.csproj"
 		$platformOutputPath = "$OutputPath/nuget/$($serverDirectory.Name)/platform"
 		$wrapperOutputPath = "$OutputPath/nuget/$($serverDirectory.Name)/wrapper"
-		$packageIconPath = $serverProjectProperties.PackageIconPath
-		if (!$packageIconPath) {
-			$packageIconPath = "$RepoRoot/eng/images/microsofticon.png"
-		}
 
 		New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
 		New-Item -ItemType Directory -Force -Path $wrapperOutputPath | Out-Null
@@ -98,13 +94,10 @@ try {
             -replace "__CommitSHA__", $CommitSha `
             -replace "__TargetFramework__", $sharedProjectProperties.TargetFramework |
             Set-Content -Path $wrapperToolNuspec
-
-        & $readMeProcessingScript -InputReadMePath "$serverDirectory/README.md" `
-            -OutputDirectory $tempNugetWrapperDir -PackageType "nuget" -InsertPayload @{ ToolTitle = '.NET Tool' }
-
+        Copy-Item -Path "$nuspecSourcePath/README.md" -Destination $tempNugetWrapperDir -Force
 		Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempNugetWrapperDir -Force
 		Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempNugetWrapperDir -Force
-		Copy-Item -Path $packageIconPath -Destination $tempNugetWrapperDir -Force
+		Copy-Item -Path $azureIconPath -Destination $tempNugetWrapperDir -Force
 
 		# Build the project
 		foreach ($platformDirectory in $platformDirectories) {
@@ -116,9 +109,9 @@ try {
 			New-Item -ItemType Directory -Force -Path $platformToolDir | Out-Null
 
 			Copy-Item -Path "$platformDirectory/dist/*" -Destination $platformToolDir -Recurse -Force
+			Copy-Item -Path $azureIconPath -Destination $tempPlatformDir -Force
 			Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempPlatformDir -Force
 			Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempPlatformDir -Force
-			Copy-Item -Path $packageIconPath -Destination $tempPlatformDir -Force
 			$platformToolEntryPoint = (
 				Get-ChildItem -Path $platformToolDir -Filter "$($serverProjectProperties.CliName)*" -Recurse |
 				Where-Object { $_.PSIsContainer -eq $false -and ($_.Extension -eq ".exe" -or $_.Extension -eq "") } |
