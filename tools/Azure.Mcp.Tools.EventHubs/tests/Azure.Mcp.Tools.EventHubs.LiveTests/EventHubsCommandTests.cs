@@ -86,7 +86,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "namespace-name", Settings.ResourceBaseName }
+                { "namespace", Settings.ResourceBaseName }
             });
 
         // Should successfully retrieve the single namespace with detailed metadata
