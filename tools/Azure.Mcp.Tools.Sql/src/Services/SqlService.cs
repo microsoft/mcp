@@ -351,7 +351,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             throw;
         }
     }
-    /// Exports an Azure SQL Database to a BACPAC file in Azure Storage.
+    /// <summary>Exports an Azure SQL Database to a BACPAC file in Azure Storage.
     /// </summary>
     /// <param name="serverName">The name of the SQL server hosting the database</param>
     /// <param name="databaseName">The name of the database to export</param>
