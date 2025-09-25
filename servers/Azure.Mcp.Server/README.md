@@ -211,6 +211,8 @@ The Azure MCP Server supercharges your agents with Azure context. Here are some 
 * "List Event Grid subscriptions for topic 'my-topic' in subscription 'my-subscription'"
 * "List Event Grid Subscriptions in subscription 'my-subscription'"
 * "List Event Grid subscriptions for topic 'my-topic' in location 'my-location'"
+* "Publish an event with data '{\"name\": \"test\"}' to topic 'my-topic' using CloudEvents schema"
+* "Send custom event data to Event Grid topic 'analytics-events' with EventGrid schema"
 
 ### 🔑 Azure Key Vault
 
