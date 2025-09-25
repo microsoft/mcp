@@ -12,7 +12,7 @@ public class NetworkAcls
     public string? DefaultAction { get; set; }
 
     /// <summary> Gets or sets the collection of private endpoint configurations with their specific access rules. </summary>
-    public List<PrivateEndpoint>? PrivateEndpoints { get; set; }
+    public IList<PrivateEndpoint>? PrivateEndpoints { get; set; }
 
     /// <summary> Gets or sets the network access rules for public network connections. </summary>
     public PublicNetwork? PublicNetwork { get; set; }
@@ -24,10 +24,10 @@ public class NetworkAcls
 public class Network
 {
     /// <summary> Gets or sets the collection of allowed request types for public network access. </summary>
-    public IEnumerable<string>? Allow { get; set; }
+    public IList<string>? Allow { get; set; }
 
     /// <summary> Gets or sets the collection of denied request types for public network access. </summary>
-    public IEnumerable<string>? Deny { get; set; }
+    public IList<string>? Deny { get; set; }
 }
 
 /// <summary> Represents public network access rules. </summary>

@@ -151,7 +151,7 @@ public sealed class SignalRService(
                 Capacity = resource.Data?.Sku?.Capacity,
                 Name = resource.Data?.Sku?.Name,
                 Size = resource.Data?.Sku?.Size,
-                Tier = resource.Data?.Sku?.Tier.ToString(),
+                Tier = resource.Data?.Sku?.Tier.ToString()
             },
             Tags = resource.Data?.Tags.ToDictionary(kv => kv.Key, kv => kv.Value)
         };
@@ -168,8 +168,8 @@ public sealed class SignalRService(
         PublicNetwork? publicNetwork = null;
         if (networkAcls.PublicNetwork is not null)
         {
-            var allow = networkAcls.PublicNetwork.Allow?.Select(a => a.ToString());
-            var deny = networkAcls.PublicNetwork.Deny?.Select(d => d.ToString());
+            var allow = networkAcls.PublicNetwork.Allow?.Select(a => a.ToString()).ToList();
+            var deny = networkAcls.PublicNetwork.Deny?.Select(d => d.ToString()).ToList();
             if (allow != null || deny != null)
             {
                 publicNetwork = new PublicNetwork { Allow = allow, Deny = deny };
@@ -179,8 +179,8 @@ public sealed class SignalRService(
         var privateEndpoints = networkAcls.PrivateEndpoints?.Select(pe => new PrivateEndpoint
         {
             Name = pe.Name,
-            Allow = pe.Allow?.Select(a => a.ToString()),
-            Deny = pe.Deny?.Select(d => d.ToString())
+            Allow = pe.Allow?.Select(a => a.ToString()).ToList(),
+            Deny = pe.Deny?.Select(d => d.ToString()).ToList()
         }).ToList();
 
         return new NetworkAcls

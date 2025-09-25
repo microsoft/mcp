@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.SignalR.Commands.Runtime;
 using Azure.Mcp.Tools.SignalR.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.SignalR;
 
