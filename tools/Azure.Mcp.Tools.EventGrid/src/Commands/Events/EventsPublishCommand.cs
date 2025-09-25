@@ -70,7 +70,7 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         {
             var normalizedSchema = eventSchema.Trim().ToLowerInvariant().Replace(" ", "");
             var supportedSchemas = new[] { "cloudevents", "eventgrid", "custom" };
-            
+
             if (!supportedSchemas.Contains(normalizedSchema))
             {
                 result.IsValid = false;
