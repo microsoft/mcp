@@ -18,4 +18,13 @@ public interface IEventGridService
         string? location = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<EventPublishResult> PublishEventAsync(
+        string subscription,
+        string? resourceGroup,
+        string topicName,
+        string eventData,
+        string? eventSchema = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
 }

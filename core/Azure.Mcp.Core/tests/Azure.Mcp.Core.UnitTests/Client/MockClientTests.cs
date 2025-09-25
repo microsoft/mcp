@@ -180,6 +180,45 @@ public class MockClientTests
             });
     }
 
+    [Fact]
+    public async Task Invoke_Invalid_Tool_Returns_Error()
+    {
+        await Invoke_Request_To_Server(
+            method: "tools/call",
+            new ServerCapabilities
+            {
+                Tools = new()
+                {
+                    CallToolHandler = (request, ct) =>
+                    {
+                        // Simulate the behavior when an invalid tool is called
+                        return ValueTask.FromResult(new CallToolResult
+                        {
+                            Content = [new TextContentBlock { Text = $"The tool {request.Params?.Name} was not found" }],
+                            IsError = true
+                        });
+                    },
+                    ListToolsHandler = (request, ct) => throw new NotImplementedException(),
+                }
+            },
+            requestParams: JsonSerializer.SerializeToNode(new
+            {
+                name = "non_existent_tool",
+                arguments = new { }
+            }),
+            configureOptions: null,
+            assertResult: response =>
+            {
+                var result = JsonSerializer.Deserialize<CallToolResult>(response);
+                Assert.NotNull(result);
+                Assert.True(result.IsError, "Expected error response for non-existent tool");
+                Assert.NotEmpty(result.Content);
+
+                var textContent = Assert.IsType<TextContentBlock>(result.Content[0]);
+                Assert.Contains("The tool non_existent_tool was not found", textContent.Text);
+            });
+    }
+
 
     private async Task Invoke_Request_To_Server(string method, ServerCapabilities? serverCapabilities, Action<McpServerOptions>? configureOptions, Action<JsonNode?> assertResult)
     {
