@@ -106,4 +106,4 @@ foreach($line in $readMeText) {
         AppendLine -Line $lineToAppend
     }
 }
-Set-Content -Path "$OutputDirectory/README$PackageType.md" -Value $processedReadMe -Force
+Set-Content -Path "$OutputDirectory/README.md" -Value $processedReadMe -Force

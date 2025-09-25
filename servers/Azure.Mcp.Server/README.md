@@ -45,8 +45,8 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 
 ## Table of Contents
 - [Overview](#overview)
-- [Installation](#installation)
-  - [Prerequisites](#prerequisites)
+- [Installation](#installation)<!-- remove-section: start vsix -->
+  - [Prerequisites](#prerequisites)<!-- remove-section: end -->
   - [Configuration](#configuration)<!-- remove-section: start nuget;vsix;npm -->
   - [Package Managers](#package-managers)
     - [NuGet](#nuget)
@@ -68,17 +68,19 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 **Azure MCP Server** supercharges your agents with Azure context across **30+ different Azure services**.
 
 # Installation
+<!-- insert-section: vsix {{- Install the [Azure MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server)}} -->
 
+<!-- remove-section: start vsix -->
 ## Prerequisites
 Before you begin, ensure you have:
 - An active Azure subscription
 - A supported IDE with the GitHub Copilot extension / plugin installed.
 
-  - **Visual Studio Code<!-- remove-section: start vsix --> (Recommended)<!-- remove-section: end -->**
+  - **Visual Studio Code (Recommended)**
     - Install either the [Stable](https://code.visualstudio.com/download) or [Insiders](https://code.visualstudio.com/insiders) release of VS Code
     - Install the [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions
 
-  <!-- remove-section: start vsix;nuget;npm -->
+  <!-- remove-section: start nuget;npm -->
   - **Visual Studio 2022**
     - Install [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Has GitHub Copilot built in)
     - From within Visual Studio 2022 install [GitHub Copilot for Azure (VS 2022)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022):
@@ -88,29 +90,29 @@ Before you begin, ensure you have:
       4. Click `Install`
   <!-- remove-section: end -->
 
-  <!-- remove-section: start vsix -->
   - **IntelliJ IDEA**
     - Install either the [IntelliJ IDEA Ultimate](https://www.jetbrains.com/idea/download) or [IntelliJ IDEA Community](https://www.jetbrains.com/idea/download) edition.
     - Install the [GitHub Copilot](https://plugins.jetbrains.com/plugin/17718-github-copilot) plugin.
-  <!-- remove-section: end -->
 
-<!-- remove-section: start npm;vsix -->
+<!-- remove-section: start npm -->
 - To use Azure MCP server from .NET, you must have [.NET 10 Preview 6 or later](https://dotnet.microsoft.com/download/dotnet/10.0) installed. This version of .NET adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
 To verify your .NET version, run the following command in your terminal: `dotnet --info`
 <!-- remove-section: end -->
-<!-- remove-section: start nuget;vsix -->
+<!-- remove-section: start nuget -->
 - To use Azure MCP server from node you must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
+<!-- remove-section: end -->
 <!-- remove-section: end -->
 
 ## Configuration
 
-You can configure the Azure MCP Server by installing the appropriate extension / plugin for your IDE<!-- remove-section: start nuget;vsix --> or editing the `mcp.json` file directly.<!-- remove-section: end -->
+<!-- remove-section: start vsix -->
+You can configure the Azure MCP Server by installing the appropriate extension / plugin for your IDE or editing the `mcp.json` file directly.
 - Installing the extension / plugin
 
-  - **Visual Studio Code<!-- remove-section: start nuget;vsix --> (Recommended)<!-- remove-section: end -->**
+  - **Visual Studio Code (Recommended)**
     - Install the [Azure MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server)
 
-  <!-- remove-section: start vsix;nuget;npm -->
+  <!-- remove-section: start nuget;npm -->
   - **Visual Studio 2022**
     - From within Visual Studio 2022 install [GitHub Copilot for Azure (VS 2022)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022):
       1. Go to `Extensions > Manage Extensions...`
@@ -119,24 +121,20 @@ You can configure the Azure MCP Server by installing the appropriate extension /
       4. Click `Install`
   <!-- remove-section: end -->
 
-  <!-- remove-section: start vsix -->
   - **IntelliJ IDEA**
     - Install the [Azure Toolkit for Intellij plugin](https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij)
-  <!-- remove-section: end -->
 
-<!-- remove-section: start vsix -->
 - Custom client configuration by updating the `mcp.json` file.
     <!-- remove-section: start nuget;npm --><details>
     <summary><b>Find mcp.json file for your IDE</b></summary><!-- remove-section: end -->
     <!-- insert-section: nuget;npm {{#### Find mcp.json file for your IDE}} -->
-    - Open GitHub Copilot in your IDE. `View > Chat` for VS code<!-- remove-section: start vsix -->, `Tools > GitHub Copilot > Open Chat` for IntelliJ IDEA<!-- remove-section: end -->
+    - Open GitHub Copilot in your IDE. `View > Chat` for VS code, `Tools > GitHub Copilot > Open Chat` for IntelliJ IDEA
     - Switch to Agent Mode then click on the Tools Configuration button
   
     ![VSCode](../../eng/images/VisualStudioCodeUI.png)
     - Click on the button for configuring or adding tools
     <!-- remove-section: start nuget;npm --></details><!-- remove-section: end -->
-    <!-- remove-section: end -->
-    <!-- remove-section: start vsix;npm -->
+    <!-- remove-section: start npm -->
     <!-- remove-section: start nuget --><details>
     <summary><b>Configure Azure MCP Server using .NET Tool</b></summary><!-- remove-section: end -->
     <!-- insert-section: nuget {{#### Configure Azure MCP Server in mcp.json}} -->
@@ -185,7 +183,7 @@ You can configure the Azure MCP Server by installing the appropriate extension /
     ```
     <!-- remove-section: start nuget --></details><!-- remove-section: end -->
     <!-- remove-section: end -->
-    <!-- remove-section: start vsix;nuget -->
+    <!-- remove-section: start nuget -->
     <!-- remove-section: start npm --><details>
     <summary><b>Configure Azure MCP Server using node tool</b></summary><!-- remove-section: end -->
     <!-- insert-section: npm {{#### Configure Azure MCP Server in mcp.json}} -->
@@ -222,6 +220,7 @@ You can configure the Azure MCP Server by installing the appropriate extension /
     }
     ```
 <!-- remove-section: start npm --></details><!-- remove-section: end -->
+<!-- remove-section: end -->
 <!-- remove-section: end -->
 <!-- remove-section: start npm;nuget;vsix --><details>
 <summary><b>Start (or Auto-Start) the MCP Server</b></summary><!-- remove-section: end -->
