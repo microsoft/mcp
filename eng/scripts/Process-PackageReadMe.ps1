@@ -53,15 +53,17 @@ foreach($line in $readMeText) {
         # e.g. <!-- remove-section: start nuget;vsix -->
         if ($lineInProcess -match "(?i)<!--\s*remove-section:\s*start\s+([^>]+?)\s*-->") {
             $action = $actionStack.Peek()
+            $matchIdx = $lineInProcess.IndexOf($matches[0])
+            if ($action -eq [ActionType]::Append) {
+                $lineToAppend += $lineInProcess.Substring(0, $matchIdx)
+            }
+            $lineInProcess = $lineInProcess.Substring($matchIdx + $matches[0].Length)
             $pkgTypeInfo = $matches[1]
             $pkgTypes = $pkgTypeInfo -split ';'
             if ($pkgTypes -contains $PackageType) {
                 $action = [ActionType]::Skip
             }
             $actionStack.Push($action)
-            $matchIdx = $lineInProcess.IndexOf($matches[0])
-            $lineToAppend += $lineInProcess.Substring(0, $matchIdx)
-            $lineInProcess = $lineInProcess.Substring($matchIdx + $matches[0].Length)
             continue
         }
 
@@ -76,13 +78,15 @@ foreach($line in $readMeText) {
             $actionStack.Pop() | Out-Null
             continue
         }
-        $lineToAppend += $lineInProcess
+        if ($actionStack.Peek() -eq [ActionType]::Append) {
+            $lineToAppend += $lineInProcess
+        }
         break
     }
 
-    # insert-chunk: start marks chunk insertion for the package type
-    # e.g. <!-- insert-section: nuget;vsix;npm {{ToolTitle}} -->
-    # ToolTitle will be inserted from the InsertPayload hashtable
+    ## insert-chunk: start marks chunk insertion for the package type
+    ## e.g. <!-- insert-section: nuget;vsix;npm {{ToolTitle}} -->
+    ## ToolTitle will be inserted from the InsertPayload hashtable
     $insertSectionPattern = "(?i)<!--\s*insert-section:\s+([^{}]+?)\s*\{\{([\s\S]*?)\}\}\s*-->"
     $matches = [regex]::Matches($lineToAppend, $insertSectionPattern)
 
@@ -98,7 +102,7 @@ foreach($line in $readMeText) {
         }
     }
 
-    if ($actionStack.Peek() -eq [ActionType]::Append) {
+    if (-not [string]::IsNullOrWhiteSpace($lineToAppend)) {
         AppendLine -Line $lineToAppend
     }
 }

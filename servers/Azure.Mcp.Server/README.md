@@ -37,7 +37,7 @@ Remember to wrap each annotation in markdown comments
 -->
 # <!-- remove-section: start nuget;vsix --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end -->Azure MCP Server <!-- insert-section: nuget;vsix;npm {{ToolTitle}} -->
 
-All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the GitHub Copilot for Azure extension in a supported IDE. This project is in Public Preview and implementation may significantly change prior to our General Availability.
+All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the GitHub Copilot for Azure extension in a supported IDE. <!-- remove-section: start nuget;vsix;npm -->This project is in Public Preview and implementation may significantly change prior to our General Availability.<!-- remove-section: end -->
 
 <!-- remove-section: start nuget;vsix;npm -->
 [![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Azure_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Azure_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-Install_Azure_MCP_Server-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022)
@@ -47,13 +47,11 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 - [Overview](#overview)
 - [Installation](#installation)
   - [Prerequisites](#prerequisites)
-  - [Configuration](#configuration)
-<!-- remove-section: start nuget;vsix;npm -->
-  - [Package Managers](#package-managers) 
-      - [NuGet](#nuget)
-      - [NPM](#npm)
-      - [Docker](#docker)
-<!-- remove-section: end -->
+  - [Configuration](#configuration)<!-- remove-section: start nuget;vsix;npm -->
+  - [Package Managers](#package-managers)
+    - [NuGet](#nuget)
+    - [NPM](#npm)
+    - [Docker](#docker)<!-- remove-section: end -->
 - [Usage](#usage)
   - [Getting Started](#getting-started)
   - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
@@ -76,7 +74,7 @@ Before you begin, ensure you have:
 - An active Azure subscription
 - A supported IDE with the GitHub Copilot extension / plugin installed.
 
-  - **Visual Studio Code (Recommended)**
+  - **Visual Studio Code<!-- remove-section: start vsix --> (Recommended)<!-- remove-section: end -->**
     - Install either the [Stable](https://code.visualstudio.com/download) or [Insiders](https://code.visualstudio.com/insiders) release of VS Code
     - Install the [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions
 
@@ -106,10 +104,10 @@ To verify your .NET version, run the following command in your terminal: `dotnet
 
 ## Configuration
 
-You can configure the Azure MCP Server by installing the appropriate extension / plugin for your IDE or editing the `mcp.json` file directly.
+You can configure the Azure MCP Server by installing the appropriate extension / plugin for your IDE<!-- remove-section: start nuget;vsix --> or editing the `mcp.json` file directly.<!-- remove-section: end -->
 - Installing the extension / plugin
 
-  - **Visual Studio Code (Recommended)**
+  - **Visual Studio Code<!-- remove-section: start nuget;vsix --> (Recommended)<!-- remove-section: end -->**
     - Install the [Azure MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server)
 
   <!-- remove-section: start vsix;nuget;npm -->
@@ -223,20 +221,20 @@ You can configure the Azure MCP Server by installing the appropriate extension /
       }
     }
     ```
-    <!-- remove-section: start npm --></details><!-- remove-section: end -->
-    <!-- remove-section: end -->
-    <!-- remove-section: start npm;nuget;vsix --><details>
-    <summary><b>Start (or Auto-Start) the MCP Server</b></summary><!-- remove-section: end -->
-    <!-- insert-section: npm;nuget;vsix {{#### Start (or Auto-Start) the MCP Server}} -->
+<!-- remove-section: start npm --></details><!-- remove-section: end -->
+<!-- remove-section: end -->
+<!-- remove-section: start npm;nuget;vsix --><details>
+<summary><b>Start (or Auto-Start) the MCP Server</b></summary><!-- remove-section: end -->
+<!-- insert-section: npm;nuget;vsix {{#### Start (or Auto-Start) the MCP Server}} -->
 
-    | | Enable Auto-Start | | Manual Start (if autostart is off) |
-    | -- | -- | -- | -- |
-    | 1| Open Settings in VS Code | 1| Open Command Palette (Ctrl+Shift+P / Cmd+Shift+P). |
-    | 2| Search for `chat.mcp.autostart` | 2| Run MCP: List Servers.![List Servers](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ListServers.png) |
-    | 3| Select **newAndOutdated** to automatically start MCP servers without manual refresh. | 3| Select Azure MCP Server ext, then click Start Server.![Select Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/SelectServer.png)![Start Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/StartServer.png) |
-    | 4| You can also set this from the refresh icon tooltip in the Chat view, which also shows which servers will auto-start.![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ToolTip.png) | 4| Confirm its runing by observing the log messages in the output tab. ![Output](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/Output.png)|
+| | Enable Auto-Start | | Manual Start (if autostart is off) |
+| -- | -- | -- | -- |
+| 1| Open Settings in VS Code | 1| Open Command Palette (Ctrl+Shift+P / Cmd+Shift+P). |
+| 2| Search for `chat.mcp.autostart` | 2| Run MCP: List Servers.![List Servers](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ListServers.png) |
+| 3| Select **newAndOutdated** to automatically start MCP servers without manual refresh. | 3| Select Azure MCP Server ext, then click Start Server.![Select Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/SelectServer.png)![Start Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/StartServer.png) |
+| 4| You can also set this from the refresh icon tooltip in the Chat view, which also shows which servers will auto-start.![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ToolTip.png) | 4| Confirm its runing by observing the log messages in the output tab. ![Output](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/Output.png)|
 
-    <!-- remove-section: start npm;nuget;vsix --></details><!-- remove-section: end -->
+<!-- remove-section: start npm;nuget;vsix --></details><!-- remove-section: end -->
 
 <!-- remove-section: start npm;nuget;vsix -->
 ## <a id="package-managers"></a> Package Managers
