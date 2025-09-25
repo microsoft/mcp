@@ -2,15 +2,11 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.8.2 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
+## 0.8.2 (2025-09-25)
 
 ### Bugs Fixed
 
-### Other Changes
+- Fixed `azmcp_subscription_list` to return empty enumerable instead of `null` when no subscriptions are found. [[#508](https://github.com/microsoft/mcp/pull/508)]
 
 ## 0.8.1 (2025-09-23)
 
