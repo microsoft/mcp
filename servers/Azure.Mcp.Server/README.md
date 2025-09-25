@@ -64,66 +64,74 @@ From within Visual Studio 2022 install [GitHub Copilot for Azure (VS 2022)](http
 
 ### <a id="nuget"></a> 🤖 NuGet
 
-Microsoft publishes an official Azure MCP Server .NET Tool on NuGet: [Azure.Mcp](https://www.nuget.org/packages/Azure.Mcp).
+Install the .NET Tool: [Azure.Mcp](https://www.nuget.org/packages/Azure.Mcp).
+
+```bash
+dotnet tool install --global Azure.Mcp
+```
 
 ### <a id="npm"></a> 📦 NPM
 
-Microsoft publishes an official Azure MCP Server npm package for Node.js: [@azure/mcp](https://www.npmjs.com/package/@azure/mcp).
+Install the Node.js package: [@azure/mcp](https://www.npmjs.com/package/@azure/mcp).
+
+```bash
+npm install -g @azure/mcp
+```
 
 ### <a id="docker"></a> 🐋 Docker
 
 Microsoft publishes an official Azure MCP Server Docker container on the [Microsoft Artifact Registry](https://mcr.microsoft.com/artifact/mar/azure-sdk/azure-mcp).
 
 <details>
-<summary>For a step-by-step Docker installation, follow these instructions:</summary>
+<summary>Docker setup instructions</summary>
 
-1. Create an `.env` file with environment variables that [match one of the `EnvironmentCredential`](https://learn.microsoft.com/dotnet/api/azure.identity.environmentcredential) sets.  For example, a `.env` file using a service principal could look like:
+1. Create a `.env` file with Azure credentials ([see EnvironmentCredential options](https://learn.microsoft.com/dotnet/api/azure.identity.environmentcredential)):
 
-    ```bash
-    AZURE_TENANT_ID={YOUR_AZURE_TENANT_ID}
-    AZURE_CLIENT_ID={YOUR_AZURE_CLIENT_ID}
-    AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
-    ```
+```bash
+   AZURE_TENANT_ID={YOUR_AZURE_TENANT_ID}
+   AZURE_CLIENT_ID={YOUR_AZURE_CLIENT_ID}
+   AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
+```
 
-2. Add `.vscode/mcp.json` or update existing MCP configuration. Replace `/full/path/to/.env` with a path to your `.env` file.
+2. Configure your MCP client with the Docker command:
 
-    ```json
-    {
+```json
+   {
       "servers": {
-        "Azure MCP Server": {
-          "command": "docker",
-          "args": [
-            "run",
-            "-i",
-            "--rm",
-            "--env-file",
-            "/full/path/to/.env",
-            "mcr.microsoft.com/azure-sdk/azure-mcp:latest",
-          ]
-        }
+         "Azure MCP Server": {
+            "command": "docker",
+            "args": [
+               "run",
+               "-i",
+               "--rm",
+               "--env-file",
+               "/full/path/to/.env",
+               "mcr.microsoft.com/azure-sdk/azure-mcp:latest"
+            ]
+         }
       }
-    }
-    ```
-
-Optionally, use `--env` or `--volume` to pass authentication values.
+   }
+```
+   
+Replace `/full/path/to/.env` with your actual .env file path. Alternatively, use individual `--env` flags or `--volume` mounts for credentials.
 </details>
 
 ## <a id="custom-clients"></a> 🤖 Custom Clients
 
-You can easily configure your MCP client to use the Azure MCP Server. 
+For IDEs or package managers not yet directly supported, you can integrate Azure MCP Server manually.
 
 <details>
-<summary>Have your client run the following command and access it via standard IO:</summary>
+<summary>Manual setup instructions</summary>
+
+Run the server directly:
 
 ```bash
-npx -y @azure/mcp@latest server start
+    npx -y @azure/mcp@latest server start
 ```
 
-For example, add the following `mcp.json` to VS Code.  Other clients will look similar, but may be structured slightly different.  Consult the documentation of the custom client for details.
+Or configure via `mcp.json` (VS Code example - adapt structure for your IDE):
 
-1. Example `mcp.json`:
-
-    ```json
+```json
     {
       "servers": {
         "Azure MCP Server": {
@@ -137,7 +145,7 @@ For example, add the following `mcp.json` to VS Code.  Other clients will look s
         }
       }
     }
-    ```
+```
 </details>
 
 # <a id="usage"></a> Usage
