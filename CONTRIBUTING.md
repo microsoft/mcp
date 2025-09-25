@@ -195,7 +195,7 @@ Update your mcp.json to point to the locally built azmcp executable:
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }
@@ -216,7 +216,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }
@@ -230,7 +230,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start", "--namespace", "storage", "--namespace", "keyvault"]
     }
   }
@@ -244,7 +244,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start", "--mode", "namespace"]
     }
   }
@@ -258,7 +258,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start", "--mode", "single"]
     }
   }
@@ -272,7 +272,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start", "--namespace", "storage", "--namespace", "keyvault", "--mode", "namespace"]
     }
   }
@@ -603,6 +603,11 @@ Please see our [support](https://github.com/microsoft/mcp/blob/main/SUPPORT.md) 
 We're building this in the open.  Your feedback is much appreciated, and will help us shape the future of the Azure MCP server.
 
 👉 [Open an issue in the public repository](https://github.com/microsoft/mcp/issues/new/choose).
+📨 [Send us an email](mailto:azmcp@microsoft.com)
+
+If you're a Microsoft employee, you can also reach out to us by making a post on the Azure MCP Server [General](https://teams.microsoft.com/l/channel/19%3AJwo_T5Rls-7KVRFup69ij9R4CoBCqtVuV3_TC7JwfRM1%40thread.tacv2/General?groupId=256e3336-e328-4683-a24a-7a36c8a123fc&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47) channel on Microsoft Teams.
+
+🤝 [Join us on Microsoft Teams (employees only)](https://teams.microsoft.com/l/team/19%3AJwo_T5Rls-7KVRFup69ij9R4CoBCqtVuV3_TC7JwfRM1%40thread.tacv2/conversations?groupId=256e3336-e328-4683-a24a-7a36c8a123fc&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47)
 
 ### Additional Resources
 
