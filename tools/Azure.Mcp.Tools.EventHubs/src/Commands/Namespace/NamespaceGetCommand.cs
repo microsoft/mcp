@@ -87,7 +87,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
                     options.RetryPolicy);
 
                 context.Response.Results = namespaceDetails != null
-                    ? ResponseResult.Create(new NamespaceGetSingleCommandResult(namespaceDetails), EventHubsJsonContext.Default.NamespaceGetSingleCommandResult)
+                    ? ResponseResult.Create(new(namespaceDetails), EventHubsJsonContext.Default.NamespaceGetSingleCommandResult)
                     : null;
             }
             else
