@@ -207,35 +207,35 @@ public class FoundryService(
 
             // Prepare data for the deployment
             ResourceIdentifier deploymentId = new ResourceIdentifier($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.CognitiveServices/accounts/{azureAiServicesName}/deployments/{deploymentName}");
-            var deploymentData = new Azure.ResourceManager.CognitiveServices.CognitiveServicesAccountDeploymentData
+            var deploymentData = new Models.CognitiveServicesAccountDeploymentData
             {
-                Properties = new Azure.ResourceManager.CognitiveServices.Models.CognitiveServicesAccountDeploymentProperties
+                Properties = new Models.CognitiveServicesAccountDeploymentProperties
                 {
-                    Model = new Azure.ResourceManager.CognitiveServices.Models.CognitiveServicesAccountDeploymentModel
+                    Model = new Models.CognitiveServicesAccountDeploymentModel
                     {
                         Format = modelFormat,
                         Name = modelName,
                         Version = modelVersion,
                         Source = string.IsNullOrEmpty(modelSource) ? null : modelSource
                     },
-                    ScaleSettings = string.IsNullOrEmpty(scaleType) ? null : new Azure.ResourceManager.CognitiveServices.Models.CognitiveServicesAccountDeploymentScaleSettings
+                    ScaleSettings = string.IsNullOrEmpty(scaleType) ? null : new Models.CognitiveServicesAccountDeploymentScaleSettings
                     {
                         ScaleType = scaleType,
                         Capacity = scaleCapacity
                     }
                 },
-                Sku = string.IsNullOrEmpty(skuName) ? null : new Azure.ResourceManager.CognitiveServices.Models.CognitiveServicesSku(skuName)
+                Sku = string.IsNullOrEmpty(skuName) ? null : new Models.CognitiveServicesSku
                 {
                     Capacity = skuCapacity
                 }
             };
 
-            var result = await CreateOrUpdateGenericResourceAsync<Azure.ResourceManager.CognitiveServices.CognitiveServicesAccountDeploymentData>(
+            var result = await CreateOrUpdateGenericResourceAsync<Models.CognitiveServicesAccountDeploymentData>(
                 armClient,
                 deploymentId,
                 cognitiveServicesAccount.Data.Location,
                 deploymentData,
-                null!);
+                FoundryJsonContext.Default.CognitiveServicesAccountDeploymentData);
             if (!result.HasData)
             {
                 return new ModelDeploymentResult
@@ -625,7 +625,7 @@ public class FoundryService(
 
             var result = await evaluator.EvaluateAsync(
                 loadedQuery ?? [],
-                new ChatResponse(loadedAgentResponse?.FirstOrDefault() ?? new Microsoft.Extensions.AI.ChatMessage(ChatRole.Assistant, "")),
+                new ChatResponse(loadedAgentResponse),
                 new ChatConfiguration(azureOpenAIChatClient),
                 evaluationContext);
 

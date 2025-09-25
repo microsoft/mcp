@@ -32,7 +32,7 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 [JsonSerializable(typeof(CognitiveServicesSku))]
 [JsonSerializable(typeof(CognitiveServicesAccountDeploymentProperties))]
 [JsonSerializable(typeof(AgentsQueryAndEvaluateCommand.AgentsQueryAndEvaluateCommandResult))]
-[JsonSerializable(typeof(List<Microsoft.Extensions.AI.ChatMessage>))]
+[JsonSerializable(typeof(List<ChatMessage>))]
 [JsonSerializable(typeof(EvaluationResult))]
 [JsonSerializable(typeof(AgentsEvaluateCommand.AgentsEvaluateCommandResult))]
 [JsonSerializable(typeof(AgentsConnectResult))]
