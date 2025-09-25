@@ -4,10 +4,10 @@
       "linux": {"OSVmImage": "env:LINUXVMIMAGE", "Pool": "env:LINUXPOOL"},
       "osx": {"OSVmImage": "env:MACVMIMAGE","Pool": "env:MACPOOL"},
       "win": {"OSVmImage": "env:WINDOWSVMIMAGE", "Pool": "env:WINDOWSPOOL"}
-   },
-   "Architecture": {
-      "x64": {"Architecture": "x64", "RunTests": "true" },
-      "arm64": {"Architecture": "arm64", "RunTests": "false"}
+    },
+    "Architecture": {
+      "x64": {"Architecture": "x64", "RunTests": "true", "BuildNative": "true" },
+      "arm64": {"Architecture": "arm64", "RunTests": "false", "BuildNative": "true" }
     }
   }
 }

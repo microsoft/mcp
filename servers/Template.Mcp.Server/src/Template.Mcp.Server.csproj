@@ -5,6 +5,7 @@
     <AssemblyTitle>Template MCP Server</AssemblyTitle>
     <Description>Template MCP Server - Basic Model Context Protocol implementation</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Template.Mcp.Server#readme</ReadmeUrl>
+    <ReadmePath>$(RepoRoot)/servers/Template.Mcp.Server/README.md</ReadmePath>
     <NpmPackageName>@azure/mcp-template</NpmPackageName>
     <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>
     <PackageId>Microsoft.Template.Mcp</PackageId>

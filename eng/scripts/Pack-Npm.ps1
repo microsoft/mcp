@@ -4,10 +4,13 @@
 [CmdletBinding()]
 param(
     [string] $ArtifactsPath,
+    [string] $BuildInfoPath,
     [string] $OutputPath,
-    [switch] $UsePaths
+    [switch] $UsePaths,
+    [switch] $IgnoreMissingArtifacts # When running locally, ignore missing artifacts instead of failing
 )
 
+$ErrorActionPreference = "Stop"
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
@@ -18,114 +21,203 @@ if(!$ArtifactsPath) {
     $ArtifactsPath = "$RepoRoot/.work/build"
 }
 
-if(!$OutputPath) {
-    $OutputPath = "$RepoRoot/.work/package"
-}
-
 if(!(Test-Path $ArtifactsPath)) {
     Write-Error "Artifacts path $ArtifactsPath does not exist."
     return
 }
 
+if(!$BuildInfoPath) {
+    $BuildInfoPath = "$RepoRoot/.work/build_info.json"
+    if(!(Test-Path $BuildInfoPath)) {
+        & "$PSScriptRoot/New-BuildInfo.ps1" -PublishTarget none -BuildId 12345 -OutputPath $BuildInfoPath
+    }
+} elseif (!(Test-Path $BuildInfoPath)) {
+    Write-Error "Build info file $BuildInfoPath does not exist."
+    return
+}
+
+if(!$OutputPath) {
+    $OutputPath = "$RepoRoot/.work/packages_npm"
+}
+
+# Clear the output directory
+Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+
 $tempFolder = "$RepoRoot/.work/temp"
 
-Push-Location $RepoRoot
-try {
-    # Clear and recreate the output directory
-    Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
-
-    $wrapperJsonFiles = Get-ChildItem -Path $ArtifactsPath -Filter "wrapper.json" -Recurse
-    foreach($wrapperJsonFile in $wrapperJsonFiles) {
-        $serverDirectory = $wrapperJsonFile.Directory
-        $serverName = $serverDirectory.Name
-        $platformOutputPath = "$OutputPath/npm/$serverName/platform"
-        $wrapperOutputPath = "$OutputPath/npm/$serverName/wrapper"
-
-        New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
-        New-Item -ItemType Directory -Force -Path $wrapperOutputPath | Out-Null
-
-        $wrapperPackageJson = Get-Content $wrapperJsonFile -Raw | ConvertFrom-Json -AsHashtable
-
-        $platformDirectories = Get-ChildItem -Path $serverDirectory -Directory
-
-        # Build the project
-        foreach ($platformDirectory in $platformDirectories) {
-            Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
-            Copy-Item -Path $platformDirectory -Destination $tempFolder -Recurse -Force
-            Copy-Item -Path "$platformSourcePath/*" -Destination $tempFolder -Force
-            Write-Host "Copied platform script files into $tempFolder"
-
-            # Remove symbols files before packing
-            Get-ChildItem -Path $tempFolder -Recurse -Include "*.pdb", "*.dSYM", "*.dbg" | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
-
-            $platformFile = "$tempFolder/package.json"
-            $platformPackageJson = Get-Content $platformFile -Raw | ConvertFrom-Json -AsHashtable
-
-            if ($platformPackageJson.version -ne $wrapperPackageJson.version) {
-                Write-Error "Version mismatch in $platformFile. Expected $($wrapperPackageJson.version), found $($platformPackageJson.version)"
-                return
-            }
-
-            $os = $platformPackageJson.os[0]
-            $cpu = $platformPackageJson.cpu[0]
-            $binPath = $platformPackageJson.bin.Values[0]
-
-            if($wrapperPackageJson.os -notcontains $os) {
-                $wrapperPackageJson.os += $os
-            }
-
-            if($wrapperPackageJson.cpu -notcontains $cpu) {
-                $wrapperPackageJson.cpu += $cpu
-            }
-
-            if (!$IsWindows) {
-                Write-Host "Setting executable permissions for $tempFolder/index.js" -ForegroundColor Yellow
-                Invoke-LoggedCommand "chmod +x `"$tempFolder/index.js`""
-
-                if ($os -ne 'win32') {
-                    Write-Host "Setting executable permissions for $tempFolder/$binPath" -ForegroundColor Yellow
-                    Invoke-LoggedCommand "chmod +x `"$tempFolder/$binPath`""
-                }
-            }
-            else {
-                Write-Warning "Executable permissions are not set when packing on a Windows agent."
-            }
-
-            Copy-Item -Path "$serverDirectory/README.md" -Destination $tempFolder -Force
-            Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
-            Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempFolder -Force
-            Write-Host "Copied README.md, NOTICE.txt and LICENSE to $tempFolder"
-
-            Write-Host "Packaging $tempFolder into $platformOutputPath"
-            Invoke-LoggedCommand "npm pack $tempFolder --pack-destination '$platformOutputPath'" -GroupOutput | Tee-Object -Variable fileName
-            Write-Host "Package location: $platformOutputPath/$fileName" -ForegroundColor Yellow
-
-            if ($UsePaths) {
-                $wrapperPackageJson.optionalDependencies[$platformPackageJson.name] = "file://$((Resolve-Path "$platformOutputPath/$fileName").Path.Replace('\', '/'))"
-            } else {
-                $wrapperPackageJson.optionalDependencies[$platformPackageJson.name] = $platformPackageJson.version
-            }
+function BuildServerPackages([hashtable] $server, [bool] $native) {
+    $serverDirectory = "$ArtifactsPath/$($server.artifactPath)"
+    if(!(Test-Path $serverDirectory)) {
+        if ($IgnoreMissingArtifacts) {
+            Write-Warning "Server directory $serverDirectory does not exist."
+            continue
         }
 
+        Write-Error "Server directory $serverDirectory does not exist."
+        return
+    }
+
+
+    $serverOutputPath = "$OutputPath/$($server.artifactPath)"
+
+    $wrapperOutputPath = "$serverOutputPath/wrapper"
+    New-Item -ItemType Directory -Force -Path $wrapperOutputPath | Out-Null
+
+    $platformOutputPath = "$serverOutputPath/platform"
+    New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
+
+    $packageName = $server.npmPackageName
+    $description = $server.npmDescription ? $server.npmDescription : $server.description
+    $cliName = $server.cliName
+    $keywords = @($server.npmPackageKeywords)
+
+    if ($native) {
+        $packageName += "-native"
+        $description += " with native dependencies"
+        $keywords += "native"
+    }
+
+    $wrapperPackage = [ordered]@{
+        name = $packageName
+        version = $server.version
+        description = $description
+        author = 'Microsoft'
+        homepage = $server.readmeUrl
+        license = 'MIT'
+        keywords = $keywords
+        bugs = @{ url = "https://github.com/microsoft/mcp/issues" }
+        repository = @{ type = 'git'; url = 'https://github.com/microsoft/mcp.git' }
+        engines = @{ node = '>=20.0.0' }
+        bin = @{ $cliName = './index.js' }
+        os = @()
+        cpu = @()
+        optionalDependencies = @{}
+        scripts = @{ postinstall = "node ./scripts/post-install-script.js" }
+    }
+
+    # Build the project
+    foreach ($platform in $server.platforms) {
+        $platformDirectory = "$ArtifactsPath/$($platform.artifactPath)"
+        if(!(Test-Path $platformDirectory)) {
+            if ($IgnoreMissingArtifacts) {
+                Write-Warning "Platform directory $platformDirectory does not exist."
+                continue
+            }
+
+            Write-Error "Platform directory $platformDirectory does not exist."
+            return
+        }
+
+        $nodeOs = $platform.nodeOs
+        $arch = $platform.architecture
+        $platformPackageName = "$packageName-$nodeOs-$arch"
+
+        $extension = $platform.extension
+        $binPath = "./dist/$cliName$extension"
+
         Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
-        Copy-Item -Path $wrapperSourcePath -Destination $tempFolder -Recurse -Force
-        Write-Host "Copied wrapper script files into $tempFolder"
+        New-Item -ItemType Directory -Force -Path $tempFolder | Out-Null
+
+        Write-Host "Copying $packageName platform files from $platformDirectory to $tempFolder/dist"
+        Copy-Item -Path $platformDirectory -Destination "$tempFolder/dist" -Recurse -Force
+
+        Write-Host "Copying platform script files from $platformSourcePath to $tempFolder"
+        Copy-Item -Path "$platformSourcePath/*" -Destination $tempFolder -Force
+
+        # Remove symbols files before packing
+        Write-Host "Removing symbol files from $tempFolder"
+        Get-ChildItem -Path $tempFolder -Recurse -Include "*.pdb", "*.dSYM", "*.dbg" | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+
+        $platformPackage = [ordered]@{
+            name = $platformPackageName
+            version = $server.version
+            description = "$description, for $nodeOs on $arch"
+            author = 'Microsoft'
+            homepage = $server.readmeUrl
+            license = 'MIT'
+            keywords = $keywords
+            bugs = @{ url = "https://github.com/microsoft/mcp/issues" }
+            repository = @{ type = 'git'; url = 'https://github.com/microsoft/mcp.git' }
+            engines = @{ node = '>=20.0.0' }
+            main = './index.js'
+            bin = @{ "$cliName-$nodeOs-$arch" = "./$binPath" }
+            os = @($nodeOs)
+            cpu = @($arch)
+        }
+
+        if($wrapperPackage.os -notcontains $nodeOs) {
+            $wrapperPackage.os += $nodeOs
+        }
+
+        if($wrapperPackage.cpu -notcontains $arch) {
+            $wrapperPackage.cpu += $arch
+        }
 
         if (!$IsWindows) {
             Write-Host "Setting executable permissions for $tempFolder/index.js" -ForegroundColor Yellow
             Invoke-LoggedCommand "chmod +x `"$tempFolder/index.js`""
+
+            if ($os -ne 'win32') {
+                Write-Host "Setting executable permissions for $tempFolder/$binPath" -ForegroundColor Yellow
+                Invoke-LoggedCommand "chmod +x `"$tempFolder/$binPath`""
+            }
+        }
+        else {
+            Write-Warning "Executable permissions are not set when packing on a Windows agent."
         }
 
-        $wrapperPackageJson | ConvertTo-Json -Depth 10 | Out-File -FilePath "$tempFolder/package.json" -Encoding utf8
-        Write-Host "Created package.json in $tempFolder"
+        $platformFile = "$tempFolder/package.json"
+        $platformPackageJson = $platformPackage | ConvertTo-Json -Depth 10
+        Write-Host "Writing $platformFile with contents:`n$platformPackageJson"
+        $platformPackageJson | Out-File -FilePath $platformFile -Encoding utf8 -Force
 
-        Copy-Item -Path "$serverDirectory/README.md" -Destination $tempFolder -Force
+        Write-Host "Copying README.md, NOTICE.txt and LICENSE to $tempFolder"
+        Copy-Item -Path "$RepoRoot/$($server.readmePath)" -Destination $tempFolder -Force
         Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
-        Write-Host "Copied README.md and LICENSE to $tempFolder"
+        Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempFolder -Force
 
-        Write-Host "Packaging $tempFolder into $wrapperOutputPath"
-        Invoke-LoggedCommand "npm pack $tempFolder --pack-destination '$wrapperOutputPath'" -GroupOutput | Tee-Object -Variable fileName
-        Write-Host "Package location: $wrapperOutputPath/$fileName" -ForegroundColor Yellow
+        Write-Host "Packaging $tempFolder into $platformOutputPath"
+        Invoke-LoggedCommand "npm pack $tempFolder --pack-destination '$platformOutputPath'" -GroupOutput | Tee-Object -Variable fileName
+        Write-Host "Package location: $platformOutputPath/$fileName" -ForegroundColor Yellow
+
+        if ($UsePaths) {
+            $wrapperPackage.optionalDependencies[$platformPackage.name] = "file://$((Resolve-Path "$platformOutputPath/$fileName").Path.Replace('\', '/'))"
+        } else {
+            $wrapperPackage.optionalDependencies[$platformPackage.name] = $platformPackage.version
+        }
+    }
+
+    Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+    Copy-Item -Path $wrapperSourcePath -Destination $tempFolder -Recurse -Force
+    Write-Host "Copied wrapper script files into $tempFolder"
+
+    if (!$IsWindows) {
+        Write-Host "Setting executable permissions for $tempFolder/index.js" -ForegroundColor Yellow
+        Invoke-LoggedCommand "chmod +x `"$tempFolder/index.js`""
+    }
+
+    $wrapperFile = "$tempFolder/package.json"
+    $wrapperPackageJson = $wrapperPackage | ConvertTo-Json -Depth 10
+    Write-Host "Writing $wrapperFile with contents:`n$wrapperPackageJson"
+    $wrapperPackageJson | Out-File -FilePath "$tempFolder/package.json" -Encoding utf8
+
+    Write-Host "Copying README.md and LICENSE to $tempFolder"
+    Copy-Item -Path "$RepoRoot/$($server.readmePath)" -Destination $tempFolder -Force
+    Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
+
+    Write-Host "Packaging $tempFolder into $wrapperOutputPath"
+    Invoke-LoggedCommand "npm pack $tempFolder --pack-destination '$wrapperOutputPath'" -GroupOutput | Tee-Object -Variable fileName
+    Write-Host "Package location: $wrapperOutputPath/$fileName" -ForegroundColor Yellow
+}
+
+Push-Location $RepoRoot
+try {
+    $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+    foreach($server in $buildInfo.servers) {
+        BuildServerPackages $server -native $false
+        if($server.platforms | Where-Object { $_.native }) {
+            BuildServerPackages $server -native $true
+        }
     }
 
     Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue

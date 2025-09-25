@@ -27,4 +27,3 @@ jobs:
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)/packed/npm
       ArtifactName: packages_npm
-      SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}

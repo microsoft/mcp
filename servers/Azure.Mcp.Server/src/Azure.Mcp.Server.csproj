@@ -5,13 +5,19 @@
     <AssemblyTitle>Azure MCP Server</AssemblyTitle>
     <Description>Azure MCP Server - Model Context Protocol implementation for Azure</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
+    <ReadmePath>$(RepoRoot)/servers/Azure.Mcp.Server/README.md</ReadmePath>
+    <!-- npm settings -->
     <NpmPackageName>@azure/mcp</NpmPackageName>
     <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>
+    <!-- docker settings -->
     <DockerImageName>azure-sdk/azure-mcp</DockerImageName>
-    <PackageId>Azure.Mcp</PackageId>
-    <ToolCommandName>$(CliName)</ToolCommandName>
+    <!-- dnx/nuget settings -->
+    <DnxPackageId>Azure.Mcp</DnxPackageId>
+    <DnxToolCommandName>$(CliName)</DnxToolCommandName>
+    <!-- vsix settings -->
+    <VsixPackagePrefix>vscode-azure-mcp</VsixPackagePrefix>
   </PropertyGroup>
-  
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AssemblyName>$(CliName)</AssemblyName>
