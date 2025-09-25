@@ -30,5 +30,5 @@ public class RuntimeProperties
     public int? ServerPort { get; set; }
 
     /// <summary> Upstream forwarding templates. </summary>
-    public List<UpstreamTemplate>? UpstreamTemplates { get; set; }
+    public IList<UpstreamTemplate>? UpstreamTemplates { get; set; }
 }
