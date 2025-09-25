@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.CommandLine.Parsing;
 using System.Net;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
@@ -55,6 +57,36 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         return options;
     }
 
+    public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
+    {
+        var result = base.Validate(commandResult, commandResponse);
+        if (!result.IsValid)
+        {
+            return result;
+        }
+
+        var eventSchema = commandResult.GetValueOrDefault(EventGridOptionDefinitions.EventSchema);
+        if (!string.IsNullOrEmpty(eventSchema))
+        {
+            var normalizedSchema = eventSchema.Trim().ToLowerInvariant().Replace(" ", "");
+            var supportedSchemas = new[] { "cloudevents", "eventgrid", "custom" };
+            
+            if (!supportedSchemas.Contains(normalizedSchema))
+            {
+                result.IsValid = false;
+                result.ErrorMessage = "Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom.";
+
+                if (commandResponse != null)
+                {
+                    commandResponse.Status = HttpStatusCode.BadRequest;
+                    commandResponse.Message = result.ErrorMessage;
+                }
+            }
+        }
+
+        return result;
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -63,13 +95,6 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         }
 
         var options = BindOptions(parseResult);
-
-        if (!string.IsNullOrEmpty(options.EventSchema) && !IsValidSchemaType(options.EventSchema))
-        {
-            context.Response.Status = HttpStatusCode.BadRequest;
-            context.Response.Message = "Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom.";
-            return context.Response;
-        }
 
         try
         {
@@ -116,13 +141,6 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         System.Text.Json.JsonException => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)
     };
-
-    private static bool IsValidSchemaType(string schema)
-    {
-        var normalizedSchema = schema.Trim().ToLowerInvariant().Replace(" ", "");
-        var supportedSchemas = new[] { "cloudevents", "eventgrid", "custom" };
-        return supportedSchemas.Contains(normalizedSchema);
-    }
 
     internal record EventGridPublishCommandResult(EventPublishResult Result);
 }
