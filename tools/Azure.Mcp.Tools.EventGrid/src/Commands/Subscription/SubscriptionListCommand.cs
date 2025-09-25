@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.EventGrid.Options;
 using Azure.Mcp.Tools.EventGrid.Options.Subscription;
@@ -9,7 +10,7 @@ using Azure.Mcp.Tools.EventGrid.Services;
 
 namespace Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 
-public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger) : BaseEventGridCommand<SubscriptionListOptions>
+public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> logger) : GlobalCommand<SubscriptionListOptions>
 {
     private const string CommandTitle = "List Event Grid Subscriptions";
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
@@ -37,17 +38,16 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         Secret = false
     };
 
-    protected override bool SubscriptionRequired => false;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.Subscription);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup);
         command.Options.Add(EventGridOptionDefinitions.TopicName);
         command.Options.Add(EventGridOptionDefinitions.Location);
         command.Validators.Add(commandResult =>
         {
-            var hasSubscription = HasSubscriptionAvailable(commandResult);
+            var hasSubscription = CommandHelper.HasSubscriptionAvailable(commandResult);
             var hasTopicOption = commandResult.HasOptionResult(EventGridOptionDefinitions.TopicName);
             var hasRg = commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup);
             var hasLocation = commandResult.HasOptionResult(EventGridOptionDefinitions.Location);
@@ -69,6 +69,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
     protected override SubscriptionListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
+        options.Subscription = CommandHelper.GetSubscription(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.TopicName = parseResult.GetValueOrDefault<string>(EventGridOptionDefinitions.TopicName.Name);
         options.Location = parseResult.GetValueOrDefault<string>(EventGridOptionDefinitions.Location.Name);
