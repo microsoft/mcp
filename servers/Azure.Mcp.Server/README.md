@@ -8,12 +8,12 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 ## Table of Contents
 - [Overview](#overview)
 - [Installation](#installation)
-    - [IDEs](#ides) 
+    - [IDE](#ide)
         - [VS Code (Recommended)](#vs-code-recommended)
         - [Visual Studio 2022](#visual-studio-2022)
         - [IntelliJ IDEA](#intellij-idea)
-        - [Other IDEs](#other-ides)
-    - [Package Managers](#package-managers) 
+        - [Additional IDEs](#additional-ides)
+    - [Package Manager](#package-manager)
         - [NuGet](#nuget)
         - [NPM](#npm)
         - [Docker](#docker)
@@ -36,7 +36,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 
 Install Azure MCP Server using either an IDE extension or package manager. Choose one method below.
 
-## IDEs
+## IDE
 
 Start using Azure MCP with your favorite IDE.  We recommend VS Code:
 
@@ -62,7 +62,7 @@ From within Visual Studio 2022 install [GitHub Copilot for Azure (VS 2022)](http
 1. Install the [GitHub Copilot](https://plugins.jetbrains.com/plugin/17718-github-copilot) plugin.
 1. Install the [Azure Toolkit for Intellij](https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij) plugin.
 
-### Other IDEs
+### Additional IDEs
 
 For IDEs not listed above, manually setup Azure MCP Server within the IDE.
 
@@ -96,7 +96,7 @@ In some environments you may need to run the server directly:
 </details>
 
 
-## Package Managers
+## Package Manager
 
 Install Azure MCP Server via a package manager:
 
