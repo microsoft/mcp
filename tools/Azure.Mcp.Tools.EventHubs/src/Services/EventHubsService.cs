@@ -112,6 +112,6 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
             MaximumThroughputUnits: eventHubsNamespace.Properties?.MaximumThroughputUnits,
             KafkaEnabled: eventHubsNamespace.Properties?.KafkaEnabled,
             ZoneRedundant: eventHubsNamespace.Properties?.ZoneRedundant,
-            Tags: eventHubsNamespace.Tags?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
+            Tags: eventHubsNamespace.Tags);
     }
 }
