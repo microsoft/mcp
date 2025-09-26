@@ -16,7 +16,7 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
     public override string Name => "set";
 
     public override string Description =>
-        "Sets a specific parameter of a PostgreSQL server to a certain value.";
+        "Configures PostgreSQL server settings including replication, connection limits, and other parameters.";
 
     public override string Title => CommandTitle;
 

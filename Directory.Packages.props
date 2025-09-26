@@ -13,6 +13,7 @@
     <PackageVersion Include="Azure.Identity" Version="1.16.0" />
     <PackageVersion Include="Azure.Developer.LoadTesting" Version="1.0.2" />
     <PackageVersion Include="Azure.Identity.Broker" Version="1.3.0" />
+    <PackageVersion Include="Azure.Messaging.EventGrid" Version="4.24.0" />
     <PackageVersion Include="Azure.Messaging.ServiceBus" Version="7.20.1" />
     <PackageVersion Include="Azure.Monitor.Ingestion" Version="1.2.0" />
     <PackageVersion Include="Azure.Monitor.Query" Version="1.7.1" />
