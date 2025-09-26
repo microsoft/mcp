@@ -18,16 +18,7 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
 
     public override string Description =>
         """
-        Retrieves a list of deployments from Azure AI Services.
-
-        This function is used when a user requests information about the available deployments in Azure AI Services. It provides an overview of the models and services that are currently deployed and available for use.
-
-        Usage:
-            Use this function when a user wants to explore the available deployments in Azure AI Services. This can help users understand what models and services are currently operational and how they can be utilized.
-
-        Notes:
-            - The deployments listed may include various models and services that are part of Azure AI Services.
-            - The list may change frequently as new deployments are added or existing ones are updated.
+        List Azure AI Foundry (Cognitive Services) model deployments at a given account endpoint. Shows currently provisioned (callable) model deployments. Required: --endpoint <endpointUrl>. Optional: --tenant <tenantId> (override default auth tenant); --retry-* (retry policy settings, if supported) for transient failure handling. Returns: deployments[].name, model.name, model.format, model.version, model.source, sku.name, sku.capacity, scale.type, scale.capacity. Use to audit what is deployed before invoking or creating new deployments. Not for discovering undeployed catalog/base models (use models list).
         """;
 
     public override string Title => CommandTitle;
