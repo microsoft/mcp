@@ -144,13 +144,26 @@ AZURE_CLIENT_ID={YOUR_AZURE_CLIENT_ID}
 AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 ```
 
-#### Run with environment variables
+#### Configure your MCP client to use Docker:
 
 2. Run using the `.env` file from step 1. Replace `/full/path/to/your.env` with the actual `.env` file path:
 
-```bash
-docker run -i --rm --env-file /full/path/to/your.env \
-  mcr.microsoft.com/azure-sdk/azure-mcp
+```json
+   {
+      "servers": {
+         "Azure MCP Server": {
+            "command": "docker",
+            "args": [
+               "run",
+               "-i",
+               "--rm",
+               "--env-file",
+               "/full/path/to/your.env",
+               "mcr.microsoft.com/azure-sdk/azure-mcp:latest"
+            ]
+         }
+      }
+   }
 ```
 
 Alternatively, use individual `--env` flags or `--volume` mounts for credentials.
