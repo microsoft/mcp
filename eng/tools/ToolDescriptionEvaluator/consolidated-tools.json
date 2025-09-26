@@ -37,7 +37,7 @@
     },
     {
       "name": "get_azure_app_resource_details",
-      "description": "Get details about Azure application platform services, such as Azure Functions.",
+      "description": "Get details about Azure application platform services, such as Azure Functions, and manage database integrations for App Service applications.",
       "parameters": {
         "intent": {
             "type": "string",
@@ -66,12 +66,13 @@
         "localRequired": false
       },
       "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_appservice_database_add",
         "mcp_azure-mcp-ser_azmcp_functionapp_get"
       ]
     },
     {
       "name": "get_azure_databases_details",
-      "description": "Comprehensive Azure database management tool for MySQL, PostgreSQL, SQL Database, and Cosmos DB. List and query databases, retrieve server configurations and parameters, explore table schemas, execute database queries, manage Cosmos DB containers and items, and view database server details across all Azure database services.",
+      "description": "Comprehensive Azure database management tool for MySQL, PostgreSQL, SQL Database, SQL Server, and Cosmos DB. List and query databases, retrieve server configurations and parameters, explore table schemas, execute database queries, manage Cosmos DB containers and items, list and view detailed information about SQL servers, and view database server details across all Azure database services.",
       "parameters": {
         "intent": {
             "type": "string",
@@ -116,6 +117,8 @@
         "mcp_azure-mcp-ser_azmcp_postgres_table_schema_get",
         "mcp_azure-mcp-ser_azmcp_sql_db_list",
         "mcp_azure-mcp-ser_azmcp_sql_db_show",
+        "mcp_azure-mcp-ser_azmcp_sql_server_list",
+        "mcp_azure-mcp-ser_azmcp_sql_server_show",
         "mcp_azure-mcp-ser_azmcp_cosmos_account_list",
         "mcp_azure-mcp-ser_azmcp_cosmos_database_container_item_query",
         "mcp_azure-mcp-ser_azmcp_cosmos_database_container_list",
@@ -159,7 +162,7 @@
     },
     {
       "name": "get_azure_resource_and_app_health_status",
-      "description": "Get Azure resource and application health status and metrics and availability. Query Log Analytics, list Log Analytics workspaces, get the current availability status of Azure resources, list Grafana instances, and view Datadog monitored resources.",
+      "description": "Get Azure resource and application health status and metrics and availability. Query Log Analytics, list Log Analytics workspaces, get the current availability status of Azure resources, list Grafana instances, view Datadog monitored resources, perform App Lens diagnostics for comprehensive application troubleshooting, and retrieve Application Insights recommendations for performance optimization.",
       "parameters": {
         "intent": {
             "type": "string",
@@ -188,6 +191,8 @@
         "localRequired": false
       },
       "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_applicationinsights_recommendation_list",
+        "mcp_azure-mcp-ser_azmcp_applens_resource_diagnose",
         "mcp_azure-mcp-ser_azmcp_grafana_list",
         "mcp_azure-mcp-ser_azmcp_datadog_monitoredresources_list",
         "mcp_azure-mcp-ser_azmcp_monitor_workspace_list",
@@ -586,7 +591,7 @@
     },
     {
       "name": "get_azure_key_vault",
-      "description": "View and retrieve Azure Key Vault security artifacts, including certificates, keys, and secrets",
+      "description": "View and retrieve Azure Key Vault security artifacts, including certificates, keys (both listing and individual key details), and secrets",
       "parameters": {
         "intent": {
             "type": "string",
@@ -617,6 +622,7 @@
       "available_commands": [
         "mcp_azure-mcp-ser_azmcp_keyvault_certificate_get",
         "mcp_azure-mcp-ser_azmcp_keyvault_certificate_list",
+        "mcp_azure-mcp-ser_azmcp_keyvault_key_get",
         "mcp_azure-mcp-ser_azmcp_keyvault_key_list",
         "mcp_azure-mcp-ser_azmcp_keyvault_secret_list"
       ]
@@ -967,7 +973,7 @@
         }
       },
       "toolMetadata": {
-        "destructive": false,
+        "destructive": true,
         "idempotent": false,
         "openWorld": true,
         "readOnly": false,
@@ -979,8 +985,76 @@
       ]
     },
     {
+      "name": "connect_azure_ai_foundry_agents",
+      "description": "Connect to Azure AI Foundry agents for establishing agent connections and communication channels.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": false,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_foundry_agents_connect"
+      ]
+    },
+    {
+      "name": "evaluate_azure_ai_foundry_agents",
+      "description": "Evaluate Azure AI Foundry agents for performance assessment and testing of agent capabilities.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": false,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_foundry_agents_evaluate"
+      ]
+    },
+    {
       "name": "get_azure_storage_details",
-      "description": "Get details about Azure Storage resources including Storage accounts, blob containers, blob data, and Azure Managed Lustre filesystem information, but not health status.",
+      "description": "Get details about Azure Storage resources including Storage accounts, blob containers, blob data, and Azure Managed Lustre filesystem information including available SKUs, but not health status.",
       "parameters": {
         "intent": {
             "type": "string",
@@ -1010,6 +1084,7 @@
       },
       "available_commands": [
         "mcp_azure-mcp-ser_azmcp_azuremanagedlustre_filesystem_list",
+        "mcp_azure-mcp-ser_azmcp_azuremanagedlustre_filesystem_sku_get",
         "mcp_azure-mcp-ser_azmcp_storage_account_get",
         "mcp_azure-mcp-ser_azmcp_storage_blob_container_get",
         "mcp_azure-mcp-ser_azmcp_storage_blob_get"
@@ -1376,7 +1451,7 @@
     },
     {
       "name": "get_azure_container_details",
-      "description": "Get details about Azure container services including Azure Container Registry (ACR) and Azure Kubernetes Service (AKS). View registries, repositories, nodepools, clusters, and cluster configurations.",
+      "description": "Get details about Azure container services including Azure Container Registry (ACR) and Azure Kubernetes Service (AKS). View registries, repositories, nodepools, clusters, cluster configurations, and individual nodepool details.",
       "parameters": {
         "intent": {
             "type": "string",
@@ -1409,7 +1484,8 @@
         "mcp_azure-mcp-ser_azmcp_acr_registry_repository_list",
         "mcp_azure-mcp-ser_azmcp_aks_cluster_list",
         "mcp_azure-mcp-ser_azmcp_aks_cluster_get",
-        "mcp_azure-mcp-ser_azmcp_aks_nodepool_list"
+        "mcp_azure-mcp-ser_azmcp_aks_nodepool_list",
+        "mcp_azure-mcp-ser_azmcp_aks_nodepool_get"
       ]
     },
     {

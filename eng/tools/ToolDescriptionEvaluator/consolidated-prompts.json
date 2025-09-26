@@ -9,12 +9,21 @@
     "What subscriptions do I have?"
   ],
   "get_azure_app_resource_details": [
+    "Add a CosmosDB database to app service <app_name>",
+    "Add a database connection to my app service <app_name> in resource group <resource_group>",
+    "Add a MySQL database to app service <app_name>",
+    "Add a PostgreSQL database to app service <app_name>",
+    "Add database <database_name> on server <database_server> to app service <app_name>",
+    "Add database <database_name> with retry policy to app service <app_name>",
+    "Configure a SQL Server database for app service <app_name>",
+    "Configure tenant <tenant> for database <database_name> in app service <app_name>",
     "Describe the function app <function_app_name> in resource group <resource_group_name>",
     "Get configuration for function app <function_app_name>",
     "Get function app status for <function_app_name>",
     "Get information about my function app <function_app_name> in <resource_group_name>",
     "List all function apps in my subscription",
     "Retrieve host name and status of function app <function_app_name>",
+    "Set connection string for database <database_name> in app service <app_name>",
     "Show function app details for <function_app_name> in <resource_group_name>",
     "Show me my Azure function apps",
     "Show me the details for the function app <function_app_name>",
@@ -23,7 +32,10 @@
     "What is the status of function app <function_app_name>?"
   ],
   "get_azure_databases_details": [
+    "Display the properties of SQL server <server_name>",
+    "Get the configuration details for SQL server <server_name>",
     "Get the configuration details for the SQL database <database_name> on server <server_name>",
+    "List all Azure SQL servers in resource group <resource_group_name>",
     "List all cosmosdb accounts in my subscription",
     "List all databases in the Azure SQL server <server_name>",
     "List all MySQL databases in server <server>",
@@ -37,6 +49,7 @@
     "Show me all items that contain the word <search_term> in the MySQL database <database> in server <server>",
     "Show me all items that contain the word <search_term> in the PostgreSQL database <database> in server <server>",
     "Show me all the databases configuration details in the Azure SQL server <server_name>",
+    "Show me every SQL server available in resource group <resource_group_name>",
     "Show me if the parameter my PostgreSQL server <server> has replication enabled",
     "Show me my cosmosdb accounts",
     "Show me my MySQL servers",
@@ -46,6 +59,7 @@
     "Show me the containers in the database <database_name> for the cosmosdb account <account_name>",
     "Show me the cosmosdb accounts in my subscription",
     "Show me the databases in the cosmosdb account <account_name>",
+    "Show me the details of Azure SQL server <server_name> in resource group <resource_group_name>",
     "Show me the details of SQL database <database_name> in server <server_name>",
     "Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name>",
     "Show me the MySQL databases in server <server>",
@@ -75,9 +89,14 @@
     "List all monitored resources in the Datadog resource <resource_name>",
     "List all tables in the Log Analytics workspace <workspace_name>",
     "List availability status for all resources in my subscription",
+    "List code optimization recommendations across my Application Insights components",
+    "List profiler recommendations for Application Insights in resource group <resource_group_name>",
+    "Please help me diagnose issues with my app using app lens",
     "Query the <metric_name> metric for <resource_type> <resource_name> for the last <time_period>",
     "Show me all available metrics and their definitions for storage account <account_name>",
+    "Show me code optimization recommendations for all Application Insights resources in my subscription",
     "Show me my Log Analytics workspaces",
+    "Show me performance improvement recommendations from Application Insights",
     "Show me the available table types in the Log Analytics workspace <workspace_name>",
     "Show me the health status of all my Azure resources",
     "Show me the health status of entity <entity_id> in the Log Analytics workspace <workspace_name>",
@@ -87,6 +106,8 @@
     "Show me the logs for the past hour in the Log Analytics workspace <workspace_name>",
     "Show me the monitored resources in the Datadog resource <resource_name>",
     "Show me the tables in the Log Analytics workspace <workspace_name>",
+    "Use app lens to check why my app is slow?",
+    "What does app lens say is wrong with my service?",
     "What is the availability status of virtual machine <vm_name> in resource group <resource_group_name>?",
     "What metric definitions are available for the Application Insights resource <resource_name>",
     "What resources in resource group <resource_group_name> have health issues?",
@@ -145,6 +166,8 @@
     "Show me the certificate <certificate_name> in the key vault <key_vault_account_name>",
     "Show me the certificates in the key vault <key_vault_account_name>",
     "Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name>",
+    "Show me the details of the key <key_name> in the key vault <key_vault_account_name>",
+    "Show me the key <key_name> in the key vault <key_vault_account_name>",
     "Show me the keys in the key vault <key_vault_account_name>",
     "Show me the secrets in the key vault <key_vault_account_name>"
   ],
@@ -212,6 +235,12 @@
   "deploy_azure_ai_models": [
     "Deploy a GPT4o instance on my resource <resource-name>"
   ],
+  "connect_azure_ai_foundry_agents": [
+    "Query an agent in my AI foundry project"
+  ],
+  "evaluate_azure_ai_foundry_agents": [
+    "Evaluate the full query and response I got from my agent for task_adherence"
+  ],
   "get_azure_storage_details": [
     "Get details about the storage account <account>",
     "Get the details about blob <blob> in the container <container> in storage account <account>",
@@ -220,6 +249,7 @@
     "List all storage accounts in my subscription including their location and SKU",
     "List the Azure Managed Lustre filesystems in my resource group <resource_group_name>",
     "List the Azure Managed Lustre filesystems in my subscription <subscription_name>",
+    "List the Azure Managed Lustre SKUs available in <location>",
     "Show me my storage accounts with whether hierarchical namespace (HNS) is enabled",
     "Show me the blobs in the blob container <container> in the storage account <account>",
     "Show me the containers in the storage account <account>",
@@ -312,6 +342,7 @@
     "What Microsoft Entra ID administrators are set up for my SQL server <server_name>?"
   ],
   "get_azure_container_details": [
+    "Get details for nodepool <nodepool-name> in AKS cluster <cluster-name> in <resource-group>",
     "Get the configuration of AKS cluster <cluster-name>",
     "List all AKS clusters in my subscription",
     "List all Azure Container Registries in my subscription",
@@ -322,6 +353,7 @@
     "Show me my Azure Container Registries",
     "Show me my Azure Kubernetes Service clusters",
     "Show me my container registry repositories",
+    "Show me the configuration for nodepool <nodepool-name> in AKS cluster <cluster-name> in resource group <resource-group>",
     "Show me the container registries in my subscription",
     "Show me the container registries in resource group <resource_group_name>",
     "Show me the details of AKS cluster <cluster-name> in resource group <resource-group>",
@@ -330,6 +362,7 @@
     "Show me the repositories in the container registry <registry_name>",
     "What AKS clusters do I have?",
     "What are the details of my AKS cluster <cluster-name> in <resource-group>?",
+    "What is the setup of nodepool <nodepool-name> for AKS cluster <cluster-name> in <resource-group>?",
     "What nodepools do I have for AKS cluster <cluster-name> in <resource-group>"
   ],
   "get_azure_virtual_desktop_details": [
