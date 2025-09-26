@@ -40,7 +40,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup);
         command.Options.Add(AksOptionDefinitions.Cluster);
         command.Validators.Add(commandResults =>
         {

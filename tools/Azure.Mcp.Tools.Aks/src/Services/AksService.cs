@@ -88,7 +88,7 @@ public sealed class AksService(
                         }
                     }
                 }
-                
+
                 // Cache the results
                 await _cacheService.SetAsync(CacheGroup, cacheKey, clusters, s_cacheDuration);
             }
