@@ -459,17 +459,6 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         return (null, new Dictionary<string, object?>());
     }
 
-    private McpClientOptions CreateClientOptions(IMcpServer server)
-    {
-        var clientOptions = new McpClientOptions
-        {
-            ClientInfo = server.ClientInfo,
-            Capabilities = new ClientCapabilities(),
-        };
-
-        return clientOptions;
-    }
-
     /// <summary>
     /// Disposes resources owned by this tool loader.
     /// Clears the cached tool lists and root tools dictionaries.
