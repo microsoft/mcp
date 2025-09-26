@@ -129,16 +129,16 @@ public class ContinuousRecognitionResultTests
         Assert.Equal("Hello world test", result.FullText);
         Assert.NotNull(result.Segments);
         Assert.Equal(3, result.Segments.Count);
-        
+
         Assert.Equal("Hello", result.Segments[0].Text);
         Assert.Equal((ulong)0, result.Segments[0].Offset);
         Assert.Equal((ulong)1000, result.Segments[0].Duration);
         Assert.Equal("en-US", result.Segments[0].Language);
-        
+
         Assert.Equal("world", result.Segments[1].Text);
         Assert.Equal((ulong)1000, result.Segments[1].Offset);
         Assert.Equal((ulong)1200, result.Segments[1].Duration);
-        
+
         Assert.Equal("test", result.Segments[2].Text);
         Assert.Equal((ulong)2200, result.Segments[2].Offset);
         Assert.Equal((ulong)800, result.Segments[2].Duration);
