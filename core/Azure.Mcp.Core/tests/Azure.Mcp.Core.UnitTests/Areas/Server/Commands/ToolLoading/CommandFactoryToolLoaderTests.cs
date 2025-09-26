@@ -19,9 +19,9 @@ public class CommandFactoryToolLoaderTests
 {
     private static (CommandFactoryToolLoader toolLoader, CommandFactory commandFactory) CreateToolLoader(ToolLoaderOptions? options = null)
     {
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var commandFactory = CommandFactoryHelpers.CreateCommandFactory(serviceProvider);
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
         var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ToolLoaderOptions());
 
@@ -448,7 +448,7 @@ public class CommandFactoryToolLoaderTests
     public async Task ListToolsHandler_ToolsWithSecretMetadata_HaveSecretHintInMeta()
     {
         // Arrange - create a simple fake command with secret metadata
-        var serviceProvider = new ServiceCollection().AddLogging().BuildServiceProvider();
+        var serviceProvider = CommandFactoryHelpers.CreateDefaultServiceProvider();
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger<CommandFactoryToolLoader>();
         var toolLoaderOptions = Microsoft.Extensions.Options.Options.Create(new ToolLoaderOptions());

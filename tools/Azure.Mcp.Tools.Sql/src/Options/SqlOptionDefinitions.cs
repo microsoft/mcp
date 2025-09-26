@@ -7,6 +7,7 @@ public static class SqlOptionDefinitions
 {
     public const string ServerName = "server";
     public const string DatabaseName = "database";
+    public const string NewDatabaseName = "new-database-name";
     public const string FirewallRuleName = "firewall-rule-name";
     public const string StartIpAddress = "start-ip-address";
     public const string EndIpAddress = "end-ip-address";
@@ -38,6 +39,14 @@ public static class SqlOptionDefinitions
     )
     {
         Description = "The Azure SQL Database name.",
+        Required = true
+    };
+
+    public static readonly Option<string> NewDatabaseNameOption = new(
+        $"--{NewDatabaseName}"
+    )
+    {
+        Description = "The new name for the Azure SQL Database.",
         Required = true
     };
 

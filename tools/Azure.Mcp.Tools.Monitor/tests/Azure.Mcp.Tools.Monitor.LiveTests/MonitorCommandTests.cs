@@ -74,63 +74,53 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         Assert.NotEmpty(array);
     }
 
-    [Fact(Skip = "Intermittent failures due to slow ingestion")]
+    [Fact]
     public async Task Should_get_table_contents()
     {
         // Query AzureMetrics table - fastest to propagate and most reliable
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("staticResourceGroup", "static-test-resources");
+        var workspace = Settings.DeploymentOutputs.GetValueOrDefault("staticWorkspace", "monitor-query-ws");
         await QueryForLogsAsync(
             async args => await CallToolAsync("azmcp_monitor_workspace_log_query", args),
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "workspace", Settings.ResourceBaseName },
-                { "resource-group", Settings.ResourceGroupName },
+                { "workspace", workspace },
+                { "resource-group", resourceGroup },
                 { "query", "AzureMetrics | where ResourceProvider == 'MICROSOFT.STORAGE' | project TimeGenerated, MetricName, Total, ResourceId" },
                 { "table", "AzureMetrics" },
                 { "limit", 5 },
                 { "hours", 24 }
             },
             $"AzureMetrics | where ResourceProvider == 'MICROSOFT.STORAGE' | project TimeGenerated, MetricName, Total, ResourceId",
-            sendLogInfo: "Generating storage metrics...",
-            sendLogAction: async () =>
-            {
-                // Generate minimal storage activity to ensure metrics are created
-                await CallToolAsync("azmcp_storage_account_list", new()
-                {
-                    { "subscription", Settings.SubscriptionId }
-                });
-                Output.WriteLine("Listed storage accounts to ensure metrics are generated");
-            },
+            sendLogInfo: null,
+            sendLogAction: null,
             output: Output,
             cancellationToken: TestContext.Current.CancellationToken,
             maxWaitTimeSeconds: 180, // 3 minutes - metrics are faster than logs
             failMessage: "No storage metrics found after waiting 180 seconds");
     }
 
-    [Fact(Skip = "Intermittent failures due to slow ingestion")]
+    [Fact]
     public async Task Should_query_monitor_logs()
     {
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("staticResourceGroup", "static-test-resources");
+        var workspace = Settings.DeploymentOutputs.GetValueOrDefault("staticWorkspace", "monitor-query-ws");
         await QueryForLogsAsync(
             async args => await CallToolAsync("azmcp_monitor_workspace_log_query", args),
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "workspace", Settings.ResourceBaseName },
-                { "resource-group", Settings.ResourceGroupName },
+                { "workspace", workspace },
+                { "resource-group", resourceGroup },
                 { "table", "StorageBlobLogs" },
                 { "query", "StorageBlobLogs | project TimeGenerated, OperationName, StatusText" },
                 { "limit", 1 },
                 { "hours", 24 }
             },
             $"StorageBlobLogs | project TimeGenerated, OperationName, StatusText",
-            sendLogInfo: "Generating storage blob logs...",
-            sendLogAction: async () =>
-            {
-                // Generate some storage activity to create logs
-                await GenerateStorageActivityAsync();
-                Output.WriteLine("Storage activity generated to create diagnostic logs");
-            },
-            output: Output,
+            sendLogInfo: null,
+            sendLogAction: null,
             cancellationToken: TestContext.Current.CancellationToken,
             maxWaitTimeSeconds: 300, // 5 minutes - realistic for storage diagnostic logs
             failMessage: "No storage blob logs found after waiting 300 seconds");
@@ -154,10 +144,15 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         Assert.NotEmpty(array);
     }
 
-    [Fact(Skip = "Intermittent failures due to slow ingestion")]
+    [Fact]
     public async Task Should_query_monitor_logs_by_resource_id()
     {
-        var storageResourceId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Storage/storageAccounts/{_storageAccountName}";
+        var subscriptionId = Settings.SubscriptionId;
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("staticResourceGroup", "static-test-resources");
+        var storageAccountName = Settings.DeploymentOutputs.GetValueOrDefault("staticStorageAccountName", "azuresdktrainingdatatme");
+
+        var storageResourceId = $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}";
+
         await QueryForLogsAsync(
             async args => await CallToolAsync("azmcp_monitor_resource_log_query", args),
             new()
@@ -170,13 +165,8 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
                 { "hours", 24 }
             },
             $"StorageBlobLogs | where TimeGenerated > datetime({DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff}) | project TimeGenerated, OperationName, StatusText",
-            sendLogInfo: "Generating storage blob logs for resource query...",
-            sendLogAction: async () =>
-            {
-                // Generate some storage activity to create logs
-                await GenerateStorageActivityAsync();
-                Output.WriteLine("Storage activity generated to create diagnostic logs");
-            },
+            sendLogInfo: null,
+            sendLogAction: null,
             output: Output,
             cancellationToken: TestContext.Current.CancellationToken,
             maxWaitTimeSeconds: 300, // 5 minutes - realistic for storage diagnostic logs

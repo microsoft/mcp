@@ -2,37 +2,37 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.Tools.Kusto.Commands;
+using Azure.Mcp.Tools.Kusto.Models;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
 
 public interface IKustoService
 {
-    Task<List<string>> ListClusters(
+    Task<List<string>> ListClustersAsync(
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<KustoClusterResourceProxy?> GetCluster(
+    Task<KustoClusterModel> GetClusterAsync(
         string subscription,
         string clusterName,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<string>> ListDatabases(
+    Task<List<string>> ListDatabasesAsync(
         string clusterUri,
         string? tenant = null,
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<string>> ListDatabases(
+    Task<List<string>> ListDatabasesAsync(
         string subscription,
         string clusterName,
         string? tenant = null,
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<JsonElement>> QueryItems(
+    Task<List<JsonElement>> QueryItemsAsync(
         string clusterUri,
         string databaseName,
         string query,
@@ -40,7 +40,7 @@ public interface IKustoService
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<JsonElement>> QueryItems(
+    Task<List<JsonElement>> QueryItemsAsync(
         string subscriptionId,
         string clusterName,
         string databaseName,
@@ -49,14 +49,14 @@ public interface IKustoService
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<string>> ListTables(
+    Task<List<string>> ListTablesAsync(
         string clusterUri,
         string databaseName,
         string? tenant = null,
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<string>> ListTables(
+    Task<List<string>> ListTablesAsync(
         string subscriptionId,
         string clusterName,
         string databaseName,
@@ -64,7 +64,7 @@ public interface IKustoService
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<string> GetTableSchema(
+    Task<string> GetTableSchemaAsync(
         string clusterUri,
         string databaseName,
         string tableName,
@@ -72,7 +72,7 @@ public interface IKustoService
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<string> GetTableSchema(
+    Task<string> GetTableSchemaAsync(
         string subscriptionId,
         string clusterName,
         string databaseName,

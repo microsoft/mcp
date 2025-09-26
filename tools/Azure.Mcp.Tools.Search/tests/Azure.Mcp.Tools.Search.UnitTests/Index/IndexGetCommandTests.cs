@@ -229,7 +229,7 @@ public class IndexGetCommandTests
         var cmd = command.GetCommand();
 
         // Assert
-        Assert.Equal("describe", cmd.Name);
+        Assert.Equal("get", cmd.Name);
         Assert.NotNull(cmd.Description!);
         Assert.NotEmpty(cmd.Description!);
 

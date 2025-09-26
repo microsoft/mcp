@@ -106,7 +106,7 @@ public class SubscriptionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_EmptySubscriptionList_ReturnsNullResults()
+    public async Task ExecuteAsync_EmptySubscriptionList_ReturnsNotNullResults()
     {
         // Arrange
         _subscriptionService
@@ -121,7 +121,7 @@ public class SubscriptionListCommandTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.Null(result.Results);
+        Assert.NotNull(result.Results);
     }
 
     [Fact]
