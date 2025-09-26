@@ -109,7 +109,7 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-
   name: 'gpt-4o'
   sku: {
     name: 'Standard'
-    capacity: 15
+    capacity: 30
   }
   properties: {
     model: {
