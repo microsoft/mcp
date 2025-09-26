@@ -12,7 +12,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [VS Code (Recommended)](#vs-code-recommended)
         - [Visual Studio 2022](#visual-studio-2022)
         - [IntelliJ IDEA](#intellij-idea)
-        - [Additional IDEs](#additional-ides)
+        - [Manual Setup](#manual-setup)
     - [Package Manager](#package-manager)
         - [NuGet](#nuget)
         - [NPM](#npm)
@@ -26,7 +26,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
     - [Feedback and Support](#feedback-and-support)
     - [Security](#security)
     - [Data Collection](#data-collection)
-    - [Contributing & Code of Conduct](#contributing)
+    - [Contributing and Code of Conduct](#contributing)
 
 # Overview
 
@@ -62,41 +62,48 @@ From within Visual Studio 2022 install [GitHub Copilot for Azure (VS 2022)](http
 1. Install the [GitHub Copilot](https://plugins.jetbrains.com/plugin/17718-github-copilot) plugin.
 1. Install the [Azure Toolkit for Intellij](https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij) plugin.
 
-### Additional IDEs
-
-For IDEs not listed above, manually setup Azure MCP Server within the IDE.
+### Manual Setup
+Azure MCP Server can also be configured across other IDEs, CLIs, and MCP clients:
 
 <details>
 <summary>Manual setup instructions</summary>
 
-Configure via `mcp.json` (VS Code example - adapt structure for your IDE):
+#### Sample Configuration
 
+Copy this configuration to your client's MCP configuration file:
 ```json
-    {
-      "servers": {
-        "Azure MCP Server": {
-          "command": "npx",
-          "args": [
+{
+    "mcpServers": {
+        "azure-mcp-server": {
+        "command": "npx",
+        "args": [
             "-y",
             "@azure/mcp@latest",
             "server",
             "start"
-          ]
+            ]
         }
-      }
     }
+}
 ```
+**Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
 
-In some environments you may need to run the server directly:
-
-```bash
-    npx -y @azure/mcp@latest server start
-```
-
+**Client-Specific Configuration**
+| IDE | File Location | Documentation Link |
+|-----|---------------|-------------------|
+| **Amazon Q Developer** | `~/.aws/amazonq/mcp.json` (global)<br>`.amazonq/mcp.json` (workspace) | [AWS Q Developer MCP Guide](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/qdev-mcp.html) |
+| **Claude Code** | `~/.claude.json` or `.mcp.json` (project) | [Claude Code MCP Configuration](https://scottspence.com/posts/configuring-mcp-tools-in-claude-code) |
+| **Claude Desktop** | `~/.claude/claude_desktop_config.json` (macOS)<br>`%APPDATA%\Claude\claude_desktop_config.json` (Windows) | [Claude Desktop MCP Setup](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) |
+| **Cursor** | `~/.cursor/mcp.json` or `.cursor/mcp.json` | [Cursor MCP Documentation](https://docs.cursor.com/context/model-context-protocol) |
+| **IntelliJ IDEA** | Built-in MCP server (2025.2+)<br>Settings > Tools > MCP Server | [IntelliJ MCP Documentation](https://www.jetbrains.com/help/ai-assistant/mcp.html) |
+| **Visual Studio** | `.mcp.json` (solution/workspace) | [Visual Studio MCP Setup](https://learn.microsoft.com/visualstudio/ide/mcp-servers?view=vs-2022) |
+| **VS Code** | `.vscode/mcp.json` (workspace)<br>`settings.json` (user) | [VS Code MCP Documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) |
+| **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | [Windsurf Cascade MCP Integration](https://docs.windsurf.com/windsurf/cascade/mcp) |
 </details>
 
 
 ## Package Manager
+Package manager installation offers several advantages over IDE-specific setup, including centralized dependency management, CI/CD integration, support for headless/server environments, version control, and project portability.
 
 Install Azure MCP Server via a package manager:
 
@@ -118,24 +125,35 @@ npm install -g @azure/mcp
 
 ### Docker
 
-Microsoft publishes an official Azure MCP Server Docker container on the [Microsoft Artifact Registry](https://mcr.microsoft.com/artifact/mar/azure-sdk/azure-mcp).
+Pull the Docker image: [mcr.microsoft.com/azure-sdk/azure-mcp](https://mcr.microsoft.com/artifact/mar/azure-sdk/azure-mcp).
+
+```bash
+docker pull mcr.microsoft.com/azure-sdk/azure-mcp
+```
 
 <details>
-<summary>Docker setup instructions</summary>
+<summary>Docker instructions</summary>
+
+#### Create an env file with Azure credentials
 
 1. Create a `.env` file with Azure credentials ([see EnvironmentCredential options](https://learn.microsoft.com/dotnet/api/azure.identity.environmentcredential)):
 
 ```bash
-   AZURE_TENANT_ID={YOUR_AZURE_TENANT_ID}
-   AZURE_CLIENT_ID={YOUR_AZURE_CLIENT_ID}
-   AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
+AZURE_TENANT_ID={YOUR_AZURE_TENANT_ID}
+AZURE_CLIENT_ID={YOUR_AZURE_CLIENT_ID}
+AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 ```
 
-2. Configure your MCP client with the Docker command:
+#### Configure your MCP client to use Docker:
+
+2. Add or update existing `mcp.json`.
+    - Replace `/full/path/to/your.env` with the actual `.env` file path.
+    - Optionally, use `--env` or `--volume` to pass authentication values.
+    - **Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
 
 ```json
    {
-      "servers": {
+      "mcpServers": {
          "Azure MCP Server": {
             "command": "docker",
             "args": [
@@ -143,15 +161,14 @@ Microsoft publishes an official Azure MCP Server Docker container on the [Micros
                "-i",
                "--rm",
                "--env-file",
-               "/full/path/to/.env",
+               "/full/path/to/your.env",
                "mcr.microsoft.com/azure-sdk/azure-mcp:latest"
             ]
          }
       }
    }
 ```
-   
-Replace `/full/path/to/.env` with your actual .env file path. Alternatively, use individual `--env` flags or `--volume` mounts for credentials.
+
 </details>
 
 # Usage
