@@ -9,6 +9,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Adds support to proxy MCP capabilities when child servers leverage sampling or elicitation. [[#581](https://github.com/microsoft/mcp/pull/581)]
 - Added support for publishing custom events to Event Grid topics via the command `azmcp_eventgrid_events_publish`. Supports EventGrid, CloudEvents, and custom schemas with structured event data delivery for event-driven architectures. [[#514](https://github.com/microsoft/mcp/pull/514)]
 
+- Added validation for the Cosmos query command `azmcp_cosmos_database_container_item_query`.[[#524](https://github.com/microsoft/mcp/pull/524)]
+
 ### Breaking Changes
 
 ### Bugs Fixed
