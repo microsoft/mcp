@@ -15,41 +15,86 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
     : BaseAzureResourceService(subscriptionService, tenantService), IEventHubsService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
+    private readonly ITenantService _tenantService = tenantService;
     private readonly ILogger<EventHubsService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public async Task<List<EventHubsNamespaceInfo>> GetNamespacesAsync(
-        string resourceGroup,
+    public async Task<List<Namespace>> GetNamespacesAsync(
+        string? resourceGroup,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        return await ExecuteResourceQueryAsync(
-            "Microsoft.EventHub/namespaces",
-            resourceGroup,
-            subscription,
-            retryPolicy,
-            ConvertToEventHubsNamespaceInfo);
+        if (!string.IsNullOrEmpty(resourceGroup))
+        {
+            // Use the base class method when resource group is specified
+            return await ExecuteResourceQueryAsync(
+                "Microsoft.EventHub/namespaces",
+                resourceGroup,
+                subscription,
+                retryPolicy,
+                ConvertToNamespace);
+        }
+        else
+        {
+            // Subscription-wide listing
+            return await ExecuteResourceQueryAsync(
+                "Microsoft.EventHub/namespaces",
+                null,
+                subscription,
+                retryPolicy,
+                ConvertToNamespace);
+        }
     }
 
-    private static EventHubsNamespaceInfo ConvertToEventHubsNamespaceInfo(JsonElement item)
+    private static Namespace ConvertToNamespace(JsonElement item)
     {
         Models.EventHubsNamespaceData? eventHubsNamespace = Models.EventHubsNamespaceData.FromJson(item);
         if (eventHubsNamespace == null)
         {
             throw new InvalidOperationException("Failed to parse EventHubs namespace data");
         }
+            
 
         if (string.IsNullOrEmpty(eventHubsNamespace.ResourceId))
+        {
             throw new InvalidOperationException("Resource ID is missing");
-        var id = new ResourceIdentifier(eventHubsNamespace.ResourceId);
+        }
 
-        return new EventHubsNamespaceInfo(
-            Name: eventHubsNamespace.ResourceName ?? "Unknown",
-            Id: eventHubsNamespace.ResourceId ?? "Unknown",
-            ResourceGroup: id.ResourceGroupName ?? "Unknown");
+        var id = new ResourceIdentifier(eventHubsNamespace.ResourceId)!;
+        
+        if (String.IsNullOrEmpty(id.ResourceGroupName))
+        {
+            throw new InvalidOperationException("Resource ID is missing resource group");
+        }
+
+        if (string.IsNullOrEmpty(eventHubsNamespace.ResourceName))
+        {
+            throw new InvalidOperationException("Resource Name is missing");
+        }
+
+        return new Namespace(
+            Name: eventHubsNamespace.ResourceName,
+            Id: eventHubsNamespace.ResourceId,
+            ResourceGroup: id.ResourceGroupName,
+            Location: eventHubsNamespace.Location,
+            Sku: new EventHubsNamespaceSku(
+                Name: eventHubsNamespace.Sku.Name,
+                Tier: eventHubsNamespace.Sku.Tier,
+                Capacity: eventHubsNamespace.Sku.Capacity),
+            Status: eventHubsNamespace.Properties?.Status,
+            ProvisioningState: eventHubsNamespace.Properties?.ProvisioningState,
+            CreationTime: eventHubsNamespace.Properties?.CreatedOn,
+            UpdatedTime: eventHubsNamespace.Properties?.UpdatedOn,
+            ServiceBusEndpoint: eventHubsNamespace.Properties?.ServiceBusEndpoint,
+            MetricId: eventHubsNamespace.Properties?.MetricId,
+            IsAutoInflateEnabled: eventHubsNamespace.Properties?.IsAutoInflateEnabled,
+            MaximumThroughputUnits: eventHubsNamespace.Properties?.MaximumThroughputUnits,
+            KafkaEnabled: eventHubsNamespace.Properties?.KafkaEnabled,
+            ZoneRedundant: eventHubsNamespace.Properties?.ZoneRedundant,
+            Tags: eventHubsNamespace.Tags != null ? new Dictionary<string, string>(eventHubsNamespace.Tags) : null);
     }
 
-    public async Task<EventHubsNamespaceDetails> GetNamespaceAsync(
+    public async Task<Namespace> GetNamespaceAsync(
         string namespaceName,
         string resourceGroup,
         string subscription,
@@ -65,7 +110,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
                             resourceGroup,
                             subscription,
                             retryPolicy,
-                            ConvertToEventHubsNamespaceDetails,
+                            ConvertToNamespace,
                             $"name =~ '{EscapeKqlString(namespaceName)}'");
 
             if (namespaceDetails == null)
@@ -83,35 +128,4 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    private static EventHubsNamespaceDetails ConvertToEventHubsNamespaceDetails(JsonElement item)
-    {
-        Models.EventHubsNamespaceData? eventHubsNamespace = Models.EventHubsNamespaceData.FromJson(item);
-        if (eventHubsNamespace == null)
-            throw new InvalidOperationException("Failed to parse EventHubs namespace data");
-
-        if (string.IsNullOrEmpty(eventHubsNamespace.ResourceId))
-            throw new InvalidOperationException("Resource ID is missing");
-        var id = new ResourceIdentifier(eventHubsNamespace.ResourceId);
-
-        return new EventHubsNamespaceDetails(
-            Name: eventHubsNamespace.ResourceName ?? "Unknown",
-            Id: eventHubsNamespace.ResourceId,
-            ResourceGroup: id.ResourceGroupName ?? "Unknown",
-            Location: eventHubsNamespace.Location ?? "Unknown",
-            Sku: eventHubsNamespace.Sku != null ? new EventHubsNamespaceSku(
-                Name: eventHubsNamespace.Sku.Name,
-                Tier: eventHubsNamespace.Sku.Tier,
-                Capacity: eventHubsNamespace.Sku.Capacity) : null,
-            Status: eventHubsNamespace.Properties?.Status,
-            ProvisioningState: eventHubsNamespace.Properties?.ProvisioningState,
-            CreationTime: eventHubsNamespace.Properties?.CreatedOn,
-            UpdatedTime: eventHubsNamespace.Properties?.UpdatedOn,
-            ServiceBusEndpoint: eventHubsNamespace.Properties?.ServiceBusEndpoint,
-            MetricId: eventHubsNamespace.Properties?.MetricId,
-            IsAutoInflateEnabled: eventHubsNamespace.Properties?.IsAutoInflateEnabled,
-            MaximumThroughputUnits: eventHubsNamespace.Properties?.MaximumThroughputUnits,
-            KafkaEnabled: eventHubsNamespace.Properties?.KafkaEnabled,
-            ZoneRedundant: eventHubsNamespace.Properties?.ZoneRedundant,
-            Tags: eventHubsNamespace.Tags);
-    }
 }

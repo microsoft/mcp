@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.EventHubs;
 

@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Tools.EventHubs.Options;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands;
 

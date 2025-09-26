@@ -4,14 +4,12 @@
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Models;
-using Azure.Mcp.Tools.EventHubs.Services.Models;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands;
 
+[JsonSerializable(typeof(NamespaceGetCommand.NamespacesGetCommandResult))]
 [JsonSerializable(typeof(NamespaceGetCommand.NamespaceGetCommandResult))]
-[JsonSerializable(typeof(NamespaceGetCommand.NamespaceGetSingleCommandResult))]
-[JsonSerializable(typeof(EventHubsNamespaceInfo))]
-[JsonSerializable(typeof(EventHubsNamespaceDetails))]
+[JsonSerializable(typeof(Models.Namespace))]
 [JsonSerializable(typeof(EventHubsNamespaceSku))]
 [JsonSerializable(typeof(EventHubsNamespaceData))]
 [JsonSourceGenerationOptions(
