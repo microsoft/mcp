@@ -25,17 +25,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
 
     public override string Description =>
         """
-        **PRIMARY USE: Diagnose Azure resource performance issues, slowness, failures, and availability problems.**
-
-        Always use this tool BEFORE manually checking metrics or logs when users report performance or functionality issues.
-
-        Use the Azure CLI tool to find the 'subscription', 'resourceGroup', and 'resourceType' parameters before asking user to provide that information."
-        This tool can be used to ask questions about application state, this tool can help when doing diagnostics and address issues about performance and failures.
-
-        If you get a resourceId, parse it to get the 'subscription', 'resourceGroup', and 'resourceType' parameters of the resource. ResourceIds are in the format:
-        /subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resource}
-
-        Once proper input is provided this tool returns a list of insights and solutions to the user question.
+        Get diagnostic help from App Lens for Azure application and service issues to identify on what's wrong with a service. Ask questions about performance problems, slowness, failures, errors, and availability to receive expert analysis and solutions. Required: --question <your-issue>, --resource <app-name>, --resource-type <service-type>, --subscription <sub>, --resource-group <group>. Optional: --tenant <tenant>. Returns insights, recommended solutions, and analysis. Examples: diagnose --question "my app is running slow" --resource webapp1 --resource-type Microsoft.Web/sites --subscription mysub --resource-group mygroup; diagnose --question "getting errors in my service" --resource myapi --resource-type Microsoft.Web/sites --subscription mysub --resource-group prod. Use App Lens before checking logs manually.
         """;
 
     public override string Title => CommandTitle;
