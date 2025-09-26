@@ -5,10 +5,10 @@ namespace Azure.Mcp.Tools.EventHubs.Options;
 
 public static class EventHubsOptionDefinitions
 {
-    public const string NamespaceNameName = "namespace";
+    public const string Namespace = "namespace";
 
     public static readonly Option<string> NamespaceName = new(
-        $"--{NamespaceNameName}"
+        $"--{Namespace}"
     )
     {
         Description = "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",

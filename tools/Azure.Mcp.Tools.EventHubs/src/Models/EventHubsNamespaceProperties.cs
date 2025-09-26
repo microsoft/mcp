@@ -3,7 +3,7 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Tools.EventHubs.Services.Models;
+namespace Azure.Mcp.Tools.EventHubs.Models;
 
 /// <summary>
 /// A class representing the EventHubs Namespace properties model.
@@ -15,10 +15,10 @@ internal sealed class EventHubsNamespaceProperties
     /// <summary> Status of the Namespace. </summary>
     public string? Status { get; set; }
     /// <summary> The time the Namespace was created. </summary>
-    [JsonPropertyName("createdAt")]
+    [JsonPropertyName(EventHubsModelDefinitions.CreatedAt)]
     public DateTimeOffset? CreatedOn { get; set; }
     /// <summary> The time the Namespace was updated. </summary>
-    [JsonPropertyName("updatedAt")]
+    [JsonPropertyName(EventHubsModelDefinitions.UpdatedAt)]
     public DateTimeOffset? UpdatedOn { get; set; }
     /// <summary> Endpoint you can use to perform Service Bus operations. </summary>
     public string? ServiceBusEndpoint { get; set; }

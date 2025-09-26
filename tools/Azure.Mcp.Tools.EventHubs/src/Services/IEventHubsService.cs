@@ -8,13 +8,13 @@ namespace Azure.Mcp.Tools.EventHubs.Services;
 
 public interface IEventHubsService
 {
-    Task<List<EventHubsNamespaceInfo>> GetNamespacesAsync(
-        string resourceGroup,
+    Task<List<Namespace>> GetNamespacesAsync(
+        string? resourceGroup,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<EventHubsNamespaceDetails> GetNamespaceAsync(
+    Task<Namespace> GetNamespaceAsync(
         string namespaceName,
         string resourceGroup,
         string subscription,
