@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Models;

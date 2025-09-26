@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Extension.Commands;
 
+[Extension("deployment", Description = "Azure Developer CLI for Azure app deployment and management")]
 public sealed class AzdCommand(ILogger<AzdCommand> logger, int processTimeoutSeconds = 300) : GlobalCommand<AzdOptions>()
 {
     private const string CommandTitle = "Azure Developer CLI Command";

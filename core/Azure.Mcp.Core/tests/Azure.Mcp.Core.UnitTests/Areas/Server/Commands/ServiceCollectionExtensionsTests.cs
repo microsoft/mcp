@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Reflection;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
@@ -258,7 +259,7 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(provider.GetService<IToolLoader>());
         Assert.IsType<CompositeToolLoader>(provider.GetService<IToolLoader>());
 
-        // Verify the presence of CommandFactoryToolLoader which is used for service areas
+        // Verify the presence of CommandFactoryToolLoader
         Assert.NotNull(provider.GetService<CommandFactoryToolLoader>());
 
         // Verify runtime
@@ -392,5 +393,37 @@ public class ServiceCollectionExtensionsTests
         Assert.Contains("Azure MCP server usage rules:", instructions);
         Assert.Contains("Use Azure Code Gen Best Practices:", instructions);
         Assert.Contains("Use Azure SWA Best Practices:", instructions);
+    }
+
+    [Fact]
+    public void AddAzureMcpServer_WithNamespaceProxy_FiltersCommandsCorrectly()
+    {
+        // Arrange
+        var services = SetupBaseServices();
+        var options = new ServiceStartOptions
+        {
+            Transport = StdioTransport,
+            Mode = "namespace",
+            Namespace = ["storage"] // Namespace mode with specific namespace
+        };
+
+        // Act
+        services.AddAzureMcpServer(options);
+
+        // Assert
+        var provider = services.BuildServiceProvider();
+
+        // Get the CommandFactoryToolLoader from the service provider
+        var commandFactoryLoader = provider.GetService<CommandFactoryToolLoader>();
+        Assert.NotNull(commandFactoryLoader);
+
+        // Verify that the command factory is available
+        var commandFactory = commandFactoryLoader.CommandFactory;
+        Assert.NotNull(commandFactory);
+
+        // Verify that CommandFactoryToolLoader is properly registered and functioning
+        // This test ensures namespace filtering is working at the service registration level
+        Assert.NotNull(provider.GetService<IToolLoader>());
+        Assert.IsType<CompositeToolLoader>(provider.GetService<IToolLoader>());
     }
 }

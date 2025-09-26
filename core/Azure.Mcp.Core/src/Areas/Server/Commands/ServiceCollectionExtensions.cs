@@ -10,7 +10,6 @@ using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands;
@@ -60,17 +59,8 @@ public static class AzureMcpServiceCollectionExtensions
         services.AddSingleton(defaultToolLoaderOptions);
         services.AddSingleton(Options.Create(defaultToolLoaderOptions));
 
-        // Register tool loader strategies
-        services.AddSingleton<CommandFactoryToolLoader>();
-        services.AddSingleton(sp =>
-        {
-            return new RegistryToolLoader(
-                sp.GetRequiredService<RegistryDiscoveryStrategy>(),
-                sp.GetRequiredService<IOptions<ToolLoaderOptions>>(),
-                sp.GetRequiredService<ILogger<RegistryToolLoader>>()
-            );
-        });
-
+        // Register other tool loaders
+        services.AddSingleton<RegistryToolLoader>();
         services.AddSingleton<SingleProxyToolLoader>();
         services.AddSingleton<CompositeToolLoader>();
         services.AddSingleton<ServerToolLoader>();
@@ -103,6 +93,9 @@ public static class AzureMcpServiceCollectionExtensions
             });
         }
 
+        // Register CommandFactoryToolLoader with attribute-based filtering
+        services.AddSingleton<CommandFactoryToolLoader>();
+
         // Configure tool loading based on mode
         if (serviceStartOptions.Mode == ModeTypes.SingleToolProxy)
         {
@@ -116,13 +109,8 @@ public static class AzureMcpServiceCollectionExtensions
                 var toolLoaders = new List<IToolLoader>
                 {
                     sp.GetRequiredService<ServerToolLoader>(),
+                    sp.GetRequiredService<CommandFactoryToolLoader>()
                 };
-
-                // Append extension commands when no other namespaces are specified.
-                if (defaultToolLoaderOptions.Namespace?.SequenceEqual(["extension"]) == true)
-                {
-                    toolLoaders.Add(sp.GetRequiredService<CommandFactoryToolLoader>());
-                }
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });

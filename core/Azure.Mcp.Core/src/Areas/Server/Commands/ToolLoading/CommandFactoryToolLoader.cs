@@ -3,9 +3,11 @@
 
 using System.Diagnostics;
 using System.Net;
+using System.Reflection;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Elicitation;
 using Azure.Mcp.Core.Services.Telemetry;
@@ -16,9 +18,14 @@ using ModelContextProtocol.Protocol;
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
 /// <summary>
-/// A tool loader that creates MCP tools from the registered command factory.
-/// Exposes AzureMcp commands as MCP tools that can be invoked through the MCP protocol.
+/// A configurable tool loader that uses command attributes to determine which commands
+/// should be exposed as MCP tools. Uses attributes (Hidden, ReadOnly, Essential, Extension)
+/// for declarative configuration.
 /// </summary>
+/// <param name="serviceProvider">The service provider for resolving dependencies.</param>
+/// <param name="commandFactory">The command factory containing all available commands.</param>
+/// <param name="options">The tool loader options for configuration.</param>
+/// <param name="logger">The logger for diagnostic information.</param>
 public sealed class CommandFactoryToolLoader(
     IServiceProvider serviceProvider,
     CommandFactory commandFactory,
@@ -26,6 +33,7 @@ public sealed class CommandFactoryToolLoader(
     ILogger<CommandFactoryToolLoader> logger) : IToolLoader
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly CommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
     private readonly IOptions<ToolLoaderOptions> _options = options;
     private IReadOnlyDictionary<string, IBaseCommand> _toolCommands =
         (options.Value.Namespace == null || options.Value.Namespace.Length == 0)
@@ -35,29 +43,11 @@ public sealed class CommandFactoryToolLoader(
 
     public const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
 
-    private static bool IsRawMcpToolInputOption(Option option)
-    {
-        if (string.Equals(NameNormalization.NormalizeOptionName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        foreach (var alias in option.Aliases)
-        {
-            if (string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     /// <summary>
-    /// Lists all tools available from the command factory.
+    /// Handles requests to list all tools available in the MCP server.
     /// </summary>
-    /// <param name="request">The request context containing parameters and metadata.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="request">The request context containing metadata and parameters.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A result containing the list of available tools.</returns>
     public ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
@@ -77,7 +67,7 @@ public sealed class CommandFactoryToolLoader(
     /// Handles tool calls by executing the corresponding command from the command factory.
     /// </summary>
     /// <param name="request">The request context containing parameters and metadata.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>The result of the tool call operation.</returns>
     public async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
@@ -110,7 +100,6 @@ public sealed class CommandFactoryToolLoader(
                 IsError = true,
             };
         }
-        var commandContext = new CommandContext(_serviceProvider, Activity.Current);
 
         // Check if this tool requires elicitation for sensitive data
         var metadata = command.Metadata;
@@ -173,23 +162,24 @@ public sealed class CommandFactoryToolLoader(
             }
         }
 
+        var commandContext = new CommandContext(_serviceProvider, Activity.Current);
         var realCommand = command.GetCommand();
         ParseResult? commandOptions = null;
 
         if (realCommand.Options.Count == 1 && IsRawMcpToolInputOption(realCommand.Options[0]))
         {
-            commandOptions = realCommand.ParseFromRawMcpToolInput(request.Params.Arguments);
+            commandOptions = realCommand.ParseFromRawMcpToolInput(request.Params!.Arguments);
         }
         else
         {
-            commandOptions = realCommand.ParseFromDictionary(request.Params.Arguments);
+            commandOptions = realCommand.ParseFromDictionary(request.Params!.Arguments);
         }
 
         _logger.LogTrace("Invoking '{Tool}'.", realCommand.Name);
 
         if (commandContext.Activity != null)
         {
-            var serviceArea = commandFactory.GetServiceArea(toolName);
+            var serviceArea = _commandFactory.GetServiceArea(toolName);
             commandContext.Activity.AddTag(TelemetryConstants.TagName.ToolArea, serviceArea);
         }
 
@@ -222,11 +212,25 @@ public sealed class CommandFactoryToolLoader(
     }
 
     /// <summary>
-    /// Converts a command to an MCP tool definition.
+    /// Disposes resources owned by this tool loader.
+    /// CommandFactoryToolLoader doesn't own external resources that need disposal.
     /// </summary>
-    /// <param name="fullName">The full name of the command.</param>
-    /// <param name="command">The command to convert.</param>
-    /// <returns>An MCP tool definition.</returns>
+    public async ValueTask DisposeAsync()
+    {
+        // CommandFactoryToolLoader doesn't create or manage disposable resources
+        await ValueTask.CompletedTask;
+    }
+
+    /// <summary>
+    /// Gets the command factory being used.
+    /// </summary>
+    public CommandFactory CommandFactory => _commandFactory;
+
+
+
+    /// <summary>
+    /// Converts a command to an MCP tool with proper metadata.
+    /// </summary>
     private static Tool GetTool(string fullName, IBaseCommand command)
     {
         var underlyingCommand = command.GetCommand();
@@ -286,13 +290,21 @@ public sealed class CommandFactoryToolLoader(
         return tool;
     }
 
-    /// <summary>
-    /// Disposes resources owned by this tool loader.
-    /// CommandFactoryToolLoader doesn't own external resources that need disposal.
-    /// </summary>
-    public async ValueTask DisposeAsync()
+    private static bool IsRawMcpToolInputOption(Option option)
     {
-        // CommandFactoryToolLoader doesn't create or manage disposable resources
-        await ValueTask.CompletedTask;
+        if (string.Equals(NameNormalization.NormalizeOptionName(option.Name), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        foreach (var alias in option.Aliases)
+        {
+            if (string.Equals(NameNormalization.NormalizeOptionName(alias), RawMcpToolInputOptionName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
