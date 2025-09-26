@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
@@ -45,7 +46,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     /// </summary>
     /// <param name="request">The request context containing the tool call parameters.</param>
     /// <returns>
-    /// The "parameters" JsonElement if it exists and is a valid JSON object; 
+    /// The "parameters" JsonElement if it exists and is a valid JSON object;
     /// otherwise, returns an empty JSON object.
     /// </returns>
     protected static JsonElement GetParametersJsonElement(RequestContext<CallToolRequestParams> request)
@@ -108,5 +109,47 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     {
         // Default implementation does nothing
         return ValueTask.CompletedTask;
+    }
+
+    protected McpClientOptions CreateClientOptions(IMcpServer server)
+    {
+        SamplingCapability? samplingCapability = null;
+        ElicitationCapability? elicitationCapability = null;
+
+        if (server.ClientCapabilities?.Sampling != null)
+        {
+            samplingCapability = new SamplingCapability
+            {
+                SamplingHandler = (request, progress, token) =>
+                {
+                    ArgumentNullException.ThrowIfNull(request);
+                    return server.SampleAsync(request, token);
+                }
+            };
+        }
+
+        if (server.ClientCapabilities?.Elicitation != null)
+        {
+            elicitationCapability = new ElicitationCapability
+            {
+                ElicitationHandler = (request, token) =>
+                {
+                    ArgumentNullException.ThrowIfNull(request);
+                    return server.ElicitAsync(request, token);
+                }
+            };
+        }
+
+        var clientOptions = new McpClientOptions
+        {
+            ClientInfo = server.ClientInfo,
+            Capabilities = new ClientCapabilities
+            {
+                Sampling = samplingCapability,
+                Elicitation = elicitationCapability,
+            }
+        };
+
+        return clientOptions;
     }
 }

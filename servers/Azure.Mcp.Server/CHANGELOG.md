@@ -5,6 +5,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ## 0.8.3 (Unreleased)
 
 ### Features Added
+- Adds support to proxy MCP capabilities when child servers leverage sampling or elicitation. [[#581](https://github.com/microsoft/mcp/pull/581)]
 
 ### Breaking Changes
 
@@ -13,6 +14,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 ## 0.8.2 (2025-09-25)
+
+### Features Added
+
+-- Added support for publishing custom events to Event Grid topics via the command `azmcp_eventgrid_events_publish`. Supports EventGrid, CloudEvents, and custom schemas with structured event data delivery for event-driven architectures. [[#514](https://github.com/microsoft/mcp/pull/514)]
 
 ### Bugs Fixed
 
