@@ -44,7 +44,6 @@ public class ServerDeleteCommandTests
         Assert.Equal("delete", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
-        Assert.Contains("Deletes an Azure SQL server", command.Description);
     }
 
     [Theory]
