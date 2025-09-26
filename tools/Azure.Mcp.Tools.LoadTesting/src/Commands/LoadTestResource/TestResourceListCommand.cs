@@ -17,8 +17,8 @@ public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> log
     public override string Name => "list";
     public override string Description =>
         $"""
-        Fetches the Load Testing resources for the current selected subscription, resource group in the logged in tenant.
-        Returns a list of Load Testing resources.
+        Lists all Azure Load Testing resources available in the selected subscription and resource group.
+        Returns metadata for each resource, including name, location, and status. Use this to discover, manage, or audit load testing resources in your environment. Does not return test plans or test runs.
         """;
     public override string Title => _commandTitle;
 
