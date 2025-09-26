@@ -429,7 +429,7 @@ public class FoundryService(
         string? tenant = null)
     {
         AzureOpenAIClient client;
-        
+
         switch (authMethod)
         {
             case AuthMethod.Key:
