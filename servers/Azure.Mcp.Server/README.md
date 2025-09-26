@@ -150,7 +150,7 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 
 ```json
    {
-      "servers": {
+      "mcpServers": {
          "Azure MCP Server": {
             "command": "docker",
             "args": [
@@ -165,6 +165,7 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
       }
    }
 ```
+**Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
 
 Alternatively, use individual `--env` flags or `--volume` mounts for credentials.
 
