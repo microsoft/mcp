@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,6 +61,10 @@ public class FoundrySetup : IAreaSetup
         var indexSchema = serviceProvider.GetRequiredService<KnowledgeIndexSchemaCommand>();
         index.AddCommand(indexSchema.Name, indexSchema);
 
+        var openai = new CommandGroup("openai", "Foundry OpenAI operations - Commands for working with Azure OpenAI models deployed in AI Foundry.");
+        foundry.AddSubGroup(openai);
+
+        openai.AddCommand("create-completion", new OpenAiCompletionsCreateCommand());
         var agents = new CommandGroup("agents", "Foundry agents operations - Commands for listing, querying, and evaluating agents in AI Foundry.");
         foundry.AddSubGroup(agents);
 

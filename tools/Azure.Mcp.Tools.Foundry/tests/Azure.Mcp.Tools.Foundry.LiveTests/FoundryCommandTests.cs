@@ -130,6 +130,50 @@ public class FoundryCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public async Task Should_create_openai_completion()
+    {
+        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
+        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIDEPLOYMENTNAME", "gpt-4o-mini");
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
+        var subscriptionId = Settings.SubscriptionId;
+        var result = await CallToolAsync(
+            "azmcp_foundry_openai_create-completion",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-group", resourceGroup },
+                { "resource-name", resourceName },
+                { "deployment", deploymentName },
+                { "prompt-text", "What is Azure? Please provide a brief answer." },
+                { "max-tokens", "50" },
+                { "temperature", "0.7" }
+            });
+
+        // Verify the response structure
+        var completionText = result.AssertProperty("completionText");
+        Assert.Equal(JsonValueKind.String, completionText.ValueKind);
+        Assert.NotEmpty(completionText.GetString()!);
+
+        var usageInfo = result.AssertProperty("usageInfo");
+        Assert.Equal(JsonValueKind.Object, usageInfo.ValueKind);
+
+        // Verify usage info contains expected properties
+        var promptTokens = usageInfo.AssertProperty("promptTokens");
+        var completionTokens = usageInfo.AssertProperty("completionTokens");
+        var totalTokens = usageInfo.AssertProperty("totalTokens");
+
+        Assert.Equal(JsonValueKind.Number, promptTokens.ValueKind);
+        Assert.Equal(JsonValueKind.Number, completionTokens.ValueKind);
+        Assert.Equal(JsonValueKind.Number, totalTokens.ValueKind);
+
+        // Verify total tokens = prompt + completion
+        Assert.Equal(
+            promptTokens.GetInt32() + completionTokens.GetInt32(),
+            totalTokens.GetInt32()
+        );
+    }
+
+    [Fact]
     [Trait("Category", "Live")]
     public async Task Should_connect_agent()
     {

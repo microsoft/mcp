@@ -16,6 +16,7 @@ function New-TestSettings {
         [string] $TestApplicationId,
         [string] $ResourceGroupName,
         [string] $BaseName,
+        [hashtable] $DeploymentOutputs,
         [string] $OutputPath
     )
 
@@ -50,6 +51,11 @@ function New-TestSettings {
         SubscriptionName = $subscriptionName
         ResourceGroupName = $ResourceGroupName
         ResourceBaseName = $BaseName
+    }
+
+    # Add DeploymentOutputs if provided
+    if($DeploymentOutputs -and $DeploymentOutputs.Count -gt 0) {
+        $testSettings.DeploymentOutputs = $DeploymentOutputs
     }
 
     if($OutputPath) {
