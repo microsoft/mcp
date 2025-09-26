@@ -17,12 +17,9 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
     public override string Name => "list";
 
-    public override string Description =>
-        $"""
-        List all Azure subscriptions accessible to your account. Optionally specify {OptionDefinitions.Common.TenantName}
-        and {OptionDefinitions.Common.AuthMethodName}. Results include subscription names and IDs, returned as a JSON array.
-        """;
-
+    public override string Description => """
+    List all subscriptions for an account; list current subscriptions available to a user. Returns subscriptionId, displayName, state, tenantId, isDefault for scope selection in governance, policy, access, cost management, or deployment. A subscription is the billing and administrative boundary above resource groups and resources. Optional parameters: tenant, retry-* (delay/max-delay/max-retries/mode/network-timeout). Not for resource group/resource CRUD, tenant-wide AAD tasks, billing account administration, or directory policy management.
+    """;
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
