@@ -3,6 +3,7 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Foundry.Commands;
@@ -52,6 +53,7 @@ public class OpenAiCompletionsCreateCommandTests
                 Arg.Any<int?>(),
                 Arg.Any<double?>(),
                 Arg.Any<string?>(),
+                Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
                 Arg.Any<RetryPolicyOptions?>())
             .Returns(expectedResult);
 
@@ -105,6 +107,7 @@ public class OpenAiCompletionsCreateCommandTests
                 Arg.Is<int?>(i => i == maxTokens),
                 Arg.Is<double?>(d => d == temperature),
                 Arg.Any<string?>(),
+                Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
                 Arg.Any<RetryPolicyOptions?>())
             .Returns(expectedResult);
 
@@ -136,6 +139,7 @@ public class OpenAiCompletionsCreateCommandTests
             Arg.Any<int?>(),
             Arg.Any<double?>(),
             Arg.Any<string?>(),
+            Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
             Arg.Any<RetryPolicyOptions?>());
     }
 
@@ -159,6 +163,7 @@ public class OpenAiCompletionsCreateCommandTests
                 Arg.Any<int?>(),
                 Arg.Any<double?>(),
                 Arg.Any<string?>(),
+                Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
                 Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new Exception(expectedError));
 
