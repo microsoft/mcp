@@ -24,26 +24,13 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        if (!string.IsNullOrEmpty(resourceGroup))
-        {
-            // Use the base class method when resource group is specified
-            return await ExecuteResourceQueryAsync(
+        var namespaces = await ExecuteResourceQueryAsync(
                 "Microsoft.EventHub/namespaces",
                 resourceGroup,
                 subscription,
                 retryPolicy,
                 ConvertToNamespace);
-        }
-        else
-        {
-            // Subscription-wide listing
-            return await ExecuteResourceQueryAsync(
-                "Microsoft.EventHub/namespaces",
-                null,
-                subscription,
-                retryPolicy,
-                ConvertToNamespace);
-        }
+        return namespaces ?? [];
     }
 
     private static Namespace ConvertToNamespace(JsonElement item)

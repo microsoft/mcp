@@ -23,16 +23,16 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
 
     public override string Description =>
         """
-        Get Event Hubs namespaces from Azure. This command can either:
+        Get Event Hubs namespaces from Azure. This command supports three modes of operation:
         1. List all Event Hubs namespaces in a subscription (when no --resource-group is provided)
-        2. List all Event Hubs namespaces in a resource group (when only --resource-group is provided)
+        2. List all Event Hubs namespaces in a specific resource group (when only --resource-group is provided)
         3. Get a single namespace by name (using --namespace with --resource-group)
         
         When retrieving a single namespace, detailed information including SKU, settings, and metadata 
         is returned. When listing namespaces, the same detailed information is returned for all 
         namespaces in the specified scope.
         
-        The --resource-group parameter is optional when listing, but required when getting a specific namespace.
+        The --resource-group parameter is optional for listing operations but required when getting a specific namespace.
         """;
 
     public override string Title => CommandTitle;
@@ -72,11 +72,11 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
         }
 
         // Get option values for custom validation
-        var namespaceName = commandResult.GetValueOrDefault(EventHubsOptionDefinitions.NamespaceName);
-        var resourceGroup = commandResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        var hasNamespaceOption = commandResult.HasOptionResult(EventHubsOptionDefinitions.NamespaceName.Name);
+        var hasResourceGroupOption = commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup.Name);
 
         // If namespace is provided, resource group must also be provided
-        if (!string.IsNullOrEmpty(namespaceName) && string.IsNullOrEmpty(resourceGroup))
+        if (hasNamespaceOption && !hasResourceGroupOption)
         {
             var errorMessage = "When specifying a namespace name, a resource group must also be provided.";
 
