@@ -12,7 +12,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [VS Code (Recommended)](#vs-code-recommended)
         - [Visual Studio 2022](#visual-studio-2022)
         - [IntelliJ IDEA](#intellij-idea)
-        - [Manual IDE Setup](#manual-ide-setup)
+        - [Manual Setup](#manual-setup)
     - [Package Manager](#package-manager)
         - [NuGet](#nuget)
         - [NPM](#npm)
@@ -62,15 +62,15 @@ From within Visual Studio 2022 install [GitHub Copilot for Azure (VS 2022)](http
 1. Install the [GitHub Copilot](https://plugins.jetbrains.com/plugin/17718-github-copilot) plugin.
 1. Install the [Azure Toolkit for Intellij](https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij) plugin.
 
-### Manual IDE Setup
-For manual configuration across different IDEs, set up Azure MCP Server within your IDE:
+### Manual Setup
+Azure MCP Server can also be configured across other IDEs, CLIs, and MCP clients:
 
 <details>
 <summary>Manual setup instructions</summary>
 
 #### Sample Configuration
 
-Copy this configuration to your IDE's MCP configuration file:
+Copy this configuration to your client's MCP configuration file:
 ```json
 {
     "mcpServers": {
@@ -88,7 +88,7 @@ Copy this configuration to your IDE's MCP configuration file:
 ```
 **Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
 
-**IDE-Specific Configuration**
+**Client-Specific Configuration**
 | IDE | File Location | Documentation Link |
 |-----|---------------|-------------------|
 | **Amazon Q Developer** | `~/.aws/amazonq/mcp.json` (global)<br>`.amazonq/mcp.json` (workspace) | [AWS Q Developer MCP Guide](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/qdev-mcp.html) |
