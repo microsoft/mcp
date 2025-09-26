@@ -63,7 +63,7 @@ From within Visual Studio 2022 install [GitHub Copilot for Azure (VS 2022)](http
 1. Install the [Azure Toolkit for Intellij](https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij) plugin.
 
 ### Manual IDE Setup
-For manual configuration across different IDEs, setup Azure MCP Server within your IDE:
+For manual configuration across different IDEs, set up Azure MCP Server within your IDE:
 
 <details>
 <summary>Manual setup instructions</summary>
