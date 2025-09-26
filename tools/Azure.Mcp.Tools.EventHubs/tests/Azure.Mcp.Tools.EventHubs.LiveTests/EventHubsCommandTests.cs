@@ -85,7 +85,6 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         // Verify comprehensive metadata fields are present
         var location = namespaceData.AssertProperty("location");
         Assert.False(string.IsNullOrEmpty(location.GetString()));
-        Assert.False(string.IsNullOrEmpty(location.GetString()));
 
         Assert.True(namespaceData.TryGetProperty("status", out var status));
         Assert.False(string.IsNullOrEmpty(status.GetString()));
