@@ -24,6 +24,7 @@ public class SqlSetup : IAreaSetup
         services.AddSingleton<DatabaseShowCommand>();
         services.AddSingleton<DatabaseListCommand>();
         services.AddSingleton<DatabaseCreateCommand>();
+        services.AddSingleton<DatabaseRenameCommand>();
         services.AddSingleton<DatabaseUpdateCommand>();
         services.AddSingleton<DatabaseDeleteCommand>();
 
@@ -54,6 +55,8 @@ public class SqlSetup : IAreaSetup
         database.AddCommand(databaseList.Name, databaseList);
         var databaseCreate = serviceProvider.GetRequiredService<DatabaseCreateCommand>();
         database.AddCommand(databaseCreate.Name, databaseCreate);
+        var databaseRename = serviceProvider.GetRequiredService<DatabaseRenameCommand>();
+        database.AddCommand(databaseRename.Name, databaseRename);
         var databaseUpdate = serviceProvider.GetRequiredService<DatabaseUpdateCommand>();
         database.AddCommand(databaseUpdate.Name, databaseUpdate);
         var databaseDelete = serviceProvider.GetRequiredService<DatabaseDeleteCommand>();

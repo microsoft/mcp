@@ -218,6 +218,26 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         }
     }
 
+    [Fact(Skip = "This test requires a Key Vault Managed HSM")]
+    public async Task Should_get_admin_settings_dictionary()
+    {
+        var result = await CallToolAsync(
+            "azmcp_keyvault_admin_settings_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "vault", Settings.ResourceBaseName }
+            });
+
+        var name = result.AssertProperty("name");
+        Assert.Equal(JsonValueKind.String, name.ValueKind);
+        Assert.Equal(Settings.ResourceBaseName, name.GetString());
+
+        var settings = result.AssertProperty("settings");
+        Assert.Equal(JsonValueKind.Object, settings.ValueKind);
+        Assert.True(settings.EnumerateObject().Any(), "Expected at least one admin setting returned.");
+    }
+
     private void ValidateCertificate(JsonElement? result)
     {
         Assert.NotNull(result);

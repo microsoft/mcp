@@ -162,7 +162,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_postgres_server_list | List all PostgreSQL servers in my subscription |
 | azmcp_postgres_server_list | Show me my PostgreSQL servers |
 | azmcp_postgres_server_list | Show me the PostgreSQL servers in my subscription |
-| azmcp_postgres_server_param | Show me if the parameter my PostgreSQL server \<server> has replication enabled |
+| azmcp_postgres_server_param_get | Show me if the parameter my PostgreSQL server \<server> has replication enabled |
 | azmcp_postgres_server_param_set | Enable replication for my PostgreSQL server \<server> |
 | azmcp_postgres_table_list | List all tables in the PostgreSQL database \<database> in server \<server> |
 | azmcp_postgres_table_list | Show me the tables in the PostgreSQL database \<database> in server \<server> |
@@ -193,6 +193,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_eventgrid_subscription_list | List all Event Grid subscriptions in subscription <subscription> |
 | azmcp_eventgrid_subscription_list | Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription> |
 | azmcp_eventgrid_subscription_list | List Event Grid subscriptions for subscription <subscription> in location <location> |
+| azmcp_eventgrid_events_publish | Publish an event to Event Grid topic <topic_name> using <event_schema> with the following data <event_data> |
+| azmcp_eventgrid_events_publish | Publish event to my Event Grid topic <topic_name> with the following events <event_data> |
+| azmcp_eventgrid_events_publish | Send an event to Event Grid topic <topic_name> in resource group <resource_group_name> with <event_data> |
 
 ## Azure Function App
 
@@ -215,6 +218,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_keyvault_admin_settings_get | Get the account settings for my key vault <key_vault_account_name> |
+| azmcp_keyvault_admin_settings_get | Show me the account settings for managed HSM keyvault <key_vault_account_name> |
+| azmcp_keyvault_admin_settings_get | What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name> |
 | azmcp_keyvault_certificate_create | Create a new certificate called <certificate_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_get | Show me the certificate <certificate_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_get | Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name> |
@@ -414,6 +420,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_db_delete | Delete the database called <database_name> on server <server_name> |
 | azmcp_sql_db_list | List all databases in the Azure SQL server <server_name> |
 | azmcp_sql_db_list | Show me all the databases configuration details in the Azure SQL server <server_name> |
+| azmcp_sql_db_rename | Rename the SQL database <database_name> on server <server_name> to <new_database_name> |
+| azmcp_sql_db_rename | Rename my Azure SQL database <database_name> to <new_database_name> on server <server_name> |
 | azmcp_sql_db_show | Get the configuration details for the SQL database <database_name> on server <server_name> |
 | azmcp_sql_db_show | Show me the details of SQL database <database_name> in server <server_name> |
 | azmcp_sql_db_update | Update the performance tier of SQL database <database_name> on server <server_name> |

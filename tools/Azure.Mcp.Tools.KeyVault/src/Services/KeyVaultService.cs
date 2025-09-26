@@ -3,14 +3,18 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Security.KeyVault.Administration;
 using Azure.Security.KeyVault.Certificates;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Secrets;
 
 namespace Azure.Mcp.Tools.KeyVault.Services;
 
-public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
+public sealed class KeyVaultService(ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IKeyVaultService
 {
+    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     public async Task<List<string>> ListKeys(
         string vaultName,
         bool includeManagedKeys,
@@ -284,6 +288,27 @@ public sealed class KeyVaultService : BaseAzureService, IKeyVaultService
         catch (Exception ex)
         {
             throw new Exception($"Error importing certificate '{certificateName}' into vault {vaultName}: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<GetSettingsResult> GetVaultSettings(
+        string vaultName,
+        string subscription,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(vaultName, subscription);
+        var credential = await GetCredential(tenantId);
+        var hsmUri = new Uri($"https://{vaultName}.managedhsm.azure.net");
+        try
+        {
+            var hsmClient = new KeyVaultSettingsClient(hsmUri, credential);
+            var hsmResponse = await hsmClient.GetSettingsAsync();
+            return hsmResponse.Value;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving Managed HSM administration settings for '{vaultName}': {ex.Message}", ex);
         }
     }
 }
