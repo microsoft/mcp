@@ -1,0 +1,34 @@
+# Common words for the entire repository
+version: "0.2"
+language: en
+words:
+  - MCP
+  - Azure
+  - CLI
+  - API
+  - Config
+  - DevOps
+  - Terraform
+  - Kubernetes
+  - Grafana
+  - Redis
+  - Postgres
+  - KeyVault
+  - Storage
+  - Quota
+  - Kusto
+  - ServiceBus
+  - Workbooks
+  - Bicep
+  - Foundry
+  - Marketplace
+  - VirtualDesktop
+  - FunctionApp
+  - AppConfig
+  - Authorization
+  - Extension
+  - Monitor
+  - LoadTesting
+  - ResourceHealth
+  - Search
+  - SQL
