@@ -23,6 +23,19 @@ resource eventHubsNamespace 'Microsoft.EventHub/namespaces@2024-01-01' = {
   }
 }
 
+resource eventHubsNamespaceEmpty 'Microsoft.EventHub/namespaces@2024-01-01' = {
+  location: location
+  name: '${substring(baseName, 0, min(length(baseName), 49))}2'
+  properties: {
+    disableLocalAuth: true
+  }
+  sku: {
+    name: 'Basic'
+    tier: 'Basic'
+    capacity: 1
+  }
+}
+
 resource eventHub 'Microsoft.EventHub/namespaces/eventhubs@2024-01-01' = {
   parent: eventHubsNamespace
   name: 'test-hub'
@@ -46,6 +59,16 @@ resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' =  
     roleDefinitionId: dataOwnerRoleDefinition.id
   }
 }
+
+resource roleAssignmentEmpty 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(dataOwnerRoleDefinition.id, testApplicationOid, eventHubsNamespaceEmpty.id)
+  scope: eventHubsNamespaceEmpty
+  properties: {
+    principalId: testApplicationOid
+    roleDefinitionId: dataOwnerRoleDefinition.id
+  }
+}
 // Outputs for test consumption
 output eventHubsNamespaceName string = eventHubsNamespace.name
+output eventHubsNamespaceEmptyName string = eventHubsNamespaceEmpty.name
 output eventHubName string = eventHub.name
