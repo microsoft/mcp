@@ -13,6 +13,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Fixed problem where help option (`--help`) was showing an error and enabling it across all commands and command groups. [[#583](https://github.com/microsoft/mcp/pull/583)]
+
 ### Other Changes
 
 ## 0.8.2 (2025-09-25)
