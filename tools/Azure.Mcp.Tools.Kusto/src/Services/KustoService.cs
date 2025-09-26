@@ -40,7 +40,7 @@ public sealed class KustoService(
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscriptionId);
+        ValidateRequiredParameters((nameof(subscriptionId), subscriptionId));
 
         try
         {
@@ -66,7 +66,7 @@ public sealed class KustoService(
             string? tenant = null,
             RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscriptionId);
+        ValidateRequiredParameters((nameof(subscriptionId), subscriptionId));
 
         try
         {
@@ -101,7 +101,9 @@ public sealed class KustoService(
         AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscriptionId, clusterName);
+        ValidateRequiredParameters(
+            (nameof(subscriptionId), subscriptionId),
+            (nameof(clusterName), clusterName));
 
         string clusterUri = await GetClusterUriAsync(subscriptionId, clusterName, tenant, retryPolicy);
         return await ListDatabasesAsync(clusterUri, tenant, authMethod, retryPolicy);
@@ -131,7 +133,10 @@ public sealed class KustoService(
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscriptionId, clusterName, databaseName);
+        ValidateRequiredParameters(
+            (nameof(subscriptionId), subscriptionId),
+            (nameof(clusterName), clusterName),
+            (nameof(databaseName), databaseName));
 
         string clusterUri = await GetClusterUriAsync(subscriptionId, clusterName, tenant, retryPolicy);
         return await ListTablesAsync(clusterUri, databaseName, tenant, authMethod, retryPolicy);
@@ -175,7 +180,10 @@ public sealed class KustoService(
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(clusterUri, databaseName, tableName);
+        ValidateRequiredParameters(
+            (nameof(clusterUri), clusterUri),
+            (nameof(databaseName), databaseName),
+            (nameof(tableName), tableName));
 
         var kustoClient = await GetOrCreateKustoClientAsync(clusterUri, tenant);
         var kustoResult = await kustoClient.ExecuteQueryCommandAsync(
@@ -199,7 +207,11 @@ public sealed class KustoService(
             AuthMethod? authMethod = AuthMethod.Credential,
             RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscriptionId, clusterName, databaseName, query);
+        ValidateRequiredParameters(
+            (nameof(subscriptionId), subscriptionId),
+            (nameof(clusterName), clusterName),
+            (nameof(databaseName), databaseName),
+            (nameof(query), query));
 
         string clusterUri = await GetClusterUriAsync(subscriptionId, clusterName, tenant, retryPolicy);
         return await QueryItemsAsync(clusterUri, databaseName, query, tenant, authMethod, retryPolicy);
