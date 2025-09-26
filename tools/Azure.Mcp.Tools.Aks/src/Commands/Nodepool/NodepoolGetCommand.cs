@@ -20,9 +20,9 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
 
     public override string Description =>
         """
-        Gets Azure Kubernetes Service (AKS) node pool (agent pool) details in a cluster. If a specific node pool name
-        is provided, the command will return details for that cluster. Otherwise, all node pools in the specified cluster
-        are returned. Returns key configuration and status including size, count, OS, mode, autoscaling, and provisioning state.
+        Get or list Azure Kubernetes Service (AKS) node pools (agent pools) in a cluster. If a specific node pool name
+        is provided, that node pool will be retrieved. Otherwise, all node pools will be listed in the specified cluster.
+        Returns key configuration and status including size, count, OS, mode, autoscaling, and provisioning state.
         """;
 
     public override string Title => CommandTitle;
