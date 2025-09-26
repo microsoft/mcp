@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
@@ -74,6 +75,7 @@ public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiC
                 options.MaxTokens,
                 options.Temperature,
                 options.Tenant,
+                options.AuthMethod ?? AuthMethod.Credential,
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create<OpenAiCompletionsCreateCommandResult>(

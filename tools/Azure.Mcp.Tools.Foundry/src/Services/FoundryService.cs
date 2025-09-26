@@ -5,11 +5,13 @@ using System.ClientModel;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
+using System.Threading.Tasks.Dataflow;
 using Azure;
 using Azure.AI.Agents.Persistent;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
 using Azure.Core;
+using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -358,6 +360,7 @@ public class FoundryService(
         int? maxTokens = null,
         double? temperature = null,
         string? tenant = null,
+        AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters(resourceName, deploymentName, promptText, subscription, resourceGroup);
@@ -369,7 +372,7 @@ public class FoundryService(
         var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
         var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName);
 
-        // Get the endpoint and key
+        // Get the endpoint
         var accountData = cognitiveServicesAccount.Value.Data;
         var endpoint = accountData.Properties.Endpoint;
 
@@ -378,17 +381,9 @@ public class FoundryService(
             throw new InvalidOperationException($"Endpoint not found for resource '{resourceName}'");
         }
 
-        // Get the access key
-        var keys = await cognitiveServicesAccount.Value.GetKeysAsync();
-        var key = keys.Value.Key1;
+        // Create Azure OpenAI client with flexible authentication
+        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant);
 
-        if (string.IsNullOrEmpty(key))
-        {
-            throw new InvalidOperationException($"Access key not found for resource '{resourceName}'");
-        }
-
-        // Create Azure OpenAI client
-        var client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(key));
         var chatClient = client.GetChatClient(deploymentName);
 
         // Set up completion options
@@ -424,6 +419,39 @@ public class FoundryService(
             result.Usage.TotalTokenCount);
 
         return new CompletionResult(completionText, usageInfo);
+    }
+
+    private async Task<AzureOpenAIClient> CreateOpenAIClientWithAuth(
+        string endpoint,
+        string resourceName,
+        CognitiveServicesAccountResource cognitiveServicesAccount,
+        AuthMethod authMethod,
+        string? tenant = null)
+    {
+        AzureOpenAIClient client;
+        
+        switch (authMethod)
+        {
+            case AuthMethod.Key:
+                // Get the access key
+                var keys = await cognitiveServicesAccount.GetKeysAsync();
+                var key = keys.Value.Key1;
+
+                if (string.IsNullOrEmpty(key))
+                {
+                    throw new InvalidOperationException($"Access key not found for resource '{resourceName}'");
+                }
+
+                client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(key));
+                break;
+
+            case AuthMethod.Credential:
+            default:
+                var credential = await GetCredential(tenant);
+                client = new AzureOpenAIClient(new Uri(endpoint), credential);
+                break;
+        }
+        return client;
     }
 
     public async Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
