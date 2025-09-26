@@ -11,9 +11,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
-### Bugs Fixed
-
 - Merged `azmcp_appconfig_kv_list` and `azmcp_appconfig_kv_show` into `azmcp_appconfig_kv_get` which can handle both listing and filtering key-values and getting a specific key-value. [[#505](https://github.com/microsoft/mcp/pull/505)]
+
+### Bugs Fixed
 
 ### Other Changes
 
