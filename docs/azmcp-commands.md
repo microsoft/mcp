@@ -1073,6 +1073,20 @@ azmcp resourcehealth service-health-events list --subscription <subscription> \
                                                 [--query-end-time <end-time>]
 ```
 
+### Azure for Startups Operations
+
+```bash
+# Get guidance about Microsoft for Startups program
+azmcp startups guidance get
+
+# Deploy static web resources to Azure storage accounts for startups
+azmcp startups deploy --subscription <subscription> \
+                      --resource-group <resource-group> \
+                      --storage-account <storage-account> \
+                      --source-path <source-directory-path> \
+                      --overwrite <true|false> \
+```
+
 ### Azure Service Bus Operations
 
 ```bash
