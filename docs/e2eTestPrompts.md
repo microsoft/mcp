@@ -147,7 +147,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_postgres_server_list | List all PostgreSQL servers in my subscription |
 | azmcp_postgres_server_list | Show me my PostgreSQL servers |
 | azmcp_postgres_server_list | Show me the PostgreSQL servers in my subscription |
-| azmcp_postgres_server_param | Show me if the parameter my PostgreSQL server \<server> has replication enabled |
+| azmcp_postgres_server_param_get | Show me if the parameter my PostgreSQL server \<server> has replication enabled |
 | azmcp_postgres_server_param_set | Enable replication for my PostgreSQL server \<server> |
 | azmcp_postgres_table_list | List all tables in the PostgreSQL database \<database> in server \<server> |
 | azmcp_postgres_table_list | Show me the tables in the PostgreSQL database \<database> in server \<server> |
@@ -178,6 +178,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_eventgrid_subscription_list | List all Event Grid subscriptions in subscription <subscription> |
 | azmcp_eventgrid_subscription_list | Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription> |
 | azmcp_eventgrid_subscription_list | List Event Grid subscriptions for subscription <subscription> in location <location> |
+| azmcp_eventgrid_events_publish | Publish an event to Event Grid topic <topic_name> using <event_schema> with the following data <event_data> |
+| azmcp_eventgrid_events_publish | Publish event to my Event Grid topic <topic_name> with the following events <event_data> |
+| azmcp_eventgrid_events_publish | Send an event to Event Grid topic <topic_name> in resource group <resource_group_name> with <event_data> |
 
 ## Azure Function App
 
