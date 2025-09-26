@@ -49,7 +49,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
         var id = new ResourceIdentifier(eventHubsNamespace.ResourceId)!;
 
-        if (String.IsNullOrEmpty(id.ResourceGroupName))
+        if (string.IsNullOrEmpty(id.ResourceGroupName))
         {
             throw new InvalidOperationException("Resource ID is missing resource group");
         }
