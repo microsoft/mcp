@@ -53,7 +53,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         {
             throw new InvalidOperationException("Failed to parse EventHubs namespace data");
         }
-            
+
 
         if (string.IsNullOrEmpty(eventHubsNamespace.ResourceId))
         {
@@ -61,7 +61,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         }
 
         var id = new ResourceIdentifier(eventHubsNamespace.ResourceId)!;
-        
+
         if (String.IsNullOrEmpty(id.ResourceGroupName))
         {
             throw new InvalidOperationException("Resource ID is missing resource group");

@@ -68,10 +68,10 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
         // Should successfully return an empty array or handle the non-existent resource group
         // Note: This might return an empty array or an error depending on how the service handles missing resource groups
-        if (result.HasValue && result.Value.TryGetProperty("namespaces", out var namespaces))
+        var namespacesProperty = result.AssertProperty("namespaces");
+        if (namespacesProperty.ValueKind == JsonValueKind.Array)
         {
-            Assert.Equal(JsonValueKind.Array, namespaces.ValueKind);
-            Assert.Empty(namespaces.EnumerateArray());
+            Assert.Empty(namespacesProperty.EnumerateArray());
         }
         // If it returns an error instead, that's also acceptable behavior
     }
@@ -118,26 +118,26 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         Assert.False(string.IsNullOrEmpty(provisioningState.GetString()));
 
         // Verify SKU information is present and detailed
-        Assert.True(namespaceData.TryGetProperty("sku", out var sku));
+        var sku = namespaceData.AssertProperty("sku");
         Assert.Equal(JsonValueKind.Object, sku.ValueKind);
 
-        Assert.True(sku.TryGetProperty("name", out var skuName));
+        var skuName = sku.AssertProperty("name");
         Assert.False(string.IsNullOrEmpty(skuName.GetString()));
 
-        Assert.True(sku.TryGetProperty("tier", out var skuTier));
+        var skuTier = sku.AssertProperty("tier");
         Assert.False(string.IsNullOrEmpty(skuTier.GetString()));
 
         // Verify timestamps are present
-        Assert.True(namespaceData.TryGetProperty("creationTime", out var creationTime));
+        var creationTime = namespaceData.AssertProperty("creationTime");
         Assert.NotEqual(JsonValueKind.Null, creationTime.ValueKind);
 
         // Verify service endpoint is present
-        Assert.True(namespaceData.TryGetProperty("serviceBusEndpoint", out var serviceBusEndpoint));
+        var serviceBusEndpoint = namespaceData.AssertProperty("serviceBusEndpoint");
         Assert.False(string.IsNullOrEmpty(serviceBusEndpoint.GetString()));
         Assert.Contains(".servicebus.windows.net", serviceBusEndpoint.GetString());
 
         // Verify metric ID is present
-        Assert.True(namespaceData.TryGetProperty("metricId", out var metricId));
+        var metricId = namespaceData.AssertProperty("metricId");
         Assert.False(string.IsNullOrEmpty(metricId.GetString()));
         Assert.Contains(Settings.SubscriptionId, metricId.GetString());
         Assert.Contains(Settings.ResourceBaseName, metricId.GetString());

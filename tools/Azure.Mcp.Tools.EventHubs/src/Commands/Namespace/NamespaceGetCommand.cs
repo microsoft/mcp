@@ -79,7 +79,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
         if (!string.IsNullOrEmpty(namespaceName) && string.IsNullOrEmpty(resourceGroup))
         {
             var errorMessage = "When specifying a namespace name, a resource group must also be provided.";
-            
+
             SetValidationError(commandResponse, errorMessage, HttpStatusCode.BadRequest);
 
             return new ValidationResult
