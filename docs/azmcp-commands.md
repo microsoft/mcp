@@ -734,7 +734,7 @@ azmcp keyvault secret list --subscription <subscription> \
 # Gets Azure Kubernetes Service (AKS) cluster details
 azmcp aks cluster get --subscription <subscription> \
                       --resource-group <resource-group> \
-                      [--name <cluster>]
+                      [--cluster <cluster>]
 
 # Gets Azure Kubernetes Service (AKS) nodepool details
 azmcp aks nodepool get --subscription <subscription> \
