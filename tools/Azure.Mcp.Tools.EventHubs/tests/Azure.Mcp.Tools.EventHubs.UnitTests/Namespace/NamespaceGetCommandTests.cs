@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Models;
+using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -37,10 +39,10 @@ public class NamespaceGetCommandTests
 
     [Theory]
     [InlineData("", false)]
-    [InlineData("--subscription 00000000-0000-0000-0000-000000000000", true)]  // Should succeed - subscription-wide listing
-    [InlineData("--subscription 00000000-0000-0000-0000-000000000000 --resource-group test-rg", true)]
-    [InlineData("--subscription 00000000-0000-0000-0000-000000000000 --namespace test-namespace --resource-group test-rg", true)]
-    [InlineData("--subscription 00000000-0000-0000-0000-000000000000 --namespace test-namespace", false)]  // Should fail - namespace requires resource group
+    [InlineData("--subscription test-subscription", true)]
+    [InlineData("--subscription test-subscription --resource-group test-rg", true)]
+    [InlineData("--subscription test-subscription --namespace test-namespace --resource-group test-rg", true)]
+    [InlineData("--subscription test-subscription --namespace test-namespace", false)]
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
     {
         // Arrange
@@ -48,7 +50,7 @@ public class NamespaceGetCommandTests
         if (shouldSucceed)
         {
             // Set up appropriate service method based on arguments
-            if (args.Contains("--namespace") && args.Contains("--resource-group"))
+            if (args.Contains(EventHubsOptionDefinitions.NamespaceName.Name) && args.Contains(OptionDefinitions.Common.ResourceGroup.Name))
             {
                 // Single namespace request
                 var namespaceDetails = new Models.Namespace(

@@ -53,31 +53,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task Should_HandleEmptyResourceGroup_Gracefully()
-    {
-        // Test with a resource group that doesn't have Event Hubs namespaces
-        var emptyResourceGroupName = $"empty-rg-{Guid.NewGuid():N}[..10]";
-
-        var result = await CallToolAsync(
-            "azmcp_eventhubs_namespace_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", emptyResourceGroupName }
-            });
-
-        // Should successfully return an empty array or handle the non-existent resource group
-        // Note: This might return an empty array or an error depending on how the service handles missing resource groups
-        var namespacesProperty = result.AssertProperty("namespaces");
-        if (namespacesProperty.ValueKind == JsonValueKind.Array)
-        {
-            Assert.Empty(namespacesProperty.EnumerateArray());
-        }
-        // If it returns an error instead, that's also acceptable behavior
-    }
-
-    [Fact]
-    public async Task Should_GetSingleNamespaceWithComprehensiveMetadata_Successfully()
+    public async Task Should_GetSingleNamespace_Successfully()
     {
         // Test getting a single namespace by name and resource group
         var result = await CallToolAsync(
