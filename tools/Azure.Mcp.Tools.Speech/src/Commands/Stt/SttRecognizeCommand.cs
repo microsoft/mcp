@@ -54,30 +54,23 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
         // Command-level validation for file-specific options
         command.Validators.Add(commandResult =>
         {
-            // Validate file path is not empty
             var fileValue = commandResult.GetValueOrDefault(SpeechOptionDefinitions.File);
-            if (string.IsNullOrWhiteSpace(fileValue))
-            {
-                commandResult.AddError("Audio file path cannot be empty.");
-                return;
-            }
 
-            // Validate file exists
+            // Validate file path exists
             if (!File.Exists(fileValue))
             {
                 commandResult.AddError($"Audio file not found: {fileValue}");
-                return;
             }
-
-            // Validate file extension
-            var extension = Path.GetExtension(fileValue).ToLowerInvariant();
-            var supportedExtensions = new[] { ".wav", ".mp3", ".ogg", ".flac", ".alaw", ".mulaw", ".mp4", ".m4a", ".aac" };
-            if (!supportedExtensions.Contains(extension))
+            else
             {
-                commandResult.AddError($"Unsupported audio file format: {extension}. Only {string.Join(", ", supportedExtensions)} are supported.");
-                return;
+                // Validate file extension
+                var extension = Path.GetExtension(fileValue).ToLowerInvariant();
+                var supportedExtensions = new[] { ".wav", ".mp3", ".ogg", ".flac", ".alaw", ".mulaw", ".mp4", ".m4a", ".aac" };
+                if (!supportedExtensions.Contains(extension))
+                {
+                    commandResult.AddError($"Unsupported audio file format: {extension}. Only {string.Join(", ", supportedExtensions)} are supported.");
+                }
             }
-
 
             // Validate format option if provided
             var formatValue = commandResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Format);
@@ -86,7 +79,6 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
                 if (formatValue != "simple" && formatValue != "detailed")
                 {
                     commandResult.AddError("Format must be 'simple' or 'detailed'.");
-                    return;
                 }
             }
 
