@@ -146,7 +146,7 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 
 #### Configure your MCP client to use Docker:
 
-2. Run using the `.env` file from step 1. Replace `/full/path/to/your.env` with the actual `.env` file path:
+2. Run using the `.env` file from step 1. Replace `/full/path/to/your.env` with the actual `.env` file path.
 
 ```json
    {
@@ -166,8 +166,6 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
    }
 ```
 **Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
-
-Alternatively, use individual `--env` flags or `--volume` mounts for credentials.
 
 </details>
 
