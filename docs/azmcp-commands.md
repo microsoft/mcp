@@ -624,6 +624,13 @@ azmcp eventgrid subscription list --subscription <subscription> \
                                   [--resource-group <resource-group>] \
                                   [--topic <topic>]
                                   [--location <location>]
+
+# Publish custom events to Event Grid topics
+azmcp eventgrid events publish --subscription <subscription> \
+                               --topic <topic> \
+                               --data <json-event-data> \
+                               [--resource-group <resource-group>] \
+                               [--schema <schema-type>]
 ```
 
 ### Azure Function App Operations

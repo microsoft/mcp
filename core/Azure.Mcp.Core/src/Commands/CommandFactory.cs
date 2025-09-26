@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Help;
 using System.Diagnostics;
 using System.Net;
 using System.Reflection;
@@ -242,6 +243,7 @@ public class CommandFactory
         {
             ConfigureCommands(subGroup);
             root.Subcommands.Add(subGroup.Command);
+            subGroup.Command.Options.Add(new HelpOption());
         }
 
         return root;
