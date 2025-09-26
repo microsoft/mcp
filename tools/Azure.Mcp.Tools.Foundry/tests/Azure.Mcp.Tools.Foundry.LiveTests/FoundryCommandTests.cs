@@ -132,7 +132,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_create_openai_completion()
     {
-        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OpenAIAccount", "dummy-test");
+        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
         var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("OpenAIDeploymentName", "gpt-4o-mini");
         var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OpenAIAccountResourceGroup", "static-test-resources");
         var subscriptionId = Settings.SubscriptionId;
