@@ -210,6 +210,18 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 
 * "Help me diagnose issues with my app"
 
+### 🕸️ Azure App Service
+
+* "List the websites in my subscription"
+* "Show me the websites in my 'my-resource-group' resource group"
+* "Get the details for website 'my-website'"
+* "Get the details for app service plan 'my-app-service-plan'"
+
+### 📦 Azure Container Apps
+
+* "List the container apps in my subscription"
+* "Show me the container apps in my 'my-resource-group' resource group"
+
 ### 📦 Azure Container Registry (ACR)
 
 * "List all my Azure Container Registries"
@@ -303,7 +315,9 @@ The Azure MCP Server provides tools for interacting with **30+ Azure service are
 - 🧮 **Azure AI Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
 - ⚙️ **Azure App Configuration** - Configuration management
+- 🕸️ **Azure App Service** - Web app hosting
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
+- 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
