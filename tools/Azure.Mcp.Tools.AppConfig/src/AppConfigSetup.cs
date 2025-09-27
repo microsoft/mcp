@@ -21,10 +21,9 @@ public class AppConfigSetup : IAreaSetup
 
         services.AddSingleton<AccountListCommand>();
 
-        services.AddSingleton<KeyValueListCommand>();
-        services.AddSingleton<KeyValueSetCommand>();
-        services.AddSingleton<KeyValueShowCommand>();
         services.AddSingleton<KeyValueDeleteCommand>();
+        services.AddSingleton<KeyValueGetCommand>();
+        services.AddSingleton<KeyValueSetCommand>();
 
         services.AddSingleton<KeyValueLockSetCommand>();
     }
@@ -51,12 +50,10 @@ public class AppConfigSetup : IAreaSetup
 
         var keyValueDelete = serviceProvider.GetRequiredService<KeyValueDeleteCommand>();
         keyValue.AddCommand(keyValueDelete.Name, keyValueDelete);
-        var keyValueList = serviceProvider.GetRequiredService<KeyValueListCommand>();
-        keyValue.AddCommand(keyValueList.Name, keyValueList);
+        var keyValueGet = serviceProvider.GetRequiredService<KeyValueGetCommand>();
+        keyValue.AddCommand(keyValueGet.Name, keyValueGet);
         var keyValueSet = serviceProvider.GetRequiredService<KeyValueSetCommand>();
         keyValue.AddCommand(keyValueSet.Name, keyValueSet);
-        var keyValueShow = serviceProvider.GetRequiredService<KeyValueShowCommand>();
-        keyValue.AddCommand(keyValueShow.Name, keyValueShow);
 
         var keyValueLockSet = serviceProvider.GetRequiredService<KeyValueLockSetCommand>();
         lockGroup.AddCommand(keyValueLockSet.Name, keyValueLockSet);
