@@ -6,13 +6,13 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.FunctionApp.Models;
-using Azure.ResourceManager.AppService;
-using Azure.ResourceManager.AppService.Models;
-using Azure.ResourceManager.Storage;
-using Azure.ResourceManager.Storage.Models;
 using Azure.ResourceManager.AppContainers;
 using Azure.ResourceManager.AppContainers.Models;
+using Azure.ResourceManager.AppService;
+using Azure.ResourceManager.AppService.Models;
 using Azure.ResourceManager.Resources;
+using Azure.ResourceManager.Storage;
+using Azure.ResourceManager.Storage.Models;
 
 namespace Azure.Mcp.Tools.FunctionApp.Services;
 
@@ -174,7 +174,7 @@ public sealed class FunctionAppService(
             runtime, runtimeVersion, hostingKind, sku, os,
             storageAccountName, containerAppsEnvironmentName);
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-        
+
         ResourceGroupResource rg;
         var resourceGroupResponse = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
         if (resourceGroupResponse?.Value == null)
