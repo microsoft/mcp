@@ -144,20 +144,13 @@ public sealed class FunctionAppService(
 
     private static async Task RetrieveAndAddFunctionApp(AsyncPageable<WebSiteResource> sites, List<FunctionAppInfo> functionApps)
     {
-        ValidateRequiredParameters(subscription, resourceGroup, functionAppName);
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
-            ?? throw new InvalidOperationException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
-
-        var sites = rg.GetWebSites();
-        if (!await sites.ExistsAsync(functionAppName))
-            return null;
-
-        var site = await sites.GetAsync(functionAppName);
-        if (!IsFunctionApp(site.Value.Data))
-            return null;
-
-        return ConvertToFunctionAppModel(site.Value);
+        await foreach (var site in sites)
+        {
+            if (site?.Data is { } data && IsFunctionApp(data))
+            {
+                functionApps.Add(ConvertToFunctionAppModel(site));
+            }
+        }
     }
 
     public async Task<FunctionAppInfo> CreateFunctionApp(
@@ -181,7 +174,20 @@ public sealed class FunctionAppService(
             runtime, runtimeVersion, hostingKind, sku, os,
             storageAccountName, containerAppsEnvironmentName);
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-        var rg = await _resourceGroupService.CreateOrUpdateResourceGroup(subscription, resourceGroup, location, tenant, retryPolicy);
+        
+        ResourceGroupResource rg;
+        var resourceGroupResponse = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+        if (resourceGroupResponse?.Value == null)
+        {
+            var rgData = new ResourceGroupData(location);
+            var rgOp = await subscriptionResource.GetResourceGroups().CreateOrUpdateAsync(WaitUntil.Completed, resourceGroup, rgData);
+            rg = rgOp.Value;
+        }
+        else
+        {
+            rg = resourceGroupResponse.Value;
+        }
+
         var options = BuildCreateOptions(inputs);
 
         return options.HostingKind == HostingKind.ContainerApp

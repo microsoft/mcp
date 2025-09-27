@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.Mcp.Tools.FunctionApp.Options;
 using Azure.Mcp.Tools.FunctionApp.Options.FunctionApp;
@@ -83,32 +86,33 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        RequireResourceGroup();
-        command.AddOption(_functionAppNameOption);
-        command.AddOption(_locationOption);
-        command.AddOption(_appServicePlanOption);
-        command.AddOption(_planTypeOption);
-        command.AddOption(_planSkuOption);
-        command.AddOption(_runtimeOption);
-        command.AddOption(_runtimeVersionOption);
-        command.AddOption(_osOption);
-        command.AddOption(_storageAccountOption);
-        command.AddOption(_containerAppsEnvironmentOption);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(_functionAppNameOption);
+        command.Options.Add(_locationOption);
+        command.Options.Add(_appServicePlanOption);
+        command.Options.Add(_planTypeOption);
+        command.Options.Add(_planSkuOption);
+        command.Options.Add(_runtimeOption);
+        command.Options.Add(_runtimeVersionOption);
+        command.Options.Add(_osOption);
+        command.Options.Add(_storageAccountOption);
+        command.Options.Add(_containerAppsEnvironmentOption);
     }
 
     protected override FunctionAppCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.FunctionAppName = parseResult.GetValueForOption(_functionAppNameOption);
-        options.Location = parseResult.GetValueForOption(_locationOption);
-        options.AppServicePlan = parseResult.GetValueForOption(_appServicePlanOption);
-        options.PlanType = parseResult.GetValueForOption(_planTypeOption);
-        options.PlanSku = parseResult.GetValueForOption(_planSkuOption);
-        options.Runtime = parseResult.GetValueForOption(_runtimeOption) ?? "dotnet";
-        options.RuntimeVersion = parseResult.GetValueForOption(_runtimeVersionOption);
-        options.OperatingSystem = parseResult.GetValueForOption(_osOption);
-        options.StorageAccount = parseResult.GetValueForOption(_storageAccountOption);
-        options.ContainerAppsEnvironment = parseResult.GetValueForOption(_containerAppsEnvironmentOption);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.FunctionAppName = parseResult.GetValueOrDefault<string>(_functionAppNameOption.Name);
+        options.Location = parseResult.GetValueOrDefault<string>(_locationOption.Name);
+        options.AppServicePlan = parseResult.GetValueOrDefault<string>(_appServicePlanOption.Name);
+        options.PlanType = parseResult.GetValueOrDefault<string>(_planTypeOption.Name);
+        options.PlanSku = parseResult.GetValueOrDefault<string>(_planSkuOption.Name);
+        options.Runtime = parseResult.GetValueOrDefault<string>(_runtimeOption.Name) ?? "dotnet";
+        options.RuntimeVersion = parseResult.GetValueOrDefault<string>(_runtimeVersionOption.Name);
+        options.OperatingSystem = parseResult.GetValueOrDefault<string>(_osOption.Name);
+        options.StorageAccount = parseResult.GetValueOrDefault<string>(_storageAccountOption.Name);
+        options.ContainerAppsEnvironment = parseResult.GetValueOrDefault<string>(_containerAppsEnvironmentOption.Name);
         return options;
     }
 
@@ -126,7 +130,7 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
                 var len = options.FunctionAppName.Length;
                 if (len < 2 || len > 43)
                 {
-                    context.Response.Status = 400;
+                    context.Response.Status = HttpStatusCode.BadRequest;
                     context.Response.Message = "function-app name must be between 2 and 43 characters.";
                     return context.Response;
                 }
@@ -134,7 +138,7 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
 
             if (!string.IsNullOrWhiteSpace(options.AppServicePlan) && string.Equals(options.PlanType, "containerapp", StringComparison.OrdinalIgnoreCase))
             {
-                context.Response.Status = 400;
+                context.Response.Status = HttpStatusCode.BadRequest;
                 context.Response.Message = "--app-service-plan cannot be combined with --plan-type containerapp.";
                 return context.Response;
             }
@@ -173,20 +177,14 @@ public sealed class FunctionAppCreateCommand(ILogger<FunctionAppCreateCommand> l
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 409 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "Function App name already exists or conflict in resource group. Choose a different name or check plan settings.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
-            $"Authorization failed creating the Function App. Details: {reqEx.Message}",
-        RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Resource group or plan not found. Verify the resource group and plan exist and you have access.",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Authorization failed accessing the Function App. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record FunctionAppCreateCommandResult(FunctionAppInfo FunctionApp);
