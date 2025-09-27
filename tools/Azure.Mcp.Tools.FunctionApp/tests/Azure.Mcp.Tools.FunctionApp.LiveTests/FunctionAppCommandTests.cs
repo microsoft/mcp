@@ -183,4 +183,77 @@ public sealed class FunctionAppCommandTests(LiveTestFixture liveTestFixture, ITe
             });
         Assert.False(missingSub.HasValue);
     }
+
+    [Theory]
+    [InlineData("consumption", null, "python", null, "linux", null)]
+    [InlineData("flex", null, "dotnet-isolated", null, "linux", null)]
+    [InlineData("premium", null, "powershell", "windows", "windows", null)]
+    [InlineData("containerapp", null, "dotnet-isolated", null, "linux", null)]
+    [InlineData("appservice", "B2", "node", "windows", "windows", "22.0.0")]
+    [InlineData("appservice", "P0V3", "java", "linux", "linux", "21.0")]
+    public async Task Should_create_function_app(
+        string planType,
+        string? planSku,
+        string runtime,
+        string? operatingSystem,
+        string expectedOperatingSystem,
+        string? runtimeVersion)
+    {
+        var uniqueName = $"mcp-test-{planType}-{DateTime.UtcNow:MMddHHmmss}";
+
+        var result = await CallToolAsync(
+            "azmcp_functionapp_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", uniqueName },
+                { "function-app", uniqueName },
+                { "location", "westus" },
+                { "plan-type", planType },
+                { "plan-sku", planSku },
+                { "runtime", runtime },
+                { "os", operatingSystem },
+                { "runtime-version", runtimeVersion }
+            });
+
+        Assert.NotNull(result);
+        var functionAppWrapper = result!.Value;
+        Assert.True(functionAppWrapper.TryGetProperty("functionApp", out var functionApp));
+        Assert.True(functionApp.TryGetProperty("name", out var nameProp));
+        Assert.Equal(uniqueName, nameProp.GetString());
+        Assert.True(functionApp.TryGetProperty("resourceGroupName", out var rgProp));
+        Assert.Equal(uniqueName, rgProp.GetString());
+        Assert.True(functionApp.TryGetProperty("appServicePlanName", out var planProp));
+        Assert.False(string.IsNullOrWhiteSpace(planProp.GetString()));
+        Assert.True(functionApp.TryGetProperty("operatingSystem", out var osProp));
+        Assert.Equal(expectedOperatingSystem, osProp.GetString());
+    }
+
+    [Theory]
+    [InlineData("python", "windows")]
+    [InlineData("dotnet", "invalid-os")]
+    public async Task Should_fail_when_invalid_or_conflicting_os(string runtime, string os)
+    {
+        var uniqueFunctionAppName = $"test-functionapp-invalid-{runtime}-{DateTime.UtcNow:MMddHHmmss}";
+        var result = await CallToolAsync(
+            "azmcp_functionapp_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "function-app", uniqueFunctionAppName },
+                { "location", "westus" },
+                { "runtime", runtime },
+                { "os", os }
+            });
+
+        if (result.HasValue)
+        {
+            Assert.True(result.Value.TryGetProperty("message", out _));
+        }
+        else
+        {
+            Assert.Null(result);
+        }
+    }
 }
