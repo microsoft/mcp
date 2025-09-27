@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using Azure.Mcp.Core.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
@@ -17,11 +18,12 @@ internal class TelemetryService : ITelemetryService
     private readonly bool _isEnabled;
     private readonly List<KeyValuePair<string, object?>> _tagsList;
     private readonly IMachineInformationProvider _informationProvider;
-    private readonly TaskCompletionSource _isInitialized = new TaskCompletionSource();
+    private readonly ILogger<TelemetryService> _logger;
+    private bool _isInitialized = false;
 
     internal ActivitySource Parent { get; }
 
-    public TelemetryService(IMachineInformationProvider informationProvider, IOptions<AzureMcpServerConfiguration> options)
+    public TelemetryService(IMachineInformationProvider informationProvider, IOptions<AzureMcpServerConfiguration> options, ILogger<TelemetryService> logger)
     {
         _isEnabled = options.Value.IsTelemetryEnabled;
         _tagsList = new List<KeyValuePair<string, object?>>()
@@ -31,20 +33,23 @@ internal class TelemetryService : ITelemetryService
 
         Parent = new ActivitySource(options.Value.Name, options.Value.Version, _tagsList);
         _informationProvider = informationProvider;
-
-        Task.Factory.StartNew(InitializeTagList);
+        _logger = logger;
     }
 
-    public ValueTask<Activity?> StartActivity(string activityId) => StartActivity(activityId, null);
+    public Activity? StartActivity(string activityId) => StartActivity(activityId, null);
 
-    public async ValueTask<Activity?> StartActivity(string activityId, Implementation? clientInfo)
+    public Activity? StartActivity(string activityId, Implementation? clientInfo)
     {
         if (!_isEnabled)
         {
             return null;
         }
 
-        await _isInitialized.Task;
+        if (!_isInitialized)
+        {
+            throw new InvalidOperationException(
+                "Telemetry service has not been initialized. Use InitializeAsync() before any other operations.");
+        }
 
         var activity = Parent.StartActivity(activityId);
 
@@ -70,8 +75,15 @@ internal class TelemetryService : ITelemetryService
     {
     }
 
-    private async Task InitializeTagList()
+    public async ValueTask InitializeAsync()
     {
+        var wasInitialized = Interlocked.CompareExchange(ref _isInitialized, true, false);
+
+        if (wasInitialized)
+        {
+            return;
+        }
+
         try
         {
             var macAddressHash = await _informationProvider.GetMacAddressHash();
@@ -79,12 +91,11 @@ internal class TelemetryService : ITelemetryService
 
             _tagsList.Add(new(TagName.MacAddressHash, macAddressHash));
             _tagsList.Add(new(TagName.DevDeviceId, deviceId));
-
-            _isInitialized.SetResult();
         }
         catch (Exception ex)
         {
-            _isInitialized.SetException(ex);
+            _logger.LogError(ex, "Error occurred initializing telemetry service.");
+            throw;
         }
     }
 }
