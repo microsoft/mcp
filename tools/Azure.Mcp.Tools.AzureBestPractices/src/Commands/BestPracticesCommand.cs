@@ -21,9 +21,6 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
 
     public override string Name => "get";
 
-    // public override string Description =>
-    // "Returns a list of best practices for code generation, operations and deployment when working with Azure services. It should be called for any code generation, deployment or operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory, Azure App Services, or any other Azure technology or programming language. Use when prompt includes explicit instructions to plan, But Not Create any code until confirmation. Use when the user asks to plan, design, outline, or get best practices for building an Azure app or feature before writing code (e.g., plan a JS HTTP Azure Function without writing code, plan a to‑do list container app but not to write any code). Not for Terraform-only guidance, full high-level multi-domain architecture ideation, or CI/CD pipeline specifics. Only call this function when you are confident the user is discussing Azure. If this tool needs to be categorized, it belongs to the Azure Best Practices category. Examples: plan to deploy to-do list app without writing code; get Azure Functions deployment best practices.";
-
     public override string Description =>
     "Returns a curated list of Azure best practices for code generation, operations, and deployment. " +
     "Use when the user wants to plan, design, or outline an Azure app or feature before writing any code. " +
