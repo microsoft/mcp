@@ -54,7 +54,7 @@ public sealed class FunctionAppGetCommandTests
         if (shouldSucceed)
         {
             _service.GetFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-                .Returns(new FunctionAppInfo("app1", "rg1", "eastus", "plan1", "Running", "app1.azurewebsites.net", null));
+                .Returns(new FunctionAppInfo("app1", "rg1", "eastus", "plan1", "Running", "app1.azurewebsites.net", null, null));
         }
 
         var context = new CommandContext(_serviceProvider);
@@ -68,7 +68,7 @@ public sealed class FunctionAppGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsFunctionApp()
     {
-        var expected = new FunctionAppInfo("app1", "rg1", "eastus", "plan1", "Running", "app1.azurewebsites.net", null);
+        var expected = new FunctionAppInfo("app1", "rg1", "eastus", "plan1", "Running", "app1.azurewebsites.net", null, null);
         _service.GetFunctionApp(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(expected);
 

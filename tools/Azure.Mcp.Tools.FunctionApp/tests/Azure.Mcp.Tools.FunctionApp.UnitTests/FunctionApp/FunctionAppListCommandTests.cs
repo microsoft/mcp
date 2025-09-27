@@ -55,8 +55,8 @@ public sealed class FunctionAppListCommandTests
         {
             var testFunctionApps = new List<FunctionAppInfo>
             {
-                new("functionApp1", null, "eastus", "plan1", "Running", "functionapp1.azurewebsites.net", null),
-                new("functionApp2", null, "westus", "plan2", "Stopped", "functionapp2.azurewebsites.net", null)
+                new("functionApp1", null, "eastus", "plan1", "Running", "functionapp1.azurewebsites.net", null, null),
+                new("functionApp2", null, "westus", "plan2", "Stopped", "functionapp2.azurewebsites.net", null, null)
             };
             _functionAppService.ListFunctionApps(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
                 .Returns(testFunctionApps);
@@ -87,8 +87,8 @@ public sealed class FunctionAppListCommandTests
         // Arrange
         var expectedFunctionApps = new List<FunctionAppInfo>
         {
-            new("functionApp1", "rg1", "eastus", "plan1", "Running", "functionapp1.azurewebsites.net", null),
-            new("functionApp2", "rg2", "westus", "plan2", "Stopped", "functionapp2.azurewebsites.net", null)
+            new("functionApp1", "rg1", "eastus", "plan1", "Running", "functionapp1.azurewebsites.net", null, null),
+            new("functionApp2", "rg2", "westus", "plan2", "Stopped", "functionapp2.azurewebsites.net", null, null)
         };
         _functionAppService.ListFunctionApps(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(expectedFunctionApps);
