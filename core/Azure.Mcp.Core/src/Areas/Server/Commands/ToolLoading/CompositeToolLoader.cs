@@ -142,7 +142,7 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
     /// <param name="server">The server context for creating list tools requests.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    private async Task InitializeAsync(IMcpServer server, CancellationToken cancellationToken)
+    private async Task InitializeAsync(McpServer server, CancellationToken cancellationToken)
     {
         if (_isInitialized)
         {
@@ -162,7 +162,7 @@ public sealed class CompositeToolLoader(IEnumerable<IToolLoader> toolLoaders, IL
             var allTools = new List<Tool>();
 
             // Create a request for listing tools to populate the tool loader map
-            var listToolsRequest = new RequestContext<ListToolsRequestParams>(server)
+            var listToolsRequest = new RequestContext<ListToolsRequestParams>(server, new() { Method = RequestMethods.ToolsList })
             {
                 Params = new ListToolsRequestParams()
             };

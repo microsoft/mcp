@@ -31,8 +31,8 @@ public class CommandFactoryToolLoaderTests
 
     private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateRequest()
     {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
-        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer)
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList })
         {
             Params = new ListToolsRequestParams()
         };
@@ -226,8 +226,8 @@ public class CommandFactoryToolLoaderTests
         var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands);
         var firstCommand = availableCommands.First();
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -248,8 +248,8 @@ public class CommandFactoryToolLoaderTests
     {
         var (toolLoader, _) = CreateToolLoader();
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = null
         };
@@ -271,8 +271,8 @@ public class CommandFactoryToolLoaderTests
     {
         var (toolLoader, _) = CreateToolLoader();
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -362,10 +362,10 @@ public class CommandFactoryToolLoaderTests
 
         var targetCommand = subscriptionListCommand;
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
         var arguments = new Dictionary<string, JsonElement>();
 
-        var callToolRequest = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var callToolRequest = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -512,10 +512,10 @@ public class CommandFactoryToolLoaderTests
         commandMap["fake-secret-get"] = fakeCommand;
 
         // Create mock server without elicitation capabilities
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
         mockServer.ClientCapabilities.Returns((ClientCapabilities?)null);
 
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -552,11 +552,11 @@ public class CommandFactoryToolLoaderTests
         commandMap["fake-non-secret-get"] = fakeCommand;
 
         // Create mock server with elicitation capabilities
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
         var capabilities = new ClientCapabilities { Elicitation = new ElicitationCapability() };
         mockServer.ClientCapabilities.Returns(capabilities);
 
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -594,10 +594,10 @@ public class CommandFactoryToolLoaderTests
         commandMap["fake-secret-get"] = fakeCommand;
 
         // Create mock server - elicitation support doesn't matter when bypassed
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
         mockServer.ClientCapabilities.Returns((ClientCapabilities?)null);
 
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -639,10 +639,10 @@ public class CommandFactoryToolLoaderTests
         commandMap["fake-secret-get"] = fakeCommand;
 
         // Create mock server without elicitation capabilities
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
         mockServer.ClientCapabilities.Returns((ClientCapabilities?)null);
 
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {

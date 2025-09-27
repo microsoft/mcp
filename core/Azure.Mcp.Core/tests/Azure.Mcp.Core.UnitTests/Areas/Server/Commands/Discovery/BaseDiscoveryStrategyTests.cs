@@ -122,7 +122,7 @@ public class BaseDiscoveryStrategyTests
     public async Task GetOrCreateClientAsync_WithNewServer_CreatesAndCachesClient()
     {
         // Arrange
-        var mockClient = Substitute.For<IMcpClient>();
+        var mockClient = Substitute.For<McpClient>();
         var provider = CreateMockServerProvider("TestServer");
         provider.CreateClientAsync(Arg.Any<McpClientOptions>()).Returns(mockClient);
         var strategy = CreateMockStrategy(provider);
@@ -139,7 +139,7 @@ public class BaseDiscoveryStrategyTests
     public async Task GetOrCreateClientAsync_WithCachedServer_ReturnsCachedClient()
     {
         // Arrange
-        var mockClient = Substitute.For<IMcpClient>();
+        var mockClient = Substitute.For<McpClient>();
         var provider = CreateMockServerProvider("TestServer");
         provider.CreateClientAsync(Arg.Any<McpClientOptions>()).Returns(mockClient);
         var strategy = CreateMockStrategy(provider);
@@ -161,7 +161,7 @@ public class BaseDiscoveryStrategyTests
     public async Task GetOrCreateClientAsync_WithCustomOptions_PassesOptionsCorrectly()
     {
         // Arrange
-        var mockClient = Substitute.For<IMcpClient>();
+        var mockClient = Substitute.For<McpClient>();
         var provider = CreateMockServerProvider("TestServer");
         provider.CreateClientAsync(Arg.Any<McpClientOptions>()).Returns(mockClient);
         var strategy = CreateMockStrategy(provider);
@@ -179,7 +179,7 @@ public class BaseDiscoveryStrategyTests
     public async Task GetOrCreateClientAsync_WithDefaultOptions_UsesDefaultOptions()
     {
         // Arrange
-        var mockClient = Substitute.For<IMcpClient>();
+        var mockClient = Substitute.For<McpClient>();
         var provider = CreateMockServerProvider("TestServer");
         provider.CreateClientAsync(Arg.Any<McpClientOptions>()).Returns(mockClient);
         var strategy = CreateMockStrategy(provider);
@@ -210,8 +210,8 @@ public class BaseDiscoveryStrategyTests
     public async Task GetOrCreateClientAsync_WithMultipleServers_CachesEachSeparately()
     {
         // Arrange
-        var mockClient1 = Substitute.For<IMcpClient>();
-        var mockClient2 = Substitute.For<IMcpClient>();
+        var mockClient1 = Substitute.For<McpClient>();
+        var mockClient2 = Substitute.For<McpClient>();
         var provider1 = CreateMockServerProvider("Server1");
         var provider2 = CreateMockServerProvider("Server2");
 
@@ -295,7 +295,7 @@ public class BaseDiscoveryStrategyTests
     public async Task GetOrCreateClientAsync_CacheUsesSameKeyForDifferentCasing_ReusesCachedClient()
     {
         // Arrange
-        var mockClient1 = Substitute.For<IMcpClient>();
+        var mockClient1 = Substitute.For<McpClient>();
         var provider = CreateMockServerProvider("TestServer");
 
         // Setup provider to return a client for the first call
@@ -326,8 +326,8 @@ public class BaseDiscoveryStrategyTests
     public async Task DisposeAsync_ShouldDisposeAllCachedClients()
     {
         // Arrange
-        var mockClient1 = Substitute.For<IMcpClient>();
-        var mockClient2 = Substitute.For<IMcpClient>();
+        var mockClient1 = Substitute.For<McpClient>();
+        var mockClient2 = Substitute.For<McpClient>();
         var provider1 = CreateMockServerProvider("Server1");
         var provider2 = CreateMockServerProvider("Server2");
 
@@ -363,8 +363,8 @@ public class BaseDiscoveryStrategyTests
     public async Task DisposeAsync_ShouldHandleClientDisposalExceptions()
     {
         // Arrange
-        var mockClient1 = Substitute.For<IMcpClient>();
-        var mockClient2 = Substitute.For<IMcpClient>();
+        var mockClient1 = Substitute.For<McpClient>();
+        var mockClient2 = Substitute.For<McpClient>();
         var provider1 = CreateMockServerProvider("Server1");
         var provider2 = CreateMockServerProvider("Server2");
 
@@ -393,7 +393,7 @@ public class BaseDiscoveryStrategyTests
     public async Task DisposeAsync_ShouldBeIdempotent()
     {
         // Arrange
-        var mockClient = Substitute.For<IMcpClient>();
+        var mockClient = Substitute.For<McpClient>();
         var provider = CreateMockServerProvider("Server1");
         provider.CreateClientAsync(Arg.Any<McpClientOptions>()).Returns(mockClient);
 
@@ -415,7 +415,7 @@ public class BaseDiscoveryStrategyTests
     public async Task DisposeAsync_ShouldClearClientCache()
     {
         // Arrange
-        var mockClient = Substitute.For<IMcpClient>();
+        var mockClient = Substitute.For<McpClient>();
         var provider = CreateMockServerProvider("Server1");
         provider.CreateClientAsync(Arg.Any<McpClientOptions>()).Returns(mockClient);
 

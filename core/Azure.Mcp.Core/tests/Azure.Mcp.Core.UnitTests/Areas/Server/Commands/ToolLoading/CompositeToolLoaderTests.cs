@@ -21,8 +21,8 @@ public class CompositeToolLoaderTests
 
     private static RequestContext<ListToolsRequestParams> CreateListToolsRequest()
     {
-        var mockServer = Substitute.For<IMcpServer>();
-        return new RequestContext<ListToolsRequestParams>(mockServer)
+        var mockServer = Substitute.For<McpServer>();
+        return new RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList })
         {
             Params = new ListToolsRequestParams()
         };
@@ -30,8 +30,8 @@ public class CompositeToolLoaderTests
 
     private static RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName, IReadOnlyDictionary<string, JsonElement>? arguments = null)
     {
-        var mockServer = Substitute.For<IMcpServer>();
-        return new RequestContext<CallToolRequestParams>(mockServer)
+        var mockServer = Substitute.For<McpServer>();
+        return new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -285,8 +285,8 @@ public class CompositeToolLoaderTests
         var toolLoaders = new List<IToolLoader> { mockToolLoader };
 
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
-        var mockServer = Substitute.For<IMcpServer>();
-        var request = new RequestContext<CallToolRequestParams>(mockServer)
+        var mockServer = Substitute.For<McpServer>();
+        var request = new RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = null
         };

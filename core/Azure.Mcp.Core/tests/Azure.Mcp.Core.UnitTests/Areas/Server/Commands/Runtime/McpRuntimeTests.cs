@@ -35,9 +35,9 @@ public class McpRuntimeTests
         return Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
     }
 
-    private static IMcpServer CreateMockServer()
+    private static McpServer CreateMockServer()
     {
-        return Substitute.For<IMcpServer>();
+        return Substitute.For<McpServer>();
     }
 
     private static ITelemetryService CreateMockTelemetryService()
@@ -47,7 +47,7 @@ public class McpRuntimeTests
 
     private static RequestContext<ListToolsRequestParams> CreateListToolsRequest()
     {
-        return new RequestContext<ListToolsRequestParams>(CreateMockServer())
+        return new RequestContext<ListToolsRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsList })
         {
             Params = new ListToolsRequestParams()
         };
@@ -55,7 +55,7 @@ public class McpRuntimeTests
 
     private static RequestContext<CallToolRequestParams> CreateCallToolRequest(string toolName = "test-tool", IReadOnlyDictionary<string, JsonElement>? arguments = null)
     {
-        return new RequestContext<CallToolRequestParams>(CreateMockServer())
+        return new RequestContext<CallToolRequestParams>(CreateMockServer(), new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {

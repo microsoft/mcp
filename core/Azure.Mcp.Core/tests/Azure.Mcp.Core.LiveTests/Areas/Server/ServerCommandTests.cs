@@ -16,7 +16,7 @@ public class ServerCommandTests(ITestOutputHelper output)
 {
     protected ITestOutputHelper Output { get; } = output;
 
-    private async Task<IMcpClient> CreateClientAsync(params string[] arguments)
+    private async Task<McpClient> CreateClientAsync(params string[] arguments)
     {
         var settingsFixture = new LiveTestSettingsFixture();
         await settingsFixture.InitializeAsync();
@@ -46,7 +46,7 @@ public class ServerCommandTests(ITestOutputHelper output)
         }
 
         var clientTransport = new StdioClientTransport(transportOptions);
-        return await McpClientFactory.CreateAsync(clientTransport);
+        return await McpClient.CreateAsync(clientTransport);
     }
 
     #region Default Mode Tests

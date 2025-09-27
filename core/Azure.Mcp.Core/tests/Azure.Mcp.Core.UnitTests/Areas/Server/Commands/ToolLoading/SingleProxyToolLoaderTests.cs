@@ -50,8 +50,8 @@ public class SingleProxyToolLoaderTests
 
     private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateListToolsRequest()
     {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
-        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer)
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList })
         {
             Params = new ListToolsRequestParams()
         };
@@ -61,8 +61,8 @@ public class SingleProxyToolLoaderTests
         string toolName = "azure",
         Dictionary<string, JsonElement>? arguments = null)
     {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
-        return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -223,8 +223,8 @@ public class SingleProxyToolLoaderTests
     {
         // Arrange
         var (toolLoader, _) = CreateToolLoader(useRealDiscovery: true);
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = null
         };

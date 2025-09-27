@@ -45,5 +45,5 @@ public interface IMcpServerProvider
     /// </summary>
     /// <param name="clientOptions">Options to configure the client behavior.</param>
     /// <returns>A configured MCP client ready for use.</returns>
-    Task<IMcpClient> CreateClientAsync(McpClientOptions clientOptions);
+    Task<McpClient> CreateClientAsync(McpClientOptions clientOptions);
 }
