@@ -453,6 +453,7 @@
         "pscore",
         "pscustomobject",
         "pullrequest",
+        "rainfly",
         "RAGRS",
         "RAGZRS",
         "rainfly",
@@ -534,5 +535,8 @@
         "wscript",
         "Xunit",
         "xvfb"
+        "aieval",
+        "requesturl",
+        "dataagent"
     ]
 }

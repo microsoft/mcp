@@ -18,6 +18,7 @@ public class FunctionAppSetup : IAreaSetup
         services.AddSingleton<IFunctionAppService, FunctionAppService>();
 
         services.AddSingleton<FunctionAppGetCommand>();
+
         services.AddSingleton<FunctionAppCreateCommand>();
     }
 
@@ -27,6 +28,7 @@ public class FunctionAppSetup : IAreaSetup
 
         var getCommand = serviceProvider.GetRequiredService<FunctionAppGetCommand>();
         functionApp.AddCommand(getCommand.Name, getCommand);
+
         var createCommand = serviceProvider.GetRequiredService<FunctionAppCreateCommand>();
         functionApp.AddCommand(createCommand.Name, createCommand);
 
