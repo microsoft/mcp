@@ -18,25 +18,6 @@ internal static class SqlQueryValidator
     private const int MaxQueryLength = 5000; // Arbitrary safety cap to avoid extremely large inputs.
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(3); // 3 second timeout for regex operations
 
-    // Allowed (case-insensitive) SQL keywords / functions in simple read-only queries.
-    private static readonly HashSet<string> AllowedKeywords = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "select","distinct","from","where","and","or","not","group","by","having","order","asc","desc",
-        "limit","offset","join","inner","left","right","full","outer","on","as","between","in","is","null",
-        "like","ilike","count","sum","avg","min","max","case","when","then","else","end"
-    };
-
-    // Known SQL keywords that should be validated (both allowed and dangerous ones)
-    private static readonly HashSet<string> KnownSqlKeywords = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "select","distinct","from","where","and","or","not","group","by","having","order","asc","desc",
-        "limit","offset","join","inner","left","right","full","outer","on","as","between","in","is","null",
-        "like","ilike","count","sum","avg","min","max","case","when","then","else","end",
-        "insert","update","delete","drop","alter","create","grant","revoke","truncate","copy","execute","exec",
-        "union","intersect","except","vacuum","analyze","attach","prepare","deallocate","call","do",
-        "show","explain","describe","use","commit","rollback","begin","transaction"
-    };
-
     /// <summary>
     /// Ensures the provided query is a single, read-only SELECT statement (no comments, no stacked statements).
     /// Throws <see cref="CommandValidationException"/> when validation fails so callers receive a 400 response.
@@ -98,23 +79,6 @@ internal static class SqlQueryValidator
         if (!matches[0].Value.Equals("select", StringComparison.OrdinalIgnoreCase))
         {
             throw new CommandValidationException("Only single read-only SELECT statements are allowed.");
-        }
-
-        foreach (Match m in matches)
-        {
-            var token = m.Value;
-
-            // Only validate tokens that are recognized SQL keywords
-            // This allows table names, column names, and other identifiers that aren't SQL keywords
-            if (KnownSqlKeywords.Contains(token))
-            {
-                // It's a recognized SQL keyword - ensure it's in our allow list
-                if (!AllowedKeywords.Contains(token))
-                {
-                    throw new CommandValidationException($"Keyword '{token}' is not permitted in this query context.");
-                }
-            }
-            // If it's not a known SQL keyword, treat it as an identifier and allow it
         }
     }
 }
