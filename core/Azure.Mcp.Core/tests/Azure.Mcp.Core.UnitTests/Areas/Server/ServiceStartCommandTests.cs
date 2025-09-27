@@ -201,7 +201,7 @@ public class ServiceStartCommandTests
 
         // Assert
         Assert.True(result.IsValid);
-        Assert.Null(result.ErrorMessage);
+        Assert.Empty(result.Errors);
     }
 
     [Fact]
@@ -216,7 +216,7 @@ public class ServiceStartCommandTests
 
         // Assert
         Assert.False(result.IsValid);
-        Assert.Contains("Invalid transport 'invalid'", result.ErrorMessage);
+        Assert.Contains("Invalid transport 'invalid'", string.Join('\n', result.Errors));
     }
 
     [Fact]
@@ -231,7 +231,7 @@ public class ServiceStartCommandTests
 
         // Assert
         Assert.False(result.IsValid);
-        Assert.Contains("Invalid mode 'invalid'", result.ErrorMessage);
+        Assert.Contains("Invalid mode 'invalid'", string.Join('\n', result.Errors));
     }
 
     [Fact]
@@ -383,14 +383,8 @@ public class ServiceStartCommandTests
         return root.Parse([.. args]);
     }
 
-    private static ParseResult CreateParseResultWithInsecureDisableElicitation(bool insecureDisableElicitation)
+    private ParseResult CreateParseResultWithInsecureDisableElicitation(bool insecureDisableElicitation)
     {
-        var root = new RootCommand
-        {
-            ServiceOptionDefinitions.Namespace,
-            ServiceOptionDefinitions.Transport,
-            ServiceOptionDefinitions.InsecureDisableElicitation
-        };
         var args = new List<string>
         {
             "--transport",
@@ -402,21 +396,11 @@ public class ServiceStartCommandTests
             args.Add("--insecure-disable-elicitation");
         }
 
-        return root.Parse([.. args]);
+        return _command.GetCommand().Parse([.. args]);
     }
 
-    private static ParseResult CreateParseResultWithTransport(string transport)
+    private ParseResult CreateParseResultWithTransport(string transport)
     {
-        var root = new RootCommand
-        {
-            ServiceOptionDefinitions.Namespace,
-            ServiceOptionDefinitions.Transport,
-            ServiceOptionDefinitions.Mode,
-            ServiceOptionDefinitions.ReadOnly,
-            ServiceOptionDefinitions.Debug,
-            ServiceOptionDefinitions.EnableInsecureTransports,
-            ServiceOptionDefinitions.InsecureDisableElicitation
-        };
         var args = new List<string>
         {
             "--transport",
@@ -426,21 +410,11 @@ public class ServiceStartCommandTests
             "--read-only"
         };
 
-        return root.Parse([.. args]);
+        return _command.GetCommand().Parse([.. args]);
     }
 
-    private static ParseResult CreateParseResultWithoutTransport()
+    private ParseResult CreateParseResultWithoutTransport()
     {
-        var root = new RootCommand
-        {
-            ServiceOptionDefinitions.Namespace,
-            ServiceOptionDefinitions.Transport,
-            ServiceOptionDefinitions.Mode,
-            ServiceOptionDefinitions.ReadOnly,
-            ServiceOptionDefinitions.Debug,
-            ServiceOptionDefinitions.EnableInsecureTransports,
-            ServiceOptionDefinitions.InsecureDisableElicitation
-        };
         var args = new List<string>
         {
             "--mode",
@@ -448,21 +422,11 @@ public class ServiceStartCommandTests
             "--read-only"
         };
 
-        return root.Parse([.. args]);
+        return _command.GetCommand().Parse([.. args]);
     }
 
-    private static ParseResult CreateParseResultWithMode(string? mode)
+    private ParseResult CreateParseResultWithMode(string? mode)
     {
-        var root = new RootCommand
-        {
-            ServiceOptionDefinitions.Namespace,
-            ServiceOptionDefinitions.Transport,
-            ServiceOptionDefinitions.Mode,
-            ServiceOptionDefinitions.ReadOnly,
-            ServiceOptionDefinitions.Debug,
-            ServiceOptionDefinitions.EnableInsecureTransports,
-            ServiceOptionDefinitions.InsecureDisableElicitation
-        };
         var args = new List<string>
         {
             "--transport",
@@ -475,21 +439,11 @@ public class ServiceStartCommandTests
             args.Add(mode);
         }
 
-        return root.Parse([.. args]);
+        return _command.GetCommand().Parse([.. args]);
     }
 
-    private static ParseResult CreateParseResultWithAllOptions()
+    private ParseResult CreateParseResultWithAllOptions()
     {
-        var root = new RootCommand
-        {
-            ServiceOptionDefinitions.Namespace,
-            ServiceOptionDefinitions.Transport,
-            ServiceOptionDefinitions.Mode,
-            ServiceOptionDefinitions.ReadOnly,
-            ServiceOptionDefinitions.Debug,
-            ServiceOptionDefinitions.EnableInsecureTransports,
-            ServiceOptionDefinitions.InsecureDisableElicitation
-        };
         var args = new List<string>
         {
             "--transport", "stdio",
@@ -501,24 +455,12 @@ public class ServiceStartCommandTests
             "--insecure-disable-elicitation"
         };
 
-        return root.Parse([.. args]);
+        return _command.GetCommand().Parse([.. args]);
     }
 
-    private static ParseResult CreateParseResultWithMinimalOptions()
+    private ParseResult CreateParseResultWithMinimalOptions()
     {
-        var root = new RootCommand
-        {
-            ServiceOptionDefinitions.Namespace,
-            ServiceOptionDefinitions.Transport,
-            ServiceOptionDefinitions.Mode,
-            ServiceOptionDefinitions.ReadOnly,
-            ServiceOptionDefinitions.Debug,
-            ServiceOptionDefinitions.EnableInsecureTransports,
-            ServiceOptionDefinitions.InsecureDisableElicitation
-        };
-        var args = new List<string>();
-
-        return root.Parse([.. args]);
+        return _command.GetCommand().Parse([]);
     }
 
     private ServiceStartOptions GetBoundOptions(ParseResult parseResult)

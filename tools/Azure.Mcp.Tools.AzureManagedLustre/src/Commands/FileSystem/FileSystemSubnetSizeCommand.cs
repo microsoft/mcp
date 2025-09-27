@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
-using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureManagedLustre.Options;
@@ -48,6 +46,15 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
         base.RegisterOptions(command);
         command.Options.Add(AzureManagedLustreOptionDefinitions.SkuOption);
         command.Options.Add(AzureManagedLustreOptionDefinitions.SizeOption);
+        command.Validators.Add(commandResult =>
+        {
+            if (commandResult.TryGetValue(AzureManagedLustreOptionDefinitions.SkuOption, out var skuName)
+                && !string.IsNullOrWhiteSpace(skuName)
+                && !AllowedSkus.Contains(skuName))
+            {
+                commandResult.AddError($"Invalid SKU '{skuName}'. Allowed values: {string.Join(", ", AllowedSkus)}");
+            }
+        });
     }
 
     protected override FileSystemSubnetSizeOptions BindOptions(ParseResult parseResult)
@@ -56,30 +63,6 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
         options.Sku = parseResult.GetValueOrDefault<string>(AzureManagedLustreOptionDefinitions.SkuOption.Name);
         options.Size = parseResult.GetValueOrDefault<int>(AzureManagedLustreOptionDefinitions.SizeOption.Name);
         return options;
-    }
-
-    public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
-    {
-        var result = base.Validate(commandResult, commandResponse);
-
-        if (result.IsValid)
-        {
-            if (commandResult.TryGetValue(AzureManagedLustreOptionDefinitions.SkuOption, out var skuName)
-                && !string.IsNullOrWhiteSpace(skuName)
-                && !AllowedSkus.Contains(skuName))
-            {
-                result.IsValid = false;
-                result.ErrorMessage = $"Invalid SKU '{skuName}'. Allowed values: {string.Join(", ", AllowedSkus)}";
-
-                if (commandResponse != null)
-                {
-                    commandResponse.Status = HttpStatusCode.BadRequest;
-                    commandResponse.Message = result.ErrorMessage!;
-                }
-            }
-        }
-        return result;
-
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
