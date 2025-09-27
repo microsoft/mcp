@@ -94,6 +94,7 @@ internal class Program
             new Azure.Mcp.Tools.Redis.RedisSetup(),
             new Azure.Mcp.Tools.ResourceHealth.ResourceHealthSetup(),
             new Azure.Mcp.Tools.Search.SearchSetup(),
+            new Azure.Mcp.Tools.Speech.SpeechSetup(),
             new Azure.Mcp.Tools.ServiceBus.ServiceBusSetup(),
             new Azure.Mcp.Tools.Sql.SqlSetup(),
             new Azure.Mcp.Tools.Storage.StorageSetup(),
