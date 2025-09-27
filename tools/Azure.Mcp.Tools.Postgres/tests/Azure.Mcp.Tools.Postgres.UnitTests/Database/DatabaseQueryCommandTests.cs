@@ -131,7 +131,7 @@ public class DatabaseQueryCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status); // CommandValidationException => 400
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status); // CommandValidationException => 400
         // Service should never be called for invalid queries.
         await _postgresService.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
     }
@@ -154,7 +154,7 @@ public class DatabaseQueryCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         await _postgresService.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
     }
 }
