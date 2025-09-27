@@ -39,6 +39,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `azmcp_foundry_agents_query_and_evaluate`: Connect to an agent in an AI Foundry project, query it, and evaluate the response in one step
 - Enhanced AKS managed cluster information with comprehensive properties. [[#490](https://github.com/microsoft/mcp/pull/490)]
 - Added support retrieving Key Vault Managed HSM account settings via the command `azmcp-keyvault-admin-settings-get`. [[358](https://github.com/microsoft/mcp/pull/358)]
+- Added validation logic in Postgres query. [[#426](https://github.com/microsoft/mcp/pull/426)]
 
 ### Breaking Changes
 
