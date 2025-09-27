@@ -9,6 +9,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added support for Azure Developer CLI (azd) MCP tools when azd CLI is installed locally - [[#566](https://github.com/microsoft/mcp/issues/566)]
 - Adds support to proxy MCP capabilities when child servers leverage sampling or elicitation. [[#581](https://github.com/microsoft/mcp/pull/581)]
 - Added support for publishing custom events to Event Grid topics via the command `azmcp_eventgrid_events_publish`. Supports EventGrid, CloudEvents, and custom schemas with structured event data delivery for event-driven architectures. [[#514](https://github.com/microsoft/mcp/pull/514)]
+- Added the following Azure Managed Lustre commands: [[#50](https://github.com/microsoft/mcp/issues/50)]
+  - `azmcp_azuremanagedlustre_filesystem_create`: Create an Azure Managed Lustre filesystems.
+  - `azmcp_azuremanagedlustre_filesystem_update`: Update an Azure Managed Lustre filesystems.
 
 ### Breaking Changes
 
