@@ -31,7 +31,7 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
     };
 
     public override string Description =>
-        "Get/retrieve/show a key from an Azure Key Vault. Retrieves and displays details about a specific key in the specified vault (latest version; no private key material). Required: --vault <vault>, --key <key>, --subscription <subscription>. Optional: --tenant <tenant>. Returns: name, keyType, enabled, notBefore, expiresOn, createdOn, updatedOn. Examples: get --vault myvault --key orders-signing --subscription <sub>; get --vault corpvault --key token-key --subscription <sub> --tenant <tenant>. Not for listing keys (key list) or secrets/certificates (secret get / certificate get).";
+        "Get/retrieve/show details for a single key in a Key Vault (latest version). Not for listing multiple keys. Required: --vault <vault>, --key <key> --subscription <subscription>. Optional: --tenant <tenant>. Returns: name, id, keyId, keyType, enabled, notBefore, expiresOn, createdOn, updatedOn.";
 
     protected override void RegisterOptions(Command command)
     {

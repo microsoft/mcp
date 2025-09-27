@@ -31,7 +31,7 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
     };
 
     public override string Description =>
-        "List/show/enumerate all keys in an Azure Key Vault";
+        "List/enumerate all keys in an Azure Key Vault. Not for fetching a single key.";
 
     protected override void RegisterOptions(Command command)
     {
