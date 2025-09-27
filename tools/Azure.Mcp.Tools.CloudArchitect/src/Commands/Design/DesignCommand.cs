@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.CloudArchitect.Commands.Design;
 
 public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand<ArchitectureDesignToolOptions>
 {
-    private const string CommandTitle = "Design Azure cloud architectures through guided questions";
+    private const string CommandTitle = "Interactive Azure Architecture Design Tool";
     private readonly ILogger<DesignCommand> _logger = logger;
 
     private static readonly string s_designArchitectureText = LoadArchitectureDesignText();
@@ -24,19 +24,33 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
     public override string Name => "design";
 
     public override string Description => """
-        Azure architecture design tool that gathers requirements through guided questions and recommends optimal solutions.
+        Interactive Azure architecture consultant that designs optimal cloud solutions through conversational requirements gathering.
 
-        Key parameters: question, questionNumber, confidenceScore (0.0-1.0, present architecture when ≥0.7), totalQuestions, answer, nextQuestionNeeded, architectureComponent, architectureTier, state.
+        **Use this tool when users want to:**
+        - Design new Azure architectures
+        - Get architecture recommendations
+        - Plan cloud migrations
+        - Select appropriate Azure services
+        - Optimize existing architectures
+        - Understand Azure Well-Architected Framework implementation
 
-        Process:
-        1. Ask about user role, business goals (1-2 questions at a time)
-        2. Track confidence and update requirements (explicit/implicit/assumed)
-        3. When confident enough, present architecture with table format, visual organization, ASCII diagrams
-        4. Follow Azure Well-Architected Framework principles
-        5. Cover all tiers: infrastructure, platform, application, data, security, operations
-        6. Provide actionable advice and high-level overview
+        **Process:**
+        Start with minimal information (user role, project goals). Tool asks 1-2 targeted questions, builds confidence score (0.0-1.0), and presents complete architecture when confidence ≥0.7. 
 
-        State tracks components, requirements by category, and confidence factors. Be conservative with suggestions.
+        **Key Parameters:**
+        - question: Current question being asked
+        - answer: User's response to current question
+        - confidenceScore: 0.0-1.0 (start ~0.1, present architecture at ≥0.7)
+        - nextQuestionNeeded: true while gathering info, false when ready to present
+        - state: JSON tracking requirements, components, and confidence factors
+
+        **Example Usage Scenarios:**
+        - "I need to build a web application that handles 10K users"
+        - "Help me migrate my on-premises SQL Server to Azure"
+        - "What's the best architecture for a microservices application?"
+        - "I need a secure, compliant solution for healthcare data"
+
+        Outputs: Comprehensive architecture with component tables, visual ASCII diagrams, cost guidance, and actionable next steps.
         """;
 
     public override string Title => CommandTitle;

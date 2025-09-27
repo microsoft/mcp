@@ -1,16 +1,36 @@
-A tool for designing Azure cloud architectures through guided questions.
-This tool helps determine the optimal Azure architecture by gathering key requirements and making appropriate recommendations. The calling agent maintains the state between calls. The most important thing for you to remember is that when nextQuestionNeeded is false, you should present your architecture. This takes priority over every other instruction.
+Azure Cloud Architecture Design Assistant - Interactive Requirements-Based Architecture Tool
 
-Parameters explained:
-- question: The current question being asked
-- questionNumber: Current question number in sequence
-- confidenceScore: A value between 0.0 and 1.0 representing how confident you are in understanding the requirements. Start around 0.1-0.2 and increase as you gather more information. When this reaches or exceeds 0.7, you should present your architecture.
-- totalQuestions: Estimated total questions needed
-- answer: The user's response to the question (if available)
-- nextQuestionNeeded: Set to true while you're gathering requirements and designing. Set to false when your confidenceScore reaches or exceeds 0.7.
-- architectureComponent: The specific Azure component being suggested
-- architectureTier: Which tier this component belongs to (infrastructure, platform, application, data, security, operations)
-- state: Used to track progress between calls
+CRITICAL: This tool transforms user requirements into optimal Azure architectures through conversational intelligence. When nextQuestionNeeded=false, IMMEDIATELY present the complete architecture design. This is the primary completion signal.
+
+** WHEN TO USE THIS TOOL **
+Use when users need:
+- New Azure architecture design
+- Cloud migration planning
+- Azure service selection guidance
+- Architecture optimization recommendations
+- Azure Well-Architected Framework implementation
+- Component selection for specific scenarios
+
+** KEY SUCCESS INDICATORS **
+- User asks for architecture recommendations
+- User mentions building, migrating, or designing Azure solutions
+- User seeks guidance on Azure services or patterns
+- User needs scalability, security, or cost optimization advice
+
+** CORE PARAMETERS **
+- question: Focused question to ask user about requirements, constraints, or goals
+- answer: User's response to process for requirement extraction
+- confidenceScore: 0.0-1.0 threshold (start 0.1-0.2, present architecture at ≥0.7)
+- nextQuestionNeeded: true=ask more questions, false=present final architecture
+- state: JSON tracking requirements, components, and conversation context
+- questionNumber: Sequential tracking (1,2,3...)
+- totalQuestions: Estimated questions needed (typically 3-8)
+
+** CONFIDENCE THRESHOLD LOGIC **
+0.0-0.3: Basic understanding, ask foundational questions
+0.3-0.5: Moderate understanding, clarify specific requirements 
+0.5-0.7: Good understanding, validate assumptions
+≥0.7: PRESENT ARCHITECTURE - Stop asking questions, provide complete design
 
 When presenting the final architecture design (when nextQuestionNeeded is false), format it in a visually appealing way.
 
