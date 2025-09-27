@@ -271,6 +271,7 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 
 * "List the Azure Managed Lustre clusters in resource group 'my-resource-group'"
 * "How many IP Addresses I need to create a 128 TiB cluster of AMLFS 500?"
+* "Check if 'my-subnet-id' can host an Azure Managed Lustre with 'my-size' TiB and 'my-sku' in 'my-region'
 
 ### 📊 Azure Monitor
 
