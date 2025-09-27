@@ -3,14 +3,14 @@
 
 using System.CommandLine;
 using System.Text.Json;
+using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.FunctionApp.Commands;
+using Azure.Mcp.Tools.FunctionApp.Commands.FunctionApp;
+using Azure.Mcp.Tools.FunctionApp.Models;
+using Azure.Mcp.Tools.FunctionApp.Services;
 using Azure.ResourceManager.AppService;
 using Azure.ResourceManager.AppService.Models;
 using Azure.ResourceManager.Storage.Models;
-using AzureMcp.Core.Models.Command;
-using AzureMcp.FunctionApp.Commands;
-using AzureMcp.FunctionApp.Commands.FunctionApp;
-using AzureMcp.FunctionApp.Models;
-using AzureMcp.FunctionApp.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -69,7 +69,7 @@ public sealed class FunctionAppCreateCommandTests
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<AzureMcp.Core.Options.RetryPolicyOptions?>())
+                Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
                 .Returns(new FunctionAppInfo("myapp", "rg", "eastus", "plan", "Running", "myapp.azurewebsites.net", null, null));
         }
 
@@ -99,7 +99,7 @@ public sealed class FunctionAppCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AzureMcp.Core.Options.RetryPolicyOptions?>())
+            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
             .Returns(expected);
 
         var context = new CommandContext(_serviceProvider);
@@ -133,7 +133,7 @@ public sealed class FunctionAppCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AzureMcp.Core.Options.RetryPolicyOptions?>())
+            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
             .Returns(Task.FromException<FunctionAppInfo>(new Exception("Create error")));
 
         var context = new CommandContext(_serviceProvider);
@@ -163,7 +163,7 @@ public sealed class FunctionAppCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AzureMcp.Core.Options.RetryPolicyOptions?>())
+            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
             .Returns(expected);
 
         var context = new CommandContext(_serviceProvider);
@@ -193,7 +193,7 @@ public sealed class FunctionAppCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AzureMcp.Core.Options.RetryPolicyOptions?>())
+            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
             .Returns(expected);
 
         var context = new CommandContext(_serviceProvider);
@@ -230,7 +230,7 @@ public sealed class FunctionAppCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AzureMcp.Core.Options.RetryPolicyOptions?>())
+            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
             .Returns(expected);
 
         var baseArgs = "--subscription sub --resource-group rg --function-app myapp --location eastus";
@@ -255,7 +255,7 @@ public sealed class FunctionAppCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AzureMcp.Core.Options.RetryPolicyOptions?>());
+            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>());
     }
 
 
@@ -315,7 +315,7 @@ public sealed class FunctionAppCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AzureMcp.Core.Options.RetryPolicyOptions?>())
+            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
             .Returns(expected);
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub --resource-group rg --function-app myapp --location eastus --app-service-plan existingPlan");
@@ -332,7 +332,7 @@ public sealed class FunctionAppCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AzureMcp.Core.Options.RetryPolicyOptions?>());
+            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>());
     }
 
     [Fact]
@@ -353,7 +353,7 @@ public sealed class FunctionAppCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AzureMcp.Core.Options.RetryPolicyOptions?>())
+            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
             .Returns(expected);
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub --resource-group rg --function-app myapp --location eastus --plan-type flex --plan-sku B1");
@@ -370,7 +370,7 @@ public sealed class FunctionAppCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AzureMcp.Core.Options.RetryPolicyOptions?>());
+            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>());
     }
 
     [Fact]
@@ -391,7 +391,7 @@ public sealed class FunctionAppCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AzureMcp.Core.Options.RetryPolicyOptions?>())
+            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
             .Returns(expected);
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub --resource-group rg --function-app myapp --location eastus --runtime dotnet-isolated");
@@ -408,7 +408,7 @@ public sealed class FunctionAppCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AzureMcp.Core.Options.RetryPolicyOptions?>());
+            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>());
     }
 
     [Fact]
@@ -429,7 +429,7 @@ public sealed class FunctionAppCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AzureMcp.Core.Options.RetryPolicyOptions?>())
+            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
             .Returns(expected);
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub --resource-group rg --function-app myapp --location eastus --os linux");
@@ -446,7 +446,7 @@ public sealed class FunctionAppCreateCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<AzureMcp.Core.Options.RetryPolicyOptions?>());
+            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>());
     }
 
     [Fact]
