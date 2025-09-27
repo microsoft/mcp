@@ -18,6 +18,7 @@ public class FunctionAppSetup : IAreaSetup
         services.AddSingleton<IFunctionAppService, FunctionAppService>();
 
         services.AddSingleton<FunctionAppGetCommand>();
+        services.AddSingleton<FunctionAppCreateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.FunctionApp.Commands;
@@ -78,7 +78,7 @@ public sealed class FunctionAppCreateCommandTests
 
         var response = await _command.ExecuteAsync(context, parseResult);
 
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     }
 
     [Fact]
@@ -107,7 +107,7 @@ public sealed class FunctionAppCreateCommandTests
 
         var response = await _command.ExecuteAsync(context, parseResult);
 
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
@@ -141,7 +141,7 @@ public sealed class FunctionAppCreateCommandTests
 
         var response = await _command.ExecuteAsync(context, parseResult);
 
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Create error", response.Message);
     }
 
@@ -172,7 +172,7 @@ public sealed class FunctionAppCreateCommandTests
 
         var response = await _command.ExecuteAsync(context, parseResult);
 
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Fact]
@@ -201,7 +201,7 @@ public sealed class FunctionAppCreateCommandTests
 
         var response = await _command.ExecuteAsync(context, parseResult);
 
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Theory]
@@ -239,7 +239,7 @@ public sealed class FunctionAppCreateCommandTests
         var parseResult = _command.GetCommand().Parse(fullArgs);
         var response = await _command.ExecuteAsync(context, parseResult);
 
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         await _service.Received(1).CreateFunctionApp(
             "sub",
@@ -320,7 +320,7 @@ public sealed class FunctionAppCreateCommandTests
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub --resource-group rg --function-app myapp --location eastus --app-service-plan existingPlan");
         var response = await _command.ExecuteAsync(context, parseResult);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         await _service.Received(1).CreateFunctionApp(
             "sub", "rg", "myapp", "eastus",
             Arg.Is<string?>(p => p == "existingPlan"),
@@ -358,7 +358,7 @@ public sealed class FunctionAppCreateCommandTests
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub --resource-group rg --function-app myapp --location eastus --plan-type flex --plan-sku B1");
         var response = await _command.ExecuteAsync(context, parseResult);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         await _service.Received(1).CreateFunctionApp(
             "sub", "rg", "myapp", "eastus",
             Arg.Any<string?>(),
@@ -396,7 +396,7 @@ public sealed class FunctionAppCreateCommandTests
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub --resource-group rg --function-app myapp --location eastus --runtime dotnet-isolated");
         var response = await _command.ExecuteAsync(context, parseResult);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         await _service.Received(1).CreateFunctionApp(
             "sub", "rg", "myapp", "eastus",
             Arg.Any<string?>(),
@@ -434,7 +434,7 @@ public sealed class FunctionAppCreateCommandTests
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub --resource-group rg --function-app myapp --location eastus --os linux");
         var response = await _command.ExecuteAsync(context, parseResult);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         await _service.Received(1).CreateFunctionApp(
             "sub", "rg", "myapp", "eastus",
             Arg.Any<string?>(),
