@@ -25,65 +25,74 @@ public static class FunctionAppOptionDefinitions
     };
 
     public static readonly Option<string> Location = new(
-        $"--{LocationName}",
-        "The Azure region for the Function App (e.g., eastus, westus2).")
+        $"--{LocationName}"
+    )
     {
-        IsRequired = true
+        Description = "The Azure region for the Function App (e.g., eastus, westus2).",
+        Required = true
     };
 
     public static readonly Option<string> AppServicePlan = new(
-        $"--{AppServicePlanName}",
-        "The App Service plan name to use. If not supplied, a Consumption plan will be created automatically.")
+        $"--{AppServicePlanName}"
+    )
     {
-        IsRequired = false
+        Description = "The App Service plan name to use. If not supplied, a Consumption plan will be created automatically.",
+        Required = false
     };
 
     public static readonly Option<string> PlanType = new(
-        $"--{PlanTypeName}",
-        "The App Service plan type when creating a plan automatically. Values: consumption, flex, premium. Defaults to consumption.")
+        $"--{PlanTypeName}"
+    )
     {
-        IsRequired = false
+        Description = "The App Service plan type when creating a plan automatically. Values: consumption, flex, premium. Defaults to consumption.",
+        Required = false
     };
 
     public static readonly Option<string> PlanSku = new(
-        $"--{PlanSkuName}",
-        "The explicit App Service plan SKU (e.g., B1, S1, P1v3). Mutually exclusive with --plan-type. If provided and --app-service-plan omitted a dedicated plan using this SKU is created.")
+        $"--{PlanSkuName}"
+    )
     {
-        IsRequired = false
+        Description = "The explicit App Service plan SKU (e.g., B1, S1, P1v3). Mutually exclusive with --plan-type. If provided and --app-service-plan omitted a dedicated plan using this SKU is created.",
+        Required = false
     };
 
     public static readonly Option<string> Runtime = new(
-        $"--{RuntimeName}",
-        "Function runtime worker. Examples: dotnet, node, python. Defaults to dotnet.")
+        $"--{RuntimeName}"
+    )
     {
-        IsRequired = false
+        Description = "Function runtime worker. Examples: dotnet, node, python. Defaults to dotnet.",
+        Required = false
     };
 
     public static readonly Option<string> RuntimeVersion = new(
-        $"--{RuntimeVersionName}",
-        "Runtime version for the selected worker (e.g., node: 22, 20; python: 3.12). If omitted, a sensible default is used.")
+        $"--{RuntimeVersionName}"
+    )
     {
-        IsRequired = false
+        Description = "Runtime version for the selected worker (e.g., node: 22, 20; python: 3.12). If omitted, a sensible default is used.",
+        Required = false
     };
 
     public static readonly Option<string> OperatingSystem = new(
-        $"--{OperatingSystemName}",
-        "Target operating system (windows|linux). Defaults to windows except when runtime/plan requires Linux (python, flex consumption, containerapp). Python and flex consumption are Linux only.")
+        $"--{OperatingSystemName}"
+    )
     {
-        IsRequired = false
+        Description = "Target operating system (windows|linux). Defaults to windows except when runtime/plan requires Linux (python, flex consumption, containerapp). Python and flex consumption are Linux only.",
+        Required = false
     };
 
     public static readonly Option<string> StorageAccount = new(
-        $"--{StorageAccountName}",
-        "The name of the Storage Account to use or create.")
+        $"--{StorageAccountName}"
+    )
     {
-        IsRequired = false
+        Description = "The name of the Storage Account to use or create.",
+        Required = false
     };
 
     public static readonly Option<string> ContainerAppsEnvironment = new(
-        $"--{ContainerAppsEnvironmentName}",
-        "The name of the Container Apps environment to use or create.")
+        $"--{ContainerAppsEnvironmentName}"
+    )
     {
-        IsRequired = false
+        Description = "The name of the Container Apps environment to use or create.",
+        Required = false
     };
 }
