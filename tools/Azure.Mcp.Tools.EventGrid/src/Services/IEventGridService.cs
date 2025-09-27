@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.EventGrid.Models;
-
 namespace Azure.Mcp.Tools.EventGrid.Services;
 
 public interface IEventGridService
@@ -18,6 +16,15 @@ public interface IEventGridService
         string? resourceGroup = null,
         string? topicName = null,
         string? location = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
+
+    Task<EventPublishResult> PublishEventAsync(
+        string subscription,
+        string? resourceGroup,
+        string topicName,
+        string eventData,
+        string? eventSchema = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 }

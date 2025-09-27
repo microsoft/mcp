@@ -31,6 +31,11 @@ jobs:
     inputs:
       versionSpec: '22.x'
 
+  - pwsh: |
+      ./eng/scripts/Build-Local.ps1 -VerifyNpx
+    displayName: "Verify npm package"
+    workingDirectory: $(Build.SourcesDirectory)
+
   - template: /eng/common/TestResources/build-test-resource-config.yml
     parameters:
       EnvVars:
@@ -41,11 +46,6 @@ jobs:
       ServiceConnection: azure-sdk-tests-public
       PersistOidcToken: true
       TestResourcesDirectory: $(Build.SourcesDirectory)/$(TestResourcesPath)
-
-  - pwsh: |
-      ./eng/scripts/Build-Local.ps1 -VerifyNpx
-    displayName: "Build local package"
-    workingDirectory: $(Build.SourcesDirectory)
 
   - task: AzurePowershell@5
     displayName: "Run tests - az pwsh"

@@ -96,6 +96,26 @@ public interface ISqlService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Renames an existing SQL database to a new name.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server hosting the database</param>
+    /// <param name="databaseName">The current database name</param>
+    /// <param name="newDatabaseName">The desired new database name</param>
+    /// <param name="resourceGroup">The resource group name</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="retryPolicy">Optional retry policy options</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The renamed SQL database information</returns>
+    Task<SqlDatabase> RenameDatabaseAsync(
+        string serverName,
+        string databaseName,
+        string newDatabaseName,
+        string resourceGroup,
+        string subscription,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets a list of databases for a SQL server.
     /// </summary>
     /// <param name="serverName">The name of the SQL server</param>

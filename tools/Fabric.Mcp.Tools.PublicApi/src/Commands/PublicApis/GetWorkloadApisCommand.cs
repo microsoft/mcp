@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Fabric.Mcp.Tools.PublicApi.Options;
@@ -63,7 +64,7 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
         {
             if (options.WorkloadType!.Equals("common", StringComparison.OrdinalIgnoreCase))
             {
-                context.Response.Status = 404;
+                context.Response.Status = HttpStatusCode.NotFound;
                 context.Response.Message = "No workload of type 'common' exists. Did you mean 'platform'?. A full list of supported workloads can be found using the discover-workloads command";
                 return context.Response;
             }
@@ -78,12 +79,12 @@ public sealed class GetWorkloadApisCommand(ILogger<GetWorkloadApisCommand> logge
             _logger.LogError(httpEx, "HTTP error getting Fabric public APIs for workload {}", options.WorkloadType);
             if (httpEx.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                context.Response.Status = 404;
+                context.Response.Status = HttpStatusCode.NotFound;
                 context.Response.Message = $"No workload of type '{options.WorkloadType}' exists. A full list of supported workloads can be found using the discover-workloads command";
             }
             else
             {
-                context.Response.Status = (int)(httpEx.StatusCode ?? System.Net.HttpStatusCode.InternalServerError);
+                context.Response.Status = httpEx.StatusCode ?? HttpStatusCode.InternalServerError;
                 context.Response.Message = httpEx.Message;
             }
         }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Sql.Commands.Server;
@@ -99,7 +100,7 @@ public class ServerListCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.Equal("Success", response.Message);
@@ -154,7 +155,7 @@ public class ServerListCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
@@ -185,7 +186,7 @@ public class ServerListCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
@@ -214,7 +215,7 @@ public class ServerListCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.NotEqual(200, response.Status);
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
         Assert.Contains("error", response.Message.ToLower());
     }
 
@@ -222,7 +223,7 @@ public class ServerListCommandTests
     public async Task ExecuteAsync_WhenAuthorizationFails_Returns403StatusCode()
     {
         // Arrange
-        var requestException = new RequestFailedException(403, "Forbidden: Insufficient permissions");
+        var requestException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Forbidden: Insufficient permissions");
 
         _service.ListServersAsync(
             Arg.Any<string>(),
@@ -238,7 +239,7 @@ public class ServerListCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(403, response.Status);
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("authorization failed", response.Message.ToLower());
         Assert.Contains("verify you have appropriate permissions", response.Message.ToLower());
     }
@@ -247,7 +248,7 @@ public class ServerListCommandTests
     public async Task ExecuteAsync_WhenResourceGroupNotFound_Returns404StatusCode()
     {
         // Arrange
-        var requestException = new RequestFailedException(404, "Not Found: Resource group does not exist");
+        var requestException = new RequestFailedException((int)HttpStatusCode.NotFound, "Not Found: Resource group does not exist");
 
         _service.ListServersAsync(
             Arg.Any<string>(),
@@ -263,7 +264,7 @@ public class ServerListCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(404, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("no sql servers found", response.Message.ToLower());
         Assert.Contains("verify the resource group and subscription", response.Message.ToLower());
     }
@@ -272,7 +273,7 @@ public class ServerListCommandTests
     public async Task ExecuteAsync_WithGenericRequestFailedException_ReturnsOriginalMessage()
     {
         // Arrange
-        var requestException = new RequestFailedException(500, "Internal Server Error");
+        var requestException = new RequestFailedException((int)HttpStatusCode.InternalServerError, "Internal Server Error");
 
         _service.ListServersAsync(
             Arg.Any<string>(),
@@ -288,7 +289,7 @@ public class ServerListCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith("Internal Server Error", response.Message);
     }
 }

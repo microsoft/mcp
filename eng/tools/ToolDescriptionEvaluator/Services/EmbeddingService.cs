@@ -17,7 +17,7 @@ public class EmbeddingService(HttpClient httpClient, string endpoint, string api
     {
         var requestBody = new EmbeddingRequest
         {
-            Input = new[] { input }
+            Input = [input]
         };
 
         var json = JsonSerializer.Serialize(requestBody, SourceGenerationContext.Default.EmbeddingRequest);

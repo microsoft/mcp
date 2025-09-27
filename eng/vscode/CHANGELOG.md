@@ -1,13 +1,42 @@
-
 # Release History
 
-## 0.8.1 (Unreleased)
+## 0.8.2 (2025-09-25)
+
+### Fixed
+
+- Fixed `azmcp_subscription_list` to return empty enumerable instead of `null` when no subscriptions are found. [[#508](https://github.com/microsoft/mcp/pull/508)]
+
+## 0.8.1 (2025-09-23)
 
 ### Added
 
+- Added support for listing SQL servers in a subscription and resource group via the command `azmcp_sql_server_list`. [[#503](https://github.com/microsoft/mcp/issues/503)]
+- Added support for renaming Azure SQL databases within a server while retaining configuration via the `azmcp sql db rename` command. [[#542](https://github.com/microsoft/mcp/pull/542)]
+- Added support for Azure App Service database management via the command `azmcp_appservice_database_add`. [[#59](https://github.com/microsoft/mcp/pull/59)]
+- Added the following Azure Foundry agents commands: [[#55](https://github.com/microsoft/mcp/pull/55)]
+  - `azmcp_foundry_agents_connect`: Connect to an agent in an AI Foundry project and query it
+  - `azmcp_foundry_agents_evaluate`: Evaluate a response from an agent by passing query and response inline
+  - `azmcp_foundry_agents_query_and_evaluate`: Connect to an agent in an AI Foundry project, query it, and evaluate the response in one step
+- Enhanced AKS managed cluster information with comprehensive properties. [[#490](https://github.com/microsoft/mcp/pull/490)]
+- Added support retrieving Key Vault Managed HSM account settings via the command `azmcp-keyvault-admin-settings-get`. [[358](https://github.com/microsoft/mcp/pull/358)]
+
 ### Changed
 
+- Refactored Kusto service implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[#528](https://github.com/microsoft/mcp/pull/528)]
+- Updated `IAreaSetup` API so the area's command tree is returned rather than modifying an existing object. It's also more DI-testing friendly. [[#478](https://github.com/microsoft/mcp/pull/478)]
+- Updated `CommandFactory.GetServiceArea` to check for a tool's service area with or without the root `azmcp` prefix. [[#478](https://github.com/microsoft/mcp/pull/478)]
+- **Breaking:** Removed the following Storage tools: [[#500](https://github.com/microsoft/mcp/pull/500)]
+  - `azmcp_storage_blob_batch_set-tier`
+  - `azmcp_storage_datalake_directory_create`
+  - `azmcp_storage_datalake_file-system_list-paths`
+  - `azmcp_storage_queue_message_send`
+  - `azmcp_storage_share_file_list`
+  - `azmcp_storage_table_list`
+- **Breaking:** Updated the `OpenWorld` and `Destructive` hints for all tools. [[#510](https://github.com/microsoft/mcp/pull/510)]
+
 ### Fixed
+
+- Fixed MCP server hanging on invalid transport arguments. Server now exits gracefully with clear error messages instead of hanging indefinitely. [[#511](https://github.com/microsoft/mcp/pull/511)]
 
 ## 0.8.0 (2025-09-18)
 

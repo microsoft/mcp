@@ -5,7 +5,6 @@ using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.AzureTerraformBestPractices.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureTerraformBestPractices;
 
@@ -15,9 +14,10 @@ public class AzureTerraformBestPracticesSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<AzureTerraformBestPracticesGetCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Register Azure Terraform Best Practices command at the root level
         var azureTerraformBestPractices = new CommandGroup(
@@ -25,10 +25,10 @@ public class AzureTerraformBestPracticesSetup : IAreaSetup
             @"Returns Terraform best practices for Azure. Call this before generating Terraform code for Azure Providers. 
             If this tool needs to be categorized, it belongs to the Azure Best Practices category."
         );
-        rootGroup.AddSubGroup(azureTerraformBestPractices);
-        azureTerraformBestPractices.AddCommand(
-            "get",
-            new AzureTerraformBestPracticesGetCommand(loggerFactory.CreateLogger<AzureTerraformBestPracticesGetCommand>())
-        );
+
+        var practices = serviceProvider.GetRequiredService<AzureTerraformBestPracticesGetCommand>();
+        azureTerraformBestPractices.AddCommand(practices.Name, practices);
+
+        return azureTerraformBestPractices;
     }
 }

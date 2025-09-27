@@ -140,10 +140,10 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        HttpRequestException httpEx => (int)httpEx.StatusCode.GetValueOrDefault(HttpStatusCode.InternalServerError),
-        ArgumentException => 400,
+        HttpRequestException httpEx => httpEx.StatusCode.GetValueOrDefault(HttpStatusCode.InternalServerError),
+        ArgumentException => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)
     };
 

@@ -516,7 +516,7 @@ public class CommandGroupDiscoveryStrategyTests
         // Arrange
         var options = new ServiceStartOptions
         {
-            Namespace = new[] { "storage", "keyvault" }
+            Namespace = ["storage", "keyvault"]
         };
         var strategy = CreateStrategy(options: options);
 
