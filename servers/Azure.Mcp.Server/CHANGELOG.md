@@ -15,8 +15,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 - Fixed problem where help option (`--help`) was showing an error and enabling it across all commands and command groups. [[#583](https://github.com/microsoft/mcp/pull/583)]
-
 - Fixed `azmcp_kusto_table_schema` to return table schema. [[#530](https://github.com/microsoft/mcp/issues/530)]
+- Fixed Kusto query fails when the sub id in the input query is enclosed in double quotes. [[#152](https://github.com/microsoft/mcp/issues/152)]
 
 ### Other Changes
 
