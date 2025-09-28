@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
