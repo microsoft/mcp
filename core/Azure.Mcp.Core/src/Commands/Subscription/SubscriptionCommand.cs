@@ -35,6 +35,11 @@ public abstract class SubscriptionCommand<
 
         // Get subscription from command line option or fallback to environment variable
         var subscriptionValue = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Subscription.Name);
+        if (!string.IsNullOrEmpty(subscriptionValue))
+        {
+            // Trim any surrounding quotes that may have been included in the input
+            subscriptionValue = subscriptionValue.Trim('"', '\'');
+        }
 
         var envSubscription = EnvironmentHelpers.GetAzureSubscriptionId();
         options.Subscription = (string.IsNullOrEmpty(subscriptionValue)
