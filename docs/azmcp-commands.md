@@ -636,6 +636,15 @@ azmcp eventgrid events publish --subscription <subscription> \
 ### Azure Function App Operations
 
 ```bash
+# Create a new Azure Function App with automatic provisioning of dependencies
+azmcp functionapp create --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --function-app <function-app-name> \
+                          --location <location> \
+                          [--plan-type <consumption|flex|premium|appservice|containerapp>] \
+                          [--runtime <dotnet|dotnet-isolated|node|python|java|powershell>] \
+                          [--os <windows|linux>]
+
 # Get detailed properties of function apps
 azmcp functionapp get --subscription <subscription> \
                       [--resource-group <resource-group>] \

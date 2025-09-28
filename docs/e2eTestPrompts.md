@@ -186,6 +186,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_functionapp_create | Create a new Azure Function App named <function_app_name> in <resource_group_name> |
+| azmcp_functionapp_create | Create a function app with Python runtime in <resource_group_name> |
+| azmcp_functionapp_create | Deploy a new function app to <location> region |
+| azmcp_functionapp_create | Set up a function app with premium hosting plan |
+| azmcp_functionapp_create | Create function app with container app hosting |
 | azmcp_functionapp_get | Describe the function app <function_app_name> in resource group <resource_group_name> |
 | azmcp_functionapp_get | Get configuration for function app <function_app_name> |
 | azmcp_functionapp_get | Get function app status for <function_app_name> |
