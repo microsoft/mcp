@@ -61,7 +61,7 @@ public class AuthorizationService(ISubscriptionService subscriptionService, ITen
     {
         RoleAssignmentData? roleAssignmentData = RoleAssignmentData.FromJson(item);
         if (roleAssignmentData == null)
-            throw new InvalidOperationException("Failed to parse role assigment data");
+            throw new InvalidOperationException("Failed to parse role assignment data");
 
         return new RoleAssignment
         {
