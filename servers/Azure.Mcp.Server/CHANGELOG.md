@@ -20,6 +20,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Refactored Authorization implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[607](https://github.com/microsoft/mcp/pull/607)]
+
+#### Dependency Updates
+
+- Removed the following dependencies:
+  - `Azure.ResourceManager.Authorization` [[607](https://github.com/microsoft/mcp/pull/607)]
+
 ## 0.8.2 (2025-09-25)
 
 ### Bugs Fixed
