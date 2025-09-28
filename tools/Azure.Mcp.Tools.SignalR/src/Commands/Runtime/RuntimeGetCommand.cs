@@ -25,13 +25,21 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger)
 
     public override string Description =>
         """
-        Show details of an Azure SignalR Runtime. Returns runtime information including location, SKU,
-        provisioning state, hostname, and port configuration.
+        Show details of an Azure SignalR Runtime.
+        Returns runtime information including identity, network ACLs, upstream templates.
         """;
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
