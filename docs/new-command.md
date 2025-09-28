@@ -227,7 +227,7 @@ Choose the appropriate base class for your service based on the operations neede
                subscription,
                retryPolicy,
                ConvertToMyResourceModel,
-               $"name =~ '{resourceName}'");
+               additionalFilter: $"name =~ '{resourceName}'");
        }
 
        private static MyResource ConvertToMyResourceModel(JsonElement item)

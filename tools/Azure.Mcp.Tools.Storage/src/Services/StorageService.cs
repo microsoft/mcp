@@ -73,7 +73,7 @@ public class StorageService(
                     subscription,
                     retryPolicy,
                     ConvertToAccountInfoModel,
-                    $"name =~ '{EscapeKqlString(account)}'");
+                    additionalFilter: $"name =~ '{EscapeKqlString(account)}'");
 
                 if (storageAccount == null)
                 {
