@@ -4,7 +4,7 @@
 namespace Azure.Mcp.Tools.AppConfig.Services.Models;
 
 /// <summary>
-/// The encryption settings for a configuration store..
+/// The encryption settings for a configuration store.
 /// </summary>
 internal sealed class AppConfigurationStoreEncryptionProperties
 {

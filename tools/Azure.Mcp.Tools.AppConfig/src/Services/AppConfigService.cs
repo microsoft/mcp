@@ -216,7 +216,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
         return new AppConfigurationAccount
         {
-            Name = appConfigAccount.ResourceName ?? "Unkown",
+            Name = appConfigAccount.ResourceName ?? "Unknown",
             Location = appConfigAccount.Location,
             Endpoint = appConfigAccount.Properties?.Endpoint,
             CreationDate = appConfigAccount.Properties?.CreatedOn,
