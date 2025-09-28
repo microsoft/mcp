@@ -18,7 +18,7 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
 
     public override string Description =>
         """
-        List Azure AI Foundry (Cognitive Services) model deployments at a given account endpoint. Shows currently provisioned (callable) model deployments. Required: --endpoint <endpointUrl>. Optional: --tenant <tenantId> (override default auth tenant); --retry-* (retry policy settings, if supported) for transient failure handling. Returns: deployments[].name, model.name, model.format, model.version, model.source, sku.name, sku.capacity, scale.type, scale.capacity. Use to audit what is deployed before invoking or creating new deployments. Not for discovering undeployed catalog/base models (use models list).
+        List Azure AI Foundry (Cognitive Services) model deployments at a given account endpoint. Shows currently provisioned (callable) model deployments. Use to audit what is deployed before invoking or creating new deployments. Not for discovering undeployed catalog/base models (use models list).
         """;
 
     public override string Title => CommandTitle;
