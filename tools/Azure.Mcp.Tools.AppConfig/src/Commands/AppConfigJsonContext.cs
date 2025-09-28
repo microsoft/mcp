@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.AppConfig.Commands.Account;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
+using Azure.Mcp.Tools.AppConfig.Services.Models;
 
 namespace Azure.Mcp.Tools.AppConfig.Commands;
 
@@ -14,6 +15,7 @@ namespace Azure.Mcp.Tools.AppConfig.Commands;
 [JsonSerializable(typeof(KeyValueLockSetCommand.KeyValueLockSetCommandResult))]
 [JsonSerializable(typeof(KeyValueShowCommand.KeyValueShowResult))]
 [JsonSerializable(typeof(KeyValueSetCommand.KeyValueSetCommandResult))]
+[JsonSerializable(typeof(AppConfigurationStoreData))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class AppConfigJsonContext : JsonSerializerContext
 {

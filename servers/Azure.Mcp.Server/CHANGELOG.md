@@ -15,8 +15,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 - Fixed problem where help option (`--help`) was showing an error and enabling it across all commands and command groups. [[#583](https://github.com/microsoft/mcp/pull/583)]
-
 - Fixed `azmcp_kusto_table_schema` to return table schema. [[#530](https://github.com/microsoft/mcp/issues/530)]
+- Refactored AppConig implementation to use Azure Resource Graph queries instead of direct ARM API calls.
+
+#### Dependency Updates
+
+- Removed the following dependencies:
+  - `Azure.ResourceManager.AppConfiguration`
 
 ### Other Changes
 
