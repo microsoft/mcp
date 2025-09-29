@@ -18,7 +18,7 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
 
     public override string Description =>
         """
-        List Azure AI Foundry (Cognitive Services) model deployments at a given account endpoint and shows currently provisioned model deployments. Use to audit what is deployed before invoking or creating new deployments. Do not use this tool to discover undeployed catalog/base models — instead, use models_list tool.
+        Lists Azure AI Foundry (Cognitive Services) model deployments at a given account endpoint and shows currently provisioned model deployments. Use to audit what is deployed before invoking or creating new deployments. Do not use this tool to discover undeployed catalog/base models — instead, use models_list tool.
         """;
 
     public override string Title => CommandTitle;
