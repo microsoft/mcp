@@ -162,6 +162,11 @@ public sealed class RegistryToolLoader(
                     _logger.LogWarning("Failed to create client for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
                     continue;
                 }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("Failed to start client for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
+                    continue;
+                }
 
                 if (mcpClient == null)
                 {

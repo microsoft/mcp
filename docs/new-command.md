@@ -349,6 +349,8 @@ Commands explicitly register options as required or optional using extension met
 - Each command controls whether each option is required or optional
 - Binding is explicit using `parseResult.GetValueOrDefault<T>()`
 - No shared state between commands - each gets its own option instance
+- Only use `.AsRequired()` and `.AsOptional()` if they will change the `Required` setting.
+- Use `Command.Validators.Add` to add unique option validation.
 
 **Usage patterns:**
 
@@ -391,6 +393,51 @@ protected override MyCommandOptions BindOptions(ParseResult parseResult)
     var options = base.BindOptions(parseResult);
     options.Account = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Account.Name);
     options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+    return options;
+}
+```
+
+**For commands with unique option requirements:**
+```csharp
+protected override void RegisterOptions(Command command)
+{
+    base.RegisterOptions(command);
+    // Simple options.
+    command.Options.Add(ServiceOptionDefinitions.Account);
+    command.Options.Add(OptionDefinitions.Common.ResourceGroup);
+    // Exclusive or options
+    command.Options.Add(ServiceOptionDefinitions.EitherThis);
+    command.Options.Add(ServiceOptionDefinitions.OrThat);
+    // Validate that only 'EitherThis' or 'OrThat' were used individually.
+    command.Validators.Add(commandResult =>
+    {
+        // Retrieve values once and infer presence from non-empty values
+        commandResult.TryGetValue(ServiceOptionDefinitions.EitherThis, out string? eitherThis);
+        commandResult.TryGetValue(ServiceOptionDefinitions.OrThat, out string? orThat);
+
+        var hasEitherThis = !string.IsNullOrWhiteSpace(eitherThis);
+        var hasOrThat = !string.IsNullOrWhiteSpace(orThat);
+
+        // Validate that either either-this or or-that is provided, but not both
+        if (!hasEitherThis && !hasOrThat)
+        {
+            commandResult.AddError("Either --either-this or --or-that must be provided.");
+        }
+
+        if (hasEitherThis && hasOrThat)
+        {
+            commandResult.AddError("Cannot specify both --either-this and --or-that. Use only one.");
+        }
+    });
+}
+
+protected override MyCommandOptions BindOptions(ParseResult parseResult)
+{
+    var options = base.BindOptions(parseResult);
+    options.Account = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Account.Name);
+    options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+    options.EitherThis = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.EitherThis.Name);
+    options.OrThat = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.OrThat.Name);
     return options;
 }
 ```
