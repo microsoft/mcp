@@ -51,5 +51,109 @@ public class SmsSendCommandTests
         Assert.Contains(cmd.Options, o => o.Name == "message");
     }
 
-    // Removed RequiredOptions_ShouldBeMarkedCorrectly test because System.CommandLine.Option does not have IsRequired property.
+    public static IEnumerable<object[]> ValidParameters => new List<object[]>
+    {
+        new object[] { "UseDevelopmentStorage=true;", "+1234567890", new string[] { "+1234567891" }, "Hello", true, "test" },
+        new object[] { "UseDevelopmentStorage=true;", "+1234567899", new string[] { "+1234567892", "+1234567893" }, "Hi", false, "" }
+    };
+
+    [Theory]
+    [MemberData(nameof(ValidParameters))]
+    public async Task ExecuteAsync_WithValidParameters_CallsServiceAndReturnsResults(string connectionString, string from, string[] to, string message, bool enableDeliveryReport, string? tag)
+    {
+        var logger = Substitute.For<ILogger<SmsSendCommand>>();
+        var service = Substitute.For<ICommunicationService>();
+        var results = new List<Models.SmsResult> {
+            new Models.SmsResult { MessageId = "msg1", To = to.First(), Successful = true, HttpStatusCode = 202 }
+        };
+        service.SendSmsAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
+            .Returns(Task.FromResult(results));
+
+        var command = new SmsSendCommand(logger);
+        var services = new ServiceCollection();
+        services.AddSingleton(service);
+        var provider = services.BuildServiceProvider();
+        var context = new CommandContext(provider);
+        var cmd = command.GetCommand();
+        var args = new List<string>
+        {
+            "--connection-string", connectionString,
+            "--from", from,
+            "--to", string.Join(",", to),
+            "--message", message
+        };
+        if (enableDeliveryReport) args.Add("--enable-delivery-report");
+        if (!string.IsNullOrEmpty(tag)) { args.Add("--tag"); args.Add(tag!); }
+        var parseResult = cmd.Parse(args.ToArray());
+
+        // Act
+        var response = await command.ExecuteAsync(context, parseResult);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.NotNull(context.Response.Results);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ServiceThrowsException_HandlesError()
+    {
+        var logger = Substitute.For<ILogger<SmsSendCommand>>();
+        var service = Substitute.For<ICommunicationService>();
+        service.SendSmsAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
+            .Returns(Task.FromException<List<Models.SmsResult>>(new InvalidOperationException("fail")));
+
+        var command = new SmsSendCommand(logger);
+        var services = new ServiceCollection();
+        services.AddSingleton(service);
+        var provider = services.BuildServiceProvider();
+        var context = new CommandContext(provider);
+        var cmd = command.GetCommand();
+        var args = new[] { "--connection-string", "cs", "--from", "+1", "--to", "+2", "--message", "fail" };
+        var parseResult = cmd.Parse(args);
+
+        // Act
+        var response = await command.ExecuteAsync(context, parseResult);
+
+        // Assert
+        Assert.NotNull(response);
+    Assert.NotEqual(System.Net.HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Message);
+    }
+
+    public static IEnumerable<object?[]> InvalidParameters => new List<object?[]>
+    {
+        new object?[] { null, "+1234567890", new string[] { "+1234567891" }, "Hello" },
+        new object?[] { "UseDevelopmentStorage=true;", null, new string[] { "+1234567891" }, "Hello" },
+        new object?[] { "UseDevelopmentStorage=true;", "+1234567890", null, "Hello" },
+        new object?[] { "UseDevelopmentStorage=true;", "+1234567890", new string[] { "+1234567891" }, null }
+    };
+
+    [Theory]
+    [MemberData(nameof(InvalidParameters))]
+    public async Task ExecuteAsync_MissingRequiredParameters_ReturnsError(string? connectionString, string? from, string[]? to, string? message)
+    {
+        var logger = Substitute.For<ILogger<SmsSendCommand>>();
+        var service = Substitute.For<ICommunicationService>();
+        var command = new SmsSendCommand(logger);
+        var services = new ServiceCollection();
+        services.AddSingleton(service);
+        var provider = services.BuildServiceProvider();
+        var context = new CommandContext(provider);
+        var cmd = command.GetCommand();
+        var args = new List<string>();
+        if (connectionString != null) { args.Add("--connection-string"); args.Add(connectionString); }
+        if (from != null) { args.Add("--from"); args.Add(from); }
+        if (to != null) { args.Add("--to"); args.Add(string.Join(",", to)); }
+        if (message != null) { args.Add("--message"); args.Add(message); }
+        var parseResult = cmd.Parse(args.ToArray());
+
+        // Act
+        var response = await command.ExecuteAsync(context, parseResult);
+
+        // Assert
+        Assert.NotNull(response);
+    Assert.NotEqual(System.Net.HttpStatusCode.OK, response.Status);
+    }
 }
