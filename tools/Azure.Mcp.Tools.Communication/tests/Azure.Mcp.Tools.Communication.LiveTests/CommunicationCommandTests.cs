@@ -2,17 +2,16 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using AzureMcp.Tests;
-using AzureMcp.Tests.Client;
-using AzureMcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests;
+using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.LiveTests;
 
 [Trait("Area", "Communication")]
-[Trait("Category", "Live")]
-public class CommunicationCommandTests(LiveTestFixture liveTestFixture, ITestOutputHelper output)
-    : CommandTestsBase(liveTestFixture, output), IClassFixture<LiveTestFixture>
+[Trait("Command", "SmsSendCommand")]
+public class CommunicationCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     [Fact]
     public async Task Should_SendSms_WithValidParameters()
@@ -39,9 +38,9 @@ public class CommunicationCommandTests(LiveTestFixture liveTestFixture, ITestOut
                 { "tag", "live-test" }
             });
 
-        Assert.Equal(200, result.GetProperty("status").GetInt32());
+        Assert.Equal(200, result.Value.GetProperty("status").GetInt32());
 
-        var resultsProperty = result.AssertProperty("results");
+        var resultsProperty = result.Value.GetProperty("results");
         Assert.Equal(JsonValueKind.Array, resultsProperty.ValueKind);
 
         foreach (var smsResult in resultsProperty.EnumerateArray())
@@ -68,9 +67,9 @@ public class CommunicationCommandTests(LiveTestFixture liveTestFixture, ITestOut
                 { "args", args }
             });
 
-        Assert.NotEqual(200, result.GetProperty("status").GetInt32());
-        var message = result.GetProperty("message").GetString()!;
-        Assert.True(message.Contains("required", StringComparison.OrdinalIgnoreCase) ||
-                   message.Contains("validation", StringComparison.OrdinalIgnoreCase));
+    Assert.NotEqual(200, result.Value.GetProperty("status").GetInt32());
+    var message = result.Value.GetProperty("message").GetString()!;
+    Assert.True(message.Contains("required", StringComparison.OrdinalIgnoreCase) ||
+           message.Contains("validation", StringComparison.OrdinalIgnoreCase));
     }
 }
