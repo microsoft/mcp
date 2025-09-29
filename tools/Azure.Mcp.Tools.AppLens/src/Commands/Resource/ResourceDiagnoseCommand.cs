@@ -24,7 +24,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
     public override string Name => "diagnose";
 
     public override string Description =>
-    "Get diagnostic help from App Lens for Azure application and service issues to identify what’s wrong with a service. Ask questions about performance, slowness, failures, errors, and availability to receive expert analysis and solutions. This tool can be used to ask questions about application state, can help when doing diagnostics and address issues about performance and failures." +
+    "Get diagnostic help from App Lens for Azure application and service issues to identify what’s wrong with a service. Ask questions about performance, slowness, failures, errors, application state, availability to receive expert analysis and solutions and can help when doing diagnostics and address issues about performance and failures." +
     "Returns insights, recommended solutions, and analysis." +
     "Always use this tool before manually checking metrics or logs when users report performance or functionality issues. Use Azure CLI to find the subscription, resourceGroup, and resourceType if not provided. If given a resourceId, parse it to extract subscription, resourceGroup, and resourceType (format: /subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resource}). This tool can be used to ask questions about application state, diagnose performance problems, and address service failures.";
 
