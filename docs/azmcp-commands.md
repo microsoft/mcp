@@ -418,26 +418,6 @@ azmcp appservice database add --subscription "my-subscription" \
 -   `--connection-string`: Custom connection string (optional - auto-generated if not provided)
 -   `--tenant`: Azure tenant ID for authentication (optional)
 
-### Azure CLI Operations
-
-```bash
-# Execute any Azure CLI command
-# ⚠️ NOT IMPLEMENTED - This command is documented but not currently enabled in the codebase
-azmcp extension az --command "<command>"
-
-# Examples:
-# List resource groups
-# ⚠️ NOT IMPLEMENTED - This command is documented but not currently enabled in the codebase
-azmcp extension az --command "group list"
-
-# Get storage account details
-# ⚠️ NOT IMPLEMENTED - This command is documented but not currently enabled in the codebase
-azmcp extension az --command "storage account show --name <account> --resource-group <resource-group>"
-
-# List virtual machines
-# ⚠️ NOT IMPLEMENTED - This command is documented but not currently enabled in the codebase
-azmcp extension az --command "vm list --resource-group <resource-group>"
-```
 
 ### Azure Container Registry (ACR) Operations
 
