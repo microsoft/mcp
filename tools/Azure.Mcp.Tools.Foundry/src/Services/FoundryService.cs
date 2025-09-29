@@ -390,10 +390,10 @@ public class FoundryService(
         var chatOptions = new ChatCompletionOptions();
 
         // Set max tokens with a default value if not provided
-        var effectiveMaxTokens = maxTokens ?? 100;
+        var effectiveMaxTokens = maxTokens ?? 1000;
         if (effectiveMaxTokens <= 0)
         {
-            effectiveMaxTokens = 100; // Ensure we always have a positive value
+            effectiveMaxTokens = 1000; // Ensure we always have a positive value
         }
         chatOptions.MaxOutputTokenCount = effectiveMaxTokens;
 
