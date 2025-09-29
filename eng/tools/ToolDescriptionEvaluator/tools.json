@@ -187,7 +187,7 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": true
+          "required": null
         },
         {
           "name": "--cluster",
@@ -2002,7 +2002,7 @@
           "name": "--topic",
           "description": "The name of the Event Grid topic.",
           "type": "string",
-          "required": true
+          "required": null
         },
         {
           "name": "--location",
@@ -3784,16 +3784,10 @@
           "required": null
         },
         {
-          "name": "--cluster-uri",
-          "description": "Kusto Cluster URI.",
-          "type": "string",
-          "required": null
-        },
-        {
           "name": "--cluster",
           "description": "Kusto Cluster name.",
           "type": "string",
-          "required": null
+          "required": true
         }
       ]
     },
@@ -6448,7 +6442,7 @@
     },
     {
       "name": "query",
-      "description": "Executes a query on the PostgreSQL database.",
+      "description": "Executes a SQL query on an Azure Database for PostgreSQL server to search for specific terms, retrieve records, or perform SELECT operations.",
       "command": "azmcp postgres database query",
       "option": [
         {
@@ -6752,7 +6746,7 @@
     },
     {
       "name": "set",
-      "description": "Sets a specific parameter of a PostgreSQL server to a certain value.",
+      "description": "Configures PostgreSQL server settings including replication, connection limits, and other parameters.",
       "command": "azmcp postgres server param set",
       "option": [
         {
@@ -8054,6 +8048,97 @@
       ]
     },
     {
+      "name": "recognize",
+      "description": "Recognize speech from an audio file using Azure AI Services Speech. This command takes an audio file and converts it to text using advanced speech recognition capabilities.\r\nYou must provide an Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/) and a path to the audio file.\r\nSupported audio formats include WAV, MP3, OPUS/OGG, FLAC, ALAW, MULAW, MP4, M4A, and AAC. Compressed formats require GStreamer to be installed on the system.\r\nOptional parameters include language specification, phrase hints for better accuracy, output format (simple or detailed), and profanity filtering.",
+      "command": "azmcp speech stt recognize",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--file",
+          "description": "Path to the audio file to recognize.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--language",
+          "description": "The language for speech recognition (e.g., en-US, es-ES). Default is en-US.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--phrases",
+          "description": "Phrase hints to improve recognition accuracy. Can be specified multiple times (--phrases \"phrase1\" --phrases \"phrase2\") or as comma-separated values (--phrases \"phrase1,phrase2\").",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--format",
+          "description": "Output format: simple or detailed. Default is simple.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--profanity",
+          "description": "Profanity filter: masked, removed, or raw. Default is masked.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
       "name": "create",
       "description": "Create a new Azure SQL Database on an existing SQL Server. This command creates a database with configurable\r\nperformance tiers, size limits, and other settings. Equivalent to 'az sql db create'.\r\nReturns the newly created database information including configuration details.",
       "command": "azmcp sql db create",
@@ -8176,7 +8261,7 @@
     },
     {
       "name": "delete",
-      "description": "Deletes an Azure SQL Database from an existing SQL Server. This command removes the specified database\r\nand is idempotent - attempting to delete a database that does not exist will succeed with Deleted = false.\r\nEquivalent to 'az sql db delete'.\r\nReturns whether the database was deleted during this operation.",
+      "description": "Deletes a database from an Azure SQL Server.This idempotent operation removes the specified database from the server, returning Deleted = false if the database doesn't exist or Deleted = true if successfully removed.",
       "command": "azmcp sql db delete",
       "option": [
         {
@@ -8468,7 +8553,7 @@
     },
     {
       "name": "update",
-      "description": "Update configuration settings for an existing Azure SQL Database. This command modifies an existing database's\r\ncompute tier, performance characteristics, redundancy, or other settings. Equivalent to 'az sql db update'.\r\nReturns the updated database information including applied configuration changes.",
+      "description": "Scale and configure Azure SQL Database performance settings.\r\nUpdate an existing database's SKU, compute tier, storage capacity,\r\nor redundancy options to meet changing performance requirements.\r\nReturns the updated database configuration including applied scaling changes.",
       "command": "azmcp sql db update",
       "option": [
         {
@@ -8753,7 +8838,7 @@
     },
     {
       "name": "delete",
-      "description": "Deletes an Azure SQL server and all of its databases from the specified resource group.\r\nThis operation is irreversible and will permanently remove the server and all its data.\r\nUse the --force flag to skip confirmation prompts.",
+      "description": "Remove the specified SQL server from your Azure subscription, including all associated databases.\r\nThis operation permanently deletes all server data and cannot be reversed.\r\nUse --force to bypass confirmation.",
       "command": "azmcp sql server delete",
       "option": [
         {
@@ -10238,5 +10323,5 @@
       ]
     }
   ],
-  "duration": 21
+  "duration": 26
 }

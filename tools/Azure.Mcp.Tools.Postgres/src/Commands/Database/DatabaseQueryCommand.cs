@@ -15,7 +15,7 @@ public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) :
     private const string CommandTitle = "Query PostgreSQL Database";
     public override string Name => "query";
 
-    public override string Description => "Executes a query on the PostgreSQL database.";
+    public override string Description => "Executes a SQL query on an Azure Database for PostgreSQL server to search for specific terms, retrieve records, or perform SELECT operations.";
 
     public override string Title => CommandTitle;
 

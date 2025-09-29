@@ -31,6 +31,21 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_search_service_list | Show me the Cognitive Search services in my subscription |
 | azmcp_search_service_list | Show me my Cognitive Search services |
 
+## Azure AI Services Speech
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_speech_stt_recognize | Convert this audio file to text using Azure Speech Services |
+| azmcp_speech_stt_recognize | Recognize speech from my audio file with language detection |
+| azmcp_speech_stt_recognize | Transcribe speech from audio file <file_path> with profanity filtering |
+| azmcp_speech_stt_recognize | Convert speech to text from audio file <file_path> using endpoint <endpoint> |
+| azmcp_speech_stt_recognize | Transcribe the audio file <file_path> in Spanish language |
+| azmcp_speech_stt_recognize | Convert speech to text with detailed output format from audio file <file_path> |
+| azmcp_speech_stt_recognize | Recognize speech from <file_path> with phrase hints for better accuracy |
+| azmcp_speech_stt_recognize | Transcribe audio using multiple phrase hints: "Azure", "cognitive services", "machine learning" |
+| azmcp_speech_stt_recognize | Convert speech to text with comma-separated phrase hints: "Azure, cognitive services, API" |
+| azmcp_speech_stt_recognize | Transcribe audio with raw profanity output from file <file_path> |
+
 ## Azure App Configuration
 
 | Tool Name | Test Prompt |
@@ -147,7 +162,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_postgres_server_list | List all PostgreSQL servers in my subscription |
 | azmcp_postgres_server_list | Show me my PostgreSQL servers |
 | azmcp_postgres_server_list | Show me the PostgreSQL servers in my subscription |
-| azmcp_postgres_server_param | Show me if the parameter my PostgreSQL server \<server> has replication enabled |
+| azmcp_postgres_server_param_get | Show me if the parameter my PostgreSQL server \<server> has replication enabled |
 | azmcp_postgres_server_param_set | Enable replication for my PostgreSQL server \<server> |
 | azmcp_postgres_table_list | List all tables in the PostgreSQL database \<database> in server \<server> |
 | azmcp_postgres_table_list | Show me the tables in the PostgreSQL database \<database> in server \<server> |
