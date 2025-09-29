@@ -17,13 +17,14 @@ param(
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
+. "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1"
+
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 $mcpServerjson = "$RepoRoot/eng/dnx/.mcp/server.json"
 $nuspecSourcePath = "$RepoRoot/eng/dnx/nuspec"
 $azureIconPath = "$RepoRoot/eng/images/azureicon.png"
 $projectPropertiesScript = "$RepoRoot/eng/scripts/Get-ProjectProperties.ps1"
-$readMeProcessingScript = "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1"
 
 if(!$ArtifactsPath) {
 	$ArtifactsPath = "$RepoRoot/.work/build"
@@ -100,8 +101,10 @@ try {
             -replace "__CommitSHA__", $CommitSha `
             -replace "__TargetFramework__", $sharedProjectProperties.TargetFramework |
             Set-Content -Path $wrapperToolNuspec
-        & $readMeProcessingScript -InputReadMePath "$serverDirectory/README.md" `
+
+        Extract-PackageSpecificReadMe -InputReadMePath "$serverDirectory/README.md" `
             -OutputDirectory $tempNugetWrapperDir -PackageType "nuget" -InsertPayload @{ ToolTitle = '.NET Tool' }
+			
 		Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempNugetWrapperDir -Force
 		Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempNugetWrapperDir -Force
 		Copy-Item -Path $packageIconPath -Destination $tempNugetWrapperDir -Force

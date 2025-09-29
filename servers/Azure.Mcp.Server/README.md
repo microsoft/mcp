@@ -1,16 +1,16 @@
 <!--
 See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to anotate this README.md for package specific output
 -->
-# <!-- remove-section: start nuget;vsix --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end -->Azure MCP Server <!-- insert-section: nuget;vsix;npm {{ToolTitle}} -->
+# <!-- remove-section: start nuget;vsix remove_azure_logo --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end remove_azure_logo -->Azure MCP Server <!-- insert-section: nuget;vsix;npm {{ToolTitle}} -->
 
 All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the [GitHub Copilot for Azure extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-github-copilot) in VS Code.  This project is in Public Preview and implementation may significantly change prior to our General Availability.
-<!-- remove-section: start nuget;vsix;npm -->
+<!-- remove-section: start nuget;vsix;npm remove_install_links -->
 [![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Azure_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Azure_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-Install_Azure_MCP_Server-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022)  [![Install Azure MCP Server](https://img.shields.io/badge/IntelliJ%20IDEA-Install%20Azure%20MCP%20Server-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053)
-<!-- remove-section: end -->
+<!-- remove-section: end remove_install_links -->
 
 ## Table of Contents
 - [Overview](#overview)
-- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm -->
+- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_installatiion_sub_sections -->
     - [IDE](#ide)
         - [VS Code (Recommended)](#vs-code-recommended)
         - [Visual Studio 2022](#visual-studio-2022)
@@ -19,7 +19,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
     - [Package Manager](#package-manager)
         - [NuGet](#nuget)
         - [NPM](#npm)
-        - [Docker](#docker)<!-- remove-section: end -->
+        - [Docker](#docker)<!-- remove-section: end remove_installatiion_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
     - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
@@ -29,7 +29,8 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
     - [Feedback and Support](#feedback-and-support)
     - [Security](#security)
     - [Data Collection](#data-collection)
-    - [Contributing and Code of Conduct](#contributing)
+    - [Contributing](#contributing)
+    - [Code of Conduct](#code-of-conduct)
 
 # Overview
 
@@ -45,8 +46,8 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- insert-section: vsix {{    | 2| Search for `chat.mcp.autostart` | 2| Run MCP: List Servers.![List Servers](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ListServers.png) |}} -->
 <!-- insert-section: vsix {{    | 3| Select **newAndOutdated** to automatically start MCP servers without manual refresh. | 3| Select Azure MCP Server ext, then click Start Server.![Select Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/SelectServer.png)![Start Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/StartServer.png) |}} -->
 <!-- insert-section: vsix {{    | 4| You can also set this from the refresh icon tooltip in the Chat view, which also shows which servers will auto-start.![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ToolTip.png) | 4| Confirm its runing by observing the log messages in the output tab. ![Output](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/Output.png)|}}-->
-<!-- remove-section: start vsix -->
-<!-- remove-section: start nuget;npm -->
+<!-- remove-section: start vsix remove_entire_installation_sub_section -->
+<!-- remove-section: start nuget;npm remove_ide_sub_section -->
 Install Azure MCP Server using either an IDE extension or package manager. Choose one method below.
 
 ## IDE
@@ -82,10 +83,10 @@ Azure MCP Server can also be configured across other IDEs, CLIs, and MCP clients
 <summary>Manual setup instructions</summary>
 
 Use one of the following options to configure your `mcp.json`:
-<!-- remove-section: end -->
-<!-- remove-section: start npm -->
-<!-- remove-section: start nuget -->
-#### Option 1: Configure using .NET tool (dnx)<!-- remove-section: end -->
+<!-- remove-section: end remove_ide_sub_section -->
+<!-- remove-section: start npm remove_dotnet_config_sub_section -->
+<!-- remove-section: start nuget remove_dotnet_config_sub_header -->
+#### Option 1: Configure using .NET tool (dnx)<!-- remove-section: end remove_dotnet_config_sub_header -->
 - To use Azure MCP server from .NET, you must have [.NET 10 Preview 6 or later](https://dotnet.microsoft.com/download/dotnet/10.0) installed. This version of .NET adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
 To verify your .NET version, run the following command in your terminal: `dotnet --info`
 -  Configure your `mcp.json` file with the following:
@@ -110,10 +111,10 @@ To verify your .NET version, run the following command in your terminal: `dotnet
         }
     }
     ```
-<!-- remove-section: end -->
-<!-- remove-section: start nuget -->
-<!-- remove-section: start npm -->
-#### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end -->
+<!-- remove-section: end remove_dotnet_config_sub_section -->
+<!-- remove-section: start nuget remove_node_config_sub_section -->
+<!-- remove-section: start npm remove_node_config_sub_header -->
+#### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end remove_node_config_sub_header -->
 - To use Azure MCP server from node you must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
 -  Configure your `mcp.json` file with the following:
 
@@ -132,7 +133,7 @@ To verify your .NET version, run the following command in your terminal: `dotnet
         }
     }
     ```
-<!-- remove-section: end -->
+<!-- remove-section: end remove_node_config_sub_section -->
 **Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
 
 **Client-Specific Configuration**
@@ -146,7 +147,7 @@ To verify your .NET version, run the following command in your terminal: `dotnet
 | **Visual Studio** | `.mcp.json` (solution/workspace) | [Visual Studio MCP Setup](https://learn.microsoft.com/visualstudio/ide/mcp-servers?view=vs-2022) |
 | **VS Code** | `.vscode/mcp.json` (workspace)<br>`settings.json` (user) | [VS Code MCP Documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) |
 | **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | [Windsurf Cascade MCP Integration](https://docs.windsurf.com/windsurf/cascade/mcp) |
-<!-- remove-section: start nuget;npm -->
+<!-- remove-section: start nuget;npm remove_package_manager_section -->
 </details>
 
 
@@ -210,8 +211,8 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
    }
 ```
 </details>
-<!-- remove-section: end -->
-<!-- remove-section: end -->
+<!-- remove-section: end remove_package_manager_section -->
+<!-- remove-section: end remove_entire_installation_sub_section -->
 
 To use Azure Entra ID, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#using-azure-entra-id-with-docker).
 
@@ -424,18 +425,18 @@ MCP as a phenomenon is very novel and cutting-edge. As with all new technology s
 
 ## Data Collection
 
-<!-- remove-section: start vsix -->
+<!-- remove-section: start vsix remove_data_collection_section_content -->
 The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft's [privacy statement](https://www.microsoft.com/privacy/privacystatement). You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
-<!-- remove-section: end -->
+<!-- remove-section: end remove_data_collection_section_content -->
 <!-- insert-section: vsix {{The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry by following the instructions [here](https://code.visualstudio.com/docs/configure/telemetry#_disable-telemetry-reporting).}} -->
 
-<!-- remove-section: start vsix -->
+<!-- remove-section: start vsix remove_telemetry_config_section -->
 ### Telemetry Configuration
 
 Telemetry collection is on by default.
 
 To opt out, set the environment variable `AZURE_MCP_COLLECT_TELEMETRY` to `false` in your environment.
-<!-- remove-section: end -->
+<!-- remove-section: end remove_telemetry_config_section -->
 
 ## Contributing
 
