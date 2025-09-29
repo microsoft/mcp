@@ -18,8 +18,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
     public override string Name => "list";
 
     public override string Description =>
-    "List all or current subscriptions for an account in Azure; returns subscriptionId, displayName, state, tenantId, and isDefault for scope selection in governance, policy, access, cost management, or deployment.";
-
+"List all or current subscriptions for an account in Azure; returns subscriptionId, displayName, state, tenantId, and isDefault. Use for scope selection in governance, policy, access, cost management, or deployment.";
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
