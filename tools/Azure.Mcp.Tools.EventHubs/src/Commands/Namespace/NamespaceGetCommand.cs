@@ -52,6 +52,16 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(EventHubsOptionDefinitions.NamespaceName.AsOptional());
+        command.Validators.Add(commandResult =>
+        {
+            var namespaceName = commandResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceName.Name);
+            var resourceGroup = commandResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+
+            if (!string.IsNullOrEmpty(namespaceName) && string.IsNullOrEmpty(resourceGroup))
+            {
+                commandResult.AddError("When specifying a namespace name, a resource group must also be provided.");
+            }
+        });
     }
 
     protected override NamespaceGetOptions BindOptions(ParseResult parseResult)
@@ -60,36 +70,6 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.NamespaceName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceName.Name);
         return options;
-    }
-
-    public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
-    {
-        // First run the base validation for required options and parser errors
-        var baseResult = base.Validate(commandResult, commandResponse);
-        if (!baseResult.IsValid)
-        {
-            return baseResult;
-        }
-
-        // Get option values for custom validation
-        var hasNamespaceOption = commandResult.HasOptionResult(EventHubsOptionDefinitions.NamespaceName.Name);
-        var hasResourceGroupOption = commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup.Name);
-
-        // If namespace is provided, resource group must also be provided
-        if (hasNamespaceOption && !hasResourceGroupOption)
-        {
-            var errorMessage = "When specifying a namespace name, a resource group must also be provided.";
-
-            SetValidationError(commandResponse, errorMessage, HttpStatusCode.BadRequest);
-
-            return new ValidationResult
-            {
-                IsValid = false,
-                ErrorMessage = errorMessage
-            };
-        }
-
-        return new ValidationResult { IsValid = true };
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
