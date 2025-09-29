@@ -137,17 +137,17 @@ public static class AzureQuotaService
             }
             catch (ArgumentException ex) when (ex.Message.Contains("Unsupported resource provider", StringComparison.OrdinalIgnoreCase))
             {
-                return resourceTypesForProvider.Select(rt => new KeyValuePair<string, List<UsageInfo>>(rt, new List<UsageInfo>(){
-                    new UsageInfo(rt, 0, 0, Description: "No Limit")
-                }));
+                return resourceTypesForProvider.Select(rt => new KeyValuePair<string, List<UsageInfo>>(rt, [
+                    new(rt, 0, 0, Description: "No Limit")
+                ]));
             }
             catch (Exception error)
             {
                 logger.LogWarning("Error fetching quota for provider {Provider}: {Error}", provider, error.Message);
-                return resourceTypesForProvider.Select(rt => new KeyValuePair<string, List<UsageInfo>>(rt, new List<UsageInfo>()
-                {
-                    new UsageInfo(rt, 0, 0, Description: error.Message)
-                }));
+                return resourceTypesForProvider.Select(rt => new KeyValuePair<string, List<UsageInfo>>(rt,
+                [
+                    new(rt, 0, 0, Description: error.Message)
+                ]));
             }
         });
 
