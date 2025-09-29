@@ -935,6 +935,158 @@
     },
     {
       "name": "list",
+      "description": "List Application Insights Code Optimization Recommendations in a subscription. Optionally filter by resource group when --resource-group is provided.\r\nReturns the code optimization recommendations based on the profiler data.",
+      "command": "azmcp applicationinsights recommendation list",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "add",
+      "description": "Add a database connection to an App Service. This command configures database connection\r\nsettings for the specified App Service, allowing it to connect to a database server.",
+      "command": "azmcp appservice database add",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--app",
+          "description": "The name of the Azure App Service (e.g., my-webapp).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--database-type",
+          "description": "The type of database (e.g., SqlServer, MySQL, PostgreSQL, CosmosDB).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--database-server",
+          "description": "The server name or endpoint for the database (e.g., myserver.database.windows.net).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--database",
+          "description": "The name of the database to connect to (e.g., mydb).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--connection-string",
+          "description": "The connection string for the database. If not provided, a default will be generated.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "list",
       "description": "Lists Azure Managed Lustre (AMLFS) file systems in a subscription or optional resource group including provisioning state, MGS address, tier, capacity (TiB), blob integration container, and maintenance window details. Use to inventory Azure Managed Lustre filesystems and to check their properties.",
       "command": "azmcp azuremanagedlustre filesystem list",
       "option": [
@@ -1832,6 +1984,79 @@
     },
     {
       "name": "list",
+      "description": "List event subscriptions for topics with filtering and endpoint configuration. This tool shows all active\r\nsubscriptions including webhook endpoints, event filters, and delivery retry policies. Returns subscription\r\ndetails as JSON array. Requires either --topic (bare topic name) OR --subscription. If only --topic is provided\r\nthe tool searches all accessible subscriptions for a topic with that name. Optional --resource-group/--location\r\nmay only be used alongside --subscription or --topic.",
+      "command": "azmcp eventgrid subscription list",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--topic",
+          "description": "The name of the Event Grid topic.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--location",
+          "description": "The Azure region to filter resources by (e.g., 'eastus', 'westus2').",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "list",
       "description": "List all Event Grid topics in a subscription with configuration and status information. This tool retrieves\r\ntopic details including endpoints, access keys, and subscription information for event publishing and management.\r\nReturns topic information as JSON array. Requires subscription.",
       "command": "azmcp eventgrid topic list",
       "option": [
@@ -1949,6 +2174,298 @@
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
           "required": null
+        }
+      ]
+    },
+    {
+      "name": "connect",
+      "description": "Connect to a specific Azure AI Agent and run a query.\r\nReturns the agent's response along with thread and run IDs for potential evaluation.",
+      "command": "azmcp foundry agents connect",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--agent-id",
+          "description": "The ID of the agent to interact with.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--query",
+          "description": "The query sent to the agent.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--endpoint",
+          "description": "The endpoint URL for the Azure AI service.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "evaluate",
+      "description": "Run agent evaluation on agent data. Requires JSON strings for query, response, and tool definitions.",
+      "command": "azmcp foundry agents evaluate",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--query",
+          "description": "The query sent to the agent.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--evaluator",
+          "description": "The name of the evaluator to use (intent_resolution, tool_call_accuracy, task_adherence).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--response",
+          "description": "The response from the agent.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--tool-definitions",
+          "description": "Optional tool definitions made by the agent in JSON format.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--azure-openai-endpoint",
+          "description": "The endpoint URL for the Azure OpenAI service to be used in evaluation.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--azure-openai-deployment",
+          "description": "The deployment name for the Azure OpenAI model to be used in evaluation.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "description": "List all Azure AI Agents available in the configured project.",
+      "command": "azmcp foundry agents list",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The endpoint URL for the Azure AI service.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "query-and-evaluate",
+      "description": "Query an agent and evaluate its response in a single operation.\r\nReturns both the agent response and evaluation results",
+      "command": "azmcp foundry agents query-and-evaluate",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--agent-id",
+          "description": "The ID of the agent to interact with.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--query",
+          "description": "The query sent to the agent.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--endpoint",
+          "description": "The endpoint URL for the Azure AI service.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--evaluators",
+          "description": "The list of evaluators to use for evaluation, separated by commas. If not specified, all evaluators will be used.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--azure-openai-endpoint",
+          "description": "The endpoint URL for the Azure OpenAI service to be used in evaluation.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--azure-openai-deployment",
+          "description": "The deployment name for the Azure OpenAI model to be used in evaluation.",
+          "type": "string",
+          "required": true
         }
       ]
     },
@@ -2861,6 +3378,73 @@
       ]
     },
     {
+      "name": "get",
+      "description": "Get a key from an Azure Key Vault. This command retrieves and displays details\r\nabout a specific key in the specified vault.",
+      "command": "azmcp keyvault key get",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--vault",
+          "description": "The name of the Key Vault.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--key",
+          "description": "The name of the key to retrieve/modify from the Key Vault.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
       "name": "list",
       "description": "List all keys in an Azure Key Vault. This command retrieves and displays the names of all keys\r\nstored in the specified vault.",
       "command": "azmcp keyvault key list",
@@ -2995,6 +3579,73 @@
         {
           "name": "--value",
           "description": "The value to set for the secret.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "description": "Gets a secret from an Azure Key Vault. This command retrieves and displays the value\r\nof a specific secret from the specified vault.",
+      "command": "azmcp keyvault secret get",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--vault",
+          "description": "The name of the Key Vault.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--secret",
+          "description": "The name of the secret.",
           "type": "string",
           "required": true
         }
@@ -7385,6 +8036,291 @@
       ]
     },
     {
+      "name": "recognize",
+      "description": "Recognize speech from an audio file using Azure AI Services Speech. This command takes an audio file and converts it to text using advanced speech recognition capabilities.\r\nYou must provide an Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/) and a path to the audio file.\r\nSupported audio formats include WAV, MP3, OPUS/OGG, FLAC, ALAW, MULAW, MP4, M4A, and AAC. Compressed formats require GStreamer to be installed on the system.\r\nOptional parameters include language specification, phrase hints for better accuracy, output format (simple or detailed), and profanity filtering.",
+      "command": "azmcp speech stt recognize",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--file",
+          "description": "Path to the audio file to recognize.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--language",
+          "description": "The language for speech recognition (e.g., en-US, es-ES). Default is en-US.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--phrases",
+          "description": "Phrase hints to improve recognition accuracy. Can be specified multiple times (--phrases \"phrase1\" --phrases \"phrase2\") or as comma-separated values (--phrases \"phrase1,phrase2\").",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--format",
+          "description": "Output format: simple or detailed. Default is simple.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--profanity",
+          "description": "Profanity filter: masked, removed, or raw. Default is masked.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "create",
+      "description": "Create a new Azure SQL Database on an existing SQL Server. This command creates a database with configurable\r\nperformance tiers, size limits, and other settings. Equivalent to 'az sql db create'.\r\nReturns the newly created database information including configuration details.",
+      "command": "azmcp sql db create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--server",
+          "description": "The Azure SQL Server name.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--database",
+          "description": "The Azure SQL Database name.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--sku-name",
+          "description": "The SKU name for the database (e.g., Basic, S0, P1, GP_Gen5_2).",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--sku-tier",
+          "description": "The SKU tier for the database (e.g., Basic, Standard, Premium, GeneralPurpose).",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--sku-capacity",
+          "description": "The SKU capacity (DTU or vCore count) for the database.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--collation",
+          "description": "The collation for the database (e.g., SQL_Latin1_General_CP1_CI_AS).",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--max-size-bytes",
+          "description": "The maximum size of the database in bytes.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--elastic-pool-name",
+          "description": "The name of the elastic pool to assign the database to.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--zone-redundant",
+          "description": "Whether the database should be zone redundant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--read-scale",
+          "description": "Read scale option for the database (Enabled or Disabled).",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "description": "Deletes an Azure SQL Database from an existing SQL Server. This command removes the specified database\r\nand is idempotent - attempting to delete a database that does not exist will succeed with Deleted = false.\r\nEquivalent to 'az sql db delete'.\r\nReturns whether the database was deleted during this operation.",
+      "command": "azmcp sql db delete",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--server",
+          "description": "The Azure SQL Server name.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--database",
+          "description": "The Azure SQL Database name.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
       "name": "list",
       "description": "Lists all databases in an Azure SQL Server with their configuration, status, SKU, and performance details.\r\nUse when you need to: view database inventory, check database status across a server, compare database configurations,\r\nor find databases for management operations.\r\nRequires: subscription ID, resource group name, server name.\r\nReturns: JSON array of databases with complete configuration details including SKU, status, and size information.\r\nEquivalent to 'az sql db list'.",
       "command": "azmcp sql db list",
@@ -7521,6 +8457,127 @@
           "description": "The Azure SQL Database name.",
           "type": "string",
           "required": true
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "description": "Update configuration settings for an existing Azure SQL Database. This command modifies an existing database's\r\ncompute tier, performance characteristics, redundancy, or other settings. Equivalent to 'az sql db update'.\r\nReturns the updated database information including applied configuration changes.",
+      "command": "azmcp sql db update",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--server",
+          "description": "The Azure SQL Server name.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--database",
+          "description": "The Azure SQL Database name.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--sku-name",
+          "description": "The SKU name for the database (e.g., Basic, S0, P1, GP_Gen5_2).",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--sku-tier",
+          "description": "The SKU tier for the database (e.g., Basic, Standard, Premium, GeneralPurpose).",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--sku-capacity",
+          "description": "The SKU capacity (DTU or vCore count) for the database.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--collation",
+          "description": "The collation for the database (e.g., SQL_Latin1_General_CP1_CI_AS).",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--max-size-bytes",
+          "description": "The maximum size of the database in bytes.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--elastic-pool-name",
+          "description": "The name of the elastic pool to assign the database to.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--zone-redundant",
+          "description": "Whether the database should be zone redundant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--read-scale",
+          "description": "Read scale option for the database (Enabled or Disabled).",
+          "type": "string",
+          "required": null
         }
       ]
     },
@@ -8054,6 +9111,25 @@
       ]
     },
     {
+      "name": "list",
+      "description": "Lists Azure SQL servers within a resource group including fully qualified domain name, state,\r\nadministrator login, and network access settings. Use this command to discover SQL servers,\r\naudit configurations, or verify deployment targets. Equivalent to 'az sql server list'.\r\nRequired parameters: subscription ID and resource group name.\r\nReturns: JSON array of SQL server objects with metadata, network configuration, and tags.",
+      "command": "azmcp sql server list",
+      "option": [
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
       "name": "show",
       "description": "Retrieves detailed information about an Azure SQL server including its configuration,\r\nstatus, and properties such as the fully qualified domain name, version,\r\nadministrator login, and network access settings.",
       "command": "azmcp sql server show",
@@ -8269,85 +9345,6 @@
           "description": "The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').",
           "type": "string",
           "required": null
-        }
-      ]
-    },
-    {
-      "name": "set-tier",
-      "description": "Sets access tier for multiple blobs in a single batch operation, returning the names of blobs that had their access\r\ntier set and blobs that failed to have their access tier set.",
-      "command": "azmcp storage blob batch set-tier",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--account",
-          "description": "The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--container",
-          "description": "The name of the container to access within the storage account.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--tier",
-          "description": "The access tier to set for the blobs. Valid values include Hot, Cool, Archive, and others depending on the storage account type. See Azure documentation for the complete list of supported access tiers.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--blobs",
-          "description": "The names of the blobs to set the access tier for. Provide multiple blob names separated by spaces. Each blob name should be the full path within the container (e.g., 'file1.txt' or 'folder/file2.txt').",
-          "type": "string",
-          "required": true
         }
       ]
     },
@@ -8632,377 +9629,6 @@
         {
           "name": "--local-file-path",
           "description": "The local file path to read content from or to write content to. This should be the full path to the file on your local system.",
-          "type": "string",
-          "required": true
-        }
-      ]
-    },
-    {
-      "name": "create",
-      "description": "Create a directory in a Data Lake file system. This command creates a new directory at the specified path\r\nwithin the Data Lake file system. The directory path must include the file system name as the first component\r\n(e.g., 'myfilesystem/data/logs' or 'myfilesystem/archives/2024'). The path supports nested structures using\r\nforward slashes (/). If the directory already exists, the operation will succeed and return the existing\r\ndirectory information. Returns directory metadata including name, type, and creation timestamp as JSON.",
-      "command": "azmcp storage datalake directory create",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--account",
-          "description": "The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--directory-path",
-          "description": "The full path of the directory to create in the Data Lake, including the file system name (e.g., 'myfilesystem/data/logs' or 'myfilesystem/archives/2024'). Use forward slashes (/) to separate the file system name from the directory path and for subdirectories.",
-          "type": "string",
-          "required": true
-        }
-      ]
-    },
-    {
-      "name": "list-paths",
-      "description": "List paths in a Data Lake file system. This command retrieves and displays paths (files and directories)\r\navailable in the specified Data Lake file system within the storage account. Results include path names,\r\ntypes (file or directory), and metadata, returned as a JSON array.",
-      "command": "azmcp storage datalake file-system list-paths",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--account",
-          "description": "The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--file-system",
-          "description": "The name of the Data Lake file system to access within the storage account.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--filter-path",
-          "description": "The prefix to filter paths in the Data Lake. Only paths that start with this prefix will be listed.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--recursive",
-          "description": "Flag to indicate whether the command will operate recursively on all subdirectories.",
-          "type": "string",
-          "required": null
-        }
-      ]
-    },
-    {
-      "name": "send",
-      "description": "Send messages to an Azure Storage queue for asynchronous processing. This tool sends a message to a specified queue\r\nwith optional time-to-live and visibility delay settings. Messages are returned with receipt handles for tracking.\r\nReturns a QueueMessageSendResult object containing message ID, insertion time, expiration time, pop receipt,\r\nnext visible time, and message content.",
-      "command": "azmcp storage queue message send",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--account",
-          "description": "The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--queue",
-          "description": "The name of the queue to access within the storage account.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--message",
-          "description": "The content of the message to send to the queue.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--time-to-live-in-seconds",
-          "description": "The time-to-live for the message in seconds. If not specified, the message will use the queue's default TTL. Set to -1 for messages that never expire.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--visibility-timeout-in-seconds",
-          "description": "The visibility timeout for the message in seconds. This determines how long the message will be invisible after it's retrieved. If not specified, defaults to 0 (immediately visible).",
-          "type": "string",
-          "required": null
-        }
-      ]
-    },
-    {
-      "name": "list",
-      "description": "Lists files and directories within a file share directory. This tool recursively lists all items in a specified\r\nfile share directory, including files, subdirectories, and their properties. Files and directories may be filtered\r\nby a prefix. Returns file listing as JSON.",
-      "command": "azmcp storage share file list",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--account",
-          "description": "The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--share",
-          "description": "The name of the file share to access within the storage account.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--directory-path",
-          "description": "The full path of the directory to create in the Data Lake, including the file system name (e.g., 'myfilesystem/data/logs' or 'myfilesystem/archives/2024'). Use forward slashes (/) to separate the file system name from the directory path and for subdirectories.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--prefix",
-          "description": "Optional prefix to filter results. Only items that start with this prefix will be returned.",
-          "type": "string",
-          "required": null
-        }
-      ]
-    },
-    {
-      "name": "list",
-      "description": "List all tables in a Storage account. This command retrieves and displays all tables available in the specified Storage account.\r\nResults include table names and are returned as a JSON array. You must specify an account name and subscription ID.\r\nUse this command to explore your Storage resources or to verify table existence before performing operations on specific tables.",
-      "command": "azmcp storage table list",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--account",
-          "description": "The name of the Azure Storage account. This is the unique name you chose for your storage account (e.g., 'mystorageaccount').",
           "type": "string",
           "required": true
         }
@@ -9606,5 +10232,5 @@
       ]
     }
   ],
-  "duration": 23
+  "duration": 46
 }

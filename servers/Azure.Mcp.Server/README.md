@@ -201,6 +201,13 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 * "What indexes do I have in my Azure AI Search service 'mysvc'?"
 * "Let's search this index for 'my search query'"
 
+### 🎤 Azure AI Services Speech
+
+* "Convert this audio file to text using Azure Speech Services"
+* "Recognize speech from my audio file with language detection"
+* "Transcribe speech from audio with profanity filtering"
+* "Transcribe audio with phrase hints for better accuracy"
+
 ### ⚙️ Azure App Configuration
 
 * "List my App Configuration stores"
@@ -314,6 +321,7 @@ The Azure MCP Server provides tools for interacting with **30+ Azure service are
 
 - 🧮 **Azure AI Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
+- 🎤 **Azure AI Services Speech** - Speech-to-text recognition
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
