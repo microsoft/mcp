@@ -197,6 +197,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_eventgrid_events_publish | Publish event to my Event Grid topic <topic_name> with the following events <event_data> |
 | azmcp_eventgrid_events_publish | Send an event to Event Grid topic <topic_name> in resource group <resource_group_name> with <event_data> |
 
+## Azure Event Hubs
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_eventhubs_namespace_get | List all Event Hubs namespaces in my subscription |
+| azmcp_eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> |
+
 ## Azure Function App
 
 | Tool Name | Test Prompt |
