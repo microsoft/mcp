@@ -25,7 +25,7 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
     "Returns a curated list of Azure best practices for code generation, operations, and deployment. " +
     "Use when the user wants to plan, design, or outline an Azure app or feature before writing any code. " +
     "Relevant to Azure Functions, Azure Kubernetes Service (AKS), Azure Container Apps (ACA), Bicep, Terraform, Azure Cache for Redis, Cosmos DB, Entra/Azure AD, Azure App Services, and similar Azure services. " +
-    "Call this tool when: the prompt includes explicit instructions to plan but not create code or the user asks for best practices or deployment guidance for Azure services. " +
+    "Call this tool when: the prompt includes explicit instructions to create a plan for an app but not create code or the user asks for best practices or deployment guidance for Azure services. " +
     "Do not use for Terraform-only guidance, broad multi-domain architecture ideation, or detailed CI/CD pipeline steps. ";
 
     public override string Title => CommandTitle;
