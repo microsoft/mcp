@@ -3,3 +3,4 @@ variables:
   skipComponentGovernanceDetection: true
   nugetMultiFeedWarnLevel: 'none'
   GDN_SUPPRESS_FORKED_BUILD_WARNING: true
+  NUGET_PACKAGES: $(Pipeline.Workspace)/.nuget/packages/
