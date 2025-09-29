@@ -36,7 +36,19 @@ public class CommunicationSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        // Not used in this implementation
-        throw new NotImplementedException();
+        // Create Communication command group
+        var communication = new CommandGroup("communication",
+            "Communication services operations - Commands for managing Azure Communication Services including SMS messaging, email, and voice calling capabilities.");
+
+        // Create SMS subgroup
+        var sms = new CommandGroup("sms", "SMS messaging operations - Commands for sending SMS messages using Azure Communication Services.");
+        communication.AddSubGroup(sms);
+
+        // Register SMS commands using DI
+        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+        var smsSendCommand = new SmsSendCommand(loggerFactory.CreateLogger<SmsSendCommand>());
+        sms.AddCommand("send", smsSendCommand);
+
+        return communication;
     }
 }

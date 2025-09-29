@@ -8,8 +8,9 @@ namespace Azure.Mcp.Tools.Communication.Models;
 
 public class SmsSendCommandResult
 {
+
     [JsonPropertyName("results")]
-    public List<SmsResult> Results { get; }
+    public List<SmsResult> Results { get; set; }
 
     public SmsSendCommandResult(List<SmsResult> results)
     {
