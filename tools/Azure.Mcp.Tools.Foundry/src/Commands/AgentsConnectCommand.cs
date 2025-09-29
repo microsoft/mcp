@@ -17,7 +17,7 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
 
     public override string Description =>
         """
-        Query an Azure AI Foundry agent and get the raw response (no query and evaluate). Use for one-off interaction or to capture run/thread IDs before calling evaluation tools. Not for combined answer+score workflows (use agents_query-and-evaluate / agents_evaluate).
+        Query an Azure AI Foundry agent and get the response as is (no query and evaluate). Use for one-off interaction or to capture run/thread IDs before calling evaluation tools. Do not use this tool for combined answer-plus-score workflows — instead, use agents_query-and-evaluate or agents_evaluate.
         """;
 
     public override ToolMetadata Metadata => new()

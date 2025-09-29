@@ -19,9 +19,7 @@ public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeployment
     public override string Name => "deploy";
 
     public override string Description =>
-    "Deploys (create) a model instance (e.g. GPT4o / gpt-4o, OpenAI, OSS, proprietary) in Azure AI Foundry as a named inference deployment in Azure AI Foundry, which's bound to a specified Azure AI Services resource, resource group, and subscription. " +
-    "Provide a deployment name plus model name and format to provision a persistent runtime endpoint addressable by that name, which enables applications to call models through a stable alias. " +
-    "Not for Azure OpenAI managed deployments—use the OpenAI deployment tool instead.";
+    "Deploys (create) a model instance (e.g. GPT4o / gpt-4o, OpenAI, OSS, proprietary) in Azure AI Foundry as a named inference deployment, which's bound to a specified Azure AI Services resource, resource group, and subscription. Do not use this tool for for Azure OpenAI Services to deploy OpenAI models.";
 
     public override string Title => CommandTitle;
 
