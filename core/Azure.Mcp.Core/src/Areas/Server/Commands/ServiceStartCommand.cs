@@ -62,6 +62,12 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.Debug);
         command.Options.Add(ServiceOptionDefinitions.EnableInsecureTransports);
         command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
+        command.Validators.Add(commandResult =>
+        {
+            ValidateMode(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode), commandResult);
+            ValidateTransport(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Transport), commandResult);
+            ValidateInsecureTransportsConfiguration(commandResult.GetValueOrDefault(ServiceOptionDefinitions.EnableInsecureTransports), commandResult);
+        });
     }
 
     /// <summary>
@@ -82,33 +88,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name)
         };
         return options;
-    }
-
-    /// <summary>
-    /// Validates the command options and arguments.
-    /// </summary>
-    /// <param name="commandResult">The command result to validate.</param>
-    /// <param name="commandResponse">Optional response object to set error details.</param>
-    /// <returns>A ValidationResult indicating whether the validation passed.</returns>
-    public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse)
-    {
-        // First run the base validation for required options and parser errors
-        var baseResult = base.Validate(commandResult, commandResponse);
-        if (!baseResult.IsValid)
-        {
-            return baseResult;
-        }
-
-        // Get option values directly from commandResult
-        var mode = commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode);
-        var transport = commandResult.GetValueOrDefault(ServiceOptionDefinitions.Transport);
-        var enableInsecureTransports = commandResult.GetValueOrDefault(ServiceOptionDefinitions.EnableInsecureTransports);
-
-        // Validate and return early on any failures
-        return ValidateMode(mode, commandResponse) ??
-               ValidateTransport(transport, commandResponse) ??
-               ValidateInsecureTransportsConfiguration(enableInsecureTransports, commandResponse) ??
-               new ValidationResult { IsValid = true };
     }
 
     /// <summary>
@@ -145,79 +124,55 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// Validates if the provided mode is a valid mode type.
     /// </summary>
     /// <param name="mode">The mode to validate.</param>
-    /// <param name="commandResponse">Optional command response to update on failure.</param>
-    /// <returns>ValidationResult with error details if invalid, null if valid.</returns>
-    private static ValidationResult? ValidateMode(string? mode, CommandResponse? commandResponse)
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateMode(string? mode, CommandResult commandResult)
     {
         if (mode == ModeTypes.SingleToolProxy ||
             mode == ModeTypes.NamespaceProxy ||
             mode == ModeTypes.All)
         {
-            return null; // Success
+            return; // Success
         }
 
-        var result = new ValidationResult
-        {
-            IsValid = false,
-            ErrorMessage = $"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}."
-        };
-
-        SetValidationError(commandResponse, result.ErrorMessage!, HttpStatusCode.BadRequest);
-        return result;
+        commandResult.AddError($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}.");
     }
 
     /// <summary>
     /// Validates if the provided transport is valid.
     /// </summary>
     /// <param name="transport">The transport to validate.</param>
-    /// <param name="commandResponse">Optional command response to update on failure.</param>
-    /// <returns>ValidationResult with error details if invalid, null if valid.</returns>
-    private static ValidationResult? ValidateTransport(string? transport, CommandResponse? commandResponse)
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateTransport(string? transport, CommandResult commandResult)
     {
         if (transport is null || transport == TransportTypes.StdIo)
         {
-            return null; // Success
+            return; // Success
         }
 
-        var result = new ValidationResult
-        {
-            IsValid = false,
-            ErrorMessage = $"Invalid transport '{transport}'. Valid transports are: {TransportTypes.StdIo}."
-        };
-
-        SetValidationError(commandResponse, result.ErrorMessage!, HttpStatusCode.BadRequest);
-        return result;
+        commandResult.AddError($"Invalid transport '{transport}'. Valid transports are: {TransportTypes.StdIo}.");
     }
 
     /// <summary>
     /// Validates if the insecure transport configuration is valid.
     /// </summary>
     /// <param name="enableInsecureTransports">Whether insecure transports are enabled.</param>
-    /// <param name="commandResponse">Optional command response to update on failure.</param>
-    /// <returns>ValidationResult with error details if invalid, null if valid.</returns>
-    private static ValidationResult? ValidateInsecureTransportsConfiguration(bool enableInsecureTransports, CommandResponse? commandResponse)
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateInsecureTransportsConfiguration(bool enableInsecureTransports, CommandResult commandResult)
     {
         // If insecure transports are not enabled, configuration is valid
         if (!enableInsecureTransports)
         {
-            return null; // Success
+            return; // Success
         }
 
         // If insecure transports are enabled, check if proper credentials are configured
         var hasCredentials = EnvironmentHelpers.GetEnvironmentVariableAsBool("AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS");
         if (hasCredentials)
         {
-            return null; // Success
+            return; // Success
         }
 
-        var result = new ValidationResult
-        {
-            IsValid = false,
-            ErrorMessage = "Using --enable-insecure-transport requires the host to have either Managed Identity or Workload Identity enabled. Please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting."
-        };
-
-        SetValidationError(commandResponse, result.ErrorMessage!, HttpStatusCode.InternalServerError);
-        return result;
+        commandResult.AddError("Using --enable-insecure-transport requires the host to have either Managed Identity or Workload Identity enabled. Please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.");
     }
 
     /// <summary>

@@ -7,9 +7,6 @@ namespace Azure.Mcp.Core.Extensions;
 
 public static class CommandResultExtensions
 {
-    public static SymbolResult? GetOptionResult(this CommandResult commandResult, Option option)
-        => commandResult.GetResult(option);
-
     public static bool HasOptionResult(this CommandResult commandResult, Option option)
     {
         var result = commandResult.GetResult(option);
@@ -81,7 +78,7 @@ public static class CommandResultExtensions
             // Handle nullable types explicitly - null is a valid value for nullable types
             if (def is null && typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))
             {
-                value = default(T); // This will be null for nullable types
+                value = default; // This will be null for nullable types
                 return true;
             }
             if (def is T typed)
@@ -95,12 +92,24 @@ public static class CommandResultExtensions
         return false;
     }
 
+    public static bool TryGetValue<T>(this CommandResult commandResult, string optionName, out T? value)
+    {
+        // Find the option by name in the command
+        var option = FindOptionTByName<T>(commandResult, optionName);
+
+        if (option is null)
+        {
+            value = default;
+            return false;
+        }
+
+        return TryGetValue(commandResult, option, out value);
+    }
+
     public static T? GetValueOrDefault<T>(this CommandResult commandResult, Option<T> option)
     {
-        if (commandResult is null)
-            throw new ArgumentNullException(nameof(commandResult));
-        if (option is null)
-            throw new ArgumentNullException(nameof(option));
+        ArgumentNullException.ThrowIfNull(commandResult);
+        ArgumentNullException.ThrowIfNull(option);
 
         // Find the OptionResult in the parse tree
         var optionResult = commandResult.GetResult(option);
@@ -116,7 +125,7 @@ public static class CommandResultExtensions
                 // Handle nullable types explicitly - null is a valid value for nullable types
                 if (def is null && typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))
                 {
-                    return default(T); // This will be null for nullable types
+                    return default; // This will be null for nullable types
                 }
                 if (def is T typed)
                 {
@@ -130,4 +139,21 @@ public static class CommandResultExtensions
         // Using the System.CommandLine API directly to avoid accidental recursion.
         return optionResult.GetValueOrDefault<T>();
     }
+
+    public static T? GetValueOrDefault<T>(this CommandResult commandResult, string optionName)
+    {
+        // Find the option by name in the command
+        var option = FindOptionTByName<T>(commandResult, optionName);
+
+        if (option is null)
+        {
+            return default;
+        }
+
+        return GetValueOrDefault(commandResult, option);
+    }
+
+    private static Option<T>? FindOptionTByName<T>(CommandResult commandResult, string optionName)
+        => commandResult.Command.Options.OfType<Option<T>>()
+            .FirstOrDefault(o => o.Name == optionName || o.Aliases.Contains(optionName));
 }

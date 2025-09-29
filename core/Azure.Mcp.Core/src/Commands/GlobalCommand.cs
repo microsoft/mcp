@@ -8,8 +8,6 @@ using Azure.Identity;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-
 namespace Azure.Mcp.Core.Commands;
 
 public abstract class GlobalCommand<
@@ -82,31 +80,20 @@ public abstract class GlobalCommand<
         {
             var policy = new RetryPolicyOptions();
 
-            if (parseResult.GetResult(OptionDefinitions.RetryPolicy.MaxRetries) != null)
-            {
-                policy.HasMaxRetries = true;
-                policy.MaxRetries = parseResult.GetValueOrDefault<int>(OptionDefinitions.RetryPolicy.MaxRetries.Name);
-            }
-            if (parseResult.GetResult(OptionDefinitions.RetryPolicy.Delay) != null)
-            {
-                policy.HasDelaySeconds = true;
-                policy.DelaySeconds = parseResult.GetValueOrDefault<double>(OptionDefinitions.RetryPolicy.Delay.Name);
-            }
-            if (parseResult.GetResult(OptionDefinitions.RetryPolicy.MaxDelay) != null)
-            {
-                policy.HasMaxDelaySeconds = true;
-                policy.MaxDelaySeconds = parseResult.GetValueOrDefault<double>(OptionDefinitions.RetryPolicy.MaxDelay.Name);
-            }
-            if (parseResult.GetResult(OptionDefinitions.RetryPolicy.Mode) != null)
-            {
-                policy.HasMode = true;
-                policy.Mode = parseResult.GetValueOrDefault<RetryMode>(OptionDefinitions.RetryPolicy.Mode.Name);
-            }
-            if (parseResult.GetResult(OptionDefinitions.RetryPolicy.NetworkTimeout) != null)
-            {
-                policy.HasNetworkTimeoutSeconds = true;
-                policy.NetworkTimeoutSeconds = parseResult.GetValueOrDefault<double>(OptionDefinitions.RetryPolicy.NetworkTimeout.Name);
-            }
+            policy.HasMaxRetries = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.MaxRetries.Name, out int maxRetries);
+            policy.MaxRetries = maxRetries;
+
+            policy.HasDelaySeconds = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.Delay.Name, out double delaySeconds);
+            policy.DelaySeconds = delaySeconds;
+
+            policy.HasMaxDelaySeconds = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.MaxDelay.Name, out double maxDelaySeconds);
+            policy.MaxDelaySeconds = maxDelaySeconds;
+
+            policy.HasMode = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.Mode.Name, out RetryMode mode);
+            policy.Mode = mode;
+
+            policy.HasNetworkTimeoutSeconds = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.NetworkTimeout.Name, out double networkTimeoutSeconds);
+            policy.NetworkTimeoutSeconds = networkTimeoutSeconds;
 
             // Only assign if at least one flag set (defensive)
             if (policy.HasMaxRetries || policy.HasDelaySeconds || policy.HasMaxDelaySeconds || policy.HasMode || policy.HasNetworkTimeoutSeconds)
