@@ -22,7 +22,7 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
 
     public override string Description =>
         """
-        List Azure service health events to track service issues that occurred in recent timeframes (last 30 days, weeks, months). Query subscription for planned maintenance, past or ongoing service incidents, advisories, and security events. Provides detailed information about resource availability state, potential issues, and timestamps. Returns: trackingId, title, summary, eventType, status, startTime, endTime, impactedServices. Examples: list --subscription <sub> --event-type ServiceIssue --query-start-time 2024-08-26T00:00:00Z (last 30 days service issues). Access Azure Service Health portal data programmatically.
+        List Azure service health events to track service issues that occurred in recent timeframes (last 30 days, weeks, months). Query subscription for planned maintenance, past or ongoing service incidents, advisories, and security events. Provides detailed information about resource availability state, potential issues, and timestamps. Returns: trackingId, title, summary, eventType, status, startTime, endTime, impactedServices. Access Azure Service Health portal data programmatically.
         """;
 
     public override string Title => CommandTitle;
