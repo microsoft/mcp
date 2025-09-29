@@ -190,10 +190,9 @@ public sealed class KustoService(
             databaseName,
             $".show table {tableName} cslschema", CancellationToken.None);
         var result = KustoResultToStringList(kustoResult);
-        var schema = result.FirstOrDefault();
-        if (schema is not null)
+        if (result.Count > 0)
         {
-            return schema;
+            return string.Join(Environment.NewLine, result);
         }
         throw new Exception($"No schema found for table '{tableName}' in database '{databaseName}'.");
     }

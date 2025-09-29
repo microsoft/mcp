@@ -10,6 +10,7 @@
     <DockerImageName>azure-sdk/azure-mcp</DockerImageName>
     <PackageId>Azure.Mcp</PackageId>
     <ToolCommandName>$(CliName)</ToolCommandName>
+    <PackageIcon>azureicon.png</PackageIcon>
   </PropertyGroup>
   
   <PropertyGroup>
@@ -64,5 +65,8 @@
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(RepoRoot)\eng\images\azureicon.png" Pack="true" PackagePath="azureicon.png" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Monitor.Models;
@@ -24,9 +23,9 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
     public override string Name => "query";
 
     public override string Description =>
-            $"""
-                Query Azure Monitor metrics for a resource. Returns time series data for the specified metrics.
-                """;
+        $"""
+        Query Azure Monitor metrics for a resource. Returns time series data for the specified metrics.
+        """;
 
     public override string Title => CommandTitle;
 
@@ -51,6 +50,25 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
         command.Options.Add(MonitorOptionDefinitions.Metrics.Filter);
         command.Options.Add(MonitorOptionDefinitions.Metrics.MetricNamespace);
         command.Options.Add(MonitorOptionDefinitions.Metrics.MaxBuckets);
+        command.Validators.Add(commandResult =>
+        {
+            commandResult.TryGetValue(MonitorOptionDefinitions.Metrics.MetricNames, out string? metricNamesValue);
+
+            if (string.IsNullOrWhiteSpace(metricNamesValue))
+            {
+                commandResult.AddError($"Invalid format for {MonitorOptionDefinitions.Metrics.MetricNames.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).");
+            }
+            else
+            {
+                // Validate the metric names
+                string[] metricNames = [.. metricNamesValue.Split(',').Select(t => t.Trim())];
+
+                if (metricNames.Length == 0 || metricNames.Any(s => string.IsNullOrWhiteSpace(s)))
+                {
+                    commandResult.AddError($"Invalid format for {MonitorOptionDefinitions.Metrics.MetricNames.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).");
+                }
+            }
+        });
     }
 
     protected override MetricsQueryOptions BindOptions(ParseResult parseResult)
@@ -65,46 +83,6 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
         options.MetricNamespace = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.MetricNamespace.Name);
         options.MaxBuckets = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Metrics.MaxBuckets.Name);
         return options;
-    }
-
-    public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
-    {
-        var result = base.Validate(commandResult, commandResponse);
-
-        if (result.IsValid)
-        {
-            commandResult.TryGetValue(MonitorOptionDefinitions.Metrics.MetricNames, out string? metricNamesValue);
-
-            if (string.IsNullOrWhiteSpace(metricNamesValue))
-            {
-                result.IsValid = false;
-                result.ErrorMessage = $"Invalid format for {MonitorOptionDefinitions.Metrics.MetricNames.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).";
-
-                if (commandResponse != null)
-                {
-                    commandResponse.Status = HttpStatusCode.BadRequest;
-                    commandResponse.Message = result.ErrorMessage!;
-                }
-            }
-            else
-            {
-                // Validate the metric names
-                string[] metricNames = [.. metricNamesValue.Split(',').Select(t => t.Trim())];
-
-                if (metricNames.Length == 0 || metricNames.Any(s => string.IsNullOrWhiteSpace(s)))
-                {
-                    result.IsValid = false;
-                    result.ErrorMessage = $"Invalid format for {MonitorOptionDefinitions.Metrics.MetricNames.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).";
-
-                    if (commandResponse != null)
-                    {
-                        commandResponse.Status = HttpStatusCode.BadRequest;
-                        commandResponse.Message = result.ErrorMessage!;
-                    }
-                }
-            }
-        }
-        return result;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)

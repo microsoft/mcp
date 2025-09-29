@@ -6,6 +6,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added support for Azure Developer CLI (azd) MCP tools when azd CLI is installed locally - [[#566](https://github.com/microsoft/mcp/issues/566)]
 - Adds support to proxy MCP capabilities when child servers leverage sampling or elicitation. [[#581](https://github.com/microsoft/mcp/pull/581)]
 - Added support for publishing custom events to Event Grid topics via the command `azmcp_eventgrid_events_publish`. Supports EventGrid, CloudEvents, and custom schemas with structured event data delivery for event-driven architectures. [[#514](https://github.com/microsoft/mcp/pull/514)]
 
@@ -14,6 +15,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Merged `azmcp_appconfig_kv_list` and `azmcp_appconfig_kv_show` into `azmcp_appconfig_kv_get` which can handle both listing and filtering key-values and getting a specific key-value. [[#505](https://github.com/microsoft/mcp/pull/505)]
 
 ### Bugs Fixed
+
+- Fixed problem where help option (`--help`) was showing an error and enabling it across all commands and command groups. [[#583](https://github.com/microsoft/mcp/pull/583)]
+
+- Fixed `azmcp_kusto_table_schema` to return table schema. [[#530](https://github.com/microsoft/mcp/issues/530)]
 
 ### Other Changes
 
