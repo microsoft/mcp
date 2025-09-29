@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using Azure.Communication.Sms;
-using AzureMcp.Communication.Models;
-using AzureMcp.Core.Options;
-using AzureMcp.Core.Services.Azure;
+using Azure.Mcp.Tools.Communication.Models;
+using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Communication.Services;

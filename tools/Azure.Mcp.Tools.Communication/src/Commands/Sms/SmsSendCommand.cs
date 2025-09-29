@@ -3,15 +3,18 @@
 
 using System.CommandLine;
 using System.CommandLine.Parsing;
-using AzureMcp.Communication.Models;
-using AzureMcp.Communication.Options;
-using AzureMcp.Communication.Options.Sms;
-using AzureMcp.Communication.Services;
-using AzureMcp.Core.Commands;
-using AzureMcp.Core.Models.Command;
+using Azure.Mcp.Tools.Communication.Models;
+using Azure.Mcp.Tools.Communication.Options;
+using Azure.Mcp.Tools.Communication.Options.Sms;
+using Azure.Mcp.Tools.Communication.Services;
+using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Models.Option;
+using Azure.Mcp.Core.Extensions;
+using System.Net;
 using Microsoft.Extensions.Logging;
 
-namespace  Azure.Mcp.Tools.Communication.Commands.Sms;
+namespace Azure.Mcp.Tools.Communication.Commands.Sms;
 
 public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommunicationCommand<SmsSendOptions>
 {
@@ -53,23 +56,23 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
 
     protected override void RegisterOptions(Command command)
     {
-        base.RegisterOptions(command);
-        command.AddOption(_fromOption);
-        command.AddOption(_toOption);
-        command.AddOption(_messageOption);
-        command.AddOption(_enableDeliveryReportOption);
-        command.AddOption(_tagOption);
+    base.RegisterOptions(command);
+    command.Options.Add(_fromOption);
+    command.Options.Add(_toOption);
+    command.Options.Add(_messageOption);
+    command.Options.Add(_enableDeliveryReportOption);
+    command.Options.Add(_tagOption);
     }
 
     protected override SmsSendOptions BindOptions(ParseResult parseResult)
     {
-        var options = base.BindOptions(parseResult);
-        options.From = parseResult.GetValueForOption(_fromOption);
-        options.To = parseResult.GetValueForOption(_toOption);
-        options.Message = parseResult.GetValueForOption(_messageOption);
-        options.EnableDeliveryReport = parseResult.GetValueForOption(_enableDeliveryReportOption);
-        options.Tag = parseResult.GetValueForOption(_tagOption);
-        return options;
+    var options = base.BindOptions(parseResult);
+    options.From = parseResult.GetValueOrDefault(_fromOption);
+    options.To = parseResult.GetValueOrDefault(_toOption);
+    options.Message = parseResult.GetValueOrDefault(_messageOption);
+    options.EnableDeliveryReport = parseResult.GetValueOrDefault(_enableDeliveryReportOption);
+    options.Tag = parseResult.GetValueOrDefault(_tagOption);
+    return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
@@ -131,13 +134,12 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        ArgumentException => 400,
-        Azure.RequestFailedException reqEx => reqEx.Status,
+        ArgumentException => HttpStatusCode.BadRequest,
+        Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
         _ => base.GetStatusCode(ex)
     };
 
-    // Strongly-typed result record
-    internal record SmsSendCommandResult(List<SmsResult> Results);
+    // Result type moved to Models/SmsSendCommandResult.cs
 }

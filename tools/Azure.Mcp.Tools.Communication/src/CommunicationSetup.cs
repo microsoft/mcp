@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using AzureMcp.Communication.Commands.Sms;
-using AzureMcp.Communication.Services;
-using AzureMcp.Core.Areas;
-using AzureMcp.Core.Commands;
+using Azure.Mcp.Tools.Communication.Commands.Sms;
+using Azure.Mcp.Tools.Communication.Services;
+using Azure.Mcp.Core.Areas;
+using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -12,6 +12,8 @@ namespace Azure.Mcp.Tools.Communication;
 
 public class CommunicationSetup : IAreaSetup
 {
+    public string Name => "communication";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ICommunicationService, CommunicationService>();
@@ -30,5 +32,11 @@ public class CommunicationSetup : IAreaSetup
 
         // Register SMS commands
         sms.AddCommand("send", new SmsSendCommand(loggerFactory.CreateLogger<SmsSendCommand>()));
+    }
+
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
+    {
+        // Not used in this implementation
+        throw new NotImplementedException();
     }
 }

@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using AzureMcp.Communication.Commands.Sms;
-using AzureMcp.Communication.Models;
+using Azure.Mcp.Tools.Communication.Models;
 
-namespace AzureMcp.Communication;
+namespace Azure.Mcp.Tools.Communication;
 
-[JsonSerializable(typeof(SmsResult))]
-[JsonSerializable(typeof(SmsSendCommand.SmsSendCommandResult))]
+[JsonSerializable(typeof(Azure.Mcp.Tools.Communication.Models.SmsResult))]
+[JsonSerializable(typeof(Azure.Mcp.Tools.Communication.Models.SmsSendCommandResult))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     GenerationMode = JsonSourceGenerationMode.Metadata)]

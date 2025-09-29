@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using AzureMcp.Core.Options;
+using Azure.Mcp.Core.Options;
 
-namespace AzureMcp.Communication.Options;
+namespace Azure.Mcp.Tools.Communication.Options;
 
 public class BaseCommunicationOptions : GlobalOptions
 {

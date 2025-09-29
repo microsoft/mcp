@@ -4,14 +4,16 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
-using AzureMcp.Communication.Options;
-using AzureMcp.Core.Commands;
+using Azure.Mcp.Tools.Communication.Options;
+using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Models.Option;
+using Azure.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.Communication.Commands;
 
 public abstract class BaseCommunicationCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions>
-    : GlobalCommand<TOptions>
+    [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties | System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicProperties)]
+    TOptions> : GlobalCommand<TOptions>
     where TOptions : BaseCommunicationOptions, new()
 {
     protected readonly Option<string> _connectionStringOption = CommunicationOptionDefinitions.ConnectionString;
@@ -19,13 +21,13 @@ public abstract class BaseCommunicationCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.AddOption(_connectionStringOption);
+        command.Options.Add(_connectionStringOption);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ConnectionString = parseResult.GetValueForOption(_connectionStringOption);
+        options.ConnectionString = parseResult.GetValueOrDefault(_connectionStringOption);
         return options;
     }
 }
