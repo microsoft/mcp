@@ -334,7 +334,7 @@ public class ClusterGetCommandTests
     public async Task ExecuteAsync_Handles404NotFound()
     {
         // Arrange
-        var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Not Found");
+        var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "AKS cluster not found");
         _aksService.GetClusters(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<List<Models.Cluster>>(notFoundException));
 
@@ -352,7 +352,7 @@ public class ClusterGetCommandTests
     public async Task ExecuteAsync_Handles403Forbidden()
     {
         // Arrange
-        var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Forbidden");
+        var forbiddenException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
         _aksService.GetClusters(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<List<Models.Cluster>>(forbiddenException));
 

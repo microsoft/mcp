@@ -16,7 +16,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
     {
         // Get a real cluster to target
         var listResult = await CallToolAsync(
-            "azmcp_aks_cluster_list",
+            "azmcp_aks_cluster_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -31,7 +31,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
 
         // Find a node pool to query
         var nodepoolList = await CallToolAsync(
-            "azmcp_aks_nodepool_list",
+            "azmcp_aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -56,7 +56,11 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
                 { "nodepool", nodepoolName }
             });
 
-        var nodePool = nodepoolGet.AssertProperty("nodePool");
+        nodePools = nodepoolGet.AssertProperty("nodePools");
+        Assert.Equal(JsonValueKind.Array, nodePools.ValueKind);
+        Assert.Single(nodePools.EnumerateArray());
+
+        var nodePool = nodePools.EnumerateArray().First();
         Assert.Equal(JsonValueKind.Object, nodePool.ValueKind);
         Assert.Equal(nodepoolName, nodePool.GetProperty("name").GetString());
 

@@ -21,8 +21,8 @@ public class NetworkUsageChecker(TokenCredential credential, string subscription
             {
                 result.Add(new UsageInfo(
                     Name: item.Name?.Value ?? string.Empty,
-                    Limit: (int)(item.Limit),
-                    Used: (int)(item.CurrentValue),
+                    Limit: (int)item.Limit,
+                    Used: (int)item.CurrentValue,
                     Unit: item.Unit.ToString()
                 ));
             }
