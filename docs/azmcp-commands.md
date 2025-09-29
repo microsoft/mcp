@@ -218,6 +218,42 @@ azmcp search index query --subscription <subscription> \
 azmcp search list --subscription <subscription>
 ```
 
+### Azure AI Services Speech Operations
+
+```bash
+# Recognize speech from an audio file using Azure AI Services Speech
+azmcp speech stt recognize --endpoint <endpoint> \
+                           --file <file-path> \
+                           [--language <language>] \
+                           [--phrases <phrase-hints>] \
+                           [--format <simple|detailed>] \
+                           [--profanity <masked|removed|raw>]
+```
+
+#### Phrase Hints for Improved Accuracy
+
+The `--phrases` parameter supports multiple ways to specify phrase hints that improve speech recognition accuracy:
+
+**Multiple Arguments:**
+```bash
+azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
+    --phrases "Azure" --phrases "cognitive services" --phrases "machine learning"
+```
+
+**Comma-Separated Values:**
+```bash
+azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
+    --phrases "Azure, cognitive services, machine learning"
+```
+
+**Mixed Syntax:**
+```bash
+azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
+    --phrases "Azure, cognitive services" --phrases "machine learning"
+```
+
+Use phrase hints when you expect specific terminology, technical terms, or domain-specific vocabulary in your audio content. This significantly improves recognition accuracy for specialized content.
+
 ### Azure App Configuration Operations
 
 ```bash
