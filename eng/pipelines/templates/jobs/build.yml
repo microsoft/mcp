@@ -56,7 +56,7 @@ jobs:
 
   - task: Cache@2
     inputs:
-      key: 'nuget | "$(Agent.OS)" | $(Build.SourcesDirectory)/Directory.Packages.props | Unit-Test
+      key: 'nuget | "$(Agent.OS)" | $(Build.SourcesDirectory)/Directory.Packages.props | unittest'
       path: $(NUGET_PACKAGES)
     continueOnError: true
     displayName: Cache NuGet packages
