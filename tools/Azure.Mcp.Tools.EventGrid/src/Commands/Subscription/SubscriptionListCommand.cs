@@ -43,12 +43,12 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.Subscription);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup);
-        command.Options.Add(EventGridOptionDefinitions.TopicName);
+        command.Options.Add(EventGridOptionDefinitions.TopicName.AsOptional());
         command.Options.Add(EventGridOptionDefinitions.Location);
         command.Validators.Add(commandResult =>
         {
             var hasSubscription = CommandHelper.HasSubscriptionAvailable(commandResult);
-            var hasTopicOption = commandResult.HasOptionResult(EventGridOptionDefinitions.TopicName);
+            var hasTopicOption = commandResult.HasOptionResult(EventGridOptionDefinitions.TopicName.Name);
             var hasRg = commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup);
             var hasLocation = commandResult.HasOptionResult(EventGridOptionDefinitions.Location);
 

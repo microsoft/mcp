@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Net;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
@@ -38,6 +36,8 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         Secret = false
     };
 
+    private static readonly string[] s_item = ["cloudevents", "eventgrid", "custom"];
+
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
@@ -45,6 +45,18 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         command.Options.Add(EventGridOptionDefinitions.TopicName);
         command.Options.Add(EventGridOptionDefinitions.EventData);
         command.Options.Add(EventGridOptionDefinitions.EventSchema);
+        command.Validators.Add(commandResult =>
+        {
+            var eventSchema = commandResult.GetValueOrDefault(EventGridOptionDefinitions.EventSchema);
+            if (!string.IsNullOrEmpty(eventSchema))
+            {
+                var normalizedSchema = eventSchema.Trim().ToLowerInvariant().Replace(" ", "");
+                if (!s_item.Contains(normalizedSchema))
+                {
+                    commandResult.AddError("Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom.");
+                }
+            }
+        });
     }
 
     protected override EventsPublishOptions BindOptions(ParseResult parseResult)
@@ -55,36 +67,6 @@ public sealed class EventGridPublishCommand(ILogger<EventGridPublishCommand> log
         options.EventData = parseResult.GetValueOrDefault<string>(EventGridOptionDefinitions.EventData.Name);
         options.EventSchema = parseResult.GetValueOrDefault<string>(EventGridOptionDefinitions.EventSchema.Name);
         return options;
-    }
-
-    public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
-    {
-        var result = base.Validate(commandResult, commandResponse);
-        if (!result.IsValid)
-        {
-            return result;
-        }
-
-        var eventSchema = commandResult.GetValueOrDefault(EventGridOptionDefinitions.EventSchema);
-        if (!string.IsNullOrEmpty(eventSchema))
-        {
-            var normalizedSchema = eventSchema.Trim().ToLowerInvariant().Replace(" ", "");
-            var supportedSchemas = new[] { "cloudevents", "eventgrid", "custom" };
-
-            if (!supportedSchemas.Contains(normalizedSchema))
-            {
-                result.IsValid = false;
-                result.ErrorMessage = "Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom.";
-
-                if (commandResponse != null)
-                {
-                    commandResponse.Status = HttpStatusCode.BadRequest;
-                    commandResponse.Message = result.ErrorMessage;
-                }
-            }
-        }
-
-        return result;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
