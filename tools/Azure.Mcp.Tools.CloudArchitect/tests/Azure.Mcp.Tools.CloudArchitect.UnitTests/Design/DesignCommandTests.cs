@@ -37,18 +37,17 @@ public class DesignCommandTests
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
 
-        // Check that the description contains the expected content
-        Assert.Contains("Azure architecture design tool that gathers requirements through guided questions and recommends optimal solutions.", command.Description);
-        Assert.Contains("Key parameters: question, questionNumber, confidenceScore (0.0-1.0, present architecture when ≥0.7), totalQuestions, answer, nextQuestionNeeded, architectureComponent, architectureTier, state.", command.Description);
-        Assert.Contains("Ask about user role, business goals (1-2 questions at a time)", command.Description);
-        Assert.Contains("Track confidence and update requirements (explicit/implicit/assumed)", command.Description);
-        Assert.Contains("When confident enough, present architecture with table format, visual organization, ASCII diagrams", command.Description);
-        Assert.Contains("Follow Azure Well-Architected Framework principles", command.Description);
-        Assert.Contains("Cover all tiers: infrastructure, platform, application, data, security, operations", command.Description);
-        Assert.Contains("State tracks components, requirements by category, and confidence factors. Be conservative with suggestions.", command.Description);
-        Assert.Contains("confidenceScore", command.Description);
-        Assert.Contains("nextQuestionNeeded", command.Description);
-        Assert.Contains("Azure Well-Architected Framework", command.Description);
+        // Check that the description contains the expected content from the actual implementation
+        Assert.Contains("Design Azure architecture for a variety of large-scale cloud services", command.Description);
+        Assert.Contains("serving as ATM for users", command.Description);
+        Assert.Contains("cloud app for ordering groceries", command.Description);
+        Assert.Contains("cloud service that will store and present (stream/play back) videos", command.Description);
+        Assert.Contains("large-scale file upload, storage, retrieval service", command.Description);
+        Assert.Contains("domain apps (e-commerce, SaaS)", command.Description);
+        Assert.Contains("Iteratively gather functional and non-functional requirements", command.Description);
+        Assert.Contains("components, dataFlows, azureServices, rationale, assumptions, risks", command.Description);
+        Assert.Contains("NFRs, securityCompliance, costLevers, nextSteps, asciiDiagram", command.Description);
+        Assert.Contains("Not for deployment, pipelines, or IaC", command.Description);
     }
 
     [Fact]
@@ -233,7 +232,7 @@ public class DesignCommandTests
         Assert.Equal("design", name);
         Assert.Equal("Design Azure cloud architectures through guided questions", title);
         Assert.NotEmpty(description);
-        Assert.Contains("guided questions", description);
+        Assert.Contains("Design Azure architecture for a variety of large-scale cloud services", description);
     }
 
     [Fact]

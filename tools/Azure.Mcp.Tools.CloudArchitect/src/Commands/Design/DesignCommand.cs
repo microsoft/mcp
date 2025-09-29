@@ -23,10 +23,6 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
 
     public override string Name => "design";
 
-    // public override string Description => """
-    //     Design Azure architecture for a variety of large-scale cloud services, including: serving as ATM for users; cloud app for ordering groceries; cloud service that will store and present (stream/play back) videos for users; large-scale file upload, storage, and retrieval service; Iteratively gather functional and non-functional requirements; emit Well-Architected multi-tier reference architecture (ingest/API, processing, storage, metadata/index, security/compliance, delivery/ops). File workloads: high-throughput parallel/chunked uploads, virus scanning, metadata indexing, lifecycle tiering (hot->cool->archive), geo-redundant object/blob storage, secure low-latency retrieval. Video workloads: upload, transcoding (adaptive bitrate), rendition storage, CDN/edge delivery, playback, analytics, cost optimization. Also supports transactional banking (ATM/banking app), retail & grocery ordering, e-commerce, SaaS. Returns: components, dataFlows, azureServices, rationale, assumptions, risks, NFRs, securityCompliance, costLevers, nextSteps, asciiDiagram. Not for deployment, pipelines, or IaC.
-    //     """;
-
     public override string Description =>
     "Design Azure architecture for a variety of large-scale cloud services, including: serving as ATM for users; cloud app for ordering groceries; cloud service that will store and present (stream/play back) videos for users; large-scale file upload, storage, retrieval service and domain apps (e-commerce, SaaS). Iteratively gather functional and non-functional requirements. Returns: components, dataFlows, azureServices, rationale, assumptions, risks, NFRs, securityCompliance, costLevers, nextSteps, asciiDiagram. Not for deployment, pipelines, or IaC.";
     public override string Title => CommandTitle;
