@@ -54,6 +54,13 @@ jobs:
       packageType: sdk
       version: 9.0.x
 
+  - task: Cache@2
+    inputs:
+      key: 'nuget | "$(Agent.OS)" | $(Build.SourcesDirectory)/Directory.Packages.props | Unit-Test
+      path: $(NUGET_PACKAGES)
+    continueOnError: true
+    displayName: Cache NuGet packages
+
   - task: Powershell@2
     displayName: "(Trimmed) Build module"
     condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
