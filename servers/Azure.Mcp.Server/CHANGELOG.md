@@ -23,14 +23,19 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Refactored Authorization implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[607](https://github.com/microsoft/mcp/pull/607)]
-- Refactored AppConig implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[606](https://github.com/microsoft/mcp/pull/606)]
+- Refactored tool implementation to use Azure Resource Graph queries instead of direct ARM API calls:
+  - Authorization [[607](https://github.com/microsoft/mcp/pull/607)]
+  - AppConig [[606](https://github.com/microsoft/mcp/pull/606)]
+  - ACR [[622](https://github.com/microsoft/mcp/pull/622)]
+  - Grafana [[628](https://github.com/microsoft/mcp/pull/628)]
 
 #### Dependency Updates
 
 - Removed the following dependencies:
   - `Azure.ResourceManager.Authorization` [[607](https://github.com/microsoft/mcp/pull/607)]
   - `Azure.ResourceManager.AppConfiguration` [[606](https://github.com/microsoft/mcp/pull/606)]
+  - `Azure.ResourceManager.ContainerRegistry` [[622](https://github.com/microsoft/mcp/pull/622)]
+  - `Azure.ResourceManager.Grafana` [[628](https://github.com/microsoft/mcp/pull/622)]
 
 ## 0.8.2 (2025-09-25)
 
