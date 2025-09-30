@@ -118,6 +118,21 @@ public static class AzureMcpServiceCollectionExtensions
                     sp.GetRequiredService<ServerToolLoader>(),
                 };
 
+                // Always add utility commands (subscription, group) in namespace mode
+                // so they are available regardless of which namespaces are loaded
+                var utilityToolLoaderOptions = new ToolLoaderOptions(
+                    Namespace: ["subscription", "group"],
+                    ReadOnly: defaultToolLoaderOptions.ReadOnly,
+                    InsecureDisableElicitation: defaultToolLoaderOptions.InsecureDisableElicitation
+                );
+                
+                toolLoaders.Add(new CommandFactoryToolLoader(
+                    sp,
+                    sp.GetRequiredService<CommandFactory>(),
+                    Options.Create(utilityToolLoaderOptions),
+                    loggerFactory.CreateLogger<CommandFactoryToolLoader>()
+                ));
+
                 // Append extension commands when no other namespaces are specified.
                 if (defaultToolLoaderOptions.Namespace?.SequenceEqual(["extension"]) == true)
                 {

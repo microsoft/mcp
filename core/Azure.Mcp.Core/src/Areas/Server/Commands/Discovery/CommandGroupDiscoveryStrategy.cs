@@ -19,7 +19,7 @@ public sealed class CommandGroupDiscoveryStrategy(CommandFactory commandFactory,
 {
     private readonly CommandFactory _commandFactory = commandFactory;
     private readonly IOptions<ServiceStartOptions> _options = options;
-    private static readonly List<string> IgnoreCommandGroups = ["extension", "server", "tools"];
+    private static readonly List<string> IgnoreCommandGroups = ["extension", "server", "tools", "subscription", "group"];
 
     /// <summary>
     /// Gets or sets the entry point to use for the command group servers.
