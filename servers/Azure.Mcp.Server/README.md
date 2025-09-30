@@ -140,8 +140,7 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 
 #### Configure your MCP client to use Docker
 
-2. Add or update existing `mcp.json`.
-    - Replace `/full/path/to/your.env` with the actual `.env` file path.
+2. Add or update existing `mcp.json`.  Replace `/full/path/to/your/.env` with the actual `.env` file path.
 
 ```json
    {
@@ -153,7 +152,7 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
                "-i",
                "--rm",
                "--env-file",
-               "/full/path/to/your.env",
+               "/full/path/to/your/.env",
                "mcr.microsoft.com/azure-sdk/azure-mcp:latest"
             ]
          }
