@@ -80,6 +80,55 @@ public class ServerCommandTests(ITestOutputHelper output)
         }
     }
 
+    [Fact]
+    public async Task DefaultMode_IncludesUtilityCommands()
+    {
+        // Arrange
+        await using var client = await CreateClientAsync("server", "start");
+
+        // Act
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotEmpty(listResult);
+
+        var toolNames = listResult.Select(t => t.Name).ToList();
+
+        // Should include subscription and group utility commands
+        Assert.Contains(toolNames, name => name.Contains("subscription", StringComparison.OrdinalIgnoreCase) && name.Contains("list", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(toolNames, name => name.Contains("group", StringComparison.OrdinalIgnoreCase) && name.Contains("list", StringComparison.OrdinalIgnoreCase));
+
+        // Log for debugging
+        Output.WriteLine($"Default mode loaded utility commands:");
+        foreach (var name in toolNames.Where(n => n.Contains("subscription", StringComparison.OrdinalIgnoreCase) || n.Contains("group", StringComparison.OrdinalIgnoreCase)))
+        {
+            Output.WriteLine($"  - {name}");
+        }
+    }
+
+    [Fact]
+    public async Task DefaultMode_CanCallSubscriptionList()
+    {
+        // Arrange
+        await using var client = await CreateClientAsync("server", "start");
+
+        // Act
+        var result = await client.CallToolAsync("azmcp_subscription_list", new Dictionary<string, object?> { },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Content);
+        Assert.NotEmpty(result.Content);
+
+        // The result should contain subscription data (even if empty list)
+        var firstContent = result.Content.FirstOrDefault();
+        Assert.NotNull(firstContent);
+
+        // Log for debugging
+        Output.WriteLine($"Subscription list result: {firstContent}");
+    }
+
     #endregion
 
     #region All Mode Tests
