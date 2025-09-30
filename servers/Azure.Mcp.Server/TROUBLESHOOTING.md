@@ -667,7 +667,7 @@ To use Azure Entra ID with the Docker image update the MCP client configuration 
 
 #### For Windows Users
 
-On Windows, Azure CLI stores credentials as an encrypted file. In Linux and Mac, the credentials are stored in a JSON file. Consequently, a mapping from the user profile to the container will not work. A workaround is to use WSL to log into the Azure CLI and then map that to the Docker container. There is an open issue to address this (https://github.com/Azure/azure-sdk-for-net/issues/19167).
+On Windows, Azure CLI stores credentials in an encrypted format that cannot be accessed from within Docker containers. On Linux and Mac, credentials are stored as plain JSON files that can be shared with containers. Consequently, mapping the `.azure` directory from the user profile to the container will not work on Windows. A workaround is to use WSL to log into the Azure CLI and then map that to the Docker container. There is an open issue to address this (https://github.com/Azure/azure-sdk-for-net/issues/19167).
 
 1. In a WSL console
    ```bash
