@@ -25,7 +25,7 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
         - The {MonitorOptionDefinitions.QueryTextName} parameter accepts a KQL query or a predefined query name.
         - Optional parameters: {MonitorOptionDefinitions.HoursName} (default: {MonitorOptionDefinitions.Hours.GetDefaultValue()}) to set the time range, and {MonitorOptionDefinitions.LimitName} (default: {MonitorOptionDefinitions.Limit.GetDefaultValue()}) to limit the number of results.
 
-        Use this tool to query logs for azure resource by resource ID and to investigate diagnostics, errors, and activity logs for specific Azure resources.
+        Use this tool to query logs for an Azure resource by resource ID and to investigate diagnostics, errors, and activity logs for specific Azure resources.
         """;
 
     public override string Title => CommandTitle;
