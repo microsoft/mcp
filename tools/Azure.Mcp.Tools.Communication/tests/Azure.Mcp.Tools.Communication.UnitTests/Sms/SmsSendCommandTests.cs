@@ -45,10 +45,10 @@ public class SmsSendCommandTests
 
         // Assert
         Assert.NotNull(cmd);
-        Assert.Contains(cmd.Options, o => o.Name == "connection-string");
-        Assert.Contains(cmd.Options, o => o.Name == "from");
-        Assert.Contains(cmd.Options, o => o.Name == "to");
-        Assert.Contains(cmd.Options, o => o.Name == "message");
+        Assert.Contains(cmd.Options, o => o.Name == "--connection-string");
+        Assert.Contains(cmd.Options, o => o.Name == "--from");
+        Assert.Contains(cmd.Options, o => o.Name == "--to");
+        Assert.Contains(cmd.Options, o => o.Name == "--message");
     }
 
     public static IEnumerable<object[]> ValidParameters => new List<object[]>
@@ -110,7 +110,7 @@ public class SmsSendCommandTests
         var provider = services.BuildServiceProvider();
         var context = new CommandContext(provider);
         var cmd = command.GetCommand();
-        var args = new[] { "--connection-string", "cs", "--from", "+1", "--to", "+2", "--message", "fail" };
+    var args = new[] { "--connection-string", "cs", "--from", "+1", "--to", "+2", "--message", "fail" };
         var parseResult = cmd.Parse(args);
 
         // Act
@@ -143,10 +143,10 @@ public class SmsSendCommandTests
         var context = new CommandContext(provider);
         var cmd = command.GetCommand();
         var args = new List<string>();
-        if (connectionString != null) { args.Add("--connection-string"); args.Add(connectionString); }
-        if (from != null) { args.Add("--from"); args.Add(from); }
-        if (to != null) { args.Add("--to"); args.Add(string.Join(",", to)); }
-        if (message != null) { args.Add("--message"); args.Add(message); }
+    if (connectionString != null) { args.Add("--connection-string"); args.Add(connectionString); }
+    if (from != null) { args.Add("--from"); args.Add(from); }
+    if (to != null) { args.Add("--to"); args.Add(string.Join(",", to)); }
+    if (message != null) { args.Add("--message"); args.Add(message); }
         var parseResult = cmd.Parse(args.ToArray());
 
         // Act
