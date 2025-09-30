@@ -9,6 +9,17 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added support for Azure Developer CLI (azd) MCP tools when azd CLI is installed locally - [[#566](https://github.com/microsoft/mcp/issues/566)]
 - Adds support to proxy MCP capabilities when child servers leverage sampling or elicitation. [[#581](https://github.com/microsoft/mcp/pull/581)]
 - Added support for publishing custom events to Event Grid topics via the command `azmcp_eventgrid_events_publish`. Supports EventGrid, CloudEvents, and custom schemas with structured event data delivery for event-driven architectures. [[#514](https://github.com/microsoft/mcp/pull/514)]
+- Updated the description of the following Key Vault comands to increase selection accuracy by LLMs: [[#608](https://github.com/microsoft/mcp/pull/608)]
+  - `azmcp_keyvault_certificate_create`
+  - `azmcp_keyvault_certificate_import`
+  - `azmcp_keyvault_certificate_get`
+  - `azmcp_keyvault_certificate_list`
+  - `azmcp_keyvault_key_create`
+  - `azmcp_keyvault_key_get`
+  - `azmcp_keyvault_key_list`
+  - `azmcp_keyvault_secret_create`
+  - `azmcp_keyvault_secret_get`
+  - `azmcp_keyvault_secret_list`
 
 ### Breaking Changes
 
