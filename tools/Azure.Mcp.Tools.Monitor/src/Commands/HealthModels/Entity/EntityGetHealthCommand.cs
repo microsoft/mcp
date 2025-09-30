@@ -16,7 +16,7 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
     public override string Name => CommandName;
 
     public override string Description =>
-         $"""
+        $"""
         Retrieves the health status and history of a specific entity from an Azure Monitor Health Model. Shows detailed health information including availability state, health events, and timestamps for the specified entity.
         Required arguments: entity name and health model name.
         """;
