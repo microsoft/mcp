@@ -218,6 +218,10 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "Get the details for website 'my-website'"
 * "Get the details for app service plan 'my-app-service-plan'"
 
+### 🖥️ Azure CLI Generate
+
+* Generate Azure CLI commands based on user intent
+
 ### 📦 Azure Container Apps
 
 * "List the container apps in my subscription"
@@ -319,6 +323,7 @@ The Azure MCP Server provides tools for interacting with **30+ Azure service are
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
+- 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
@@ -352,40 +357,6 @@ The Azure MCP Server provides tools for interacting with **30+ Azure service are
 - 📊 **Azure Workbooks** - Custom visualizations
 - 🏗️ **Bicep** - Azure resource templates
 - 🏗️ **Cloud Architect** - Guided architecture design
-### 🔎 Azure AI Search (search engine/vector database)
-
-* List Azure AI Search services
-* List indexes and look at their schema and configuration
-* Query search indexes
-
-### ⚙️ Azure App Configuration
-
-* List App Configuration stores
-* Manage key-value pairs
-* Handle labeled configurations
-* Lock/unlock configuration settings
-
-### 🛡️ Azure Best Practices
-
-* Get secure, production-grade Azure SDK best practices for effective code generation.
-
-### 🖥️ Azure CLI Generate
-
-* Generate Azure CLI commands based on user intent
-
-### 📦 Azure Container Registry (ACR)
-
-* List Azure Container Registries and repositories in a subscription
-* Filter container registries and repositories by resource group
-* JSON output formatting
-* Cross-platform compatibility
-
-### 📊 Azure Cosmos DB (NoSQL Databases)
-
-* List Cosmos DB accounts
-* List and query databases
-* Manage containers and items
-* Execute SQL queries against containers
 
 # Support and Reference
 
