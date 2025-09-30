@@ -18,6 +18,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_foundry_models_deployments_list | Show me all AI Foundry model deployments |
 | azmcp_foundry_models_list | List all AI Foundry models |
 | azmcp_foundry_models_list | Show me the available AI Foundry models |
+| azmcp_foundry_openai_create-completion | Create a completion with the prompt "What is Azure?"|
 
 ## Azure AI Search
 
@@ -30,6 +31,21 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_search_service_list | List all Cognitive Search services in my subscription |
 | azmcp_search_service_list | Show me the Cognitive Search services in my subscription |
 | azmcp_search_service_list | Show me my Cognitive Search services |
+
+## Azure AI Services Speech
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_speech_stt_recognize | Convert this audio file to text using Azure Speech Services |
+| azmcp_speech_stt_recognize | Recognize speech from my audio file with language detection |
+| azmcp_speech_stt_recognize | Transcribe speech from audio file <file_path> with profanity filtering |
+| azmcp_speech_stt_recognize | Convert speech to text from audio file <file_path> using endpoint <endpoint> |
+| azmcp_speech_stt_recognize | Transcribe the audio file <file_path> in Spanish language |
+| azmcp_speech_stt_recognize | Convert speech to text with detailed output format from audio file <file_path> |
+| azmcp_speech_stt_recognize | Recognize speech from <file_path> with phrase hints for better accuracy |
+| azmcp_speech_stt_recognize | Transcribe audio using multiple phrase hints: "Azure", "cognitive services", "machine learning" |
+| azmcp_speech_stt_recognize | Convert speech to text with comma-separated phrase hints: "Azure, cognitive services, API" |
+| azmcp_speech_stt_recognize | Transcribe audio with raw profanity output from file <file_path> |
 
 ## Azure App Configuration
 
@@ -182,6 +198,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_eventgrid_events_publish | Publish event to my Event Grid topic <topic_name> with the following events <event_data> |
 | azmcp_eventgrid_events_publish | Send an event to Event Grid topic <topic_name> in resource group <resource_group_name> with <event_data> |
 
+## Azure Event Hubs
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_eventhubs_namespace_get | List all Event Hubs namespaces in my subscription |
+| azmcp_eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> |
+
 ## Azure Function App
 
 | Tool Name | Test Prompt |
@@ -207,22 +230,58 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_keyvault_admin_settings_get | Show me the account settings for managed HSM keyvault <key_vault_account_name> |
 | azmcp_keyvault_admin_settings_get | What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name> |
 | azmcp_keyvault_certificate_create | Create a new certificate called <certificate_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_create | Generate a certificate named <certificate_name> in key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_create | Request creation of certificate <certificate_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_create | Provision a new key vault certificate <certificate_name> in vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_create | Issue a certificate <certificate_name> in key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_get | Show me the certificate <certificate_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_get | Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_get | Get the certificate <certificate_name> from vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_get | Display the certificate details for <certificate_name> in vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_get | Retrieve certificate metadata for <certificate_name> in vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_import | Import the certificate in file <file_path> into the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_import | Import a certificate into the key vault <key_vault_account_name> using the name <certificate_name> |
+| azmcp_keyvault_certificate_import | Upload certificate file <file_path> to key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_import | Load certificate <certificate_name> from file <file_path> into vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_import | Add existing certificate file <file_path> to the key vault <key_vault_account_name> with name <certificate_name> |
 | azmcp_keyvault_certificate_list | List all certificates in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_list | Show me the certificates in the key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_list | What certificates are in the key vault <key_vault_account_name>? |
+| azmcp_keyvault_certificate_list | List certificate names in vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_list | Enumerate certificates in key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_list | Show certificate names in the key vault <key_vault_account_name> |
 | azmcp_keyvault_key_create | Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name> |
+| azmcp_keyvault_key_create | Generate a key <key_name> with type <key_type> in vault <key_vault_account_name> |
+| azmcp_keyvault_key_create | Create an oct key in the vault <key_vault_account_name> |
+| azmcp_keyvault_key_create | Create an RSA key in the vault <key_vault_account_name> with name <key_name> |
+| azmcp_keyvault_key_create | Create an EC key with name <key_name> in the vault <key_vault_account_name> |
 | azmcp_keyvault_key_get | Show me the key <key_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_key_get | Show me the details of the key <key_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_key_get | Get the key <key_name> from vault <key_vault_account_name> |
+| azmcp_keyvault_key_get | Display the key details for <key_name> in vault <key_vault_account_name> |
+| azmcp_keyvault_key_get | Retrieve key metadata for <key_name> in vault <key_vault_account_name> |
 | azmcp_keyvault_key_list | List all keys in the key vault <key_vault_account_name> |
 | azmcp_keyvault_key_list | Show me the keys in the key vault <key_vault_account_name> |
+| azmcp_keyvault_key_list | What keys are in the key vault <key_vault_account_name>? |
+| azmcp_keyvault_key_list | List key names in vault <key_vault_account_name> |
+| azmcp_keyvault_key_list | Enumerate keys in key vault <key_vault_account_name> |
+| azmcp_keyvault_key_list | Show key names in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_create | Create a new secret called <secret_name> with value <secret_value> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_create | Set a secret named <secret_name> with value <secret_value> in key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_create | Store secret <secret_name> value <secret_value> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_create | Add a new version of secret <secret_name> with value <secret_value> in vault <key_vault_account_name> |
+| azmcp_keyvault_secret_create | Update secret <secret_name> to value <secret_value> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_get | Show me the secret <secret_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_get | Show me the details of the secret <secret_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_get | Get the secret <secret_name> from vault <key_vault_account_name> |
+| azmcp_keyvault_secret_get | Display the secret details for <secret_name> in vault <key_vault_account_name> |
+| azmcp_keyvault_secret_get | Retrieve secret metadata for <secret_name> in vault <key_vault_account_name> |
 | azmcp_keyvault_secret_list | List all secrets in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_list | Show me the secrets in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_list | What secrets are in the key vault <key_vault_account_name>? |
+| azmcp_keyvault_secret_list | List secrets names in vault <key_vault_account_name> |
+| azmcp_keyvault_secret_list | Enumerate secrets in key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_list | Show secrets names in the key vault <key_vault_account_name> |
 
 ## Azure Kubernetes Service (AKS)
 

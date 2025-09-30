@@ -31,10 +31,7 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : Subscri
     };
 
     public override string Description =>
-        """
-        Create a new key in an Azure Key Vault. This command creates a key with the specified name and type
-        in the given vault.
-        """;
+        "Create a new key in an Azure Key Vault. This command creates a key with the specified name and type in the given vault. Supports types: RSA, RSA-HSM, EC, EC-HSM, oct, oct-HSM. Required: --vault <vault>, --key <key> --key-type <key-type> --subscription <subscription>. Optional: --tenant <tenant>. Returns: Returns: name, id, keyId, keyType, enabled, notBefore, expiresOn, createdOn, updatedOn. Creates a new key version if it already exists.";
 
     protected override void RegisterOptions(Command command)
     {

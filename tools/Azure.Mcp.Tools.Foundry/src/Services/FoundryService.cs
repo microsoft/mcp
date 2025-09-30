@@ -5,10 +5,13 @@ using System.ClientModel;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
+using System.Threading.Tasks.Dataflow;
+using Azure;
 using Azure.AI.Agents.Persistent;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
 using Azure.Core;
+using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -18,9 +21,13 @@ using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Services.Models;
 using Azure.ResourceManager;
+using Azure.ResourceManager.CognitiveServices;
+using Azure.ResourceManager.CognitiveServices.Models;
+using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.AI.Evaluation;
 using Microsoft.Extensions.AI.Evaluation.Quality;
+using OpenAI.Chat;
 
 #pragma warning disable AIEVAL001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
@@ -46,6 +53,7 @@ public class FoundryService(
     };
 
     private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
+    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
 
     public async Task<List<ModelInformation>> ListModels(
         bool searchForFreePlayground = false,
@@ -201,31 +209,30 @@ public class FoundryService(
 
             // Prepare data for the deployment
             ResourceIdentifier deploymentId = new ResourceIdentifier($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.CognitiveServices/accounts/{azureAiServicesName}/deployments/{deploymentName}");
-            var deploymentData = new CognitiveServicesAccountDeploymentData
+            var deploymentData = new Models.CognitiveServicesAccountDeploymentData
             {
-                Properties = new CognitiveServicesAccountDeploymentProperties
+                Properties = new Models.CognitiveServicesAccountDeploymentProperties
                 {
-                    Model = new CognitiveServicesAccountDeploymentModel
+                    Model = new Models.CognitiveServicesAccountDeploymentModel
                     {
                         Format = modelFormat,
                         Name = modelName,
                         Version = modelVersion,
                         Source = string.IsNullOrEmpty(modelSource) ? null : modelSource
                     },
-                    ScaleSettings = string.IsNullOrEmpty(scaleType) ? null : new CognitiveServicesAccountDeploymentScaleSettings
+                    ScaleSettings = string.IsNullOrEmpty(scaleType) ? null : new Models.CognitiveServicesAccountDeploymentScaleSettings
                     {
                         ScaleType = scaleType,
                         Capacity = scaleCapacity
                     }
                 },
-                Sku = string.IsNullOrEmpty(skuName) ? null : new CognitiveServicesSku
+                Sku = string.IsNullOrEmpty(skuName) ? null : new Models.CognitiveServicesSku
                 {
-                    Name = skuName,
                     Capacity = skuCapacity
                 }
             };
 
-            var result = await CreateOrUpdateGenericResourceAsync(
+            var result = await CreateOrUpdateGenericResourceAsync<Models.CognitiveServicesAccountDeploymentData>(
                 armClient,
                 deploymentId,
                 cognitiveServicesAccount.Data.Location,
@@ -344,6 +351,109 @@ public class FoundryService(
         }
     }
 
+    public async Task<CompletionResult> CreateCompletionAsync(
+        string resourceName,
+        string deploymentName,
+        string promptText,
+        string subscription,
+        string resourceGroup,
+        int? maxTokens = null,
+        double? temperature = null,
+        string? tenant = null,
+        AuthMethod authMethod = AuthMethod.Credential,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(resourceName, deploymentName, promptText, subscription, resourceGroup);
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+
+        // Get the Cognitive Services account
+        var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
+        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName);
+
+        // Get the endpoint
+        var accountData = cognitiveServicesAccount.Value.Data;
+        var endpoint = accountData.Properties.Endpoint;
+
+        if (string.IsNullOrEmpty(endpoint))
+        {
+            throw new InvalidOperationException($"Endpoint not found for resource '{resourceName}'");
+        }
+
+        // Create Azure OpenAI client with flexible authentication
+        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant);
+
+        var chatClient = client.GetChatClient(deploymentName);
+
+        // Set up completion options
+        var chatOptions = new ChatCompletionOptions();
+
+        // Set max tokens with a default value if not provided
+        var effectiveMaxTokens = maxTokens ?? 1000;
+        if (effectiveMaxTokens <= 0)
+        {
+            effectiveMaxTokens = 1000; // Ensure we always have a positive value
+        }
+        chatOptions.MaxOutputTokenCount = effectiveMaxTokens;
+
+        if (temperature.HasValue)
+        {
+            chatOptions.Temperature = (float)temperature.Value;
+        }
+
+        // Create the completion request
+        var messages = new List<OpenAI.Chat.ChatMessage>
+        {
+            new UserChatMessage(promptText)
+        };
+
+        var completion = await chatClient.CompleteChatAsync(messages, chatOptions);
+
+        var result = completion.Value;
+        var completionText = result.Content[0].Text;
+
+        var usageInfo = new CompletionUsageInfo(
+            result.Usage.InputTokenCount,
+            result.Usage.OutputTokenCount,
+            result.Usage.TotalTokenCount);
+
+        return new CompletionResult(completionText, usageInfo);
+    }
+
+    private async Task<AzureOpenAIClient> CreateOpenAIClientWithAuth(
+        string endpoint,
+        string resourceName,
+        CognitiveServicesAccountResource cognitiveServicesAccount,
+        AuthMethod authMethod,
+        string? tenant = null)
+    {
+        AzureOpenAIClient client;
+
+        switch (authMethod)
+        {
+            case AuthMethod.Key:
+                // Get the access key
+                var keys = await cognitiveServicesAccount.GetKeysAsync();
+                var key = keys.Value.Key1;
+
+                if (string.IsNullOrEmpty(key))
+                {
+                    throw new InvalidOperationException($"Access key not found for resource '{resourceName}'");
+                }
+
+                client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(key));
+                break;
+
+            case AuthMethod.Credential:
+            default:
+                var credential = await GetCredential(tenant);
+                client = new AzureOpenAIClient(new Uri(endpoint), credential);
+                break;
+        }
+        return client;
+    }
+
     public async Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters(endpoint);
@@ -423,7 +533,7 @@ public class FoundryService(
             }
 
             var convertedRequestMessages = ConvertMessages(requestMessages).ToList();
-            convertedRequestMessages.Prepend(new ChatMessage(ChatRole.System, run.Value.Instructions));
+            convertedRequestMessages.Prepend(new Microsoft.Extensions.AI.ChatMessage(ChatRole.System, run.Value.Instructions));
 
             // full list of messages converted to Microsoft.Extensions.AI.ChatMessage for evaluation
             var convertedResponse = ConvertMessages(messages)
@@ -529,8 +639,8 @@ public class FoundryService(
                 throw new Exception($"Unknown evaluator {evaluatorName}. Supported evaluators are: {string.Join(", ", AgentEvaluatorDictionary.Keys)}");
             }
 
-            var loadedQuery = JsonSerializer.Deserialize(query, (JsonTypeInfo<List<ChatMessage>>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(List<ChatMessage>)));
-            var loadedAgentResponse = JsonSerializer.Deserialize(agentResponse, (JsonTypeInfo<List<ChatMessage>>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(List<ChatMessage>)));
+            var loadedQuery = JsonSerializer.Deserialize(query, (JsonTypeInfo<List<Microsoft.Extensions.AI.ChatMessage>>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(List<Microsoft.Extensions.AI.ChatMessage>)));
+            var loadedAgentResponse = JsonSerializer.Deserialize(agentResponse, (JsonTypeInfo<List<Microsoft.Extensions.AI.ChatMessage>>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(List<Microsoft.Extensions.AI.ChatMessage>)));
             var loadedToolDefinitions = ConvertToolDefinitionsFromString(toolDefinitions);
 
             var evaluator = AgentEvaluatorDictionary[evaluatorName.ToLowerInvariant()]();
@@ -575,11 +685,11 @@ public class FoundryService(
         return functionDefinitions;
     }
 
-    private static IEnumerable<ChatMessage> ConvertMessages(IEnumerable<PersistentThreadMessage> messages)
+    private static IEnumerable<Microsoft.Extensions.AI.ChatMessage> ConvertMessages(IEnumerable<PersistentThreadMessage> messages)
     {
         foreach (PersistentThreadMessage message in messages)
         {
-            ChatMessage result = new()
+            Microsoft.Extensions.AI.ChatMessage result = new()
             {
                 AuthorName = message.AssistantId,
                 MessageId = message.Id,
@@ -602,7 +712,7 @@ public class FoundryService(
         }
     }
 
-    private static IEnumerable<ChatMessage> ConvertSteps(IEnumerable<RunStep> steps)
+    private static IEnumerable<Microsoft.Extensions.AI.ChatMessage> ConvertSteps(IEnumerable<RunStep> steps)
     {
         foreach (RunStep step in steps)
         {
@@ -610,7 +720,7 @@ public class FoundryService(
             {
                 foreach (RunStepToolCall toolCall in details.ToolCalls)
                 {
-                    ChatMessage CreateRequestMessage(string name, Dictionary<string, object?> arguments) =>
+                    Microsoft.Extensions.AI.ChatMessage CreateRequestMessage(string name, Dictionary<string, object?> arguments) =>
                         new(ChatRole.Assistant, [new FunctionCallContent(toolCall.Id, name, arguments)])
                         {
                             AuthorName = step.AssistantId,
@@ -618,7 +728,7 @@ public class FoundryService(
                             RawRepresentation = step,
                         };
 
-                    ChatMessage CreateResponseMessage(object result) =>
+                    Microsoft.Extensions.AI.ChatMessage CreateResponseMessage(object result) =>
                         new(ChatRole.Tool, [new FunctionResultContent(toolCall.Id, result)])
                         {
                             AuthorName = step.AssistantId,

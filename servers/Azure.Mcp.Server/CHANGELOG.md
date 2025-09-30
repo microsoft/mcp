@@ -9,16 +9,42 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added support for Azure Developer CLI (azd) MCP tools when azd CLI is installed locally - [[#566](https://github.com/microsoft/mcp/issues/566)]
 - Adds support to proxy MCP capabilities when child servers leverage sampling or elicitation. [[#581](https://github.com/microsoft/mcp/pull/581)]
 - Added support for publishing custom events to Event Grid topics via the command `azmcp_eventgrid_events_publish`. Supports EventGrid, CloudEvents, and custom schemas with structured event data delivery for event-driven architectures. [[#514](https://github.com/microsoft/mcp/pull/514)]
+- `azmcp foundry openai create-completion` - Generate text completions using deployed Azure OpenAI models in AI Foundry. [[#54](https://github.com/microsoft/mcp/pull/54)]
+  - Supports configurable temperature and max token parameters
+  - Requires resource-name, deployment-name, and prompt-text parameters
+- Updated the description of the following comands to increase selection accuracy by LLMs:
+  - Key Vault: [[#608](https://github.com/microsoft/mcp/pull/608)]
+    - `azmcp_keyvault_certificate_create`
+    - `azmcp_keyvault_certificate_import`
+    - `azmcp_keyvault_certificate_get`
+    - `azmcp_keyvault_certificate_list`
+    - `azmcp_keyvault_key_create`
+    - `azmcp_keyvault_key_get`
+    - `azmcp_keyvault_key_list`
+    - `azmcp_keyvault_secret_create`
+    - `azmcp_keyvault_secret_get`
+    - `azmcp_keyvault_secret_list`
+  - MySQL: [[#614](https://github.com/microsoft/mcp/pull/614)]
+    - `azmcp_mysql_server_param_set`
 
 ### Breaking Changes
 
 ### Bugs Fixed
 
 - Fixed problem where help option (`--help`) was showing an error and enabling it across all commands and command groups. [[#583](https://github.com/microsoft/mcp/pull/583)]
-
 - Fixed `azmcp_kusto_table_schema` to return table schema. [[#530](https://github.com/microsoft/mcp/issues/530)]
+- Fixed Kusto query fails when the sub id in the input query is enclosed in double quotes. [[#152](https://github.com/microsoft/mcp/issues/152)]
 
 ### Other Changes
+
+- Refactored Authorization implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[607](https://github.com/microsoft/mcp/pull/607)]
+- Refactored AppConig implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[606](https://github.com/microsoft/mcp/pull/606)]
+
+#### Dependency Updates
+
+- Removed the following dependencies:
+  - `Azure.ResourceManager.Authorization` [[607](https://github.com/microsoft/mcp/pull/607)]
+  - `Azure.ResourceManager.AppConfiguration` [[606](https://github.com/microsoft/mcp/pull/606)]
 
 ## 0.8.2 (2025-09-25)
 
