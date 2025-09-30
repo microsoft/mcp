@@ -24,6 +24,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Refactored AppConig implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[606](https://github.com/microsoft/mcp/pull/606)]
+
+#### Dependency Updates
+
+- Removed the following dependencies:
+  - `Azure.ResourceManager.AppConfiguration` [[606](https://github.com/microsoft/mcp/pull/606)]
+
 ## 0.8.2 (2025-09-25)
 
 ### Bugs Fixed

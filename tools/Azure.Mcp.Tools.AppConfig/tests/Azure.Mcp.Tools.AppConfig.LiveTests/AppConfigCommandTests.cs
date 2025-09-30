@@ -9,6 +9,8 @@ using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.LiveTests;
@@ -18,14 +20,16 @@ public class AppConfigCommandTests : CommandTestsBase
     private const string AccountsKey = "accounts";
     private const string SettingsKey = "settings";
     private readonly AppConfigService _appConfigService;
+    private readonly ILogger<AppConfigService> _logger;
 
     public AppConfigCommandTests(ITestOutputHelper output) : base(output)
     {
+        _logger = NullLogger<AppConfigService>.Instance;
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new CacheService(memoryCache);
         var tenantService = new TenantService(cacheService);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);
-        _appConfigService = new AppConfigService(subscriptionService, tenantService);
+        _appConfigService = new AppConfigService(subscriptionService, tenantService, _logger);
     }
 
     [Fact]
