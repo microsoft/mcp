@@ -116,10 +116,10 @@
 # ServiceOwners:                       @jayanthjj @pachaturevedi
 
 # PRLabel: %tools-Kusto
-/tools/Azure.Mcp.Tools.Kusto/          @danield137 @xiangyan99 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Kusto/          @prvavill @danield137 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Kusto
-# ServiceOwners:                       @danield137
+# ServiceOwners:                       @prvavill @danield137
 
 
 # PRLabel: %tools-Marketplace
