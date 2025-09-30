@@ -125,6 +125,8 @@ npm install -g @azure/mcp
 
 ### Docker
 
+Run the Azure MCP server as a Docker container for easy deployment and isolation. The container image is available at [mcr.microsoft.com/azure-sdk/azure-mcp](https://mcr.microsoft.com/artifact/mar/azure-sdk/azure-mcp).
+
 <details>
 <summary>Docker instructions</summary>
 
@@ -159,8 +161,9 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
       }
    }
 ```
-
 </details>
+
+To use Azure Entra ID, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#using-azure-entra-id-with-docker).
 
 # Usage
 
@@ -378,8 +381,6 @@ The software may collect information about you and your use of the software and 
 Telemetry collection is on by default.
 
 To opt out, set the environment variable `AZURE_MCP_COLLECT_TELEMETRY` to `false` in your environment.
-
-
 
 ## Contributing
 
