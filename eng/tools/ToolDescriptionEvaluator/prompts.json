@@ -40,6 +40,18 @@
     "Show me the Cognitive Search services in my subscription",
     "Show me my Cognitive Search services"
   ],
+  "azmcp_speech_stt_recognize": [
+    "Convert this audio file to text using Azure Speech Services",
+    "Recognize speech from my audio file with language detection",
+    "Transcribe speech from audio file <file_path> with profanity filtering",
+    "Convert speech to text from audio file <file_path> using endpoint <endpoint>",
+    "Transcribe the audio file <file_path> in Spanish language",
+    "Convert speech to text with detailed output format from audio file <file_path>",
+    "Recognize speech from <file_path> with phrase hints for better accuracy",
+    "Transcribe audio using multiple phrase hints: \"Azure\", \"cognitive services\", \"machine learning\"",
+    "Convert speech to text with comma-separated phrase hints: \"Azure, cognitive services, API\"",
+    "Transcribe audio with raw profanity output from file <file_path>"
+  ],
   "azmcp_appconfig_account_list": [
     "List all App Configuration stores in my subscription",
     "Show me the App Configuration stores in my subscription",
@@ -238,6 +250,11 @@
     "Show me my Azure function apps",
     "What function apps do I have?"
   ],
+  "azmcp_keyvault_admin_settings_get": [
+    "Get the account settings for my key vault <key_vault_account_name>",
+    "Show me the account settings for key vault <key_vault_account_name>",
+    "What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name>"
+  ],
   "azmcp_keyvault_certificate_create": [
     "Create a new certificate called <certificate_name> in the key vault <key_vault_account_name>",
     "Generate a certificate named <certificate_name> in key vault <key_vault_account_name>",
@@ -281,6 +298,10 @@
     "Display the key details for <key_name> in vault <key_vault_account_name>",
     "Retrieve key metadata for <key_name> in vault <key_vault_account_name>"
   ],
+  "azmcp_keyvault_key_get": [
+    "Show me the key <key_name> in the key vault <key_vault_account_name>",
+    "Show me the details of the key <key_name> in the key vault <key_vault_account_name>"
+  ],
   "azmcp_keyvault_key_list": [
     "List all keys in the key vault <key_vault_account_name>",
     "Show me the keys in the key vault <key_vault_account_name>",
@@ -302,6 +323,10 @@
     "Get the secret <secret_name> from vault <key_vault_account_name>",
     "Display the secret details for <secret_name> in vault <key_vault_account_name>",
     "Retrieve secret metadata for <secret_name> in vault <key_vault_account_name>"
+  ],
+  "azmcp_keyvault_secret_get": [
+    "Show me the secret <secret_name> in the key vault <key_vault_account_name>",
+    "Show me the details of the secret <secret_name> in the key vault <key_vault_account_name>"
   ],
   "azmcp_keyvault_secret_list": [
     "List all secrets in the key vault <key_vault_account_name>",

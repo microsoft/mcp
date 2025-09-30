@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Authorization.Commands;
 using Azure.Mcp.Tools.Authorization.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Authorization;
 
@@ -17,14 +16,15 @@ public sealed class AuthorizationSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAuthorizationService, AuthorizationService>();
+
+        services.AddSingleton<RoleAssignmentListCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Authorization RBAC role command group
         var authorization = new CommandGroup(Name,
             "Authorization operations - Commands for managing Azure Role-Based Access Control (RBAC) resources. Includes operations for listing role assignments, managing permissions, and working with Azure security and access management at various scopes.");
-        rootGroup.AddSubGroup(authorization);
 
         // Create Role Assignment subgroup
         var roleAssignment = new CommandGroup("assignment",
@@ -32,6 +32,9 @@ public sealed class AuthorizationSetup : IAreaSetup
         authorization.AddSubGroup(roleAssignment);
 
         // Register role assignment commands
-        roleAssignment.AddCommand("list", new RoleAssignmentListCommand(loggerFactory.CreateLogger<RoleAssignmentListCommand>()));
+        var command = serviceProvider.GetRequiredService<RoleAssignmentListCommand>();
+        roleAssignment.AddCommand(command.Name, command);
+
+        return authorization;
     }
 }

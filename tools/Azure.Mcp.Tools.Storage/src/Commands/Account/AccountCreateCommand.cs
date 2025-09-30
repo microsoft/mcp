@@ -108,6 +108,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     // Implementation-specific error handling
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
+        KeyNotFoundException => $"Storage account not found. Verify the account name, subscription, and that you have access.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "Storage account name already exists. Choose a different name.",
         RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
@@ -119,5 +120,5 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     };
 
     // Strongly-typed result record
-    internal record AccountCreateCommandResult([property: JsonPropertyName("account")] AccountInfo Account);
+    internal record AccountCreateCommandResult([property: JsonPropertyName("account")] StorageAccountResult Account);
 }

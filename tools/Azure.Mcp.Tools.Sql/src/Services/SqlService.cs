@@ -291,6 +291,68 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
     }
 
     /// <summary>
+    /// Renames an existing SQL database to a new name.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server hosting the database</param>
+    /// <param name="databaseName">The current database name</param>
+    /// <param name="newDatabaseName">The desired new database name</param>
+    /// <param name="resourceGroup">The name of the resource group containing the server</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>The renamed SQL database information</returns>
+    /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
+    public async Task<SqlDatabase> RenameDatabaseAsync(
+        string serverName,
+        string databaseName,
+        string newDatabaseName,
+        string resourceGroup,
+        string subscription,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(serverName, databaseName, resourceGroup, subscription);
+        if (string.IsNullOrWhiteSpace(newDatabaseName))
+            throw new ArgumentException("New database name cannot be null or empty.", nameof(newDatabaseName));
+        try
+        {
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+
+            var currentDatabaseId = SqlDatabaseResource.CreateResourceIdentifier(
+                subscription,
+                resourceGroup,
+                serverName,
+                databaseName);
+
+            var targetDatabaseId = SqlDatabaseResource.CreateResourceIdentifier(
+                subscription,
+                resourceGroup,
+                serverName,
+                newDatabaseName);
+
+            var databaseResource = armClient.GetSqlDatabaseResource(currentDatabaseId);
+            var moveDefinition = new SqlResourceMoveDefinition(targetDatabaseId);
+
+            await databaseResource.RenameAsync(moveDefinition, cancellationToken);
+
+            var renamedDatabaseResource = await armClient.GetSqlDatabaseResource(targetDatabaseId).GetAsync(cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully renamed SQL database. Server: {Server}, Database: {Database}, NewDatabase: {NewDatabase}, ResourceGroup: {ResourceGroup}",
+                serverName, databaseName, newDatabaseName, resourceGroup);
+
+            return ConvertToSqlDatabaseModel(renamedDatabaseResource.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error renaming SQL database. Server: {Server}, Database: {Database}, NewDatabase: {NewDatabase}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                serverName, databaseName, newDatabaseName, resourceGroup, subscription);
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Retrieves a list of all SQL databases from an Azure SQL Server.
     /// </summary>
     /// <param name="serverName">The name of the SQL server to list databases from</param>

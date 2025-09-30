@@ -155,12 +155,12 @@ azmcp foundry agents connect --agent-id <agent-id> \
 
 # Evaluate a response from an agent by passing query and response inline
 azmcp foundry agents evaluate --agent-id <agent-id> \
-                                        --query <query> \
-                                        --response <response> \
-                                        --evaluator <evaluator> \
-                                        --azure-openai-endpoint <azure-openai-endpoint> \
-                                        --azure-openai-deployment <azure-openai-deployment> \
-                                        [--tool-definitions <tool-definitions>]
+                              --query <query> \
+                              --response <response> \
+                              --evaluator <evaluator> \
+                              --azure-openai-endpoint <azure-openai-endpoint> \
+                              --azure-openai-deployment <azure-openai-deployment> \
+                              [--tool-definitions <tool-definitions>]
 
 # Query and evaluate an agent in one command
 azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
@@ -217,6 +217,42 @@ azmcp search index query --subscription <subscription> \
 # List AI Search accounts in a subscription
 azmcp search list --subscription <subscription>
 ```
+
+### Azure AI Services Speech Operations
+
+```bash
+# Recognize speech from an audio file using Azure AI Services Speech
+azmcp speech stt recognize --endpoint <endpoint> \
+                           --file <file-path> \
+                           [--language <language>] \
+                           [--phrases <phrase-hints>] \
+                           [--format <simple|detailed>] \
+                           [--profanity <masked|removed|raw>]
+```
+
+#### Phrase Hints for Improved Accuracy
+
+The `--phrases` parameter supports multiple ways to specify phrase hints that improve speech recognition accuracy:
+
+**Multiple Arguments:**
+```bash
+azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
+    --phrases "Azure" --phrases "cognitive services" --phrases "machine learning"
+```
+
+**Comma-Separated Values:**
+```bash
+azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
+    --phrases "Azure, cognitive services, machine learning"
+```
+
+**Mixed Syntax:**
+```bash
+azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
+    --phrases "Azure, cognitive services" --phrases "machine learning"
+```
+
+Use phrase hints when you expect specific terminology, technical terms, or domain-specific vocabulary in your audio content. This significantly improves recognition accuracy for specialized content.
 
 ### Azure App Configuration Operations
 
@@ -624,6 +660,13 @@ azmcp eventgrid subscription list --subscription <subscription> \
                                   [--resource-group <resource-group>] \
                                   [--topic <topic>]
                                   [--location <location>]
+
+# Publish custom events to Event Grid topics
+azmcp eventgrid events publish --subscription <subscription> \
+                               --topic <topic> \
+                               --data <json-event-data> \
+                               [--resource-group <resource-group>] \
+                               [--schema <schema-type>]
 ```
 
 ### Azure Function App Operations
@@ -636,6 +679,14 @@ azmcp functionapp get --subscription <subscription> \
 ```
 
 ### Azure Key Vault Operations
+
+#### Administration
+
+```bash
+# Gets Key Vault administration settings
+azmcp keyvault admin settings get --subscription <subscription> \
+                                  --vault <vault-name>
+```
 
 #### Certificates
 
@@ -1107,6 +1158,13 @@ azmcp sql db delete --subscription <subscription> \
 azmcp sql db list --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name>
+                  
+# Rename an existing SQL database to a new name within the same server
+azmcp sql db rename --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <current-database-name> \
+                    --new-database-name <new-database-name>
 
 # Show details of a specific SQL database
 azmcp sql db show --subscription <subscription> \
@@ -1175,14 +1233,14 @@ azmcp sql server firewall-rule list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
 
-# List SQL servers in a resource group
-azmcp sql server list --subscription <subscription> \
-                      --resource-group <resource-group>
-
 # Delete a SQL server
 azmcp sql server delete --subscription <subscription> \
                         --resource-group <resource-group> \
                         --server <server-name>
+
+# List SQL servers in a resource group
+azmcp sql server list --subscription <subscription> \
+                      --resource-group <resource-group>
 
 # Show details of a specific SQL server
 azmcp sql server show --subscription <subscription> \

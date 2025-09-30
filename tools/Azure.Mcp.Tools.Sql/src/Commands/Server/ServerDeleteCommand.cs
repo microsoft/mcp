@@ -20,9 +20,9 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
 
     public override string Description =>
         """
-        Deletes an Azure SQL server and all of its databases from the specified resource group.
-        This operation is irreversible and will permanently remove the server and all its data.
-        Use the --force flag to skip confirmation prompts.
+        Remove the specified SQL server from your Azure subscription, including all associated databases.
+        This operation permanently deletes all server data and cannot be reversed.
+        Use --force to bypass confirmation.
         """;
 
     public override string Title => CommandTitle;
