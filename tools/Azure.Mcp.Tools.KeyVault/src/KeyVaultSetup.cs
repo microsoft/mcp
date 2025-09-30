@@ -75,8 +75,11 @@ public class KeyVaultSetup : IAreaSetup
         var certificateImport = serviceProvider.GetRequiredService<CertificateImportCommand>();
         certificate.AddCommand(certificateImport.Name, certificateImport);
 
+        var settings = new CommandGroup("settings", "Key Vault Managed HSM account settings operations - Commands for managing Key Vault Managed HSM account settings.");
+        admin.AddSubGroup(settings);
+
         var adminSettingsGet = serviceProvider.GetRequiredService<AdminSettingsGetCommand>();
-        admin.AddCommand(adminSettingsGet.Name, adminSettingsGet);
+        settings.AddCommand(adminSettingsGet.Name, adminSettingsGet);
 
         return keyVault;
     }
