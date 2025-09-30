@@ -50,21 +50,11 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger) : B
 
             IReadOnlyList<Models.HostPool> hostpools;
 
-            if (!string.IsNullOrEmpty(options.ResourceGroup))
-            {
-                hostpools = await virtualDesktopService.ListHostpoolsByResourceGroupAsync(
-                    options.Subscription!,
-                    options.ResourceGroup,
-                    options.Tenant,
-                    options.RetryPolicy);
-            }
-            else
-            {
-                hostpools = await virtualDesktopService.ListHostpoolsAsync(
-                    options.Subscription!,
-                    options.Tenant,
-                    options.RetryPolicy);
-            }
+            hostpools = await virtualDesktopService.ListHostpoolsAsync(
+                options.Subscription!,
+                options.ResourceGroup,
+                options.Tenant,
+                options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(new([.. hostpools ?? []]), VirtualDesktopJsonContext.Default.HostPoolListCommandResult);
         }

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Threading;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
@@ -18,30 +17,9 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService, ITe
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ILogger<VirtualDesktopService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public async Task<IReadOnlyList<HostPool>> ListHostpoolsAsync(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<IReadOnlyList<HostPool>> ListHostpoolsAsync(string subscription, string? resourceGroup, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
-
-        try
-        {
-            return await ExecuteResourceQueryAsync(
-                "Microsoft.DesktopVirtualization/hostPools",
-                null,
-                subscription,
-                retryPolicy,
-                ConvertToHostPoolModel);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error listing Host Pools in Subscription: {Subscription}", subscription);
-            throw;
-        }
-    }
-
-    public async Task<IReadOnlyList<HostPool>> ListHostpoolsByResourceGroupAsync(string subscription, string resourceGroup, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
-    {
-        ValidateRequiredParameters((nameof(subscription), subscription));
-        ValidateRequiredParameters((nameof(resourceGroup), resourceGroup));
 
         try
         {
@@ -54,12 +32,12 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService, ITe
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing Host Pools in Subscription: {Subscription}", subscription);
+            _logger.LogError(ex, "Error listing Host Pools in resource Group: {ResourceGroup}, Subscription: {Subscription}", resourceGroup, subscription);
             throw;
         }
     }
 
-    public async Task<IReadOnlyList<SessionHost>> ListSessionHostsAsync(string subscription, string hostPoolName, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<IReadOnlyList<SessionHost>> ListSessionHostsAsync(string subscription, string? resourceGroup, string hostPoolName,string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
         ValidateRequiredParameters((nameof(hostPoolName), hostPoolName));
@@ -69,7 +47,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService, ITe
             hostPoolName = hostPoolName.Trim('"', '\'');
             var results = await ExecuteResourceQueryAsync(
                 "Microsoft.DesktopVirtualization/hostPools/sessionHosts",
-                null,
+                resourceGroup,
                 subscription,
                 retryPolicy,
                 ConvertToSessionHostModel,
@@ -83,12 +61,13 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService, ITe
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing Session Hosts in host Pool: {HostPoolName}, Subscription: {Subscription}", hostPoolName, subscription);
+            _logger.LogError(ex, "Error listing Session Hosts in host Pool: {HostPoolName}, Resource Group: {ResourceGroup}, Subscription: {Subscription}",
+                hostPoolName, resourceGroup, subscription);
             throw;
         }
     }
 
-    public async Task<IReadOnlyList<UserSession>> ListUserSessionsAsync(string subscription, string hostPoolName, string sessionHostName, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<IReadOnlyList<UserSession>> ListUserSessionsAsync(string subscription, string? resourceGroup, string hostPoolName, string sessionHostName, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
         ValidateRequiredParameters((nameof(hostPoolName), hostPoolName));
@@ -100,7 +79,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService, ITe
             sessionHostName = sessionHostName.Trim('"', '\'');
             var results = await ExecuteResourceQueryAsync(
                 "Microsoft.DesktopVirtualization/hostPools/sessionHosts/userSessions",
-                null,
+                resourceGroup,
                 subscription,
                 retryPolicy,
                 ConvertToUserSessionModel,
@@ -115,7 +94,8 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService, ITe
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing Session Hosts in host Pool: {HostPoolName}, Session Host: {SessionHostName}, Subscription: {Subscription}", hostPoolName, sessionHostName, subscription);
+            _logger.LogError(ex, "Error listing Session Hosts in host Pool: {HostPoolName}, Session Host: {SessionHostName}, Resource Group: {ResourceGroup}, Subscription: {Subscription}",
+                hostPoolName, sessionHostName, resourceGroup, subscription);
             throw;
         }
     }
@@ -131,7 +111,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService, ITe
         {
             var results = await ExecuteResourceQueryAsync(
                 "Microsoft.DesktopVirtualization/hostPools/sessionHosts",
-                null,
+                resourceId.ResourceGroupName,
                 subscription,
                 retryPolicy,
                 ConvertToSessionHostModel,
@@ -145,7 +125,8 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService, ITe
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing Session Hosts in host Pool: {HostPoolResourceId}, Subscription: {Subscription}", hostPoolResourceId, subscription);
+            _logger.LogError(ex, "Error listing Session Hosts in host Pool: {HostPoolResourceId}, Resource Group: {ResourceGroup}, Subscription: {Subscription}",
+                hostPoolResourceId, resourceId.ResourceGroupName, subscription);
             throw;
         }
     }
@@ -163,7 +144,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService, ITe
             sessionHostName = sessionHostName.Trim('"', '\'');
             var results = await ExecuteResourceQueryAsync(
                 "Microsoft.DesktopVirtualization/hostPools/sessionHosts/userSessions",
-                null,
+                resourceId.ResourceGroupName,
                 subscription,
                 retryPolicy,
                 ConvertToUserSessionModel,
@@ -178,70 +159,8 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService, ITe
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing Session Hosts in host Pool: {HostPoolResourceId}, Session Host: {SessionHostName}, Subscription: {Subscription}", hostPoolResourceId, sessionHostName, subscription);
-            throw;
-        }
-    }
-
-    public async Task<IReadOnlyList<SessionHost>> ListSessionHostsByResourceGroupAsync(string subscription, string resourceGroup, string hostPoolName, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
-    {
-        ValidateRequiredParameters((nameof(subscription), subscription));
-        ValidateRequiredParameters((nameof(hostPoolName), hostPoolName));
-        ValidateRequiredParameters((nameof(resourceGroup), resourceGroup));
-
-        try
-        {
-            hostPoolName = hostPoolName.Trim('"', '\'');
-            var results = await ExecuteResourceQueryAsync(
-                "Microsoft.DesktopVirtualization/hostPools/sessionHosts",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToSessionHostModel,
-                additionalFilter: $"id contains '/hostPools/{EscapeKqlString(hostPoolName)}'");
-
-            foreach (var session in results)
-            {
-                session.HostPoolName = hostPoolName;
-            }
-            return results;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error listing Session Hosts in host Pool: {HostPoolName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}", hostPoolName, resourceGroup, subscription);
-            throw;
-        }
-    }
-
-    public async Task<IReadOnlyList<UserSession>> ListUserSessionsByResourceGroupAsync(string subscription, string resourceGroup, string hostPoolName, string sessionHostName, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
-    {
-        ValidateRequiredParameters((nameof(subscription), subscription));
-        ValidateRequiredParameters((nameof(hostPoolName), hostPoolName));
-        ValidateRequiredParameters((nameof(resourceGroup), resourceGroup));
-        ValidateRequiredParameters((nameof(sessionHostName), sessionHostName));
-
-        try
-        {
-            hostPoolName = hostPoolName.Trim('"', '\'');
-            sessionHostName = sessionHostName.Trim('"', '\'');
-            var results = await ExecuteResourceQueryAsync(
-                "Microsoft.DesktopVirtualization/hostPools/sessionHosts/userSessions",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToUserSessionModel,
-                additionalFilter: $"id contains '/hostPools/{EscapeKqlString(hostPoolName)}/sessionHosts/{EscapeKqlString(sessionHostName)}'");
-
-            foreach (var session in results)
-            {
-                session.HostPoolName = hostPoolName;
-                session.SessionHostName = sessionHostName;
-            }
-            return results;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error listing Session Hosts in host Pool: {HostPoolName}, Session Host: {SessionHostName}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}", hostPoolName, sessionHostName, resourceGroup, subscription);
+            _logger.LogError(ex, "Error listing Session Hosts in host Pool: {HostPoolResourceId}, Session Host: {SessionHostName}, resource group: {ResourceGroup}, Subscription: {Subscription}",
+                hostPoolResourceId, sessionHostName, resourceId.ResourceGroupName, subscription);
             throw;
         }
     }

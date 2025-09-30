@@ -75,18 +75,11 @@ public class SessionHostListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
+                Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>())
                 .Returns(Task.FromResult<IReadOnlyList<SessionHostModel>>(mockSessionHosts));
 
             _virtualDesktopService.ListSessionHostsByResourceIdAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
-                .Returns(Task.FromResult<IReadOnlyList<SessionHostModel>>(mockSessionHosts));
-
-            _virtualDesktopService.ListSessionHostsByResourceGroupAsync(
-                Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -126,6 +119,7 @@ public class SessionHostListCommandTests
         };
         _virtualDesktopService.ListSessionHostsAsync(
             "sub123",
+            null,
             "pool1",
             null,
             Arg.Any<RetryPolicyOptions>())
@@ -144,6 +138,7 @@ public class SessionHostListCommandTests
 
         await _virtualDesktopService.Received(1).ListSessionHostsAsync(
             "sub123",
+            null,
             "pool1",
             null,
             Arg.Any<RetryPolicyOptions>());
@@ -188,6 +183,7 @@ public class SessionHostListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>());
     }
 
@@ -214,7 +210,7 @@ public class SessionHostListCommandTests
             CreateMockSessionHost("sessionhost2")
         };
 
-        _virtualDesktopService.ListSessionHostsByResourceGroupAsync(
+        _virtualDesktopService.ListSessionHostsAsync(
             "sub123",
             "rg1",
             "pool1",
@@ -239,7 +235,7 @@ public class SessionHostListCommandTests
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
-        await _virtualDesktopService.Received(1).ListSessionHostsByResourceGroupAsync(
+        await _virtualDesktopService.Received(1).ListSessionHostsAsync(
             "sub123",
             "rg1",
             "pool1",
@@ -252,6 +248,7 @@ public class SessionHostListCommandTests
     {
         // Arrange
         _virtualDesktopService.ListSessionHostsAsync(
+            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -282,6 +279,7 @@ public class SessionHostListCommandTests
     {
         // Arrange
         _virtualDesktopService.ListSessionHostsAsync(
+            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),

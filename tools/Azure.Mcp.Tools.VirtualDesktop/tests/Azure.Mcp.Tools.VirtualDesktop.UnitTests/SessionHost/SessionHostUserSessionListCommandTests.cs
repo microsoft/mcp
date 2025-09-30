@@ -85,20 +85,12 @@ public class SessionHostUserSessionListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
+                Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>())
                 .Returns(userSessions.AsReadOnly());
 
             _virtualDesktopService.ListUserSessionsByResourceIdAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
-                .Returns(userSessions.AsReadOnly());
-
-            _virtualDesktopService.ListUserSessionsByResourceGroupAsync(
-                Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -155,6 +147,7 @@ public class SessionHostUserSessionListCommandTests
 
         _virtualDesktopService.ListUserSessionsAsync(
             "test-sub",
+            null,
             "test-hostpool",
             "test-sessionhost",
             Arg.Any<string?>(),
@@ -173,6 +166,7 @@ public class SessionHostUserSessionListCommandTests
 
         await _virtualDesktopService.Received(1).ListUserSessionsAsync(
             "test-sub",
+            null,
             "test-hostpool",
             "test-sessionhost",
             null,
@@ -226,6 +220,7 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>());
     }
@@ -247,7 +242,7 @@ public class SessionHostUserSessionListCommandTests
             }
         };
 
-        _virtualDesktopService.ListUserSessionsByResourceGroupAsync(
+        _virtualDesktopService.ListUserSessionsAsync(
             "test-sub",
             "test-rg",
             "test-hostpool",
@@ -266,19 +261,12 @@ public class SessionHostUserSessionListCommandTests
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
-        await _virtualDesktopService.Received(1).ListUserSessionsByResourceGroupAsync(
+        await _virtualDesktopService.Received(1).ListUserSessionsAsync(
             "test-sub",
             "test-rg",
             "test-hostpool",
             "test-sessionhost",
             null,
-            Arg.Any<RetryPolicyOptions?>());
-
-        await _virtualDesktopService.DidNotReceive().ListUserSessionsAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>());
 
         await _virtualDesktopService.DidNotReceive().ListUserSessionsByResourceIdAsync(
@@ -296,6 +284,7 @@ public class SessionHostUserSessionListCommandTests
         var userSessions = new List<UserSession>();
 
         _virtualDesktopService.ListUserSessionsAsync(
+            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -327,6 +316,7 @@ public class SessionHostUserSessionListCommandTests
     {
         // Arrange
         _virtualDesktopService.ListUserSessionsAsync(
+            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -362,6 +352,7 @@ public class SessionHostUserSessionListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(exception);
@@ -391,6 +382,7 @@ public class SessionHostUserSessionListCommandTests
         // Arrange
         var exception = new RequestFailedException((int)HttpStatusCode.Forbidden, "Access denied");
         _virtualDesktopService.ListUserSessionsAsync(
+            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -436,6 +428,7 @@ public class SessionHostUserSessionListCommandTests
 
         _virtualDesktopService.ListUserSessionsAsync(
             "test-sub",
+            null,
             "test-hostpool",
             "test-sessionhost",
             "test-tenant",
@@ -462,6 +455,7 @@ public class SessionHostUserSessionListCommandTests
 
         await _virtualDesktopService.Received(1).ListUserSessionsAsync(
             "test-sub",
+            null,
             "test-hostpool",
             "test-sessionhost",
             "test-tenant",

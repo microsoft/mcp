@@ -10,9 +10,6 @@
     <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Services\Models\" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Azure.ResourceManager" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />

@@ -59,20 +59,11 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
                     options.Tenant,
                     options.RetryPolicy);
             }
-            else if (!string.IsNullOrEmpty(options.ResourceGroup))
-            {
-                userSessions = await virtualDesktopService.ListUserSessionsByResourceGroupAsync(
-                    options.Subscription!,
-                    options.ResourceGroup,
-                    options.HostPoolName!,
-                    options.SessionHostName!,
-                    options.Tenant,
-                    options.RetryPolicy);
-            }
             else
             {
                 userSessions = await virtualDesktopService.ListUserSessionsAsync(
                     options.Subscription!,
+                    options.ResourceGroup,
                     options.HostPoolName!,
                     options.SessionHostName!,
                     options.Tenant,
