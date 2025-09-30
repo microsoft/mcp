@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace Azure.Mcp.Tools.VirtualDesktop.Services.Models;
 
 /// <summary>
-/// Represents a RegistrationInfo definition.
+/// Represents a registration info definition.
 /// </summary>
 internal sealed class HostPoolRegistrationInfo
 {

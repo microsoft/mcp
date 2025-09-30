@@ -10,8 +10,7 @@ using Azure.Mcp.Tools.VirtualDesktop.Models;
 namespace Azure.Mcp.Tools.VirtualDesktop.Services.Models;
 
 /// <summary>
-/// A class representing the SessionHostHealthCheckReport data model.
-/// A storage account resource.
+/// A class representing the health check report data model.
 /// </summary>
 internal sealed class SessionHostHealthCheckReport
 {

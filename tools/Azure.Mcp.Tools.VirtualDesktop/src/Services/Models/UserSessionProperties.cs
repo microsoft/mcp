@@ -10,22 +10,21 @@ using Azure.Mcp.Tools.VirtualDesktop.Models;
 namespace Azure.Mcp.Tools.VirtualDesktop.Services.Models;
 
 /// <summary>
-/// A class representing the SessionHostProperties data model.
-/// A storage account resource.
+/// A class representing the user session properties.
 /// </summary>
 internal sealed class UserSessionProperties
 {
     /// <summary> ObjectId of user session. (internal use). </summary>
-        public string? ObjectId { get; set; }
-        /// <summary> The user principal name. </summary>
-        public string? UserPrincipalName { get; set; }
-        /// <summary> Application type of application. </summary>
-        public string? ApplicationType { get; set; }
-        /// <summary> State of user session. </summary>
-        public string? SessionState { get; set; }
-        /// <summary> The active directory user name. </summary>
-        public string? ActiveDirectoryUserName { get; set; }
-        /// <summary> The timestamp of the user session create. </summary>
-        [JsonPropertyName("createTime")]
-        public DateTimeOffset? CreateOn { get; set; }
+    public string? ObjectId { get; set; }
+    /// <summary> The user principal name. </summary>
+    public string? UserPrincipalName { get; set; }
+    /// <summary> Application type of application. </summary>
+    public string? ApplicationType { get; set; }
+    /// <summary> State of user session. </summary>
+    public string? SessionState { get; set; }
+    /// <summary> The active directory user name. </summary>
+    public string? ActiveDirectoryUserName { get; set; }
+    /// <summary> The timestamp of the user session create. </summary>
+    [JsonPropertyName("createTime")]
+    public DateTimeOffset? CreateOn { get; set; }
 }

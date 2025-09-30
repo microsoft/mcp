@@ -35,7 +35,9 @@
         "**/obj/**",
         "**/tools/**/tests/test-resources-post.ps1",
         "!**/.devcontainer/**",
-        "**/Fabric.Mcp.Tools.PublicApi/src/Resources/**"
+        "**/Fabric.Mcp.Tools.PublicApi/src/Resources/**",
+        "**/*.wav",
+        "**/*.mp3"
     ],
     "dictionaryDefinitions": [
         {
@@ -263,6 +265,7 @@
         "aarch",
         "accesspolicy",
         "acaenvironment",
+        "adfs",
         "adminprovider",
         "agentic",
         "aieval",
@@ -524,6 +527,7 @@
         "serverfarms",
         "servicebus",
         "sessionhost",
+        "sessionhosts",
         "setparam",
         "setpermission",
         "siteextensions",
