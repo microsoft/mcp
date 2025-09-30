@@ -24,7 +24,6 @@ The application:
 ├── tools.json                              # Tool definitions (fallback/static)
 ├── prompts.json                            # Test prompts (fallback/static)
 ├── .env.example                            # Environment variables template
-├── results.txt                             # Analysis output (plain text)
 ├── results.md                              # Analysis output (markdown)
 └── README.md                               # This file
 ```
@@ -159,7 +158,7 @@ Results are written to `results.md` with:
 
 ### Plain Text Output
 
-Results are written to `results.txt`:
+Results are written to `results.txt` when using the following option:
 
 ```bash
 dotnet run -- --text
@@ -168,6 +167,14 @@ dotnet run -- --text
 - Compact, simple format for quick review
 - Includes confidence scores and success rates
 - Shows top matching tools for each prompt
+
+### Custom output file name
+
+You can use a custom file name by using the option `--output-file-name`
+
+```bash
+dotnet run -- --output-file-name my-tests
+```
 
 ### Analysis Metrics
 
@@ -201,10 +208,10 @@ The tool reads from `../../../docs/e2eTestPrompts.md` which contains tables like
 ## Azure Storage
 
 | Tool Name | Test Prompt |
-|:----------|:----------|
-| azmcp-storage-account-list | List all storage accounts in my subscription |
-| azmcp-storage-account-list | Show me my storage accounts |
-| azmcp-storage-container-list | List containers in storage account <account-name> |
+|:----------|:------------|
+| azmcp-storage-account-get | List all storage accounts in my subscription |
+| azmcp-storage-account-get | Show me my storage accounts |
+| azmcp-storage-container-get | List containers in storage account <account-name> |
 ```
 
 #### JSON Format (Alternative)
@@ -213,11 +220,11 @@ Prompts can be organized in JSON format:
 
 ```json
 {
-  "azmcp-storage-account-list": [
+  "azmcp-storage-account-get": [
     "List all storage accounts in my subscription",
     "Show me my storage accounts"
   ],
-  "azmcp-storage-container-list": [
+  "azmcp-storage-container-get": [
     "List containers in storage account <account-name>"
   ]
 }

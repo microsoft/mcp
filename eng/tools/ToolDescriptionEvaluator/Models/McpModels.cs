@@ -122,7 +122,10 @@ public class ListToolsResult
     public string? Message { get; set; }
 
     [JsonPropertyName("results")]
-    public required List<Tool> Tools { get; set; }
+    public List<Tool>? Tools { get; set; }
+
+    [JsonPropertyName("consolidated_azure_tools")]
+    public List<Tool>? ConsolidatedAzureTools { get; set; }
 
     [JsonPropertyName("duration")]
     public int? Duration { get; set; }

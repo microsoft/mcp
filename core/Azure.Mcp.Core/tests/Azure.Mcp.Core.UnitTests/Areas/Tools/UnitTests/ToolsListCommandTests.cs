@@ -144,7 +144,6 @@ public class ToolsListCommandTests
         Assert.DoesNotContain(result, cmd => cmd.Name == "list" && cmd.Command.Contains("tool"));
 
         Assert.Contains(result, cmd => !string.IsNullOrEmpty(cmd.Name));
-
     }
 
     /// <summary>
@@ -308,6 +307,46 @@ public class ToolsListCommandTests
 
             // Command paths should not have double spaces
             Assert.DoesNotContain("  ", command.Command);
+        }
+    }
+
+    /// <summary>
+    /// Verifies that the --namespaces switch returns only distinct top-level namespaces.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_WithNamespaceSwitch_ReturnsNamespacesOnly()
+    {
+        // Arrange
+        var args = _commandDefinition.Parse(new[] { "--namespaces" });
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.NotNull(response.Results);
+
+        // Serialize then deserialize as list of CommandInfo
+        var json = JsonSerializer.Serialize(response.Results);
+        var namespaces = JsonSerializer.Deserialize<List<CommandInfo>>(json);
+
+        Assert.NotNull(namespaces);
+        Assert.NotEmpty(namespaces);
+
+        // Should include some well-known namespaces (matching Name property)
+        Assert.Contains(namespaces, ci => ci.Name.Equals("subscription", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(namespaces, ci => ci.Name.Equals("storage", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(namespaces, ci => ci.Name.Equals("keyvault", StringComparison.OrdinalIgnoreCase));
+
+        foreach (var ns in namespaces!)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(ns.Name));
+            Assert.False(string.IsNullOrWhiteSpace(ns.Command));
+            Assert.StartsWith("azmcp ", ns.Command, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(ns.Name, ns.Name.Trim());
+            Assert.DoesNotContain(" ", ns.Name);
+            // Namespace should not itself have options
+            Assert.Null(ns.Options);
         }
     }
 
