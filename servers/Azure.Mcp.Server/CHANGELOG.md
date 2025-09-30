@@ -44,6 +44,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Added support for listing SQL servers in a subscription and resource group via the command `azmcp_sql_server_list`. [[#503](https://github.com/microsoft/mcp/issues/503)]
 - Added support for renaming Azure SQL databases within a server while retaining configuration via the `azmcp sql db rename` command. [[#542](https://github.com/microsoft/mcp/pull/542)]
+- Added support for exporting Azure SQL databases to BACPAC files in Azure Storage via the `azmcp sql db export` command. [[#526](https://github.com/microsoft/mcp/pull/526)]
 - Added support for Azure App Service database management via the command `azmcp_appservice_database_add`. [[#59](https://github.com/microsoft/mcp/pull/59)]
 - Added the following Azure Foundry agents commands: [[#55](https://github.com/microsoft/mcp/pull/55)]
   - `azmcp_foundry_agents_connect`: Connect to an agent in an AI Foundry project and query it

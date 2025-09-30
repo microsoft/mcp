@@ -25,6 +25,12 @@ public static class SqlOptionDefinitions
     public const string ElasticPoolName = "elastic-pool-name";
     public const string ZoneRedundant = "zone-redundant";
     public const string ReadScale = "read-scale";
+    public const string StorageUri = "storage-uri";
+    public const string StorageKey = "storage-key";
+    public const string StorageKeyType = "storage-key-type";
+    public const string AdminUser = "admin-user";
+    public const string AdminPassword = "admin-password";
+    public const string AuthType = "auth-type";
 
     public static readonly Option<string> Server = new(
         $"--{ServerName}"
@@ -183,6 +189,54 @@ public static class SqlOptionDefinitions
     )
     {
         Description = "Read scale option for the database (Enabled or Disabled).",
+        Required = false
+    };
+
+    public static readonly Option<string> StorageUriOption = new(
+        $"--{StorageUri}"
+    )
+    {
+        Description = "The storage URI for the BACPAC file (e.g., https://mystorageaccount.blob.core.windows.net/mycontainer/myfile.bacpac).",
+        Required = true
+    };
+
+    public static readonly Option<string> StorageKeyOption = new(
+        $"--{StorageKey}"
+    )
+    {
+        Description = "The storage access key or shared access signature for the storage account.",
+        Required = true
+    };
+
+    public static readonly Option<string> StorageKeyTypeOption = new(
+        $"--{StorageKeyType}"
+    )
+    {
+        Description = "The storage key type (StorageAccessKey or SharedAccessKey).",
+        Required = true
+    };
+
+    public static readonly Option<string> AdminUserOption = new(
+        $"--{AdminUser}"
+    )
+    {
+        Description = "The SQL Server administrator login name for database access.",
+        Required = true
+    };
+
+    public static readonly Option<string> AdminPasswordOption = new(
+        $"--{AdminPassword}"
+    )
+    {
+        Description = "The SQL Server administrator password for database access.",
+        Required = true
+    };
+
+    public static readonly Option<string> AuthTypeOption = new(
+        $"--{AuthType}"
+    )
+    {
+        Description = "The authentication type (SQL, ADPassword, or ManagedIdentity).",
         Required = false
     };
 }

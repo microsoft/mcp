@@ -434,6 +434,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_db_show | Show me the details of SQL database <database_name> in server <server_name> |
 | azmcp_sql_db_update | Update the performance tier of SQL database <database_name> on server <server_name> |
 | azmcp_sql_db_update | Scale SQL database <database_name> on server <server_name> to use <sku_name> SKU |
+| azmcp_sql_db_export | Export SQL database <database_name> from server <server_name> to Azure Storage |
+| azmcp_sql_db_export | Create a BACPAC backup of database <database_name> on server <server_name> |
 
 ## Azure SQL Elastic Pool Operations
 

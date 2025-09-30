@@ -116,6 +116,36 @@ public interface ISqlService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Exports an Azure SQL Database to a BACPAC file in Azure Storage.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server</param>
+    /// <param name="databaseName">The name of the database to export</param>
+    /// <param name="resourceGroup">The resource group name</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="storageUri">The storage URI for the BACPAC file</param>
+    /// <param name="storageKey">The storage access key or shared access signature</param>
+    /// <param name="storageKeyType">The storage key type (StorageAccessKey, SharedAccessKey, or ManagedIdentity)</param>
+    /// <param name="adminUser">The SQL Server administrator login name</param>
+    /// <param name="adminPassword">The SQL Server administrator password</param>
+    /// <param name="authType">Optional authentication type (SQL, ADPassword, or ManagedIdentity)</param>
+    /// <param name="retryPolicy">Optional retry policy options</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The export operation information</returns>
+    Task<SqlDatabaseExportResult> ExportDatabaseAsync(
+        string serverName,
+        string databaseName,
+        string resourceGroup,
+        string subscription,
+        string storageUri,
+        string storageKey,
+        string storageKeyType,
+        string adminUser,
+        string adminPassword,
+        string? authType = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets a list of databases for a SQL server.
     /// </summary>
     /// <param name="serverName">The name of the SQL server</param>

@@ -17,6 +17,7 @@ namespace Azure.Mcp.Tools.Sql.Commands;
 [JsonSerializable(typeof(DatabaseCreateCommand.DatabaseCreateResult))]
 [JsonSerializable(typeof(DatabaseUpdateCommand.DatabaseUpdateResult))]
 [JsonSerializable(typeof(DatabaseRenameCommand.DatabaseRenameResult))]
+[JsonSerializable(typeof(DatabaseExportCommand.DatabaseExportResult))]
 [JsonSerializable(typeof(DatabaseDeleteCommand.DatabaseDeleteResult))]
 [JsonSerializable(typeof(EntraAdminListCommand.EntraAdminListResult))]
 [JsonSerializable(typeof(FirewallRuleListCommand.FirewallRuleListResult))]
@@ -42,6 +43,7 @@ namespace Azure.Mcp.Tools.Sql.Commands;
 [JsonSerializable(typeof(SqlElasticPoolProperties))]
 [JsonSerializable(typeof(SqlElasticPoolPerDatabaseSettings))]
 [JsonSerializable(typeof(SqlFirewallRuleData))]
+[JsonSerializable(typeof(SqlDatabaseExportResult))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     WriteIndented = true,
