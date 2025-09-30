@@ -18,6 +18,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_foundry_models_deployments_list | Show me all AI Foundry model deployments |
 | azmcp_foundry_models_list | List all AI Foundry models |
 | azmcp_foundry_models_list | Show me the available AI Foundry models |
+| azmcp_foundry_openai_create-completion | Create a completion with the prompt "What is Azure?"|
 
 ## Azure AI Search
 
