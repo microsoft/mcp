@@ -199,6 +199,15 @@ azmcp foundry models list [--search-for-free-playground <search-for-free-playgro
                           [--publisher <publisher>] \
                           [--license <license>] \
                           [--model-name <model>]
+
+# Generate text completions using deployed Azure OpenAI models in AI Foundry
+azmcp foundry openai create-completion --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-name <resource-name> \
+                                       --deployment <deployment-name> \
+                                       --prompt-text <prompt-text> \
+                                       [--max-tokens <max-tokens>] \
+                                       [--temperature <temperature>]
 ```
 
 ### Azure AI Search Operations
@@ -217,6 +226,42 @@ azmcp search index query --subscription <subscription> \
 # List AI Search accounts in a subscription
 azmcp search list --subscription <subscription>
 ```
+
+### Azure AI Services Speech Operations
+
+```bash
+# Recognize speech from an audio file using Azure AI Services Speech
+azmcp speech stt recognize --endpoint <endpoint> \
+                           --file <file-path> \
+                           [--language <language>] \
+                           [--phrases <phrase-hints>] \
+                           [--format <simple|detailed>] \
+                           [--profanity <masked|removed|raw>]
+```
+
+#### Phrase Hints for Improved Accuracy
+
+The `--phrases` parameter supports multiple ways to specify phrase hints that improve speech recognition accuracy:
+
+**Multiple Arguments:**
+```bash
+azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
+    --phrases "Azure" --phrases "cognitive services" --phrases "machine learning"
+```
+
+**Comma-Separated Values:**
+```bash
+azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
+    --phrases "Azure, cognitive services, machine learning"
+```
+
+**Mixed Syntax:**
+```bash
+azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
+    --phrases "Azure, cognitive services" --phrases "machine learning"
+```
+
+Use phrase hints when you expect specific terminology, technical terms, or domain-specific vocabulary in your audio content. This significantly improves recognition accuracy for specialized content.
 
 ### Azure App Configuration Operations
 

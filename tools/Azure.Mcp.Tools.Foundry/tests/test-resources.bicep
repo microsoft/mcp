@@ -14,6 +14,11 @@ param tenantId string = '72f988bf-86f1-41af-91ab-2d7cd011db47'
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
+// Static resource names for consistent testing
+var staticOpenAIAccount = 'azmcp-test'
+var staticOpenAIDeploymentName = 'gpt-4o-mini'
+var staticOpenAIAccountResourceGroup = 'static-test-resources'
+
 var cognitiveServicesContributorRoleId = '25fbc0a9-bd7c-42a3-aa1a-3b75d497ee68' // Cognitive Services Contributor role
 
 resource aiServicesAccount 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
@@ -193,3 +198,8 @@ output searchServiceName string = searchService.name
 output searchServiceEndpoint string = 'https://${searchService.name}.search.windows.net'
 output knowledgeIndexName string = '${baseName}-knowledge-index'
 output aiProjectsEndpoint string = 'https://${aiServicesAccount.name}.services.ai.azure.com/api/projects/${aiProjects.name}'
+
+// Static resource outputs for test configuration
+output openAIAccount string = staticOpenAIAccount
+output openAIDeploymentName string = staticOpenAIDeploymentName
+output openAIAccountResourceGroup string = staticOpenAIAccountResourceGroup

@@ -359,7 +359,7 @@
 |------|-------|------|--------|
 | 1 | 0.586014 | `azmcp_acr_registry_list` | ✅ **EXPECTED** |
 | 2 | 0.563636 | `azmcp_acr_registry_repository_list` | ❌ |
-| 3 | 0.450287 | `azmcp_storage_blob_container_get` | ❌ |
+| 3 | 0.449979 | `azmcp_storage_blob_container_get` | ❌ |
 | 4 | 0.415552 | `azmcp_cosmos_database_container_list` | ❌ |
 | 5 | 0.382728 | `azmcp_mysql_server_list` | ❌ |
 
@@ -376,7 +376,7 @@
 |------|-------|------|--------|
 | 1 | 0.637130 | `azmcp_acr_registry_list` | ✅ **EXPECTED** |
 | 2 | 0.563476 | `azmcp_acr_registry_repository_list` | ❌ |
-| 3 | 0.474000 | `azmcp_redis_cache_list` | ❌ |
+| 3 | 0.474087 | `azmcp_redis_cache_list` | ❌ |
 | 4 | 0.471804 | `azmcp_redis_cluster_list` | ❌ |
 | 5 | 0.463742 | `azmcp_postgres_server_list` | ❌ |
 
@@ -427,7 +427,7 @@
 |------|-------|------|--------|
 | 1 | 0.626482 | `azmcp_acr_registry_repository_list` | ✅ **EXPECTED** |
 | 2 | 0.617504 | `azmcp_acr_registry_list` | ❌ |
-| 3 | 0.510435 | `azmcp_redis_cache_list` | ❌ |
+| 3 | 0.510487 | `azmcp_redis_cache_list` | ❌ |
 | 4 | 0.495567 | `azmcp_postgres_server_list` | ❌ |
 | 5 | 0.492550 | `azmcp_redis_cluster_list` | ❌ |
 
@@ -445,7 +445,7 @@
 | 1 | 0.546333 | `azmcp_acr_registry_repository_list` | ✅ **EXPECTED** |
 | 2 | 0.469295 | `azmcp_acr_registry_list` | ❌ |
 | 3 | 0.407973 | `azmcp_cosmos_database_container_list` | ❌ |
-| 4 | 0.400145 | `azmcp_storage_blob_container_get` | ❌ |
+| 4 | 0.399932 | `azmcp_storage_blob_container_get` | ❌ |
 | 5 | 0.339307 | `azmcp_mysql_database_list` | ❌ |
 
 ---
@@ -462,7 +462,7 @@
 | 1 | 0.674296 | `azmcp_acr_registry_repository_list` | ✅ **EXPECTED** |
 | 2 | 0.541779 | `azmcp_acr_registry_list` | ❌ |
 | 3 | 0.433927 | `azmcp_cosmos_database_container_list` | ❌ |
-| 4 | 0.388490 | `azmcp_storage_blob_container_get` | ❌ |
+| 4 | 0.388271 | `azmcp_storage_blob_container_get` | ❌ |
 | 5 | 0.370375 | `azmcp_mysql_database_list` | ❌ |
 
 ---
@@ -479,7 +479,7 @@
 | 1 | 0.600780 | `azmcp_acr_registry_repository_list` | ✅ **EXPECTED** |
 | 2 | 0.501842 | `azmcp_acr_registry_list` | ❌ |
 | 3 | 0.418623 | `azmcp_cosmos_database_container_list` | ❌ |
-| 4 | 0.374628 | `azmcp_storage_blob_container_get` | ❌ |
+| 4 | 0.374433 | `azmcp_storage_blob_container_get` | ❌ |
 | 5 | 0.359922 | `azmcp_mysql_database_list` | ❌ |
 
 ---
@@ -1190,7 +1190,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.646978 | `azmcp_azuremanagedlustre_filesystem_required-subnet-size` | ✅ **EXPECTED** |
+| 1 | 0.647272 | `azmcp_azuremanagedlustre_filesystem_required-subnet-size` | ✅ **EXPECTED** |
 | 2 | 0.450342 | `azmcp_azuremanagedlustre_filesystem_list` | ❌ |
 | 3 | 0.327359 | `azmcp_azuremanagedlustre_filesystem_sku_get` | ❌ |
 | 4 | 0.235376 | `azmcp_cloudarchitect_design` | ❌ |

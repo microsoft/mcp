@@ -33,6 +33,18 @@
     "Show me the nodepool list for AKS cluster <cluster-name> in <resource-group>",
     "What nodepools do I have for AKS cluster <cluster-name> in <resource-group>"
   ],
+  "azmcp_speech_stt_recognize": [
+    "Convert this audio file to text using Azure Speech Services",
+    "Recognize speech from my audio file with language detection",
+    "Transcribe speech from audio file <file_path> with profanity filtering",
+    "Convert speech to text from audio file <file_path> using endpoint <endpoint>",
+    "Transcribe the audio file <file_path> in Spanish language",
+    "Convert speech to text with detailed output format from audio file <file_path>",
+    "Recognize speech from <file_path> with phrase hints for better accuracy",
+    "Transcribe audio using multiple phrase hints: \"Azure\", \"cognitive services\", \"machine learning\"",
+    "Convert speech to text with comma-separated phrase hints: \"Azure, cognitive services, API\"",
+    "Transcribe audio with raw profanity output from file <file_path>"
+  ],
   "azmcp_appconfig_account_list": [
     "List all App Configuration stores in my subscription",
     "Show me the App Configuration stores in my subscription",

@@ -3,7 +3,6 @@
 
 namespace Azure.Mcp.Core.Services.Azure.Models;
 
-
 /// <summary>
 /// A class representing the Resource Sku data model.
 /// </summary>
