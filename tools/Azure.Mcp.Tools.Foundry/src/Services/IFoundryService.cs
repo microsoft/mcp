@@ -3,6 +3,7 @@
 
 using Azure.AI.Agents.Persistent;
 using Azure.AI.Projects;
+using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Foundry.Models;
 
@@ -52,6 +53,18 @@ public interface IFoundryService
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null
     );
+
+    Task<CompletionResult> CreateCompletionAsync(
+        string resourceName,
+        string deploymentName,
+        string promptText,
+        string subscription,
+        string resourceGroup,
+        int? maxTokens = null,
+        double? temperature = null,
+        string? tenant = null,
+        AuthMethod authMethod = AuthMethod.Credential,
+        RetryPolicyOptions? retryPolicy = null);
 
     Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null);
