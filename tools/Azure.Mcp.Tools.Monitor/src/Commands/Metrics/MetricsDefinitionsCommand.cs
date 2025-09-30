@@ -33,7 +33,7 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -99,9 +99,7 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
 
                 // Set response message and results
                 context.Response.Message = status;
-                context.Response.Results = ResponseResult.Create(
-                    new MetricsDefinitionsCommandResult(limitedResults, status),
-                    MonitorJsonContext.Default.MetricsDefinitionsCommandResult);
+                context.Response.Results = ResponseResult.Create(new(limitedResults, status), MonitorJsonContext.Default.MetricsDefinitionsCommandResult);
             }
             else
             {

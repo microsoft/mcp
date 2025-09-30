@@ -146,7 +146,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
 
     private async Task<AccessToken> GetEntraIdAccessTokenAsync(string resource)
     {
-        var tokenRequestContext = new TokenRequestContext(new[] { $"{resource}/.default" });
+        var tokenRequestContext = new TokenRequestContext([$"{resource}/.default"]);
         var tokenCredential = await GetCredential();
         return await tokenCredential
             .GetTokenAsync(tokenRequestContext, CancellationToken.None)

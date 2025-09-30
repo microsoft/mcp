@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -39,12 +40,12 @@ public class ModelsListCommandTests
         };
 
         _foundryService.ListModels(
-                Arg.Any<bool>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Any<bool>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<RetryPolicyOptions>())
             .Returns(expectedModels);
 
         var command = new ModelsListCommand();
@@ -76,12 +77,12 @@ public class ModelsListCommandTests
         };
 
         _foundryService.ListModels(
-                Arg.Any<bool>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Any<bool>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<RetryPolicyOptions>())
             .Returns(expectedModels);
 
         var command = new ModelsListCommand();
@@ -104,12 +105,12 @@ public class ModelsListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoModels()
     {
         _foundryService.ListModels(
-                Arg.Any<bool>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Any<bool>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<RetryPolicyOptions>())
             .Returns([]);
 
         var command = new ModelsListCommand();
@@ -133,12 +134,12 @@ public class ModelsListCommandTests
         var expectedError = "Test error";
 
         _foundryService.ListModels(
-                Arg.Any<bool>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<int>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Any<bool>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new ModelsListCommand();
@@ -147,7 +148,7 @@ public class ModelsListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
     }
 }

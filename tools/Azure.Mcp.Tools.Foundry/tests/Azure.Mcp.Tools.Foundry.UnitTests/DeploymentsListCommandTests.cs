@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.AI.Projects;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -39,9 +40,9 @@ public class DeploymentsListCommandTests
         };
 
         _foundryService.ListDeployments(
-                Arg.Is<string>(s => s == endpoint),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Is(endpoint),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
             .Returns(expectedDeployments);
 
         var command = new DeploymentsListCommand();
@@ -59,9 +60,9 @@ public class DeploymentsListCommandTests
         var endpoint = "https://test-endpoint.com";
 
         _foundryService.ListDeployments(
-                Arg.Is<string>(s => s == endpoint),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Is(endpoint),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
             .Returns([]);
 
         var command = new DeploymentsListCommand();
@@ -80,9 +81,9 @@ public class DeploymentsListCommandTests
         var expectedError = "Test error";
 
         _foundryService.ListDeployments(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new DeploymentsListCommand();
@@ -91,7 +92,7 @@ public class DeploymentsListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
     }
 
@@ -102,9 +103,9 @@ public class DeploymentsListCommandTests
         var expectedError = "Test error";
 
         _foundryService.ListDeployments(
-                Arg.Is<string>(s => s == endpoint),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+            Arg.Is(endpoint),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new DeploymentsListCommand();
@@ -113,7 +114,7 @@ public class DeploymentsListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.StartsWith("Missing Required options: --endpoint", response.Message);
     }
 

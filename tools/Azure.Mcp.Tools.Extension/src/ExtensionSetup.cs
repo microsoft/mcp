@@ -8,7 +8,6 @@ using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Extension.Commands;
 using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Extension;
 
@@ -20,18 +19,17 @@ public sealed class ExtensionSetup : IAreaSetup
     {
         services.AddHttpClientServices();
         services.AddSingleton<ICliGenerateService, CliGenerateService>();
+        services.AddSingleton<AzqrCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var extension = new CommandGroup(Name, "Extension commands for additional Azure tooling functionality. Includes operations for Azure Quick Review (azqr) commands directly from the MCP server to extend capabilities beyond native Azure service operations.");
-        rootGroup.AddSubGroup(extension);
 
         // Azure CLI and Azure Developer CLI tools are hidden
         // extension.AddCommand("az", new AzCommand(loggerFactory.CreateLogger<AzCommand>()));
-        // extension.AddCommand("azd", new AzdCommand(loggerFactory.CreateLogger<AzdCommand>()));
-        AzqrCommand azqrCommand = new(loggerFactory.CreateLogger<AzqrCommand>());
-        extension.AddCommand(azqrCommand.Name, azqrCommand);
+        var azqr = serviceProvider.GetRequiredService<AzqrCommand>();
+        extension.AddCommand(azqr.Name, azqr);
 
         var cli = new CommandGroup("cli", "Commands for helping users to use CLI tools for Azure services operations. Includes operations for generating Azure CLI commands.");
         extension.AddSubGroup(cli);

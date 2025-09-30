@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Redis.Commands;
 using Azure.Mcp.Tools.Redis.Commands.CacheForRedis;
 using Azure.Mcp.Tools.Redis.Models.CacheForRedis;
 using Azure.Mcp.Tools.Redis.Services;
@@ -47,7 +50,7 @@ public class AccessPolicyListCommandTests
             "sub123",
             Arg.Any<string>(),
             Arg.Any<AuthMethod>(),
-            Arg.Any<Core.Options.RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>())
             .Returns(expectedAssignments);
 
         var command = new AccessPolicyListCommand(_logger);
@@ -56,16 +59,12 @@ public class AccessPolicyListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccessPolicyListCommandResult>(json, new JsonSerializerOptions()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, RedisJsonContext.Default.AccessPolicyListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedAssignments.Length, result.AccessPolicyAssignments.Count());
@@ -83,7 +82,7 @@ public class AccessPolicyListCommandTests
             "sub123",
             Arg.Any<string>(),
             Arg.Any<AuthMethod>(),
-            Arg.Any<Core.Options.RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>())
             .Returns([]);
 
         var command = new AccessPolicyListCommand(_logger);
@@ -95,11 +94,7 @@ public class AccessPolicyListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<AccessPolicyListCommandResult>(json, new JsonSerializerOptions()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, RedisJsonContext.Default.AccessPolicyListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.AccessPolicyAssignments);
@@ -115,7 +110,7 @@ public class AccessPolicyListCommandTests
             "sub123",
             Arg.Any<string>(),
             Arg.Any<AuthMethod>(),
-            Arg.Any<Core.Options.RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception("Test error"));
 
         var command = new AccessPolicyListCommand(_logger);
@@ -126,7 +121,7 @@ public class AccessPolicyListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
     }
 
@@ -153,9 +148,7 @@ public class AccessPolicyListCommandTests
         var response = await command.ExecuteAsync(context, parseResult);
 
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("required", response.Message, StringComparison.OrdinalIgnoreCase);
     }
-
-    private record AccessPolicyListCommandResult(IEnumerable<AccessPolicyAssignment> AccessPolicyAssignments);
 }

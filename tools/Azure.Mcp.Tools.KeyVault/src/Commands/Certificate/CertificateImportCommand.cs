@@ -24,20 +24,14 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
     {
         Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = true,
         Secret = false
     };
 
     public override string Description =>
-        """
-        Imports (uploads) an existing certificate (PFX or PEM with private key) into an Azure Key Vault without generating
-        a new certificate or key material. This command accepts either a file path to a PFX/PEM file, a base64 encoded PFX,
-        or raw PEM text starting with -----BEGIN. If the certificate is a password-protected PFX, a password must be provided.
-        Returns certificate details including name, id, keyId, secretId, cer (base64), thumbprint, validity, and policy
-        subject/issuer.
-        """;
+        "Imports/uploads an existing certificate (PFX or PEM with private key) into an Azure Key Vault without generating a new certificate or key material. This command accepts either a file path to a PFX/PEM file, a base64 encoded PFX, or raw PEM text starting with -----BEGIN. If the certificate is a password-protected PFX, a password must be provided. Required: --vault <vault>, --certificate <certificate>, --certificate-data <certificate-data>, --subscription <subscription>. Optional: --password <password-for-PFX>, --tenant <tenant>. Returns: name, id, keyId, secretId, cer (base64), thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuer. Creates a new certificate version if it already exists.";
 
     protected override void RegisterOptions(Command command)
     {
@@ -81,7 +75,7 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new CertificateImportCommandResult(
+                new(
                     certificate.Name,
                     certificate.Id,
                     certificate.KeyId,

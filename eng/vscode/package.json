@@ -131,18 +131,20 @@
                         ]
                     },
                     "uniqueItems": true,
-                    "markdownDescription": "Service namespaces to enable. Leave empty to enable all. Choose from the list to avoid typing errors."
+                    "markdownDescription": "Service namespaces to enable. Leave empty to enable all. Choose from the list to avoid typing errors. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Azure MCP → Start/Restart)."
+
                 },
                 "azureMcp.serverMode": {
                     "type": "string",
                     "enum": ["single", "namespace", "all"],
                     "default": "namespace",
-                    "markdownDescription": "Server Mode determines how tools are exposed: `single` collapses every tool (100+) into one (1) single tool that routes internally, `namespace` (default) collapses all tools down into logical Azure service namespace grouping (about 30 tools), while `all` exposes every MCP tool directly to the MCP client. We recommend namespace as the right balance between MCP tool count and tool selection accuracy."
+                    "markdownDescription": "Server Mode determines how tools are exposed: `single` collapses every tool (100+) into one (1) single tool that routes internally, `namespace` (default) collapses all tools down into logical Azure service namespace grouping (about 30 tools), while `all` exposes every MCP tool directly to the MCP client. We recommend namespace as the right balance between MCP tool count and tool selection accuracy. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Azure MCP → Start/Restart)."
+
                 },
                 "azureMcp.readOnly": {
                     "type": "boolean",
                     "default": false,
-                    "markdownDescription": "Start the Azure MCP server in read-only mode (operations that modify resources will be disabled)."
+                    "markdownDescription": "Start the Azure MCP server in read-only mode (operations that modify resources will be disabled). **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Azure MCP → Start/Restart)."
                 }
             }
         }

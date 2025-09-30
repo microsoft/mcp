@@ -2,20 +2,17 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using Azure.Core;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.Mcp.Tools.EventGrid.Commands.Subscription;
 using Azure.Mcp.Tools.EventGrid.Services;
-using Azure.ResourceManager.Models;
-using Azure.ResourceManager.Resources;
-using Azure.ResourceManager.Resources.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventGrid.UnitTests.Subscription;
@@ -25,7 +22,7 @@ public class SubscriptionListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IEventGridService _eventGridService;
-    private readonly Azure.Mcp.Core.Services.Azure.Subscription.ISubscriptionService _subscriptionService;
+    private readonly ISubscriptionService _subscriptionService;
     private readonly ILogger<SubscriptionListCommand> _logger;
     private readonly SubscriptionListCommand _command;
     private readonly CommandContext _context;
@@ -34,7 +31,7 @@ public class SubscriptionListCommandTests
     public SubscriptionListCommandTests()
     {
         _eventGridService = Substitute.For<IEventGridService>();
-        _subscriptionService = Substitute.For<Azure.Mcp.Core.Services.Azure.Subscription.ISubscriptionService>();
+        _subscriptionService = Substitute.For<ISubscriptionService>();
         _logger = Substitute.For<ILogger<SubscriptionListCommand>>();
 
         var collection = new ServiceCollection()
@@ -80,7 +77,7 @@ public class SubscriptionListCommandTests
 
         var json = JsonSerializer.Serialize(response.Results);
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-        var result = JsonSerializer.Deserialize<SubscriptionListResult>(json, options);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.SubscriptionListCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result!.Subscriptions);
@@ -113,8 +110,7 @@ public class SubscriptionListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-        var result = JsonSerializer.Deserialize<SubscriptionListResult>(json, options);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.SubscriptionListCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result!.Subscriptions);
@@ -123,13 +119,13 @@ public class SubscriptionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoSubscriptions()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoSubscriptions()
     {
         // Arrange
         var subscription = "sub123";
 
         _eventGridService.GetSubscriptionsAsync(Arg.Is(subscription), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-            .Returns(Task.FromResult(new List<Models.EventGridSubscriptionInfo>()));
+            .Returns([]);
 
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
@@ -141,10 +137,9 @@ public class SubscriptionListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-        var result = JsonSerializer.Deserialize<SubscriptionListResult>(json, options);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.SubscriptionListCommandResult);
+
         Assert.NotNull(result);
-        Assert.NotNull(result.Subscriptions);
         Assert.Empty(result.Subscriptions);
     }
 
@@ -172,8 +167,7 @@ public class SubscriptionListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-        var result = JsonSerializer.Deserialize<SubscriptionListResult>(json, options);
+        var result = JsonSerializer.Deserialize(json, EventGridJsonContext.Default.SubscriptionListCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result!.Subscriptions);
@@ -194,13 +188,10 @@ public class SubscriptionListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
-
-
-
 
     [Theory]
     [InlineData("--subscription sub", true)]
@@ -216,14 +207,14 @@ public class SubscriptionListCommandTests
         if (shouldSucceed)
         {
             _eventGridService.GetSubscriptionsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-                .Returns(new List<Models.EventGridSubscriptionInfo>
-                {
+                .Returns(
+                [
                     new("subscription1", "Microsoft.EventGrid/eventSubscriptions", "WebHook", "https://example.com/webhook1", "Succeeded", null, null, 30, 1440, "2023-01-01T00:00:00Z", "2023-01-02T00:00:00Z")
-                });
+                ]);
 
-            // Set up subscription service for cross-subscription search scenario  
+            // Set up subscription service for cross-subscription search scenario
             _subscriptionService.GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-                .Returns(new List<SubscriptionData>());
+                .Returns([]);
         }
 
         var parseResult = _commandDefinition.Parse(args);
@@ -232,7 +223,7 @@ public class SubscriptionListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.NotNull(response.Results);
@@ -241,13 +232,5 @@ public class SubscriptionListCommandTests
         {
             Assert.Contains("required", response.Message.ToLower());
         }
-    }
-
-
-
-    private class SubscriptionListResult
-    {
-        [JsonPropertyName("subscriptions")]
-        public List<Models.EventGridSubscriptionInfo>? Subscriptions { get; set; }
     }
 }

@@ -24,17 +24,14 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
     };
 
     public override string Description =>
-        """
-        List all keys in an Azure Key Vault. This command retrieves and displays the names of all keys
-        stored in the specified vault.
-        """;
+        "List/enumerate all keys in an Azure Key Vault. Not for fetching a single key.";
 
     protected override void RegisterOptions(Command command)
     {

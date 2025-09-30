@@ -37,11 +37,11 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
     /// <param name="clientOptions">Options to configure the client behavior.</param>
     /// <returns>A configured MCP client ready for use.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the server configuration doesn't specify a valid transport mechanism.</exception>
-    public async Task<IMcpClient> CreateClientAsync(McpClientOptions clientOptions)
+    public async Task<McpClient> CreateClientAsync(McpClientOptions clientOptions)
     {
         if (!string.IsNullOrWhiteSpace(_serverInfo.Url))
         {
-            return await CreateSseClientAsync(clientOptions);
+            return await CreateHttpClientAsync(clientOptions);
         }
         else if (!string.IsNullOrWhiteSpace(_serverInfo.Type) && _serverInfo.Type.Equals("stdio", StringComparison.OrdinalIgnoreCase))
         {
@@ -58,16 +58,16 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
     /// </summary>
     /// <param name="clientOptions">Options to configure the client behavior.</param>
     /// <returns>A configured MCP client using SSE transport.</returns>
-    private async Task<IMcpClient> CreateSseClientAsync(McpClientOptions clientOptions)
+    private async Task<McpClient> CreateHttpClientAsync(McpClientOptions clientOptions)
     {
-        var transportOptions = new SseClientTransportOptions
+        var transportOptions = new HttpClientTransportOptions
         {
             Name = _id,
             Endpoint = new Uri(_serverInfo.Url!),
             TransportMode = HttpTransportMode.AutoDetect,
         };
-        var clientTransport = new SseClientTransport(transportOptions);
-        return await McpClientFactory.CreateAsync(clientTransport, clientOptions);
+        var clientTransport = new HttpClientTransport(transportOptions);
+        return await McpClient.CreateAsync(clientTransport, clientOptions);
     }
 
     /// <summary>
@@ -76,7 +76,7 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
     /// <param name="clientOptions">Options to configure the client behavior.</param>
     /// <returns>A configured MCP client using stdio transport.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the server configuration doesn't specify a valid command for stdio transport.</exception>
-    private async Task<IMcpClient> CreateStdioClientAsync(McpClientOptions clientOptions)
+    private async Task<McpClient> CreateStdioClientAsync(McpClientOptions clientOptions)
     {
         if (string.IsNullOrWhiteSpace(_serverInfo.Command))
         {
@@ -105,6 +105,6 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
         };
 
         var clientTransport = new StdioClientTransport(transportOptions);
-        return await McpClientFactory.CreateAsync(clientTransport, clientOptions);
+        return await McpClient.CreateAsync(clientTransport, clientOptions);
     }
 }

@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Tools.EventGrid.Models;
 using Azure.Mcp.Tools.EventGrid.Options.Topic;
 using Azure.Mcp.Tools.EventGrid.Services;
 
@@ -18,9 +17,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
 
     public override string Description =>
         """
-        List all Event Grid topics in a subscription with configuration and status information. This tool retrieves
-        topic details including endpoints, access keys, and subscription information for event publishing and management.
-        Returns topic information as JSON array. Requires subscription.
+        List or show all Event Grid topics in a subscription, optionally filtered by resource group, returning endpoints, access keys, provisioning state, and subscription details for event publishing and management. A subscription or topic name is required.
         """;
 
     public override string Title => CommandTitle;
@@ -29,7 +26,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -66,9 +63,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new TopicListCommandResult(topics ?? []),
-                EventGridJsonContext.Default.TopicListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(topics ?? []), EventGridJsonContext.Default.TopicListCommandResult);
         }
         catch (Exception ex)
         {

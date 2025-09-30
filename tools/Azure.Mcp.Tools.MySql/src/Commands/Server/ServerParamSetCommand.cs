@@ -16,7 +16,7 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
 
     public override string Name => "set";
 
-    public override string Description => "Sets/updates a MySQL server configuration parameter to a new value to optimize performance, security, or operational behavior. This command enables fine-tuned configuration management with validation to ensure parameter changes are compatible with the server's current state and constraints.";
+    public override string Description => "Sets/updates a single MySQL server configuration setting/parameter.";
 
     public override string Title => CommandTitle;
 
@@ -24,7 +24,7 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
     {
         Destructive = true,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -59,9 +59,7 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
             string result = await mysqlService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, options.Value!);
             context.Response.Results = !string.IsNullOrEmpty(result) ?
-                ResponseResult.Create(
-                    new ServerParamSetCommandResult(options.Param!, result),
-                    MySqlJsonContext.Default.ServerParamSetCommandResult) :
+                ResponseResult.Create(new(options.Param!, result), MySqlJsonContext.Default.ServerParamSetCommandResult) :
                 null;
         }
         catch (Exception ex)

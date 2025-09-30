@@ -74,6 +74,13 @@ You’re all set! Azure MCP Server is now ready to help you work smarter with Az
 
 Here are some cool prompts you can try across our supported Azure services:
 
+### 🧮 Azure AI Foundry
+
+* List Azure Foundry models
+* Deploy foundry models
+* List foundry model deployments
+* List knowledge indexes
+
 ### 🔎 Azure AI Search
 
 * "What indexes do I have in my Azure AI Search service 'mysvc'?"
@@ -227,13 +234,6 @@ Here are some cool prompts you can try across our supported Azure services:
 * List Event Grid topics in subscription or resource group
 * View topic configuration and status information
 * Access endpoint and key details for event publishing
-
-### 🧮 Azure Foundry
-
-* List Azure Foundry models
-* Deploy foundry models
-* List foundry model deployments
-* List knowledge indexes
 
 ### ☁️ Azure Function App
 
@@ -392,36 +392,36 @@ For detailed command documentation and examples, see [Azure MCP Commands](https:
 
 The Azure MCP Server provides tools for interacting with **30+ Azure service areas**:
 
+- 🧮 **Azure AI Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
-- 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 🐬 **Azure Database for MySQL** - MySQL database management
+- 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 📊 **Azure Event Grid** - Event routing and management
 - ⚡ **Azure Functions** - Function App management
-- 🧮 **Azure Foundry** - AI model management, AI model deployment, and knowledge index management
-- 🚀 **Azure Managed Grafana** - Monitoring dashboards
-- 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
 - 📦 **Azure Load Testing** - Performance testing
+- 🚀 **Azure Managed Grafana** - Monitoring dashboards
+- 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations
 - 🏪 **Azure Marketplace** - Product discovery
 - 📈 **Azure Monitor** - Logging, metrics, and health monitoring
-- 🏥 **Azure Service Health** - Resource health status and availability
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning
 - 📊 **Azure Quota** - Resource quota and usage management
+- 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
 - 🏗️ **Azure Resource Groups** - Resource organization
-- 🎭 **Azure RBAC** - Access control management
-- 🚌 **Azure Service Bus** - Message queuing
 - 🗄️ **Azure SQL Database** - Relational database management
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
-- 💾 **Azure Storage** - Blob, table, file, and data lake storage
+- 🚌 **Azure Service Bus** - Message queuing
+- 🏥 **Azure Service Health** - Resource health status and availability
+- 💾 **Azure Storage** - Blob storage
 - 📋 **Azure Subscription** - Subscription management
 - 🏗️ **Azure Terraform Best Practices** - Infrastructure as code guidance
 - 🖥️ **Azure Virtual Desktop** - Virtual desktop infrastructure

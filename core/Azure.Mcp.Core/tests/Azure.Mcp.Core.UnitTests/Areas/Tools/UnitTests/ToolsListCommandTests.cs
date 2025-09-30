@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Areas.Tools.Commands;
@@ -18,8 +19,6 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Tools.UnitTests;
 
 public class ToolsListCommandTests
 {
-    private const int SuccessStatusCode = 200;
-    private const int ErrorStatusCode = 500;
     private const int MinimumExpectedCommands = 3;
 
     private readonly IServiceProvider _serviceProvider;
@@ -145,7 +144,6 @@ public class ToolsListCommandTests
         Assert.DoesNotContain(result, cmd => cmd.Name == "list" && cmd.Command.Contains("tool"));
 
         Assert.Contains(result, cmd => !string.IsNullOrEmpty(cmd.Name));
-
     }
 
     /// <summary>
@@ -195,7 +193,7 @@ public class ToolsListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(ErrorStatusCode, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("cannot be null", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -219,7 +217,7 @@ public class ToolsListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(ErrorStatusCode, response.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
         Assert.Contains("Corrupted command factory", response.Message);
     }
 
@@ -313,6 +311,46 @@ public class ToolsListCommandTests
     }
 
     /// <summary>
+    /// Verifies that the --namespaces switch returns only distinct top-level namespaces.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_WithNamespaceSwitch_ReturnsNamespacesOnly()
+    {
+        // Arrange
+        var args = _commandDefinition.Parse(new[] { "--namespaces" });
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.NotNull(response.Results);
+
+        // Serialize then deserialize as list of CommandInfo
+        var json = JsonSerializer.Serialize(response.Results);
+        var namespaces = JsonSerializer.Deserialize<List<CommandInfo>>(json);
+
+        Assert.NotNull(namespaces);
+        Assert.NotEmpty(namespaces);
+
+        // Should include some well-known namespaces (matching Name property)
+        Assert.Contains(namespaces, ci => ci.Name.Equals("subscription", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(namespaces, ci => ci.Name.Equals("storage", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(namespaces, ci => ci.Name.Equals("keyvault", StringComparison.OrdinalIgnoreCase));
+
+        foreach (var ns in namespaces!)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(ns.Name));
+            Assert.False(string.IsNullOrWhiteSpace(ns.Command));
+            Assert.StartsWith("azmcp ", ns.Command, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(ns.Name, ns.Name.Trim());
+            Assert.DoesNotContain(" ", ns.Name);
+            // Namespace should not itself have options
+            Assert.Null(ns.Options);
+        }
+    }
+
+    /// <summary>
     /// Verifies that the command handles empty command factory gracefully
     /// and returns empty results when no commands are available.
     /// </summary>
@@ -345,7 +383,7 @@ public class ToolsListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(SuccessStatusCode, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var result = DeserializeResults(response.Results!);
 

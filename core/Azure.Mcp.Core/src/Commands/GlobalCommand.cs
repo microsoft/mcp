@@ -2,17 +2,16 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-
 namespace Azure.Mcp.Core.Commands;
 
 public abstract class GlobalCommand<
-    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : BaseCommand
+    [DynamicallyAccessedMembers(TrimAnnotations.CommandAnnotations)] TOptions> : BaseCommand<TOptions>
     where TOptions : GlobalOptions, new()
 {
     protected override void RegisterOptions(Command command)
@@ -67,7 +66,7 @@ public abstract class GlobalCommand<
 
         return commandPath;
     }
-    protected virtual TOptions BindOptions(ParseResult parseResult)
+    protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = new TOptions
         {
@@ -76,36 +75,25 @@ public abstract class GlobalCommand<
         };
 
         // Create a RetryPolicyOptions capturing only explicitly provided values so unspecified settings remain SDK defaults
-        var hasAnyRetry = Azure.Mcp.Core.Options.ParseResultExtensions.HasAnyRetryOptions(parseResult);
+        var hasAnyRetry = Options.ParseResultExtensions.HasAnyRetryOptions(parseResult);
         if (hasAnyRetry)
         {
             var policy = new RetryPolicyOptions();
 
-            if (parseResult.GetResult(OptionDefinitions.RetryPolicy.MaxRetries) != null)
-            {
-                policy.HasMaxRetries = true;
-                policy.MaxRetries = parseResult.GetValueOrDefault<int>(OptionDefinitions.RetryPolicy.MaxRetries.Name);
-            }
-            if (parseResult.GetResult(OptionDefinitions.RetryPolicy.Delay) != null)
-            {
-                policy.HasDelaySeconds = true;
-                policy.DelaySeconds = parseResult.GetValueOrDefault<double>(OptionDefinitions.RetryPolicy.Delay.Name);
-            }
-            if (parseResult.GetResult(OptionDefinitions.RetryPolicy.MaxDelay) != null)
-            {
-                policy.HasMaxDelaySeconds = true;
-                policy.MaxDelaySeconds = parseResult.GetValueOrDefault<double>(OptionDefinitions.RetryPolicy.MaxDelay.Name);
-            }
-            if (parseResult.GetResult(OptionDefinitions.RetryPolicy.Mode) != null)
-            {
-                policy.HasMode = true;
-                policy.Mode = parseResult.GetValueOrDefault<RetryMode>(OptionDefinitions.RetryPolicy.Mode.Name);
-            }
-            if (parseResult.GetResult(OptionDefinitions.RetryPolicy.NetworkTimeout) != null)
-            {
-                policy.HasNetworkTimeoutSeconds = true;
-                policy.NetworkTimeoutSeconds = parseResult.GetValueOrDefault<double>(OptionDefinitions.RetryPolicy.NetworkTimeout.Name);
-            }
+            policy.HasMaxRetries = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.MaxRetries.Name, out int maxRetries);
+            policy.MaxRetries = maxRetries;
+
+            policy.HasDelaySeconds = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.Delay.Name, out double delaySeconds);
+            policy.DelaySeconds = delaySeconds;
+
+            policy.HasMaxDelaySeconds = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.MaxDelay.Name, out double maxDelaySeconds);
+            policy.MaxDelaySeconds = maxDelaySeconds;
+
+            policy.HasMode = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.Mode.Name, out RetryMode mode);
+            policy.Mode = mode;
+
+            policy.HasNetworkTimeoutSeconds = parseResult.TryGetValue(OptionDefinitions.RetryPolicy.NetworkTimeout.Name, out double networkTimeoutSeconds);
+            policy.NetworkTimeoutSeconds = networkTimeoutSeconds;
 
             // Only assign if at least one flag set (defensive)
             if (policy.HasMaxRetries || policy.HasDelaySeconds || policy.HasMaxDelaySeconds || policy.HasMode || policy.HasNetworkTimeoutSeconds)
@@ -127,11 +115,12 @@ public abstract class GlobalCommand<
         _ => ex.Message  // Just return the actual exception message
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        AuthenticationFailedException => 401,
-        RequestFailedException rfEx => rfEx.Status,
-        HttpRequestException => 503,
-        _ => 500
+        KeyNotFoundException => HttpStatusCode.NotFound,
+        AuthenticationFailedException => HttpStatusCode.Unauthorized,
+        RequestFailedException rfEx => (HttpStatusCode)rfEx.Status,
+        HttpRequestException => HttpStatusCode.ServiceUnavailable,
+        _ => HttpStatusCode.InternalServerError
     };
 }

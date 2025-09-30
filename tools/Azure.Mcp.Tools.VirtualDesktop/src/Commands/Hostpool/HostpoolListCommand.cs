@@ -29,7 +29,7 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger) : B
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false

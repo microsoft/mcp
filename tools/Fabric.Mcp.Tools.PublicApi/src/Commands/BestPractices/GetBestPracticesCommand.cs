@@ -1,6 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Fabric.Mcp.Tools.PublicApi.Options;
@@ -70,7 +71,7 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
         catch (ArgumentException argEx)
         {
             _logger.LogError(argEx, "No best practice resources found for {}", options.Topic);
-            context.Response.Status = 404;
+            context.Response.Status = HttpStatusCode.NotFound;
             context.Response.Message = $"No best practice resources found for {options.Topic}";
         }
         catch (Exception ex)

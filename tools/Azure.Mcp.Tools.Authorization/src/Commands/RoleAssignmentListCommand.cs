@@ -31,7 +31,7 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -62,8 +62,9 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
         try
         {
             var authService = context.GetService<IAuthorizationService>();
-            var assignments = await authService.ListRoleAssignments(
-                options.Scope,
+            var assignments = await authService.ListRoleAssignmentsAsync(
+                options.Subscription!,
+                options.Scope!,
                 options.Tenant,
                 options.RetryPolicy);
 

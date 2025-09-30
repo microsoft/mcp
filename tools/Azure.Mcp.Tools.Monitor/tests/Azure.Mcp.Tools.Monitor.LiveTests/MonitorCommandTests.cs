@@ -74,63 +74,53 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         Assert.NotEmpty(array);
     }
 
-    [Fact(Skip = "Intermittent failures due to slow ingestion")]
+    [Fact]
     public async Task Should_get_table_contents()
     {
         // Query AzureMetrics table - fastest to propagate and most reliable
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("staticResourceGroup", "static-test-resources");
+        var workspace = Settings.DeploymentOutputs.GetValueOrDefault("staticWorkspace", "monitor-query-ws");
         await QueryForLogsAsync(
             async args => await CallToolAsync("azmcp_monitor_workspace_log_query", args),
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "workspace", Settings.ResourceBaseName },
-                { "resource-group", Settings.ResourceGroupName },
+                { "workspace", workspace },
+                { "resource-group", resourceGroup },
                 { "query", "AzureMetrics | where ResourceProvider == 'MICROSOFT.STORAGE' | project TimeGenerated, MetricName, Total, ResourceId" },
                 { "table", "AzureMetrics" },
                 { "limit", 5 },
                 { "hours", 24 }
             },
             $"AzureMetrics | where ResourceProvider == 'MICROSOFT.STORAGE' | project TimeGenerated, MetricName, Total, ResourceId",
-            sendLogInfo: "Generating storage metrics...",
-            sendLogAction: async () =>
-            {
-                // Generate minimal storage activity to ensure metrics are created
-                await CallToolAsync("azmcp_storage_account_list", new()
-                {
-                    { "subscription", Settings.SubscriptionId }
-                });
-                Output.WriteLine("Listed storage accounts to ensure metrics are generated");
-            },
+            sendLogInfo: null,
+            sendLogAction: null,
             output: Output,
             cancellationToken: TestContext.Current.CancellationToken,
             maxWaitTimeSeconds: 180, // 3 minutes - metrics are faster than logs
             failMessage: "No storage metrics found after waiting 180 seconds");
     }
 
-    [Fact(Skip = "Intermittent failures due to slow ingestion")]
+    [Fact]
     public async Task Should_query_monitor_logs()
     {
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("staticResourceGroup", "static-test-resources");
+        var workspace = Settings.DeploymentOutputs.GetValueOrDefault("staticWorkspace", "monitor-query-ws");
         await QueryForLogsAsync(
             async args => await CallToolAsync("azmcp_monitor_workspace_log_query", args),
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "workspace", Settings.ResourceBaseName },
-                { "resource-group", Settings.ResourceGroupName },
+                { "workspace", workspace },
+                { "resource-group", resourceGroup },
                 { "table", "StorageBlobLogs" },
                 { "query", "StorageBlobLogs | project TimeGenerated, OperationName, StatusText" },
                 { "limit", 1 },
                 { "hours", 24 }
             },
             $"StorageBlobLogs | project TimeGenerated, OperationName, StatusText",
-            sendLogInfo: "Generating storage blob logs...",
-            sendLogAction: async () =>
-            {
-                // Generate some storage activity to create logs
-                await GenerateStorageActivityAsync();
-                Output.WriteLine("Storage activity generated to create diagnostic logs");
-            },
-            output: Output,
+            sendLogInfo: null,
+            sendLogAction: null,
             cancellationToken: TestContext.Current.CancellationToken,
             maxWaitTimeSeconds: 300, // 5 minutes - realistic for storage diagnostic logs
             failMessage: "No storage blob logs found after waiting 300 seconds");
@@ -154,10 +144,15 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         Assert.NotEmpty(array);
     }
 
-    [Fact(Skip = "Intermittent failures due to slow ingestion")]
+    [Fact]
     public async Task Should_query_monitor_logs_by_resource_id()
     {
-        var storageResourceId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Storage/storageAccounts/{_storageAccountName}";
+        var subscriptionId = Settings.SubscriptionId;
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("staticResourceGroup", "static-test-resources");
+        var storageAccountName = Settings.DeploymentOutputs.GetValueOrDefault("staticStorageAccountName", "azuresdktrainingdatatme");
+
+        var storageResourceId = $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}";
+
         await QueryForLogsAsync(
             async args => await CallToolAsync("azmcp_monitor_resource_log_query", args),
             new()
@@ -170,13 +165,8 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
                 { "hours", 24 }
             },
             $"StorageBlobLogs | where TimeGenerated > datetime({DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff}) | project TimeGenerated, OperationName, StatusText",
-            sendLogInfo: "Generating storage blob logs for resource query...",
-            sendLogAction: async () =>
-            {
-                // Generate some storage activity to create logs
-                await GenerateStorageActivityAsync();
-                Output.WriteLine("Storage activity generated to create diagnostic logs");
-            },
+            sendLogInfo: null,
+            sendLogAction: null,
             output: Output,
             cancellationToken: TestContext.Current.CancellationToken,
             maxWaitTimeSeconds: 300, // 5 minutes - realistic for storage diagnostic logs
@@ -289,42 +279,42 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         var firstDefinition = resultsArray.EnumerateArray().First();
 
         // Verify required properties exist and are populated
-        Assert.True(firstDefinition.TryGetProperty("name", out var name));
+        var name = firstDefinition.AssertProperty("name");
         Assert.Equal(JsonValueKind.String, name.ValueKind);
         Assert.False(string.IsNullOrEmpty(name.GetString()));
 
-        Assert.True(firstDefinition.TryGetProperty("category", out var category));
+        var category = firstDefinition.AssertProperty("category");
         Assert.Equal(JsonValueKind.String, category.ValueKind);
         Assert.False(string.IsNullOrEmpty(category.GetString()));
 
-        Assert.True(firstDefinition.TryGetProperty("description", out var description));
+        var description = firstDefinition.AssertProperty("description");
         Assert.Equal(JsonValueKind.String, description.ValueKind);
         Assert.False(string.IsNullOrEmpty(description.GetString()));
 
-        Assert.True(firstDefinition.TryGetProperty("unit", out var unit));
+        var unit = firstDefinition.AssertProperty("unit");
         Assert.Equal(JsonValueKind.String, unit.ValueKind);
         Assert.False(string.IsNullOrEmpty(unit.GetString()));
 
-        Assert.True(firstDefinition.TryGetProperty("defaultAggregation", out var defaultAggregation));
+        var defaultAggregation = firstDefinition.AssertProperty("defaultAggregation");
         Assert.Equal(JsonValueKind.String, defaultAggregation.ValueKind);
         Assert.False(string.IsNullOrEmpty(defaultAggregation.GetString()));
 
-        Assert.True(firstDefinition.TryGetProperty("supportedAggregationTypes", out var supportedAggregationTypes));
+        var supportedAggregationTypes = firstDefinition.AssertProperty("supportedAggregationTypes");
         Assert.Equal(JsonValueKind.Array, supportedAggregationTypes.ValueKind);
         Assert.NotEmpty(supportedAggregationTypes.EnumerateArray());
 
-        Assert.True(firstDefinition.TryGetProperty("isDimensionRequiredWhenQuerying", out var isDimensionRequired));
+        var isDimensionRequired = firstDefinition.AssertProperty("isDimensionRequiredWhenQuerying");
         Assert.Equal(JsonValueKind.False, isDimensionRequired.ValueKind);
 
-        Assert.True(firstDefinition.TryGetProperty("metricNamespace", out var metricNamespace));
+        var metricNamespace = firstDefinition.AssertProperty("metricNamespace");
         Assert.Equal(JsonValueKind.String, metricNamespace.ValueKind);
         Assert.False(string.IsNullOrEmpty(metricNamespace.GetString()));
 
-        Assert.True(firstDefinition.TryGetProperty("allowedIntervals", out var allowedIntervals));
+        var allowedIntervals = firstDefinition.AssertProperty("allowedIntervals");
         Assert.Equal(JsonValueKind.Array, allowedIntervals.ValueKind);
         Assert.NotEmpty(allowedIntervals.EnumerateArray());
 
-        Assert.True(firstDefinition.TryGetProperty("dimensions", out var dimensions));
+        var dimensions = firstDefinition.AssertProperty("dimensions");
         Assert.Equal(JsonValueKind.Array, dimensions.ValueKind);
         // Dimensions array can be empty, so we just verify it exists and is an array
     }
@@ -354,37 +344,37 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         var firstMetric = resultsArray.EnumerateArray().First();
 
         // Verify metric-level properties
-        Assert.True(firstMetric.TryGetProperty("name", out var name));
+        var name = firstMetric.AssertProperty("name");
         Assert.Equal(JsonValueKind.String, name.ValueKind);
         Assert.False(string.IsNullOrEmpty(name.GetString()));
 
-        Assert.True(firstMetric.TryGetProperty("unit", out var unit));
+        var unit = firstMetric.AssertProperty("unit");
         Assert.Equal(JsonValueKind.String, unit.ValueKind);
         Assert.False(string.IsNullOrEmpty(unit.GetString()));
 
-        Assert.True(firstMetric.TryGetProperty("timeSeries", out var timeSeries));
+        var timeSeries = firstMetric.AssertProperty("timeSeries");
         Assert.Equal(JsonValueKind.Array, timeSeries.ValueKind);
         Assert.NotEmpty(timeSeries.EnumerateArray());
 
         // Validate the first timeSeries entry has all expected properties
         var firstTimeSeries = timeSeries.EnumerateArray().First();
 
-        Assert.True(firstTimeSeries.TryGetProperty("metadata", out var metadata));
+        var metadata = firstTimeSeries.AssertProperty("metadata");
         Assert.Equal(JsonValueKind.Object, metadata.ValueKind);
 
-        Assert.True(firstTimeSeries.TryGetProperty("start", out var start));
+        var start = firstTimeSeries.AssertProperty("start");
         Assert.Equal(JsonValueKind.String, start.ValueKind);
         Assert.False(string.IsNullOrEmpty(start.GetString()));
         // Verify it's a valid ISO date format
         Assert.True(DateTime.TryParse(start.GetString(), out _));
 
-        Assert.True(firstTimeSeries.TryGetProperty("end", out var end));
+        var end = firstTimeSeries.AssertProperty("end");
         Assert.Equal(JsonValueKind.String, end.ValueKind);
         Assert.False(string.IsNullOrEmpty(end.GetString()));
         // Verify it's a valid ISO date format
         Assert.True(DateTime.TryParse(end.GetString(), out _));
 
-        Assert.True(firstTimeSeries.TryGetProperty("interval", out var interval));
+        var interval = firstTimeSeries.AssertProperty("interval");
         Assert.Equal(JsonValueKind.String, interval.ValueKind);
         Assert.False(string.IsNullOrEmpty(interval.GetString()));
         // Verify it follows duration format (starts with PT)

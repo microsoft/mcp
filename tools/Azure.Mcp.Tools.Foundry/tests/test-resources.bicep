@@ -14,6 +14,11 @@ param tenantId string = '72f988bf-86f1-41af-91ab-2d7cd011db47'
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
+// Static resource names for consistent testing
+var staticOpenAIAccount = 'azmcp-test'
+var staticOpenAIDeploymentName = 'gpt-4o-mini'
+var staticOpenAIAccountResourceGroup = 'static-test-resources'
+
 var cognitiveServicesContributorRoleId = '25fbc0a9-bd7c-42a3-aa1a-3b75d497ee68' // Cognitive Services Contributor role
 
 resource aiServicesAccount 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
@@ -104,12 +109,40 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-
   name: 'gpt-4o'
   sku: {
     name: 'Standard'
-    capacity: 1
+    capacity: 30
   }
   properties: {
     model: {
       format: 'OpenAI'
       name: 'gpt-4o'
+    }
+  }
+}
+
+resource bingGroundingSearch 'Microsoft.Bing/accounts@2020-06-10' = {
+  name: '${baseName}-bing-grounding'
+  location: 'Global'
+  sku: {
+    name: 'G1'
+  }
+  kind: 'Bing.Grounding'
+}
+
+resource bingGroundingConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-04-01-preview' = {
+  parent: aiProjects
+  name: '${baseName}-bing-connection'
+  properties: {
+    authType: 'ApiKey'
+    metadata: {
+      type: 'bing_grounding'
+      ApiType: 'Azure'
+      ResourceId: bingGroundingSearch.id
+    }
+    target: 'https://api.bing.microsoft.com/'
+    category: 'GroundingWithBingSearch'
+    group: 'AzureAI'
+    credentials: {
+      key: bingGroundingSearch.listKeys().key1
     }
   }
 }
@@ -165,3 +198,8 @@ output searchServiceName string = searchService.name
 output searchServiceEndpoint string = 'https://${searchService.name}.search.windows.net'
 output knowledgeIndexName string = '${baseName}-knowledge-index'
 output aiProjectsEndpoint string = 'https://${aiServicesAccount.name}.services.ai.azure.com/api/projects/${aiProjects.name}'
+
+// Static resource outputs for test configuration
+output openAIAccount string = staticOpenAIAccount
+output openAIDeploymentName string = staticOpenAIDeploymentName
+output openAIAccountResourceGroup string = staticOpenAIAccountResourceGroup

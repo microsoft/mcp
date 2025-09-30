@@ -19,19 +19,15 @@ public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeployment
     public override string Name => "deploy";
 
     public override string Description =>
-        """
-        Deploy a model to Azure AI Foundry.
-
-        This function is used to deploy a model on Azure AI Services, allowing users to integrate the model into their applications and utilize its capabilities. This command should not be used for Azure OpenAI Services to deploy OpenAI models.
-        """;
+    "Deploys (create) a model instance (e.g. GPT4o / gpt-4o, OpenAI, OSS, proprietary) in Azure AI Foundry as a named inference deployment, which's bound to a specified Azure AI Services resource, resource group, and subscription. Do not use this tool for for Azure OpenAI Services to deploy OpenAI models.";
 
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -98,10 +94,7 @@ public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeployment
                 options.ScaleCapacity,
                 options.RetryPolicy);
 
-            context.Response.Results =
-                ResponseResult.Create(
-                    new ModelDeploymentCommandResult(deploymentResource),
-                    FoundryJsonContext.Default.ModelDeploymentCommandResult);
+            context.Response.Results = ResponseResult.Create(new(deploymentResource), FoundryJsonContext.Default.ModelDeploymentCommandResult);
         }
         catch (Exception ex)
         {
