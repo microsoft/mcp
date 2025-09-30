@@ -52,6 +52,8 @@ jobs:
   - pwsh: |
       # Verify that the package README.md files do not contain invalid headers or comment annotations
       . $(Build.SourcesDirectory)/eng/scripts/Process-PackageReadMe.ps1
-      Validate-PackageReadMe -InputReadMePath "$(Build.SourcesDirectory)/servers/$(ServerName)/README.md"
+      Validate-PackageReadMe -InputReadMePath "$(Build.SourcesDirectory)/servers/$env:SERVERNAME/README.md"
     displayName: 'Validate Package README.md file'
     condition: succeededOrFailed()
+    env:
+      SERVERNAME: ${{ parameters.ServerName }}
