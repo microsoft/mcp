@@ -10,7 +10,11 @@ using special comment annotations to mark sections of the markdown that should b
 
 To generate a README tailored for a specific package type, run:
 
-eng\scripts\Process-PackageReadMe.ps1 -InputReadMePath "<path to readme>" -OutputDirectory "<output directory>" -PackageType "<nuget|npm|vsix>"
+. eng\scripts\Process-PackageReadMe.ps1
+Extract-PackageSpecificReadMe -InputReadMePath "<path to readme>" -OutputDirectory "<output directory>" -PackageType "<nuget|npm|vsix>"
+
+To validate the annotations in a README file, run:
+Validate-PackageReadMe -InputReadMePath "<path to readme>"
 
 ## Supported Annotations
 
