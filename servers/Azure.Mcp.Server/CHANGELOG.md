@@ -9,6 +9,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added support for Azure Developer CLI (azd) MCP tools when azd CLI is installed locally - [[#566](https://github.com/microsoft/mcp/issues/566)]
 - Adds support to proxy MCP capabilities when child servers leverage sampling or elicitation. [[#581](https://github.com/microsoft/mcp/pull/581)]
 - Added support for publishing custom events to Event Grid topics via the command `azmcp_eventgrid_events_publish`. Supports EventGrid, CloudEvents, and custom schemas with structured event data delivery for event-driven architectures. [[#514](https://github.com/microsoft/mcp/pull/514)]
+- `azmcp foundry openai create-completion` - Generate text completions using deployed Azure OpenAI models in AI Foundry. [[#54](https://github.com/microsoft/mcp/pull/54)]
+  - Supports configurable temperature and max token parameters
+  - Requires resource-name, deployment-name, and prompt-text parameters
 
 ### Breaking Changes
 
@@ -21,11 +24,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Refactored Authorization implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[607](https://github.com/microsoft/mcp/pull/607)]
+- Refactored AppConig implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[606](https://github.com/microsoft/mcp/pull/606)]
 
 #### Dependency Updates
 
 - Removed the following dependencies:
   - `Azure.ResourceManager.Authorization` [[607](https://github.com/microsoft/mcp/pull/607)]
+  - `Azure.ResourceManager.AppConfiguration` [[606](https://github.com/microsoft/mcp/pull/606)]
 
 ## 0.8.2 (2025-09-25)
 
