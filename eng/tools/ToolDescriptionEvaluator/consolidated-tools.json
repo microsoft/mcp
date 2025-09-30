@@ -730,7 +730,7 @@
       "available_commands": [
         "mcp_azure-mcp-ser_azmcp_azureterraformbestpractices_get",
         "mcp_azure-mcp-ser_azmcp_bicepschema_get",
-        "mcp_azure-mcp-ser_azmcp_bestpractices_get"
+        "mcp_azure-mcp-ser_azmcp_get_bestpractices_get"
       ]
     },
     {

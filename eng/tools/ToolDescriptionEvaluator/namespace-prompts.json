@@ -69,9 +69,7 @@
     "Fetch the Azure Terraform best practices",
     "Show me the Azure Terraform best practices and generate code sample to get a secret from Azure Key Vault"
   ],
-  "azmcp_bestpractices": [
-    "Create the plan for creating a simple HTTP-triggered function app in javascript that returns a random compliment from a predefined list in a JSON response. And deploy it to azure eventually. But don't create any code until I confirm.",
-    "Create the plan for creating a to-do list app. And deploy it to azure as a container app. But don't create any code until I confirm.",
+  "azmcp_get_bestpractices_get": [
     "Get the latest Azure best practices",
     "Get the latest Azure code generation best practices",
     "Get the latest Azure deployment best practices",

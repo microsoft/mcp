@@ -199,7 +199,7 @@ class Program
 
             if (!string.IsNullOrWhiteSpace(customOutputFileName))
             {
-                outputFileName = customOutputFileName;
+                outputFileName = Path.GetFileNameWithoutExtension(customOutputFileName);
             }
 
             outputFileName += isTextOutput ? ".txt" : ".md";
@@ -1170,7 +1170,7 @@ class Program
         Console.WriteLine("  ToolDescriptionEvaluator                                          # Use dynamic tool loading (default)");
         Console.WriteLine("  ToolDescriptionEvaluator --tools-file my-tools.json               # Use custom tools file");
         Console.WriteLine("  ToolDescriptionEvaluator --prompts-file my-prompts.md             # Use custom prompts file");
-        Console.WriteLine("  ToolDescriptionEvaluator --output-file-name my-results            # Use custom output file name");
+        Console.WriteLine("  ToolDescriptionEvaluator --output-file-name my-results            # Use custom output file name (don't include extension)");
         Console.WriteLine("  ToolDescriptionEvaluator --text-results                           # Output in text format");
         Console.WriteLine("  ToolDescriptionEvaluator --ci --tools-file tools.json             # CI mode with JSON file");
         Console.WriteLine();

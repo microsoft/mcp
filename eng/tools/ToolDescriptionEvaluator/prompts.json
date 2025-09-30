@@ -91,7 +91,7 @@
     "Fetch the Azure Terraform best practices",
     "Show me the Azure Terraform best practices and generate code sample to get a secret from Azure Key Vault"
   ],
-  "azmcp_bestpractices_get": [
+  "azmcp_get_bestpractices_get": [
     "Get the latest Azure code generation best practices",
     "Get the latest Azure deployment best practices",
     "Get the latest Azure best practices",

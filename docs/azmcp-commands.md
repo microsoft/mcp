@@ -1400,7 +1400,7 @@ All responses follow a consistent JSON format:
 }
 ```
 
-### Tool & Namespace Result Objects
+### Tool and Namespace Result Objects
 
 When invoking `azmcp tools list` (with or without `--namespaces`), each returned object now includes a `count` field:
 

@@ -282,14 +282,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_bestpractices_get | Get the latest Azure code generation best practices |
-| azmcp_bestpractices_get | Get the latest Azure deployment best practices |
-| azmcp_bestpractices_get | Get the latest Azure best practices |
-| azmcp_bestpractices_get | Get the latest Azure Functions code generation best practices |
-| azmcp_bestpractices_get | Get the latest Azure Functions deployment best practices|
-| azmcp_bestpractices_get | Get the latest Azure Functions best practices |
-| azmcp_bestpractices_get | Get the latest Azure Static Web Apps best practices |
-| azmcp_bestpractices_get | What are azure function best practices? |
+| azmcp_get_bestpractices_get | Get the latest Azure code generation best practices |
+| azmcp_get_bestpractices_get | Get the latest Azure deployment best practices |
+| azmcp_get_bestpractices_get | Get the latest Azure best practices |
+| azmcp_get_bestpractices_get | Get the latest Azure Functions code generation best practices |
+| azmcp_get_bestpractices_get | Get the latest Azure Functions deployment best practices|
+| azmcp_get_bestpractices_get | Get the latest Azure Functions best practices |
+| azmcp_get_bestpractices_get | Get the latest Azure Static Web Apps best practices |
+| azmcp_get_bestpractices_get | What are azure function best practices? |
 
 ## Azure Monitor
 

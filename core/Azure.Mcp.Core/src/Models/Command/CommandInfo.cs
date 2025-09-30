@@ -24,10 +24,4 @@ public class CommandInfo
     [JsonPropertyName("option")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public List<OptionInfo>? Options { get; set; }
-
-    // Number of immediate subcommands for grouping/namespace entries.
-    // Leaf commands will always have 0.
-    [JsonPropertyName("subcommandsCount")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public int SubcommandsCount { get; set; }
 }
