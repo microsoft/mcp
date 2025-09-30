@@ -125,12 +125,6 @@ npm install -g @azure/mcp
 
 ### Docker
 
-Pull the Docker image: [mcr.microsoft.com/azure-sdk/azure-mcp](https://mcr.microsoft.com/artifact/mar/azure-sdk/azure-mcp).
-
-```bash
-docker pull mcr.microsoft.com/azure-sdk/azure-mcp
-```
-
 <details>
 <summary>Docker instructions</summary>
 
@@ -144,12 +138,10 @@ AZURE_CLIENT_ID={YOUR_AZURE_CLIENT_ID}
 AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 ```
 
-#### Configure your MCP client to use Docker:
+#### Configure your MCP client to use Docker
 
 2. Add or update existing `mcp.json`.
     - Replace `/full/path/to/your.env` with the actual `.env` file path.
-    - Optionally, use `--env` or `--volume` to pass authentication values.
-    - **Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
 
 ```json
    {
