@@ -27,7 +27,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Refactored Authorization implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[607](https://github.com/microsoft/mcp/pull/607)]
-- Refactored AppConig implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[606](https://github.com/microsoft/mcp/pull/606)]
+- Refactored AppConfig implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[606](https://github.com/microsoft/mcp/pull/606)]
 - Fixed the names of the following MySQL and Postgres commands: [[#614](https://github.com/microsoft/mcp/pull/614)]
   - `azmcp_mysql_server_config_config`    → `azmcp_mysql_server_config_get`
   - `azmcp_mysql_server_param_param`      → `azmcp_mysql_server_param_get`
