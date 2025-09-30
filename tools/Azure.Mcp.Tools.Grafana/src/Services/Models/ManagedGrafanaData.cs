@@ -26,13 +26,13 @@ internal sealed class ManagedGrafanaData
     public string? Location { get; set; }
     /// <summary> The SKU of the resource. </summary>
     public ResourceSku? Sku { get; set; }
-    /// <summary> The identity of the cluster, if configured. </summary>
+    /// <summary> The identity of the resource, if configured. </summary>
     public ManagedServiceIdentity? Identity { get; set; }
-    /// <summary> The availability zones of the cluster. </summary>
+    /// <summary> The availability zones of the resource. </summary>
     public IList<string>? Zones { get; set; }
-    /// <summary> Resource tags associated with the node pool. </summary>
+    /// <summary> Resource tags associated with the resource. </summary>
     public IDictionary<string, string>? Tags { get; set; }
-    /// <summary> Properties of the Kusto cluster. </summary>
+    /// <summary> Properties of the Grafana workspace. </summary>
     public ManagedGrafanaProperties? Properties { get; set; }
 
     // Read the JSON response content and create a model instance from it.

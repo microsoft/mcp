@@ -30,7 +30,7 @@ public class GrafanaService(ISubscriptionService subscriptionService, ITenantSer
 
         try
         {
-            var clusters = await ExecuteResourceQueryAsync(
+            var workspaces = await ExecuteResourceQueryAsync(
                 "Microsoft.Dashboard/grafana",
                 resourceGroup: null, // all resource groups
                 subscription,
@@ -38,7 +38,7 @@ public class GrafanaService(ISubscriptionService subscriptionService, ITenantSer
                 ConvertToWorkspaceModel,
                 cancellationToken: CancellationToken.None);
 
-            return clusters;
+            return workspaces;
         }
         catch (Exception ex)
         {
@@ -47,10 +47,10 @@ public class GrafanaService(ISubscriptionService subscriptionService, ITenantSer
     }
 
     /// <summary>
-    /// Converts a JsonElement from Azure Resource Graph query to a cluster name string.
+    /// Converts a JsonElement from Azure Resource Graph query to a Grafana workspace model.
     /// </summary>
-    /// <param name="item">The JsonElement containing cluster data</param>
-    /// <returns>The cluster model</returns>
+    /// <param name="item">The JsonElement containing workspace data</param>
+    /// <returns>The Grafana workspace model</returns>
     private static GrafanaWorkspace ConvertToWorkspaceModel(JsonElement item)
     {
         var grafanaWorkspace = ManagedGrafanaData.FromJson(item);
