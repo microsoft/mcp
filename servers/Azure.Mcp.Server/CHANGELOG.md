@@ -10,25 +10,30 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added support to proxy MCP capabilities when child servers leverage sampling or elicitation. [[#581](https://github.com/microsoft/mcp/pull/581)]
 - Added support for publishing custom events to Event Grid topics via the command `azmcp_eventgrid_events_publish`. [[#514](https://github.com/microsoft/mcp/pull/514)]
 - Added support for generating text completions using deployed Azure OpenAI models in AI Foundry via the command `azmcp_foundry_openai_create-completion`. [[#54](https://github.com/microsoft/mcp/pull/54)]
+- Added support for speech recognition from an audio file with Azure AI Services Speech via the command `azmcp_speech_stt_recognize`. [[#436](https://github.com/microsoft/mcp/pull/436)]
+- Added support for getting the details of an Azure Event Hubs namespace via the command `azmcp_eventhubs_namespace_get`. [[#105](https://github.com/microsoft/mcp/pull/105)]
 
 ### Breaking Changes
 
 ### Bugs Fixed
 
 - Fixed an issue with the help option (`--help`) and enabled it across all commands and command groups. [[#583](https://github.com/microsoft/mcp/pull/583)]
-- Fixed `azmcp_kusto_table_schema` to return the correct table schema. [[#530](https://github.com/microsoft/mcp/issues/530)]
-- Fixed Kusto issue where a query would fail when the subscription id in the input query is enclosed in double quotes. [[#152](https://github.com/microsoft/mcp/issues/152)]
+- Fixed the following issues with Kusto commands:
+  - `azmcp_kusto_cluster_list` and `azmcp_kusto_cluster_get` now accept the correct parameters expected by the service. [[#589](https://github.com/microsoft/mcp/issues/589)]
+  - `azmcp_kusto_table_schema` now returns the correct table schema. [[#530](https://github.com/microsoft/mcp/issues/530)]
+  - `azmcp_kusto_query` does not fail when the subscription id in the input query is enclosed in double quotes anymore. [[#152](https://github.com/microsoft/mcp/issues/152)]
+  - All commands now return enough details in error messages when input parameters are invalid or missing. [[#575](https://github.com/microsoft/mcp/issues/575)]
 
 ### Other Changes
 
 - Refactored Authorization implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[607](https://github.com/microsoft/mcp/pull/607)]
 - Refactored AppConig implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[606](https://github.com/microsoft/mcp/pull/606)]
 - Fixed the names of the following MySQL and Postgres commands: [[#614](https://github.com/microsoft/mcp/pull/614)]
-  - `azmcp_mysql_server_param_param`      → `azmcp_mysql_server_param_get`
   - `azmcp_mysql_server_config_config`    → `azmcp_mysql_server_config_get`
+  - `azmcp_mysql_server_param_param`      → `azmcp_mysql_server_param_get`
   - `azmcp_mysql_table_schema_schema`     → `azmcp_mysql_table_schema_get`
-  - `azmcp_postgres_server_param_param`   → `azmcp_postgres_server_param_get`
   - `azmcp_postgres_server_config_config` → `azmcp_postgres_server_config_get`
+  - `azmcp_postgres_server_param_param`   → `azmcp_postgres_server_param_get`
   - `azmcp_postgres_table_schema_schema`  → `azmcp_postgres_table_schema_get`
 - Updated the description of the following comands to increase selection accuracy by LLMs:
   - AI Foundry: [[#599](https://github.com/microsoft/mcp/pull/599)]
@@ -71,6 +76,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Removed the following dependencies:
   - `Azure.ResourceManager.Authorization` [[607](https://github.com/microsoft/mcp/pull/607)]
   - `Azure.ResourceManager.AppConfiguration` [[606](https://github.com/microsoft/mcp/pull/606)]
+  - `Azure.ResourceManager.ContainerRegistry` [[622](https://github.com/microsoft/mcp/pull/622)]
 
 ## 0.8.2 (2025-09-25)
 
