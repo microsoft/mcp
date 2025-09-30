@@ -30,7 +30,7 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
 
     public override string Description =>
         """
-        This tool fetches logs from the Log Analytics workspace for Container Apps, App Services, and Function Apps deployed using azd. Use it after a successful azd up to check app status or troubleshoot errors in deployed applications.
+        Shows application logs specifically for Azure Developer CLI (azd) deployed applications from their associated Log Analytics workspace for Container Apps, App Services, and Function Apps. Designed exclusively for applications deployed via 'azd up' command and automatically discovers the correct workspace and resources based on the azd environment configuration. Use this tool to check deployment status or troubleshoot post-deployment issues.
         """;
 
     protected override void RegisterOptions(Command command)
