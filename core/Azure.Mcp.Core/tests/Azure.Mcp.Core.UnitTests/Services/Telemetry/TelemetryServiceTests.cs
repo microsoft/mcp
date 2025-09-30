@@ -163,6 +163,37 @@ public class TelemetryServiceTests
     }
 
     [Fact]
+    public async Task StartActivity_WhenInitializationFails_Throws()
+    {
+        // Arrange
+        var informationProvider = new ExceptionalInformationProvider();
+
+        var configuration = new AzureMcpServerConfiguration
+        {
+            Name = "TestService",
+            Version = "1.0.0",
+            IsTelemetryEnabled = true
+        };
+
+        var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
+        mockOptions.Value.Returns(configuration);
+
+        var implementation = new Implementation
+        {
+            Name = "Foo-Bar-MCP",
+            Version = "1.0.0",
+            Title = "Test MCP server"
+        };
+
+        // Act & Assert
+        using var service = new TelemetryService(informationProvider, mockOptions, _logger);
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() => service.InitializeAsync().AsTask());
+
+        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", implementation));
+    }
+
+    [Fact]
     public async Task StartActivity_ReturnsActivityWhenEnabled()
     {
         // Arrange
@@ -188,5 +219,37 @@ public class TelemetryServiceTests
         {
             Assert.Equal(operationName, activity.OperationName);
         }
+    }
+
+    [Fact]
+    public async Task InitializeAsync_InvokedOnce()
+    {
+        // Arrange
+        var configuration = new AzureMcpServerConfiguration
+        {
+            Name = "TestService",
+            Version = "1.0.0",
+            IsTelemetryEnabled = true
+        };
+
+        var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
+        mockOptions.Value.Returns(configuration);
+
+        using var service = new TelemetryService(_mockInformationProvider, mockOptions, _logger);
+
+        await service.InitializeAsync();
+        await service.InitializeAsync();
+
+        // Act
+        await _mockInformationProvider.Received(1).GetOrCreateDeviceId();
+        await _mockInformationProvider.Received(1).GetMacAddressHash();
+    }
+
+    private class ExceptionalInformationProvider : IMachineInformationProvider
+    {
+        public Task<string> GetMacAddressHash() => Task.FromResult("test-mac-address");
+
+        public Task<string?> GetOrCreateDeviceId() => Task.FromException<string?>(
+            new ArgumentNullException("test-exception"));
     }
 }
