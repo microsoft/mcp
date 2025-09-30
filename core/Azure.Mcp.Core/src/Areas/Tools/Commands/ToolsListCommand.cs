@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Areas.Tools.Options;
+using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Models.Option;
 using Microsoft.Extensions.Logging;
 
