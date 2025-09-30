@@ -3032,7 +3032,7 @@
     },
     {
       "name": "create",
-      "description": "Creates a new certificate in an Azure Key Vault. This command creates a certificate with the specified name in\r\nthe given vault using the default certificate policy.",
+      "description": "Create/issue/generate a new certificate in an Azure Key Vault using the default certificate policy. Required: --vault, --certificate, --subscription. Optional: --tenant <tenant>. Returns: name, id, keyId, secretId, cer (base64), thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuerName. Creates a new certificate version if it already exists.",
       "command": "azmcp keyvault certificate create",
       "option": [
         {
@@ -3099,7 +3099,7 @@
     },
     {
       "name": "get",
-      "description": "Gets a certificate from an Azure Key Vault. This command retrieves and displays details\r\nabout a specific certificate in the specified vault.",
+      "description": "Get/retrieve/show details for a single certificate in a Key Vault (latest version). Not for listing multiple certificates or importing existing ones. Required: --vault <vault>, --certificate <certificate> --subscription <subscription>. Optional: --tenant <tenant>. Returns: name, id, keyId, secretId, cer, thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuer.",
       "command": "azmcp keyvault certificate get",
       "option": [
         {
@@ -3166,7 +3166,7 @@
     },
     {
       "name": "import",
-      "description": "Imports (uploads) an existing certificate (PFX or PEM with private key) into an Azure Key Vault without generating\r\na new certificate or key material. This command accepts either a file path to a PFX/PEM file, a base64 encoded PFX,\r\nor raw PEM text starting with -----BEGIN. If the certificate is a password-protected PFX, a password must be provided.\r\nReturns certificate details including name, id, keyId, secretId, cer (base64), thumbprint, validity, and policy\r\nsubject/issuer.",
+      "description": "Imports/uploads an existing certificate (PFX or PEM with private key) into an Azure Key Vault without generating a new certificate or key material. This command accepts either a file path to a PFX/PEM file, a base64 encoded PFX, or raw PEM text starting with -----BEGIN. If the certificate is a password-protected PFX, a password must be provided. Required: --vault <vault>, --certificate <certificate>, --certificate-data <certificate-data>, --subscription <subscription>. Optional: --password <password-for-PFX>, --tenant <tenant>. Returns: name, id, keyId, secretId, cer (base64), thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuer. Creates a new certificate version if it already exists.",
       "command": "azmcp keyvault certificate import",
       "option": [
         {
@@ -3245,7 +3245,7 @@
     },
     {
       "name": "list",
-      "description": "List all certificates in an Azure Key Vault. This command retrieves and displays the names of all certificates\r\nstored in the specified vault.",
+      "description": "List/enumerate all certificates in an Azure Key Vault. Not for fetching a single certificate.",
       "command": "azmcp keyvault certificate list",
       "option": [
         {
@@ -3306,7 +3306,7 @@
     },
     {
       "name": "create",
-      "description": "Create a new key in an Azure Key Vault. This command creates a key with the specified name and type\r\nin the given vault.",
+      "description": "Create a new key in an Azure Key Vault. This command creates a key with the specified name and type in the given vault. Supports types: RSA, RSA-HSM, EC, EC-HSM, oct, oct-HSM. Required: --vault <vault>, --key <key> --key-type <key-type> --subscription <subscription>. Optional: --tenant <tenant>. Returns: Returns: name, id, keyId, keyType, enabled, notBefore, expiresOn, createdOn, updatedOn. Creates a new key version if it already exists.",
       "command": "azmcp keyvault key create",
       "option": [
         {
@@ -3379,7 +3379,7 @@
     },
     {
       "name": "get",
-      "description": "Get a key from an Azure Key Vault. This command retrieves and displays details\r\nabout a specific key in the specified vault.",
+      "description": "Get/retrieve/show details for a single key in a Key Vault (latest version). Not for listing multiple keys. Required: --vault <vault>, --key <key> --subscription <subscription>. Optional: --tenant <tenant>. Returns: name, id, keyId, keyType, enabled, notBefore, expiresOn, createdOn, updatedOn.",
       "command": "azmcp keyvault key get",
       "option": [
         {
@@ -3446,7 +3446,7 @@
     },
     {
       "name": "list",
-      "description": "List all keys in an Azure Key Vault. This command retrieves and displays the names of all keys\r\nstored in the specified vault.",
+      "description": "List/enumerate all keys in an Azure Key Vault. Not for fetching a single key.",
       "command": "azmcp keyvault key list",
       "option": [
         {
@@ -3513,7 +3513,7 @@
     },
     {
       "name": "create",
-      "description": "Creates a new secret in an Azure Key Vault. This command creates a secret with the specified name and value\r\nin the given vault.",
+      "description": "Create/set a secret in an Azure Key Vault with the specified name and value. Required: --vault <vault>, --secret <secret>, --subscription <subscription>. Optional: --tenant <tenant>. Creates a new secret version if it already exists.",
       "command": "azmcp keyvault secret create",
       "option": [
         {
@@ -3586,7 +3586,7 @@
     },
     {
       "name": "get",
-      "description": "Gets a secret from an Azure Key Vault. This command retrieves and displays the value\r\nof a specific secret from the specified vault.",
+      "description": "Get/retrieve/show details for a single secret in an Azure Key Vault (latest version). Not for listing multiple secrets. Required: --vault <vault>, --secret <secret> --subscription <subscription>. Optional: --tenant <tenant>. Returns: name, value, id, contentType, enabled, notBefore, expiresOn, createdOn, updatedOn, tags.",
       "command": "azmcp keyvault secret get",
       "option": [
         {
@@ -3653,7 +3653,7 @@
     },
     {
       "name": "list",
-      "description": "List all secrets in an Azure Key Vault. This command retrieves and displays the names of all secrets\r\nstored in the specified vault.",
+      "description": "List/enumerate all secrets in a Key Vault. Not for fetching a single secret.",
       "command": "azmcp keyvault secret list",
       "option": [
         {
@@ -10229,8 +10229,8 @@
           "type": "string",
           "required": null
         }
-      ]
     }
-  ],
+=======
   "duration": 46
+>>>>>>> origin/main
 }
