@@ -10,7 +10,9 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.AppLens.Models;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Azure.Mcp.Tools.AppLens.Services;
 
@@ -144,6 +146,10 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
         });
 
         await using HubConnection connection = new HubConnectionBuilder()
+            .AddJsonProtocol(options =>
+            {
+                options.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppLensJsonContext.Default);
+            })
             .WithUrl(ConversationalDiagnosticsSignalREndpoint, options =>
             {
                 options.AccessTokenProvider = () => Task.FromResult(session.Token)!;
