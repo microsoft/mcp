@@ -274,7 +274,7 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "List the container apps in my subscription"
 * "Show me the container apps in my 'my-resource-group' resource group"
 
-### � Azure Communication Services
+### 📞 Azure Communication Services
 
 * "Send an SMS message to +1234567890"
 * "Send SMS with delivery reporting enabled"
