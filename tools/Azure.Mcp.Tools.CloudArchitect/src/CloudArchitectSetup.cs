@@ -20,7 +20,7 @@ public class CloudArchitectSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create CloudArchitect command group
-        var cloudArchitect = new CommandGroup(Name, "Cloud Architecture operations - Commands for generating Azure architecture designs and recommendations based on requirements.");
+        var cloudArchitect = new CommandGroup(Name, "Azure Cloud Architecture Design Assistant - Interactive tool for designing optimal Azure architectures through guided requirements gathering. Use when users need: architecture recommendations, Azure solution design, cloud migration planning, component selection, or architectural guidance. Specializes in: multi-tier applications, scalability planning, security design, cost optimization, and Azure Well-Architected Framework compliance.");
 
         // Register CloudArchitect commands
         var design = serviceProvider.GetRequiredService<DesignCommand>();
