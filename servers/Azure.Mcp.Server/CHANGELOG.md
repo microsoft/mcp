@@ -35,7 +35,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `azmcp_postgres_server_config_config` → `azmcp_postgres_server_config_get`
   - `azmcp_postgres_server_param_param`   → `azmcp_postgres_server_param_get`
   - `azmcp_postgres_table_schema_schema`  → `azmcp_postgres_table_schema_get`
-- Updated the description of the following comands to increase selection accuracy by LLMs:
+- Updated the description of the following commands to increase selection accuracy by LLMs:
   - AI Foundry: [[#599](https://github.com/microsoft/mcp/pull/599)]
     - `azmcp_foundry_agents_connect`
     - `azmcp_foundry_models_deploy`
