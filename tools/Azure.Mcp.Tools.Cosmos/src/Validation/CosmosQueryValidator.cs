@@ -66,7 +66,7 @@ internal static class CosmosQueryValidator
         }
 
         var lower = core.ToLowerInvariant();
-        
+
         // Check for common SQL injection patterns
         if (lower.Contains(" or 1=1") || lower.Contains("' or '1'='1"))
         {
@@ -77,7 +77,7 @@ internal static class CosmosQueryValidator
         // While these cannot be executed via SQL queries, this is defense-in-depth
         var withoutStrings = Regex.Replace(core, "'([^']|'')*'", "'str'", RegexOptions.Compiled, RegexTimeout);
         var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.Compiled, RegexTimeout);
-        
+
         foreach (Match m in matches)
         {
             var token = m.Value;
