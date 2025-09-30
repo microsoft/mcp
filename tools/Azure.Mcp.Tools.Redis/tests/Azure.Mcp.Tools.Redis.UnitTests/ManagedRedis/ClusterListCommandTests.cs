@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Redis.Commands;
 using Azure.Mcp.Tools.Redis.Commands.ManagedRedis;
 using Azure.Mcp.Tools.Redis.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,16 +48,12 @@ public class ClusterListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ClusterListResult>(json, new JsonSerializerOptions()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, RedisJsonContext.Default.ClusterListCommandResult);
 
         Assert.NotNull(result);
         Assert.Collection(result.Clusters,
@@ -64,7 +62,7 @@ public class ClusterListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoClusters()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoClusters()
     {
         _redisService.ListClustersAsync("sub123").Returns([]);
 
@@ -74,7 +72,13 @@ public class ClusterListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, RedisJsonContext.Default.ClusterListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Clusters);
     }
 
     [Fact]
@@ -91,7 +95,7 @@ public class ClusterListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
     }
 
@@ -113,9 +117,7 @@ public class ClusterListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
     }
-
-    private record ClusterListResult(IEnumerable<ClusterModel> Clusters);
 }

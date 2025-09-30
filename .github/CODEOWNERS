@@ -47,6 +47,12 @@
 # ServiceLabel: %area-AppLens
 # ServiceOwners:                       @msalaman
 
+# PRLabel: %tools-ApplicationInsights
+/tools/Azure.Mcp.Tools.ApplicationInsights/  @regexrowboat @xiaomi7732 @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ApplicationInsights
+# ServiceOwners:                       @regexrowboat @xiaomi7732
+
 # PRLabel: %tools-ACR
 /tools/Azure.Mcp.Tools.Acr/            @jongio @microsoft/azure-mcp
 
@@ -140,6 +146,11 @@
 # ServiceLabel: %tools-MySQL
 # ServiceOwners:                       @ramnov @mattkohnms
 
+# PRLabel: %tools-SQL
+/tools/Azure.Mcp.Tools.Sql/          @ericshape @AV25242 @akromm @jeremyfrosti @mitesh-pv @achyuth-ms @microsoft/azure-mcp
+
+# ServiceLabel: %tools-SQL
+# ServiceOwners:                     @ericshape @AV25242 @akromm @jeremyfrosti @mitesh-pv @achyuth-ms
 
 # PRLabel: %tools-Postgres
 /tools/Azure.Mcp.Tools.Postgres/       @kk-src @shreyaaithal @maxluk @xiangyan99 @microsoft/azure-mcp
@@ -198,8 +209,16 @@
 # ServiceLabel: %tools-VirtualDesktop
 # ServiceOwners:                       @vladimisms
 
+
 # PRLabel: %tools-EventGrid
-/tools/Azure.Mcp.Tools.EventGrid/     @microsoft/azure-mcp
- 
+/tools/Azure.Mcp.Tools.EventGrid/      @microsoft/azure-mcp
+
 # ServiceLabel: %tools-EventGrid
-# ServiceOwners:                      @microsoft/azure-mcp
+# ServiceOwners:                       @microsoft/azure-mcp
+
+
+# PRLabel: %tools-Workbooks
+/tools/Azure.Mcp.Tools.Workbooks/      @matteing @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Workbooks
+# ServiceOwners:                       @matteing

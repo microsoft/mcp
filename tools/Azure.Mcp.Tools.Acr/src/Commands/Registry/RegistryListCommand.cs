@@ -28,17 +28,11 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger) : B
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
     };
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        UseResourceGroup();
-    }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -58,9 +52,7 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger) : B
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = registries?.Count > 0
-                ? ResponseResult.Create(new RegistryListCommandResult(registries), AcrJsonContext.Default.RegistryListCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(registries ?? []), AcrJsonContext.Default.RegistryListCommandResult);
         }
         catch (Exception ex)
         {

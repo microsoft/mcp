@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Reflection;
 using Fabric.Mcp.Tools.PublicApi.Services;
 using Microsoft.Extensions.Logging;
 using NSubstitute;

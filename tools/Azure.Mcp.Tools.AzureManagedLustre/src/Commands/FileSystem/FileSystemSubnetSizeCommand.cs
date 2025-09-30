@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.AzureManagedLustre.Options;
@@ -42,46 +41,28 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
         "AMLFS-Durable-Premium-500"
     ];
 
-    private readonly Option<string> _skuOption = AzureManagedLustreOptionDefinitions.SkuOption;
-    private static readonly Option<int> _sizeOption = AzureManagedLustreOptionDefinitions.SizeOption;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_skuOption);
-        command.Options.Add(_sizeOption);
+        command.Options.Add(AzureManagedLustreOptionDefinitions.SkuOption);
+        command.Options.Add(AzureManagedLustreOptionDefinitions.SizeOption);
+        command.Validators.Add(commandResult =>
+        {
+            if (commandResult.TryGetValue(AzureManagedLustreOptionDefinitions.SkuOption, out var skuName)
+                && !string.IsNullOrWhiteSpace(skuName)
+                && !AllowedSkus.Contains(skuName))
+            {
+                commandResult.AddError($"Invalid SKU '{skuName}'. Allowed values: {string.Join(", ", AllowedSkus)}");
+            }
+        });
     }
 
     protected override FileSystemSubnetSizeOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Sku = parseResult.GetValue(_skuOption);
-        options.Size = parseResult.GetValue(_sizeOption);
+        options.Sku = parseResult.GetValueOrDefault<string>(AzureManagedLustreOptionDefinitions.SkuOption.Name);
+        options.Size = parseResult.GetValueOrDefault<int>(AzureManagedLustreOptionDefinitions.SizeOption.Name);
         return options;
-    }
-
-    public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
-    {
-        var result = base.Validate(commandResult, commandResponse);
-
-        if (result.IsValid)
-        {
-            if (commandResult.TryGetValue(_skuOption, out var skuName)
-                && !string.IsNullOrWhiteSpace(skuName)
-                && !AllowedSkus.Contains(skuName))
-            {
-                result.IsValid = false;
-                result.ErrorMessage = $"Invalid SKU '{skuName}'. Allowed values: {string.Join(", ", AllowedSkus)}";
-
-                if (commandResponse != null)
-                {
-                    commandResponse.Status = 400;
-                    commandResponse.Message = result.ErrorMessage!;
-                }
-            }
-        }
-        return result;
-
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
@@ -100,7 +81,7 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
                 options.Tenant,
                 options.RetryPolicy
                 );
-            context.Response.Results = ResponseResult.Create(new FileSystemSubnetSizeResult(result), AzureManagedLustreJsonContext.Default.FileSystemSubnetSizeResult);
+            context.Response.Results = ResponseResult.Create(new(result), AzureManagedLustreJsonContext.Default.FileSystemSubnetSizeResult);
         }
         catch (Exception ex)
         {
@@ -110,5 +91,5 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
         return context.Response;
     }
 
-    internal record FileSystemSubnetSizeResult(int numberOfRequiredIPs);
+    internal record FileSystemSubnetSizeResult(int NumberOfRequiredIPs);
 }

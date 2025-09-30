@@ -55,7 +55,8 @@ If you are contributing significant changes, or if the issue is already assigned
 
 ## Getting Started
 
-> ⚠️ If you are a Microsoft employee then please also review our [Azure Internal Onboarding Documentation](https://aka.ms/azmcp/intake) for getting setup
+> [!IMPORTANT] 
+> If you are a **Microsoft employee** then please also review our [Azure Internal Onboarding Documentation](https://aka.ms/azmcp/intake) for getting setup
 
 ### Prerequisites
 
@@ -102,7 +103,8 @@ If you are contributing significant changes, or if the issue is already assigned
 
 ### Adding a New Command
 
-> **⚠️ Important: Submit One Tool Per Pull Request**
+> [!TIP]  
+> **Submit One Tool Per Pull Request**
 >
 > We strongly recommend submitting **one tool per pull request** to streamline the review process and provide better onboarding experience. This approach results in:
 >
@@ -195,14 +197,15 @@ Update your mcp.json to point to the locally built azmcp executable:
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }
 }
 ```
 
-> **Note:** Replace `<absolute-path-to>` with the full path to your built executable.
+> [!NOTE]
+> Replace `<absolute-path-to>` with the full path to your built executable.
 > On **Windows**, use `azmcp.exe`. On **macOS/Linux**, use `azmcp`.
 
 #### Server Modes
@@ -216,7 +219,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }
@@ -230,7 +233,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start", "--namespace", "storage", "--namespace", "keyvault"]
     }
   }
@@ -244,7 +247,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start", "--mode", "namespace"]
     }
   }
@@ -258,7 +261,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start", "--mode", "single"]
     }
   }
@@ -272,7 +275,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start", "--namespace", "storage", "--namespace", "keyvault", "--mode", "namespace"]
     }
   }
@@ -295,7 +298,7 @@ With the configuration in place, you can launch the MCP server directly from you
 
 To build a local image for testing purposes:
 
-1. Execute: `./eng/scripts/Build-Docker.ps1`.
+1. Execute: `./eng/scripts/Build-Docker.ps1 -ServerName "Azure.Mcp.Server"`.
 2. Update `mcp.json` to point to locally built Docker image:
 
     ```json
@@ -309,7 +312,7 @@ To build a local image for testing purposes:
             "--rm",
             "--env-file",
             "/full/path/to/.env"
-            "azure/azure-mcp:<insert-version-here>",
+            "azure-sdk/azure-mcp:<version-number-of-docker-image>",
           ]
         }
       }
@@ -318,7 +321,8 @@ To build a local image for testing purposes:
 
 ### Live Tests
 
-> ⚠️ If you are a Microsoft employee with Azure source permissions then please review our [Azure Internal Onboarding Documentation](https://aka.ms/azmcp/intake). As part of reviewing community contributions, Azure team members can run live tests by adding this comment to the PR `/azp run  mcp - pullrequest - live`.
+> [!IMPORTANT]
+> If you are a **Microsoft employee** with Azure source permissions then please review our [Azure Internal Onboarding Documentation](https://aka.ms/azmcp/intake). As part of reviewing community contributions, Azure team members can run live tests by adding this comment to the PR `/azp run  mcp - pullrequest - live`.
 
 Before running live tests:
 

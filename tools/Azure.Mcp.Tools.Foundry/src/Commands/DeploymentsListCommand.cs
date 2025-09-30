@@ -3,6 +3,7 @@
 
 using Azure.AI.Projects;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Models;
 using Azure.Mcp.Tools.Foundry.Services;
@@ -12,7 +13,6 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOptions>
 {
     private const string CommandTitle = "List Deployments from Azure AI Services";
-    private readonly Option<string> _endpointOption = FoundryOptionDefinitions.EndpointOption;
 
     public override string Name => "list";
 
@@ -36,7 +36,7 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -45,13 +45,13 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_endpointOption);
+        command.Options.Add(FoundryOptionDefinitions.EndpointOption);
     }
 
     protected override DeploymentsListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValue(_endpointOption);
+        options.Endpoint = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.EndpointOption.Name);
 
         return options;
     }
@@ -74,11 +74,7 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = deployments?.Count > 0 ?
-                ResponseResult.Create(
-                    new DeploymentsListCommandResult(deployments),
-                    FoundryJsonContext.Default.DeploymentsListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(deployments ?? []), FoundryJsonContext.Default.DeploymentsListCommandResult);
         }
         catch (Exception ex)
         {

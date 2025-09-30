@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.AppLens.Models;
 using Azure.Mcp.Tools.AppLens.Options;
 using Azure.Mcp.Tools.AppLens.Options.Resource;
@@ -20,45 +21,40 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
     private const string CommandTitle = "Diagnose Azure Resource Issues";
     private readonly ILogger<ResourceDiagnoseCommand> _logger = logger;
 
-    private readonly Option<string> _questionOption = AppLensOptionDefinitions.Question;
-    private readonly Option<string> _resourceOption = AppLensOptionDefinitions.Resource;
-    private readonly Option<string?> _resourceTypeOption = AppLensOptionDefinitions.ResourceType;
-
     public override string Name => "diagnose";
 
     public override string Description =>
-        """
-        **PRIMARY USE: Diagnose Azure resource performance issues, slowness, failures, and availability problems.**
-
-        Always use this tool BEFORE manually checking metrics or logs when users report performance or functionality issues.
-
-        Use the Azure CLI tool to find the 'subscription', 'resourceGroup', and 'resourceType' parameters before asking user to provide that information."
-        This tool can be used to ask questions about application state, this tool can help when doing diagnostics and address issues about performance and failures.
-
-        If you get a resourceId, parse it to get the 'subscription', 'resourceGroup', and 'resourceType' parameters of the resource. ResourceIds are in the format:
-        /subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resource}
-
-        Once proper input is provided this tool returns a list of insights and solutions to the user question.
-        """;
-
+    "Get diagnostic help from App Lens for Azure application and service issues to identify what’s wrong with a service. Ask questions about performance, slowness, failures, errors, application state, availability to receive expert analysis and solutions which can help when performing diagnostics and to address issues about performance and failures. " +
+    "Returns insights, recommended solutions, and analysis. " +
+    "Always use this tool before manually checking metrics or logs when users report performance or functionality issues. Use Azure CLI to find the subscription, resourceGroup, and resourceType if not provided. If given a resourceId, parse it to extract subscription, resourceGroup, and resourceType (format: /subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resource}). This tool can be used to ask questions about application state, diagnose performance problems, and address service failures.";
     public override string Title => CommandTitle;
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_questionOption);
-        command.Options.Add(_resourceOption);
-        command.Options.Add(_resourceTypeOption);
-        RequireResourceGroup();
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
+        command.Options.Add(AppLensOptionDefinitions.Question);
+        command.Options.Add(AppLensOptionDefinitions.Resource);
+        command.Options.Add(AppLensOptionDefinitions.ResourceType);
     }
 
     protected override ResourceDiagnoseOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Question = parseResult.GetValueOrDefault(_questionOption) ?? string.Empty;
-        options.Resource = parseResult.GetValueOrDefault(_resourceOption) ?? string.Empty;
-        options.ResourceType = parseResult.GetValueOrDefault(_resourceTypeOption) ?? string.Empty;
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.Question = parseResult.GetValueOrDefault<string>(AppLensOptionDefinitions.Question.Name) ?? string.Empty;
+        options.Resource = parseResult.GetValueOrDefault<string>(AppLensOptionDefinitions.Resource.Name) ?? string.Empty;
+        options.ResourceType ??= parseResult.GetValueOrDefault<string>(AppLensOptionDefinitions.ResourceType.Name);
         return options;
     }
 
@@ -86,8 +82,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
                 options.ResourceType,
                 options.Tenant);
 
-            var commandResult = new ResourceDiagnoseCommandResult(result);
-            context.Response.Results = ResponseResult.Create(commandResult, AppLensJsonContext.Default.ResourceDiagnoseCommandResult);
+            context.Response.Results = ResponseResult.Create(new(result), AppLensJsonContext.Default.ResourceDiagnoseCommandResult);
         }
         catch (Exception ex)
         {

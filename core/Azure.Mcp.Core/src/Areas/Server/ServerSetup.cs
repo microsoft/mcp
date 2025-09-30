@@ -4,7 +4,6 @@
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Areas.Server;
 
@@ -21,7 +20,7 @@ public sealed class ServerSetup : IAreaSetup
     /// <param name="services">The service collection to add services to.</param>
     public void ConfigureServices(IServiceCollection services)
     {
-        // No additional services needed for Server area
+        services.AddSingleton<ServiceStartCommand>();
     }
 
     /// <summary>
@@ -29,14 +28,15 @@ public sealed class ServerSetup : IAreaSetup
     /// </summary>
     /// <param name="rootGroup">The root command group to add server commands to.</param>
     /// <param name="loggerFactory">The logger factory for creating loggers.</param>
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create MCP Server command group
         var mcpServer = new CommandGroup(Name, "MCP Server operations - Commands for managing and interacting with the MCP Server.");
-        rootGroup.AddSubGroup(mcpServer);
 
         // Register MCP Server commands
-        var startServer = new ServiceStartCommand();
-        mcpServer.AddCommand("start", startServer);
+        var startCommand = serviceProvider.GetRequiredService<ServiceStartCommand>();
+        mcpServer.AddCommand(startCommand.Name, startCommand);
+
+        return mcpServer;
     }
 }

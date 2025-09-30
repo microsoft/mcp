@@ -1,0 +1,125 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Net;
+using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Tools.Sql.Options;
+using Azure.Mcp.Tools.Sql.Options.Server;
+using Azure.Mcp.Tools.Sql.Services;
+using Microsoft.Extensions.Logging;
+
+namespace Azure.Mcp.Tools.Sql.Commands.Server;
+
+public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
+    : BaseSqlCommand<ServerDeleteOptions>(logger)
+{
+    private const string CommandTitle = "Delete SQL Server";
+
+    public override string Name => "delete";
+
+    public override string Description =>
+        """
+        Remove the specified SQL server from your Azure subscription, including all associated databases.
+        This operation permanently deletes all server data and cannot be reversed.
+        Use --force to bypass confirmation.
+        """;
+
+    public override string Title => CommandTitle;
+
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = true,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = false,
+        LocalRequired = false,
+        Secret = false
+    };
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(SqlOptionDefinitions.ForceOption);
+    }
+
+    protected override ServerDeleteOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.Force = parseResult.GetValueOrDefault<bool>(SqlOptionDefinitions.ForceOption.Name);
+        return options;
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
+        var options = BindOptions(parseResult);
+
+        try
+        {
+            // Show warning about destructive operation unless force is specified
+            if (!options.Force)
+            {
+                context.Response.Status = HttpStatusCode.OK;
+                context.Response.Message =
+                    $"WARNING: This operation will permanently delete the SQL server '{options.Server}' " +
+                    $"and ALL its databases in resource group '{options.ResourceGroup}'. " +
+                    $"This action cannot be undone. Use --force to confirm deletion.";
+                return context.Response;
+            }
+
+            var sqlService = context.GetService<ISqlService>();
+
+            var deleted = await sqlService.DeleteServerAsync(
+                options.Server!,
+                options.ResourceGroup!,
+                options.Subscription!,
+                options.RetryPolicy);
+
+            if (deleted)
+            {
+                context.Response.Results = ResponseResult.Create(new($"SQL server '{options.Server}' was successfully deleted.", true), SqlJsonContext.Default.ServerDeleteResult);
+            }
+            else
+            {
+                context.Response.Status = HttpStatusCode.NotFound;
+                context.Response.Message = $"SQL server '{options.Server}' not found in resource group '{options.ResourceGroup}'.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error deleting SQL server. Server: {Server}, ResourceGroup: {ResourceGroup}, Options: {@Options}",
+                options.Server, options.ResourceGroup, options);
+            HandleException(context, ex);
+        }
+
+        return context.Response;
+    }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
+            $"The given SQL server not found. It may have already been deleted.",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
+            $"Authorization failed deleting the SQL server. Verify you have appropriate permissions. Details: {reqEx.Message}",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
+            $"Cannot delete SQL server due to a conflict. It may be in use or have dependent resources. Details: {reqEx.Message}",
+        RequestFailedException reqEx => reqEx.Message,
+        ArgumentException argEx => $"Invalid parameter: {argEx.Message}",
+        _ => base.GetErrorMessage(ex)
+    };
+
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
+    {
+        RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
+        ArgumentException => HttpStatusCode.BadRequest,
+        _ => base.GetStatusCode(ex)
+    };
+
+    internal record ServerDeleteResult(string Message, bool Success);
+}

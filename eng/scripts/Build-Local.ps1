@@ -26,7 +26,7 @@ $prereleaseNumber = [int]::Parse((Get-Date -UFormat %s))
 $versionSuffix = "-$prereleaseLabel.$prereleaseNumber"
 
 function Build($os, $arch) {
-    & "$RepoRoot/eng/scripts/Build-Module.ps1" `
+    & "$RepoRoot/eng/scripts/Build-Code.ps1" `
         -ServerName $ServerName `
         -VersionSuffix $versionSuffix `
         -OperatingSystem $os `
@@ -36,6 +36,10 @@ function Build($os, $arch) {
         -OutputPath $buildOutputPath `
         -DebugBuild:$DebugBuild `
         -BuildNative:$BuildNative
+
+    if ($LastExitCode -ne 0) {
+        exit $LastExitCode
+    }
 }
 
 Remove-Item -Path $buildOutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
@@ -63,7 +67,7 @@ else {
     Build -os $os -arch $arch
 }
 
-& "$RepoRoot/eng/scripts/Pack-Modules.ps1" `
+& "$RepoRoot/eng/scripts/Pack-Npm.ps1" `
     -ArtifactsPath $buildOutputPath `
     -UsePaths:(!$NoUsePaths) `
     -OutputPath $packageOutputPath

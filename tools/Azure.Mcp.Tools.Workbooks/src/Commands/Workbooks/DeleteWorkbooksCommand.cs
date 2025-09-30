@@ -15,8 +15,6 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
     private const string CommandTitle = "Delete Workbook";
     private readonly ILogger<DeleteWorkbooksCommand> _logger = logger;
 
-    private static readonly Option<string> _workbookIdOption = WorkbooksOptionDefinitions.WorkbookId;
-
     public override string Name => "delete";
 
     public override string Description =>
@@ -34,7 +32,7 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
     {
         Destructive = true,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -43,13 +41,13 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_workbookIdOption);
+        command.Options.Add(WorkbooksOptionDefinitions.WorkbookId);
     }
 
     protected override DeleteWorkbookOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkbookId = parseResult.GetValueOrDefault(_workbookIdOption);
+        options.WorkbookId = parseResult.GetValueOrDefault<string>(WorkbooksOptionDefinitions.WorkbookId.Name);
         return options;
     }
 
@@ -69,9 +67,8 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
 
             if (deleted)
             {
-                context.Response.Results = ResponseResult.Create(
-                            new DeleteWorkbooksCommandResult(options.WorkbookId!, "Successfully deleted"),
-                            WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
+                context.Response.Results = ResponseResult.Create(new(options.WorkbookId!, "Successfully deleted"),
+                    WorkbooksJsonContext.Default.DeleteWorkbooksCommandResult);
             }
             else
             {

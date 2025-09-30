@@ -18,6 +18,7 @@
     - [ ] Updated `servers/Azure.Mcp.Server/README.md` and/or `servers/Fabric.Mcp.Server/README.md` documentation
     - [ ] Updated command list in `/docs/azmcp-commands.md` and/or `/docs/fabric-commands.md`
     - [ ] For new or modified tool descriptions, ran [`ToolDescriptionEvaluator`](https://github.com/microsoft/mcp/blob/main/eng/tools/ToolDescriptionEvaluator/Quickstart.md) and obtained a score of `0.4` or more and a top 3 ranking for all related test prompts
+    - [ ] For new tools associated with Azure services or publicly available tools/APIs/products, add URL to documentation in the PR description
 - [ ] Extra steps for **Azure MCP Server** tool changes:
     - [ ] Updated test prompts in `/docs/e2eTestPrompts.md`
     - [ ] 👉 For Community (non-Microsoft team member) PRs:

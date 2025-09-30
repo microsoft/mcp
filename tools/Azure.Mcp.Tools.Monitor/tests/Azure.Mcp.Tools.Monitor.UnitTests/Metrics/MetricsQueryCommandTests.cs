@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Services;
@@ -123,7 +125,7 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
-            .Returns(new List<MetricResult>());
+            .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse(args);
@@ -168,7 +170,7 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
-            .Returns(new List<MetricResult>());
+            .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse(args);
@@ -220,12 +222,12 @@ public class MetricsQueryCommandTests
         {
             Assert.NotNull(result.Message);
             Assert.Contains("Invalid format for --metric-names", result.Message);
-            Assert.Equal(400, result.Status);
+            Assert.Equal(HttpStatusCode.BadRequest, result.Status);
         }
         else
         {
             Assert.Equal("Success", result.Message);
-            Assert.Equal(200, result.Status); // Default status should remain unchanged for valid cases
+            Assert.Equal(HttpStatusCode.OK, result.Status); // Default status should remain unchanged for valid cases
         }
     }
 
@@ -247,17 +249,17 @@ public class MetricsQueryCommandTests
             {
                 Name = "CPU",
                 Unit = "Percent",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
-                        Metadata = new Dictionary<string, string>(),
+                        Metadata = [],
                         Start = DateTime.UtcNow.AddHours(-1),
                         End = DateTime.UtcNow,
                         Interval = "PT1M",
-                        AvgBuckets = new double[] { 45.5, 50.2, 48.1 }
+                        AvgBuckets = [45.5, 50.2, 48.1]
                     }
-                }
+                ]
             }
         };
 
@@ -284,7 +286,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Equal("Success", response.Message);
 
@@ -295,11 +297,11 @@ public class MetricsQueryCommandTests
         Assert.Equal("CPU", results[0].Name);
         Assert.Equal("Percent", results[0].Unit);
         Assert.Single(results[0].TimeSeries);
-        Assert.Equal(new double[] { 45.5, 50.2, 48.1 }, results[0].TimeSeries[0].AvgBuckets);
+        Assert.Equal([45.5, 50.2, 48.1], results[0].TimeSeries[0].AvgBuckets!);
     }
 
     [Fact]
-    public async Task ExecuteAsync_EmptyResults_ReturnsSuccessWithNullResults()
+    public async Task ExecuteAsync_EmptyResults_ReturnsSuccessWithEmptyResults()
     {
         // Arrange
         _service.QueryMetricsAsync(
@@ -316,7 +318,7 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
-            .Returns(new List<MetricResult>());
+            .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub1 --resource sa1 --metric-names CPU --metric-namespace microsoft.compute/virtualmachines");
@@ -325,8 +327,12 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var results = GetResult(response.Results);
+        Assert.NotNull(results);
+        Assert.Empty(results);
     }
 
     [Fact]
@@ -392,7 +398,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.NotEmpty(response.Message);
         Assert.Null(response.Results);
     }
@@ -411,17 +417,17 @@ public class MetricsQueryCommandTests
             {
                 Name = "CPU",
                 Unit = "Percent",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
-                        Metadata = new Dictionary<string, string>(),
+                        Metadata = [],
                         Start = DateTime.UtcNow.AddHours(-1),
                         End = DateTime.UtcNow,
                         Interval = "PT1M",
                         AvgBuckets = new double[51] // Exceeds default limit of 50
                     }
-                }
+                ]
             }
         };
 
@@ -448,7 +454,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("exceeds the maximum allowed limit of 50", response.Message);
         Assert.Contains("CPU", response.Message);
         Assert.Contains("51 time buckets", response.Message);
@@ -465,17 +471,17 @@ public class MetricsQueryCommandTests
             {
                 Name = "Memory",
                 Unit = "Bytes",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
-                        Metadata = new Dictionary<string, string>(),
+                        Metadata = [],
                         Start = DateTime.UtcNow.AddHours(-1),
                         End = DateTime.UtcNow,
                         Interval = "PT1M",
                         MaxBuckets = new double[26] // Exceeds custom limit of 25
                     }
-                }
+                ]
             }
         };
 
@@ -502,7 +508,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("exceeds the maximum allowed limit of 25", response.Message);
         Assert.Contains("Memory", response.Message);
         Assert.Contains("26 time buckets", response.Message);
@@ -519,7 +525,7 @@ public class MetricsQueryCommandTests
         // Arrange
         var timeSeries = new MetricTimeSeries
         {
-            Metadata = new Dictionary<string, string>(),
+            Metadata = [],
             Start = DateTime.UtcNow.AddHours(-1),
             End = DateTime.UtcNow,
             Interval = "PT1M"
@@ -552,7 +558,7 @@ public class MetricsQueryCommandTests
             {
                 Name = "TestMetric",
                 Unit = "Count",
-                TimeSeries = new List<MetricTimeSeries> { timeSeries }
+                TimeSeries = [timeSeries]
             }
         };
 
@@ -579,7 +585,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("exceeds the maximum allowed limit", response.Message);
     }
 
@@ -593,17 +599,17 @@ public class MetricsQueryCommandTests
             {
                 Name = "CPU",
                 Unit = "Percent",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
-                        Metadata = new Dictionary<string, string>(),
+                        Metadata = [],
                         Start = DateTime.UtcNow.AddHours(-1),
                         End = DateTime.UtcNow,
                         Interval = "PT1M",
-                        AvgBuckets = new double[50] // Exactly at the limit
+                        AvgBuckets = [50] // Exactly at the limit
                     }
-                }
+                ]
             }
         };
 
@@ -630,7 +636,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
@@ -644,17 +650,17 @@ public class MetricsQueryCommandTests
             {
                 Name = "CPU",
                 Unit = "Percent",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
-                        Metadata = new Dictionary<string, string>(),
+                        Metadata = [],
                         Start = DateTime.UtcNow.AddHours(-1),
                         End = DateTime.UtcNow,
                         Interval = "PT1M",
                         AvgBuckets = new double[51]
                     }
-                }
+                ]
             }
         };
 
@@ -721,7 +727,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Service unavailable", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -776,25 +782,25 @@ public class MetricsQueryCommandTests
             {
                 Name = "CPU",
                 Unit = "Percent",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
                         AvgBuckets = new double[30] // Within limit
                     }
-                }
+                ]
             },
             new()
             {
                 Name = "Memory",
                 Unit = "Bytes",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
                         AvgBuckets = new double[51] // Exceeds limit
                     }
-                }
+                ]
             }
         };
 
@@ -821,7 +827,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Memory", response.Message);
         Assert.Contains("51 time buckets", response.Message);
     }
@@ -836,8 +842,8 @@ public class MetricsQueryCommandTests
             {
                 Name = "CPU",
                 Unit = "Percent",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
                         AvgBuckets = new double[30] // Within limit
@@ -846,7 +852,7 @@ public class MetricsQueryCommandTests
                     {
                         AvgBuckets = new double[51] // Exceeds limit
                     }
-                }
+                ]
             }
         };
 
@@ -873,7 +879,7 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("CPU", response.Message);
         Assert.Contains("51 time buckets", response.Message);
     }
@@ -888,8 +894,8 @@ public class MetricsQueryCommandTests
             {
                 Name = "CPU",
                 Unit = "Percent",
-                TimeSeries = new List<MetricTimeSeries>
-                {
+                TimeSeries =
+                [
                     new()
                     {
                         AvgBuckets = null,
@@ -898,7 +904,7 @@ public class MetricsQueryCommandTests
                         TotalBuckets = null,
                         CountBuckets = null
                     }
-                }
+                ]
             }
         };
 
@@ -925,12 +931,12 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
     [Fact]
-    public async Task ExecuteAsync_NullResults_ReturnsSuccessWithNullResults()
+    public async Task ExecuteAsync_NullResults_ReturnsSuccessWithEmptyResults()
     {
         // Arrange
         _service.QueryMetricsAsync(
@@ -956,8 +962,8 @@ public class MetricsQueryCommandTests
         var response = await _command.ExecuteAsync(context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
     }
 
     #endregion
@@ -969,8 +975,6 @@ public class MetricsQueryCommandTests
             return null;
         }
         var json = JsonSerializer.Serialize(result);
-        return JsonSerializer.Deserialize<MetricsQueryCommandResult>(json)?.results;
+        return JsonSerializer.Deserialize(json, MonitorJsonContext.Default.MetricsQueryCommandResult)?.Results;
     }
-
-    private record MetricsQueryCommandResult(List<MetricResult> results) { }
 }

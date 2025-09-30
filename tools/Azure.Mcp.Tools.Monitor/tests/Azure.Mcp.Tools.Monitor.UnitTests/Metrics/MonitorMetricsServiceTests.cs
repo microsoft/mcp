@@ -244,7 +244,7 @@ public class MonitorMetricsServiceTests
                 TestResourceType,
                 TestResourceName,
                 null!,
-                new[] { "Transactions" }));
+                ["Transactions"]));
     }
 
     [Fact]
@@ -630,13 +630,13 @@ public class MonitorMetricsServiceTests
                 resourceType: "Microsoft.Storage/storageAccounts",
                 name: "Transactions",
                 unit: MetricUnit.Count,
-                timeSeries: new List<MetricTimeSeriesElement>()),
+                timeSeries: []),
             MonitorQueryModelFactory.MetricResult(
                 id: "availability-metric",
                 resourceType: "Microsoft.Storage/storageAccounts",
                 name: "Availability",
                 unit: MetricUnit.Percent,
-                timeSeries: new List<MetricTimeSeriesElement>())
+                timeSeries: [])
         };
 
         var result = MonitorQueryModelFactory.MetricsQueryResult(

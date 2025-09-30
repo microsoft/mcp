@@ -18,14 +18,18 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
     public override string Name => "list";
 
     public override string Description =>
-        $"""
-        List all Azure subscriptions accessible to your account. Optionally specify {OptionDefinitions.Common.TenantName}
-        and {OptionDefinitions.Common.AuthMethodName}. Results include subscription names and IDs, returned as a JSON array.
-        """;
-
+    "List all or current subscriptions for an account in Azure; returns subscriptionId, displayName, state, tenantId, and isDefault. Use for scope selection in governance, policy, access, cost management, or deployment.";
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -41,11 +45,9 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
             var subscriptionService = context.GetService<ISubscriptionService>();
             var subscriptions = await subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy);
 
-            context.Response.Results = subscriptions?.Count > 0
-                ? ResponseResult.Create(
+            context.Response.Results = ResponseResult.Create(
                     new SubscriptionListCommandResult(subscriptions),
-                    SubscriptionJsonContext.Default.SubscriptionListCommandResult)
-                : null;
+                    SubscriptionJsonContext.Default.SubscriptionListCommandResult);
         }
         catch (Exception ex)
         {
