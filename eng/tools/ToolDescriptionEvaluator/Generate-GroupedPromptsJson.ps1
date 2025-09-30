@@ -124,18 +124,48 @@ function Resolve-PromptsForCommands {
     return $sorted
 }
 
-# Recursive walker for namespace-tools.json structure
+<#
+    NOTE: Namespace tools JSON is now a FLAT list where each element is either:
+      1. A top-level namespace entry:   { name, command: "azmcp <ns>" }
+      2. A surfaced leaf command entry: { name, command: "azmcp extension <leaf>" }
+
+    Previously the structure contained recursive subcommands; the old recursive walker is retained
+    only for backwards compatibility scenarios (not currently invoked). The new logic derives the
+    leaf command set for a namespace by scanning all prompt keys with the prefix 'azmcp_<ns>_'.
+    Surfaced leaf commands simply aggregate their own prompts.
+#>
 function Get-NamespaceCommandStrings {
-    param($Node)
+    param(
+        [Parameter(Mandatory)] $Node,
+        [Parameter(Mandatory)] [string[]] $AllPromptKeys
+    )
+
     $acc = @()
-    if ($null -eq $Node) { return $acc }
-    if ($Node.command) { $acc += ($Node.command -replace '\s+', ' ').Trim() }
-    $hasSub = $false
-    if ($Node -is [psobject] -and ($Node.PSObject.Properties.Name -contains 'subcommands')) { $hasSub = $true }
-    if ($hasSub -and $Node.subcommands) {
-        foreach ($s in $Node.subcommands) { $acc += Get-NamespaceCommandStrings -Node $s }
+    if ($null -eq $Node -or -not $Node.command) { return $acc }
+    $cmd = ($Node.command -replace '\s+', ' ').Trim()
+
+    # Pattern: azmcp <namespace>
+    if ($cmd -match '^(azmcp)\s+([^\s]+)$') {
+        $ns = $Matches[2]
+        # Collect all prompt keys beginning with azmcp_<ns>_ (leaf commands)
+        $prefix = "azmcp_${ns}_"
+        $matchingLeafKeys = $AllPromptKeys | Where-Object { $_.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase) }
+        foreach ($k in $matchingLeafKeys) {
+            # Convert prompt key back to command string: underscores -> spaces
+            $acc += ($k -replace '_', ' ')
+        }
+        return ($acc | Sort-Object -Unique)
     }
+
+    # Surfaced leaf (e.g., azmcp extension azqr) – aggregate only itself
+    $acc += $cmd
     return $acc
+}
+
+function Convert-PromptKeyToCommand {
+    param([Parameter(Mandatory)][string]$Key)
+    if ([string]::IsNullOrWhiteSpace($Key)) { return $null }
+    return ($Key -replace '_', ' ') -replace '\s+', ' '
 }
 
 function Invoke-ConsolidatedGeneration {
@@ -199,16 +229,25 @@ function Invoke-NamespaceGeneration {
     $warnings = @()
     $outputMap = [ordered]@{}
     foreach ($ns in $namespaceJson.results) {
-        if (-not $ns.name) { continue }
-        $nsName = $ns.name
-        # Special cases: remap raw namespace identifiers before prefixing
-        switch ($nsName) {
-            'azqr' { $nsName = 'extension_azqr'; break }
+    if (-not $ns.name) { continue }
+
+        $commandStrings = Get-NamespaceCommandStrings -Node $ns -AllPromptKeys $AllPromptKeys
+
+        # Determine aggregation key: namespace entries get 'azmcp_<ns>', surfaced leaf commands keep their converted key
+        $isNamespace = $ns.command -match '^(azmcp)\s+([^\s]+)$'
+        if ($isNamespace) {
+            $nsName = $Matches[2]
+            switch ($nsName) { 'azqr' { $nsName = 'extension_azqr'; break } }
+            if (-not $nsName.StartsWith('azmcp_')) { $nsName = 'azmcp_' + $nsName }
+            $resolved = Resolve-PromptsForCommands -CommandStrings $commandStrings -PromptsJson $PromptsJson -AllPromptKeys $AllPromptKeys -Warnings ([ref]$warnings) -VerboseWarnings:$VerboseWarnings
+            $outputMap[$nsName] = @($resolved)
         }
-        if (-not $nsName.StartsWith('azmcp_')) { $nsName = 'azmcp_' + $nsName }
-        $commandStrings = Get-NamespaceCommandStrings -Node $ns | Sort-Object -Unique
-        $resolved = Resolve-PromptsForCommands -CommandStrings $commandStrings -PromptsJson $PromptsJson -AllPromptKeys $AllPromptKeys -Warnings ([ref]$warnings) -VerboseWarnings:$VerboseWarnings
-        $outputMap[$nsName] = @($resolved)
+        else {
+            # Surfaced leaf command: just map its own prompts under its prompt key
+            $key = Convert-CommandToPromptKey -Command $ns.command
+            $resolved = Resolve-PromptsForCommands -CommandStrings @($ns.command) -PromptsJson $PromptsJson -AllPromptKeys $AllPromptKeys -Warnings ([ref]$warnings) -VerboseWarnings:$VerboseWarnings
+            $outputMap[$key] = @($resolved)
+        }
     }
 
     $jsonOutput = $outputMap | ConvertTo-Json -Depth 100
@@ -252,11 +291,11 @@ switch ($Mode) {
         $consolidatedPath = Join-Path $baseDir ('consolidated-' + $leaf)
         $namespacePath    = Join-Path $baseDir ('namespace-'    + $leaf)
 
-        $w1 = Invoke-ConsolidatedGeneration -ConsolidatedToolsPath $ConsolidatedToolsPath `
+        $allWarnings += Invoke-ConsolidatedGeneration -ConsolidatedToolsPath $ConsolidatedToolsPath `
             -PromptsPath $PromptsPath -ToolsPath $ToolsPath -OutputPath $consolidatedPath `
             -PromptsJson $promptsJson -AllPromptKeys $allPromptKeys -Force:$Force -VerboseWarnings:$VerboseWarnings
 
-        $w2 = Invoke-NamespaceGeneration -NamespaceToolsPath $NamespaceToolsPath `
+        $allWarnings += Invoke-NamespaceGeneration -NamespaceToolsPath $NamespaceToolsPath `
             -OutputPath $namespacePath -PromptsJson $promptsJson -AllPromptKeys $allPromptKeys `
             -Force:$Force -VerboseWarnings:$VerboseWarnings
     }

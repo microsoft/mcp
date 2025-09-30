@@ -69,16 +69,6 @@
     "Fetch the Azure Terraform best practices",
     "Show me the Azure Terraform best practices and generate code sample to get a secret from Azure Key Vault"
   ],
-  "azmcp_get_bestpractices_get": [
-    "Get the latest Azure best practices",
-    "Get the latest Azure code generation best practices",
-    "Get the latest Azure deployment best practices",
-    "Get the latest Azure Functions best practices",
-    "Get the latest Azure Functions code generation best practices",
-    "Get the latest Azure Functions deployment best practices",
-    "Get the latest Azure Static Web Apps best practices",
-    "What are azure function best practices?"
-  ],
   "azmcp_bicepschema": [
     "How can I use Bicep to create an Azure OpenAI service?"
   ],
@@ -162,11 +152,13 @@
     "Create a new certificate called <certificate_name> in the key vault <key_vault_account_name>",
     "Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name>",
     "Create a new secret called <secret_name> with value <secret_value> in the key vault <key_vault_account_name>",
+    "Get the account settings for my key vault <key_vault_account_name>",
     "Import a certificate into the key vault <key_vault_account_name> using the name <certificate_name>",
     "Import the certificate in file <file_path> into the key vault <key_vault_account_name>",
     "List all certificates in the key vault <key_vault_account_name>",
     "List all keys in the key vault <key_vault_account_name>",
     "List all secrets in the key vault <key_vault_account_name>",
+    "Show me the account settings for key vault <key_vault_account_name>",
     "Show me the certificate <certificate_name> in the key vault <key_vault_account_name>",
     "Show me the certificates in the key vault <key_vault_account_name>",
     "Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name>",
@@ -175,7 +167,8 @@
     "Show me the key <key_name> in the key vault <key_vault_account_name>",
     "Show me the keys in the key vault <key_vault_account_name>",
     "Show me the secret <secret_name> in the key vault <key_vault_account_name>",
-    "Show me the secrets in the key vault <key_vault_account_name>"
+    "Show me the secrets in the key vault <key_vault_account_name>",
+    "What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name>"
   ],
   "azmcp_kusto": [
     "List all Data Explorer clusters in my subscription",
@@ -386,5 +379,15 @@
     "Check my Azure subscription for any compliance issues or recommendations",
     "Provide compliance recommendations for my current Azure subscription",
     "Scan my Azure subscription for compliance recommendations"
+  ],
+  "azmcp_get_bestpractices_get": [
+    "Get the latest Azure best practices",
+    "Get the latest Azure code generation best practices",
+    "Get the latest Azure deployment best practices",
+    "Get the latest Azure Functions best practices",
+    "Get the latest Azure Functions code generation best practices",
+    "Get the latest Azure Functions deployment best practices",
+    "Get the latest Azure Static Web Apps best practices",
+    "What are azure function best practices?"
   ]
 }
