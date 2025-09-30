@@ -3,6 +3,7 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure.Resource;
 using Azure.Mcp.Tools.Monitor.Services;
 using Azure.Monitor.Query;
 using Azure.Monitor.Query.Models;

@@ -3,6 +3,7 @@
 
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.ApplicationInsights.Models;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Services;
 
@@ -18,11 +19,15 @@ public interface IApplicationInsightsService
     /// List Application Insights trace metadata (placeholder until full trace retrieval is implemented).
     /// Currently returns basic component information that can be used to scope future trace queries.
     /// </summary>
-    Task<IEnumerable<JsonNode>> GetAppTracesAsync(
+    Task<AppListTraceResult> ListDistributedTracesAsync(
         string subscription,
-        string? resourceGroup = null,
+        string? resourceGroup,
+        string? resourceName,
+        string? resourceId,
+        string[] filters,
+        string table,
+        DateTime startTime,
+        DateTime endTime,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        DateTime? startDateTimeUtc = null,
-        DateTime? endDateTimeUtc = null);
+        RetryPolicyOptions? retryPolicy = null);
 }
