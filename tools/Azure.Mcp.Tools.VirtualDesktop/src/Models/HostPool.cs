@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics.CodeAnalysis;
-using Azure.ResourceManager.DesktopVirtualization;
-
 namespace Azure.Mcp.Tools.VirtualDesktop.Models;
 
-public class HostPool
+public sealed class HostPool
 {
     /// <summary> Name of the host pool. </summary>
     public string? Name { get; set; }
@@ -52,28 +49,4 @@ public class HostPool
 
     /// <summary> Azure Resource Manager resource identifier for the host pool. </summary>
     public string? ResourceIdentifier { get; set; }
-
-    /// <summary> Constructor that takes a HostPoolResource and extracts relevant data. </summary>
-    [SetsRequiredMembers]
-    public HostPool(HostPoolResource resource) : this()
-    {
-        Name = resource.Data.Name;
-        ResourceGroupName = resource.Id.ResourceGroupName;
-        SubscriptionId = resource.Id.SubscriptionId;
-        Location = resource.Data.Location.ToString();
-        HostPoolType = resource.Data.HostPoolType.ToString();
-        LoadBalancerType = resource.Data.LoadBalancerType.ToString();
-        MaxSessionLimit = resource.Data.MaxSessionLimit;
-        FriendlyName = resource.Data.FriendlyName;
-        Description = resource.Data.Description;
-        ValidationEnvironment = resource.Data.IsValidationEnvironment;
-        PreferredAppGroupType = resource.Data.PreferredAppGroupType.ToString();
-        StartVMOnConnect = resource.Data.StartVmOnConnect;
-        RegistrationEnabled = resource.Data.RegistrationInfo?.RegistrationTokenOperation != null;
-        CustomRdpProperty = resource.Data.CustomRdpProperty;
-        ResourceIdentifier = resource.Id.ToString();
-    }
-
-    /// <summary> Default constructor for serialization. </summary>
-    public HostPool() { }
 }
