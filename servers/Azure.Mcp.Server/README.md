@@ -125,11 +125,7 @@ npm install -g @azure/mcp
 
 ### Docker
 
-Pull the Docker image: [mcr.microsoft.com/azure-sdk/azure-mcp](https://mcr.microsoft.com/artifact/mar/azure-sdk/azure-mcp).
-
-```bash
-docker pull mcr.microsoft.com/azure-sdk/azure-mcp
-```
+Run the Azure MCP server as a Docker container for easy deployment and isolation. The container image is available at [mcr.microsoft.com/azure-sdk/azure-mcp](https://mcr.microsoft.com/artifact/mar/azure-sdk/azure-mcp).
 
 <details>
 <summary>Docker instructions</summary>
@@ -144,12 +140,9 @@ AZURE_CLIENT_ID={YOUR_AZURE_CLIENT_ID}
 AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 ```
 
-#### Configure your MCP client to use Docker:
+#### Configure your MCP client to use Docker
 
-2. Add or update existing `mcp.json`.
-    - Replace `/full/path/to/your.env` with the actual `.env` file path.
-    - Optionally, use `--env` or `--volume` to pass authentication values.
-    - **Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
+2. Add or update existing `mcp.json`.  Replace `/full/path/to/your/.env` with the actual `.env` file path.
 
 ```json
    {
@@ -161,15 +154,16 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
                "-i",
                "--rm",
                "--env-file",
-               "/full/path/to/your.env",
+               "/full/path/to/your/.env",
                "mcr.microsoft.com/azure-sdk/azure-mcp:latest"
             ]
          }
       }
    }
 ```
-
 </details>
+
+To use Azure Entra ID, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#using-azure-entra-id-with-docker).
 
 # Usage
 
@@ -387,8 +381,6 @@ The software may collect information about you and your use of the software and 
 Telemetry collection is on by default.
 
 To opt out, set the environment variable `AZURE_MCP_COLLECT_TELEMETRY` to `false` in your environment.
-
-
 
 ## Contributing
 

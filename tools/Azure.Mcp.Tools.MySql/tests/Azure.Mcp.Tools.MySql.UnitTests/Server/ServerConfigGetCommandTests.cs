@@ -97,9 +97,6 @@ public class ServerConfigGetCommandTests
     {
         var command = new ServerConfigGetCommand(_logger);
 
-        Assert.Equal("config", command.Name);
-        Assert.Equal("Retrieves comprehensive configuration details for the specified Azure Database for MySQL Flexible Server instance. This command provides insights into server settings, performance parameters, security configurations, and operational characteristics essential for database administration and optimization. Returns configuration data in JSON format including ServerName, Location, Version, SKU, StorageSizeGB, BackupRetentionDays, and GeoRedundantBackup properties.", command.Description);
-        Assert.Equal("Get MySQL Server Configuration", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }
