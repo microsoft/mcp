@@ -678,6 +678,15 @@ azmcp eventgrid events publish --subscription <subscription> \
                                [--schema <schema-type>]
 ```
 
+### Azure Event Hubs
+
+```bash
+# Get detailed properties of an Event Hubs namespace
+azmcp eventhubs namespace get --subscription <subscription> \
+                              --namespace <namespace> \
+                              --resource-group <resource-group>
+```
+
 ### Azure Function App Operations
 
 ```bash
