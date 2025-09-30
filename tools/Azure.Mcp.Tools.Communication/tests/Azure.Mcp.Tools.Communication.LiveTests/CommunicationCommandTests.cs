@@ -67,9 +67,9 @@ public class CommunicationCommandTests(ITestOutputHelper output) : CommandTestsB
                 { "args", args }
             });
 
-    Assert.NotEqual(200, result.Value.GetProperty("status").GetInt32());
-    var message = result.Value.GetProperty("message").GetString()!;
-    Assert.True(message.Contains("required", StringComparison.OrdinalIgnoreCase) ||
-           message.Contains("validation", StringComparison.OrdinalIgnoreCase));
+        Assert.NotEqual(200, result.Value.GetProperty("status").GetInt32());
+        var message = result.Value.GetProperty("message").GetString()!;
+        Assert.True(message.Contains("required", StringComparison.OrdinalIgnoreCase) ||
+               message.Contains("validation", StringComparison.OrdinalIgnoreCase));
     }
 }

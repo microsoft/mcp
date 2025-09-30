@@ -3,15 +3,15 @@
 
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using System.Net;
+using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Communication.Models;
 using Azure.Mcp.Tools.Communication.Options;
 using Azure.Mcp.Tools.Communication.Options.Sms;
 using Azure.Mcp.Tools.Communication.Services;
-using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Models.Command;
-using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Core.Extensions;
-using System.Net;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Communication.Commands.Sms;
@@ -56,23 +56,23 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
 
     protected override void RegisterOptions(Command command)
     {
-    base.RegisterOptions(command);
-    command.Options.Add(_fromOption);
-    command.Options.Add(_toOption);
-    command.Options.Add(_messageOption);
-    command.Options.Add(_enableDeliveryReportOption);
-    command.Options.Add(_tagOption);
+        base.RegisterOptions(command);
+        command.Options.Add(_fromOption);
+        command.Options.Add(_toOption);
+        command.Options.Add(_messageOption);
+        command.Options.Add(_enableDeliveryReportOption);
+        command.Options.Add(_tagOption);
     }
 
     protected override SmsSendOptions BindOptions(ParseResult parseResult)
     {
-    var options = base.BindOptions(parseResult);
-    options.From = parseResult.GetValueOrDefault(_fromOption);
-    options.To = parseResult.GetValueOrDefault(_toOption);
-    options.Message = parseResult.GetValueOrDefault(_messageOption);
-    options.EnableDeliveryReport = parseResult.GetValueOrDefault(_enableDeliveryReportOption);
-    options.Tag = parseResult.GetValueOrDefault(_tagOption);
-    return options;
+        var options = base.BindOptions(parseResult);
+        options.From = parseResult.GetValueOrDefault(_fromOption);
+        options.To = parseResult.GetValueOrDefault(_toOption);
+        options.Message = parseResult.GetValueOrDefault(_messageOption);
+        options.EnableDeliveryReport = parseResult.GetValueOrDefault(_enableDeliveryReportOption);
+        options.Tag = parseResult.GetValueOrDefault(_tagOption);
+        return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)

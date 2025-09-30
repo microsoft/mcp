@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
+using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Communication.Commands.Sms;
 using Azure.Mcp.Tools.Communication.Options.Sms;
 using Azure.Mcp.Tools.Communication.Services;
-using Azure.Mcp.Core.Models.Command;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -83,8 +83,10 @@ public class SmsSendCommandTests
             "--to", string.Join(",", to),
             "--message", message
         };
-        if (enableDeliveryReport) args.Add("--enable-delivery-report");
-        if (!string.IsNullOrEmpty(tag)) { args.Add("--tag"); args.Add(tag!); }
+        if (enableDeliveryReport)
+            args.Add("--enable-delivery-report");
+        if (!string.IsNullOrEmpty(tag))
+        { args.Add("--tag"); args.Add(tag!); }
         var parseResult = cmd.Parse(args.ToArray());
 
         // Act
@@ -110,7 +112,7 @@ public class SmsSendCommandTests
         var provider = services.BuildServiceProvider();
         var context = new CommandContext(provider);
         var cmd = command.GetCommand();
-    var args = new[] { "--connection-string", "cs", "--from", "+1", "--to", "+2", "--message", "fail" };
+        var args = new[] { "--connection-string", "cs", "--from", "+1", "--to", "+2", "--message", "fail" };
         var parseResult = cmd.Parse(args);
 
         // Act
@@ -118,7 +120,7 @@ public class SmsSendCommandTests
 
         // Assert
         Assert.NotNull(response);
-    Assert.NotEqual(System.Net.HttpStatusCode.OK, response.Status);
+        Assert.NotEqual(System.Net.HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Message);
     }
 
@@ -143,10 +145,14 @@ public class SmsSendCommandTests
         var context = new CommandContext(provider);
         var cmd = command.GetCommand();
         var args = new List<string>();
-    if (connectionString != null) { args.Add("--connection-string"); args.Add(connectionString); }
-    if (from != null) { args.Add("--from"); args.Add(from); }
-    if (to != null) { args.Add("--to"); args.Add(string.Join(",", to)); }
-    if (message != null) { args.Add("--message"); args.Add(message); }
+        if (connectionString != null)
+        { args.Add("--connection-string"); args.Add(connectionString); }
+        if (from != null)
+        { args.Add("--from"); args.Add(from); }
+        if (to != null)
+        { args.Add("--to"); args.Add(string.Join(",", to)); }
+        if (message != null)
+        { args.Add("--message"); args.Add(message); }
         var parseResult = cmd.Parse(args.ToArray());
 
         // Act
@@ -154,6 +160,6 @@ public class SmsSendCommandTests
 
         // Assert
         Assert.NotNull(response);
-    Assert.NotEqual(System.Net.HttpStatusCode.OK, response.Status);
+        Assert.NotEqual(System.Net.HttpStatusCode.OK, response.Status);
     }
 }

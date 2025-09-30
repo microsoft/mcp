@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.Communication.Commands.Sms;
-using Azure.Mcp.Tools.Communication.Services;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.Communication.Commands.Sms;
+using Azure.Mcp.Tools.Communication.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -22,7 +22,7 @@ public class CommunicationSetup : IAreaSetup
     public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
     {
         // Create Communication command group
-        var communication = new CommandGroup("communication", 
+        var communication = new CommandGroup("communication",
             "Communication services operations - Commands for managing Azure Communication Services including SMS messaging, email, and voice calling capabilities.");
         rootGroup.AddSubGroup(communication);
 
