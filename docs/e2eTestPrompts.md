@@ -230,22 +230,58 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_keyvault_admin_settings_get | Show me the account settings for managed HSM keyvault <key_vault_account_name> |
 | azmcp_keyvault_admin_settings_get | What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name> |
 | azmcp_keyvault_certificate_create | Create a new certificate called <certificate_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_create | Generate a certificate named <certificate_name> in key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_create | Request creation of certificate <certificate_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_create | Provision a new key vault certificate <certificate_name> in vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_create | Issue a certificate <certificate_name> in key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_get | Show me the certificate <certificate_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_get | Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_get | Get the certificate <certificate_name> from vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_get | Display the certificate details for <certificate_name> in vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_get | Retrieve certificate metadata for <certificate_name> in vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_import | Import the certificate in file <file_path> into the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_import | Import a certificate into the key vault <key_vault_account_name> using the name <certificate_name> |
+| azmcp_keyvault_certificate_import | Upload certificate file <file_path> to key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_import | Load certificate <certificate_name> from file <file_path> into vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_import | Add existing certificate file <file_path> to the key vault <key_vault_account_name> with name <certificate_name> |
 | azmcp_keyvault_certificate_list | List all certificates in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_list | Show me the certificates in the key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_list | What certificates are in the key vault <key_vault_account_name>? |
+| azmcp_keyvault_certificate_list | List certificate names in vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_list | Enumerate certificates in key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_list | Show certificate names in the key vault <key_vault_account_name> |
 | azmcp_keyvault_key_create | Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name> |
+| azmcp_keyvault_key_create | Generate a key <key_name> with type <key_type> in vault <key_vault_account_name> |
+| azmcp_keyvault_key_create | Create an oct key in the vault <key_vault_account_name> |
+| azmcp_keyvault_key_create | Create an RSA key in the vault <key_vault_account_name> with name <key_name> |
+| azmcp_keyvault_key_create | Create an EC key with name <key_name> in the vault <key_vault_account_name> |
 | azmcp_keyvault_key_get | Show me the key <key_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_key_get | Show me the details of the key <key_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_key_get | Get the key <key_name> from vault <key_vault_account_name> |
+| azmcp_keyvault_key_get | Display the key details for <key_name> in vault <key_vault_account_name> |
+| azmcp_keyvault_key_get | Retrieve key metadata for <key_name> in vault <key_vault_account_name> |
 | azmcp_keyvault_key_list | List all keys in the key vault <key_vault_account_name> |
 | azmcp_keyvault_key_list | Show me the keys in the key vault <key_vault_account_name> |
+| azmcp_keyvault_key_list | What keys are in the key vault <key_vault_account_name>? |
+| azmcp_keyvault_key_list | List key names in vault <key_vault_account_name> |
+| azmcp_keyvault_key_list | Enumerate keys in key vault <key_vault_account_name> |
+| azmcp_keyvault_key_list | Show key names in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_create | Create a new secret called <secret_name> with value <secret_value> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_create | Set a secret named <secret_name> with value <secret_value> in key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_create | Store secret <secret_name> value <secret_value> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_create | Add a new version of secret <secret_name> with value <secret_value> in vault <key_vault_account_name> |
+| azmcp_keyvault_secret_create | Update secret <secret_name> to value <secret_value> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_get | Show me the secret <secret_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_get | Show me the details of the secret <secret_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_get | Get the secret <secret_name> from vault <key_vault_account_name> |
+| azmcp_keyvault_secret_get | Display the secret details for <secret_name> in vault <key_vault_account_name> |
+| azmcp_keyvault_secret_get | Retrieve secret metadata for <secret_name> in vault <key_vault_account_name> |
 | azmcp_keyvault_secret_list | List all secrets in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_list | Show me the secrets in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_list | What secrets are in the key vault <key_vault_account_name>? |
+| azmcp_keyvault_secret_list | List secrets names in vault <key_vault_account_name> |
+| azmcp_keyvault_secret_list | Enumerate secrets in key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_list | Show secrets names in the key vault <key_vault_account_name> |
 
 ## Azure Kubernetes Service (AKS)
 

@@ -18,12 +18,7 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
     public override string Name => "query";
 
     public override string Description =>
-        $"""
-        Execute a SQL query against items in a Cosmos DB container. Requires {CosmosOptionDefinitions.AccountName},
-        {CosmosOptionDefinitions.DatabaseName}, and {CosmosOptionDefinitions.ContainerName}.
-        The {CosmosOptionDefinitions.QueryText} parameter accepts SQL query syntax. Results are returned as a
-        JSON array of documents.
-        """;
+    "List items from a Cosmos DB container by specifying the account name, database name, and container name, optionally providing a custom SQL query to filter results.";
 
     public override string Title => CommandTitle;
 

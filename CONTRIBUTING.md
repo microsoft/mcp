@@ -298,7 +298,7 @@ With the configuration in place, you can launch the MCP server directly from you
 
 To build a local image for testing purposes:
 
-1. Execute: `./eng/scripts/Build-Docker.ps1`.
+1. Execute: `./eng/scripts/Build-Docker.ps1 -ServerName "Azure.Mcp.Server"`.
 2. Update `mcp.json` to point to locally built Docker image:
 
     ```json
@@ -312,7 +312,7 @@ To build a local image for testing purposes:
             "--rm",
             "--env-file",
             "/full/path/to/.env"
-            "azure/azure-mcp:<insert-version-here>",
+            "azure-sdk/azure-mcp:<version-number-of-docker-image>",
           ]
         }
       }

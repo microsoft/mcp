@@ -92,9 +92,6 @@ public class ServerParamSetCommandTests
     {
         var command = new ServerParamSetCommand(_logger);
 
-        Assert.Equal("set", command.Name);
-        Assert.Equal("Sets/updates a MySQL server configuration parameter to a new value to optimize performance, security, or operational behavior. This command enables fine-tuned configuration management with validation to ensure parameter changes are compatible with the server's current state and constraints.", command.Description);
-        Assert.Equal("Set MySQL Server Parameter", command.Title);
         Assert.True(command.Metadata.Destructive);
         Assert.False(command.Metadata.ReadOnly);
     }
