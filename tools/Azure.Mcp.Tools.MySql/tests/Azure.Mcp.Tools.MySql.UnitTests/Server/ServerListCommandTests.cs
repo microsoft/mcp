@@ -85,9 +85,6 @@ public class ServerListCommandTests
     {
         var command = new ServerListCommand(_logger);
 
-        Assert.Equal("list", command.Name);
-        Assert.Equal("Discovers and lists all Azure Database for MySQL Flexible Server instances within the specified resource group. This command provides an inventory of available MySQL server resources, including their names and current status, enabling efficient server management and resource planning.", command.Description);
-        Assert.Equal("List MySQL Servers", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }

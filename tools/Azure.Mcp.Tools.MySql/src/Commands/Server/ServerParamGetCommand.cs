@@ -14,7 +14,7 @@ public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger)
 {
     private const string CommandTitle = "Get MySQL Server Parameter";
 
-    public override string Name => "param";
+    public override string Name => "get";
 
     public override string Description => "Retrieves the current value of a single server configuration parameter on an Azure Database for MySQL Flexible Server. Use to inspect a setting (e.g. max_connections, wait_timeout, slow_query_log) before changing it.";
 

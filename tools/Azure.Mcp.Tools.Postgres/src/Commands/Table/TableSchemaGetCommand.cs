@@ -14,7 +14,7 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
 {
     private const string CommandTitle = "Get PostgreSQL Table Schema";
 
-    public override string Name => "schema";
+    public override string Name => "get";
     public override string Description => "Retrieves the schema of a specified table in a PostgreSQL database.";
     public override string Title => CommandTitle;
 

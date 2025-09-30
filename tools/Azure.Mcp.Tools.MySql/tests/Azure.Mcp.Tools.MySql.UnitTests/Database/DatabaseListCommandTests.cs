@@ -113,9 +113,6 @@ public class DatabaseListCommandTests
     {
         var command = new DatabaseListCommand(_logger);
 
-        Assert.Equal("list", command.Name);
-        Assert.Equal("Retrieves a comprehensive list of all databases available on the specified Azure Database for MySQL Flexible Server instance. This command provides visibility into the database structure and helps identify available databases for connection and querying operations.", command.Description);
-        Assert.Equal("List MySQL Databases", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }

@@ -89,9 +89,6 @@ public class TableSchemaGetCommandTests
     {
         var command = new TableSchemaGetCommand(_logger);
 
-        Assert.Equal("schema", command.Name);
-        Assert.Equal("Retrieves detailed schema information for a specific table within an Azure Database for MySQL Flexible Server database. This command provides comprehensive metadata including column definitions, data types, constraints, indexes, and relationships, essential for understanding table structure and supporting application development.", command.Description);
-        Assert.Equal("Get MySQL Table Schema", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }

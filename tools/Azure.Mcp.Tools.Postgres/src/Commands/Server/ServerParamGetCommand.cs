@@ -13,7 +13,7 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 public sealed class ServerParamGetCommand(ILogger<ServerParamGetCommand> logger) : BaseServerCommand<ServerParamGetOptions>(logger)
 {
     private const string CommandTitle = "Get PostgreSQL Server Parameter";
-    public override string Name => "param";
+    public override string Name => "get";
 
     public override string Description =>
         "Retrieves a specific parameter of a PostgreSQL server.";
