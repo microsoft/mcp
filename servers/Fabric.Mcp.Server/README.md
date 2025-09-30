@@ -80,7 +80,7 @@ The Fabric MCP Server unlocks practical developer workflows by providing local a
      "servers": {
        "Microsoft Fabric MCP": {
          "command": "/path/to/executable",
-         "args": ["server start", "--mode all"]
+         "args": ["server", "start", "--mode", "all"]
        }
      }
    }

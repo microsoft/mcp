@@ -159,13 +159,10 @@ public static class AzureMcpServiceCollectionExtensions
                     Version = assemblyName?.Version?.ToString() ?? "1.0.0-beta"
                 };
 
-                mcpServerOptions.Capabilities = new ServerCapabilities
+                mcpServerOptions.Handlers = new()
                 {
-                    Tools = new ToolsCapability()
-                    {
-                        CallToolHandler = mcpRuntime.CallToolHandler,
-                        ListToolsHandler = mcpRuntime.ListToolsHandler,
-                    }
+                    CallToolHandler = mcpRuntime.CallToolHandler,
+                    ListToolsHandler = mcpRuntime.ListToolsHandler,
                 };
 
                 // Add instructions for the server

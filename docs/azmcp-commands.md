@@ -701,7 +701,7 @@ azmcp functionapp get --subscription <subscription> \
 #### Administration
 
 ```bash
-# Gets Key Vault administration settings
+# Gets Key Vault Managed HSM account settings
 azmcp keyvault admin settings get --subscription <subscription> \
                                   --vault <vault-name>
 ```
@@ -923,6 +923,9 @@ azmcp bestpractices get --resource <resource> --action <action>
 ```bash
 # List all available tools in the Azure MCP server
 azmcp tools list
+
+# List only the available top-level service namespaces
+azmcp tools list --namespaces
 ```
 
 ### Azure Monitor Operations
@@ -1450,6 +1453,21 @@ All responses follow a consistent JSON format:
   "duration": 123
 }
 ```
+
+### Tool and Namespace Result Objects
+
+When invoking `azmcp tools list` (with or without `--namespaces`), each returned object now includes a `count` field:
+
+| Field | Description |
+|-------|-------------|
+| `name` | Command or namespace name |
+| `description` | Human-readable description |
+| `command` | Fully qualified CLI invocation path |
+| `subcommands` | (Namespaces only) Array of leaf command objects |
+| `option` | (Leaf commands only) Array of options supported by the command |
+| `count` | Namespaces: number of subcommands; Leaf commands: always 0 (options not counted) |
+
+This quantitative field enables quick sizing of a namespace without traversing nested arrays. Leaf command complexity should be inferred from its option list, not the `count` field.
 
 ## Error Handling
 
