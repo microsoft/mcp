@@ -246,7 +246,7 @@ dotnet build
 ./eng/scripts/Build-Local.ps1 -DebugBuild
 
 # Docker image build
-./eng/scripts/Build-Docker.ps1
+./eng/scripts/Build-Docker.ps1 -ServerName "Azure.Mcp.Server"
 ```
 
 ### Testing Commands
@@ -551,14 +551,14 @@ mcp.json configuration for local development:
 ### Docker Development
 ```powershell
 # Build local Docker image
-./eng/scripts/Build-Docker.ps1
+./eng/scripts/Build-Docker.ps1 -ServerName "Azure.Mcp.Server"
 
 # Use in mcp.json
 {
   "servers": {
     "Azure MCP Server": {
       "command": "docker",
-      "args": ["run", "-i", "--rm", "--env-file", "/path/to/.env", "azure/azure-mcp:latest"]
+      "args": ["run", "-i", "--rm", "--env-file", "/path/to/.env", "azure-sdk/azure-mcp:<version-number-of-docker-image>"]
     }
   }
 }

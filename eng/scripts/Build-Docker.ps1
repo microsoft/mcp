@@ -4,6 +4,7 @@
 [CmdletBinding(DefaultParameterSetName='none')]
 param(
     [string] $VersionSuffix,
+    [Parameter(Mandatory=$true)]
     [string] $ServerName,
     [switch] $Trimmed,
     [switch] $DebugBuild

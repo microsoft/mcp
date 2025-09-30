@@ -34,6 +34,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
     - [Network and Firewall Restrictions](#network-and-firewall-restrictions)
     - [Enterprise Environment Scenarios](#enterprise-environment-scenarios)
     - [AADSTS500200 error: User account is a personal Microsoft account](#aadsts500200-error-user-account-is-a-personal-microsoft-account)
+    - [Using Azure Entra ID with Docker](#using-azure-entra-id-with-docker)
 
 ## Common Issues
 
@@ -639,6 +640,59 @@ If you're behind a corporate firewall, you may need to:
 - Configure npm proxy settings
 - Whitelist npm registry domains (`*.npmjs.org`, `registry.npmjs.org`)
 - Work with IT to ensure npm can download packages
+
+### Using Azure Entra ID with Docker
+
+To use Azure Entra ID with the Docker image update the MCP client configuration to use `--volume` rather than `--env-file`.  The value for `--volume` is a mapping from the host machine's `.azure` folder to the corresponding `.azure` directory in the container.
+
+1. On the host machine, log into Azure via Azure CLI.
+2. Update MCP client configuration to point to the user's `.azure` folder.
+   ```json
+      {
+         "mcpServers": {
+            "Azure MCP Server": {
+               "command": "docker",
+               "args": [
+                  "run",
+                  "-i",
+                  "--rm",
+                  "--volume",
+                  "~/.azure:/root/.azure",
+                  "mcr.microsoft.com/azure-sdk/azure-mcp:latest"
+               ]
+            }
+         }
+      }
+   ```
+
+#### For Windows Users
+
+On Windows, Azure CLI stores credentials in an encrypted format that cannot be accessed from within Docker containers. On Linux and Mac, credentials are stored as plain JSON files that can be shared with containers. Consequently, mapping the `.azure` directory from the user profile to the container will not work on Windows. A workaround is to use WSL to log into the Azure CLI and then map that to the Docker container. There is an open issue to address this (https://github.com/Azure/azure-sdk-for-net/issues/19167).
+
+1. In a WSL console
+   ```bash
+   mkdir /mnt/c/users/<username>/.azure-wsl
+   AZURE_CONFIG_DIR=/mnt/c/users/<username>/.azure-wsl
+   az login
+   ```
+2. Update MCP client configuration to point that folder.
+   ```json
+      {
+         "mcpServers": {
+            "Azure MCP Server": {
+               "command": "docker",
+               "args": [
+                  "run",
+                  "-i",
+                  "--rm",
+                  "--volume",
+                  "C:\\users\\<username>\\.azure-wsl:/root/.azure",
+                  "mcr.microsoft.com/azure-sdk/azure-mcp:latest"
+               ]
+            }
+         }
+      }
+   ```
 
 ## Remote MCP Server
 
