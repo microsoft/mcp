@@ -95,9 +95,9 @@ internal class TelemetryService : ITelemetryService
 
     public async ValueTask InitializeAsync()
     {
-        var wasInitialized = Interlocked.CompareExchange(ref _isInitialized, true, false);
+        var previouslyInitialized = Interlocked.CompareExchange(ref _isInitialized, true, false);
 
-        if (wasInitialized)
+        if (previouslyInitialized)
         {
             return;
         }
