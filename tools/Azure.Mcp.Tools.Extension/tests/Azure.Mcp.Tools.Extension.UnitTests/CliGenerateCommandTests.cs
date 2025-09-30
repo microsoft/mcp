@@ -75,7 +75,7 @@ public sealed class CliGenerateCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal([shouldSucceed ? 200 : 400], [(int)response.Status]);
         if (shouldSucceed)
         {
             Assert.NotNull(response.Results);
@@ -103,7 +103,7 @@ public sealed class CliGenerateCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal([200], [(int)response.Status]);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
@@ -126,7 +126,7 @@ public sealed class CliGenerateCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal([500], [(int)response.Status]);
         Assert.Contains("Test error", response.Message);
     }
 }

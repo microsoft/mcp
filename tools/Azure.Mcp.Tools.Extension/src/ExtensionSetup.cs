@@ -20,6 +20,7 @@ public sealed class ExtensionSetup : IAreaSetup
         services.AddHttpClientServices();
         services.AddSingleton<ICliGenerateService, CliGenerateService>();
         services.AddSingleton<AzqrCommand>();
+        services.AddSingleton<CliGenerateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -33,7 +34,8 @@ public sealed class ExtensionSetup : IAreaSetup
 
         var cli = new CommandGroup("cli", "Commands for helping users to use CLI tools for Azure services operations. Includes operations for generating Azure CLI commands.");
         extension.AddSubGroup(cli);
-        CliGenerateCommand cliGenerateCommand = new(loggerFactory.CreateLogger<CliGenerateCommand>());
+        var cliGenerateCommand = serviceProvider.GetRequiredService<CliGenerateCommand>();
         cli.AddCommand(cliGenerateCommand.Name, cliGenerateCommand);
+        return extension;
     }
 }
