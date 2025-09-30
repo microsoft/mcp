@@ -701,7 +701,7 @@ azmcp functionapp get --subscription <subscription> \
 #### Administration
 
 ```bash
-# Gets Key Vault administration settings
+# Gets Key Vault Managed HSM account settings
 azmcp keyvault admin settings get --subscription <subscription> \
                                   --vault <vault-name>
 ```
