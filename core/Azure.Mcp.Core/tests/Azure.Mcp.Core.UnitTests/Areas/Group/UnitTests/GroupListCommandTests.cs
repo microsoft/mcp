@@ -21,7 +21,7 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Group.UnitTests;
 public class GroupListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly IMcpServer _mcpServer;
+    private readonly McpServer _mcpServer;
     private readonly ILogger<GroupListCommand> _logger;
     private readonly IResourceGroupService _resourceGroupService;
     private readonly GroupListCommand _command;
@@ -30,7 +30,7 @@ public class GroupListCommandTests
 
     public GroupListCommandTests()
     {
-        _mcpServer = Substitute.For<IMcpServer>();
+        _mcpServer = Substitute.For<McpServer>();
         _resourceGroupService = Substitute.For<IResourceGroupService>();
         _logger = Substitute.For<ILogger<GroupListCommand>>();
         var collection = new ServiceCollection()

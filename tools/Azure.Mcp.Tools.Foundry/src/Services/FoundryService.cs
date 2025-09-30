@@ -958,12 +958,11 @@ public class FoundryService(
     private static JsonElement DeserializeToElement(BinaryData data) =>
         (JsonElement)JsonSerializer.Deserialize(data.ToMemory().Span, AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(JsonElement)))!;
 
-    public sealed class ToolDefinitionAIFunction(string name, string description, JsonElement? schema = null) : AIFunction
+    public sealed class ToolDefinitionAIFunction(string name, string description, JsonElement? schema = null) : AIFunctionDeclaration
     {
         public override string Name => name;
         public override string Description => description;
         public override JsonElement JsonSchema => schema ?? base.JsonSchema;
-        protected override ValueTask<object?> InvokeCoreAsync(AIFunctionArguments arguments, CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public static ToolDefinitionAIFunction DeserializeToolDefinition(JsonElement json)
         {

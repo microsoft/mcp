@@ -111,43 +111,32 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         return ValueTask.CompletedTask;
     }
 
-    protected McpClientOptions CreateClientOptions(IMcpServer server)
+    protected McpClientOptions CreateClientOptions(McpServer server)
     {
-        SamplingCapability? samplingCapability = null;
-        ElicitationCapability? elicitationCapability = null;
+        McpClientHandlers handlers = new();
 
         if (server.ClientCapabilities?.Sampling != null)
         {
-            samplingCapability = new SamplingCapability
+            handlers.SamplingHandler = (request, progress, token) =>
             {
-                SamplingHandler = (request, progress, token) =>
-                {
-                    ArgumentNullException.ThrowIfNull(request);
-                    return server.SampleAsync(request, token);
-                }
+                ArgumentNullException.ThrowIfNull(request);
+                return server.SampleAsync(request, token);
             };
         }
 
         if (server.ClientCapabilities?.Elicitation != null)
         {
-            elicitationCapability = new ElicitationCapability
+            handlers.ElicitationHandler = (request, token) =>
             {
-                ElicitationHandler = (request, token) =>
-                {
-                    ArgumentNullException.ThrowIfNull(request);
-                    return server.ElicitAsync(request, token);
-                }
+                ArgumentNullException.ThrowIfNull(request);
+                return server.ElicitAsync(request, token);
             };
         }
 
         var clientOptions = new McpClientOptions
         {
             ClientInfo = server.ClientInfo,
-            Capabilities = new ClientCapabilities
-            {
-                Sampling = samplingCapability,
-                Elicitation = elicitationCapability,
-            }
+            Handlers = handlers
         };
 
         return clientOptions;

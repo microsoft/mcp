@@ -29,5 +29,5 @@ public interface IMcpDiscoveryStrategy : IAsyncDisposable
     /// <returns>An MCP client that can communicate with the specified server.</returns>
     /// <exception cref="KeyNotFoundException">Thrown when no server with the specified name is found.</exception>
     /// <exception cref="ArgumentNullException">Thrown when the name parameter is null.</exception>
-    Task<IMcpClient> GetOrCreateClientAsync(string name, McpClientOptions? clientOptions = null);
+    Task<McpClient> GetOrCreateClientAsync(string name, McpClientOptions? clientOptions = null);
 }

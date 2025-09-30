@@ -15,7 +15,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
 {
     protected const string TenantNameReason = "Service principals cannot use TenantName for lookup";
 
-    protected IMcpClient Client { get; private set; } = default!;
+    protected McpClient Client { get; private set; } = default!;
     protected LiveTestSettings Settings { get; private set; } = default!;
     protected StringBuilder FailureOutput { get; } = new();
     protected ITestOutputHelper Output { get; } = output;
@@ -65,7 +65,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         }
 
         var clientTransport = new StdioClientTransport(transportOptions);
-        Client = await McpClientFactory.CreateAsync(clientTransport);
+        Client = await McpClient.CreateAsync(clientTransport);
 
         Output.WriteLine("MCP client initialized successfully");
     }
@@ -75,7 +75,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         return CallToolAsync(command, parameters, Client);
     }
 
-    protected async Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters, IMcpClient mcpClient)
+    protected async Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters, McpClient mcpClient)
     {
         // Use the same debug logic as MCP server initialization
         var debugEnvVar = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_DEBUG");

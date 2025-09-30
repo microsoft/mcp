@@ -21,8 +21,8 @@ public sealed class RegistryToolLoader(
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = discoveryStrategy;
     private readonly IOptions<ToolLoaderOptions> _options = options;
-    private Dictionary<string, IMcpClient> _toolClientMap = new();
-    private List<IMcpClient> _discoveredClients = new();
+    private Dictionary<string, McpClient> _toolClientMap = new();
+    private List<McpClient> _discoveredClients = new();
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
 
@@ -152,7 +152,7 @@ public sealed class RegistryToolLoader(
             foreach (var server in serverList)
             {
                 var serverMetadata = server.CreateMetadata();
-                IMcpClient? mcpClient;
+                McpClient? mcpClient;
                 try
                 {
                     mcpClient = await _serverDiscoveryStrategy.GetOrCreateClientAsync(serverMetadata.Name, ClientOptions);

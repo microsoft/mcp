@@ -19,7 +19,7 @@ public abstract class BaseDiscoveryStrategy(ILogger logger) : IMcpDiscoveryStrat
     /// <summary>
     /// Cache of MCP clients created by this discovery strategy, keyed by server name (case-insensitive).
     /// </summary>
-    protected readonly Dictionary<string, IMcpClient> _clientCache = new(StringComparer.OrdinalIgnoreCase);
+    protected readonly Dictionary<string, McpClient> _clientCache = new(StringComparer.OrdinalIgnoreCase);
 
     private bool _disposed = false;
 
@@ -64,7 +64,7 @@ public abstract class BaseDiscoveryStrategy(ILogger logger) : IMcpDiscoveryStrat
     /// <returns>An MCP client that can communicate with the specified server.</returns>
     /// <exception cref="ArgumentNullException">Thrown when the name parameter is null.</exception>
     /// <exception cref="KeyNotFoundException">Thrown when no server with the specified name is found.</exception>
-    public async Task<IMcpClient> GetOrCreateClientAsync(string name, McpClientOptions? clientOptions = null)
+    public async Task<McpClient> GetOrCreateClientAsync(string name, McpClientOptions? clientOptions = null)
     {
         ArgumentNullException.ThrowIfNull(name, nameof(name));
         if (string.IsNullOrWhiteSpace(name))

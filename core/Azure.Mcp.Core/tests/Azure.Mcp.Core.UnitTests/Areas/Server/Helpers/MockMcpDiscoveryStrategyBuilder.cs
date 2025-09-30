@@ -30,7 +30,7 @@ public sealed class MockMcpDiscoveryStrategyBuilder
     /// <param name="description">The description of the server. If null, uses a default description.</param>
     /// <param name="client">The mock client to return for this server.</param>
     /// <returns>The current instance for method chaining.</returns>
-    public MockMcpDiscoveryStrategyBuilder AddServer(string serverId, string? serverName = null, string? description = null, IMcpClient? client = null)
+    public MockMcpDiscoveryStrategyBuilder AddServer(string serverId, string? serverName = null, string? description = null, McpClient? client = null)
     {
         var mockProvider = Substitute.For<IMcpServerProvider>();
         var metadata = new McpServerMetadata
@@ -49,7 +49,7 @@ public sealed class MockMcpDiscoveryStrategyBuilder
         else
         {
             // If no client is provided, create a basic substitute
-            var defaultClient = Substitute.For<IMcpClient>();
+            var defaultClient = Substitute.For<McpClient>();
             mockProvider.CreateClientAsync(Arg.Any<McpClientOptions>()).Returns(Task.FromResult(defaultClient));
         }
 

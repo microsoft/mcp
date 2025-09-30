@@ -20,7 +20,7 @@ public class BaseToolLoaderTests
     {
         // Arrange
         var loader = new TestableBaseToolLoader(NullLogger.Instance);
-        var mockServer = Substitute.For<IMcpServer>();
+        var mockServer = Substitute.For<McpServer>();
         mockServer.ClientCapabilities.Returns((ClientCapabilities?)null);
 
         // Act
@@ -28,9 +28,9 @@ public class BaseToolLoaderTests
 
         // Assert
         Assert.NotNull(options);
-        Assert.NotNull(options.Capabilities);
-        Assert.Null(options.Capabilities.Sampling);
-        Assert.Null(options.Capabilities.Elicitation);
+        Assert.NotNull(options.Handlers);
+        Assert.Null(options.Handlers.SamplingHandler);
+        Assert.Null(options.Handlers.ElicitationHandler);
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class BaseToolLoaderTests
     {
         // Arrange
         var loader = new TestableBaseToolLoader(NullLogger.Instance);
-        var mockServer = Substitute.For<IMcpServer>();
+        var mockServer = Substitute.For<McpServer>();
         mockServer.ClientCapabilities.Returns(new ClientCapabilities());
 
         // Act
@@ -46,9 +46,9 @@ public class BaseToolLoaderTests
 
         // Assert
         Assert.NotNull(options);
-        Assert.NotNull(options.Capabilities);
-        Assert.Null(options.Capabilities.Sampling);
-        Assert.Null(options.Capabilities.Elicitation);
+        Assert.NotNull(options.Handlers);
+        Assert.Null(options.Handlers.SamplingHandler);
+        Assert.Null(options.Handlers.ElicitationHandler);
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public class BaseToolLoaderTests
     {
         // Arrange
         var loader = new TestableBaseToolLoader(NullLogger.Instance);
-        var mockServer = Substitute.For<IMcpServer>();
+        var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
             Sampling = new SamplingCapability()
@@ -68,9 +68,9 @@ public class BaseToolLoaderTests
 
         // Assert
         Assert.NotNull(options);
-        Assert.NotNull(options.Capabilities);
-        Assert.NotNull(options.Capabilities.Sampling);
-        Assert.Null(options.Capabilities.Elicitation);
+        Assert.NotNull(options.Handlers);
+        Assert.NotNull(options.Handlers.SamplingHandler);
+        Assert.Null(options.Handlers.ElicitationHandler);
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public class BaseToolLoaderTests
     {
         // Arrange
         var loader = new TestableBaseToolLoader(NullLogger.Instance);
-        var mockServer = Substitute.For<IMcpServer>();
+        var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
             Elicitation = new ElicitationCapability()
@@ -90,9 +90,9 @@ public class BaseToolLoaderTests
 
         // Assert
         Assert.NotNull(options);
-        Assert.NotNull(options.Capabilities);
-        Assert.Null(options.Capabilities.Sampling);
-        Assert.NotNull(options.Capabilities.Elicitation);
+        Assert.NotNull(options.Handlers);
+        Assert.Null(options.Handlers.SamplingHandler);
+        Assert.NotNull(options.Handlers.ElicitationHandler);
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public class BaseToolLoaderTests
     {
         // Arrange
         var loader = new TestableBaseToolLoader(NullLogger.Instance);
-        var mockServer = Substitute.For<IMcpServer>();
+        var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
             Sampling = new SamplingCapability(),
@@ -113,9 +113,9 @@ public class BaseToolLoaderTests
 
         // Assert
         Assert.NotNull(options);
-        Assert.NotNull(options.Capabilities);
-        Assert.NotNull(options.Capabilities.Sampling);
-        Assert.NotNull(options.Capabilities.Elicitation);
+        Assert.NotNull(options.Handlers);
+        Assert.NotNull(options.Handlers.SamplingHandler);
+        Assert.NotNull(options.Handlers.ElicitationHandler);
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public class BaseToolLoaderTests
     {
         // Arrange
         var loader = new TestableBaseToolLoader(NullLogger.Instance);
-        var mockServer = Substitute.For<IMcpServer>();
+        var mockServer = Substitute.For<McpServer>();
         var clientInfo = new Implementation
         {
             Name = "test-client",
@@ -145,7 +145,7 @@ public class BaseToolLoaderTests
     {
         // Arrange
         var loader = new TestableBaseToolLoader(NullLogger.Instance);
-        var mockServer = Substitute.For<IMcpServer>();
+        var mockServer = Substitute.For<McpServer>();
         mockServer.ClientInfo.Returns((Implementation?)null);
         mockServer.ClientCapabilities.Returns(new ClientCapabilities());
 
@@ -162,7 +162,7 @@ public class BaseToolLoaderTests
     {
         // Arrange
         var loader = new TestableBaseToolLoader(NullLogger.Instance);
-        var mockServer = Substitute.For<IMcpServer>();
+        var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
             Sampling = new SamplingCapability()
@@ -171,11 +171,11 @@ public class BaseToolLoaderTests
 
         // Act
         var options = loader.CreateClientOptionsPublic(mockServer);
-        Assert.NotNull(options.Capabilities?.Sampling?.SamplingHandler);
+        Assert.NotNull(options.Handlers.SamplingHandler);
 
         // Assert - verify handler validates null request
         await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-            await options.Capabilities.Sampling.SamplingHandler(null!, default!, CancellationToken.None));
+            await options.Handlers.SamplingHandler(null!, default!, CancellationToken.None));
     }
 
     [Fact]
@@ -183,7 +183,7 @@ public class BaseToolLoaderTests
     {
         // Arrange
         var loader = new TestableBaseToolLoader(NullLogger.Instance);
-        var mockServer = Substitute.For<IMcpServer>();
+        var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
             Sampling = new SamplingCapability()
@@ -218,9 +218,9 @@ public class BaseToolLoaderTests
 
         // Act
         var options = loader.CreateClientOptionsPublic(mockServer);
-        Assert.NotNull(options.Capabilities?.Sampling?.SamplingHandler);
+        Assert.NotNull(options.Handlers.SamplingHandler);
 
-        await options.Capabilities.Sampling.SamplingHandler(samplingRequest, default!, CancellationToken.None);
+        await options.Handlers.SamplingHandler(samplingRequest, default!, CancellationToken.None);
 
         // Assert - verify SendRequestAsync was called with sampling method
         await mockServer.Received(1).SendRequestAsync(
@@ -233,7 +233,7 @@ public class BaseToolLoaderTests
     {
         // Arrange
         var loader = new TestableBaseToolLoader(NullLogger.Instance);
-        var mockServer = Substitute.For<IMcpServer>();
+        var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
             Elicitation = new ElicitationCapability()
@@ -256,9 +256,9 @@ public class BaseToolLoaderTests
 
         // Act
         var options = loader.CreateClientOptionsPublic(mockServer);
-        Assert.NotNull(options.Capabilities?.Elicitation?.ElicitationHandler);
+        Assert.NotNull(options.Handlers.ElicitationHandler);
 
-        await options.Capabilities.Elicitation.ElicitationHandler(elicitationRequest, CancellationToken.None);
+        await options.Handlers.ElicitationHandler(elicitationRequest, CancellationToken.None);
 
         // Assert - verify SendRequestAsync was called with elicitation method
         await mockServer.Received(1).SendRequestAsync(
@@ -271,7 +271,7 @@ public class BaseToolLoaderTests
     {
         // Arrange
         var loader = new TestableBaseToolLoader(NullLogger.Instance);
-        var mockServer = Substitute.For<IMcpServer>();
+        var mockServer = Substitute.For<McpServer>();
         var capabilities = new ClientCapabilities
         {
             Elicitation = new ElicitationCapability()
@@ -280,11 +280,11 @@ public class BaseToolLoaderTests
 
         // Act
         var options = loader.CreateClientOptionsPublic(mockServer);
-        Assert.NotNull(options.Capabilities?.Elicitation?.ElicitationHandler);
+        Assert.NotNull(options.Handlers.ElicitationHandler);
 
         // Assert - verify handler validates null request
         await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-            await options.Capabilities.Elicitation.ElicitationHandler(null!, CancellationToken.None));
+            await options.Handlers.ElicitationHandler.Invoke(null!, CancellationToken.None));
     }
 
     internal sealed class TestableBaseToolLoader : BaseToolLoader
@@ -294,7 +294,7 @@ public class BaseToolLoaderTests
         {
         }
 
-        public McpClientOptions CreateClientOptionsPublic(IMcpServer server)
+        public McpClientOptions CreateClientOptionsPublic(McpServer server)
         {
             return CreateClientOptions(server);
         }

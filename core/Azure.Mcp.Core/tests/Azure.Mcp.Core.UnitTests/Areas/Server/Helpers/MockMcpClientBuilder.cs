@@ -10,7 +10,7 @@ using NSubstitute;
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Helpers;
 
 /// <summary>
-/// A builder for creating mock <see cref="IMcpClient"/> instances for testing purposes.
+/// A builder for creating mock <see cref="McpClient"/> instances for testing purposes.
 /// Provides a fluent API for registering mock tools with custom handlers.
 /// </summary>
 public sealed class MockMcpClientBuilder
@@ -114,12 +114,12 @@ public sealed class MockMcpClientBuilder
     }
 
     /// <summary>
-    /// Builds and returns a mock <see cref="IMcpClient"/> instance configured with the registered tools.
+    /// Builds and returns a mock <see cref="McpClient"/> instance configured with the registered tools.
     /// </summary>
-    /// <returns>A mock <see cref="IMcpClient"/> instance.</returns>
-    public IMcpClient Build()
+    /// <returns>A mock <see cref="McpClient"/> instance.</returns>
+    public McpClient Build()
     {
-        var mockClient = Substitute.For<IMcpClient>();
+        var mockClient = Substitute.For<McpClient>();
 
         // Setup tools/list response
         mockClient.SendRequestAsync(

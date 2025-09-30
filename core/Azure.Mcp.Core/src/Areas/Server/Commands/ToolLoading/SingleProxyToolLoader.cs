@@ -268,7 +268,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
 
     private async Task<CallToolResult> CommandModeAsync(RequestContext<CallToolRequestParams> request, string intent, string tool, string command, Dictionary<string, object?> parameters, CancellationToken cancellationToken)
     {
-        IMcpClient? client;
+        McpClient? client;
 
         try
         {
@@ -312,7 +312,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         }
     }
 
-    private static bool SupportsSampling(IMcpServer server)
+    private static bool SupportsSampling(McpServer server)
     {
         return server?.ClientCapabilities?.Sampling != null;
     }
