@@ -38,18 +38,28 @@ public class KeyVaultSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var keyVault = new CommandGroup(Name, "Key Vault operations - Commands for managing and accessing Azure Key Vault resources.");
+        var keyVault = new CommandGroup(
+            Name,
+            "Key Vault operations - Routes to data-plane subcommands: keys, secrets, certificates, and administration. Use to create or retrieve these items or view basic Managed HSM settings. Not for listing vaults, rotating keys, performing crypto (encrypt/sign), changing access policies, or managing RBAC. Set 'learn=true' to list sub-commands. Requires appropriate Key Vault permissions; secret values and key/cert material only returned on explicit get.");
 
-        var keys = new CommandGroup("key", "Key Vault key operations - Commands for managing and accessing keys in Azure Key Vault.");
+        var keys = new CommandGroup(
+            "key",
+            "Azure Key Vault Keys operations - List key names, get key metadata + public portion, or create a new RSA/EC key in this vault. No private key export. Not for crypto (encrypt/sign/wrap), rotation, import, or managing secrets/certificates. Requires list|get|create key permissions.");
         keyVault.AddSubGroup(keys);
 
-        var secret = new CommandGroup("secret", "Key Vault secret operations - Commands for managing and accessing secrets in Azure Key Vault.");
+        var secret = new CommandGroup(
+            "secret",
+            "Azure Key Vault Secrets operations - Create a new secret (new version if name exists), get a secret's current value + metadata, or list secret names (no values) for inventory/rotation. Not for large binaries, non‑sensitive config (use App Configuration), certificates, or keys. Requires get|list|set secret permissions; versions retained until explicitly purged.");
         keyVault.AddSubGroup(secret);
 
-        var certificate = new CommandGroup("certificate", "Key Vault certificate operations - Commands for managing and accessing certificates in Azure Key Vault.");
+        var certificate = new CommandGroup(
+            "certificate",
+            "Azure Key Vault Certificates operations - List certificate names, get certificate metadata + public certificate, create a new certificate with the default policy, or import an existing PFX/PEM (with private key) into the vault. Private key material stays protected; no export here. Not for secret storage, raw key generation (use key), rotation policy management, or deploying/binding certs to services. Requires list|get|create|import certificate permissions.");
         keyVault.AddSubGroup(certificate);
 
-        var admin = new CommandGroup("admin", "Key Vault administration operations - Commands for administering a Managed HSM in Azure Key Vault.");
+        var admin = new CommandGroup(
+            "admin",
+            "Key Vault Administration operations for Managed HSM - Get high-level Managed HSM settings (e.g., purge protection, soft-delete retention) for compliance/audit visibility. Read-only; not for key/secret/certificate CRUD, crypto operations, or policy changes. Requires elevated RBAC (Key Vault Administrator or equivalent). Applies only to Managed HSM instances.");
         keyVault.AddSubGroup(admin);
 
         var keyList = serviceProvider.GetRequiredService<KeyListCommand>();
