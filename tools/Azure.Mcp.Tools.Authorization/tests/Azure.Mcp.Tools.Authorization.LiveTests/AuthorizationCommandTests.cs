@@ -24,7 +24,7 @@ public class AuthorizationCommandTests(ITestOutputHelper output)
                 { "scope", scope }
             });
 
-        var roleAssignmentsArray = result.AssertProperty("Assignments");
+        var roleAssignmentsArray = result.AssertProperty("assignments");
         Assert.Equal(JsonValueKind.Array, roleAssignmentsArray.ValueKind);
 
         var enumerator = roleAssignmentsArray.EnumerateArray();
@@ -35,7 +35,7 @@ public class AuthorizationCommandTests(ITestOutputHelper output)
         while (enumerator.MoveNext() && !testRoleAssignmentFound)
         {
             var roleAssignment = enumerator.Current;
-            var description = roleAssignment.AssertProperty("Description").GetString();
+            var description = roleAssignment.AssertProperty("description").GetString();
             testRoleAssignmentFound = expectedDescription.Equals(description, StringComparison.Ordinal);
         }
         Assert.True(testRoleAssignmentFound, "Test role assignment not found in the list of role assignments.");

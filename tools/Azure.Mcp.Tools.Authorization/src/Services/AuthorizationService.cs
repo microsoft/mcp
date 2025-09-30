@@ -1,54 +1,79 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Authorization.Models;
-using Azure.ResourceManager;
-using Azure.ResourceManager.Authorization;
+using Azure.Mcp.Tools.Authorization.Services.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Authorization.Services;
 
-public class AuthorizationService(ITenantService tenantService)
-    : BaseAzureService(tenantService), IAuthorizationService
+public class AuthorizationService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AuthorizationService> logger)
+    : BaseAzureResourceService(subscriptionService, tenantService), IAuthorizationService
 {
-    public async Task<List<RoleAssignment>> ListRoleAssignments(
-        string? scope,
+    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
+    private readonly ILogger<AuthorizationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+    public async Task<List<RoleAssignment>> ListRoleAssignmentsAsync(
+        string subscription,
+        string scope,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(scope);
+        ValidateRequiredParameters((nameof(scope), scope));
 
         try
         {
-            ArmClient armClient = await CreateArmClientAsync(tenantId, retryPolicy);
-            ResourceIdentifier scopeResourceId = new(scope!);
-            RoleAssignmentCollection resources = armClient.GetRoleAssignments(scopeResourceId);
-            List<RoleAssignment> roleAssignments = [];
-            await foreach (RoleAssignmentResource resource in resources.GetAllAsync())
-            {
-                var roleAssignment = new RoleAssignment
-                {
-                    Id = resource.Id.ToString(),
-                    Name = resource.Data.Name,
-                    PrincipalId = resource.Data.PrincipalId,
-                    PrincipalType = resource.Data.PrincipalType?.ToString(),
-                    RoleDefinitionId = resource.Data.RoleDefinitionId?.ToString(),
-                    Scope = resource.Data.Scope,
-                    Description = resource.Data.Description,
-                    DelegatedManagedIdentityResourceId = resource.Data.DelegatedManagedIdentityResourceId?.ToString() ?? string.Empty,
-                    Condition = resource.Data.Condition
-                };
-                roleAssignments.Add(roleAssignment);
-            }
+            var scopeId = new ResourceIdentifier(scope!);
+            var roleAssignments = await ExecuteResourceQueryAsync(
+                "Microsoft.Authorization/roleAssignments",
+                null, // all resource groups
+                subscription,
+                retryPolicy,
+                ConvertToRoleAssignmentModel,
+                "authorizationresources",
+                additionalFilter: $"id contains '{EscapeKqlString(scope)}'",
+                cancellationToken: cancellationToken);
 
             return roleAssignments;
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error listing authorization role assignments: {ex.Message}", ex);
+            _logger.LogError(ex,
+                "Error retrieving role assignments for scope '{Scope}' and tenant '{Tenant}'",
+                scope, tenantId);
+            throw;
         }
+    }
+
+    /// <summary>
+    /// Converts a JsonElement from Azure Resource Graph query to a role assignment model.
+    /// </summary>
+    /// <param name="item">The JsonElement containing role assignment data</param>
+    /// <returns>The role assignment model</returns>
+    private static RoleAssignment ConvertToRoleAssignmentModel(JsonElement item)
+    {
+        RoleAssignmentData? roleAssignmentData = RoleAssignmentData.FromJson(item);
+        if (roleAssignmentData == null)
+            throw new InvalidOperationException("Failed to parse role assignment data");
+
+        return new RoleAssignment
+        {
+            Id = roleAssignmentData.ResourceId,
+            Name = roleAssignmentData.ResourceName,
+            PrincipalId = roleAssignmentData.Properties?.PrincipalId,
+            PrincipalType = roleAssignmentData.Properties?.PrincipalType,
+            RoleDefinitionId = roleAssignmentData.Properties?.RoleDefinitionId,
+            Scope = roleAssignmentData.Properties?.Scope,
+            Description = roleAssignmentData.Properties?.Description,
+            DelegatedManagedIdentityResourceId = roleAssignmentData.Properties?.DelegatedManagedIdentityResourceId,
+            Condition = roleAssignmentData.Properties?.Condition
+        };
     }
 }

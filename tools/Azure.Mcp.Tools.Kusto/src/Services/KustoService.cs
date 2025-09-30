@@ -76,7 +76,7 @@ public sealed class KustoService(
                         subscriptionId,
                         retryPolicy,
                         ConvertToClusterModel,
-                        $"name =~ '{EscapeKqlString(clusterName)}'");
+                        additionalFilter: $"name =~ '{EscapeKqlString(clusterName)}'");
 
             if (cluster == null)
             {
