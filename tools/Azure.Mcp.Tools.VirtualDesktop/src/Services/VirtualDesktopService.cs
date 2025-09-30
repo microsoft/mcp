@@ -37,7 +37,7 @@ public class VirtualDesktopService(ISubscriptionService subscriptionService, ITe
         }
     }
 
-    public async Task<IReadOnlyList<SessionHost>> ListSessionHostsAsync(string subscription, string? resourceGroup, string hostPoolName,string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<IReadOnlyList<SessionHost>> ListSessionHostsAsync(string subscription, string? resourceGroup, string hostPoolName, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
         ValidateRequiredParameters((nameof(hostPoolName), hostPoolName));
