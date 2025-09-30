@@ -12,6 +12,17 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - `azmcp foundry openai create-completion` - Generate text completions using deployed Azure OpenAI models in AI Foundry. [[#54](https://github.com/microsoft/mcp/pull/54)]
   - Supports configurable temperature and max token parameters
   - Requires resource-name, deployment-name, and prompt-text parameters
+- Updated the description of the following Key Vault comands to increase selection accuracy by LLMs: [[#608](https://github.com/microsoft/mcp/pull/608)]
+  - `azmcp_keyvault_certificate_create`
+  - `azmcp_keyvault_certificate_import`
+  - `azmcp_keyvault_certificate_get`
+  - `azmcp_keyvault_certificate_list`
+  - `azmcp_keyvault_key_create`
+  - `azmcp_keyvault_key_get`
+  - `azmcp_keyvault_key_list`
+  - `azmcp_keyvault_secret_create`
+  - `azmcp_keyvault_secret_get`
+  - `azmcp_keyvault_secret_list`
 
 ### Breaking Changes
 
