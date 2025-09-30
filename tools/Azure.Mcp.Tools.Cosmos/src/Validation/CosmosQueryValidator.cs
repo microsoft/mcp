@@ -7,32 +7,24 @@ using Azure.Mcp.Core.Exceptions;
 namespace Azure.Mcp.Tools.Cosmos.Validation;
 
 /// <summary>
-/// Lightweight validator to reduce risk of executing unsafe Cosmos SQL statements entered via the tool.
-/// Only a single read-only SELECT statement targeting container aliases (e.g., c) is allowed.
-/// Disallows DDL/DML, multiple statements, comments that could hide stacked statements, and UNION/INTERSECT/EXCEPT.
-/// This is intentionally conservative; relax only with strong justification.
+/// Lightweight validator to reduce risk of executing unsafe queries via the Cosmos SQL query tool.
+/// Cosmos SQL syntax is inherently read-only (SELECT only), but this validator blocks:
+/// 1. Multiple/stacked statements that could bypass security
+/// 2. Comments that could hide malicious code
+/// 3. Attempts to execute stored procedures/triggers (which CAN modify data)
+/// 4. Common SQL injection patterns
+/// Note: Stored procedures and triggers are executed via SDK APIs, not SQL queries, so they cannot
+/// be invoked through this query interface. This is defense-in-depth validation.
 /// </summary>
 internal static class CosmosQueryValidator
 {
     private const int MaxQueryLength = 5000; // Safety cap similar to Postgres validator.
     private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(3); // Prevent ReDoS attacks
 
-    // Allowed (case-insensitive) Cosmos SQL keywords / functions in simple read-only queries.
-    private static readonly HashSet<string> AllowedKeywords = new(StringComparer.OrdinalIgnoreCase)
+    // Keywords/patterns that might indicate attempts to execute stored procedures or triggers
+    private static readonly HashSet<string> BlockedPatterns = new(StringComparer.OrdinalIgnoreCase)
     {
-        "select","value","distinct","top","from","where","and","or","not","in","between","is","null",
-        "like","order","by","asc","desc","offset","limit","join","as","count","sum","avg","min","max",
-        "case","when","then","else","end"
-    };
-
-    // Known Cosmos SQL keywords that should be validated (both allowed and dangerous ones)
-    private static readonly HashSet<string> KnownCosmosKeywords = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "select","value","distinct","top","from","where","and","or","not","in","between","is","null",
-        "like","order","by","asc","desc","offset","limit","join","as","count","sum","avg","min","max",
-        "case","when","then","else","end",
-        "insert","update","delete","drop","alter","create","replace","upsert","grant","revoke","truncate",
-        "union","intersect","except","exec","execute"
+        "exec", "execute", "trigger", "sproc", "storedprocedure", "call"
     };
 
     /// <summary>
@@ -74,42 +66,26 @@ internal static class CosmosQueryValidator
         }
 
         var lower = core.ToLowerInvariant();
+        
+        // Check for common SQL injection patterns
         if (lower.Contains(" or 1=1") || lower.Contains("' or '1'='1"))
         {
             throw new CommandValidationException("Suspicious boolean tautology pattern detected.");
         }
 
-        // Strip single-quoted string literals to avoid flagging keywords inside them.
+        // Check for attempts to execute stored procedures or triggers
+        // While these cannot be executed via SQL queries, this is defense-in-depth
         var withoutStrings = Regex.Replace(core, "'([^']|'')*'", "'str'", RegexOptions.Compiled, RegexTimeout);
-
-        // Tokenize: letters / underscore. Numbers & punctuation ignored.
         var matches = Regex.Matches(withoutStrings, "[A-Za-z_]+", RegexOptions.Compiled, RegexTimeout);
-        if (matches.Count == 0)
-        {
-            throw new CommandValidationException("Query must contain a SELECT statement.");
-        }
-
-        // First token must be select (already checked; double guard)
-        if (!matches[0].Value.Equals("select", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new CommandValidationException("Only single read-only SELECT statements are allowed.");
-        }
-
+        
         foreach (Match m in matches)
         {
             var token = m.Value;
-
-            // Only validate tokens that are recognized Cosmos SQL keywords
-            // This allows table names, column names, and other identifiers that aren't SQL keywords
-            if (KnownCosmosKeywords.Contains(token))
+            // Check for exact matches or identifiers that start with blocked patterns
+            if (BlockedPatterns.Contains(token) || token.StartsWith("sp_", StringComparison.OrdinalIgnoreCase))
             {
-                // It's a recognized Cosmos SQL keyword - ensure it's in our allow list
-                if (!AllowedKeywords.Contains(token))
-                {
-                    throw new CommandValidationException($"Keyword '{token}' is not permitted in this query context.");
-                }
+                throw new CommandValidationException($"Keyword '{token}' is not permitted. Stored procedures and triggers cannot be executed through SQL queries.");
             }
-            // If it's not a known Cosmos SQL keyword, treat it as an identifier and allow it
         }
     }
 }

@@ -45,18 +45,26 @@ public class CosmosQueryValidatorTests
     [InlineData("DROP TABLE c")]
     public void EnsureReadOnlySelect_NonSelectQuery_ShouldThrow(string query)
     {
+        // These don't start with SELECT, so they're rejected
         var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
         Assert.Contains("select", ex.Message.ToLowerInvariant());
     }
 
     [Theory]
-    [InlineData("SELECT * FROM c UNION SELECT * FROM d")]
-    [InlineData("SELECT id FROM c; INSERT INTO c VALUES(1)")]
-    public void EnsureReadOnlySelect_DangerousKeywords_ShouldThrow(string query)
+    [InlineData("SELECT * FROM c UNION SELECT * FROM d")]  // UNION is now allowed (Cosmos will reject at execution)
+    public void EnsureReadOnlySelect_UnionQueries_ShouldPass(string query)
     {
+        // UNION is not blocked since Cosmos SQL doesn't support it - Cosmos DB will reject at execution
+        CosmosQueryValidator.EnsureReadOnlySelect(query);
+    }
+
+    [Theory]
+    [InlineData("SELECT id FROM c; INSERT INTO c VALUES(1)")]
+    public void EnsureReadOnlySelect_StackedStatementsWithDML_ShouldThrow(string query)
+    {
+        // This fails because of multiple statements (semicolon)
         var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.True(ex.Message.Contains("not permitted", StringComparison.OrdinalIgnoreCase) ||
-                   ex.Message.Contains("multiple", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains("multiple", ex.Message.ToLowerInvariant());
     }
 
     [Theory]
@@ -152,13 +160,20 @@ public class CosmosQueryValidatorTests
     [Theory]
     [InlineData("EXEC sp_procedure")]
     [InlineData("EXECUTE dynamic_query")]
+    public void EnsureReadOnlySelect_StoredProcedureExecution_ShouldThrow(string query)
+    {
+        // These don't start with SELECT or attempt to execute stored procedures
+        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
+        Assert.True(ex.Message.Contains("select", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Theory]
     [InlineData("SELECT * FROM c EXCEPT SELECT * FROM d")]
     [InlineData("SELECT * FROM c INTERSECT SELECT * FROM d")]
-    public void EnsureReadOnlySelect_ProceduralAndSetOperations_ShouldThrow(string query)
+    public void EnsureReadOnlySelect_SetOperations_ShouldPass(string query)
     {
-        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.True(ex.Message.Contains("not permitted", StringComparison.OrdinalIgnoreCase) ||
-                   ex.Message.Contains("select", StringComparison.OrdinalIgnoreCase));
+        // EXCEPT and INTERSECT are not blocked - Cosmos DB will reject them at execution if unsupported
+        CosmosQueryValidator.EnsureReadOnlySelect(query);
     }
 
     [Theory]
@@ -200,9 +215,9 @@ public class CosmosQueryValidatorTests
     [InlineData("UPSERT INTO test VALUES(1)")]
     public void EnsureReadOnlySelect_DDLStatements_ShouldThrow(string query)
     {
+        // These don't start with SELECT
         var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
-        Assert.True(ex.Message.Contains("select", StringComparison.OrdinalIgnoreCase) ||
-                   ex.Message.Contains("not permitted", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains("select", ex.Message.ToLowerInvariant());
     }
 
     [Theory]
@@ -261,5 +276,28 @@ public class CosmosQueryValidatorTests
 
         // Should complete quickly (well under 5 seconds) due to regex timeout protection
         Assert.True(stopwatch.ElapsedMilliseconds < 5000, $"Validation took too long: {stopwatch.ElapsedMilliseconds}ms");
+    }
+
+    [Theory]
+    [InlineData("SELECT * FROM c WHERE EXEC('malicious')")]
+    [InlineData("SELECT * FROM c WHERE EXECUTE sp_adduser")]
+    [InlineData("SELECT sp_executesql(@sql) FROM c")]
+    [InlineData("SELECT * FROM c WHERE trigger = 1")]
+    public void EnsureReadOnlySelect_StoredProcedureKeywords_ShouldThrow(string query)
+    {
+        // Attempts to use stored procedure execution keywords should be blocked
+        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
+        Assert.Contains("stored procedure", ex.Message.ToLowerInvariant());
+    }
+
+    [Theory]
+    [InlineData("SELECT * FROM c WHERE c.description = 'EXEC command here'")]  // exec in string literal
+    [InlineData("SELECT * FROM c WHERE c.note = 'Call trigger later'")]  // trigger in string literal
+    [InlineData("SELECT call_sproc() FROM c")]  // UDF name that happens to contain 'call'
+    [InlineData("SELECT my_sproc_result FROM c")]  // Column name that happens to contain 'sproc'
+    public void EnsureReadOnlySelect_StoredProcedureKeywordsInStringsOrIdentifiers_ShouldPass(string query)
+    {
+        // Keywords inside quoted strings or as part of legitimate identifiers should not trigger validation errors
+        CosmosQueryValidator.EnsureReadOnlySelect(query);
     }
 }
