@@ -15,14 +15,14 @@ internal class CliGenerateService(IHttpClientService httpClientService) : ICliGe
 
     public async Task<HttpResponseMessage> GenerateAzureCLICommandAsync(string intent)
     {
-        // GHCP4A Prod app scope
-        const string apiScope = "9577cf87-9600-4e0d-94cd-0941e6f3c187/.default";
+        // AzCli copilot 1P app scope
+        const string apiScope = "a5ede409-60d3-4a6c-93e6-eb2e7271e8e3/.default";
 
         var credential = new CustomChainedCredential();
         var accessToken = await credential.GetTokenAsync(new TokenRequestContext([apiScope]), CancellationToken.None);
 
         // GHCP4A Prod app endpoint
-        const string url = "https://aiservice.ghcpaz-prod.azure.com/api/azurecli/generate";
+        const string url = "https://azclis-copilot-apim-beta-eus.azure-api.net/azcli/copilot";
 
         var requestBody = new AzureCliGenerateRequest()
         {
