@@ -275,7 +275,7 @@ public class CommandGroupDiscoveryStrategyTests
 
         // Assert
         var names = result.Select(p => p.CreateMetadata().Name).ToList();
-        var ignoredGroups = new[] { "extension", "server", "tools" };
+        var ignoredGroups = new[] { "extension", "server", "tools", "subscription", "group" };
 
         foreach (var ignored in ignoredGroups)
         {
@@ -377,7 +377,7 @@ public class CommandGroupDiscoveryStrategyTests
         Assert.Contains("storage", names, StringComparer.OrdinalIgnoreCase);
 
         // Should not include ignored groups
-        var ignoredGroups = new[] { "extension", "server", "tools" };
+        var ignoredGroups = new[] { "extension", "server", "tools", "subscription", "group" };
         foreach (var ignored in ignoredGroups)
         {
             Assert.DoesNotContain(ignored, names, StringComparer.OrdinalIgnoreCase);
@@ -424,6 +424,8 @@ public class CommandGroupDiscoveryStrategyTests
         Assert.DoesNotContain("extension", names, StringComparer.OrdinalIgnoreCase);
         Assert.DoesNotContain("server", names, StringComparer.OrdinalIgnoreCase);
         Assert.DoesNotContain("tools", names, StringComparer.OrdinalIgnoreCase);
+        Assert.DoesNotContain("subscription", names, StringComparer.OrdinalIgnoreCase);
+        Assert.DoesNotContain("group", names, StringComparer.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -469,7 +471,7 @@ public class CommandGroupDiscoveryStrategyTests
         var result = (await strategy.DiscoverServersAsync()).ToList();
         Assert.NotEmpty(result);
         // Should not include ignored groups
-        var ignored = new[] { "extension", "server", "tools" };
+        var ignored = new[] { "extension", "server", "tools", "subscription", "group" };
         Assert.DoesNotContain(result, p => ignored.Contains(p.CreateMetadata().Name, StringComparer.OrdinalIgnoreCase));
         // Should include at least one known group (e.g. storage)
         Assert.Contains(result, p => p.CreateMetadata().Name == "storage");
@@ -558,6 +560,8 @@ public class CommandGroupDiscoveryStrategyTests
         Assert.Contains("keyvault", serverNames);
         Assert.DoesNotContain("server", serverNames); // Should be ignored
         Assert.DoesNotContain("extension", serverNames); // Should be ignored
+        Assert.DoesNotContain("subscription", serverNames); // Should be ignored
+        Assert.DoesNotContain("group", serverNames); // Should be ignored
     }
 
     [Fact]
@@ -583,6 +587,8 @@ public class CommandGroupDiscoveryStrategyTests
         Assert.Contains("keyvault", serverNames);
         Assert.DoesNotContain("server", serverNames); // Should be ignored
         Assert.DoesNotContain("extension", serverNames); // Should be ignored
+        Assert.DoesNotContain("subscription", serverNames); // Should be ignored
+        Assert.DoesNotContain("group", serverNames); // Should be ignored
     }
 
 }
