@@ -57,8 +57,8 @@ internal class Program
     {
 
         return [
-            // Register core areas
-            new Azure.Mcp.Tools.AzureBestPractices.AzureBestPracticesSetup(),
+                // Register core areas
+                new Azure.Mcp.Tools.AzureBestPractices.AzureBestPracticesSetup(),
             new Azure.Mcp.Tools.Extension.ExtensionSetup(),
             new Azure.Mcp.Core.Areas.Group.GroupSetup(),
             new Azure.Mcp.Core.Areas.Server.ServerSetup(),
@@ -93,6 +93,7 @@ internal class Program
             new Azure.Mcp.Tools.MySql.MySqlSetup(),
             new Azure.Mcp.Tools.Postgres.PostgresSetup(),
             new Azure.Mcp.Tools.Redis.RedisSetup(),
+            new Azure.Mcp.Tools.Communication.CommunicationSetup(),
             new Azure.Mcp.Tools.ResourceHealth.ResourceHealthSetup(),
             new Azure.Mcp.Tools.Search.SearchSetup(),
             new Azure.Mcp.Tools.Speech.SpeechSetup(),
