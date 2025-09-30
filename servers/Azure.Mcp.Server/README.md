@@ -274,7 +274,14 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "List the container apps in my subscription"
 * "Show me the container apps in my 'my-resource-group' resource group"
 
-### 📦 Azure Container Registry (ACR)
+### � Azure Communication Services
+
+* "Send an SMS message to +1234567890"
+* "Send SMS with delivery reporting enabled"
+* "Send a broadcast SMS to multiple recipients"
+* "Send SMS with custom tracking tag"
+
+### �📦 Azure Container Registry (ACR)
 
 * "List all my Azure Container Registries"
 * "Show me my container registries in the 'my-resource-group' resource group"
@@ -371,7 +378,8 @@ The Azure MCP Server provides tools for interacting with **30+ Azure service are
 - 🕸️ **Azure App Service** - Web app hosting
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 📦 **Azure Container Apps** - Container hosting
-- 📦 **Azure Container Registry (ACR)** - Container registry management
+- � **Azure Communication Services** - SMS messaging and communication
+- �📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
