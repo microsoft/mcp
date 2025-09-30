@@ -121,7 +121,7 @@ public static class AzureMcpServiceCollectionExtensions
                 // Always add utility commands (subscription, group) in namespace mode
                 // so they are available regardless of which namespaces are loaded
                 var utilityToolLoaderOptions = new ToolLoaderOptions(
-                    Namespace: ["subscription", "group"],
+                    Namespace: Discovery.DiscoveryConstants.UtilityNamespaces,
                     ReadOnly: defaultToolLoaderOptions.ReadOnly,
                     InsecureDisableElicitation: defaultToolLoaderOptions.InsecureDisableElicitation
                 );

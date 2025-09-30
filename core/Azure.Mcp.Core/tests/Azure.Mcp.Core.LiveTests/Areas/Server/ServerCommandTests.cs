@@ -129,6 +129,29 @@ public class ServerCommandTests(ITestOutputHelper output)
         Output.WriteLine($"Subscription list result: {firstContent}");
     }
 
+    [Fact]
+    public async Task DefaultMode_CanCallGroupList()
+    {
+        // Arrange
+        await using var client = await CreateClientAsync("server", "start");
+
+        // Act
+        var result = await client.CallToolAsync("azmcp_group_list", new Dictionary<string, object?> { },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Content);
+        Assert.NotEmpty(result.Content);
+
+        // The result should contain resource group data (even if empty list)
+        var firstContent = result.Content.FirstOrDefault();
+        Assert.NotNull(firstContent);
+
+        // Log for debugging
+        Output.WriteLine($"Group list result: {firstContent}");
+    }
+
     #endregion
 
     #region All Mode Tests
