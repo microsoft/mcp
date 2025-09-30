@@ -32,8 +32,9 @@ public sealed class SecretCreateCommand(ILogger<SecretCreateCommand> logger) : S
 
     public override string Description =>
         """
-        Creates a new secret in an Azure Key Vault. This command creates a secret with the specified name and value
-        in the given vault.
+        Create (or version) a secret with a name + value. If the name exists a new version is added. Use for storing
+        credentials, API keys, connection strings. Not for large files, keys, or certificates. Plan rotation by stable
+        naming + versions. Permission: set secret.
         """;
 
     protected override void RegisterOptions(Command command)

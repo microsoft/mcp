@@ -32,8 +32,9 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
 
     public override string Description =>
         """
-        Gets a secret from an Azure Key Vault. This command retrieves and displays the value
-        of a specific secret from the specified vault.
+        Get the current value + metadata for a specific secret (enabled, not-before, expiry, created, updated).
+        Use to retrieve sensitive credentials at runtime or validate rotation. Not for large binaries or certificates
+        (use certificate group). Handle value securely after retrieval. Permission: get secret.
         """;
 
     protected override void RegisterOptions(Command command)
