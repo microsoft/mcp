@@ -32,8 +32,9 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : Subscri
 
     public override string Description =>
         """
-        Create a new key in an Azure Key Vault. This command creates a key with the specified name and type
-        in the given vault.
+        Create a new RSA or EC key (server-side generation; private portion retained). Use to provision material for
+        future signing/encryption/wrapping. Not for importing existing keys, rotation policy config, or crypto ops.
+        Fails if name already exists. Permission: create key.
         """;
 
     protected override void RegisterOptions(Command command)

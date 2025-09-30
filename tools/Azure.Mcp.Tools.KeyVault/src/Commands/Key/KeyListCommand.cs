@@ -32,8 +32,9 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
 
     public override string Description =>
         """
-        List all keys in an Azure Key Vault. This command retrieves and displays the names of all keys
-        stored in the specified vault.
+        List key names in a Key Vault (no versions, attributes, or key material). Use to inventory keys or check
+        availability before creation. Optional --include-managed to surface service‑managed/imported keys.
+        Not for metadata (use key get) or cryptographic operations. Permission: list keys.
         """;
 
     protected override void RegisterOptions(Command command)
