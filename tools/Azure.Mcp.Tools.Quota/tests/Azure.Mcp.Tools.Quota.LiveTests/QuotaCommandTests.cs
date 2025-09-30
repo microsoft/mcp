@@ -22,7 +22,7 @@ public class QuotaCommandTests : CommandTestsBase
         // act
         var resourceTypes = "Microsoft.CognitiveServices, Microsoft.Compute, Microsoft.Storage, Microsoft.App, Microsoft.Network, Microsoft.MachineLearningServices, Microsoft.DBforPostgreSQL, Microsoft.HDInsight, Microsoft.Search, Microsoft.ContainerInstance";
         JsonElement? result = await CallToolAsync(
-            "azmcp_quota_usage_check",
+            "az_quota_usage_check",
             new() {
                 { "subscription", Settings.SubscriptionId },
                 { "region", "eastus" },
@@ -70,7 +70,7 @@ public class QuotaCommandTests : CommandTestsBase
     {
         // act
         var result = await CallToolAsync(
-            "azmcp_quota_region_availability_list",
+            "az_quota_region_availability_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -104,7 +104,7 @@ public class QuotaCommandTests : CommandTestsBase
     {
         // act
         var result = await CallToolAsync(
-            "azmcp_quota_region_availability_list",
+            "az_quota_region_availability_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
         public async Task Should_list_filesystems_by_subscription()
         {
             var result = await CallToolAsync(
-                "azmcp_azuremanagedlustre_filesystem_list",
+                "az_azuremanagedlustre_filesystem_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId }
@@ -28,7 +28,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
         public async Task Should_calculate_required_subnet_size()
         {
             var result = await CallToolAsync(
-                "azmcp_azuremanagedlustre_filesystem_required-subnet-size",
+                "az_azuremanagedlustre_filesystem_required-subnet-size",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -44,7 +44,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
         public async Task Should_get_sku_info()
         {
             var result = await CallToolAsync(
-                "azmcp_azuremanagedlustre_filesystem_sku_get",
+                "az_azuremanagedlustre_filesystem_sku_get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId }
@@ -58,7 +58,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
         public async Task Should_get_sku_info_zonal_support()
         {
             var result = await CallToolAsync(
-                "azmcp_azuremanagedlustre_filesystem_sku_get",
+                "az_azuremanagedlustre_filesystem_sku_get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -77,7 +77,7 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.LiveTests
         public async Task Should_get_sku_info_no_zonal_support()
         {
             var result = await CallToolAsync(
-                "azmcp_azuremanagedlustre_filesystem_sku_get",
+                "az_azuremanagedlustre_filesystem_sku_get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },

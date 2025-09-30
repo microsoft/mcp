@@ -17,7 +17,7 @@ public class EventGridCommandTests(ITestOutputHelper output)
     public async Task Should_list_eventgrid_topics_by_subscription()
     {
         var result = await CallToolAsync(
-            "azmcp_eventgrid_topic_list",
+            "az_eventgrid_topic_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -32,7 +32,7 @@ public class EventGridCommandTests(ITestOutputHelper output)
     public async Task Should_list_eventgrid_topics_by_subscription_and_resource_group()
     {
         var result = await CallToolAsync(
-            "azmcp_eventgrid_topic_list",
+            "az_eventgrid_topic_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -48,7 +48,7 @@ public class EventGridCommandTests(ITestOutputHelper output)
     public async Task Should_list_eventgrid_subscriptions_by_subscription()
     {
         var result = await CallToolAsync(
-            "azmcp_eventgrid_subscription_list",
+            "az_eventgrid_subscription_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -63,7 +63,7 @@ public class EventGridCommandTests(ITestOutputHelper output)
     public async Task Should_list_eventgrid_subscriptions_by_subscription_and_resource_group()
     {
         var result = await CallToolAsync(
-            "azmcp_eventgrid_subscription_list",
+            "az_eventgrid_subscription_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -88,7 +88,7 @@ public class EventGridCommandTests(ITestOutputHelper output)
         });
 
         var result = await CallToolAsync(
-            "azmcp_eventgrid_events_publish",
+            "az_eventgrid_events_publish",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -128,7 +128,7 @@ public class EventGridCommandTests(ITestOutputHelper output)
         });
 
         var result = await CallToolAsync(
-            "azmcp_eventgrid_events_publish",
+            "az_eventgrid_events_publish",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -165,7 +165,7 @@ public class EventGridCommandTests(ITestOutputHelper output)
         });
 
         var result = await CallToolAsync(
-            "azmcp_eventgrid_events_publish",
+            "az_eventgrid_events_publish",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -210,7 +210,7 @@ public class EventGridCommandTests(ITestOutputHelper output)
         });
 
         var result = await CallToolAsync(
-            "azmcp_eventgrid_events_publish",
+            "az_eventgrid_events_publish",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -255,7 +255,7 @@ public class EventGridCommandTests(ITestOutputHelper output)
         });
 
         var result = await CallToolAsync(
-            "azmcp_eventgrid_events_publish",
+            "az_eventgrid_events_publish",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -293,7 +293,7 @@ public class EventGridCommandTests(ITestOutputHelper output)
         });
 
         var result = await CallToolAsync(
-            "azmcp_eventgrid_events_publish",
+            "az_eventgrid_events_publish",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -328,7 +328,7 @@ public class EventGridCommandTests(ITestOutputHelper output)
         });
 
         var result = await CallToolAsync(
-            "azmcp_eventgrid_events_publish",
+            "az_eventgrid_events_publish",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

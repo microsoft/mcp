@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_list_storage_accounts_by_subscription_id()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_account_get",
+                "az_storage_account_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionId }
@@ -29,7 +29,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_get_storage_account_details_by_subscription_id()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_account_get",
+                "az_storage_account_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionId },
@@ -61,7 +61,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_get_storage_account_details_by_subscription_name()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_account_get",
+                "az_storage_account_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -84,7 +84,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_get_storage_account_details_with_tenant_id()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_account_get",
+                "az_storage_account_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -107,7 +107,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
             var result = await CallToolAsync(
-                "azmcp_storage_account_get",
+                "az_storage_account_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -128,7 +128,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_list_storage_accounts_by_subscription_name()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_account_get",
+                "az_storage_account_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName }
@@ -143,7 +143,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_list_storage_accounts_by_subscription_name_with_tenant_id()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_account_get",
+                "az_storage_account_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -161,7 +161,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
             var result = await CallToolAsync(
-                "azmcp_storage_account_get",
+                "az_storage_account_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -177,7 +177,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_list_blobs_in_container()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_blob_get",
+                "az_storage_blob_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -195,7 +195,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_get_blob_details()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_blob_get",
+                "az_storage_blob_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -236,7 +236,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
                 await File.WriteAllTextAsync(tempFilePath, testContent, TestContext.Current.CancellationToken);
 
                 var result = await CallToolAsync(
-                    "azmcp_storage_blob_upload",
+                    "az_storage_blob_upload",
                     new()
                     {
                         { "subscription", Settings.SubscriptionName },
@@ -275,7 +275,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_list_containers()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_blob_container_get",
+                "az_storage_blob_container_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -293,7 +293,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_get_container_details()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_blob_container_get",
+                "az_storage_blob_container_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -313,7 +313,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         public async Task Should_get_container_details_with_tenant_authkey()
         {
             var result = await CallToolAsync(
-                "azmcp_storage_blob_container_get",
+                "az_storage_blob_container_get",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -336,7 +336,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             var containerName = $"test-container-{DateTime.UtcNow.Ticks}";
 
             var result = await CallToolAsync(
-                "azmcp_storage_blob_container_create",
+                "az_storage_blob_container_create",
                 new()
                 {
                 { "subscription", Settings.SubscriptionName },
@@ -358,7 +358,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             var uniqueAccountName = $"testacct{DateTime.UtcNow:MMddHHmmss}";
 
             var result = await CallToolAsync(
-                "azmcp_storage_account_create",
+                "az_storage_account_create",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -400,7 +400,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
             // and we need to catch any exceptions or check the response manually
             try
             {
-                var result = await CallToolAsync("azmcp_storage_account_create",
+                var result = await CallToolAsync("az_storage_account_create",
                     new Dictionary<string, object?> { { "args", argsString } });
 
                 // If we get here, the command didn't fail as expected

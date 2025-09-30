@@ -17,7 +17,7 @@ public class AuthorizationCommandTests(ITestOutputHelper output)
     {
         var scope = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}";
         var result = await CallToolAsync(
-            "azmcp_role_assignment_list",
+            "az_role_assignment_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

@@ -18,7 +18,7 @@ public class DatabaseAddCommandLiveTests(ITestOutputHelper output) : CommandTest
     public async Task ExecuteAsync_WithValidParameters_ReturnsSuccessResult()
     {
         var result = await CallToolAsync(
-            "azmcp_appservice_database_add",
+            "az_appservice_database_add",
             new Dictionary<string, object?>
             {
                 { "subscription", Settings.SubscriptionId },
@@ -47,7 +47,7 @@ public class DatabaseAddCommandLiveTests(ITestOutputHelper output) : CommandTest
     public async Task ExecuteAsync_WithDifferentDatabaseTypes_AcceptsValidTypes(string databaseType)
     {
         var result = await CallToolAsync(
-            "azmcp_appservice_database_add",
+            "az_appservice_database_add",
             new Dictionary<string, object?>
             {
                 { "subscription", Settings.SubscriptionId },
@@ -86,7 +86,7 @@ public class DatabaseAddCommandLiveTests(ITestOutputHelper output) : CommandTest
     public async Task ExecuteAsync_WithInvalidDatabaseTypes_ReturnsValidationError(string invalidDatabaseType)
     {
         var result = await CallToolAsync(
-            "azmcp_appservice_database_add",
+            "az_appservice_database_add",
             new Dictionary<string, object?>
             {
                 { "subscription", Settings.SubscriptionId },

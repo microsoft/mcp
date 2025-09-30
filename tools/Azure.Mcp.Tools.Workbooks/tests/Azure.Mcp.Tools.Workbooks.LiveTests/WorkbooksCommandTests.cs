@@ -31,7 +31,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
     public async Task Should_list_workbooks()
     {
         var result = await CallToolAsync(
-            "azmcp_workbooks_list",
+            "az_workbooks_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -58,7 +58,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
     {
         // First get the list of workbooks to find a valid ID
         var listResult = await CallToolAsync(
-            "azmcp_workbooks_list",
+            "az_workbooks_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -75,7 +75,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
 
         // Now get the detailed workbook
         var result = await CallToolAsync(
-            "azmcp_workbooks_show",
+            "az_workbooks_show",
             new()
             {
                 { "workbook-id", workbookId.GetString()! }
@@ -99,7 +99,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
         {
             // CREATE
             var createResult = await CallToolAsync(
-                "azmcp_workbooks_create",
+                "az_workbooks_create",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -120,7 +120,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
             // UPDATE
             var updatedName = $"Updated {workbookName}";
             var updateResult = await CallToolAsync(
-                "azmcp_workbooks_update",
+                "az_workbooks_update",
                 new()
                 {
                     { "workbook-id", workbookId },
@@ -133,7 +133,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
 
             // READ (verify exists)
             var showResult = await CallToolAsync(
-                "azmcp_workbooks_show",
+                "az_workbooks_show",
                 new()
                 {
                     { "workbook-id", workbookId }
@@ -150,7 +150,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
             if (!string.IsNullOrEmpty(workbookId))
             {
                 var deleteResult = await CallToolAsync(
-                    "azmcp_workbooks_delete",
+                    "az_workbooks_delete",
                     new()
                     {
                         { "workbook-id", workbookId }
@@ -168,7 +168,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
 
         // Create a workbook to delete
         var createResult = await CallToolAsync(
-            "azmcp_workbooks_create",
+            "az_workbooks_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -185,7 +185,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
 
         // Delete the workbook
         var deleteResult = await CallToolAsync(
-            "azmcp_workbooks_delete",
+            "az_workbooks_delete",
             new()
             {
                 { "workbook-id", workbookId }
@@ -200,7 +200,7 @@ public class WorkbooksCommandTests(ITestOutputHelper output) : CommandTestsBase(
 
         // Verify workbook no longer exists by trying to show it (should return error)
         var showResult = await CallToolAsync(
-            "azmcp_workbooks_show",
+            "az_workbooks_show",
             new()
             {
                 { "workbook-id", workbookId }

@@ -16,7 +16,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     public async Task Should_ListHostpools_WithSubscriptionId()
     {
         var result = await CallToolAsync(
-            "azmcp_virtualdesktop_hostpool_list",
+            "az_virtualdesktop_hostpool_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -42,7 +42,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     public async Task Should_ListHostpools_WithSubscriptionName()
     {
         var result = await CallToolAsync(
-            "azmcp_virtualdesktop_hostpool_list",
+            "az_virtualdesktop_hostpool_list",
             new()
             {
                 { "subscription", Settings.SubscriptionName }
@@ -69,7 +69,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     {
         // First get all hostpools to find one with a resource group
         var allHostpoolsResult = await CallToolAsync(
-            "azmcp_virtualdesktop_hostpool_list",
+            "az_virtualdesktop_hostpool_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -83,7 +83,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
 
             // Now test with resource group filter
             var result = await CallToolAsync(
-                "azmcp_virtualdesktop_hostpool_list",
+                "az_virtualdesktop_hostpool_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -113,7 +113,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     {
         // First get all hostpools to find one with a resource group
         var allHostpoolsResult = await CallToolAsync(
-            "azmcp_virtualdesktop_hostpool_list",
+            "az_virtualdesktop_hostpool_list",
             new()
             {
                 { "subscription", Settings.SubscriptionName }
@@ -127,7 +127,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
 
             // Now test with resource group filter
             var result = await CallToolAsync(
-                "azmcp_virtualdesktop_hostpool_list",
+                "az_virtualdesktop_hostpool_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionName },
@@ -157,7 +157,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     {
         // Test with a non-existent resource group name
         var result = await CallToolAsync(
-            "azmcp_virtualdesktop_hostpool_list",
+            "az_virtualdesktop_hostpool_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -175,7 +175,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     {
         // First get available hostpools
         var hostpoolsResult = await CallToolAsync(
-            "azmcp_virtualdesktop_hostpool_list",
+            "az_virtualdesktop_hostpool_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -187,7 +187,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
             var firstHostpool = hostpools[0].GetProperty("name").GetString()!;
 
             var result = await CallToolAsync(
-                "azmcp_virtualdesktop_hostpool_sessionhost_list",
+                "az_virtualdesktop_hostpool_sessionhost_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -214,7 +214,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     {
         // First get available hostpools
         var hostpoolsResult = await CallToolAsync(
-            "azmcp_virtualdesktop_hostpool_list",
+            "az_virtualdesktop_hostpool_list",
             new()
             {
                 { "subscription", Settings.SubscriptionName }
@@ -226,7 +226,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
             var firstHostpool = hostpools[0].GetProperty("name").GetString()!;
 
             var result = await CallToolAsync(
-                "azmcp_virtualdesktop_hostpool_sessionhost_list",
+                "az_virtualdesktop_hostpool_sessionhost_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionName },
@@ -253,7 +253,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     {
         // First get available hostpools
         var hostpoolsResult = await CallToolAsync(
-            "azmcp_virtualdesktop_hostpool_list",
+            "az_virtualdesktop_hostpool_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -266,7 +266,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
 
             // Get session hosts for the first hostpool
             var sessionHostsResult = await CallToolAsync(
-                "azmcp_virtualdesktop_hostpool_sessionhost_list",
+                "az_virtualdesktop_hostpool_sessionhost_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -279,7 +279,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
                 var firstSessionHost = sessionHosts.Value[0].GetProperty("name").GetString()!;
 
                 var result = await CallToolAsync(
-                    "azmcp_virtualdesktop_hostpool_sessionhost_usersession_list",
+                    "az_virtualdesktop_hostpool_sessionhost_usersession_list",
                     new()
                     {
                         { "subscription", Settings.SubscriptionId },
@@ -312,7 +312,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     {
         // First get available hostpools
         var hostpoolsResult = await CallToolAsync(
-            "azmcp_virtualdesktop_hostpool_list",
+            "az_virtualdesktop_hostpool_list",
             new()
             {
                 { "subscription", Settings.SubscriptionName }
@@ -325,7 +325,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
 
             // Get session hosts for the first hostpool
             var sessionHostsResult = await CallToolAsync(
-                "azmcp_virtualdesktop_hostpool_sessionhost_list",
+                "az_virtualdesktop_hostpool_sessionhost_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionName },
@@ -338,7 +338,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
                 var firstSessionHost = sessionHosts.Value[0].GetProperty("name").GetString()!;
 
                 var result = await CallToolAsync(
-                    "azmcp_virtualdesktop_hostpool_sessionhost_usersession_list",
+                    "az_virtualdesktop_hostpool_sessionhost_usersession_list",
                     new()
                     {
                         { "subscription", Settings.SubscriptionName },
