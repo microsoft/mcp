@@ -18,7 +18,7 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
     public override string Name => "query";
 
     public override string Description =>
-        "List items from a Cosmos DB container by executing SQL queries that can be filtered by account name, database name, container name, or query text.";
+    "List items from a Cosmos DB container by specifying the account name, database name, and container name, optionally providing a custom SQL query to filter results.";
 
     public override string Title => CommandTitle;
 
