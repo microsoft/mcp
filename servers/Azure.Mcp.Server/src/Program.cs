@@ -37,6 +37,8 @@ internal class Program
             var serviceProvider = services.BuildServiceProvider();
 
             // Perform any initialization before starting the service.
+            // If the initialization operation fails, do not continue because we do not want
+            // invalid telemetry published.
             var telemetryService = serviceProvider.GetRequiredService<ITelemetryService>();
             await telemetryService.InitializeAsync();
 
