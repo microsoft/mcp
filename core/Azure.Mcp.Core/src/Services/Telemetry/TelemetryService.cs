@@ -17,11 +17,15 @@ namespace Azure.Mcp.Core.Services.Telemetry;
 /// </summary>
 internal class TelemetryService : ITelemetryService
 {
-    private readonly bool _isEnabled;
-    private readonly List<KeyValuePair<string, object?>> _tagsList;
     private readonly IMachineInformationProvider _informationProvider;
+    private readonly ManualResetEventSlim _initializationCompleted = new ManualResetEventSlim(false);
+    private readonly bool _isEnabled;
     private readonly ILogger<TelemetryService> _logger;
+    private readonly TimeSpan _operationTimeout;
+    private readonly List<KeyValuePair<string, object?>> _tagsList;
+
     private bool _isInitialized;
+
 
     internal ActivitySource Parent { get; }
 
@@ -44,6 +48,7 @@ internal class TelemetryService : ITelemetryService
         Parent = new ActivitySource(options.Value.Name, options.Value.Version, _tagsList);
         _informationProvider = informationProvider;
         _logger = logger;
+        _operationTimeout = options.Value.OperationTimeout;
     }
 
     /// <summary>
@@ -66,7 +71,13 @@ internal class TelemetryService : ITelemetryService
         if (!_isInitialized)
         {
             throw new InvalidOperationException(
-                "Telemetry service has not been initialized. Use InitializeAsync() before any other operations.");
+                $"Telemetry service has not been initialized. Use {nameof(InitializeAsync)}() before any other operations.");
+        }
+
+        if (!_initializationCompleted.Wait(_operationTimeout))
+        {
+            throw new InvalidOperationException(
+                $"Telemetry service did not finish initialization within {_operationTimeout.TotalSeconds} seconds.");
         }
 
         var activity = Parent.StartActivity(activityId);
@@ -114,6 +125,10 @@ internal class TelemetryService : ITelemetryService
         {
             _logger.LogError(ex, "Error occurred initializing telemetry service.");
             throw;
+        }
+        finally
+        {
+            _initializationCompleted.Set();
         }
     }
 }
