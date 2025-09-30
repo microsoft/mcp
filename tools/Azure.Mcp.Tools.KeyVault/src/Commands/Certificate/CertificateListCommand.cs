@@ -32,8 +32,8 @@ public sealed class CertificateListCommand(ILogger<CertificateListCommand> logge
 
     public override string Description =>
         """
-        List all certificates in an Azure Key Vault. This command retrieves and displays the names of all certificates
-        stored in the specified vault.
+        List certificate names in a Key Vault (no policy or private material). Use to inventory TLS/client auth assets
+        or confirm availability before get/create/import. Not for metadata (use certificate get). Permission: list certificates.
         """;
 
     protected override void RegisterOptions(Command command)

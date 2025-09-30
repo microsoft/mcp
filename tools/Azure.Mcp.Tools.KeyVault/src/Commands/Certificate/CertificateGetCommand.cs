@@ -32,8 +32,9 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
 
     public override string Description =>
         """
-        Gets a certificate from an Azure Key Vault. This command retrieves and displays details
-        about a specific certificate in the specified vault.
+        Get certificate metadata + public cert (base64), IDs (cert/key/secret), thumbprint, lifecycle timestamps, subject,
+        issuer. Private key material is not exported. Use for deployment packaging or validation. Not for creation (use create)
+        or import (use import). Permission: get certificate.
         """;
 
     protected override void RegisterOptions(Command command)
