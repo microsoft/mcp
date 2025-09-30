@@ -22,8 +22,8 @@ internal class TelemetryService : ITelemetryService
     private readonly TimeSpan _operationTimeout;
     private readonly List<KeyValuePair<string, object?>> _tagsList;
 
+    private bool _initializationSuccessful;
     private bool _isInitialized;
-
 
     internal ActivitySource Parent { get; }
 
@@ -41,8 +41,14 @@ internal class TelemetryService : ITelemetryService
         _operationTimeout = options.Value.OperationTimeout;
     }
 
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
     public Activity? StartActivity(string activityId) => StartActivity(activityId, null);
 
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
     public Activity? StartActivity(string activityId, Implementation? clientInfo)
     {
         if (!_isEnabled)
@@ -60,6 +66,11 @@ internal class TelemetryService : ITelemetryService
         {
             throw new InvalidOperationException(
                 $"Telemetry service did not finish initialization within {_operationTimeout.TotalSeconds} seconds.");
+        }
+
+        if (!_initializationSuccessful)
+        {
+            throw new InvalidOperationException("Telemetry service was not successfully initialized. Check logs for initialization errors.");
         }
 
         var activity = Parent.StartActivity(activityId);
@@ -86,6 +97,9 @@ internal class TelemetryService : ITelemetryService
     {
     }
 
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
     public async ValueTask InitializeAsync()
     {
         var previouslyInitialized = Interlocked.CompareExchange(ref _isInitialized, true, false);
@@ -102,6 +116,8 @@ internal class TelemetryService : ITelemetryService
 
             _tagsList.Add(new(TagName.MacAddressHash, macAddressHash));
             _tagsList.Add(new(TagName.DevDeviceId, deviceId));
+
+            _initializationSuccessful = true;
         }
         catch (Exception ex)
         {
