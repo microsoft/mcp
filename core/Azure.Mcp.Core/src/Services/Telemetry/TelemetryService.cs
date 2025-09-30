@@ -21,7 +21,7 @@ internal class TelemetryService : ITelemetryService
     private readonly List<KeyValuePair<string, object?>> _tagsList;
     private readonly IMachineInformationProvider _informationProvider;
     private readonly ILogger<TelemetryService> _logger;
-    private bool _isInitialized = false;
+    private bool _isInitialized;
 
     internal ActivitySource Parent { get; }
 
