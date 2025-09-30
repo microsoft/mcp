@@ -23,22 +23,8 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
 
     public override string Name => "design";
 
-    public override string Description => """
-        Azure architecture design tool that gathers requirements through guided questions and recommends optimal solutions.
-
-        Key parameters: question, questionNumber, confidenceScore (0.0-1.0, present architecture when ≥0.7), totalQuestions, answer, nextQuestionNeeded, architectureComponent, architectureTier, state.
-
-        Process:
-        1. Ask about user role, business goals (1-2 questions at a time)
-        2. Track confidence and update requirements (explicit/implicit/assumed)
-        3. When confident enough, present architecture with table format, visual organization, ASCII diagrams
-        4. Follow Azure Well-Architected Framework principles
-        5. Cover all tiers: infrastructure, platform, application, data, security, operations
-        6. Provide actionable advice and high-level overview
-
-        State tracks components, requirements by category, and confidence factors. Be conservative with suggestions.
-        """;
-
+    public override string Description =>
+    "Recommends architecture design for cloud services/apps/solutions, such as: file storage, banking, video streaming, e-commerce, SaaS, and more. Use as follows: 1. Ask about user role, business goals, etc (1-2 questions at a time). 2. Track confidence returned by service and update requirements (explicit/implicit/assumed). 3. Repeat steps 1 and 2 as needed until confidence >= 0.7 4. Present architecture with table format, visual organization, ASCII diagrams. 4. Follow Azure Well-Architected Framework principles. 5. Cover all tiers: infrastructure, platform, application, data, security, operations. 6. Provide actionable advice and high-level overview. Note: State tracks components, requirements by category, and confidence factors. Be conservative with suggestions.";
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
