@@ -7,7 +7,7 @@
 
       "linux_arm64": {"OSVmImage": "env:LINUXARMVMIMAGE", "Pool": "env:LINUXARMPOOL", "RunTests": "false", "Architecture": "arm64" },
       "osx_arm64": {"OSVmImage": "env:MACVMIMAGE","Pool": "env:MACPOOL", "RunTests": "false", "Architecture": "arm64"},
-      "win_arm64": {"OSVmImage": "env:WINDOWSARMVMIMAGE ", "Pool": "env:WINDOWSARMPOOL", "RunTests": "false", "Architecture": "arm64" }
+      "win_arm64": {"OSVmImage": "env:WINDOWSARMVMIMAGE", "Pool": "env:WINDOWSARMPOOL", "RunTests": "false", "Architecture": "arm64" }
     }
   }
 }
