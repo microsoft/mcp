@@ -147,6 +147,11 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
         await using HubConnection connection = new HubConnectionBuilder()
             .AddJsonProtocol(options =>
             {
+                // TypeInfo resolver chain needs to be update to use AppLensJsonContext first to resolve App Lens
+                // types. Without this it'll attempt to use reflection-based serialization, which will result in a
+                // runtime error when using the native AoT server, as that disables reflection.
+                // More information about configuring HubConnection JSON serialization can be found here:
+                // https://learn.microsoft.com/aspnet/core/signalr/configuration?view=aspnetcore-9.0&tabs=dotnet#jsonmessagepack-serialization-options
                 options.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, AppLensJsonContext.Default);
             })
             .WithUrl(ConversationalDiagnosticsSignalREndpoint, options =>
