@@ -18,6 +18,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+#### Dependency updates
+
+- Updated `Microsoft.Azure.Cosmos.Aot` from `0.1.2-preview.2` to `0.1.4-preview.2`, which upgrades the transitive Newtonsoft.Json dependency to `13.0.4`. [[662](https://github.com/microsoft/mcp/pull/662)]
+
 ## 0.8.4 (2025-10-02)
 
 ### Features Added
