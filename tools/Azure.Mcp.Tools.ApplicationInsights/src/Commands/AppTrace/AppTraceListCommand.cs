@@ -41,7 +41,7 @@ public sealed class AppTraceListCommand(ILogger<AppTraceListCommand> logger) : S
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(ApplicationInsightsOptionDefinitions.ResourceName);
         command.Options.Add(ApplicationInsightsOptionDefinitions.ResourceId);
         command.Options.Add(ApplicationInsightsOptionDefinitions.Table);
@@ -50,30 +50,16 @@ public sealed class AppTraceListCommand(ILogger<AppTraceListCommand> logger) : S
         command.Options.Add(_endTimeOption);
     }
 
-    public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
+    private ValidationResult OnExecuting(CommandResult commandResult, CommandResponse? commandResponse = null)
     {
-        ValidationResult result = base.Validate(commandResult, commandResponse);
+        ValidationResult result = new();
 
-        // Short circuit if base validation failed
-        if (!result.IsValid)
-        {
-            return result;
-        }
-
-        // Additional validation: either resourceName or resourceId must be provided
+        // Either resourceName or resourceId must be provided
         string? resourceName = commandResult.GetValueOrDefault(ApplicationInsightsOptionDefinitions.ResourceName);
         string? resourceId = commandResult.GetValueOrDefault(ApplicationInsightsOptionDefinitions.ResourceId);
         if (string.IsNullOrEmpty(resourceName) && string.IsNullOrEmpty(resourceId))
         {
-            result.IsValid = false;
-            result.ErrorMessage = $"Either --{ApplicationInsightsOptionDefinitions.ResourceNameName} or --{ApplicationInsightsOptionDefinitions.ResourceIdName} must be provided.";
-            if (commandResponse != null)
-            {
-                commandResponse.Status = HttpStatusCode.BadRequest;
-                commandResponse.Message = result.ErrorMessage;
-            }
-
-            return result;
+            result.Errors.Add($"Either --{ApplicationInsightsOptionDefinitions.ResourceNameName} or --{ApplicationInsightsOptionDefinitions.ResourceIdName} must be provided.");
         }
 
         // Validate time range
@@ -81,35 +67,24 @@ public sealed class AppTraceListCommand(ILogger<AppTraceListCommand> logger) : S
             !DateTime.TryParse(commandResult.GetValueOrDefault(_endTimeOption), out DateTime endTime) ||
             startTime >= endTime)
         {
-            result.IsValid = false;
-            result.ErrorMessage = $"Invalid time range specified. Ensure that --{ApplicationInsightsOptionDefinitions.StartTimeName} is before --{ApplicationInsightsOptionDefinitions.EndTimeName} and that --{ApplicationInsightsOptionDefinitions.StartTimeName} and --{ApplicationInsightsOptionDefinitions.EndTimeName} are valid dates in ISO format.";
-            if (commandResponse != null)
-            {
-                commandResponse.Status = HttpStatusCode.BadRequest;
-                commandResponse.Message = result.ErrorMessage;
-            }
-
-            return result;
+            result.Errors.Add($"Invalid time range specified. Ensure that --{ApplicationInsightsOptionDefinitions.StartTimeName} is before --{ApplicationInsightsOptionDefinitions.EndTimeName} and that both are valid dates in ISO format.");
         }
 
-        // Validate table option
-        if (result.IsValid)
-        {
-            string? table = commandResult.GetValueOrDefault(ApplicationInsightsOptionDefinitions.Table);
+        // Validate table name
+        string? table = commandResult.GetValueOrDefault(ApplicationInsightsOptionDefinitions.Table);
 
-            if (!string.Equals(table, "exceptions", StringComparison.OrdinalIgnoreCase) &&
-                !string.Equals(table, "dependencies", StringComparison.OrdinalIgnoreCase) &&
-                !string.Equals(table, "availabilityResults", StringComparison.OrdinalIgnoreCase) &&
-                !string.Equals(table, "requests", StringComparison.OrdinalIgnoreCase))
-            {
-                result.IsValid = false;
-                result.ErrorMessage = $"Invalid table specified. Valid options are: exceptions, dependencies, availabilityResults, requests.";
-                if (commandResponse != null)
-                {
-                    commandResponse.Status = HttpStatusCode.BadRequest;
-                    commandResponse.Message = result.ErrorMessage;
-                }
-            }
+        if (!string.Equals(table, "exceptions", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(table, "dependencies", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(table, "availabilityResults", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(table, "requests", StringComparison.OrdinalIgnoreCase))
+        {
+            result.Errors.Add($"Invalid table specified. Valid options are: exceptions, dependencies, availabilityResults, requests.");
+        }
+
+        if (!result.IsValid && commandResponse != null)
+        {
+            commandResponse.Status = HttpStatusCode.BadRequest;
+            commandResponse.Message = string.Join('\n', result.Errors);
         }
 
         return result;
@@ -149,7 +124,12 @@ public sealed class AppTraceListCommand(ILogger<AppTraceListCommand> logger) : S
             return context.Response;
         }
 
-        var options = BindOptions(parseResult);
+        if (!OnExecuting(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
+        AppTraceListOptions options = BindOptions(parseResult);
         try
         {
             IApplicationInsightsService service = context.GetService<IApplicationInsightsService>();
