@@ -79,6 +79,14 @@ public interface IFoundryService
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null);
 
+    Task<OpenAiModelsListResult> ListOpenAiModelsAsync(
+        string resourceName,
+        string subscription,
+        string resourceGroup,
+        string? tenant = null,
+        AuthMethod authMethod = AuthMethod.Credential,
+        RetryPolicyOptions? retryPolicy = null);
+
     Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null);
 

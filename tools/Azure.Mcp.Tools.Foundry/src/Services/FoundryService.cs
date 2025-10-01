@@ -484,6 +484,76 @@ public class FoundryService(
             usageInfo);
     }
 
+    public async Task<OpenAiModelsListResult> ListOpenAiModelsAsync(
+        string resourceName,
+        string subscription,
+        string resourceGroup,
+        string? tenant = null,
+        AuthMethod authMethod = AuthMethod.Credential,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(resourceName, subscription, resourceGroup);
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+
+        // Get the Cognitive Services account
+        var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
+        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName);
+
+        // Get all deployments for this account
+        var deployments = cognitiveServicesAccount.Value.GetCognitiveServicesAccountDeployments();
+        var allDeployments = new List<OpenAiModelDeployment>();
+
+        await foreach (var deployment in deployments.GetAllAsync())
+        {
+            var deploymentData = deployment.Data;
+            var properties = deploymentData.Properties;
+
+            // Determine model capabilities based on model name
+            var capabilities = DetermineModelCapabilities(properties.Model?.Name);
+
+            var modelDeployment = new OpenAiModelDeployment(
+                DeploymentName: deploymentData.Name,
+                ModelName: properties.Model?.Name ?? "Unknown",
+                ModelVersion: properties.Model?.Version,
+                ScaleType: properties.ScaleSettings?.ScaleType?.ToString(),
+                Capacity: properties.ScaleSettings?.Capacity,
+                ProvisioningState: deploymentData.Properties.ProvisioningState?.ToString(),
+                CreatedAt: null, // This information may not be available in the current API
+                UpdatedAt: null, // This information may not be available in the current API
+                Capabilities: capabilities
+            );
+
+            allDeployments.Add(modelDeployment);
+        }
+
+        return new OpenAiModelsListResult(allDeployments, resourceName);
+    }
+
+    private static OpenAiModelCapabilities DetermineModelCapabilities(string? modelName)
+    {
+        if (string.IsNullOrEmpty(modelName))
+        {
+            return new OpenAiModelCapabilities(false, false, false, false);
+        }
+
+        var modelNameLower = modelName.ToLowerInvariant();
+
+        // Determine capabilities based on model name patterns
+        var isEmbeddingModel = modelNameLower.Contains("embedding") || modelNameLower.Contains("ada");
+        var isCompletionModel = modelNameLower.Contains("gpt") || modelNameLower.Contains("davinci") || modelNameLower.Contains("curie") || modelNameLower.Contains("babbage");
+        var isChatModel = modelNameLower.Contains("gpt-3.5") || modelNameLower.Contains("gpt-4") || modelNameLower.Contains("gpt-35");
+        var supportsFineTuning = modelNameLower.Contains("gpt-3.5") || modelNameLower.Contains("gpt-35") || modelNameLower.Contains("davinci");
+
+        return new OpenAiModelCapabilities(
+            Completions: isCompletionModel,
+            Embeddings: isEmbeddingModel,
+            ChatCompletions: isChatModel,
+            FineTuning: supportsFineTuning
+        );
+    }
+
     private async Task<AzureOpenAIClient> CreateOpenAIClientWithAuth(
         string endpoint,
         string resourceName,

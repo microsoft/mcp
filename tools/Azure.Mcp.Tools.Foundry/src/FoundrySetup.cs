@@ -66,6 +66,7 @@ public class FoundrySetup : IAreaSetup
 
         openai.AddCommand("create-completion", new OpenAiCompletionsCreateCommand());
         openai.AddCommand("azmcp-ai-openai-embeddings-create", new OpenAiEmbeddingsCreateCommand());
+        openai.AddCommand("azmcp-ai-openai-models-list", new OpenAiModelsListCommand());
         var agents = new CommandGroup("agents", "Foundry agents operations - Commands for listing, querying, and evaluating agents in AI Foundry.");
         foundry.AddSubGroup(agents);
 

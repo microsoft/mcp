@@ -320,6 +320,88 @@ public class FoundryCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public async Task Should_list_openai_models()
+    {
+        var resourceName = Settings.ResourceBaseName;
+        var resourceGroup = Settings.ResourceGroupName;
+        var subscriptionId = Settings.SubscriptionId;
+
+        var result = await CallToolAsync(
+            "azmcp_foundry_openai_azmcp-ai-openai-models-list",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-group", resourceGroup },
+                { "resource-name", resourceName }
+            });
+
+        // Verify the response structure
+        var modelsListResult = result.AssertProperty("modelsListResult");
+        Assert.Equal(JsonValueKind.Object, modelsListResult.ValueKind);
+
+        // Verify resource name matches
+        var returnedResourceName = modelsListResult.AssertProperty("resourceName");
+        Assert.Equal(JsonValueKind.String, returnedResourceName.ValueKind);
+        Assert.Equal(resourceName, returnedResourceName.GetString());
+
+        // Verify models array exists (may be empty if no models deployed)
+        var models = modelsListResult.AssertProperty("models");
+        Assert.Equal(JsonValueKind.Array, models.ValueKind);
+
+        // If models exist, verify their structure
+        var modelArray = models.EnumerateArray().ToArray();
+        if (modelArray.Length > 0)
+        {
+            foreach (var model in modelArray)
+            {
+                // Verify required properties exist
+                var deploymentName = model.GetProperty("deploymentName");
+                var modelName = model.GetProperty("modelName");
+
+                Assert.Equal(JsonValueKind.String, deploymentName.ValueKind);
+                Assert.Equal(JsonValueKind.String, modelName.ValueKind);
+                Assert.NotEmpty(deploymentName.GetString()!);
+                Assert.NotEmpty(modelName.GetString()!);
+
+                // Verify capabilities structure if present
+                if (model.TryGetProperty("capabilities", out var capabilities))
+                {
+                    Assert.Equal(JsonValueKind.Object, capabilities.ValueKind);
+
+                    // Check boolean capability properties
+                    var completions = capabilities.GetProperty("completions");
+                    var embeddings = capabilities.GetProperty("embeddings");
+                    var chatCompletions = capabilities.GetProperty("chatCompletions");
+                    var fineTuning = capabilities.GetProperty("fineTuning");
+
+                    Assert.Equal(JsonValueKind.True, completions.ValueKind == JsonValueKind.True ? JsonValueKind.True : JsonValueKind.False);
+                    Assert.Equal(JsonValueKind.True, embeddings.ValueKind == JsonValueKind.True ? JsonValueKind.True : JsonValueKind.False);
+                    Assert.Equal(JsonValueKind.True, chatCompletions.ValueKind == JsonValueKind.True ? JsonValueKind.True : JsonValueKind.False);
+                    Assert.Equal(JsonValueKind.True, fineTuning.ValueKind == JsonValueKind.True ? JsonValueKind.True : JsonValueKind.False);
+                }
+
+                // Verify optional properties if present
+                if (model.TryGetProperty("capacity", out var capacity))
+                {
+                    Assert.Equal(JsonValueKind.Number, capacity.ValueKind);
+                    Assert.True(capacity.GetInt32() > 0);
+                }
+
+                if (model.TryGetProperty("provisioningState", out var provisioningState))
+                {
+                    Assert.Equal(JsonValueKind.String, provisioningState.ValueKind);
+                    Assert.NotEmpty(provisioningState.GetString()!);
+                }
+            }
+        }
+
+        // Verify command metadata (returned resource name should match input)
+        var commandResourceName = result.AssertProperty("resourceName");
+        Assert.Equal(JsonValueKind.String, commandResourceName.ValueKind);
+        Assert.Equal(resourceName, commandResourceName.GetString());
+    }
+
+    [Fact]
     [Trait("Category", "Live")]
     public async Task Should_connect_agent()
     {
