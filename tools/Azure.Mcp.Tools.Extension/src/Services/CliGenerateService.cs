@@ -21,7 +21,7 @@ internal class CliGenerateService(IHttpClientService httpClientService) : ICliGe
         var credential = new CustomChainedCredential();
         var accessToken = await credential.GetTokenAsync(new TokenRequestContext([apiScope]), CancellationToken.None);
 
-        // GHCP4A Prod app endpoint
+        // AzCli copilot API endpoint
         const string url = "https://azclis-copilot-apim-beta-eus.azure-api.net/azcli/copilot";
 
         var requestBody = new AzureCliGenerateRequest()
