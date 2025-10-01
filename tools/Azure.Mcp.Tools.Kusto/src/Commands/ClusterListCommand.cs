@@ -17,7 +17,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
     public override string Name => "list";
 
     public override string Description =>
-        "List/enumerate all Data Explorer (Kusto) clusters in an Azure subscription.";
+        "List/enumerate all Azure Data Explorer/Kusto/KQL clusters in a subscription.";
 
     public override string Title => CommandTitle;
 

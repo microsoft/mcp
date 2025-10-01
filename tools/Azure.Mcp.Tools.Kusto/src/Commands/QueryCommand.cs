@@ -30,7 +30,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
     public override string Name => "query";
 
     public override string Description =>
-        "Executes a query against a Data Explorer (Kusto) cluster to search for specific terms, retrieve records, or perform management operations. Requires: --cluster-uri (or --cluster and --subscription), --database, and --query.";
+        "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.";
 
     public override string Title => CommandTitle;
 
