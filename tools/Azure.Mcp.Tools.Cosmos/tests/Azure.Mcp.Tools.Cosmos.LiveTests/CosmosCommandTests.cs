@@ -17,7 +17,7 @@ public class CosmosCommandTests(ITestOutputHelper output)
     public async Task Should_list_storage_accounts_by_subscription_id()
     {
         var result = await CallToolAsync(
-            "az_cosmos_database_list",
+            "azmcp_cosmos_database_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -33,7 +33,7 @@ public class CosmosCommandTests(ITestOutputHelper output)
     public async Task Should_list_cosmos_database_containers()
     {
         var result = await CallToolAsync(
-            "az_cosmos_database_container_list",
+            "azmcp_cosmos_database_container_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -50,7 +50,7 @@ public class CosmosCommandTests(ITestOutputHelper output)
     public async Task Should_list_cosmos_database_containers_by_database_name()
     {
         var result = await CallToolAsync(
-            "az_cosmos_database_container_list",
+            "azmcp_cosmos_database_container_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -67,7 +67,7 @@ public class CosmosCommandTests(ITestOutputHelper output)
     public async Task Should_query_cosmos_database_container_items()
     {
         var result = await CallToolAsync(
-            "az_cosmos_database_container_item_query",
+            "azmcp_cosmos_database_container_item_query",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -85,7 +85,7 @@ public class CosmosCommandTests(ITestOutputHelper output)
     public async Task Should_list_cosmos_accounts()
     {
         var result = await CallToolAsync(
-            "az_cosmos_account_list",
+            "azmcp_cosmos_account_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -100,7 +100,7 @@ public class CosmosCommandTests(ITestOutputHelper output)
     public async Task Should_show_single_item_from_cosmos_account()
     {
         var dbResult = await CallToolAsync(
-            "az_cosmos_database_list",
+            "azmcp_cosmos_database_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -122,7 +122,7 @@ public class CosmosCommandTests(ITestOutputHelper output)
         Assert.False(string.IsNullOrEmpty(dbName));
 
         var containerResult = await CallToolAsync(
-            "az_cosmos_database_container_list",
+            "azmcp_cosmos_database_container_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -144,7 +144,7 @@ public class CosmosCommandTests(ITestOutputHelper output)
         Assert.False(string.IsNullOrEmpty(containerName));
 
         var itemResult = await CallToolAsync(
-            "az_cosmos_database_container_item_query",
+            "azmcp_cosmos_database_container_item_query",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -161,7 +161,7 @@ public class CosmosCommandTests(ITestOutputHelper output)
     public async Task Should_list_and_query_multiple_databases_and_containers()
     {
         var dbResult = await CallToolAsync(
-            "az_cosmos_database_list",
+            "azmcp_cosmos_database_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -182,7 +182,7 @@ public class CosmosCommandTests(ITestOutputHelper output)
             Assert.False(string.IsNullOrEmpty(dbName));
 
             var containerResult = await CallToolAsync(
-                "az_cosmos_database_container_list",
+                "azmcp_cosmos_database_container_list",
                 new() { { "subscription", Settings.SubscriptionId }, { "account", Settings.ResourceBaseName! }, { "database", dbName! } });
             var containers = containerResult.AssertProperty("containers");
             Assert.Equal(JsonValueKind.Array, containers.ValueKind);
@@ -197,7 +197,7 @@ public class CosmosCommandTests(ITestOutputHelper output)
                 Assert.False(string.IsNullOrEmpty(containerName));
 
                 var itemResult = await CallToolAsync(
-                    "az_cosmos_database_container_item_query",
+                    "azmcp_cosmos_database_container_item_query",
                     new() { { "subscription", Settings.SubscriptionId }, { "account", Settings.ResourceBaseName! }, { "database", dbName! }, { "container", containerName! } });
                 var items = itemResult.AssertProperty("items");
                 Assert.Equal(JsonValueKind.Array, items.ValueKind);

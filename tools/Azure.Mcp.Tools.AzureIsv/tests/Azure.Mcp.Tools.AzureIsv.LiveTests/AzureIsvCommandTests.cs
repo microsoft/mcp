@@ -19,7 +19,7 @@ public class AzureIsvCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             Assert.Skip("Test skipped because Tenant is not 'Customer LED Tenant'.");
         }
         var result = await CallToolAsync(
-            "az_datadog_monitoredresources_list",
+            "azmcp_datadog_monitoredresources_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

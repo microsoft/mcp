@@ -636,7 +636,7 @@ class Program
                             continue;
 
                         // Ensure we have a valid tool name (starts with azmcp_)
-                        if (!toolName.StartsWith("az_"))
+                        if (!toolName.StartsWith("azmcp_"))
                             continue;
 
                         if (!prompts.ContainsKey(toolName))

@@ -14,7 +14,7 @@ public class CommandTests(ITestOutputHelper output) : CommandTestsBase(output)
     public async Task Should_list_groups_by_subscription()
     {
         var result = await CallToolAsync(
-            "az_group_list",
+            "azmcp_group_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -29,7 +29,7 @@ public class CommandTests(ITestOutputHelper output) : CommandTestsBase(output)
     public async Task Should_list_subscriptions()
     {
         var result = await CallToolAsync(
-            "az_subscription_list",
+            "azmcp_subscription_list",
             new Dictionary<string, object?>());
 
         var subscriptionsArray = result.AssertProperty("subscriptions");

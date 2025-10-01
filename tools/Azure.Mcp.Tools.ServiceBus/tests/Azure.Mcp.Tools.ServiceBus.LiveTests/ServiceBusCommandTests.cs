@@ -30,7 +30,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
             await SendTestMessages(QueueName, numberOfMessages);
 
             var result = await CallToolAsync(
-                "az_servicebus_queue_peek",
+                "azmcp_servicebus_queue_peek",
                 new()
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
@@ -52,7 +52,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
             await SendTestMessages(TopicName, numberOfMessages);
 
             var result = await CallToolAsync(
-                "az_servicebus_topic_subscription_peek",
+                "azmcp_servicebus_topic_subscription_peek",
                 new()
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
@@ -71,7 +71,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
         public async Task Queue_details()
         {
             var result = await CallToolAsync(
-                "az_servicebus_queue_details",
+                "azmcp_servicebus_queue_details",
                 new()
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
@@ -87,7 +87,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
         public async Task Topic_details()
         {
             var result = await CallToolAsync(
-                "az_servicebus_topic_details",
+                "azmcp_servicebus_topic_details",
                 new()
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },
@@ -103,7 +103,7 @@ namespace Azure.Mcp.Tools.ServiceBus.LiveTests
         public async Task Subscription_details()
         {
             var result = await CallToolAsync(
-                "az_servicebus_topic_subscription_details",
+                "azmcp_servicebus_topic_subscription_details",
                 new()
                 {
                     { OptionDefinitions.Common.SubscriptionName, Settings.SubscriptionId },

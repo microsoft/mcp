@@ -14,7 +14,7 @@ public class GrafanaCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     public async Task Should_list_grafana_workspaces_by_subscription_id()
     {
         var result = await CallToolAsync(
-            "az_grafana_list",
+            "azmcp_grafana_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -29,7 +29,7 @@ public class GrafanaCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     public async Task Should_include_test_grafana_workspace_in_list()
     {
         var result = await CallToolAsync(
-            "az_grafana_list",
+            "azmcp_grafana_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }

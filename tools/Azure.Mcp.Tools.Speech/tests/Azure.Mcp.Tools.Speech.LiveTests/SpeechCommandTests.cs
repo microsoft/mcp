@@ -17,7 +17,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
-            "az_speech_stt_recognize",
+            "azmcp_speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -51,7 +51,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
 
         // Test with the real audio file - expect successful speech recognition
         var result = await CallToolAsync(
-            "az_speech_stt_recognize",
+            "azmcp_speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -109,7 +109,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
-            "az_speech_stt_recognize",
+            "azmcp_speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -157,7 +157,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
-            "az_speech_stt_recognize",
+            "azmcp_speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -214,7 +214,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
-            "az_speech_stt_recognize",
+            "azmcp_speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -252,7 +252,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
-            "az_speech_stt_recognize",
+            "azmcp_speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -292,7 +292,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var invalidEndpoint = "https://invalid-endpoint.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
-            "az_speech_stt_recognize",
+            "azmcp_speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -324,7 +324,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
             var result = await CallToolAsync(
-                "az_speech_stt_recognize",
+                "azmcp_speech_stt_recognize",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -386,7 +386,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
             var result = await CallToolAsync(
-                "az_speech_stt_recognize",
+                "azmcp_speech_stt_recognize",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -437,7 +437,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
-            "az_speech_stt_recognize",
+            "azmcp_speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -483,7 +483,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
 
         // Test with the audio file - expect successful speech recognition
         var result = await CallToolAsync(
-            "az_speech_stt_recognize",
+            "azmcp_speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -525,7 +525,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
-            "az_speech_stt_recognize",
+            "azmcp_speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -576,7 +576,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             : new[] { "passport", "verify", "voice" };
 
         var result = await CallToolAsync(
-            "az_speech_stt_recognize",
+            "azmcp_speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -620,7 +620,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         foreach (var profanityOption in new[] { "masked", "removed", "raw" })
         {
             var result = await CallToolAsync(
-                "az_speech_stt_recognize",
+                "azmcp_speech_stt_recognize",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },

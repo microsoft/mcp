@@ -20,7 +20,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         var databaseName = "testdb";
 
         var result = await CallToolAsync(
-            "az_sql_db_show",
+            "azmcp_sql_db_show",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -48,7 +48,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         var serverName = Settings.ResourceBaseName;
 
         var result = await CallToolAsync(
-            "az_sql_db_list",
+            "azmcp_sql_db_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -98,7 +98,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         // and we need to catch any exceptions or check the response manually
         try
         {
-            var result = await CallToolAsync("az_sql_db_show",
+            var result = await CallToolAsync("azmcp_sql_db_show",
                 new Dictionary<string, object?> { { "args", argsString } });
 
             // If we get here, the command didn't fail as expected
@@ -120,7 +120,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         try
         {
             var result = await CallToolAsync(
-                "az_sql_db_show",
+                "azmcp_sql_db_show",
                 new Dictionary<string, object?>
                 {
                     { "subscription", Settings.SubscriptionId }
@@ -148,7 +148,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         try
         {
             var result = await CallToolAsync(
-                "az_sql_db_delete",
+                "azmcp_sql_db_delete",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -182,7 +182,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
     {
         try
         {
-            var result = await CallToolAsync("az_sql_db_delete",
+            var result = await CallToolAsync("azmcp_sql_db_delete",
                 new Dictionary<string, object?> { { "args", args } });
 
             Assert.Fail("Expected command to fail with invalid input, but it succeeded");
@@ -201,7 +201,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         var serverName = Settings.ResourceBaseName;
 
         var result = await CallToolAsync(
-            "az_sql_server_entra-admin_list",
+            "azmcp_sql_server_entra-admin_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -239,7 +239,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         var serverName = Settings.ResourceBaseName;
 
         var result = await CallToolAsync(
-            "az_sql_server_firewall-rule_list",
+            "azmcp_sql_server_firewall-rule_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -285,7 +285,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
     {
         try
         {
-            var result = await CallToolAsync("az_sql_server_firewall-rule_list",
+            var result = await CallToolAsync("azmcp_sql_server_firewall-rule_list",
                 new Dictionary<string, object?> { { "args", args } });
 
             // If we get here, the command didn't fail as expected
@@ -306,7 +306,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         var serverName = Settings.ResourceBaseName;
 
         var result = await CallToolAsync(
-            "az_sql_elastic-pool_list",
+            "azmcp_sql_elastic-pool_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -343,7 +343,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         var endIp = "192.168.1.200";
 
         var result = await CallToolAsync(
-            "az_sql_server_firewall-rule_create",
+            "azmcp_sql_server_firewall-rule_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -388,7 +388,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
 
         // First create a firewall rule to delete
         await CallToolAsync(
-            "az_sql_server_firewall-rule_create",
+            "azmcp_sql_server_firewall-rule_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -401,7 +401,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
 
         // Now delete the firewall rule
         var result = await CallToolAsync(
-            "az_sql_server_firewall-rule_delete",
+            "azmcp_sql_server_firewall-rule_delete",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -426,7 +426,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
         var nonExistentRuleName = $"non-existent-rule-{DateTime.UtcNow:yyyyMMddHHmmss}";
 
         var result = await CallToolAsync(
-            "az_sql_server_firewall-rule_delete",
+            "azmcp_sql_server_firewall-rule_delete",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -452,7 +452,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
     {
         try
         {
-            var result = await CallToolAsync("az_sql_server_firewall-rule_create",
+            var result = await CallToolAsync("azmcp_sql_server_firewall-rule_create",
                 new Dictionary<string, object?> { { "args", args } });
 
             // If we get here, the command didn't fail as expected
@@ -475,7 +475,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
     {
         try
         {
-            var result = await CallToolAsync("az_sql_server_create",
+            var result = await CallToolAsync("azmcp_sql_server_create",
                 new Dictionary<string, object?> { { "args", args } });
 
             // If we get here, the command didn't fail as expected
@@ -497,7 +497,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
     {
         try
         {
-            var result = await CallToolAsync("az_sql_server_show",
+            var result = await CallToolAsync("azmcp_sql_server_show",
                 new Dictionary<string, object?> { { "args", args } });
 
             // If we get here, the command didn't fail as expected
@@ -519,7 +519,7 @@ public class SqlCommandTests(ITestOutputHelper output) : CommandTestsBase(output
     {
         try
         {
-            var result = await CallToolAsync("az_sql_server_delete",
+            var result = await CallToolAsync("azmcp_sql_server_delete",
                 new Dictionary<string, object?> { { "args", args } });
 
             // If we get here, the command didn't fail as expected
