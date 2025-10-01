@@ -49,7 +49,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - Authorization [[607](https://github.com/microsoft/mcp/pull/607)]
   - AppConig [[606](https://github.com/microsoft/mcp/pull/606)]
   - ACR [[622](https://github.com/microsoft/mcp/pull/622)]
-  - Grafana [[628](https://github.com/microsoft/mcp/pull/628)]
 - Fixed the names of the following MySQL and Postgres commands: [[#614](https://github.com/microsoft/mcp/pull/614)]
   - `azmcp_mysql_server_config_config`    → `azmcp_mysql_server_config_get`
   - `azmcp_mysql_server_param_param`      → `azmcp_mysql_server_param_get`
