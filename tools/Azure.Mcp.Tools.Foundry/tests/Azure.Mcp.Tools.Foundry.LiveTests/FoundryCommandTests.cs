@@ -551,6 +551,130 @@ public class FoundryCommandTests(ITestOutputHelper output)
         Assert.Equal(JsonValueKind.Object, context.ValueKind);
     }
 
+    [Fact]
+    public async Task Should_create_openai_chat_completions()
+    {
+        var resourceName = Settings.ResourceBaseName;
+        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("CHATDEPLOYMENTNAME", "gpt-35-turbo");
+        var subscriptionId = Settings.SubscriptionId;
+        var messages = JsonSerializer.Serialize(new[]
+        {
+            new { role = "system", content = "You are a helpful assistant." },
+            new { role = "user", content = "Hello, how are you today?" }
+        });
+
+        var result = await CallToolAsync(
+            "azmcp_foundry_openai_azmcp-ai-openai-chat-completions-create",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-name", resourceName },
+                { "deployment-name", deploymentName },
+                { "message-array", messages },
+                { "max-tokens", "150" },
+                { "temperature", "0.7" },
+                { "user", "test-user" }
+            });
+
+        // Verify the response structure
+        var chatResult = result.AssertProperty("result");
+        Assert.Equal(JsonValueKind.Object, chatResult.ValueKind);
+
+        // Verify chat completion result properties
+        var id = chatResult.AssertProperty("id");
+        Assert.Equal(JsonValueKind.String, id.ValueKind);
+        Assert.False(string.IsNullOrEmpty(id.GetString()));
+
+        var objectType = chatResult.AssertProperty("object");
+        Assert.Equal(JsonValueKind.String, objectType.ValueKind);
+        Assert.Equal("chat.completion", objectType.GetString());
+
+        var model = chatResult.AssertProperty("model");
+        Assert.Equal(JsonValueKind.String, model.ValueKind);
+        Assert.Equal(deploymentName, model.GetString());
+
+        var choices = chatResult.AssertProperty("choices");
+        Assert.Equal(JsonValueKind.Array, choices.ValueKind);
+        Assert.NotEmpty(choices.EnumerateArray());
+
+        // Verify first choice
+        var firstChoice = choices.EnumerateArray().First();
+        var index = firstChoice.GetProperty("index");
+        Assert.Equal(0, index.GetInt32());
+
+        var message = firstChoice.GetProperty("message");
+        var role = message.GetProperty("role");
+        Assert.Equal("assistant", role.GetString());
+
+        var content = message.GetProperty("content");
+        Assert.Equal(JsonValueKind.String, content.ValueKind);
+        Assert.False(string.IsNullOrEmpty(content.GetString()));
+
+        var finishReason = firstChoice.GetProperty("finishReason");
+        Assert.Equal(JsonValueKind.String, finishReason.ValueKind);
+
+        // Verify usage information
+        var usage = chatResult.AssertProperty("usage");
+        var promptTokens = usage.AssertProperty("promptTokens");
+        Assert.True(promptTokens.GetInt32() > 0, "Should have consumed prompt tokens");
+
+        var completionTokens = usage.AssertProperty("completionTokens");
+        Assert.True(completionTokens.GetInt32() > 0, "Should have generated completion tokens");
+
+        var totalTokens = usage.AssertProperty("totalTokens");
+        Assert.True(totalTokens.GetInt32() > 0, "Should have total token usage");
+        Assert.Equal(promptTokens.GetInt32() + completionTokens.GetInt32(), totalTokens.GetInt32());
+    }
+
+    [Fact]
+    public async Task Should_create_openai_chat_completions_with_conversation_history()
+    {
+        var resourceName = Settings.ResourceBaseName;
+        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("CHATDEPLOYMENTNAME", "gpt-35-turbo");
+        var subscriptionId = Settings.SubscriptionId;
+        var messages = JsonSerializer.Serialize(new[]
+        {
+            new { role = "system", content = "You are a helpful assistant that answers questions about Azure." },
+            new { role = "user", content = "What is Azure OpenAI Service?" },
+            new { role = "assistant", content = "Azure OpenAI Service is a cloud service that provides REST API access to OpenAI's language models including GPT-4, GPT-3.5-turbo, and Embeddings model series." },
+            new { role = "user", content = "How can I use it for chat applications?" }
+        });
+
+        var result = await CallToolAsync(
+            "azmcp_foundry_openai_azmcp-ai-openai-chat-completions-create",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-name", resourceName },
+                { "deployment-name", deploymentName },
+                { "message-array", messages },
+                { "max-tokens", "200" },
+                { "temperature", "0.5" },
+                { "top-p", "0.9" },
+                { "user", "test-user-conversation" }
+            });
+
+        // Verify response structure (same checks as basic test)
+        var chatResult = result.AssertProperty("result");
+        var choices = chatResult.AssertProperty("choices");
+        var firstChoice = choices.EnumerateArray().First();
+        var message = firstChoice.GetProperty("message");
+        var content = message.GetProperty("content");
+        
+        // Verify the response is relevant to the conversation context
+        var responseText = content.GetString();
+        Assert.False(string.IsNullOrEmpty(responseText));
+        
+        // The response should be contextually relevant to chat applications
+        // We don't check for specific words to avoid brittleness, just that we got a meaningful response
+        Assert.True(responseText.Length > 10, "Response should be substantial");
+        
+        // Verify usage shows reasonable token consumption for conversation
+        var usage = chatResult.AssertProperty("usage");
+        var totalTokens = usage.AssertProperty("totalTokens");
+        Assert.True(totalTokens.GetInt32() > 50, "Conversation should consume reasonable tokens");
+    }
+
     private async Task<string> CreateAgent(string agentName, string projectEndpoint, string deploymentName)
     {
         var client = new PersistentAgentsClient(

@@ -554,6 +554,175 @@ public class FoundryService(
         );
     }
 
+    public async Task<ChatCompletionResult> CreateChatCompletionsAsync(
+        string subscription,
+        string resourceName,
+        string deploymentName,
+        List<object> messages,
+        int? maxTokens = null,
+        double? temperature = null,
+        double? topP = null,
+        double? frequencyPenalty = null,
+        double? presencePenalty = null,
+        string? stop = null,
+        bool? stream = null,
+        int? seed = null,
+        string? user = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(resourceName, deploymentName, subscription);
+
+        if (messages == null || messages.Count == 0)
+        {
+            throw new ArgumentException("Messages array cannot be null or empty", nameof(messages));
+        }
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+        var resourceGroups = subscriptionResource.GetResourceGroups();
+
+        // Find the resource group containing the specified resource
+        CognitiveServicesAccountResource? cognitiveServicesAccount = null;
+        await foreach (var resourceGroup in resourceGroups.GetAllAsync())
+        {
+            try
+            {
+                var cognitiveServicesAccounts = resourceGroup.GetCognitiveServicesAccounts();
+                var account = await cognitiveServicesAccounts.GetAsync(resourceName);
+                cognitiveServicesAccount = account.Value;
+                break;
+            }
+            catch (RequestFailedException)
+            {
+                // Resource not found in this resource group, continue searching
+                continue;
+            }
+        }
+
+        if (cognitiveServicesAccount == null)
+        {
+            throw new InvalidOperationException($"Cognitive Services account '{resourceName}' not found in subscription '{subscription}'");
+        }
+
+        // Get the endpoint
+        var accountData = cognitiveServicesAccount.Data;
+        var endpoint = accountData.Properties.Endpoint;
+
+        if (string.IsNullOrEmpty(endpoint))
+        {
+            throw new InvalidOperationException($"Endpoint not found for resource '{resourceName}'");
+        }
+
+        // Create Azure OpenAI client with credential authentication
+        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount, AuthMethod.Credential);
+
+        var chatClient = client.GetChatClient(deploymentName);
+
+        // Convert messages to ChatMessage objects
+        var chatMessages = new List<OpenAI.Chat.ChatMessage>();
+        foreach (var message in messages)
+        {
+            if (message is JsonObject jsonMessage)
+            {
+                var role = jsonMessage["role"]?.ToString();
+                var content = jsonMessage["content"]?.ToString();
+
+                if (string.IsNullOrEmpty(role) || string.IsNullOrEmpty(content))
+                {
+                    throw new ArgumentException("Each message must have 'role' and 'content' properties");
+                }
+
+                OpenAI.Chat.ChatMessage chatMessage = role.ToLowerInvariant() switch
+                {
+                    "system" => OpenAI.Chat.ChatMessage.CreateSystemMessage(content),
+                    "user" => OpenAI.Chat.ChatMessage.CreateUserMessage(content),
+                    "assistant" => OpenAI.Chat.ChatMessage.CreateAssistantMessage(content),
+                    _ => throw new ArgumentException($"Invalid message role: {role}")
+                };
+
+                chatMessages.Add(chatMessage);
+            }
+            else
+            {
+                throw new ArgumentException("Messages must be valid JSON objects with 'role' and 'content' properties");
+            }
+        }
+
+        // Create chat completion options
+        var options = new ChatCompletionOptions();
+        if (maxTokens.HasValue)
+            options.MaxOutputTokenCount = maxTokens.Value;
+        if (temperature.HasValue)
+            options.Temperature = (float)temperature.Value;
+        if (topP.HasValue)
+            options.TopP = (float)topP.Value;
+        if (frequencyPenalty.HasValue)
+            options.FrequencyPenalty = (float)frequencyPenalty.Value;
+        if (presencePenalty.HasValue)
+            options.PresencePenalty = (float)presencePenalty.Value;
+#pragma warning disable OPENAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        if (seed.HasValue)
+            options.Seed = seed.Value;
+#pragma warning restore OPENAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        if (!string.IsNullOrEmpty(user))
+            options.EndUserId = user;
+
+        // Handle stop sequences
+        if (!string.IsNullOrEmpty(stop))
+        {
+            var stopSequences = stop.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                  .Select(s => s.Trim())
+                                  .ToArray();
+            foreach (var stopSequence in stopSequences)
+            {
+                options.StopSequences.Add(stopSequence);
+            }
+        }
+
+        // Create the chat completion
+        var response = await chatClient.CompleteChatAsync(chatMessages, options);
+        var result = response.Value;
+
+        // Convert response to our model
+        var choices = new List<ChatCompletionChoice>();
+        for (int i = 0; i < result.Content.Count; i++)
+        {
+            var contentPart = result.Content[i];
+            var message = new ChatCompletionMessage(
+                Role: "assistant",
+                Content: contentPart.Text,
+                Name: null,
+                FunctionCall: null,
+                ToolCalls: null
+            );
+
+            var choice = new ChatCompletionChoice(
+                Index: i,
+                Message: message,
+                FinishReason: result.FinishReason.ToString(),
+                LogProbs: null
+            );
+
+            choices.Add(choice);
+        }
+
+        // Create usage information
+        var usage = new ChatCompletionUsageInfo(
+            PromptTokens: result.Usage?.InputTokenCount ?? 0,
+            CompletionTokens: result.Usage?.OutputTokenCount ?? 0,
+            TotalTokens: result.Usage?.TotalTokenCount ?? 0
+        );
+
+        return new ChatCompletionResult(
+            Id: result.Id ?? Guid.NewGuid().ToString(),
+            Object: "chat.completion",
+            Created: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            Model: deploymentName,
+            Choices: choices,
+            Usage: usage,
+            SystemFingerprint: result.SystemFingerprint
+        );
+    }
+
     private async Task<AzureOpenAIClient> CreateOpenAIClientWithAuth(
         string endpoint,
         string resourceName,

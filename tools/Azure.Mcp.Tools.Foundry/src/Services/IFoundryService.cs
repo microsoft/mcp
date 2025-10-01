@@ -116,4 +116,20 @@ public interface IFoundryService
         string? toolDefinitions,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<ChatCompletionResult> CreateChatCompletionsAsync(
+        string subscription,
+        string resourceName,
+        string deploymentName,
+        List<object> messages,
+        int? maxTokens = null,
+        double? temperature = null,
+        double? topP = null,
+        double? frequencyPenalty = null,
+        double? presencePenalty = null,
+        string? stop = null,
+        bool? stream = null,
+        int? seed = null,
+        string? user = null,
+        RetryPolicyOptions? retryPolicy = null);
 }
