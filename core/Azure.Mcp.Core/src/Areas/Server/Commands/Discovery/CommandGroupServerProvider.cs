@@ -35,7 +35,7 @@ public sealed class CommandGroupServerProvider(CommandGroup commandGroup) : IMcp
     /// <summary>
     /// Creates an MCP client from a command group.
     /// </summary>
-    public async Task<IMcpClient> CreateClientAsync(McpClientOptions clientOptions)
+    public async Task<McpClient> CreateClientAsync(McpClientOptions clientOptions)
     {
         if (string.IsNullOrWhiteSpace(EntryPoint))
         {
@@ -52,7 +52,7 @@ public sealed class CommandGroupServerProvider(CommandGroup commandGroup) : IMcp
         };
 
         var clientTransport = new StdioClientTransport(transportOptions);
-        return await McpClientFactory.CreateAsync(clientTransport, clientOptions);
+        return await McpClient.CreateAsync(clientTransport, clientOptions);
     }
 
     /// <summary>

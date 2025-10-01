@@ -19,13 +19,13 @@ public class MockClientTests
         _options = CreateOptions();
     }
 
-    private static McpServerOptions CreateOptions(ServerCapabilities? capabilities = null)
+    private static McpServerOptions CreateOptions(McpServerHandlers? serverHandlers = null)
     {
         return new McpServerOptions
         {
             ProtocolVersion = "2024",
             InitializationTimeout = TimeSpan.FromSeconds(30),
-            Capabilities = capabilities,
+            Handlers = serverHandlers ?? new(),
             ServerInfo = new Implementation { Name = "Azure MCP", Version = "1.0.0-beta" }
         };
     }
@@ -35,7 +35,7 @@ public class MockClientTests
     {
         await Invoke_Request_To_Server(
             method: "ping",
-            serverCapabilities: null,
+            serverHandlers: null,
             configureOptions: null,
             assertResult: response =>
             {
@@ -49,7 +49,7 @@ public class MockClientTests
     {
         await Invoke_Request_To_Server(
             method: "initialize",
-            serverCapabilities: null,
+            serverHandlers: null,
             configureOptions: null,
             assertResult: response =>
             {
@@ -66,19 +66,17 @@ public class MockClientTests
     {
         await Invoke_Request_To_Server(
             method: "tools/call",
-            new ServerCapabilities
+            new()
             {
-                Tools = new()
+                CallToolHandler = (request, ct) =>
                 {
-                    CallToolHandler = (request, ct) =>
+                    if (request.Params?.Name == "azmcp_subscription_list")
                     {
-                        if (request.Params?.Name == "azmcp_subscription_list")
+                        return ValueTask.FromResult(new CallToolResult
                         {
-                            return ValueTask.FromResult(new CallToolResult
-                            {
-                                Content =
-                                [
-                                    new TextContentBlock
+                            Content =
+                            [
+                                new TextContentBlock
                                     {
                                         Text = JsonSerializer.Serialize(new
                                         {
@@ -89,14 +87,13 @@ public class MockClientTests
                                             }
                                         })
                                     }
-                                ]
-                            });
-                        }
+                            ]
+                        });
+                    }
 
-                        throw new Exception($"Unhandled tool name: {request.Params?.Name}");
-                    },
-                    ListToolsHandler = (request, ct) => throw new NotImplementedException(),
-                }
+                    throw new Exception($"Unhandled tool name: {request.Params?.Name}");
+                },
+                ListToolsHandler = (request, ct) => throw new NotImplementedException(),
             },
             requestParams: JsonSerializer.SerializeToNode(new
             {
@@ -127,19 +124,16 @@ public class MockClientTests
     {
         await Invoke_Request_To_Server(
             method: "tools/list",
-            new ServerCapabilities
+            new()
             {
-                Tools = new()
+                ListToolsHandler = (request, ct) =>
                 {
-                    ListToolsHandler = (request, ct) =>
+                    return ValueTask.FromResult(new ListToolsResult
                     {
-                        return ValueTask.FromResult(new ListToolsResult
-                        {
-                            Tools = [new() { Name = "ListTools" }]
-                        });
-                    },
-                    CallToolHandler = (request, ct) => throw new NotImplementedException(),
-                }
+                        Tools = [new() { Name = "ListTools" }]
+                    });
+                },
+                CallToolHandler = (request, ct) => throw new NotImplementedException(),
             },
             configureOptions: null,
             assertResult: response =>
@@ -156,19 +150,16 @@ public class MockClientTests
     {
         await Invoke_Request_To_Server(
             method: "tools/call",
-            new ServerCapabilities
+            new()
             {
-                Tools = new()
+                CallToolHandler = (request, ct) =>
                 {
-                    CallToolHandler = (request, ct) =>
+                    return ValueTask.FromResult(new CallToolResult
                     {
-                        return ValueTask.FromResult(new CallToolResult
-                        {
-                            Content = [new TextContentBlock { Text = "dummyTool" }]
-                        });
-                    },
-                    ListToolsHandler = (request, ct) => throw new NotImplementedException(),
-                }
+                        Content = [new TextContentBlock { Text = "dummyTool" }]
+                    });
+                },
+                ListToolsHandler = (request, ct) => throw new NotImplementedException(),
             },
             configureOptions: null,
             assertResult: response =>
@@ -185,21 +176,18 @@ public class MockClientTests
     {
         await Invoke_Request_To_Server(
             method: "tools/call",
-            new ServerCapabilities
+            new()
             {
-                Tools = new()
+                CallToolHandler = (request, ct) =>
                 {
-                    CallToolHandler = (request, ct) =>
+                    // Simulate the behavior when an invalid tool is called
+                    return ValueTask.FromResult(new CallToolResult
                     {
-                        // Simulate the behavior when an invalid tool is called
-                        return ValueTask.FromResult(new CallToolResult
-                        {
-                            Content = [new TextContentBlock { Text = $"The tool {request.Params?.Name} was not found" }],
-                            IsError = true
-                        });
-                    },
-                    ListToolsHandler = (request, ct) => throw new NotImplementedException(),
-                }
+                        Content = [new TextContentBlock { Text = $"The tool {request.Params?.Name} was not found" }],
+                        IsError = true
+                    });
+                },
+                ListToolsHandler = (request, ct) => throw new NotImplementedException(),
             },
             requestParams: JsonSerializer.SerializeToNode(new
             {
@@ -220,10 +208,10 @@ public class MockClientTests
     }
 
 
-    private async Task Invoke_Request_To_Server(string method, ServerCapabilities? serverCapabilities, Action<McpServerOptions>? configureOptions, Action<JsonNode?> assertResult)
+    private async Task Invoke_Request_To_Server(string method, McpServerHandlers? serverHandlers, Action<McpServerOptions>? configureOptions, Action<JsonNode?> assertResult)
     {
         await Invoke_Request_To_Server(
-            serverCapabilities: serverCapabilities,
+            serverHandlers: serverHandlers,
             method: method,
             requestParams: null,
             configureOptions: configureOptions,
@@ -231,13 +219,13 @@ public class MockClientTests
         );
     }
 
-    private async Task Invoke_Request_To_Server(string method, ServerCapabilities? serverCapabilities, JsonNode? requestParams, Action<McpServerOptions>? configureOptions, Action<JsonNode?> assertResult)
+    private async Task Invoke_Request_To_Server(string method, McpServerHandlers? serverHandlers, JsonNode? requestParams, Action<McpServerOptions>? configureOptions, Action<JsonNode?> assertResult)
     {
         await using var transport = new CustomTestTransport();
-        var options = CreateOptions(serverCapabilities);
+        var options = CreateOptions(serverHandlers);
         configureOptions?.Invoke(options);
 
-        await using var server = McpServerFactory.Create(transport, options);
+        await using var server = McpServer.Create(transport, options);
         var runTask = server.RunAsync();
 
         var receivedMessage = new TaskCompletionSource<JsonRpcResponse>();
