@@ -35,8 +35,19 @@ function Get-MetadataLine {
     )
     
     $icon = if ($Value) { "✅" } else { "❌" }
-    $capitalizedName = (Get-Culture).TextInfo.ToTitleCase($PropertyName)
-    return "$icon $capitalizedName"
+    
+    # Convert to PascalCase
+    $pascalCase = switch ($PropertyName) {
+        "destructive" { "Destructive" }
+        "idempotent" { "Idempotent" }
+        "openWorld" { "OpenWorld" }
+        "readOnly" { "ReadOnly" }
+        "secret" { "Secret" }
+        "localRequired" { "LocalRequired" }
+        default { (Get-Culture).TextInfo.ToTitleCase($PropertyName) }
+    }
+    
+    return "$icon $pascalCase"
 }
 
 function Get-ToolMetadataString {
@@ -72,7 +83,8 @@ function Get-ToolMetadataString {
     }
     
     if ($lines.Count -gt 0) {
-        return ($lines -join " | ")
+        # Add # prefix for markdown comment
+        return "# " + ($lines -join " | ")
     }
     
     return $null
@@ -130,9 +142,18 @@ Write-Host "Processing document and adding metadata..." -ForegroundColor Yellow
 $updatedLines = @()
 $i = 0
 $updatedCount = 0
+$removedCount = 0
 
 while ($i -lt $docLines.Count) {
     $line = $docLines[$i]
+    
+    # Check if this is an old metadata line (without # prefix) and skip it
+    if ($line -match '^(✅|❌)\s+(Destructive|Idempotent|Openworld|Readonly|Secret|Localrequired)') {
+        Write-Verbose "Removing old metadata line: $line"
+        $removedCount++
+        $i++
+        continue
+    }
     
     # Check if this line starts with "azmcp " (a command line)
     if ($line -match '^azmcp\s+(.+?)(\s+\\)?$') {
@@ -154,12 +175,12 @@ while ($i -lt $docLines.Count) {
         
         if ($matchedMetadata) {
             # Check if the previous line already has metadata (to avoid duplicates)
-            $prevLineIndex = $i - 1
             $hasPreviousMetadata = $false
             
-            if ($prevLineIndex -ge 0) {
-                $prevLine = $docLines[$prevLineIndex]
-                if ($prevLine -match '(✅|❌)\s+(Destructive|Idempotent|OpenWorld|ReadOnly|Secret|LocalRequired)') {
+            if ($updatedLines.Count -gt 0) {
+                $prevLine = $updatedLines[$updatedLines.Count - 1]
+                # Check for metadata line with # prefix and PascalCase
+                if ($prevLine -match '^#\s+(✅|❌)\s+(Destructive|Idempotent|OpenWorld|ReadOnly|Secret|LocalRequired)') {
                     $hasPreviousMetadata = $true
                 }
             }
@@ -197,5 +218,6 @@ if (Test-Path $tempOutputFile) {
 
 Write-Host "`nUpdate complete!" -ForegroundColor Green
 Write-Host "  - Total commands found in metadata: $($commandMetadata.Count)" -ForegroundColor Cyan
-Write-Host "  - Metadata lines added: $updatedCount" -ForegroundColor Cyan
+Write-Host "  - Old metadata lines removed: $removedCount" -ForegroundColor Cyan
+Write-Host "  - New metadata lines added: $updatedCount" -ForegroundColor Cyan
 Write-Host "`nPlease review the changes in $DocsPath" -ForegroundColor Yellow
