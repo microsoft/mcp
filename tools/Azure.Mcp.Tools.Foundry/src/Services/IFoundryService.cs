@@ -66,6 +66,19 @@ public interface IFoundryService
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null);
 
+    Task<EmbeddingResult> CreateEmbeddingsAsync(
+        string resourceName,
+        string deploymentName,
+        string inputText,
+        string subscription,
+        string resourceGroup,
+        string? user = null,
+        string encodingFormat = "float",
+        int? dimensions = null,
+        string? tenant = null,
+        AuthMethod authMethod = AuthMethod.Credential,
+        RetryPolicyOptions? retryPolicy = null);
+
     Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null);
 

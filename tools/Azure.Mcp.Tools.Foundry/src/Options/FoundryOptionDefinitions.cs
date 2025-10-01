@@ -33,6 +33,10 @@ public static class FoundryOptionDefinitions
     public const string MaxTokens = "max-tokens";
     public const string Temperature = "temperature";
     public const string ResourceName = "resource-name";
+    public const string InputText = "input-text";
+    public const string User = "user";
+    public const string EncodingFormat = "encoding-format";
+    public const string Dimensions = "dimensions";
 
     public static readonly Option<string> EndpointOption = new(
         $"--{Endpoint}"
@@ -241,5 +245,34 @@ public static class FoundryOptionDefinitions
     )
     {
         Description = "Controls randomness in the output. Lower values make it more deterministic."
+    };
+
+    public static readonly Option<string> InputTextOption = new(
+        $"--{InputText}"
+    )
+    {
+        Description = "The input text to generate embeddings for.",
+        Required = true
+    };
+
+    public static readonly Option<string> UserOption = new(
+        $"--{User}"
+    )
+    {
+        Description = "Optional user identifier for tracking and abuse monitoring."
+    };
+
+    public static readonly Option<string> EncodingFormatOption = new(
+        $"--{EncodingFormat}"
+    )
+    {
+        Description = "The format to return embeddings in (float or base64). Default is float."
+    };
+
+    public static readonly Option<int> DimensionsOption = new(
+        $"--{Dimensions}"
+    )
+    {
+        Description = "The number of dimensions for the embedding output. Only supported in some models."
     };
 }

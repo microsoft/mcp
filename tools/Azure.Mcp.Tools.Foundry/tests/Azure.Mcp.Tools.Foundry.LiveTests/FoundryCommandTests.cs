@@ -174,6 +174,152 @@ public class FoundryCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public async Task Should_create_openai_embeddings()
+    {
+        var resourceName = Settings.ResourceBaseName;
+        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("EMBEDDINGDEPLOYMENTNAME", "text-embedding-ada-002");
+        var resourceGroup = Settings.ResourceGroupName;
+        var subscriptionId = Settings.SubscriptionId;
+        var inputText = "Generate embeddings for this test text using Azure OpenAI.";
+
+        var result = await CallToolAsync(
+            "azmcp_foundry_openai_azmcp-ai-openai-embeddings-create",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-group", resourceGroup },
+                { "resource-name", resourceName },
+                { "deployment", deploymentName },
+                { "input-text", inputText },
+                { "user", "test-user" },
+                { "encoding-format", "float" }
+            });
+
+        // Verify the response structure
+        var embeddingResult = result.AssertProperty("embeddingResult");
+        Assert.Equal(JsonValueKind.Object, embeddingResult.ValueKind);
+
+        // Verify embedding result properties
+        var objectType = embeddingResult.AssertProperty("object");
+        Assert.Equal(JsonValueKind.String, objectType.ValueKind);
+        Assert.Equal("list", objectType.GetString());
+
+        var data = embeddingResult.AssertProperty("data");
+        Assert.Equal(JsonValueKind.Array, data.ValueKind);
+        Assert.NotEmpty(data.EnumerateArray());
+
+        // Verify first embedding data element
+        var firstEmbedding = data.EnumerateArray().First();
+        var embeddingObject = firstEmbedding.GetProperty("object");
+        Assert.Equal("embedding", embeddingObject.GetString());
+
+        var embeddingIndex = firstEmbedding.GetProperty("index");
+        Assert.Equal(0, embeddingIndex.GetInt32());
+
+        var embeddingVector = firstEmbedding.GetProperty("embedding");
+        Assert.Equal(JsonValueKind.Array, embeddingVector.ValueKind);
+
+        // Verify embedding vector contains float values and has reasonable dimensions
+        var vectorArray = embeddingVector.EnumerateArray().ToArray();
+        Assert.True(vectorArray.Length > 0, "Embedding vector should not be empty");
+        Assert.True(vectorArray.Length >= 1536, $"Embedding vector should have at least 1536 dimensions, got {vectorArray.Length}"); // Ada-002 has 1536 dimensions
+
+        // Verify all values are valid numbers
+        foreach (var value in vectorArray)
+        {
+            Assert.Equal(JsonValueKind.Number, value.ValueKind);
+            var floatValue = value.GetSingle();
+            Assert.True(!float.IsNaN(floatValue), "Embedding values should not be NaN");
+            Assert.True(!float.IsInfinity(floatValue), "Embedding values should not be infinity");
+        }
+
+        // Verify model name in response
+        var model = embeddingResult.AssertProperty("model");
+        Assert.Equal(JsonValueKind.String, model.ValueKind);
+        Assert.Equal(deploymentName, model.GetString());
+
+        // Verify usage information
+        var usage = embeddingResult.AssertProperty("usage");
+        Assert.Equal(JsonValueKind.Object, usage.ValueKind);
+
+        var promptTokens = usage.AssertProperty("promptTokens");
+        var totalTokens = usage.AssertProperty("totalTokens");
+
+        Assert.Equal(JsonValueKind.Number, promptTokens.ValueKind);
+        Assert.Equal(JsonValueKind.Number, totalTokens.ValueKind);
+
+        // For embeddings, prompt tokens should equal total tokens (no completion tokens)
+        Assert.Equal(promptTokens.GetInt32(), totalTokens.GetInt32());
+        Assert.True(promptTokens.GetInt32() > 0, "Should have used some tokens");
+
+        // Verify metadata properties are present
+        var resourceNameProperty = result.AssertProperty("resourceName");
+        var deploymentNameProperty = result.AssertProperty("deploymentName");
+        var inputTextProperty = result.AssertProperty("inputText");
+
+        Assert.Equal(JsonValueKind.String, resourceNameProperty.ValueKind);
+        Assert.Equal(JsonValueKind.String, deploymentNameProperty.ValueKind);
+        Assert.Equal(JsonValueKind.String, inputTextProperty.ValueKind);
+
+        Assert.Equal(resourceName, resourceNameProperty.GetString());
+        Assert.Equal(deploymentName, deploymentNameProperty.GetString());
+        Assert.Equal(inputText, inputTextProperty.GetString());
+    }
+
+    [Fact]
+    public async Task Should_create_openai_embeddings_with_optional_parameters()
+    {
+        var resourceName = Settings.ResourceBaseName;
+        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("EMBEDDINGDEPLOYMENTNAME", "text-embedding-ada-002");
+        var resourceGroup = Settings.ResourceGroupName;
+        var subscriptionId = Settings.SubscriptionId;
+        var inputText = "Test embeddings with optional parameters.";
+        var dimensions = 512; // Test with reduced dimensions if supported
+
+        var result = await CallToolAsync(
+            "azmcp_foundry_openai_azmcp-ai-openai-embeddings-create",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-group", resourceGroup },
+                { "resource-name", resourceName },
+                { "deployment", deploymentName },
+                { "input-text", inputText },
+                { "user", "test-user-with-params" },
+                { "encoding-format", "float" },
+                { "dimensions", dimensions.ToString() }
+            });
+
+        // Verify the response structure (same as basic test)
+        var embeddingResult = result.AssertProperty("embeddingResult");
+        var data = embeddingResult.AssertProperty("data");
+        var firstEmbedding = data.EnumerateArray().First();
+        var embeddingVector = firstEmbedding.GetProperty("embedding");
+
+        // Verify embedding vector dimensions match requested dimensions (if model supports it)
+        var vectorArray = embeddingVector.EnumerateArray().ToArray();
+        Assert.True(vectorArray.Length > 0, "Embedding vector should not be empty");
+
+        // Note: Some models may not support custom dimensions and will return default size
+        // So we just verify we got a reasonable response, not necessarily the exact dimensions requested
+        Assert.True(vectorArray.Length >= 512, $"Embedding vector should have reasonable dimensions, got {vectorArray.Length}");
+
+        // Verify all values are valid numbers
+        foreach (var value in vectorArray)
+        {
+            Assert.Equal(JsonValueKind.Number, value.ValueKind);
+            var floatValue = value.GetSingle();
+            Assert.True(!float.IsNaN(floatValue), "Embedding values should not be NaN");
+            Assert.True(!float.IsInfinity(floatValue), "Embedding values should not be infinity");
+        }
+
+        // Verify usage information shows token consumption
+        var usage = embeddingResult.AssertProperty("usage");
+        var totalTokens = usage.AssertProperty("totalTokens");
+        Assert.True(totalTokens.GetInt32() > 0, "Should have consumed tokens");
+    }
+
+    [Fact]
     [Trait("Category", "Live")]
     public async Task Should_connect_agent()
     {

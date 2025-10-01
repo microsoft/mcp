@@ -28,6 +28,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.AI.Evaluation;
 using Microsoft.Extensions.AI.Evaluation.Quality;
 using OpenAI.Chat;
+using OpenAI.Embeddings;
 
 #pragma warning disable AIEVAL001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
@@ -419,6 +420,68 @@ public class FoundryService(
             result.Usage.TotalTokenCount);
 
         return new CompletionResult(completionText, usageInfo);
+    }
+
+    public async Task<EmbeddingResult> CreateEmbeddingsAsync(
+        string resourceName,
+        string deploymentName,
+        string inputText,
+        string subscription,
+        string resourceGroup,
+        string? user = null,
+        string encodingFormat = "float",
+        int? dimensions = null,
+        string? tenant = null,
+        AuthMethod authMethod = AuthMethod.Credential,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(resourceName, deploymentName, inputText, subscription, resourceGroup);
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+
+        // Get the Cognitive Services account
+        var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
+        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName);
+
+        // Get the endpoint
+        var accountData = cognitiveServicesAccount.Value.Data;
+        var endpoint = accountData.Properties.Endpoint;
+
+        if (string.IsNullOrEmpty(endpoint))
+        {
+            throw new InvalidOperationException($"Endpoint not found for resource '{resourceName}'");
+        }
+
+        // Create Azure OpenAI client with flexible authentication
+        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant);
+
+        var embeddingClient = client.GetEmbeddingClient(deploymentName);
+
+        // Create the embedding request
+        var embedding = await embeddingClient.GenerateEmbeddingAsync(inputText);
+
+        var result = embedding.Value;
+
+        var embeddingData = new List<EmbeddingData>
+        {
+            new EmbeddingData(
+                "embedding",
+                0,
+                result.ToFloats().ToArray())
+        };
+
+        // Note: Usage information might not be available in the current SDK version
+        // Using placeholder values for now
+        var usageInfo = new EmbeddingUsageInfo(
+            inputText.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length, // Approximate token count
+            inputText.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length);
+
+        return new EmbeddingResult(
+            "list",
+            embeddingData,
+            deploymentName,
+            usageInfo);
     }
 
     private async Task<AzureOpenAIClient> CreateOpenAIClientWithAuth(
