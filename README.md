@@ -166,7 +166,22 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **INSTALL**: [![Install Playwright MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Playwright_MCP-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect?url=vscode%3Amcp%2Finstall%3F%257B%2522name%2522%253A%2522playwright%2522%252C%2522command%2522%253A%2522npx%2522%252C%2522args%2522%253A%255B%2522%2540playwright%252Fmcp%2540latest%2522%255D%257D) [![Install Playwright MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Playwright_MCP-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect?url=vscode-insiders%3Amcp%2Finstall%3F%257B%2522name%2522%253A%2522playwright%2522%252C%2522command%2522%253A%2522npx%2522%252C%2522args%2522%253A%255B%2522%2540playwright%252Fmcp%2540latest%2522%255D%257D) [![Install Playwright MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-Install_Playwright_MCP-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://aka.ms/vs/mcp-install?%7B%22name%22%3A%22playwright%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22%40playwright%2Fmcp%40latest%22%5D%7D)
 
 
-## 🏗️ Looking for starter templates that use MCP? 
+## 🌐 Community MCP Servers
+
+Microsoft's MCP ecosystem is enhanced by valuable community contributions that extend the platform's capabilities. These community-developed servers demonstrate the power and versatility of the Model Context Protocol specification.
+
+### 🎯 Roundtable MCP Server
+- **REPOSITORY**: [askbudi/roundtable](https://github.com/askbudi/roundtable)
+- **DESCRIPTION**: Zero-configuration MCP server that unifies multiple AI coding assistants (Codex, Claude Code, Cursor, Gemini) through intelligent auto-discovery and standardized interface. Eliminates CLI tool management complexity for Microsoft ecosystem developers and provides seamless integration with enterprise workflows.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `Local`
+- **INSTALL**: `pip install roundtable-ai` | **Website**: [askbudi.ai/roundtable](https://askbudi.ai/roundtable)
+
+> **Note**: Community MCP servers are maintained by their respective developers and communities. Microsoft does not provide official support for community servers, but encourages their development as part of the broader MCP ecosystem. For support, please refer to each project's repository.
+
+---
+
+## 🏗️ Looking for starter templates that use MCP?
 Check out the [Azure Developer CLI (azd) templates](https://azure.github.io/awesome-azd/?tags=mcp) tagged with MCP.
 
 ## 📎 Related Resources
