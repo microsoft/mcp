@@ -65,9 +65,9 @@ public class FoundrySetup : IAreaSetup
         foundry.AddSubGroup(openai);
 
         openai.AddCommand("create-completion", new OpenAiCompletionsCreateCommand());
-        openai.AddCommand("azmcp-ai-openai-embeddings-create", new OpenAiEmbeddingsCreateCommand());
-        openai.AddCommand("azmcp-ai-openai-models-list", new OpenAiModelsListCommand());
-        openai.AddCommand("azmcp-ai-openai-chat-completions-create", new OpenAiChatCompletionsCreateCommand());
+        openai.AddCommand("embeddings-create", new OpenAiEmbeddingsCreateCommand());
+        openai.AddCommand("models-list", new OpenAiModelsListCommand());
+        openai.AddCommand("chat-completions-create", new OpenAiChatCompletionsCreateCommand());
         var agents = new CommandGroup("agents", "Foundry agents operations - Commands for listing, querying, and evaluating agents in AI Foundry.");
         foundry.AddSubGroup(agents);
 

@@ -15,7 +15,7 @@ public class OpenAiChatCompletionsCreateCommandTests
         var command = new OpenAiChatCompletionsCreateCommand();
 
         // Act & Assert
-        Assert.Equal("azmcp-ai-openai-chat-completions-create", command.Name);
+        Assert.Equal("chat-completions-create", command.Name);
     }
 
     [Fact]

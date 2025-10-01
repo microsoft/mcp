@@ -16,7 +16,7 @@ public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsLi
 {
     private const string CommandTitle = "List OpenAI Models";
 
-    public override string Name => "azmcp-ai-openai-models-list";
+    public override string Name => "models-list";
 
     public override string Description =>
         $"""

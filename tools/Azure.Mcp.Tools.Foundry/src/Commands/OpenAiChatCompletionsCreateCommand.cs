@@ -20,7 +20,7 @@ public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<Ope
 {
     private const string CommandTitle = "Create OpenAI Chat Completions";
 
-    public override string Name => "azmcp-ai-openai-chat-completions-create";
+    public override string Name => "chat-completions-create";
 
     public override string Description =>
         $"""

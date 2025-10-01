@@ -183,7 +183,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var inputText = "Generate embeddings for this test text using Azure OpenAI.";
 
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_azmcp-ai-openai-embeddings-create",
+            "azmcp_foundry_openai_embeddings-create",
             new()
             {
                 { "subscription", subscriptionId },
@@ -277,7 +277,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var dimensions = 512; // Test with reduced dimensions if supported
 
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_azmcp-ai-openai-embeddings-create",
+            "azmcp_foundry_openai_embeddings-create",
             new()
             {
                 { "subscription", subscriptionId },
@@ -327,7 +327,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var subscriptionId = Settings.SubscriptionId;
 
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_azmcp-ai-openai-models-list",
+            "azmcp_foundry_openai_models-list",
             new()
             {
                 { "subscription", subscriptionId },
@@ -564,7 +564,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         });
 
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_azmcp-ai-openai-chat-completions-create",
+            "azmcp_foundry_openai_chat-completions-create",
             new()
             {
                 { "subscription", subscriptionId },
@@ -641,7 +641,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         });
 
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_azmcp-ai-openai-chat-completions-create",
+            "azmcp_foundry_openai_chat-completions-create",
             new()
             {
                 { "subscription", subscriptionId },

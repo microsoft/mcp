@@ -16,7 +16,7 @@ public sealed class OpenAiEmbeddingsCreateCommand : SubscriptionCommand<OpenAiEm
 {
     private const string CommandTitle = "Create OpenAI Embeddings";
 
-    public override string Name => "azmcp-ai-openai-embeddings-create";
+    public override string Name => "embeddings-create";
 
     public override string Description =>
         $"""

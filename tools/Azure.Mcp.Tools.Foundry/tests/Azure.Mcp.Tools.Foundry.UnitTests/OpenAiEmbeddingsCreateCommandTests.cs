@@ -214,7 +214,7 @@ public class OpenAiEmbeddingsCreateCommandTests
         var command = new OpenAiEmbeddingsCreateCommand();
 
         // Assert
-        Assert.Equal("azmcp-ai-openai-embeddings-create", command.Name);
+        Assert.Equal("embeddings-create", command.Name);
     }
 
     [Fact]

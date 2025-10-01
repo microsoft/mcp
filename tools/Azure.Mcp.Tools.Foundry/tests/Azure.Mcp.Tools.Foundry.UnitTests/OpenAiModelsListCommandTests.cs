@@ -195,7 +195,7 @@ public class OpenAiModelsListCommandTests
         var command = new OpenAiModelsListCommand();
 
         // Assert
-        Assert.Equal("azmcp-ai-openai-models-list", command.Name);
+        Assert.Equal("models-list", command.Name);
     }
 
     [Fact]
