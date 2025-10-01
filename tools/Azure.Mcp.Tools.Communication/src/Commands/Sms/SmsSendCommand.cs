@@ -25,18 +25,8 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
 
     public override string Description =>
         """
-        Send an SMS message using Azure Communication Services.
-        
-        Sends SMS messages to one or more recipients using your Communication Services resource.
-        Supports delivery reporting and custom tags for message tracking.
-        
-        Required options:
-        - --connection-string: Azure Communication Services connection string
-        - --from: SMS-enabled phone number (E.164 format, e.g., +14255550123)
-        - --to: Recipient phone number(s) (E.164 format)
-        - --message: SMS message content
-        
-        Returns: Array of SMS send results with message IDs and delivery status.
+        Sends SMS messages to one or more recipients using Azure Communication Services.
+        Returns message IDs and delivery status for each sent message.
         """;
 
     public override string Title => CommandTitle;
@@ -70,16 +60,15 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
+
         var options = BindOptions(parseResult);
 
         try
         {
-            // Required validation step
-            if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-            {
-                return context.Response;
-            }
-
             // Get the Communication service from DI
             var communicationService = context.GetService<ICommunicationService>();
 
