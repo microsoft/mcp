@@ -18,8 +18,8 @@ parameters:
 - name: IncludeDockerRelease
   type: boolean
   default: false
-- name: IsTestPipeline
-  type: boolean
+- name: 
+  type: booleanIsTestPipeline
   default: false
   # Test pipelines (e.g. Template.Mcp.Server) can release to public feeds, but they always use prerelease tags and automatically close their version bump PRs
   # This allows us to run them multiple times from the same commit without hitting github release tag or package deployment conflicts
