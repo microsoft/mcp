@@ -6,6 +6,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added the support to return meta data in `tool list` command[[#564](https://github.com/microsoft/mcp/issues/564)].
+
 ### Breaking Changes
 
 ### Bugs Fixed
