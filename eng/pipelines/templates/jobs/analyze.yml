@@ -2,6 +2,8 @@ parameters:
 - name: TimeoutInMinutes
   type: number
   default: 120
+- name: ServerName
+  type: string
 
 jobs:
 - job: Analyze
@@ -46,3 +48,12 @@ jobs:
       CheckLinkGuidance: $true
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         Urls: (eng/common/scripts/get-markdown-files-from-changed-files.ps1)
+
+  - pwsh: |
+      # Verify that the package README.md files do not contain invalid headers or comment annotations
+      . $(Build.SourcesDirectory)/eng/scripts/Process-PackageReadMe.ps1
+      Validate-PackageReadMe -InputReadMePath "$(Build.SourcesDirectory)/servers/$env:SERVERNAME/README.md"
+    displayName: 'Validate Package README.md file'
+    condition: succeededOrFailed()
+    env:
+      SERVERNAME: ${{ parameters.ServerName }}
