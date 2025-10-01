@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Communication.Services;
 
-public class CommunicationService(ILogger<CommunicationService> logger) : ICommunicationService
+public class CommunicationService(ILogger<CommunicationService> logger) : BaseAzureService, ICommunicationService
 {
     private readonly ILogger<CommunicationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -22,7 +22,18 @@ public class CommunicationService(ILogger<CommunicationService> logger) : ICommu
         string? tag = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(connectionString, from, to, message);
+        // Validate required parameters using base class method
+        ValidateRequiredParameters(
+            (nameof(connectionString), connectionString),
+            (nameof(from), from),
+            (nameof(message), message));
+        
+        // Validate to array separately since it has special requirements
+        if (to == null || to.Length == 0)
+            throw new ArgumentException("To phone numbers cannot be null or empty", nameof(to));
+        
+        if (to.Any(string.IsNullOrWhiteSpace))
+            throw new ArgumentException("All To phone numbers must be valid", nameof(to));
 
         try
         {
@@ -64,23 +75,5 @@ public class CommunicationService(ILogger<CommunicationService> logger) : ICommu
             _logger.LogError(ex, "Failed to send SMS from {From} to {ToCount} recipient(s)", from, to.Length);
             throw;
         }
-    }
-
-    private static void ValidateRequiredParameters(string connectionString, string from, string[] to, string message)
-    {
-        if (string.IsNullOrWhiteSpace(connectionString))
-            throw new ArgumentException("Connection string cannot be null or empty", nameof(connectionString));
-
-        if (string.IsNullOrWhiteSpace(from))
-            throw new ArgumentException("From phone number cannot be null or empty", nameof(from));
-
-        if (to == null || to.Length == 0)
-            throw new ArgumentException("To phone numbers cannot be null or empty", nameof(to));
-
-        if (to.Any(string.IsNullOrWhiteSpace))
-            throw new ArgumentException("All To phone numbers must be valid", nameof(to));
-
-        if (string.IsNullOrWhiteSpace(message))
-            throw new ArgumentException("Message cannot be null or empty", nameof(message));
     }
 }
