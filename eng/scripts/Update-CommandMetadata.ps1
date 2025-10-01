@@ -19,7 +19,7 @@
     6. Skip commands that already have metadata
     
     The metadata format is:
-    _Metadata: ✅/❌ Destructive | ✅/❌ Idempotent | ✅/❌ OpenWorld | ✅/❌ ReadOnly | ✅/❌ Secret | ✅/❌ LocalRequired_
+    # ✅/❌ Destructive | ✅/❌ Idempotent | ✅/❌ OpenWorld | ✅/❌ ReadOnly | ✅/❌ Secret | ✅/❌ LocalRequired
 
 .PARAMETER CommandsFilePath
     Path to the azmcp-commands.md file. Defaults to docs/azmcp-commands.md.
@@ -225,7 +225,7 @@ function Format-MetadataBadge {
     }
     
     if ($badges.Count -gt 0) {
-        return "_Metadata: " + ($badges -join " | ") + "_"
+        return "# " + ($badges -join " | ")
     }
     
     return $null
@@ -412,7 +412,7 @@ for ($i = 0; $i -lt $lines.Count; $i++) {
                 # Check if the previous line already contains metadata
                 $prevLine = if ($i -gt 0) { $lines[$i - 1] } else { "" }
                 
-                if ($prevLine -match '_Metadata:') {
+                if ($prevLine -match '^#\s+(✅|❌)') {
                     $skippedAlreadyHasMetadata++
                     Write-Verbose "Skipping $baseCommand - already has metadata"
                 }
@@ -443,7 +443,7 @@ if ($DryRun) {
     $sampleCount = [Math]::Min(5, $addedMetadata)
     $shown = 0
     for ($i = 0; $i -lt $updatedLines.Count -and $shown -lt $sampleCount; $i++) {
-        if ($updatedLines[$i] -match '^_Metadata:') {
+        if ($updatedLines[$i] -match '^#\s+(✅|❌)') {
             Write-Host $updatedLines[$i] -ForegroundColor Green
             Write-Host $updatedLines[$i + 1] -ForegroundColor White
             Write-Host ""
