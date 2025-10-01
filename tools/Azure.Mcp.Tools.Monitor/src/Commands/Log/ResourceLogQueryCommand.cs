@@ -18,16 +18,12 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
 
     public override string Description =>
         $"""
-        Executes a Kusto Query Language (KQL) query to retrieve logs for any Azure resource that emits logs to Log Analytics.
-
+        Queries logs from Log Analytics for a specific Azure resource using Kusto Query Language (KQL). Use this tool to retrieve logs for individual resources such as storage accounts, virtual machines, app services, or any resource that emits logs to Log Analytics. You can also query by resource ID to investigate diagnostics, errors, and activity logs.  
         - Use the {ResourceLogQueryOptionDefinitions.ResourceIdName} parameter to specify the full Azure Resource ID (/subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/myaccount).
         - The {MonitorOptionDefinitions.TableNameName} parameter specifies the Log Analytics table to query.
         - The {MonitorOptionDefinitions.QueryTextName} parameter accepts a KQL query or a predefined query name.
         - Optional parameters: {MonitorOptionDefinitions.HoursName} (default: {MonitorOptionDefinitions.Hours.GetDefaultValue()}) to set the time range, and {MonitorOptionDefinitions.LimitName} (default: {MonitorOptionDefinitions.Limit.GetDefaultValue()}) to limit the number of results.
-
-        This tool is useful for:
-        - Querying logs for any Azure resource by resourceId
-        - Investigating diagnostics, errors, and activity logs
+        Do not use this to query logs from a Log Analytics workspace - instead use monitor_workspace_log_query.
         """;
 
     public override string Title => CommandTitle;
