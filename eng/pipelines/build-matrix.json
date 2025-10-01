@@ -1,13 +1,13 @@
 {
   "matrix": {
     "Agent": {
-      "linux": {"OSVmImage": "env:LINUXVMIMAGE", "Pool": "env:LINUXPOOL"},
-      "osx": {"OSVmImage": "env:MACVMIMAGE","Pool": "env:MACPOOL"},
-      "win": {"OSVmImage": "env:WINDOWSVMIMAGE", "Pool": "env:WINDOWSPOOL"}
-   },
-   "Architecture": {
-      "x64": {"Architecture": "x64", "RunTests": "true" },
-      "arm64": {"Architecture": "arm64", "RunTests": "false"}
+      "linux_x64": {"OSVmImage": "env:LINUXVMIMAGE", "Pool": "env:LINUXPOOL", "RunTests": "true", "Architecture": "x64" },
+      "osx_x64": {"OSVmImage": "env:MACVMIMAGE","Pool": "env:MACPOOL", "RunTests": "true", "Architecture": "x64"},
+      "win_x64": {"OSVmImage": "env:WINDOWSVMIMAGE", "Pool": "env:WINDOWSPOOL", "RunTests": "true", "Architecture": "x64" },
+
+      "linux_arm64": {"OSVmImage": "env:LINUXARMVMIMAGE", "Pool": "env:LINUXARMPOOL", "RunTests": "false", "Architecture": "arm64" },
+      "osx_arm64": {"OSVmImage": "env:MACVMIMAGE","Pool": "env:MACPOOL", "RunTests": "false", "Architecture": "arm64"},
+      "win_arm64": {"OSVmImage": "env:WINDOWSARMVMIMAGE ", "Pool": "env:WINDOWSARMPOOL", "RunTests": "false", "Architecture": "arm64" }
     }
   }
 }
