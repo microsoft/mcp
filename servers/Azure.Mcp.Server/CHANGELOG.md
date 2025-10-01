@@ -15,6 +15,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Change base Docker image from `bookworm-slim` to `alpine`. [[#651](https://github.com/microsoft/mcp/pull/651)]
+
 ## 0.8.3 (2025-09-30)
 
 ### Features Added
