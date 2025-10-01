@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- Fixed duplicate MCP tool name prefixes when used in VS Code. Tool names now use `az_` prefix instead of `azmcp_` to avoid duplication with VS Code's MCP server prefix. This resolves tool names appearing as `mcp_azure_mcp_azmcp_*` and makes them properly show as `mcp_azure_az_*` or similar.
+- Fixed duplicate MCP tool name prefixes in VS Code by setting an empty server name in the MCP server definition. This prevents VS Code from adding any prefix to tool names, allowing them to appear as `azmcp_[command]` instead of `mcp_azure_mcp_azmcp_[command]`.
 
 ## 0.8.2 (2025-09-25)
 
