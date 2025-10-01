@@ -17,7 +17,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
     public async Task Should_list_foundry_models()
     {
         var result = await CallToolAsync(
-            "az_foundry_models_list",
+            "azmcp_foundry_models_list",
             new()
             {
                 { "search-for-free-playground", "true" }
@@ -34,7 +34,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var projectName = $"{Settings.ResourceBaseName}-ai-projects";
         var accounts = Settings.ResourceBaseName;
         var result = await CallToolAsync(
-            "az_foundry_models_deployments_list",
+            "azmcp_foundry_models_deployments_list",
             new()
             {
                 { "endpoint", $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}" },
@@ -51,7 +51,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
     {
         var deploymentName = $"test-deploy-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
         var result = await CallToolAsync(
-            "az_foundry_models_deploy",
+            "azmcp_foundry_models_deploy",
             new()
             {
                 { "deployment", deploymentName },
@@ -73,7 +73,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var projectName = $"{Settings.ResourceBaseName}-ai-projects";
         var accounts = Settings.ResourceBaseName;
         var result = await CallToolAsync(
-            "az_foundry_knowledge_index_list",
+            "azmcp_foundry_knowledge_index_list",
             new()
             {
                 { "endpoint", $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}" },
@@ -97,7 +97,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
 
         // First get list of indexes to find one to test with
         var listResult = await CallToolAsync(
-            "az_foundry_knowledge_index_list",
+            "azmcp_foundry_knowledge_index_list",
             new()
             {
                 { "endpoint", endpoint },
@@ -111,7 +111,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
             var indexName = firstIndex.GetProperty("name").GetString();
 
             var result = await CallToolAsync(
-                "az_foundry_knowledge_index_schema",
+                "azmcp_foundry_knowledge_index_schema",
                 new()
                 {
                     { "endpoint", endpoint },
@@ -137,7 +137,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
         var subscriptionId = Settings.SubscriptionId;
         var result = await CallToolAsync(
-            "az_foundry_openai_create-completion",
+            "azmcp_foundry_openai_create-completion",
             new()
             {
                 { "subscription", subscriptionId },
@@ -186,7 +186,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var agentId = await CreateAgent(agentName, endpoint, "gpt-4o");
 
         var result = await CallToolAsync(
-            "az_foundry_agents_connect",
+            "azmcp_foundry_agents_connect",
             new()
             {
                 { "agent-id", agentId },
@@ -216,7 +216,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         await CreateAgent(agentName, endpoint, "gpt-4o");
 
         var result = await CallToolAsync(
-            "az_foundry_agents_list",
+            "azmcp_foundry_agents_list",
             new()
             {
                 { "endpoint", endpoint }
@@ -244,7 +244,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
 
         var agentId = await CreateAgent(agentName, endpoint, "gpt-4o");
         var result = await CallToolAsync(
-            "az_foundry_agents_query-and-evaluate",
+            "azmcp_foundry_agents_query-and-evaluate",
             new()
             {
                 { "agent-id", agentId },
@@ -293,7 +293,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var azureOpenAIEndpoint = $"https://{accounts}.cognitiveservices.azure.com";
         var azureOpenAIDeployment = "gpt-4o";
         var result = await CallToolAsync(
-            "az_foundry_agents_evaluate",
+            "azmcp_foundry_agents_evaluate",
             new()
             {
                 { "evaluator", evaluatorName },
