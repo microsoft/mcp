@@ -176,9 +176,9 @@ public class FoundryCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_create_openai_embeddings()
     {
-        var resourceName = Settings.ResourceBaseName;
+        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
         var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("EMBEDDINGDEPLOYMENTNAME", "text-embedding-ada-002");
-        var resourceGroup = Settings.ResourceGroupName;
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
         var subscriptionId = Settings.SubscriptionId;
         var inputText = "Generate embeddings for this test text using Azure OpenAI.";
 
@@ -269,9 +269,9 @@ public class FoundryCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_create_openai_embeddings_with_optional_parameters()
     {
-        var resourceName = Settings.ResourceBaseName;
+        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
         var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("EMBEDDINGDEPLOYMENTNAME", "text-embedding-ada-002");
-        var resourceGroup = Settings.ResourceGroupName;
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
         var subscriptionId = Settings.SubscriptionId;
         var inputText = "Test embeddings with optional parameters.";
         var dimensions = 512; // Test with reduced dimensions if supported
@@ -322,8 +322,8 @@ public class FoundryCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_list_openai_models()
     {
-        var resourceName = Settings.ResourceBaseName;
-        var resourceGroup = Settings.ResourceGroupName;
+        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
         var subscriptionId = Settings.SubscriptionId;
 
         var result = await CallToolAsync(
@@ -554,8 +554,9 @@ public class FoundryCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_create_openai_chat_completions()
     {
-        var resourceName = Settings.ResourceBaseName;
-        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("CHATDEPLOYMENTNAME", "gpt-35-turbo");
+        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
+        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIDEPLOYMENTNAME", "gpt-4o-mini");
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
         var subscriptionId = Settings.SubscriptionId;
         var messages = JsonSerializer.Serialize(new[]
         {
@@ -568,8 +569,9 @@ public class FoundryCommandTests(ITestOutputHelper output)
             new()
             {
                 { "subscription", subscriptionId },
+                { "resource-group", resourceGroup },
                 { "resource-name", resourceName },
-                { "deployment-name", deploymentName },
+                { "deployment", deploymentName },
                 { "message-array", messages },
                 { "max-tokens", "150" },
                 { "temperature", "0.7" },
@@ -629,8 +631,9 @@ public class FoundryCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_create_openai_chat_completions_with_conversation_history()
     {
-        var resourceName = Settings.ResourceBaseName;
-        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("CHATDEPLOYMENTNAME", "gpt-35-turbo");
+        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
+        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIDEPLOYMENTNAME", "gpt-4o-mini");
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
         var subscriptionId = Settings.SubscriptionId;
         var messages = JsonSerializer.Serialize(new[]
         {
@@ -645,8 +648,9 @@ public class FoundryCommandTests(ITestOutputHelper output)
             new()
             {
                 { "subscription", subscriptionId },
+                { "resource-group", resourceGroup },
                 { "resource-name", resourceName },
-                { "deployment-name", deploymentName },
+                { "deployment", deploymentName },
                 { "message-array", messages },
                 { "max-tokens", "200" },
                 { "temperature", "0.5" },
