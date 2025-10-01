@@ -22,8 +22,7 @@ public sealed class CacheListCommand(ILogger<CacheListCommand> logger) : Subscri
 
     public override string Description =>
         $"""
-        List all Redis Cache resources in a specified subscription. Returns an array of Redis Cache details.
-        Use this command to explore which Redis Cache resources are available in your subscription.
+        List/show all Redis Caches in a subscription. Returns Redis Cache details including Azure Cache for Redis resources (Basic, Standard, and Premium tier caches). Use this command to explore and view which Redis Cache resources are available in your subscription.
         """;
 
     public override string Title => CommandTitle;

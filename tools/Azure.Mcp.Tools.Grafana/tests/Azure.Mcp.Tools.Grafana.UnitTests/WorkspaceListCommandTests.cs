@@ -7,8 +7,9 @@ using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Grafana.Commands;
 using Azure.Mcp.Tools.Grafana.Commands.Workspace;
-using Azure.Mcp.Tools.Grafana.Models.Workspace;
+using Azure.Mcp.Tools.Grafana.Models;
 using Azure.Mcp.Tools.Grafana.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -50,26 +51,38 @@ public sealed class WorkspaceListCommandTests
     public async Task ExecuteAsync_ReturnsWorkspaces_WhenWorkspacesExist()
     {
         // Arrange
-        var expectedWorkspaces = new List<Workspace>
+        var expectedWorkspaces = new List<GrafanaWorkspace>
         {
-            new()
-            {
-                Name = "grafana-workspace-1",
-                ResourceGroupName = "rg-test",
-                SubscriptionId = "sub123",
-                Location = "East US",
-                ProvisioningState = "Succeeded",
-                Endpoint = "https://grafana1.grafana.azure.com"
-            },
-            new()
-            {
-                Name = "grafana-workspace-2",
-                ResourceGroupName = "rg-test2",
-                SubscriptionId = "sub123",
-                Location = "West US",
-                ProvisioningState = "Succeeded",
-                Endpoint = "https://grafana2.grafana.azure.com"
-            }
+            new GrafanaWorkspace
+            (
+                Name : "grafana-workspace-1",
+                ResourceGroupName : "rg-test",
+                SubscriptionId : "sub123",
+                Location : "East US",
+                Sku: "Standard",
+                ProvisioningState : "Succeeded",
+                Endpoint : "https://grafana1.grafana.azure.com",
+                ZoneRedundancy : "Disabled",
+                PublicNetworkAccess : "Enabled",
+                GrafanaVersion : "8.0",
+                Identity : null,
+                Tags : null
+            ),
+            new GrafanaWorkspace
+            (
+                Name : "grafana-workspace-2",
+                ResourceGroupName : "rg-test2",
+                SubscriptionId : "sub123",
+                Location : "West US",
+                Sku: "Standard",
+                ProvisioningState : "Succeeded",
+                Endpoint : "https://grafana2.grafana.azure.com",
+                ZoneRedundancy : "Disabled",
+                PublicNetworkAccess : "Enabled",
+                GrafanaVersion : "8.0",
+                Identity : null,
+                Tags : null
+            )
         };
 
         _grafana.ListWorkspacesAsync("sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
@@ -121,14 +134,23 @@ public sealed class WorkspaceListCommandTests
     public async Task ExecuteAsync_WithTenant_PassesTenantToService()
     {
         // Arrange
-        var expectedWorkspaces = new List<Workspace>
+        var expectedWorkspaces = new List<GrafanaWorkspace>
         {
-            new()
-            {
-                Name = "grafana-workspace",
-                ResourceGroupName = "rg-test",
-                SubscriptionId = "sub123"
-            }
+            new GrafanaWorkspace
+            (
+                Name : "grafana-workspace",
+                ResourceGroupName : "rg-test",
+                SubscriptionId : "sub123",
+                Location : "West US",
+                Sku: "Standard",
+                ProvisioningState : "Succeeded",
+                Endpoint : "https://grafana2.grafana.azure.com",
+                ZoneRedundancy : "Disabled",
+                PublicNetworkAccess : "Enabled",
+                GrafanaVersion : "8.0",
+                Identity : null,
+                Tags : null
+            )
         };
 
         _grafana.ListWorkspacesAsync("sub123", "tenant456", Arg.Any<RetryPolicyOptions>())
@@ -154,7 +176,7 @@ public sealed class WorkspaceListCommandTests
         var subscriptionId = "sub123";
 
         _grafana.ListWorkspacesAsync(subscriptionId, null, Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromException<IEnumerable<Workspace>>(new Exception("Test error")));
+            .Returns(Task.FromException<IEnumerable<GrafanaWorkspace>>(new Exception("Test error")));
 
         var command = new WorkspaceListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", subscriptionId]);

@@ -80,10 +80,6 @@ public static class AzureMcpServiceCollectionExtensions
         services.AddSingleton<CompositeDiscoveryStrategy>();
         services.AddSingleton<RegistryDiscoveryStrategy>();
 
-        // Register server providers
-        services.AddSingleton<CommandGroupServerProvider>();
-        services.AddSingleton<RegistryServerProvider>();
-
         // Register MCP runtimes
         services.AddSingleton<IMcpRuntime, McpRuntime>();
 

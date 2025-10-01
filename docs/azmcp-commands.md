@@ -275,11 +275,13 @@ azmcp appconfig kv delete --subscription <subscription> \
                           --key <key> \
                           [--label <label>]
 
-# List all key-value settings in an App Configuration store
-azmcp appconfig kv list --subscription <subscription> \
-                        --account <account> \
-                        [--key <key>] \
-                        [--label <label>]
+# Get key-value settings in an App Configuration store
+azmcp appconfig kv get --subscription <subscription> \
+                       --account <account> \
+                       [--key <key>] \
+                       [--label <label>] \
+                       [--key-filter <key-filter>] \
+                       [--label-filter <label-filter>]
 
 # Lock (make it read-only) or unlock (remove read-only) a key-value setting 
 azmcp appconfig kv lock set --subscription <subscription> \
@@ -294,12 +296,6 @@ azmcp appconfig kv set --subscription <subscription> \
                        --key <key> \
                        --value <value> \
                        [--label <label>]
-
-# Show a specific key-value setting
-azmcp appconfig kv show --subscription <subscription> \
-                        --account <account> \
-                        --key <key> \
-                        [--label <label>]
 ```
 
 ### Azure App Lens Operations

@@ -65,6 +65,8 @@ extends:
         value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
       jobs:
       - template: /eng/pipelines/templates/jobs/analyze.yml
+        parameters:
+          ServerName: ${{ parameters.ServerName }}
       - template: /eng/common/pipelines/templates/jobs/generate-job-matrix.yml
         parameters:
           SparseCheckout: false
