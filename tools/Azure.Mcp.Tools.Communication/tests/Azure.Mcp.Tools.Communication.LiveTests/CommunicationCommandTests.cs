@@ -18,6 +18,7 @@ public class CommunicationCommandTests : CommandTestsBase
     public CommunicationCommandTests(ITestOutputHelper output) : base(output)
     {
     }
+
     [Fact]
     public async Task Should_SendSms_WithValidParameters()
     {
