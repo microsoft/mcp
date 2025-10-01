@@ -15,6 +15,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Fixed App Lens having a runtime error for reflection-based serialization when using native AoT MCP build. [[#639](https://github.com/microsoft/mcp/pull/639)]
 
 ### Other Changes
+- Updated the description of Service bus commands to decrease ambiguity and increase selection accuracy by LLMs: [[#642](https://github.com/microsoft/mcp/pull/642)]
 
 - Refactored tool implementation to use Azure Resource Graph queries instead of direct ARM API calls:
   - Grafana [[628](https://github.com/microsoft/mcp/pull/628)]
