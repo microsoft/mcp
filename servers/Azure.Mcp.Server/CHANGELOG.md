@@ -14,6 +14,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Removed redundant DI instantiation of MCP server providers, as these are expected to be instantiated by the MCP server discovery mechanism. [[644](https://github.com/microsoft/mcp/pull/644)]
 
 ### Other Changes
+- Updated the description of Service bus commands to decrease ambiguity and increase selection accuracy by LLMs: [[#642](https://github.com/microsoft/mcp/pull/642)]
 
 ## 0.8.3 (2025-09-30)
 
