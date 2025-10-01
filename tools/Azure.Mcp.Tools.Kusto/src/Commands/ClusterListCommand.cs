@@ -17,11 +17,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
     public override string Name => "list";
 
     public override string Description =>
-        """
-        List all Kusto clusters in a subscription. This command retrieves all clusters
-        available in the specified subscription. Requires `subscription`.
-        Result is a list of cluster names as a JSON array.
-        """;
+        "List/enumerate all Data Explorer (Kusto) clusters in an Azure subscription.";
 
     public override string Title => CommandTitle;
 
