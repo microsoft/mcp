@@ -293,6 +293,7 @@ azmcp appconfig kv delete --subscription <subscription> \
                           [--label <label>]
 
 # Get key-value settings in an App Configuration store
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appconfig kv get --subscription <subscription> \
                        --account <account> \
                        [--key <key>] \
