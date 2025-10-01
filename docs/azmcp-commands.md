@@ -292,12 +292,13 @@ azmcp appconfig kv delete --subscription <subscription> \
                           --key <key> \
                           [--label <label>]
 
-# List all key-value settings in an App Configuration store
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appconfig kv list --subscription <subscription> \
-                        --account <account> \
-                        [--key <key>] \
-                        [--label <label>]
+# Get key-value settings in an App Configuration store
+azmcp appconfig kv get --subscription <subscription> \
+                       --account <account> \
+                       [--key <key>] \
+                       [--label <label>] \
+                       [--key-filter <key-filter>] \
+                       [--label-filter <label-filter>]
 
 # Lock (make it read-only) or unlock (remove read-only) a key-value setting 
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
