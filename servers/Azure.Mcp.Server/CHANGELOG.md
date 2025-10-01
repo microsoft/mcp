@@ -26,6 +26,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Removed the following dependencies:
   - `Azure.ResourceManager.Grafana` [[628](https://github.com/microsoft/mcp/pull/622)]
 
+- Updated the description of Redis commands to increase selection accuracy by LLMs: [[#655](https://github.com/microsoft/mcp/pull/655)]
+
 ## 0.8.3 (2025-09-30)
 
 ### Features Added
