@@ -11,3 +11,4 @@ extends:
   template: /eng/pipelines/templates/common.yml
   parameters:
     ServerName: Azure.Mcp.Server
+    RunLiveTests: ${{ eq(variables['System.TeamProject'], 'internal') }}
