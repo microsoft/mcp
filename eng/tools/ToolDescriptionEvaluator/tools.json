@@ -4012,7 +4012,7 @@
     },
     {
       "name": "get",
-      "description": "Get/retrieve/show details for a specific Data Explorer (Kusto) cluster in an Azure subscription. Not for listing multiple clusters. Requires: --subscription and --cluster.",
+      "description": "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters. Required: --cluster and --subscription.",
       "command": "azmcp kusto cluster get",
       "option": [
         {
@@ -4073,7 +4073,7 @@
     },
     {
       "name": "list",
-      "description": "List/enumerate all Data Explorer (Kusto) clusters in an Azure subscription.",
+      "description": "List/enumerate all Azure Data Explorer/Kusto/KQL clusters in a subscription.",
       "command": "azmcp kusto cluster list",
       "option": [
         {
@@ -4128,7 +4128,7 @@
     },
     {
       "name": "list",
-      "description": "List all databases in a Kusto cluster.\r\nRequires `cluster-uri` ( or `subscription` and `cluster`).\r\nResult is a list of database names, returned as a JSON array.",
+      "description": "List/enumerate all databases in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri ( or --cluster and --subscription).",
       "command": "azmcp kusto database list",
       "option": [
         {
@@ -4195,7 +4195,7 @@
     },
     {
       "name": "query",
-      "description": "Executes a query against a Data Explorer (Kusto) cluster to search for specific terms, retrieve records, or perform management operations. Requires: --cluster-uri (or --cluster and --subscription), --database, and --query.",
+      "description": "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.",
       "command": "azmcp kusto query",
       "option": [
         {
@@ -4274,7 +4274,7 @@
     },
     {
       "name": "sample",
-      "description": "Return a sample of rows from the specified table in an Kusto table.\r\nRequires `cluster-uri` (or `cluster`), `database`, and `table`.\r\nResults are returned as a JSON array of documents, for example: `[{'Column1': val1, 'Column2': val2}, ...]`.",
+      "description": "Return a sample of rows from a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.",
       "command": "azmcp kusto sample",
       "option": [
         {
@@ -4359,7 +4359,7 @@
     },
     {
       "name": "list",
-      "description": "List all tables in a specific Kusto database.\r\nRequired `cluster-uri` (or `subscription` and `cluster`) and `database`.\r\nReturns table names as a JSON array.",
+      "description": "List/enumerate all tables in a specific Azure Data Explorer/Kusto/KQL database. Required: --cluster-uri (or --cluster and --subscription), --database.",
       "command": "azmcp kusto table list",
       "option": [
         {
@@ -4432,7 +4432,7 @@
     },
     {
       "name": "schema",
-      "description": "Get the schema of a specific table in an Kusto database.\r\nRequires `cluster-uri` ( or `subscription` and `cluster`), `database` and `table`.",
+      "description": "Get/retrieve/show the schema of a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.",
       "command": "azmcp kusto table schema",
       "option": [
         {
@@ -10604,5 +10604,5 @@
     }
   ],
   "consolidated_azure_tools": null,
-  "duration": 34
+  "duration": 25
 }
