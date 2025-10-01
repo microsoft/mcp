@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
+using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -125,7 +126,7 @@ public static class AzureMcpServiceCollectionExtensions
                     ReadOnly: defaultToolLoaderOptions.ReadOnly,
                     InsecureDisableElicitation: defaultToolLoaderOptions.InsecureDisableElicitation
                 );
-                
+
                 toolLoaders.Add(new CommandFactoryToolLoader(
                     sp,
                     sp.GetRequiredService<CommandFactory>(),
