@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
@@ -108,7 +109,7 @@ public class CreateWorkbooksCommandTests
         // Assert
         Assert.Equal(context.Response, result);
         Assert.NotNull(result.Results);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
 
         await _service.Received(1).CreateWorkbook(
             "test-sub",
@@ -191,7 +192,7 @@ public class CreateWorkbooksCommandTests
 
         // Assert
         Assert.Equal(context.Response, result);
-        Assert.Equal(500, result.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
     }
 
     [Fact]
@@ -218,7 +219,7 @@ public class CreateWorkbooksCommandTests
 
         // Assert
         Assert.Equal(context.Response, result);
-        Assert.Equal(500, result.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
     }
 
     [Fact]
@@ -360,7 +361,7 @@ public class CreateWorkbooksCommandTests
 
         // Assert
         Assert.Equal(context.Response, result);
-        Assert.Equal(400, result.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, result.Status);
     }
 
     [Theory]
@@ -385,7 +386,7 @@ public class CreateWorkbooksCommandTests
 
         // Assert
         Assert.Equal(context.Response, result);
-        Assert.Equal(400, result.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, result.Status);
     }
 
     [Fact]
@@ -449,7 +450,7 @@ public class CreateWorkbooksCommandTests
 
         // Assert
         Assert.Equal(context.Response, result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
     }
 
@@ -518,7 +519,7 @@ public class CreateWorkbooksCommandTests
 
         // Assert
         Assert.Equal(context.Response, result);
-        Assert.Equal(500, result.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
     }
 
     private ParseResult CreateParseResult(params string[] args)

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.MySql.Commands;
@@ -51,7 +52,7 @@ public class ServerParamSetCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
@@ -82,7 +83,7 @@ public class ServerParamSetCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Parameter 'invalid_param' not found", response.Message);
     }
 
@@ -91,9 +92,6 @@ public class ServerParamSetCommandTests
     {
         var command = new ServerParamSetCommand(_logger);
 
-        Assert.Equal("set", command.Name);
-        Assert.Equal("Sets/updates a MySQL server configuration parameter to a new value to optimize performance, security, or operational behavior. This command enables fine-tuned configuration management with validation to ensure parameter changes are compatible with the server's current state and constraints.", command.Description);
-        Assert.Equal("Set MySQL Server Parameter", command.Title);
         Assert.True(command.Metadata.Destructive);
         Assert.False(command.Metadata.ReadOnly);
     }

@@ -47,7 +47,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
         try
         {
             var kusto = context.GetService<IKustoService>();
-            var clusterNames = await kusto.ListClusters(
+            var clusterNames = await kusto.ListClustersAsync(
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy);

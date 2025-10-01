@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -65,10 +66,12 @@ public class RoleAssignmentListCommandTests
                 Condition = "ActionMatches{'Microsoft.Authorization/roleAssignments/write'}"
             }
         };
-        _authorizationService.ListRoleAssignments(
+        _authorizationService.ListRoleAssignmentsAsync(
+                Arg.Is(subscriptionId),
                 Arg.Is(scope),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedRoleAssignments);
         var command = new RoleAssignmentListCommand(_logger);
         var args = command.GetCommand().Parse([
@@ -97,7 +100,7 @@ public class RoleAssignmentListCommandTests
         // Arrange
         var subscriptionId = "00000000-0000-0000-0000-000000000001";
         var scope = $"/subscriptions/{subscriptionId}/resourceGroups/rg1";
-        _authorizationService.ListRoleAssignments(scope, null, null)
+        _authorizationService.ListRoleAssignmentsAsync(subscriptionId, scope, null, null, CancellationToken.None)
             .Returns([]);
 
         var command = new RoleAssignmentListCommand(_logger);
@@ -129,7 +132,7 @@ public class RoleAssignmentListCommandTests
         var subscriptionId = "00000000-0000-0000-0000-000000000001";
         var scope = $"/subscriptions/{subscriptionId}/resourceGroups/rg1";
 
-        _authorizationService.ListRoleAssignments(scope, null, Arg.Any<RetryPolicyOptions>())
+        _authorizationService.ListRoleAssignmentsAsync(subscriptionId, scope, null, null, CancellationToken.None)
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new RoleAssignmentListCommand(_logger);
@@ -144,7 +147,7 @@ public class RoleAssignmentListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
     }
 }

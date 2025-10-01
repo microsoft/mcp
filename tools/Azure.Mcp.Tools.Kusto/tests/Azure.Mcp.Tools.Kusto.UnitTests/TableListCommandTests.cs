@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
@@ -42,7 +43,7 @@ public sealed class TableListCommandTests
         var expectedTables = new List<string> { "table1", "table2" };
         if (useClusterUri)
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
@@ -50,7 +51,7 @@ public sealed class TableListCommandTests
         }
         else
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "sub1", "mycluster", "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(expectedTables);
@@ -78,7 +79,7 @@ public sealed class TableListCommandTests
     {
         if (useClusterUri)
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
@@ -86,7 +87,7 @@ public sealed class TableListCommandTests
         }
         else
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "sub1", "mycluster", "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns([]);
@@ -114,7 +115,7 @@ public sealed class TableListCommandTests
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         if (useClusterUri)
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
@@ -122,7 +123,7 @@ public sealed class TableListCommandTests
         }
         else
         {
-            _kusto.ListTables(
+            _kusto.ListTablesAsync(
                 "sub1", "mycluster", "db1",
                 Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
                 .Returns(Task.FromException<List<string>>(new Exception("Test error")));
@@ -134,7 +135,7 @@ public sealed class TableListCommandTests
 
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
     }
 
@@ -148,6 +149,6 @@ public sealed class TableListCommandTests
 
         var response = await command.ExecuteAsync(context, args);
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 }

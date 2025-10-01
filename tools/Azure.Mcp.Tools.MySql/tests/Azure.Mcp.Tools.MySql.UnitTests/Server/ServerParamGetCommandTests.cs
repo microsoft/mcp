@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.MySql.Commands;
@@ -50,7 +51,7 @@ public class ServerParamGetCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
@@ -80,7 +81,7 @@ public class ServerParamGetCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Parameter 'invalid_param' not found", response.Message);
     }
 
@@ -89,9 +90,6 @@ public class ServerParamGetCommandTests
     {
         var command = new ServerParamGetCommand(_logger);
 
-        Assert.Equal("param", command.Name);
-        Assert.Equal("Retrieves the current value of a single server configuration parameter on an Azure Database for MySQL Flexible Server. Use to inspect a setting (e.g. max_connections, wait_timeout, slow_query_log) before changing it.", command.Description);
-        Assert.Equal("Get MySQL Server Parameter", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }

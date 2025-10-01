@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Sql.Models;
@@ -20,9 +21,10 @@ public sealed class DatabaseUpdateCommand(ILogger<DatabaseUpdateCommand> logger)
 
     public override string Description =>
         """
-        Update configuration settings for an existing Azure SQL Database. This command modifies an existing database's
-        compute tier, performance characteristics, redundancy, or other settings. Equivalent to 'az sql db update'.
-        Returns the updated database information including applied configuration changes.
+        Scale and configure Azure SQL Database performance settings.
+        Update an existing database's SKU, compute tier, storage capacity,
+        or redundancy options to meet changing performance requirements.
+        Returns the updated database configuration including applied scaling changes.
         """;
 
     public override string Title => CommandTitle;
@@ -107,11 +109,11 @@ public sealed class DatabaseUpdateCommand(ILogger<DatabaseUpdateCommand> logger)
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "SQL database or server not found. Verify the database name, server name, resource group, and that you have access.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed updating the SQL database. Verify you have appropriate permissions. Details: {reqEx.Message}",
-        RequestFailedException reqEx when reqEx.Status == 400 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.BadRequest =>
             $"Invalid database configuration. Check your update parameters. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)

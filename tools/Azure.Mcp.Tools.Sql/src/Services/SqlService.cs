@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
@@ -46,8 +47,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 subscription,
                 retryPolicy,
                 ConvertToSqlDatabaseModel,
-                $"name =~ '{EscapeKqlString(databaseName)}'",
-                cancellationToken);
+                additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
+                cancellationToken: cancellationToken);
 
             if (result == null)
             {
@@ -106,7 +107,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             // Use ARM client directly for create operations
             var armClient = await CreateArmClientAsync(null, retryPolicy);
-            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
             var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
 
@@ -150,14 +151,14 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             // Configure read scale if provided
             if (!string.IsNullOrEmpty(readScale))
             {
-                if (Enum.TryParse<ResourceManager.Sql.Models.DatabaseReadScale>(readScale, true, out var readScaleEnum))
+                if (Enum.TryParse<DatabaseReadScale>(readScale, true, out var readScaleEnum))
                 {
                     databaseData.ReadScale = readScaleEnum;
                 }
             }
 
             var operation = await sqlServerResource.Value.GetSqlDatabases().CreateOrUpdateAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 databaseName,
                 databaseData,
                 cancellationToken);
@@ -219,7 +220,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         try
         {
             var armClient = await CreateArmClientAsync(null, retryPolicy);
-            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
             var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
 
@@ -261,13 +262,13 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             }
 
             if (!string.IsNullOrEmpty(readScale) &&
-                Enum.TryParse<ResourceManager.Sql.Models.DatabaseReadScale>(readScale, true, out var readScaleEnum))
+                Enum.TryParse<DatabaseReadScale>(readScale, true, out var readScaleEnum))
             {
                 databaseData.ReadScale = readScaleEnum;
             }
 
             var operation = await sqlServerResource.Value.GetSqlDatabases().CreateOrUpdateAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 databaseName,
                 databaseData,
                 cancellationToken);
@@ -285,6 +286,68 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             _logger.LogError(ex,
                 "Error updating SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
                 serverName, databaseName, resourceGroup, subscription);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Renames an existing SQL database to a new name.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server hosting the database</param>
+    /// <param name="databaseName">The current database name</param>
+    /// <param name="newDatabaseName">The desired new database name</param>
+    /// <param name="resourceGroup">The name of the resource group containing the server</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>The renamed SQL database information</returns>
+    /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
+    public async Task<SqlDatabase> RenameDatabaseAsync(
+        string serverName,
+        string databaseName,
+        string newDatabaseName,
+        string resourceGroup,
+        string subscription,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(serverName, databaseName, resourceGroup, subscription);
+        if (string.IsNullOrWhiteSpace(newDatabaseName))
+            throw new ArgumentException("New database name cannot be null or empty.", nameof(newDatabaseName));
+        try
+        {
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+
+            var currentDatabaseId = SqlDatabaseResource.CreateResourceIdentifier(
+                subscription,
+                resourceGroup,
+                serverName,
+                databaseName);
+
+            var targetDatabaseId = SqlDatabaseResource.CreateResourceIdentifier(
+                subscription,
+                resourceGroup,
+                serverName,
+                newDatabaseName);
+
+            var databaseResource = armClient.GetSqlDatabaseResource(currentDatabaseId);
+            var moveDefinition = new SqlResourceMoveDefinition(targetDatabaseId);
+
+            await databaseResource.RenameAsync(moveDefinition, cancellationToken);
+
+            var renamedDatabaseResource = await armClient.GetSqlDatabaseResource(targetDatabaseId).GetAsync(cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully renamed SQL database. Server: {Server}, Database: {Database}, NewDatabase: {NewDatabase}, ResourceGroup: {ResourceGroup}",
+                serverName, databaseName, newDatabaseName, resourceGroup);
+
+            return ConvertToSqlDatabaseModel(renamedDatabaseResource.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error renaming SQL database. Server: {Server}, Database: {Database}, NewDatabase: {NewDatabase}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
+                serverName, databaseName, newDatabaseName, resourceGroup, subscription);
             throw;
         }
     }
@@ -351,9 +414,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 subscription,
                 retryPolicy,
                 ConvertToSqlServerEntraAdministratorModel,
-                $"id contains '/servers/{EscapeKqlString(serverName)}/'",
-                50,
-                cancellationToken);
+                additionalFilter: $"id contains '/servers/{EscapeKqlString(serverName)}/'",
+                cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {
@@ -468,7 +530,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             // Use ARM client directly for create operations
             var armClient = await CreateArmClientAsync(null, retryPolicy);
-            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
             var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
 
@@ -479,7 +541,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             };
 
             var operation = await sqlServerResource.Value.GetSqlFirewallRules().CreateOrUpdateAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 firewallRuleName,
                 firewallRuleData,
                 cancellationToken);
@@ -528,13 +590,13 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             // Use ARM client directly for delete operations
             var armClient = await CreateArmClientAsync(null, retryPolicy);
-            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
             var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
 
             var firewallRuleResource = await sqlServerResource.Value.GetSqlFirewallRules().GetAsync(firewallRuleName);
 
-            await firewallRuleResource.Value.DeleteAsync(Azure.WaitUntil.Completed, cancellationToken);
+            await firewallRuleResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully deleted SQL server firewall rule. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}",
@@ -542,7 +604,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
             return true;
         }
-        catch (RequestFailedException ex) when (ex.Status == 404)
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(
                 "Firewall rule not found during delete operation. Server: {Server}, ResourceGroup: {ResourceGroup}, Rule: {Rule}",
@@ -593,7 +655,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             // Use ARM client directly for create operations
             var armClient = await CreateArmClientAsync(null, retryPolicy);
-            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
 
             var serverData = new SqlServerData(location)
@@ -613,7 +675,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             }
 
             var operation = await resourceGroupResource.Value.GetSqlServers().CreateOrUpdateAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 serverName,
                 serverData,
                 cancellationToken);
@@ -667,7 +729,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             // Use ARM client directly for get operations
             var armClient = await CreateArmClientAsync(null, retryPolicy);
-            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
 
             var serverResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
@@ -687,7 +749,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 Tags: tags
             );
         }
-        catch (RequestFailedException reqEx) when (reqEx.Status == 404)
+        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
         {
             throw new KeyNotFoundException($"SQL server '{serverName}' not found in resource group '{resourceGroup}' for subscription '{subscription}'.");
         }
@@ -728,7 +790,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 var response = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
                 resourceGroupResource = response.Value;
             }
-            catch (RequestFailedException reqEx) when (reqEx.Status == 404)
+            catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
             {
                 _logger.LogWarning(reqEx,
                     "Resource group not found when listing SQL servers. ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
@@ -767,18 +829,18 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             // Use ARM client directly for delete operations
             var armClient = await CreateArmClientAsync(null, retryPolicy);
-            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
 
             var serverResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
 
             var operation = await serverResource.Value.DeleteAsync(
-                Azure.WaitUntil.Completed,
+                WaitUntil.Completed,
                 cancellationToken);
 
             return true;
         }
-        catch (RequestFailedException reqEx) when (reqEx.Status == 404)
+        catch (RequestFailedException reqEx) when (reqEx.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(
                 "SQL server not found during delete operation. Server: {Server}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}",
@@ -819,13 +881,13 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             // Use ARM client directly for delete operations
             var armClient = await CreateArmClientAsync(null, retryPolicy);
-            var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
             var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
             var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
 
             var databaseResource = await sqlServerResource.Value.GetSqlDatabases().GetAsync(databaseName);
 
-            await databaseResource.Value.DeleteAsync(Azure.WaitUntil.Completed, cancellationToken);
+            await databaseResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully deleted SQL database. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",
@@ -833,7 +895,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
             return true;
         }
-        catch (RequestFailedException ex) when (ex.Status == 404)
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.NotFound)
         {
             _logger.LogWarning(
                 "Database not found during delete operation. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}",
@@ -882,7 +944,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
     private static SqlDatabase ConvertToSqlDatabaseModel(JsonElement item)
     {
-        Models.SqlDatabaseData? sqlDatabase = Azure.Mcp.Tools.Sql.Services.Models.SqlDatabaseData.FromJson(item);
+        Models.SqlDatabaseData? sqlDatabase = Models.SqlDatabaseData.FromJson(item);
         if (sqlDatabase == null)
             throw new InvalidOperationException("Failed to parse SQL database data");
 
@@ -985,7 +1047,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
     private static SqlServerFirewallRule ConvertToSqlFirewallRuleModel(JsonElement item)
     {
-        Models.SqlFirewallRuleData? firewallRule = Azure.Mcp.Tools.Sql.Services.Models.SqlFirewallRuleData.FromJson(item);
+        Models.SqlFirewallRuleData? firewallRule = Models.SqlFirewallRuleData.FromJson(item);
         if (firewallRule == null)
             throw new InvalidOperationException("Failed to parse SQL firewall rule data");
 

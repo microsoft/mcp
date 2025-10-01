@@ -6,7 +6,7 @@ using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
-using Azure.Mcp.Core.Services.Telemetry;
+using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Server;
@@ -21,10 +21,8 @@ public class ServiceCollectionExtensionsTests
 
     private IServiceCollection SetupBaseServices()
     {
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddSingleton(CommandFactoryHelpers.CreateCommandFactory);
-        services.AddSingleton<ITelemetryService, CommandFactoryHelpers.NoOpTelemetryService>();
+        var services = CommandFactoryHelpers.SetupCommonServices();
+        services.AddSingleton<CommandFactory>(sp => CommandFactoryHelpers.CreateCommandFactory(sp));
 
         return services;
     }
@@ -156,8 +154,8 @@ public class ServiceCollectionExtensionsTests
         // Check that appropriate registration was completed
         Assert.NotNull(provider.GetService<IMcpRuntime>());
 
-        // Verify that the service collection contains an IMcpServer registration
-        Assert.Contains(services, sd => sd.ServiceType == typeof(IMcpServer));
+        // Verify that the service collection contains an McpServer registration
+        Assert.Contains(services, sd => sd.ServiceType == typeof(McpServer));
     }
 
     [Fact]
@@ -182,7 +180,9 @@ public class ServiceCollectionExtensionsTests
         Assert.Equal("2024-11-05", mcpServerOptions.ProtocolVersion);
         Assert.NotNull(mcpServerOptions.ServerInfo);
         Assert.NotNull(mcpServerOptions.Capabilities);
-        Assert.NotNull(mcpServerOptions.Capabilities.Tools);
+        Assert.NotNull(mcpServerOptions.Handlers);
+        Assert.NotNull(mcpServerOptions.Handlers.ListToolsHandler);
+        Assert.NotNull(mcpServerOptions.Handlers.CallToolHandler);
     }
 
     [Fact]
@@ -247,7 +247,7 @@ public class ServiceCollectionExtensionsTests
         var options = new ServiceStartOptions
         {
             Transport = StdioTransport,
-            Namespace = new[] { "keyvault", "storage" }
+            Namespace = ["keyvault", "storage"]
         };
 
         // Act
@@ -279,7 +279,7 @@ public class ServiceCollectionExtensionsTests
         var options = new ServiceStartOptions
         {
             Transport = StdioTransport,
-            Namespace = new[] { serviceArea }
+            Namespace = [serviceArea]
         };
 
         // Act

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Sql.Options.Database;
 using Azure.Mcp.Tools.Sql.Services;
@@ -17,10 +18,7 @@ public sealed class DatabaseDeleteCommand(ILogger<DatabaseDeleteCommand> logger)
 
     public override string Description =>
         """
-		Deletes an Azure SQL Database from an existing SQL Server. This command removes the specified database
-		and is idempotent - attempting to delete a database that does not exist will succeed with Deleted = false.
-		Equivalent to 'az sql db delete'.
-		Returns whether the database was deleted during this operation.
+		Deletes a database from an Azure SQL Server.This idempotent operation removes the specified database from the server, returning Deleted = false if the database doesn't exist or Deleted = true if successfully removed.
 		""";
 
     public override string Title => CommandTitle;
@@ -70,9 +68,9 @@ public sealed class DatabaseDeleteCommand(ILogger<DatabaseDeleteCommand> logger)
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "SQL server or database not found. Verify the server name, database name, resource group, and that you have access.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed deleting the SQL database. Verify you have appropriate permissions. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)

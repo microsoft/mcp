@@ -24,20 +24,9 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
     public override string Name => "diagnose";
 
     public override string Description =>
-        """
-        **PRIMARY USE: Diagnose Azure resource performance issues, slowness, failures, and availability problems.**
-
-        Always use this tool BEFORE manually checking metrics or logs when users report performance or functionality issues.
-
-        Use the Azure CLI tool to find the 'subscription', 'resourceGroup', and 'resourceType' parameters before asking user to provide that information."
-        This tool can be used to ask questions about application state, this tool can help when doing diagnostics and address issues about performance and failures.
-
-        If you get a resourceId, parse it to get the 'subscription', 'resourceGroup', and 'resourceType' parameters of the resource. ResourceIds are in the format:
-        /subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resource}
-
-        Once proper input is provided this tool returns a list of insights and solutions to the user question.
-        """;
-
+    "Get diagnostic help from App Lens for Azure application and service issues to identify what’s wrong with a service. Ask questions about performance, slowness, failures, errors, application state, availability to receive expert analysis and solutions which can help when performing diagnostics and to address issues about performance and failures. " +
+    "Returns insights, recommended solutions, and analysis. " +
+    "Always use this tool before manually checking metrics or logs when users report performance or functionality issues. Use Azure CLI to find the subscription, resourceGroup, and resourceType if not provided. If given a resourceId, parse it to extract subscription, resourceGroup, and resourceType (format: /subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resource}). This tool can be used to ask questions about application state, diagnose performance problems, and address service failures.";
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()

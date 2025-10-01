@@ -7,7 +7,6 @@ using Azure.Mcp.Tools.VirtualDesktop.Commands.Hostpool;
 using Azure.Mcp.Tools.VirtualDesktop.Commands.SessionHost;
 using Azure.Mcp.Tools.VirtualDesktop.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.VirtualDesktop;
 
@@ -18,12 +17,15 @@ public class VirtualDesktopSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IVirtualDesktopService, VirtualDesktopService>();
+
+        services.AddSingleton<HostpoolListCommand>();
+        services.AddSingleton<SessionHostListCommand>();
+        services.AddSingleton<SessionHostUserSessionListCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var desktop = new CommandGroup(Name, "Azure Virtual Desktop operations - Commands for managing and accessing Azure Virtual Desktop resources. Includes operations for hostpools, session hosts, and user sessions.");
-        rootGroup.AddSubGroup(desktop);
 
         // Create AVD subgroups
         var hostpool = new CommandGroup("hostpool", "Hostpool operations - Commands for listing and managing Hostpools, including listing and changing settings on hostpools.");
@@ -33,11 +35,13 @@ public class VirtualDesktopSetup : IAreaSetup
         hostpool.AddSubGroup(sessionhost);
 
         // Register AVD commands
-        hostpool.AddCommand("list", new HostpoolListCommand(
-            loggerFactory.CreateLogger<HostpoolListCommand>()));
-        sessionhost.AddCommand("list", new SessionHostListCommand(
-            loggerFactory.CreateLogger<SessionHostListCommand>()));
-        sessionhost.AddCommand("usersession-list", new SessionHostUserSessionListCommand(
-            loggerFactory.CreateLogger<SessionHostUserSessionListCommand>()));
+        var hostpoolList = serviceProvider.GetRequiredService<HostpoolListCommand>();
+        hostpool.AddCommand(hostpoolList.Name, hostpoolList);
+        var sessionHostList = serviceProvider.GetRequiredService<SessionHostListCommand>();
+        sessionhost.AddCommand(sessionHostList.Name, sessionHostList);
+        var sessionHostUserSessionList = serviceProvider.GetRequiredService<SessionHostUserSessionListCommand>();
+        sessionhost.AddCommand(sessionHostUserSessionList.Name, sessionHostUserSessionList);
+
+        return desktop;
     }
 }

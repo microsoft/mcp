@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tools.Deploy.Commands.App;
 using Azure.Mcp.Tools.Deploy.Services;
@@ -60,7 +61,7 @@ public class LogsGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.StartsWith("App logs retrieved:", result.Message);
         Assert.Contains("Application started", result.Message);
@@ -91,7 +92,7 @@ public class LogsGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.StartsWith("App logs retrieved:", result.Message);
     }
@@ -119,7 +120,7 @@ public class LogsGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.Equal("No logs found.", result.Message);
     }
 
@@ -146,7 +147,7 @@ public class LogsGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.StartsWith("Error during retrieval of app logs", result.Message);
         Assert.Contains("test-env", result.Message);
@@ -174,7 +175,7 @@ public class LogsGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.NotEqual(200, result.Status); // Should be an error status
+        Assert.NotEqual(HttpStatusCode.OK, result.Status); // Should be an error status
         Assert.NotNull(result.Message);
         Assert.Contains("Failed to connect to Azure", result.Message);
     }
@@ -194,7 +195,7 @@ public class LogsGetCommandTests
 
         // assert
         Assert.NotNull(result);
-        Assert.NotEqual(200, result.Status); // Should fail validation
+        Assert.NotEqual(HttpStatusCode.OK, result.Status); // Should fail validation
     }
 
 
