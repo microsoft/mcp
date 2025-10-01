@@ -19,14 +19,8 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands
 
         public override string Description =>
        """
-
-        Provides the Bicep schema for the most recent apiVersion of an Azure resource. Do not call this command for Terraform IaC generation.
-        If you are asked to create or modify resources in a Bicep ARM template, call this function multiple times,
-        once for every resource type you are adding, even if you already have information about Bicep resources from other sources.
-        Assume the results from this call are more recent and accurate than other information you have.
-        Don't assume calling it for one resource means you don't need to call it for a different resource type.
-        Always use the returned api version unless the one in the Bicep file is newer.
-        Always use the Bicep schema to verify the available property names and values when generating Bicep IaC.
+        Provides the official Bicep resource schema definition and latest API version for any Azure resource type. Use this to get the exact schema structure needed to write Bicep code for Azure resources including OpenAI, other LLM models, storage accounts, databases, VMs, or any other Azure service. Returns technical schema specifications (property names, data types, validation rules) for .bicep file development. Use this tool to look up Bicep schema when writing infrastructure code for various Azure resources. Gets you the exact property names and data types needed in your .bicep resource definitions. This is SCHEMA REFERENCE ONLY - not for actual resource deployment. Use deployment tools to create resources, this tool only provides the schema structure for writing correct Bicep syntax.
+        Do not use this tool for Resource deployment, getting best practices, deployment guidelines, or creating actual resources. Use deployment tools for those operations.
        """;
 
         public override string Title => CommandTitle;
