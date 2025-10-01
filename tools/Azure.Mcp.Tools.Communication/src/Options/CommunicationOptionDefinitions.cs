@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+
 namespace Azure.Mcp.Tools.Communication.Options;
 
 public static class CommunicationOptionDefinitions

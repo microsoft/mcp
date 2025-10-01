@@ -21,13 +21,6 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
     private const string CommandTitle = "Send SMS Message";
     private readonly ILogger<SmsSendCommand> _logger = logger;
 
-    // Define options from OptionDefinitions
-    private readonly Option<string> _fromOption = CommunicationOptionDefinitions.From;
-    private readonly Option<string[]> _toOption = CommunicationOptionDefinitions.To;
-    private readonly Option<string> _messageOption = CommunicationOptionDefinitions.Message;
-    private readonly Option<bool> _enableDeliveryReportOption = CommunicationOptionDefinitions.EnableDeliveryReport;
-    private readonly Option<string> _tagOption = CommunicationOptionDefinitions.Tag;
-
     public override string Name => "send";
 
     public override string Description =>
@@ -57,21 +50,21 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_fromOption);
-        command.Options.Add(_toOption);
-        command.Options.Add(_messageOption);
-        command.Options.Add(_enableDeliveryReportOption);
-        command.Options.Add(_tagOption);
+        command.Options.Add(CommunicationOptionDefinitions.From);
+        command.Options.Add(CommunicationOptionDefinitions.To);
+        command.Options.Add(CommunicationOptionDefinitions.Message);
+        command.Options.Add(CommunicationOptionDefinitions.EnableDeliveryReport);
+        command.Options.Add(CommunicationOptionDefinitions.Tag);
     }
 
     protected override SmsSendOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.From = parseResult.GetValueOrDefault(_fromOption);
-        options.To = parseResult.GetValueOrDefault(_toOption);
-        options.Message = parseResult.GetValueOrDefault(_messageOption);
-        options.EnableDeliveryReport = parseResult.GetValueOrDefault(_enableDeliveryReportOption);
-        options.Tag = parseResult.GetValueOrDefault(_tagOption);
+        options.From = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.From.Name);
+        options.To = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.To.Name);
+        options.Message = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.Message.Name);
+        options.EnableDeliveryReport = parseResult.GetValueOrDefault<bool>(CommunicationOptionDefinitions.EnableDeliveryReport.Name);
+        options.Tag = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.Tag.Name);
         return options;
     }
 
