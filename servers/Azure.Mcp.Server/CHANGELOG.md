@@ -18,10 +18,14 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Updated the description of the following commands to decrease ambiguity and increase selection accuracy by LLMs:
-  - Kusto:
-    - `azmcp_kusto_cluster_list`
+  - Kusto: [[#666](https://github.com/microsoft/mcp/pull/666)]
     - `azmcp_kusto_cluster_get`
+    - `azmcp_kusto_cluster_list`
+    - `azmcp_kusto_database_list`
     - `azmcp_kusto_query`
+    - `azmcp_kusto_sample`
+    - `azmcp_kusto_table_list`
+    - `azmcp_kusto_table_schema`
   - Service Bus: `azmcp_servicebus_topic_details` [[#642](https://github.com/microsoft/mcp/pull/642)]
 - Refactored tool implementation to use Azure Resource Graph queries instead of direct ARM API calls:
   - Grafana [[628](https://github.com/microsoft/mcp/pull/628)]
