@@ -27,6 +27,9 @@
     "List all AI Foundry models",
     "Show me the available AI Foundry models"
   ],
+  "azmcp_foundry_openai_create-completion": [
+    "Create a completion with the prompt \"What is Azure?\""
+  ],
   "azmcp_search_index_get": [
     "Show me the details of the index <index-name> in Cognitive Search service <service-name>",
     "List all indexes in the Cognitive Search service <service-name>",
@@ -193,7 +196,7 @@
     "Show me my PostgreSQL servers",
     "Show me the PostgreSQL servers in my subscription"
   ],
-  "azmcp_postgres_server_param": [
+  "azmcp_postgres_server_param_get": [
     "Show me if the parameter my PostgreSQL server <server> has replication enabled"
   ],
   "azmcp_postgres_server_param_set": [
@@ -236,6 +239,15 @@
     "Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription>",
     "List Event Grid subscriptions for subscription <subscription> in location <location>"
   ],
+  "azmcp_eventgrid_events_publish": [
+    "Publish an event to Event Grid topic <topic_name> using <event_schema> with the following data <event_data>",
+    "Publish event to my Event Grid topic <topic_name> with the following events <event_data>",
+    "Send an event to Event Grid topic <topic_name> in resource group <resource_group_name> with <event_data>"
+  ],
+  "azmcp_eventhubs_namespace_get": [
+    "List all Event Hubs namespaces in my subscription",
+    "Get the details of my namespace <namespace_name> in my resource group <resource_group_name>"
+  ],
   "azmcp_functionapp_get": [
     "Describe the function app <function_app_name> in resource group <resource_group_name>",
     "Get configuration for function app <function_app_name>",
@@ -252,45 +264,81 @@
   ],
   "azmcp_keyvault_admin_settings_get": [
     "Get the account settings for my key vault <key_vault_account_name>",
-    "Show me the account settings for key vault <key_vault_account_name>",
+    "Show me the account settings for managed HSM keyvault <key_vault_account_name>",
     "What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name>"
   ],
   "azmcp_keyvault_certificate_create": [
-    "Create a new certificate called <certificate_name> in the key vault <key_vault_account_name>"
+    "Create a new certificate called <certificate_name> in the key vault <key_vault_account_name>",
+    "Generate a certificate named <certificate_name> in key vault <key_vault_account_name>",
+    "Request creation of certificate <certificate_name> in the key vault <key_vault_account_name>",
+    "Provision a new key vault certificate <certificate_name> in vault <key_vault_account_name>",
+    "Issue a certificate <certificate_name> in key vault <key_vault_account_name>"
   ],
   "azmcp_keyvault_certificate_get": [
     "Show me the certificate <certificate_name> in the key vault <key_vault_account_name>",
-    "Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name>"
+    "Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name>",
+    "Get the certificate <certificate_name> from vault <key_vault_account_name>",
+    "Display the certificate details for <certificate_name> in vault <key_vault_account_name>",
+    "Retrieve certificate metadata for <certificate_name> in vault <key_vault_account_name>"
   ],
   "azmcp_keyvault_certificate_import": [
     "Import the certificate in file <file_path> into the key vault <key_vault_account_name>",
-    "Import a certificate into the key vault <key_vault_account_name> using the name <certificate_name>"
+    "Import a certificate into the key vault <key_vault_account_name> using the name <certificate_name>",
+    "Upload certificate file <file_path> to key vault <key_vault_account_name>",
+    "Load certificate <certificate_name> from file <file_path> into vault <key_vault_account_name>",
+    "Add existing certificate file <file_path> to the key vault <key_vault_account_name> with name <certificate_name>"
   ],
   "azmcp_keyvault_certificate_list": [
     "List all certificates in the key vault <key_vault_account_name>",
-    "Show me the certificates in the key vault <key_vault_account_name>"
+    "Show me the certificates in the key vault <key_vault_account_name>",
+    "What certificates are in the key vault <key_vault_account_name>?",
+    "List certificate names in vault <key_vault_account_name>",
+    "Enumerate certificates in key vault <key_vault_account_name>",
+    "Show certificate names in the key vault <key_vault_account_name>"
   ],
   "azmcp_keyvault_key_create": [
-    "Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name>"
+    "Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name>",
+    "Generate a key <key_name> with type <key_type> in vault <key_vault_account_name>",
+    "Create an oct key in the vault <key_vault_account_name>",
+    "Create an RSA key in the vault <key_vault_account_name> with name <key_name>",
+    "Create an EC key with name <key_name> in the vault <key_vault_account_name>"
   ],
   "azmcp_keyvault_key_get": [
     "Show me the key <key_name> in the key vault <key_vault_account_name>",
-    "Show me the details of the key <key_name> in the key vault <key_vault_account_name>"
+    "Show me the details of the key <key_name> in the key vault <key_vault_account_name>",
+    "Get the key <key_name> from vault <key_vault_account_name>",
+    "Display the key details for <key_name> in vault <key_vault_account_name>",
+    "Retrieve key metadata for <key_name> in vault <key_vault_account_name>"
   ],
   "azmcp_keyvault_key_list": [
     "List all keys in the key vault <key_vault_account_name>",
-    "Show me the keys in the key vault <key_vault_account_name>"
+    "Show me the keys in the key vault <key_vault_account_name>",
+    "What keys are in the key vault <key_vault_account_name>?",
+    "List key names in vault <key_vault_account_name>",
+    "Enumerate keys in key vault <key_vault_account_name>",
+    "Show key names in the key vault <key_vault_account_name>"
   ],
   "azmcp_keyvault_secret_create": [
-    "Create a new secret called <secret_name> with value <secret_value> in the key vault <key_vault_account_name>"
+    "Create a new secret called <secret_name> with value <secret_value> in the key vault <key_vault_account_name>",
+    "Set a secret named <secret_name> with value <secret_value> in key vault <key_vault_account_name>",
+    "Store secret <secret_name> value <secret_value> in the key vault <key_vault_account_name>",
+    "Add a new version of secret <secret_name> with value <secret_value> in vault <key_vault_account_name>",
+    "Update secret <secret_name> to value <secret_value> in the key vault <key_vault_account_name>"
   ],
   "azmcp_keyvault_secret_get": [
     "Show me the secret <secret_name> in the key vault <key_vault_account_name>",
-    "Show me the details of the secret <secret_name> in the key vault <key_vault_account_name>"
+    "Show me the details of the secret <secret_name> in the key vault <key_vault_account_name>",
+    "Get the secret <secret_name> from vault <key_vault_account_name>",
+    "Display the secret details for <secret_name> in vault <key_vault_account_name>",
+    "Retrieve secret metadata for <secret_name> in vault <key_vault_account_name>"
   ],
   "azmcp_keyvault_secret_list": [
     "List all secrets in the key vault <key_vault_account_name>",
-    "Show me the secrets in the key vault <key_vault_account_name>"
+    "Show me the secrets in the key vault <key_vault_account_name>",
+    "What secrets are in the key vault <key_vault_account_name>?",
+    "List secrets names in vault <key_vault_account_name>",
+    "Enumerate secrets in key vault <key_vault_account_name>",
+    "Show secrets names in the key vault <key_vault_account_name>"
   ],
   "azmcp_aks_cluster_get": [
     "Get the configuration of AKS cluster <cluster-name>",
@@ -357,7 +405,7 @@
     "Search for Microsoft products in the marketplace",
     "Show me marketplace products from publisher <publisher_name>"
   ],
-  "azmcp_bestpractices_get": [
+  "azmcp_get_bestpractices_get": [
     "Get the latest Azure code generation best practices",
     "Get the latest Azure deployment best practices",
     "Get the latest Azure best practices",
@@ -365,9 +413,7 @@
     "Get the latest Azure Functions deployment best practices",
     "Get the latest Azure Functions best practices",
     "Get the latest Azure Static Web Apps best practices",
-    "What are azure function best practices?",
-    "Create the plan for creating a simple HTTP-triggered function app in javascript that returns a random compliment from a predefined list in a JSON response. And deploy it to azure eventually. But don't create any code until I confirm.",
-    "Create the plan for creating a to-do list app. And deploy it to azure as a container app. But don't create any code until I confirm."
+    "What are azure function best practices?"
   ],
   "azmcp_monitor_healthmodels_entity_gethealth": [
     "Show me the health status of entity <entity_id> in the Log Analytics workspace <workspace_name>"
@@ -407,6 +453,9 @@
   "azmcp_datadog_monitoredresources_list": [
     "List all monitored resources in the Datadog resource <resource_name>",
     "Show me the monitored resources in the Datadog resource <resource_name>"
+  ],
+  "---------": [
+    "-----------"
   ],
   "azmcp_extension_azqr": [
     "Check my Azure subscription for any compliance issues or recommendations",
@@ -485,6 +534,10 @@
   "azmcp_sql_db_list": [
     "List all databases in the Azure SQL server <server_name>",
     "Show me all the databases configuration details in the Azure SQL server <server_name>"
+  ],
+  "azmcp_sql_db_rename": [
+    "Rename the SQL database <database_name> on server <server_name> to <new_database_name>",
+    "Rename my Azure SQL database <database_name> to <new_database_name> on server <server_name>"
   ],
   "azmcp_sql_db_show": [
     "Get the configuration details for the SQL database <database_name> on server <server_name>",

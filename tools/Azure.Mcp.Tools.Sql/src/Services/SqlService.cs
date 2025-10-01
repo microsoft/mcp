@@ -47,8 +47,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 subscription,
                 retryPolicy,
                 ConvertToSqlDatabaseModel,
-                $"name =~ '{EscapeKqlString(databaseName)}'",
-                cancellationToken);
+                additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
+                cancellationToken: cancellationToken);
 
             if (result == null)
             {
@@ -414,9 +414,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 subscription,
                 retryPolicy,
                 ConvertToSqlServerEntraAdministratorModel,
-                $"id contains '/servers/{EscapeKqlString(serverName)}/'",
-                50,
-                cancellationToken);
+                additionalFilter: $"id contains '/servers/{EscapeKqlString(serverName)}/'",
+                cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {

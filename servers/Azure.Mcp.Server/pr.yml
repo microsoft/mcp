@@ -1,0 +1,13 @@
+pr:
+  branches:
+    include:
+      - main
+      - feature/*
+      - hotfix/*
+
+trigger: none
+
+extends:
+  template: /eng/pipelines/templates/common.yml
+  parameters:
+    ServerName: Azure.Mcp.Server

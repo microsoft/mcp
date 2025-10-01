@@ -12,7 +12,7 @@ public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logge
 {
     private const string CommandTitle = "Get MySQL Server Configuration";
 
-    public override string Name => "config";
+    public override string Name => "get";
 
     public override string Description => "Retrieves comprehensive configuration details for the specified Azure Database for MySQL Flexible Server instance. This command provides insights into server settings, performance parameters, security configurations, and operational characteristics essential for database administration and optimization. Returns configuration data in JSON format including ServerName, Location, Version, SKU, StorageSizeGB, BackupRetentionDays, and GeoRedundantBackup properties.";
 

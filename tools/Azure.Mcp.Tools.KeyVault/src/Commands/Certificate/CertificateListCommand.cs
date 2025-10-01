@@ -31,10 +31,7 @@ public sealed class CertificateListCommand(ILogger<CertificateListCommand> logge
     };
 
     public override string Description =>
-        """
-        List all certificates in an Azure Key Vault. This command retrieves and displays the names of all certificates
-        stored in the specified vault.
-        """;
+        "List/enumerate all certificates in an Azure Key Vault. Not for fetching a single certificate.";
 
     protected override void RegisterOptions(Command command)
     {
