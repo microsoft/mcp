@@ -266,7 +266,7 @@ function Validate-PackageReadme {
 
 function Validate-All-PackageReadmes {
     $readmeFiles = Get-ChildItem -Path "$RepoRoot/servers" -Recurse -Filter "README.md"
-    $exitCode = 0
+    $hasFailures = $false
     foreach ($file in $readmeFiles) {
         Write-Host "Validating README: $($file.FullName)" -ForegroundColor Yellow
         try {
@@ -274,8 +274,12 @@ function Validate-All-PackageReadmes {
             Write-Host "Validation passed for: $($file.FullName)" -ForegroundColor Green
         } catch {
             Write-Host "Validation failed for: $($file.FullName). Error: $_" -ForegroundColor Red
-            $exitCode = 1
+            $hasFailures = $true
         }
     }
-    exit $exitCode
+    if ($hasFailures) {
+        exit 1
+    } else {
+        exit 0
+    }
 }
