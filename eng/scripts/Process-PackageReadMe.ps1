@@ -277,9 +277,5 @@ function Validate-All-PackageReadmes {
             $hasFailures = $true
         }
     }
-    if ($hasFailures) {
-        exit 1
-    } else {
-        exit 0
-    }
+    return $hasFailures
 }
