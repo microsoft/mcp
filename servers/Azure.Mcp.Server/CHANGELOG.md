@@ -34,7 +34,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added support for speech recognition from an audio file with Azure AI Services Speech via the command `azmcp_speech_stt_recognize`. [[#436](https://github.com/microsoft/mcp/pull/436)]
 - Added support for getting the details of an Azure Event Hubs namespace via the command `azmcp_eventhubs_namespace_get`. [[#105](https://github.com/microsoft/mcp/pull/105)]
 
-
 ### Breaking Changes
 
 ### Bugs Fixed
