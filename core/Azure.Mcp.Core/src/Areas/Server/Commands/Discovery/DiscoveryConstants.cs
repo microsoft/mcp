@@ -6,7 +6,7 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 /// <summary>
 /// Constants used by discovery strategies and tool loaders.
 /// </summary>
-internal static class DiscoveryConstants
+public static class DiscoveryConstants
 {
     /// <summary>
     /// Utility namespaces that should be exposed as individual commands rather than namespace proxies.
