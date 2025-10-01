@@ -14,6 +14,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Removed redundant DI instantiation of MCP server providers, as these are expected to be instantiated by the MCP server discovery mechanism. [[644](https://github.com/microsoft/mcp/pull/644)]
 - Fixed App Lens having a runtime error for reflection-based serialization when using native AoT MCP build. [[#639](https://github.com/microsoft/mcp/pull/639)]
 - Added validation for the PostgreSQL database query command `azmcp_postgres_database_query`.[[#518](https://github.com/microsoft/mcp/pull/518)]
+- Fixed App Configuration Resource Graph query construction in `FindAppConfigStore` method to correctly pass the name filter via `additionalFilter` parameter instead of `tableName`, resolving "ExactlyOneStartingOperatorRequired" and "BadRequest" errors when setting key-value pairs.
 
 ### Other Changes
 - Updated the description of Service bus commands to decrease ambiguity and increase selection accuracy by LLMs: [[#642](https://github.com/microsoft/mcp/pull/642)]
