@@ -1011,7 +1011,7 @@ public class {Toolset}CommandTests(ITestOutputHelper output)
     {
         // Arrange
         var result = await CallToolAsync(
-            "azmcp_{Toolset}_{resource}_{operation}",
+            "{Toolset}_{resource}_{operation}",
             new()
             {
                 { "subscription", Settings.Subscription },
@@ -1045,7 +1045,7 @@ public class {Toolset}CommandTests(ITestOutputHelper output)
     public async Task Should_Return400_WithInvalidInput(string args)
     {
         var result = await CallToolAsync(
-            $"azmcp_{Toolset}_{resource}_{operation} {args}");
+            $"{Toolset}_{resource}_{operation} {args}");
 
         Assert.Equal(400, result.GetProperty("status").GetInt32());
         Assert.Contains("required",
@@ -1447,7 +1447,7 @@ public class {Toolset}CommandTests( ITestOutputHelper output)
         var resourceName = "test{resource}";
 
         var result = await CallToolAsync(
-            "azmcp_{Toolset}_{resource}_show",
+            "{Toolset}_{resource}_show",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -1475,7 +1475,7 @@ public class {Toolset}CommandTests( ITestOutputHelper output)
         var argsString = string.Join(" ", allArgs);
 
         var result = await CallToolAsync(
-            "azmcp_{Toolset}_{resource}_show",
+            "{Toolset}_{resource}_show",
             new()
             {
                 { "args", argsString }

@@ -14,7 +14,7 @@ public class RedisCommandTests(ITestOutputHelper output) : CommandTestsBase(outp
     public async Task Should_list_redis_caches_by_subscription_id()
     {
         var result = await CallToolAsync(
-            "azmcp_redis_cache_list",
+            "redis_cache_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -28,7 +28,7 @@ public class RedisCommandTests(ITestOutputHelper output) : CommandTestsBase(outp
     public async Task Should_list_redis_caches_by_subscription_name()
     {
         var result = await CallToolAsync(
-            "azmcp_redis_cache_list",
+            "redis_cache_list",
             new()
             {
                 { "subscription", Settings.SubscriptionName }
@@ -42,7 +42,7 @@ public class RedisCommandTests(ITestOutputHelper output) : CommandTestsBase(outp
     public async Task Should_list_redis_caches_by_subscription_id_with_tenant_id()
     {
         var result = await CallToolAsync(
-            "azmcp_redis_cache_list",
+            "redis_cache_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -59,7 +59,7 @@ public class RedisCommandTests(ITestOutputHelper output) : CommandTestsBase(outp
         Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
         var result = await CallToolAsync(
-            "azmcp_redis_cache_list",
+            "redis_cache_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -74,7 +74,7 @@ public class RedisCommandTests(ITestOutputHelper output) : CommandTestsBase(outp
     public async Task Should_list_redis_caches_with_retry_policy()
     {
         var result = await CallToolAsync(
-            "azmcp_redis_cache_list",
+            "redis_cache_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -90,7 +90,7 @@ public class RedisCommandTests(ITestOutputHelper output) : CommandTestsBase(outp
     public async Task Should_list_redis_clusters_by_subscription_id()
     {
         var result = await CallToolAsync(
-            "azmcp_redis_cluster_list",
+            "redis_cluster_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -104,7 +104,7 @@ public class RedisCommandTests(ITestOutputHelper output) : CommandTestsBase(outp
     public async Task Should_list_redis_clusters_by_subscription_name()
     {
         var result = await CallToolAsync(
-            "azmcp_redis_cluster_list",
+            "redis_cluster_list",
             new()
             {
                 { "subscription", Settings.SubscriptionName }
@@ -118,7 +118,7 @@ public class RedisCommandTests(ITestOutputHelper output) : CommandTestsBase(outp
     public async Task Should_list_redis_clusters_by_subscription_id_with_tenant_id()
     {
         var result = await CallToolAsync(
-            "azmcp_redis_cluster_list",
+            "redis_cluster_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -133,7 +133,7 @@ public class RedisCommandTests(ITestOutputHelper output) : CommandTestsBase(outp
     public async Task Should_list_redis_access_policies()
     {
         var result = await CallToolAsync(
-            "azmcp_redis_cache_accesspolicy_list",
+            "redis_cache_accesspolicy_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -149,7 +149,7 @@ public class RedisCommandTests(ITestOutputHelper output) : CommandTestsBase(outp
     public async Task Should_list_redis_access_policies_with_tenant_id()
     {
         var result = await CallToolAsync(
-            "azmcp_redis_cache_accesspolicy_list",
+            "redis_cache_accesspolicy_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -166,7 +166,7 @@ public class RedisCommandTests(ITestOutputHelper output) : CommandTestsBase(outp
     public async Task Should_list_redis_databases()
     {
         var result = await CallToolAsync(
-            "azmcp_redis_cluster_database_list",
+            "redis_cluster_database_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -182,7 +182,7 @@ public class RedisCommandTests(ITestOutputHelper output) : CommandTestsBase(outp
     public async Task Should_list_redis_databases_with_retry_policy()
     {
         var result = await CallToolAsync(
-            "azmcp_redis_cluster_database_list",
+            "redis_cluster_database_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

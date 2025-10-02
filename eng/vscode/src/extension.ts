@@ -99,7 +99,7 @@ export function activate(context: vscode.ExtensionContext) {
 
                 return [
                     new vscode.McpStdioServerDefinition(
-                        '',
+                        'azmcp',
                         binPath,
                         args,
                         env

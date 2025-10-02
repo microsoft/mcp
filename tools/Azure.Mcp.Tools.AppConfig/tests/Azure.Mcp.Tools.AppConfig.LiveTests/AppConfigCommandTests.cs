@@ -37,7 +37,7 @@ public class AppConfigCommandTests : CommandTestsBase
     {
         // act
         var result = await CallToolAsync(
-            "azmcp_appconfig_account_list",
+            "appconfig_account_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -64,7 +64,7 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act
         var result = await CallToolAsync(
-            "azmcp_appconfig_kv_list",
+            "appconfig_kv_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -95,7 +95,7 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act
         var result = await CallToolAsync(
-            "azmcp_appconfig_kv_list",
+            "appconfig_kv_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -135,7 +135,7 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act
         var result = await CallToolAsync(
-            "azmcp_appconfig_kv_lock_set",
+            "appconfig_kv_lock_set",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -169,7 +169,7 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act
         var result = await CallToolAsync(
-            "azmcp_appconfig_kv_lock_set",
+            "appconfig_kv_lock_set",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -204,7 +204,7 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act
         _ = await CallToolAsync(
-            "azmcp_appconfig_kv_lock_set",
+            "appconfig_kv_lock_set",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -246,7 +246,7 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act
         _ = await CallToolAsync(
-            "azmcp_appconfig_kv_lock_set",
+            "appconfig_kv_lock_set",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -277,7 +277,7 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act
         var result = await CallToolAsync(
-            "azmcp_appconfig_kv_show",
+            "appconfig_kv_show",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -303,7 +303,7 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act and assert
         var result = await CallToolAsync(
-            "azmcp_appconfig_kv_set",
+            "appconfig_kv_set",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -316,7 +316,7 @@ public class AppConfigCommandTests : CommandTestsBase
         Assert.Equal(value, valueRead.GetString());
 
         result = await CallToolAsync(
-            "azmcp_appconfig_kv_delete",
+            "appconfig_kv_delete",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -339,7 +339,7 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act - set key-value with content type
         var setResult = await CallToolAsync(
-            "azmcp_appconfig_kv_set",
+            "appconfig_kv_set",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -359,7 +359,7 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act - get the key-value to verify content type was stored
         var getResult = await CallToolAsync(
-            "azmcp_appconfig_kv_show",
+            "appconfig_kv_show",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -422,7 +422,7 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act - set key-value with a single tag
         var setResult = await CallToolAsync(
-            "azmcp_appconfig_kv_set",
+            "appconfig_kv_set",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -453,7 +453,7 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act - set key-value with multiple tags
         var setResult = await CallToolAsync(
-            "azmcp_appconfig_kv_set",
+            "appconfig_kv_set",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -495,7 +495,7 @@ public class AppConfigCommandTests : CommandTestsBase
 
         // act - set key-value with tags containing spaces
         var setResult = await CallToolAsync(
-            "azmcp_appconfig_kv_set",
+            "appconfig_kv_set",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

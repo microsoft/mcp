@@ -23,7 +23,7 @@ public class CommandFactory
     private readonly CommandGroup _rootGroup;
     private readonly ModelsJsonContext _srcGenWithOptions;
 
-    private const string RootCommandGroupName = "azmcp";
+    private const string RootCommandGroupName = "";
     public const char Separator = '_';
 
     /// <summary>
@@ -276,7 +276,7 @@ public class CommandFactory
     }
 
     /// <summary>
-    /// Gets the service area given the full command name (i.e. 'storage_account_list' or 'azmcp_storage_account_list' would return 'storage').
+    /// Gets the service area given the full command name (i.e. 'storage_account_list' would return 'storage').
     /// </summary>
     /// <param name="fullCommandName">Name of the command.</param>
     public string? GetServiceArea(string fullCommandName)
@@ -291,7 +291,13 @@ public class CommandFactory
             return area.Name;
         }
 
-        // If it starts with azmcp, then it is already the full command name.
+        // If RootCommandGroupName is empty, command names don't have a root prefix
+        if (string.IsNullOrEmpty(RootCommandGroupName))
+        {
+            return null;
+        }
+
+        // If it starts with the root command group name, then it is already the full command name.
         if (fullCommandName.StartsWith(RootCommandGroupName, StringComparison.OrdinalIgnoreCase))
         {
             return null;
