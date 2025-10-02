@@ -34,7 +34,11 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        ReadOnly = false
+        ReadOnly = false,
+        OpenWorld = false,
+        Idempotent = true,
+        Secret = false,
+        LocalRequired = true
     };
 
     protected override void RegisterOptions(Command command)
@@ -102,27 +106,6 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
 
         return context.Response;
     }
-
-    // Implementation-specific error handling
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        ArgumentException argEx => $"Invalid parameter: {argEx.Message}",
-        Azure.RequestFailedException reqEx when reqEx.Status == 401 =>
-            "Authentication failed. Please verify your connection string is correct and has not expired.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 403 =>
-            "Authorization failed. Ensure your Communication Services resource has SMS permissions and the phone number is provisioned.",
-        Azure.RequestFailedException reqEx when reqEx.Status == 400 =>
-            $"Bad request: {reqEx.Message}. Please verify phone numbers are in E.164 format and message content is valid.",
-        Azure.RequestFailedException reqEx => reqEx.Message,
-        _ => base.GetErrorMessage(ex)
-    };
-
-    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
-    {
-        ArgumentException => HttpStatusCode.BadRequest,
-        Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
 
     // Result type moved to Models/SmsSendCommandResult.cs
 }
