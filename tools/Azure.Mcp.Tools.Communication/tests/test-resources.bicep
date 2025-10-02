@@ -25,10 +25,9 @@ resource communicationService 'Microsoft.Communication/communicationServices@202
   }
 }
 
-// Communication Services doesn't support RBAC-based access for SMS operations
-// SMS requires connection string authentication, so we don't need role assignments
-// The connection string will be provided via outputs for live tests
+// Communication Services supports both connection string and credential-based authentication
+// For MCP tools, we use credential-based authentication with endpoint URL
+// The endpoint URL and phone numbers will be provided via outputs for live tests
 
-output COMMUNICATION_SERVICES_CONNECTION_STRING string = communicationService.listKeys().primaryConnectionString
+output COMMUNICATION_SERVICES_ENDPOINT string = 'https://${communicationService.properties.hostName}'
 output COMMUNICATION_SERVICES_RESOURCE_NAME string = communicationService.name
-output COMMUNICATION_SERVICES_ENDPOINT string = communicationService.properties.hostName

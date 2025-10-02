@@ -23,16 +23,17 @@ public class CommunicationCommandTests : CommandTestsBase
     public async Task Should_SendSms_WithValidParameters()
     {
         // Get configuration from DeploymentOutputs in Settings
-        Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_CONNECTION_STRING", out var connectionString);
+        Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_ENDPOINT", out var endpoint);
         Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_FROM_PHONE", out var fromPhone);
         Settings.DeploymentOutputs.TryGetValue("COMMUNICATION_SERVICES_TO_PHONE", out var toPhone);
+        Assert.SkipWhen(string.IsNullOrEmpty(endpoint), "Communication Services endpoint not configured for live testing");
         Assert.SkipWhen(string.IsNullOrEmpty(fromPhone), "From phone number not configured for live testing");
         Assert.SkipWhen(string.IsNullOrEmpty(toPhone), "To phone number not configured for live testing");
         var result = await CallToolAsync(
             "azmcp_communication_sms_send",
             new()
             {
-                { "connection-string", connectionString },
+                { "endpoint", endpoint },
                 { "from", fromPhone },
                 { "to", new[] { toPhone } },
                 { "message", "Test SMS from Azure MCP Live Test" },
@@ -69,11 +70,11 @@ public class CommunicationCommandTests : CommandTestsBase
     }
 
     [Theory]
-    [InlineData("--invalid-connection-string test")]
-    [InlineData("--connection-string")]
-    [InlineData("--connection-string cs --from")]
-    [InlineData("--connection-string cs --from +1234567890")]
-    [InlineData("--connection-string cs --from +1234567890 --to +1987654321")]
+    [InlineData("--invalid-endpoint test")]
+    [InlineData("--endpoint")]
+    [InlineData("--endpoint https://mycomm.communication.azure.com --from")]
+    [InlineData("--endpoint https://mycomm.communication.azure.com --from +1234567890")]
+    [InlineData("--endpoint https://mycomm.communication.azure.com --from +1234567890 --to +1987654321")]
     public async Task Should_Return400_WithInvalidInput(string args)
     {
         var result = await CallToolAsync(

@@ -7,18 +7,18 @@ namespace Azure.Mcp.Tools.Communication.Options;
 
 public static class CommunicationOptionDefinitions
 {
-    public const string ConnectionStringName = "connection-string";
+    public const string EndpointName = "endpoint";
     public const string FromName = "from";
     public const string ToName = "to";
     public const string MessageName = "message";
     public const string EnableDeliveryReportName = "enable-delivery-report";
     public const string TagName = "tag";
 
-    public static readonly Option<string> ConnectionString = new(
-        $"--{ConnectionStringName}"
+    public static readonly Option<string> Endpoint = new(
+        $"--{EndpointName}"
     )
     {
-        Description = "The connection string for the Azure Communication Services resource. You can find this in the Azure portal under your Communication Services resource.",
+        Description = "The Communication Services endpoint URL (e.g., https://myservice.communication.azure.com). Required for credential authentication.",
         Required = true
     };
 

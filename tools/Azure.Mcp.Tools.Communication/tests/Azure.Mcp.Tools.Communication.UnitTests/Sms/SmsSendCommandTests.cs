@@ -45,7 +45,7 @@ public class SmsSendCommandTests
 
         // Assert
         Assert.NotNull(cmd);
-        Assert.Contains(cmd.Options, o => o.Name == "--connection-string");
+        Assert.Contains(cmd.Options, o => o.Name == "--endpoint");
         Assert.Contains(cmd.Options, o => o.Name == "--from");
         Assert.Contains(cmd.Options, o => o.Name == "--to");
         Assert.Contains(cmd.Options, o => o.Name == "--message");
@@ -53,13 +53,13 @@ public class SmsSendCommandTests
 
     public static IEnumerable<object[]> ValidParameters => new List<object[]>
     {
-        new object[] { "UseDevelopmentStorage=true;", "+1234567890", new string[] { "+1234567891" }, "Hello", true, "test" },
-        new object[] { "UseDevelopmentStorage=true;", "+1234567899", new string[] { "+1234567892", "+1234567893" }, "Hi", false, "" }
+        new object[] { "https://mycomm.communication.azure.com", "+1234567890", new string[] { "+1234567891" }, "Hello", true, "test" },
+        new object[] { "https://mycomm.communication.azure.com", "+1234567899", new string[] { "+1234567892", "+1234567893" }, "Hi", false, "" }
     };
 
     [Theory]
     [MemberData(nameof(ValidParameters))]
-    public async Task ExecuteAsync_WithValidParameters_CallsServiceAndReturnsResults(string connectionString, string from, string[] to, string message, bool enableDeliveryReport, string? tag)
+    public async Task ExecuteAsync_WithValidParameters_CallsServiceAndReturnsResults(string endpoint, string from, string[] to, string message, bool enableDeliveryReport, string? tag)
     {
         var logger = Substitute.For<ILogger<SmsSendCommand>>();
         var service = Substitute.For<ICommunicationService>();
@@ -67,7 +67,7 @@ public class SmsSendCommandTests
             new Models.SmsResult { MessageId = "msg1", To = to.First(), Successful = true, HttpStatusCode = 202 }
         };
         service.SendSmsAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
             .Returns(Task.FromResult(results));
 
         var command = new SmsSendCommand(logger);
@@ -78,7 +78,7 @@ public class SmsSendCommandTests
         var cmd = command.GetCommand();
         var args = new List<string>
         {
-            "--connection-string", connectionString,
+            "--endpoint", endpoint,
             "--from", from,
             "--to", string.Join(",", to),
             "--message", message
@@ -103,7 +103,7 @@ public class SmsSendCommandTests
         var logger = Substitute.For<ILogger<SmsSendCommand>>();
         var service = Substitute.For<ICommunicationService>();
         service.SendSmsAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
             .Returns(Task.FromException<List<Models.SmsResult>>(new InvalidOperationException("fail")));
 
         var command = new SmsSendCommand(logger);
@@ -112,7 +112,7 @@ public class SmsSendCommandTests
         var provider = services.BuildServiceProvider();
         var context = new CommandContext(provider);
         var cmd = command.GetCommand();
-        var args = new[] { "--connection-string", "cs", "--from", "+1", "--to", "+2", "--message", "fail" };
+        var args = new[] { "--endpoint", "https://mycomm.communication.azure.com", "--from", "+1", "--to", "+2", "--message", "fail" };
         var parseResult = cmd.Parse(args);
 
         // Act
@@ -127,14 +127,14 @@ public class SmsSendCommandTests
     public static IEnumerable<object?[]> InvalidParameters => new List<object?[]>
     {
         new object?[] { null, "+1234567890", new string[] { "+1234567891" }, "Hello" },
-        new object?[] { "UseDevelopmentStorage=true;", null, new string[] { "+1234567891" }, "Hello" },
-        new object?[] { "UseDevelopmentStorage=true;", "+1234567890", null, "Hello" },
-        new object?[] { "UseDevelopmentStorage=true;", "+1234567890", new string[] { "+1234567891" }, null }
+        new object?[] { "https://mycomm.communication.azure.com", null, new string[] { "+1234567891" }, "Hello" },
+        new object?[] { "https://mycomm.communication.azure.com", "+1234567890", null, "Hello" },
+        new object?[] { "https://mycomm.communication.azure.com", "+1234567890", new string[] { "+1234567891" }, null }
     };
 
     [Theory]
     [MemberData(nameof(InvalidParameters))]
-    public async Task ExecuteAsync_MissingRequiredParameters_ReturnsError(string? connectionString, string? from, string[]? to, string? message)
+    public async Task ExecuteAsync_MissingRequiredParameters_ReturnsError(string? endpoint, string? from, string[]? to, string? message)
     {
         var logger = Substitute.For<ILogger<SmsSendCommand>>();
         var service = Substitute.For<ICommunicationService>();
@@ -145,8 +145,8 @@ public class SmsSendCommandTests
         var context = new CommandContext(provider);
         var cmd = command.GetCommand();
         var args = new List<string>();
-        if (connectionString != null)
-        { args.Add("--connection-string"); args.Add(connectionString); }
+        if (endpoint != null)
+        { args.Add("--endpoint"); args.Add(endpoint); }
         if (from != null)
         { args.Add("--from"); args.Add(from); }
         if (to != null)

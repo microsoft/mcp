@@ -24,7 +24,7 @@ $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 # $DeploymentOutputs keys are all UPPERCASE
 
 Write-Host "Communication Services resource '$BaseName' has been created." -ForegroundColor Green
-Write-Host "Connection string: $($DeploymentOutputs.COMMUNICATION_SERVICES_CONNECTION_STRING)" -ForegroundColor Yellow
+Write-Host "Endpoint URL: $($DeploymentOutputs.COMMUNICATION_SERVICES_ENDPOINT)" -ForegroundColor Yellow
 
 Write-Host "" -ForegroundColor Yellow
 Write-Host "⚠️  MANUAL STEPS REQUIRED FOR SMS TESTING:" -ForegroundColor Yellow
@@ -38,7 +38,7 @@ Write-Host "2. For testing, set the COMMUNICATION_SERVICES_TO_PHONE environment 
 Write-Host "   to a phone number you can verify (e.g., your own phone)" -ForegroundColor Yellow
 Write-Host "" -ForegroundColor Yellow
 Write-Host "3. Environment variables for live tests:" -ForegroundColor Yellow
-Write-Host "   COMMUNICATION_SERVICES_CONNECTION_STRING (already set)" -ForegroundColor Yellow
+Write-Host "   COMMUNICATION_SERVICES_ENDPOINT (already set)" -ForegroundColor Yellow
 Write-Host "   COMMUNICATION_SERVICES_FROM_PHONE (requires phone number purchase)" -ForegroundColor Yellow
 Write-Host "   COMMUNICATION_SERVICES_TO_PHONE (your test phone number)" -ForegroundColor Yellow
 Write-Host "" -ForegroundColor Yellow

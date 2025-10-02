@@ -8,6 +8,6 @@ namespace Azure.Mcp.Tools.Communication.Options;
 
 public class BaseCommunicationOptions : GlobalOptions
 {
-    [JsonPropertyName(CommunicationOptionDefinitions.ConnectionStringName)]
-    public string? ConnectionString { get; set; }
+    [JsonPropertyName(CommunicationOptionDefinitions.EndpointName)]
+    public string? Endpoint { get; set; }
 }

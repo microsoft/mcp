@@ -74,12 +74,13 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
 
             // Call service operation with required parameters
             var results = await communicationService.SendSmsAsync(
-                options.ConnectionString!,
+                options.Endpoint!,
                 options.From!,
                 options.To!,
                 options.Message!,
                 options.EnableDeliveryReport,
                 options.Tag,
+                options.Tenant,
                 options.RetryPolicy);
 
             // Set results

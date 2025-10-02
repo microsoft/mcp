@@ -2,29 +2,35 @@
 // Licensed under the MIT License.
 
 using Azure.Communication.Sms;
+using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Communication.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Communication.Services;
 
-public class CommunicationService(ILogger<CommunicationService> logger) : BaseAzureService, ICommunicationService
+public class CommunicationService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<CommunicationService> logger) 
+    : BaseAzureService(tenantService), ICommunicationService
 {
+    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<CommunicationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<SmsResult>> SendSmsAsync(
-        string connectionString,
+        string endpoint,
         string from,
         string[] to,
         string message,
         bool enableDeliveryReport = false,
         string? tag = null,
+        string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
         // Validate required parameters using base class method
         ValidateRequiredParameters(
-            (nameof(connectionString), connectionString),
+            (nameof(endpoint), endpoint),
             (nameof(from), from),
             (nameof(message), message));
         
@@ -37,7 +43,9 @@ public class CommunicationService(ILogger<CommunicationService> logger) : BaseAz
 
         try
         {
-            var smsClient = new SmsClient(connectionString);
+            // Create SMS client using Azure credential from base class and endpoint
+            var credential = await GetCredential(tenantId);
+            var smsClient = new SmsClient(new Uri(endpoint), credential);
 
             var sendOptions = new SmsSendOptions(enableDeliveryReport)
             {

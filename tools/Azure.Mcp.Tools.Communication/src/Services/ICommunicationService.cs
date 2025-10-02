@@ -9,11 +9,12 @@ namespace Azure.Mcp.Tools.Communication.Services;
 public interface ICommunicationService
 {
     Task<List<SmsResult>> SendSmsAsync(
-        string connectionString,
+        string endpoint,
         string from,
         string[] to,
         string message,
         bool enableDeliveryReport = false,
         string? tag = null,
+        string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null);
 }
