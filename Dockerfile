@@ -9,7 +9,7 @@ RUN if [ -z "$PUBLISH_DIR" ]; then \
     echo "ERROR: PUBLISH_DIR build argument is required" && exit 1; \
     fi
 
-RUN apk add libc6-compat
+RUN apk add --no-cache libc6-compat
 
 # Copy the contents of the publish directory to '/azuremcpserver' and set it as the working directory
 RUN mkdir -p /azuremcpserver
