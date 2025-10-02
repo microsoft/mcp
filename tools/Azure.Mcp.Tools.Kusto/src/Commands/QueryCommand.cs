@@ -30,11 +30,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
     public override string Name => "query";
 
     public override string Description =>
-        """
-        Execute a KQL against items in a Kusto cluster.
-        Requires `cluster-uri` (or `cluster` and `subscription`), `database`, and `query`.
-        Results are returned as a JSON array of documents, for example: `[{'Column1': val1, 'Column2': val2}, ...]`.
-        """;
+        "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.";
 
     public override string Title => CommandTitle;
 

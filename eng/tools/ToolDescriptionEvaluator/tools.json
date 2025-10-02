@@ -1757,7 +1757,7 @@
     },
     {
       "name": "get",
-      "description": "This tool fetches logs from the Log Analytics workspace for Container Apps, App Services, and Function Apps deployed using azd. Use it after a successful azd up to check app status or troubleshoot errors in deployed applications.",
+      "description": "Shows application logs specifically for Azure Developer CLI (azd) deployed applications from their associated Log Analytics workspace for Container Apps, App Services, and Function Apps. Designed exclusively for applications deployed via 'azd up' command and automatically discovers the correct workspace and resources based on the azd environment configuration. Use this tool to check deployment status or troubleshoot post-deployment issues.",
       "command": "azmcp deploy app logs get",
       "option": [
         {
@@ -3270,7 +3270,7 @@
     {
       "name": "get",
       "description": "Retrieves all Key Vault Managed HSM account settings for a given vault. This includes settings such as purge protection and soft-delete retention days. This tool ONLY applies to Managed HSM vaults.",
-      "command": "azmcp keyvault admin get",
+      "command": "azmcp keyvault admin settings get",
       "option": [
         {
           "name": "--tenant",
@@ -4012,7 +4012,7 @@
     },
     {
       "name": "get",
-      "description": "Get details for a specific Kusto cluster. Requires `subscription` and `cluster`.\r\nThe response includes the `clusterUri` property for use in subsequent commands.",
+      "description": "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters. Required: --cluster and --subscription.",
       "command": "azmcp kusto cluster get",
       "option": [
         {
@@ -4073,7 +4073,7 @@
     },
     {
       "name": "list",
-      "description": "List all Kusto clusters in a subscription. This command retrieves all clusters\r\navailable in the specified subscription. Requires `subscription`.\r\nResult is a list of cluster names as a JSON array.",
+      "description": "List/enumerate all Azure Data Explorer/Kusto/KQL clusters in a subscription.",
       "command": "azmcp kusto cluster list",
       "option": [
         {
@@ -4128,7 +4128,7 @@
     },
     {
       "name": "list",
-      "description": "List all databases in a Kusto cluster.\r\nRequires `cluster-uri` ( or `subscription` and `cluster`).\r\nResult is a list of database names, returned as a JSON array.",
+      "description": "List/enumerate all databases in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri ( or --cluster and --subscription).",
       "command": "azmcp kusto database list",
       "option": [
         {
@@ -4195,7 +4195,7 @@
     },
     {
       "name": "query",
-      "description": "Execute a KQL against items in a Kusto cluster.\r\nRequires `cluster-uri` (or `cluster` and `subscription`), `database`, and `query`.\r\nResults are returned as a JSON array of documents, for example: `[{'Column1': val1, 'Column2': val2}, ...]`.",
+      "description": "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.",
       "command": "azmcp kusto query",
       "option": [
         {
@@ -4274,7 +4274,7 @@
     },
     {
       "name": "sample",
-      "description": "Return a sample of rows from the specified table in an Kusto table.\r\nRequires `cluster-uri` (or `cluster`), `database`, and `table`.\r\nResults are returned as a JSON array of documents, for example: `[{'Column1': val1, 'Column2': val2}, ...]`.",
+      "description": "Return a sample of rows from a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.",
       "command": "azmcp kusto sample",
       "option": [
         {
@@ -4359,7 +4359,7 @@
     },
     {
       "name": "list",
-      "description": "List all tables in a specific Kusto database.\r\nRequired `cluster-uri` (or `subscription` and `cluster`) and `database`.\r\nReturns table names as a JSON array.",
+      "description": "List/enumerate all tables in a specific Azure Data Explorer/Kusto/KQL database. Required: --cluster-uri (or --cluster and --subscription), --database.",
       "command": "azmcp kusto table list",
       "option": [
         {
@@ -4432,7 +4432,7 @@
     },
     {
       "name": "schema",
-      "description": "Get the schema of a specific table in an Kusto database.\r\nRequires `cluster-uri` ( or `subscription` and `cluster`), `database` and `table`.",
+      "description": "Get/retrieve/show the schema of a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.",
       "command": "azmcp kusto table schema",
       "option": [
         {
@@ -8189,7 +8189,7 @@
     },
     {
       "name": "details",
-      "description": "Get details about a Service Bus topic. Returns topic properties and runtime information. Properties returned include\r\nnumber of subscriptions, max message size, max topic size, number of scheduled messages, etc.\r\n\r\nRequired arguments:\r\n- namespace: The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)\r\n- topic: Topic name to get information about.",
+      "description": "Retrieves details about a Service Bus topic. Returns runtime information and topic properties including number of subscriptions, max message size, max topic size, number of scheduled messages, etc.\r\nRequired arguments are namespace: The fully qualified Service Bus namespace host name (usually in the form <namespace>.servicebus.windows.net) and topic: Topic name to get information about.\r\nDo not use this to get details on Service Bus subscription- instead use servicebus_topic_subscription_details.",
       "command": "azmcp servicebus topic details",
       "option": [
         {
@@ -10604,5 +10604,5 @@
     }
   ],
   "consolidated_azure_tools": null,
-  "duration": 31
+  "duration": 25
 }

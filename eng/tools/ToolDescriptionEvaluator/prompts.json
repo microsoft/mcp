@@ -224,6 +224,11 @@
   "azmcp_deploy_plan_get": [
     "Create a plan to deploy this application to azure"
   ],
+  "azmcp_eventgrid_events_publish": [
+    "Publish an event to Event Grid topic <topic_name> using <event_schema> with the following data <event_data>",
+    "Publish event to my Event Grid topic <topic_name> with the following events <event_data>",
+    "Send an event to Event Grid topic <topic_name> in resource group <resource_group_name> with <event_data>"
+  ],
   "azmcp_eventgrid_topic_list": [
     "List all Event Grid topics in my subscription",
     "Show me the Event Grid topics in my subscription",
@@ -238,11 +243,6 @@
     "List all Event Grid subscriptions in subscription <subscription>",
     "Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription>",
     "List Event Grid subscriptions for subscription <subscription> in location <location>"
-  ],
-  "azmcp_eventgrid_events_publish": [
-    "Publish an event to Event Grid topic <topic_name> using <event_schema> with the following data <event_data>",
-    "Publish event to my Event Grid topic <topic_name> with the following events <event_data>",
-    "Send an event to Event Grid topic <topic_name> in resource group <resource_group_name> with <event_data>"
   ],
   "azmcp_eventhubs_namespace_get": [
     "List all Event Hubs namespaces in my subscription",
@@ -453,9 +453,6 @@
   "azmcp_datadog_monitoredresources_list": [
     "List all monitored resources in the Datadog resource <resource_name>",
     "Show me the monitored resources in the Datadog resource <resource_name>"
-  ],
-  "---------": [
-    "-----------"
   ],
   "azmcp_extension_azqr": [
     "Check my Azure subscription for any compliance issues or recommendations",

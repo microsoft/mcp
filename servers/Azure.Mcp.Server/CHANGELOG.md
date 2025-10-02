@@ -20,10 +20,21 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added validation for the PostgreSQL database query command `azmcp_postgres_database_query`.[[#518](https://github.com/microsoft/mcp/pull/518)]
 
 ### Other Changes
-- Updated the description of Service bus commands to decrease ambiguity and increase selection accuracy by LLMs: [[#642](https://github.com/microsoft/mcp/pull/642)]
 
+- Updated the description of the following commands to decrease ambiguity and increase selection accuracy by LLMs:
+  - Kusto: [[#666](https://github.com/microsoft/mcp/pull/666)]
+    - `azmcp_kusto_cluster_get`
+    - `azmcp_kusto_cluster_list`
+    - `azmcp_kusto_database_list`
+    - `azmcp_kusto_query`
+    - `azmcp_kusto_sample`
+    - `azmcp_kusto_table_list`
+    - `azmcp_kusto_table_schema`
+  - Service Bus: `azmcp_servicebus_topic_details` [[#642](https://github.com/microsoft/mcp/pull/642)]
 - Refactored tool implementation to use Azure Resource Graph queries instead of direct ARM API calls:
   - Grafana [[628](https://github.com/microsoft/mcp/pull/628)]
+
+#### Dependency Updates
 
 - Removed the following dependencies:
   - `Azure.ResourceManager.Grafana` [[628](https://github.com/microsoft/mcp/pull/622)]
