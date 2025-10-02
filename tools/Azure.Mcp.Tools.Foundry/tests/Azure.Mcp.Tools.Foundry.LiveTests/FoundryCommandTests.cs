@@ -146,7 +146,8 @@ public class FoundryCommandTests(ITestOutputHelper output)
                 { "deployment", deploymentName },
                 { "prompt-text", "What is Azure? Please provide a brief answer." },
                 { "max-tokens", "50" },
-                { "temperature", "0.7" }
+                { "temperature", "0.7" },
+                { "tenant", Settings.TenantId }
             });
 
         // Verify the response structure
@@ -192,7 +193,8 @@ public class FoundryCommandTests(ITestOutputHelper output)
                 { "deployment", deploymentName },
                 { "input-text", inputText },
                 { "user", "test-user" },
-                { "encoding-format", "float" }
+                { "encoding-format", "float" },
+                { "tenant", Settings.TenantId }
             });
 
         // Verify the response structure
@@ -287,7 +289,8 @@ public class FoundryCommandTests(ITestOutputHelper output)
                 { "input-text", inputText },
                 { "user", "test-user-with-params" },
                 { "encoding-format", "float" },
-                { "dimensions", dimensions.ToString() }
+                { "dimensions", dimensions.ToString() },
+                { "tenant", Settings.TenantId }
             });
 
         // Verify the response structure (same as basic test)
@@ -332,7 +335,8 @@ public class FoundryCommandTests(ITestOutputHelper output)
             {
                 { "subscription", subscriptionId },
                 { "resource-group", resourceGroup },
-                { "resource-name", resourceName }
+                { "resource-name", resourceName },
+                { "tenant", Settings.TenantId }
             });
 
         // Verify the response structure
@@ -575,7 +579,8 @@ public class FoundryCommandTests(ITestOutputHelper output)
                 { "message-array", messages },
                 { "max-tokens", "150" },
                 { "temperature", "0.7" },
-                { "user", "test-user" }
+                { "user", "test-user" },
+                { "tenant", Settings.TenantId }
             });
 
         // Verify the response structure
@@ -626,6 +631,15 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var totalTokens = usage.AssertProperty("totalTokens");
         Assert.True(totalTokens.GetInt32() > 0, "Should have total token usage");
         Assert.Equal(promptTokens.GetInt32() + completionTokens.GetInt32(), totalTokens.GetInt32());
+
+        // Verify command metadata (returned resource and deployment names should match input)
+        var commandResourceName = result.AssertProperty("resourceName");
+        Assert.Equal(JsonValueKind.String, commandResourceName.ValueKind);
+        Assert.Equal(resourceName, commandResourceName.GetString());
+
+        var commandDeploymentName = result.AssertProperty("deploymentName");
+        Assert.Equal(JsonValueKind.String, commandDeploymentName.ValueKind);
+        Assert.Equal(deploymentName, commandDeploymentName.GetString());
     }
 
     [Fact]
@@ -655,7 +669,8 @@ public class FoundryCommandTests(ITestOutputHelper output)
                 { "max-tokens", "200" },
                 { "temperature", "0.5" },
                 { "top-p", "0.9" },
-                { "user", "test-user-conversation" }
+                { "user", "test-user-conversation" },
+                { "tenant", Settings.TenantId }
             });
 
         // Verify response structure (same checks as basic test)
@@ -664,15 +679,15 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var firstChoice = choices.EnumerateArray().First();
         var message = firstChoice.GetProperty("message");
         var content = message.GetProperty("content");
-        
+
         // Verify the response is relevant to the conversation context
         var responseText = content.GetString();
         Assert.False(string.IsNullOrEmpty(responseText));
-        
+
         // The response should be contextually relevant to chat applications
         // We don't check for specific words to avoid brittleness, just that we got a meaningful response
         Assert.True(responseText.Length > 10, "Response should be substantial");
-        
+
         // Verify usage shows reasonable token consumption for conversation
         var usage = chatResult.AssertProperty("usage");
         var totalTokens = usage.AssertProperty("totalTokens");

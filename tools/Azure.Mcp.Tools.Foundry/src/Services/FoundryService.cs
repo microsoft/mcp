@@ -555,9 +555,10 @@ public class FoundryService(
     }
 
     public async Task<ChatCompletionResult> CreateChatCompletionsAsync(
-        string subscription,
         string resourceName,
         string deploymentName,
+        string subscription,
+        string resourceGroup,
         List<object> messages,
         int? maxTokens = null,
         double? temperature = null,
@@ -568,43 +569,26 @@ public class FoundryService(
         bool? stream = null,
         int? seed = null,
         string? user = null,
+        string? tenant = null,
+        AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(resourceName, deploymentName, subscription);
+        ValidateRequiredParameters(resourceName, deploymentName, subscription, resourceGroup);
 
         if (messages == null || messages.Count == 0)
         {
             throw new ArgumentException("Messages array cannot be null or empty", nameof(messages));
         }
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
-        var resourceGroups = subscriptionResource.GetResourceGroups();
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
 
-        // Find the resource group containing the specified resource
-        CognitiveServicesAccountResource? cognitiveServicesAccount = null;
-        await foreach (var resourceGroup in resourceGroups.GetAllAsync())
-        {
-            try
-            {
-                var cognitiveServicesAccounts = resourceGroup.GetCognitiveServicesAccounts();
-                var account = await cognitiveServicesAccounts.GetAsync(resourceName);
-                cognitiveServicesAccount = account.Value;
-                break;
-            }
-            catch (RequestFailedException)
-            {
-                // Resource not found in this resource group, continue searching
-                continue;
-            }
-        }
-
-        if (cognitiveServicesAccount == null)
-        {
-            throw new InvalidOperationException($"Cognitive Services account '{resourceName}' not found in subscription '{subscription}'");
-        }
+        // Get the Cognitive Services account
+        var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
+        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName);
 
         // Get the endpoint
-        var accountData = cognitiveServicesAccount.Data;
+        var accountData = cognitiveServicesAccount.Value.Data;
         var endpoint = accountData.Properties.Endpoint;
 
         if (string.IsNullOrEmpty(endpoint))
@@ -612,8 +596,8 @@ public class FoundryService(
             throw new InvalidOperationException($"Endpoint not found for resource '{resourceName}'");
         }
 
-        // Create Azure OpenAI client with credential authentication
-        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount, AuthMethod.Credential);
+        // Create Azure OpenAI client with flexible authentication
+        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant);
 
         var chatClient = client.GetChatClient(deploymentName);
 

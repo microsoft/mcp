@@ -1,13 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine;
-using System.CommandLine.Parsing;
-using System.Text.Json;
+using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Models;
-using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
@@ -44,6 +41,7 @@ public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<Ope
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(FoundryOptionDefinitions.ResourceNameOption);
         command.Options.Add(FoundryOptionDefinitions.DeploymentNameOption);
         command.Options.Add(FoundryOptionDefinitions.MessageArrayOption);
@@ -61,18 +59,19 @@ public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<Ope
     protected override OpenAiChatCompletionsCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.ResourceName);
-        options.DeploymentName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.DeploymentName);
-        options.MessageArray = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.MessageArray);
-        options.MaxTokens = parseResult.GetValueOrDefault<int?>(FoundryOptionDefinitions.MaxTokens);
-        options.Temperature = parseResult.GetValueOrDefault<double?>(FoundryOptionDefinitions.Temperature);
-        options.TopP = parseResult.GetValueOrDefault<double?>(FoundryOptionDefinitions.TopP);
-        options.FrequencyPenalty = parseResult.GetValueOrDefault<double?>(FoundryOptionDefinitions.FrequencyPenalty);
-        options.PresencePenalty = parseResult.GetValueOrDefault<double?>(FoundryOptionDefinitions.PresencePenalty);
-        options.Stop = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.Stop);
-        options.Stream = parseResult.GetValueOrDefault<bool?>(FoundryOptionDefinitions.Stream);
-        options.Seed = parseResult.GetValueOrDefault<int?>(FoundryOptionDefinitions.Seed);
-        options.User = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.User);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.ResourceName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.ResourceNameOption.Name);
+        options.DeploymentName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.DeploymentNameOption.Name);
+        options.MessageArray = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.MessageArrayOption.Name);
+        options.MaxTokens = parseResult.GetValueOrDefault<int?>(FoundryOptionDefinitions.MaxTokensOption.Name);
+        options.Temperature = parseResult.GetValueOrDefault<double?>(FoundryOptionDefinitions.TemperatureOption.Name);
+        options.TopP = parseResult.GetValueOrDefault<double?>(FoundryOptionDefinitions.TopPOption.Name);
+        options.FrequencyPenalty = parseResult.GetValueOrDefault<double?>(FoundryOptionDefinitions.FrequencyPenaltyOption.Name);
+        options.PresencePenalty = parseResult.GetValueOrDefault<double?>(FoundryOptionDefinitions.PresencePenaltyOption.Name);
+        options.Stop = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.StopOption.Name);
+        options.Stream = parseResult.GetValueOrDefault<bool?>(FoundryOptionDefinitions.StreamOption.Name);
+        options.Seed = parseResult.GetValueOrDefault<int?>(FoundryOptionDefinitions.SeedOption.Name);
+        options.User = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.UserOption.Name);
         return options;
     }
 
@@ -89,22 +88,27 @@ public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<Ope
 
             var foundryService = context.GetService<IFoundryService>();
 
-            // Parse the message array (simple parsing for now)
+            // Parse the message array
             var messages = new List<object>();
             if (!string.IsNullOrEmpty(options.MessageArray))
             {
-                // For now, use basic JSON parsing - this will be refined in the service layer
                 var jsonDocument = JsonDocument.Parse(options.MessageArray);
                 foreach (var element in jsonDocument.RootElement.EnumerateArray())
                 {
-                    messages.Add(element);
+                    // Convert JsonElement to JsonObject for proper type matching in service
+                    var jsonNode = JsonNode.Parse(element.GetRawText());
+                    if (jsonNode is JsonObject jsonObj)
+                    {
+                        messages.Add(jsonObj);
+                    }
                 }
             }
 
             var result = await foundryService.CreateChatCompletionsAsync(
-                options.Subscription!,
                 options.ResourceName!,
                 options.DeploymentName!,
+                options.Subscription!,
+                options.ResourceGroup!,
                 messages,
                 options.MaxTokens,
                 options.Temperature,
@@ -115,6 +119,8 @@ public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<Ope
                 options.Stream,
                 options.Seed,
                 options.User,
+                options.Tenant,
+                options.AuthMethod ?? AuthMethod.Credential,
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create<OpenAiChatCompletionsCreateCommandResult>(

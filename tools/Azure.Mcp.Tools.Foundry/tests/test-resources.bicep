@@ -18,6 +18,7 @@ param testApplicationOid string
 var staticOpenAIAccount = 'azmcp-test'
 var staticOpenAIDeploymentName = 'gpt-4o-mini'
 var staticOpenAIAccountResourceGroup = 'static-test-resources'
+var staticEmbeddingModel = 'embedding-model'
 
 var cognitiveServicesContributorRoleId = '25fbc0a9-bd7c-42a3-aa1a-3b75d497ee68' // Cognitive Services Contributor role
 
@@ -218,4 +219,4 @@ output aiProjectsEndpoint string = 'https://${aiServicesAccount.name}.services.a
 output openAIAccount string = staticOpenAIAccount
 output openAIDeploymentName string = staticOpenAIDeploymentName
 output openAIAccountResourceGroup string = staticOpenAIAccountResourceGroup
-output embeddingDeploymentName string = embeddingModelDeployment.name
+output embeddingDeploymentName string = staticEmbeddingModel

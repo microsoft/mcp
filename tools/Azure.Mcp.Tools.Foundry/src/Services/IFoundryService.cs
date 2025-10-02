@@ -118,9 +118,10 @@ public interface IFoundryService
         RetryPolicyOptions? retryPolicy = null);
 
     Task<ChatCompletionResult> CreateChatCompletionsAsync(
-        string subscription,
         string resourceName,
         string deploymentName,
+        string subscription,
+        string resourceGroup,
         List<object> messages,
         int? maxTokens = null,
         double? temperature = null,
@@ -131,5 +132,7 @@ public interface IFoundryService
         bool? stream = null,
         int? seed = null,
         string? user = null,
+        string? tenant = null,
+        AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null);
 }
