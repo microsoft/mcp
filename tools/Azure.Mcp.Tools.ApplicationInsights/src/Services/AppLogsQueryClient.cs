@@ -77,7 +77,7 @@ public class AppLogsQueryClient(LogsQueryClient logsQueryClient) : IAppLogsQuery
                 Data = retObj,
                 OtherColumns = otherColumns
             };
-        }).ToList(); // Use tolist to force conversion to happen now, not on demand
+        }).ToList(); // Use ToList to force conversion to happen now, not on demand
 
         return rows;
     }
