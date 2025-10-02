@@ -2,11 +2,12 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.8.4 (Unreleased)
+## 0.8.4 (2025-10-02)
 
 ### Features Added
 
-- Added the support to return meta data in `tool list` command[[#564](https://github.com/microsoft/mcp/issues/564)].
+- Added support to return metadata when using the `azmcp_tool_list` command. [[#564](https://github.com/microsoft/mcp/issues/564)]
+- Added support for returning a list of tool namespaces instead of individual tools when using the `azmcp_tool_list` command with the `--namespaces` option. [[#496](https://github.com/microsoft/mcp/issues/496)]
 
 ### Breaking Changes
 
@@ -15,15 +16,17 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 - Fixed the name of the Key Vault Managed HSM settings get command from `azmcp_keyvault_admin_get` to `azmcp_keyvault_admin_settings_get`. [[#643](https://github.com/microsoft/mcp/issues/643)]
-- Removed redundant DI instantiation of MCP server providers, as these are expected to be instantiated by the MCP server discovery mechanism. [[644](https://github.com/microsoft/mcp/pull/644)]
+- Removed redundant DI instantiation of MCP server providers, as these are expected to be instantiated by the MCP server discovery mechanism. [[#644](https://github.com/microsoft/mcp/pull/644)]
 - Fixed App Lens having a runtime error for reflection-based serialization when using native AoT MCP build. [[#639](https://github.com/microsoft/mcp/pull/639)]
-- Added validation for the PostgreSQL database query command `azmcp_postgres_database_query`.[[#518](https://github.com/microsoft/mcp/pull/518)]
+- Added validation for the PostgreSQL database query command `azmcp_postgres_database_query`. [[#518](https://github.com/microsoft/mcp/pull/518)]
 
 ### Other Changes
 
 - Change base Docker image from `bookworm-slim` to `alpine`. [[#651](https://github.com/microsoft/mcp/pull/651)]
-
-- Updated the description of the following commands to decrease ambiguity and increase selection accuracy by LLMs:
+- Refactored tool implementation to use Azure Resource Graph queries instead of direct ARM API calls:
+  - Grafana [[#628](https://github.com/microsoft/mcp/pull/628)]
+- Updated the description of the following commands to increase selection accuracy by LLMs:
+  - App Deployment: `azmcp_deploy_app_logs_get` [[#640](https://github.com/microsoft/mcp/pull/640)]
   - Kusto: [[#666](https://github.com/microsoft/mcp/pull/666)]
     - `azmcp_kusto_cluster_get`
     - `azmcp_kusto_cluster_list`
@@ -32,16 +35,16 @@ The Azure MCP Server updates automatically by default whenever a new release com
     - `azmcp_kusto_sample`
     - `azmcp_kusto_table_list`
     - `azmcp_kusto_table_schema`
+  - Redis: [[#655](https://github.com/microsoft/mcp/pull/655)]
+    - `azmcp_redis_cache_list`
+    - `azmcp_redis_cluster_list`
   - Service Bus: `azmcp_servicebus_topic_details` [[#642](https://github.com/microsoft/mcp/pull/642)]
-- Refactored tool implementation to use Azure Resource Graph queries instead of direct ARM API calls:
-  - Grafana [[628](https://github.com/microsoft/mcp/pull/628)]
 
 #### Dependency Updates
 
+- Updated the `ModelContextProtocol.AspNetCore` version from `0.3.0-preview.4` to `0.4.0-preview.1`. [[#576](https://github.com/Azure/azure-mcp/pull/576)]
 - Removed the following dependencies:
-  - `Azure.ResourceManager.Grafana` [[628](https://github.com/microsoft/mcp/pull/622)]
-
-- Updated the description of Redis commands to increase selection accuracy by LLMs: [[#655](https://github.com/microsoft/mcp/pull/655)]
+  - `Azure.ResourceManager.Grafana` [[#628](https://github.com/microsoft/mcp/pull/622)]
 
 ## 0.8.3 (2025-09-30)
 
@@ -68,9 +71,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Refactored tool implementation to use Azure Resource Graph queries instead of direct ARM API calls:
-  - Authorization [[607](https://github.com/microsoft/mcp/pull/607)]
-  - AppConig [[606](https://github.com/microsoft/mcp/pull/606)]
-  - ACR [[622](https://github.com/microsoft/mcp/pull/622)]
+  - Authorization [[#607](https://github.com/microsoft/mcp/pull/607)]
+  - AppConig [[#606](https://github.com/microsoft/mcp/pull/606)]
+  - ACR [[#622](https://github.com/microsoft/mcp/pull/622)]
 - Fixed the names of the following MySQL and Postgres commands: [[#614](https://github.com/microsoft/mcp/pull/614)]
   - `azmcp_mysql_server_config_config`    → `azmcp_mysql_server_config_get`
   - `azmcp_mysql_server_param_param`      → `azmcp_mysql_server_param_get`
@@ -117,9 +120,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 #### Dependency Updates
 
 - Removed the following dependencies:
-  - `Azure.ResourceManager.Authorization` [[607](https://github.com/microsoft/mcp/pull/607)]
-  - `Azure.ResourceManager.AppConfiguration` [[606](https://github.com/microsoft/mcp/pull/606)]
-  - `Azure.ResourceManager.ContainerRegistry` [[622](https://github.com/microsoft/mcp/pull/622)]
+  - `Azure.ResourceManager.Authorization` [[#607](https://github.com/microsoft/mcp/pull/607)]
+  - `Azure.ResourceManager.AppConfiguration` [[#606](https://github.com/microsoft/mcp/pull/606)]
+  - `Azure.ResourceManager.ContainerRegistry` [[#622](https://github.com/microsoft/mcp/pull/622)]
 
 ## 0.8.2 (2025-09-25)
 
@@ -139,7 +142,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `azmcp_foundry_agents_evaluate`: Evaluate a response from an agent by passing query and response inline
   - `azmcp_foundry_agents_query_and_evaluate`: Connect to an agent in an AI Foundry project, query it, and evaluate the response in one step
 - Enhanced AKS managed cluster information with comprehensive properties. [[#490](https://github.com/microsoft/mcp/pull/490)]
-- Added support retrieving Key Vault Managed HSM account settings via the command `azmcp-keyvault-admin-settings-get`. [[358](https://github.com/microsoft/mcp/pull/358)]
+- Added support retrieving Key Vault Managed HSM account settings via the command `azmcp-keyvault-admin-settings-get`. [[#358](https://github.com/microsoft/mcp/pull/358)]
 
 ### Breaking Changes
 

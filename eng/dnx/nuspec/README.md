@@ -57,7 +57,7 @@ If you'd like to use a specific version of the Azure MCP server, you can specify
 			"--source",
 			"https://api.nuget.org/v3/index.json",
 			"--version",
-			"0.8.3",
+			"0.8.4",
 			"--yes",
 			"--",
 			"azmcp",
