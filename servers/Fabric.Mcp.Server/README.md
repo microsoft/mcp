@@ -16,13 +16,13 @@ Why this project?
 - [What Can You Do?](#what-can-you-do)
 - [Getting Started](#getting-started)
 - [Available Tools](#available-tools)
-- [Development & Contributing](#development--contributing)
+- [Development and Contributing](#development-and-contributing)
 - [Support](#support)
 - [License](#license)
 
 ---
 
-## What Can You Do?
+# What Can You Do?
 The Fabric MCP Server unlocks practical developer workflows by providing local access to Fabric API context:
 
 - Generate or scaffold Fabric resource definitions (Lakehouse, data pipelines, notebooks, reports).
@@ -41,14 +41,14 @@ The Fabric MCP Server unlocks practical developer workflows by providing local a
 
 ---
 
-## Getting Started
+# Getting Started
 
-### Prerequisites
+## Prerequisites
 - .NET 9.x SDK is recommended. Check `global.json` at the repository root for any pinned SDK version.
   - If `global.json` pins a preview SDK not installed locally, either install the requested preview SDK or update `global.json` for local development.
 - An MCP-compatible client (VS Code with an MCP extension, Claude Desktop, etc.).
 
-### Installation Steps
+## Installation Steps
 
 1. **Clone the repository:**
    ```bash
@@ -91,13 +91,13 @@ The Fabric MCP Server unlocks practical developer workflows by providing local a
    > - The `--mode all` argument enables all available tools
 
 
-### Common Issues
+## Common Issues
 - **SDK mismatch:** If `dotnet` outputs an SDK resolution error, inspect `global.json` and align local SDKs or update the file.
 - **Path issues:** Always use absolute paths in MCP configuration to avoid path resolution problems.
 
 ---
 
-## Available Tools
+# Available Tools
 Use the server's CLI to query embedded data and examples. Commands are organized under a `publicapis` command group in code.
 
 | Command | Purpose | Implementation |
@@ -113,7 +113,7 @@ Use the server's CLI to query embedded data and examples. Commands are organized
 
 ---
 
-## Development & Contributing
+# Development and Contributing
 We welcome contributions. Please follow the repository's contribution guidelines and the checklist below when preparing a PR.
 
 **Contributor checklist**
@@ -127,7 +127,7 @@ See [CONTRIBUTING](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md) f
 
 ---
 
-## Support
+# Support
 If you encounter issues:
 1. Search existing issues.
 2. If none match, file a new issue with:
@@ -140,5 +140,5 @@ For troubleshooting steps, see [TROUBLESHOOTING](https://github.com/microsoft/mc
 
 ---
 
-## License
+# License
 This project is licensed under the MIT License — see the [LICENSE](https://github.com/microsoft/mcp/blob/main/LICENSE) file for details.

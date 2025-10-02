@@ -17,9 +17,9 @@ param(
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
-. "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1"
 
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
+. "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1"
 
 $mcpServerjson = "$RepoRoot/eng/dnx/.mcp/server.json"
 $nuspecSourcePath = "$RepoRoot/eng/dnx/nuspec"

@@ -39,6 +39,9 @@ e.g.
 <!-- insert-section: nuget;vsix;npm {{Text to be inserted}} -->
 #>
 
+. "$PSScriptRoot/../common/scripts/common.ps1"
+$RepoRoot = $RepoRoot.Path.Replace('\', '/')
+
 class TagInfo {
     [string] $Tag
     [string] $Position
@@ -174,10 +177,11 @@ function Extract-PackageSpecificReadMe {
     Set-Content -Path "$OutputDirectory/README.md" -Value $processedReadMe -Force
 }
 
-function Validate-PackageReadMe {
+function Validate-PackageReadme {
     param (
         [string] $InputReadMePath
     )
+
     $tagValidationStack = [System.Collections.Generic.Stack[TagInfo]]::new()
     $headingValidationList = [System.Collections.Generic.Dictionary[string, HeadingInfo]]::new()
     $allowedTags = @('remove-section:', 'insert-section:')
@@ -258,4 +262,20 @@ function Validate-PackageReadMe {
         }
         throw "There are missing headings in the README. Please check the log for details."
     }
+}
+
+function Validate-All-PackageReadmes {
+    $readmeFiles = Get-ChildItem -Path "$RepoRoot/servers" -Recurse -Filter "README.md"
+    $hasFailures = $false
+    foreach ($file in $readmeFiles) {
+        Write-Host "Validating README: $($file.FullName)" -ForegroundColor Yellow
+        try {
+            Validate-PackageReadme -InputReadMePath $file.FullName
+            Write-Host "Validation passed for: $($file.FullName)" -ForegroundColor Green
+        } catch {
+            Write-Host "Validation failed for: $($file.FullName). Error: $_" -ForegroundColor Red
+            $hasFailures = $true
+        }
+    }
+    return $hasFailures
 }
