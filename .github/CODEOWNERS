@@ -136,9 +136,9 @@
 # ServiceOwners:                       @smritiy @srnagar @jongio
 
 # PRLabel: %tools-AzureManagedLustre
-/tools/Azure.Mcp.Tools.AzureManagedLustre/                        @wolfgang-desalvador @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.AzureManagedLustre/                        @wolfgang-desalvador @kinorirosnow @microsoft/azure-mcp
 # ServiceLabel: %tools-AzureManagedLustre
-# ServiceOwners:                       @wolfgang-desalvador
+# ServiceOwners:                       @wolfgang-desalvador @kinorirosnow
 
 # PRLabel: %tools-MySQL
 /tools/Azure.Mcp.Tools.MySql/          @ramnov @mattkohnms @microsoft/azure-mcp
@@ -211,7 +211,7 @@
 
 
 # PRLabel: %tools-EventGrid
-/tools/Azure.Mcp.Tools.EventGrid/      @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.EventGrid/     @microsoft/azure-mcp
 
 # ServiceLabel: %tools-EventGrid
 # ServiceOwners:                       @microsoft/azure-mcp

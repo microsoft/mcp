@@ -20,3 +20,15 @@ public sealed record LustreFileSystem(
     [property: JsonPropertyName("maintenanceDay")] string? MaintenanceDay,
     [property: JsonPropertyName("maintenanceTime")] string? MaintenanceTime
 );
+
+public sealed record ImportJobInfo(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("fileSystemName")] string FileSystemName,
+    [property: JsonPropertyName("resourceGroupName")] string ResourceGroupName,
+    [property: JsonPropertyName("subscriptionId")] string SubscriptionId,
+    [property: JsonPropertyName("status")] string Status,
+    [property: JsonPropertyName("conflictResolutionMode")] string ConflictResolutionMode,
+    [property: JsonPropertyName("maximumErrors")] int? MaximumErrors,
+    [property: JsonPropertyName("adminStatus")] string? AdminStatus,
+    [property: JsonPropertyName("importPrefixes")] IList<string>? ImportPrefixes
+);
