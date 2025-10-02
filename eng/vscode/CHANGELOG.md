@@ -6,6 +6,73 @@
 
 - Fixed duplicate MCP tool name prefixes in VS Code. Removed the `azmcp_` prefix from tool names in the codebase and set the VS Code server name to `azmcp` so that VS Code/Copilot adds the prefix automatically. Tool names now appear as `azmcp_[command]` instead of `mcp_azure_mcp_azmcp_[command]`.
 
+## 0.8.3 (2025-09-30)
+
+### Added
+
+- Added support for Azure Developer CLI (azd) MCP tools when azd CLI is installed locally - [[#566](https://github.com/microsoft/mcp/issues/566)]
+- Added support to proxy MCP capabilities when child servers leverage sampling or elicitation. [[#581](https://github.com/microsoft/mcp/pull/581)]
+- Added support for publishing custom events to Event Grid topics via the command `eventgrid_events_publish`. [[#514](https://github.com/microsoft/mcp/pull/514)]
+- Added support for generating text completions using deployed Azure OpenAI models in AI Foundry via the command `foundry_openai_create-completion`. [[#54](https://github.com/microsoft/mcp/pull/54)]
+- Added support for speech recognition from an audio file with Azure AI Services Speech via the command `speech_stt_recognize`. [[#436](https://github.com/microsoft/mcp/pull/436)]
+- Added support for getting the details of an Azure Event Hubs namespace via the command `eventhubs_namespace_get`. [[#105](https://github.com/microsoft/mcp/pull/105)]
+
+### Changed
+
+- Refactored Authorization implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[607](https://github.com/microsoft/mcp/pull/607)]
+- Refactored AppConfig implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[606](https://github.com/microsoft/mcp/pull/606)]
+- Fixed the names of the following MySQL and Postgres commands: [[#614](https://github.com/microsoft/mcp/pull/614)]
+  - `mysql_server_config_config`    → `mysql_server_config_get`
+  - `mysql_server_param_param`      → `mysql_server_param_get`
+  - `mysql_table_schema_schema`     → `mysql_table_schema_get`
+  - `postgres_server_config_config` → `postgres_server_config_get`
+  - `postgres_server_param_param`   → `postgres_server_param_get`
+  - `postgres_table_schema_schema`  → `postgres_table_schema_get`
+- Updated the description of the following commands to increase selection accuracy by LLMs:
+  - AI Foundry: [[#599](https://github.com/microsoft/mcp/pull/599)]
+    - `foundry_agents_connect`
+    - `foundry_models_deploy`
+    - `foundry_models_deployments_list`
+  - App Lens: `applens_resource_diagnose` [[#556](https://github.com/microsoft/mcp/pull/556)]
+  - Cloud Architect: `cloudarchitect_design` [[#587](https://github.com/microsoft/mcp/pull/587)]
+  - Cosmos DB: `cosmos_database_container_item_query` [[#625](https://github.com/microsoft/mcp/pull/625)]
+  - Event Grid: [[#552](https://github.com/microsoft/mcp/pull/552)] 
+    - `eventgrid_subscription_list`
+    - `eventgrid_topic_list`
+  - Key Vault: [[#608](https://github.com/microsoft/mcp/pull/608)]
+    - `keyvault_certificate_create`
+    - `keyvault_certificate_import`
+    - `keyvault_certificate_get`
+    - `keyvault_certificate_list`
+    - `keyvault_key_create`
+    - `keyvault_key_get`
+    - `keyvault_key_list`
+    - `keyvault_secret_create`
+    - `keyvault_secret_get`
+    - `keyvault_secret_list`
+  - MySQL: [[#614](https://github.com/microsoft/mcp/pull/614)]
+    - `mysql_server_param_set`
+  - Postgres: [[#562](https://github.com/microsoft/mcp/pull/562)]
+    - `postgres_database_query`
+    - `postgres_server_param_set`
+  - Resource Health: [[#588](https://github.com/microsoft/mcp/pull/588)]
+    - `resourcehealth_availability-status_get`
+    - `resourcehealth_service-health-events_list`
+  - SQL: [[#594](https://github.com/microsoft/mcp/pull/594)]
+    - `sql_db_delete`
+    - `sql_db_update`
+    - `sql_server_delete`
+  - Subscriptions: `subscription_list` [[#559](https://github.com/microsoft/mcp/pull/559)]
+
+### Fixed
+
+- Fixed an issue with the help option (`--help`) and enabled it across all commands and command groups. [[#583](https://github.com/microsoft/mcp/pull/583)]
+- Fixed the following issues with Kusto commands:
+  - `kusto_cluster_list` and `kusto_cluster_get` now accept the correct parameters expected by the service. [[#589](https://github.com/microsoft/mcp/issues/589)]
+  - `kusto_table_schema` now returns the correct table schema. [[#530](https://github.com/microsoft/mcp/issues/530)]
+  - `kusto_query` does not fail when the subscription id in the input query is enclosed in double quotes anymore. [[#152](https://github.com/microsoft/mcp/issues/152)]
+  - All commands now return enough details in error messages when input parameters are invalid or missing. [[#575](https://github.com/microsoft/mcp/issues/575)]
+
 ## 0.8.2 (2025-09-25)
 
 ### Fixed

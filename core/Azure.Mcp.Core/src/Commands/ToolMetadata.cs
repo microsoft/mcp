@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
+
 namespace Azure.Mcp.Core.Commands;
 
 /// <summary>
@@ -22,6 +24,7 @@ public sealed class ToolMetadata
     /// The default is <see langword="true"/>.
     /// </para>
     /// </remarks>
+    [JsonPropertyName("destructive")]
     public bool Destructive { get; init; } = true;
 
     /// <summary>
@@ -36,6 +39,7 @@ public sealed class ToolMetadata
     /// The default is <see langword="false"/>.
     /// </para>
     /// </remarks>
+    [JsonPropertyName("idempotent")]
     public bool Idempotent { get; init; } = false;
 
     /// <summary>
@@ -50,6 +54,7 @@ public sealed class ToolMetadata
     /// The default is <see langword="true"/>.
     /// </para>
     /// </remarks>
+    [JsonPropertyName("openWorld")]
     public bool OpenWorld { get; init; } = true;
 
     /// <summary>
@@ -68,6 +73,7 @@ public sealed class ToolMetadata
     /// The default is <see langword="false"/>.
     /// </para>
     /// </remarks>
+    [JsonPropertyName("readOnly")]
     public bool ReadOnly { get; init; } = false;
 
     /// <summary>
@@ -86,6 +92,7 @@ public sealed class ToolMetadata
     /// The default is <see langword="false"/>.
     /// </para>
     /// </remarks>
+    [JsonPropertyName("secret")]
     public bool Secret { get; init; } = false;
 
     /// <summary>
@@ -104,6 +111,7 @@ public sealed class ToolMetadata
     /// The default is <see langword="false"/>.
     /// </para>
     /// </remarks>
+    [JsonPropertyName("localRequired")]
     public bool LocalRequired { get; init; } = false;
 
     /// <summary>

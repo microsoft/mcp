@@ -80,10 +80,6 @@ public static class AzureMcpServiceCollectionExtensions
         services.AddSingleton<CompositeDiscoveryStrategy>();
         services.AddSingleton<RegistryDiscoveryStrategy>();
 
-        // Register server providers
-        services.AddSingleton<CommandGroupServerProvider>();
-        services.AddSingleton<RegistryServerProvider>();
-
         // Register MCP runtimes
         services.AddSingleton<IMcpRuntime, McpRuntime>();
 
@@ -159,13 +155,10 @@ public static class AzureMcpServiceCollectionExtensions
                     Version = assemblyName?.Version?.ToString() ?? "1.0.0-beta"
                 };
 
-                mcpServerOptions.Capabilities = new ServerCapabilities
+                mcpServerOptions.Handlers = new()
                 {
-                    Tools = new ToolsCapability()
-                    {
-                        CallToolHandler = mcpRuntime.CallToolHandler,
-                        ListToolsHandler = mcpRuntime.ListToolsHandler,
-                    }
+                    CallToolHandler = mcpRuntime.CallToolHandler,
+                    ListToolsHandler = mcpRuntime.ListToolsHandler,
                 };
 
                 // Add instructions for the server
