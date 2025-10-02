@@ -21,6 +21,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Change base Docker image from `bookworm-slim` to `alpine`. [[#651](https://github.com/microsoft/mcp/pull/651)]
+
 - Updated the description of the following commands to decrease ambiguity and increase selection accuracy by LLMs:
   - Kusto: [[#666](https://github.com/microsoft/mcp/pull/666)]
     - `azmcp_kusto_cluster_get`
