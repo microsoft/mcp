@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Models;
+
 public class AppListTraceEntry
 {
     [JsonPropertyName("operation_Name")]
