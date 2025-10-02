@@ -102,7 +102,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- remove-section: start nuget;npm remove_ide_sub_section -->
 Install Azure MCP Server using either an IDE extension or package manager. Choose one method below.
 
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > Authenticate to Azure before running the Azure MCP server. See the [Authentication guide](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md) for authentication methods and instructions.
 
 ## IDE
@@ -123,7 +123,7 @@ Compatible with both the [Stable](https://code.visualstudio.com/download) and [I
     - If Visual Studio 2026 is already installed, open the **Visual Studio Installer** and select the **Modify** button, which displays the available workloads.
 1. On the Workloads tab, select **Azure and AI development** and select **GitHub Copilot**.
 1. Click **install while downloading** to complete the installation.
-   
+
 For more information, visit [Install GitHub Copilot for Azure in Visual Studio 2026](https://aka.ms/ghcp4a/vs2026)
 
 ### Visual Studio 2022
@@ -235,7 +235,7 @@ Install the .NET Tool: [Azure.Mcp](https://www.nuget.org/packages/Azure.Mcp).
 ```bash
 dotnet tool install Azure.Mcp
 ```
-or 
+or
 ```bash
 dotnet tool install Azure.Mcp --version <version>
 ```
@@ -365,7 +365,7 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * Create AI Foundry agent threads
 * List AI Foundry agent threads
 * Get messages of an AI Foundry thread
-  
+
 ### 🔎 Azure AI Search
 
 * "What indexes do I have in my Azure AI Search service 'mysvc'?"
@@ -396,6 +396,13 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "Show me the websites in my 'my-resource-group' resource group"
 * "Get the details for website 'my-website'"
 * "Get the details for app service plan 'my-app-service-plan'"
+
+### 📈 Azure Application Insights
+
+* "List Application Insights traces for app 'my-ai-app' over the last hour"
+* "List Application Insights trace metadata for app 'my-ai-app' in resource group 'rg-observability'"
+* "Show trace metadata for my Application Insights component 'my-ai-app' using the requests table"
+* "List Application Insights recommendations in my subscription"
 
 ### 🖥️ Azure CLI Generate
 
@@ -525,6 +532,7 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 - 🤖 **Azure AI Best Practices** - AI app development guidance for Azure AI Foundry and Microsoft Agent Framework
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
+- 📈 **Azure Application Insights** - Distributed trace metadata & performance recommendations
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
 - 📞 **Azure Communication Services** - SMS messaging and communication
