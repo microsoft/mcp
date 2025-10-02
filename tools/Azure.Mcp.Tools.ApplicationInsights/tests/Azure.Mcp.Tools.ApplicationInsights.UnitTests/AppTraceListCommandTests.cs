@@ -83,9 +83,9 @@ public class AppTraceListCommandTests
         var args = _command.GetCommand().Parse(["--subscription", "sub1", "--resource-name", "app1", "--table", "requests", "--start-time", DateTime.UtcNow.AddMinutes(-30).ToString("o"), "--end-time", DateTime.UtcNow.ToString("o")]);
         await _command.ExecuteAsync(_context, args);
 
-    // Empty result still yields a result object per current command implementation
-    // Adjust expectation: if command changes to suppress empty results, update this assertion.
-    Assert.NotNull(_context.Response.Results);
+        // Empty result still yields a result object per current command implementation
+        // Adjust expectation: if command changes to suppress empty results, update this assertion.
+        Assert.NotNull(_context.Response.Results);
     }
 
     [Fact]
