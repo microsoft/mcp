@@ -5,6 +5,7 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Cosmos.Options;
 using Azure.Mcp.Tools.Cosmos.Services;
+using Azure.Mcp.Tools.Cosmos.Validation;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Cosmos.Commands;
@@ -57,11 +58,19 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
         try
         {
             var cosmosService = context.GetService<ICosmosService>();
+            var queryToRun = options.Query ?? DefaultQuery;
+
+            // Validate user-provided query (skip validation only if using default)
+            if (options.Query is { Length: > 0 })
+            {
+                CosmosQueryValidator.EnsureReadOnlySelect(options.Query);
+            }
+
             var items = await cosmosService.QueryItems(
                 options.Account!,
                 options.Database!,
                 options.Container!,
-                options.Query ?? DefaultQuery,
+                queryToRun,
                 options.Subscription!,
                 options.AuthMethod ?? AuthMethod.Credential,
                 options.Tenant,
