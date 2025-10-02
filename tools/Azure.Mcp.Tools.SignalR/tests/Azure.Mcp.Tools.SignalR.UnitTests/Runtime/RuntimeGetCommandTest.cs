@@ -3,9 +3,11 @@
 
 using System.CommandLine;
 using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.SignalR.Commands;
 using Azure.Mcp.Tools.SignalR.Commands.Runtime;
 using Azure.Mcp.Tools.SignalR.Models;
 using Azure.Mcp.Tools.SignalR.Services;
@@ -121,12 +123,12 @@ public class RuntimeGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNullWhenNoRuntimes()
+    public async Task ExecuteAsync_ReturnsEmptyWhenNoRuntimes()
     {
         // Arrange
         _signalRService.GetRuntimeAsync(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions?>())
-            .Returns(new List<Models.Runtime>());
+            .Returns([]);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
 
@@ -135,8 +137,11 @@ public class RuntimeGetCommandTests
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.Null(response.Results);
-        Assert.Equal("Success", response.Message);
+        Assert.NotNull(response.Results);
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, SignalRJsonContext.Default.RuntimeGetCommandResult);
+        Assert.NotNull(result);
+        Assert.Empty(result.Runtimes);
     }
 
     [Fact]

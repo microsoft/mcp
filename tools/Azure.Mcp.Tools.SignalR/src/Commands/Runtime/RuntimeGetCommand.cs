@@ -77,11 +77,7 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger)
             _logger.LogInformation("Found {Count} SignalR service(s) in subscription {SubscriptionId}",
                 runtimes.Count(), options.Subscription);
 
-            context.Response.Results = runtimes.Any()
-                ? ResponseResult.Create(
-                    new RuntimeGetCommandResult(runtimes),
-                    SignalRJsonContext.Default.RuntimeGetCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(runtimes ?? []), SignalRJsonContext.Default.RuntimeGetCommandResult);
         }
         catch (Exception ex)
         {
