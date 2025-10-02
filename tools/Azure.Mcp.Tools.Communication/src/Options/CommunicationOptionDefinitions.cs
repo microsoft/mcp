@@ -18,7 +18,7 @@ public static class CommunicationOptionDefinitions
         $"--{EndpointName}"
     )
     {
-        Description = "The Communication Services endpoint URL (e.g., https://myservice.communication.azure.com). Required for credential authentication.",
+        Description = "The Communication Services URI endpoint (e.g., https://myservice.communication.azure.com). Required for credential authentication.",
         Required = true
     };
 
