@@ -58,6 +58,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.Transport);
         command.Options.Add(ServiceOptionDefinitions.Namespace);
         command.Options.Add(ServiceOptionDefinitions.Mode);
+        command.Options.Add(ServiceOptionDefinitions.Tool);
         command.Options.Add(ServiceOptionDefinitions.ReadOnly);
         command.Options.Add(ServiceOptionDefinitions.Debug);
         command.Options.Add(ServiceOptionDefinitions.EnableInsecureTransports);
@@ -82,6 +83,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             Transport = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo,
             Namespace = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
             Mode = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Mode.Name),
+            Tool = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name),
             ReadOnly = parseResult.GetValueOrDefault<bool?>(ServiceOptionDefinitions.ReadOnly.Name),
             Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
             EnableInsecureTransports = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports.Name),

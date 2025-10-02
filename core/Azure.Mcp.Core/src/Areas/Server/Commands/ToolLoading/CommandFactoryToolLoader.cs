@@ -61,7 +61,15 @@ public sealed class CommandFactoryToolLoader(
     /// <returns>A result containing the list of available tools.</returns>
     public ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
-        var tools = CommandFactory.GetVisibleCommands(_toolCommands)
+        var visibleCommands = CommandFactory.GetVisibleCommands(_toolCommands);
+        
+        // Filter by specific tools if provided
+        if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
+        {
+            visibleCommands = visibleCommands.Where(kvp => _options.Value.Tool.Contains(kvp.Key, StringComparer.OrdinalIgnoreCase));
+        }
+
+        var tools = visibleCommands
             .Select(kvp => GetTool(kvp.Key, kvp.Value))
             .Where(tool => !_options.Value.ReadOnly || (tool.Annotations?.ReadOnlyHint == true))
             .ToList();
@@ -96,6 +104,25 @@ public sealed class CommandFactoryToolLoader(
         }
 
         var toolName = request.Params.Name;
+        
+        // Check if tool filtering is enabled and validate the requested tool
+        if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
+        {
+            if (!_options.Value.Tool.Contains(toolName, StringComparer.OrdinalIgnoreCase))
+            {
+                var content = new TextContentBlock
+                {
+                    Text = $"Tool '{toolName}' is not available. This server is configured to only expose the tools: {string.Join(", ", _options.Value.Tool.Select(t => $"'{t}'"))}",
+                };
+
+                return new CallToolResult
+                {
+                    Content = [content],
+                    IsError = true,
+                };
+            }
+        }
+        
         var command = _toolCommands.GetValueOrDefault(toolName);
         if (command == null)
         {
