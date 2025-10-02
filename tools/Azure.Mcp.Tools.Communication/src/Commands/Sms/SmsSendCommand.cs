@@ -37,7 +37,7 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
         ReadOnly = false,
         OpenWorld = false,
         Idempotent = true,
-        Secret = false,
+        Secret = true,
         LocalRequired = true
     };
 
