@@ -17,37 +17,20 @@ public class CommunicationSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ICommunicationService, CommunicationService>();
-    }
-
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
-    {
-        // Create Communication command group
-        var communication = new CommandGroup("communication",
-            "Communication services operations - Commands for managing Azure Communication Services including SMS messaging, email, and voice calling capabilities.");
-        rootGroup.AddSubGroup(communication);
-
-        // Create SMS subgroup
-        var sms = new CommandGroup("sms", "SMS messaging operations - Commands for sending SMS messages using Azure Communication Services.");
-        communication.AddSubGroup(sms);
-
-        // Register SMS commands
-        sms.AddCommand("send", new SmsSendCommand(loggerFactory.CreateLogger<SmsSendCommand>()));
+        services.AddSingleton<SmsSendCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Communication command group
-        var communication = new CommandGroup("communication",
-            "Communication services operations - Commands for managing Azure Communication Services including SMS messaging, email, and voice calling capabilities.");
-
+        var communication = new CommandGroup(Name,
+            "Communication services operations - Commands for managing Azure Communication Services - supports sending SMS");
         // Create SMS subgroup
-        var sms = new CommandGroup("sms", "SMS messaging operations - Commands for sending SMS messages using Azure Communication Services.");
+        var sms = new CommandGroup("sms", "SMS messaging operations - sending SMS messages to one or more recipients using Azure Communication Services.");
         communication.AddSubGroup(sms);
-
-        // Register SMS commands using DI
-        var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-        var smsSendCommand = new SmsSendCommand(loggerFactory.CreateLogger<SmsSendCommand>());
-        sms.AddCommand("send", smsSendCommand);
+        // Register SMS commands        
+        var smsSend = serviceProvider.GetRequiredService<SmsSendCommand>();
+        sms.AddCommand(smsSend.Name, smsSend);
 
         return communication;
     }
