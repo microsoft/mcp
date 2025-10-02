@@ -6,6 +6,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added support for creating interactive chat completions using Azure OpenAI chat models in AI Foundry via the command `azmcp_foundry_openai_chat-completions-create`.
+- Added support for generating vector embeddings using Azure OpenAI embedding models in AI Foundry via the command `azmcp_foundry_openai_embeddings-create`.
+- Added support for listing all available OpenAI models and deployments in an Azure resource via the command `azmcp_foundry_openai_models-list`.
+
 ### Breaking Changes
 
 ### Bugs Fixed
