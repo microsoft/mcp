@@ -39,7 +39,7 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
             throw new ArgumentException("At least one 'to' phone number must be provided", nameof(to));
 
         if (to.Any(string.IsNullOrWhiteSpace))
-            throw new ArgumentException("All To phone numbers must be valid", nameof(to));
+            throw new ArgumentException("Recipient phone numbers cannot be empty.", nameof(to));
 
         try
         {
