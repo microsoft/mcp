@@ -79,8 +79,10 @@ public class VersionSyncTests
     {
         var dockerfileContent = File.ReadAllText(dockerfilePath);
 
-        // Look for patterns like: FROM mcr.microsoft.com/dotnet/aspnet:9.0.5-bookworm-slim
-        var pattern = @"FROM\s+mcr\.microsoft\.com/dotnet/aspnet:(\d+\.\d+\.\d+)";
+        // Look for patterns like:
+        // - FROM mcr.microsoft.com/dotnet/aspnet:9.0.5-bookworm-slim
+        // - FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
+        var pattern = @"FROM\s+mcr\.microsoft\.com/dotnet/aspnet:(\d+\.\d+(\.\d+)?)";
         var match = Regex.Match(dockerfileContent, pattern);
 
         if (match.Success)

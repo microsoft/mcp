@@ -30,11 +30,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
     public override string Name => "sample";
 
     public override string Description =>
-        """
-        Return a sample of rows from the specified table in an Kusto table.
-        Requires `cluster-uri` (or `cluster`), `database`, and `table`.
-        Results are returned as a JSON array of documents, for example: `[{'Column1': val1, 'Column2': val2}, ...]`.
-        """;
+        "Return a sample of rows from a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.";
 
     public override string Title => CommandTitle;
 

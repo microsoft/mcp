@@ -16,10 +16,7 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger) : Bas
     public override string Name => "schema";
 
     public override string Description =>
-        """
-        Get the schema of a specific table in an Kusto database.
-        Requires `cluster-uri` ( or `subscription` and `cluster`), `database` and `table`.
-        """;
+        "Get/retrieve/show the schema of a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.";
 
     public override string Title => CommandTitle;
 

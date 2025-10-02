@@ -21,10 +21,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : Subsc
     public override string Name => "get";
 
     public override string Description =>
-        """
-        Get details for a specific Kusto cluster. Requires `subscription` and `cluster`.
-        The response includes the `clusterUri` property for use in subsequent commands.
-        """;
+        "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters. Required: --cluster and --subscription.";
 
     public override string Title => CommandTitle;
 

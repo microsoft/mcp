@@ -131,7 +131,8 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             Name = commandDetails.Name,
             Description = commandDetails.Description ?? string.Empty,
             Command = tokenizedName.Replace(CommandFactory.Separator, ' '),
-            Options = optionInfos
+            Options = optionInfos,
+            Metadata = command.Metadata
         };
     }
 }
