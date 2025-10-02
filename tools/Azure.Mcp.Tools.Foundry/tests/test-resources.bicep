@@ -18,6 +18,7 @@ param testApplicationOid string
 var staticOpenAIAccount = 'azmcp-test'
 var staticOpenAIDeploymentName = 'gpt-4o-mini'
 var staticOpenAIAccountResourceGroup = 'static-test-resources'
+var staticEmbeddingModel = 'embedding-model'
 
 var cognitiveServicesContributorRoleId = '25fbc0a9-bd7c-42a3-aa1a-3b75d497ee68' // Cognitive Services Contributor role
 
@@ -119,6 +120,21 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-
   }
 }
 
+resource embeddingModelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-04-01-preview' = {
+  parent: aiServicesAccount
+  name: 'text-embedding-ada-002'
+  sku: {
+    name: 'Standard'
+    capacity: 120
+  }
+  properties: {
+    model: {
+      format: 'OpenAI'
+      name: 'text-embedding-ada-002'
+    }
+  }
+}
+
 resource bingGroundingSearch 'Microsoft.Bing/accounts@2020-06-10' = {
   name: '${baseName}-bing-grounding'
   location: 'Global'
@@ -203,3 +219,4 @@ output aiProjectsEndpoint string = 'https://${aiServicesAccount.name}.services.a
 output openAIAccount string = staticOpenAIAccount
 output openAIDeploymentName string = staticOpenAIDeploymentName
 output openAIAccountResourceGroup string = staticOpenAIAccountResourceGroup
+output embeddingDeploymentName string = staticEmbeddingModel
