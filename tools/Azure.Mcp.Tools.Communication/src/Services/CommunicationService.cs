@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Communication.Services;
 
-public class CommunicationService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<CommunicationService> logger) 
+public class CommunicationService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<CommunicationService> logger)
     : BaseAzureService(tenantService), ICommunicationService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
@@ -33,11 +33,11 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
             (nameof(endpoint), endpoint),
             (nameof(from), from),
             (nameof(message), message));
-        
+
         // Validate to array separately since it has special requirements
         if (to == null || to.Length == 0)
             throw new ArgumentException("To phone numbers cannot be null or empty", nameof(to));
-        
+
         if (to.Any(string.IsNullOrWhiteSpace))
             throw new ArgumentException("All To phone numbers must be valid", nameof(to));
 
