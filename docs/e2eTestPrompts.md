@@ -393,7 +393,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 ## Azure Quick Review CLI
 
 | Tool Name | Test Prompt |
-| --------- | ----------- |
+|:----------|:----------|
 | azmcp_extension_azqr | Check my Azure subscription for any compliance issues or recommendations |
 | azmcp_extension_azqr | Provide compliance recommendations for my current Azure subscription |
 | azmcp_extension_azqr | Scan my Azure subscription for compliance recommendations |
