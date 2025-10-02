@@ -36,7 +36,7 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
 
         // Validate to array separately since it has special requirements
         if (to == null || to.Length == 0)
-            throw new ArgumentException("To phone numbers cannot be null or empty", nameof(to));
+            throw new ArgumentException("At least one 'to' phone number must be provided", nameof(to));
 
         if (to.Any(string.IsNullOrWhiteSpace))
             throw new ArgumentException("All To phone numbers must be valid", nameof(to));
