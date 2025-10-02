@@ -421,7 +421,7 @@ public class CommandFactoryToolLoaderTests
         var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
 
         // Find the appconfig_kv_set tool and print all tool names
-        var appConfigSetTool = result.Tools.FirstOrDefault(t => t.Name == "azmcp_appconfig_kv_set");
+        var appConfigSetTool = result.Tools.FirstOrDefault(t => t.Name == "appconfig_kv_set");
 
         // Assert
         Assert.NotNull(appConfigSetTool);

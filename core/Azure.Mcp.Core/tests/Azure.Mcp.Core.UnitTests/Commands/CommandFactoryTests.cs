@@ -49,7 +49,7 @@ public class CommandFactoryTests
     [InlineData("subscription", "list", "subscription_list")]
     [InlineData("storage", "account_list", "storage_account_list")]
     [InlineData("role", "assignment_list", "role_assignment_list")]
-    [InlineData("azmcp", "subscription_list", "azmcp_subscription_list")]
+    [InlineData("azmcp", "subscription_list", "subscription_list")]
     public void GetPrefix_Should_Use_Underscore_Separator(string currentPrefix, string additional, string expected)
     {
         // This test verifies that command hierarchies are joined with underscores
@@ -92,7 +92,7 @@ public class CommandFactoryTests
         // with our underscore separator, which was the core issue we're solving
 
         // Arrange
-        var prefix = "azmcp_role";
+        var prefix = "role";
 
         // Act
         var result = CallGetPrefix(prefix, commandNameWithDash);

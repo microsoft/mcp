@@ -39,7 +39,7 @@ public class DashSupportTests
         // because we use underscores as separators
 
         // Arrange
-        var prefix = "azmcp_role";
+        var prefix = "role";
 
         // Act - Simulate how the CommandFactory builds command names
         var toolName = $"{prefix}_{commandWithDash}";
@@ -62,11 +62,11 @@ public class DashSupportTests
         // This test shows the difference between old and new approach
 
         var commandName = "list-roles";
-        var prefix = "azmcp_role";
+        var prefix = "role";
 
         // New approach (after fix): Use underscore separator
         var newToolName = $"{prefix}_{commandName}";
-        Assert.Equal("azmcp_role_list-roles", newToolName);
+        Assert.Equal("role_list-roles", newToolName);
 
         // Old approach would have been: "azmcp-role-list-roles"
         // This would be ambiguous - is it "azmcp-role" + "list-roles" 
@@ -89,7 +89,7 @@ public class DashSupportTests
         // This test demonstrates how tool names map back to commands
 
         // Arrange
-        var fullToolName = $"azmcp_{toolNameSuffix}";
+        var fullToolName = $"{toolNameSuffix}";
 
         // Act - Simulate parsing tool name back to command structure
         var parts = fullToolName.Split('_');
