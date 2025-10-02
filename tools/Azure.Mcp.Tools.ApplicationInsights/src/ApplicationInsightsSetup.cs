@@ -4,11 +4,11 @@
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
+using Azure.Mcp.Core.Services.Azure.Resource;
 using Azure.Mcp.Tools.ApplicationInsights.Commands.AppTrace;
+using Azure.Mcp.Tools.ApplicationInsights.Commands.Recommendation;
 using Azure.Mcp.Tools.ApplicationInsights.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Azure.Mcp.Core.Services.Azure.Resource;
 
 namespace Azure.Mcp.Tools.ApplicationInsights;
 
