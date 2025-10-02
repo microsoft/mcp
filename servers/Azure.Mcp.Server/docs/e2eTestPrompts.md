@@ -149,6 +149,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | applicationinsights_recommendation_list | Show me code optimization recommendations for all Application Insights resources in my subscription |
 | applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> |
 | applicationinsights_recommendation_list | Show me performance improvement recommendations from Application Insights |
+| applicationinsights_apptrace_list | List Application Insights trace metadata for app <app_insights_name> in resource group <resource_group_name> from <start_time> to <end_time> |
+| applicationinsights_apptrace_list | Show trace metadata for Application Insights component <resource_id> using the requests table |
+| applicationinsights_apptrace_list | List Application Insights traces for app <app_insights_name> over the last hour |
+| applicationinsights_apptrace_list | List dependency traces for Application Insights app <app_insights_name> in resource group <resource_group_name> between <start_time> and <end_time> |
+| applicationinsights_apptrace_list | Get availability result trace metadata for Application Insights app <app_insights_name> between <start_time> and <end_time> |
+| applicationinsights_apptrace_list | List exception trace metadata for Application Insights app <app_insights_name> in resource group <resource_group_name> |
 
 ## Azure CLI
 

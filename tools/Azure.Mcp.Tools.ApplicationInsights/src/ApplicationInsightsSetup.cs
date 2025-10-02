@@ -48,7 +48,7 @@ public class ApplicationInsightsSetup : IAreaSetup
         var recommendationGroup = new CommandGroup("recommendation", "Application Insights recommendation operations - list recommendation targets (components).");
         group.AddSubGroup(recommendationGroup);
 
-        var appInsightsGroup = new CommandGroup("app-trace", "Application Insights trace operations - list traces and spans for components.");
+        var appInsightsGroup = new CommandGroup("apptrace", "Application Insights trace operations - list traces and spans for components.");
         group.AddSubGroup(appInsightsGroup);
 
         var recommendationList = serviceProvider.GetRequiredService<RecommendationListCommand>();
