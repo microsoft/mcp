@@ -220,7 +220,7 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 ## Getting Started
 
-1. Open GitHub Copilot in [VS Code](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode) or [IntelliJ](https://github.blog/changelog/2025-05-19-agent-mode-and-mcp-support-for-copilot-in-jetbrains-eclipse-and-xcode-now-in-public-preview/#agent-mode) and switch to Agent mode.
+1. Open GitHub Copilot in [VS Code](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode) <!-- remove-section: start vsix remove_intellij_uri -->or [IntelliJ](https://github.blog/changelog/2025-05-19-agent-mode-and-mcp-support-for-copilot-in-jetbrains-eclipse-and-xcode-now-in-public-preview/#agent-mode)<!-- remove-section: end remove_intellij_uri --> and switch to Agent mode.
 1. Click `refresh` on the tools list
     - You should see the Azure MCP Server in the list of tools
 1. Try a prompt that tells the agent to use the Azure MCP Server, such as `List my Azure Storage containers`
