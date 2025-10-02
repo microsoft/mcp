@@ -16,8 +16,8 @@ jobs:
   - checkout: self
 
   - download: current
-    displayName: Download packages_npm
-    artifact: packages_npm
+    displayName: "Download binaries_signed_zipped"
+    artifact: binaries_signed_zipped
 
   - template: /eng/common/pipelines/templates/steps/retain-run.yml
 
@@ -28,7 +28,7 @@ jobs:
       $tag = "$serverName-$version$versionSuffix"
 
       gh release create $tag --title "$serverName $version$versionSuffix"
-      gh release upload $tag $(Pipeline.Workspace)/packages_npm/*/*/*.tgz
+      gh release upload $tag $(Pipeline.Workspace)/binaries_signed_zipped/*.zip
     displayName: Create GitHub Release and upload artifacts
     env:
       GH_TOKEN: $(azuresdk-github-pat)

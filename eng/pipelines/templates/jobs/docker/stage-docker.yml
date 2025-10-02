@@ -3,10 +3,14 @@ parameters:
   type: object
 
 jobs:
-- job: PackNpm
-  displayName: "Pack Npm"
+- job: CreateDockerArtifact
+  displayName: 'Creating Docker artifact'
   dependsOn: ${{ parameters.DependsOn }}
-  timeoutInMinutes: 120
+  pool:
+    name: $(LINUXPOOL)
+    image: $(LINUXVMIMAGE)
+    os: linux
+
   steps:
   - checkout: self
 
@@ -19,16 +23,16 @@ jobs:
     artifact: binaries_signed
 
   - task: Powershell@2
-    displayName: "Pack modules for Npm"
+    displayName: "Prepare files for Docker"
     inputs:
       pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Npm.ps1
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Prepare-Docker.ps1
       arguments: >
-        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
 
-  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
-    parameters:
-      ArtifactPath: $(Build.ArtifactStagingDirectory)
-      ArtifactName: packages_npm
+  - task: 1ES.PublishPipelineArtifact@1
+    inputs:
+      path: $(Build.ArtifactStagingDirectory)
+      artifact: docker_staged

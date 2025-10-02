@@ -1,13 +1,6 @@
-parameters:
-- name: ServerName
-  type: string
-- name: TimeoutInMinutes
-  type: number
-  default: 120
-
 jobs:
 - job: Sign
-  timeoutInMinutes: ${{ parameters.TimeoutInMinutes }}
+  timeoutInMinutes: 120
   pool: # Binary signing of mac bits needs to happen on mac see https://github.com/Azure/azure-mcp/blob/4ff032fafc77bc618738879b7028665c0de2e632/eng/scripts/Compress-ForSigning.ps1#L40
     name: $(MACPOOL)
     vmImage: $(MACVMIMAGE)
@@ -24,8 +17,9 @@ jobs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Compress-ForSigning.ps1
       arguments: >
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -ArtifactsPath '$(Pipeline.Workspace)'
-        -ArtifactPrefix 'build_'
+        -ArtifactPrefix 'binaries_'
         -OutputPath '$(Build.ArtifactStagingDirectory)/signed'
 
   - template: pipelines/steps/binary-signing.yml@azure-sdk-build-tools
@@ -68,7 +62,21 @@ jobs:
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)/signed
       ArtifactName: binaries_signed
-      SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
+
+  - task: Powershell@2
+    displayName: "Pack binaries into zip files"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Zip.ps1
+      arguments: >
+        -ArtifactsPath '$(Build.ArtifactStagingDirectory)/signed'
+        -OutputPath '$(Build.ArtifactStagingDirectory)/zipped'
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactPath: $(Build.ArtifactStagingDirectory)/zipped
+      ArtifactName: binaries_signed_zipped
 
 - job: Verify_Signing
   displayName: "Verify Signing"
@@ -117,4 +125,7 @@ jobs:
 - template: /eng/pipelines/templates/jobs/vsix/pack-and-sign-vsix.yml
   parameters:
     DependsOn: Sign
-    ServerName: ${{ parameters.ServerName }}
+
+- template: /eng/pipelines/templates/jobs/docker/stage-docker.yml
+  parameters:
+    DependsOn: Sign
