@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Extension.Models;
 using Azure.Mcp.Tools.Extension.Options;
 using Azure.Mcp.Tools.Extension.Services;
@@ -39,8 +38,17 @@ This tool can generate Azure CLI commands to be used with the corresponding CLI 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(ExtensionOptionDefinitions.CliGenerate.Intent.AsRequired());
-        command.Options.Add(ExtensionOptionDefinitions.CliGenerate.CliType.AsRequired());
+        command.Options.Add(ExtensionOptionDefinitions.CliGenerate.Intent);
+        command.Options.Add(ExtensionOptionDefinitions.CliGenerate.CliType);
+
+        command.Validators.Add(result =>
+        {
+            var cliType = result.GetValue(ExtensionOptionDefinitions.CliGenerate.CliType);
+            if (!_allowedCliTypeValues.Contains(cliType))
+            {
+                result.AddError($"Invalid CLI type: {cliType}. Supported values are: {string.Join(", ", _allowedCliTypeValues)}");
+            }
+        });
     }
 
     protected override CliGenerateOptions BindOptions(ParseResult parseResult)
