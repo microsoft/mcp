@@ -295,9 +295,23 @@ public class CosmosQueryValidatorTests
     [InlineData("SELECT * FROM c WHERE c.note = 'Call trigger later'")]  // trigger in string literal
     [InlineData("SELECT call_sproc() FROM c")]  // UDF name that happens to contain 'call'
     [InlineData("SELECT my_sproc_result FROM c")]  // Column name that happens to contain 'sproc'
+    [InlineData("SELECT * FROM c WHERE c.comment = 'Run EXECUTE on server'")]  // execute in string
+    [InlineData("SELECT * FROM c WHERE c.code = 'sp_adduser example'")]  // sp_ in string
+    [InlineData("SELECT * FROM c WHERE c.note = '''EXEC'' escaped quotes'")]  // escaped quotes with EXEC
     public void EnsureReadOnlySelect_StoredProcedureKeywordsInStringsOrIdentifiers_ShouldPass(string query)
     {
         // Keywords inside quoted strings or as part of legitimate identifiers should not trigger validation errors
         CosmosQueryValidator.EnsureReadOnlySelect(query);
+    }
+
+    [Theory]
+    [InlineData("SELECT * FROM c WHERE EXEC = 1")]  // EXEC as identifier (not in string)
+    [InlineData("SELECT * FROM c, EXECUTE AS e")]  // EXECUTE as alias
+    [InlineData("SELECT trigger.field FROM c JOIN trigger ON c.id = trigger.id")]  // trigger as table name
+    public void EnsureReadOnlySelect_StoredProcedureKeywordsAsIdentifiers_ShouldThrow(string query)
+    {
+        // Keywords used as identifiers (outside of strings) should be blocked
+        var ex = Assert.Throws<CommandValidationException>(() => CosmosQueryValidator.EnsureReadOnlySelect(query));
+        Assert.Contains("stored procedure", ex.Message.ToLowerInvariant());
     }
 }
