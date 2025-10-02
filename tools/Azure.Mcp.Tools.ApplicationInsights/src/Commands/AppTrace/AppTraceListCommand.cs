@@ -13,6 +13,7 @@ using Azure.Mcp.Tools.ApplicationInsights.Models;
 using Azure.Mcp.Tools.ApplicationInsights.Options;
 using Azure.Mcp.Tools.ApplicationInsights.Services;
 using Microsoft.Extensions.Logging;
+using static Azure.Mcp.Tools.ApplicationInsights.Options.ApplicationInsightsOptionDefinitions;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Commands.AppTrace;
 
@@ -22,17 +23,44 @@ namespace Azure.Mcp.Tools.ApplicationInsights.Commands.AppTrace;
 public sealed class AppTraceListCommand(ILogger<AppTraceListCommand> logger) : SubscriptionCommand<AppTraceListOptions>()
 {
     private const string CommandTitle = "List Application Insights Trace Metadata";
-    private static readonly Option<string> _startTimeOption = ApplicationInsightsOptionDefinitions.StartTime;
-    private static readonly Option<string> _endTimeOption = ApplicationInsightsOptionDefinitions.EndTime;
     private readonly ILogger<AppTraceListCommand> _logger = logger;
 
     public override string Name => "list";
 
     public override string Description =>
-        """
-        List Application Insights trace metadata (component identifiers and time window) in a subscription. Optionally filter by resource group when --resource-group is provided.
-        This is an initial implementation that returns component metadata and a requested time window; future versions may return detailed trace/span data.
+        $$"""
+        List the most relevant traces from an Application Insights table.
+
+        This tool is useful for correlating errors and dependencies to specific transactions in an application.
+
+        Returns a list of traceIds and spanIds that can be further explored for each operation.
+
+        Example usage:
+        Filter to dependency failures
+        "table": "dependencies",
+        "filters": ["success=\"false\""]
+
+        Filter to request failures with 500 code
+        "table": "requests",
+        "filters": ["success=\"false\"", "resultCode=\"500\""]
+
+        Filter to requests slower than 95th percentile (use start and end time filters to filter to the duration spike). Any percentile is valid (e.g. 99p is also valid)
+        "table": "requests",
+        "filters": ["duration=\"95p\""],
+        "start-time":"start of spike (ISO date)",
+        "end-time":"end of spike (ISO date)"
+
+        Use this tool for investigating issues with Application Insights resources.
+        Required options:
+        - {{ResourceName.Name}}: {{ResourceName.Description}} or {{ResourceId.Name}}: {{ResourceId.Description}}
+        - {{Table.Name}}: {{Table.Description}}
+        Optional options:
+        - {{Filters.Name}}: {{Filters.Description}}
+        - {{OptionDefinitions.Common.ResourceGroup.Name}}: {{OptionDefinitions.Common.ResourceGroup.Description}}
+        - {{StartTime.Name}}: {{StartTime.Description}}
+        - {{EndTime.Name}}: {{EndTime.Description}}
         """;
+
 
     public override string Title => CommandTitle;
 
@@ -42,12 +70,12 @@ public sealed class AppTraceListCommand(ILogger<AppTraceListCommand> logger) : S
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(ApplicationInsightsOptionDefinitions.ResourceName);
-        command.Options.Add(ApplicationInsightsOptionDefinitions.ResourceId);
-        command.Options.Add(ApplicationInsightsOptionDefinitions.Table);
-        command.Options.Add(ApplicationInsightsOptionDefinitions.Filters);
-        command.Options.Add(_startTimeOption);
-        command.Options.Add(_endTimeOption);
+        command.Options.Add(ResourceName);
+        command.Options.Add(ResourceId);
+        command.Options.Add(Table);
+        command.Options.Add(Filters);
+        command.Options.Add(StartTime);
+        command.Options.Add(EndTime);
     }
 
     private ValidationResult OnExecuting(CommandResult commandResult, CommandResponse? commandResponse = null)
@@ -55,23 +83,23 @@ public sealed class AppTraceListCommand(ILogger<AppTraceListCommand> logger) : S
         ValidationResult result = new();
 
         // Either resourceName or resourceId must be provided
-        string? resourceName = commandResult.GetValueOrDefault(ApplicationInsightsOptionDefinitions.ResourceName);
-        string? resourceId = commandResult.GetValueOrDefault(ApplicationInsightsOptionDefinitions.ResourceId);
+        string? resourceName = commandResult.GetValueOrDefault(ResourceName);
+        string? resourceId = commandResult.GetValueOrDefault(ResourceId);
         if (string.IsNullOrEmpty(resourceName) && string.IsNullOrEmpty(resourceId))
         {
-            result.Errors.Add($"Either --{ApplicationInsightsOptionDefinitions.ResourceNameName} or --{ApplicationInsightsOptionDefinitions.ResourceIdName} must be provided.");
+            result.Errors.Add($"Either --{ResourceNameName} or --{ResourceIdName} must be provided.");
         }
 
         // Validate time range
-        if (!DateTime.TryParse(commandResult.GetValueOrDefault(_startTimeOption), out DateTime startTime) ||
-            !DateTime.TryParse(commandResult.GetValueOrDefault(_endTimeOption), out DateTime endTime) ||
+        if (!DateTime.TryParse(commandResult.GetValueOrDefault(StartTime), out DateTime startTime) ||
+            !DateTime.TryParse(commandResult.GetValueOrDefault(EndTime), out DateTime endTime) ||
             startTime >= endTime)
         {
-            result.Errors.Add($"Invalid time range specified. Ensure that --{ApplicationInsightsOptionDefinitions.StartTimeName} is before --{ApplicationInsightsOptionDefinitions.EndTimeName} and that both are valid dates in ISO format.");
+            result.Errors.Add($"Invalid time range specified. Ensure that --{StartTimeName} is before --{EndTimeName} and that both are valid dates in ISO format.");
         }
 
         // Validate table name
-        string? table = commandResult.GetValueOrDefault(ApplicationInsightsOptionDefinitions.Table);
+        string? table = commandResult.GetValueOrDefault(Table);
 
         if (!string.Equals(table, "exceptions", StringComparison.OrdinalIgnoreCase) &&
             !string.Equals(table, "dependencies", StringComparison.OrdinalIgnoreCase) &&
@@ -93,16 +121,16 @@ public sealed class AppTraceListCommand(ILogger<AppTraceListCommand> logger) : S
     protected override AppTraceListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
 
-        options.ResourceName ??= parseResult.GetValueOrDefault<string>(ApplicationInsightsOptionDefinitions.ResourceName.Name);
-        options.ResourceId ??= parseResult.GetValueOrDefault<string>(ApplicationInsightsOptionDefinitions.ResourceId.Name);
+        options.ResourceName ??= parseResult.GetValueOrDefault(ResourceName);
+        options.ResourceId ??= parseResult.GetValueOrDefault(ResourceId);
 
-        options.Table = parseResult.GetValue<string>(ApplicationInsightsOptionDefinitions.Table.Name);
-        options.Filters = parseResult.GetValueOrDefault<string[]>(ApplicationInsightsOptionDefinitions.Filters.Name) ?? [];
+        options.Table = parseResult.GetValue(Table);
+        options.Filters = parseResult.GetValueOrDefault(Filters) ?? [];
 
-        string? startRaw = parseResult.GetValueOrDefault<string>(_startTimeOption.Name);
-        string? endRaw = parseResult.GetValueOrDefault<string>(_endTimeOption.Name);
+        string? startRaw = parseResult.GetValueOrDefault(StartTime);
+        string? endRaw = parseResult.GetValueOrDefault(EndTime);
 
         if (DateTime.TryParse(startRaw, out DateTime startUtc))
         {
