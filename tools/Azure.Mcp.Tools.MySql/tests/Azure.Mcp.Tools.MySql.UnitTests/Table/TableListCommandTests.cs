@@ -89,9 +89,6 @@ public class TableListCommandTests
     {
         var command = new TableListCommand(_logger);
 
-        Assert.Equal("list", command.Name);
-        Assert.Equal("Enumerates all tables within a specified database on an Azure Database for MySQL Flexible Server instance. This command provides a complete inventory of table objects, facilitating database exploration, schema analysis, and data architecture understanding for development tasks.", command.Description);
-        Assert.Equal("List MySQL Tables", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
     }

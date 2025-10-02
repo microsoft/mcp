@@ -17,7 +17,9 @@ param(
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
+
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
+. "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1"
 
 $mcpServerjson = "$RepoRoot/eng/dnx/.mcp/server.json"
 $nuspecSourcePath = "$RepoRoot/eng/dnx/nuspec"
@@ -51,6 +53,11 @@ try {
 		$serverProjectProperties = & "$projectPropertiesScript" -ProjectName "$serverName.csproj"
 		$platformOutputPath = "$OutputPath/nuget/$($serverDirectory.Name)/platform"
 		$wrapperOutputPath = "$OutputPath/nuget/$($serverDirectory.Name)/wrapper"
+		$packageIcon = $serverProjectProperties.PackageIcon
+		if (!$packageIcon) {
+			$packageIcon = "microsofticon.png"
+		}
+		$packageIconPath = "$RepoRoot/eng/images/$packageIcon"
 
 		New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
 		New-Item -ItemType Directory -Force -Path $wrapperOutputPath | Out-Null
@@ -94,10 +101,13 @@ try {
             -replace "__CommitSHA__", $CommitSha `
             -replace "__TargetFramework__", $sharedProjectProperties.TargetFramework |
             Set-Content -Path $wrapperToolNuspec
-        Copy-Item -Path "$nuspecSourcePath/README.md" -Destination $tempNugetWrapperDir -Force
+
+        Extract-PackageSpecificReadMe -InputReadMePath "$serverDirectory/README.md" `
+            -OutputDirectory $tempNugetWrapperDir -PackageType "nuget" -InsertPayload @{ ToolTitle = '.NET Tool' }
+			
 		Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempNugetWrapperDir -Force
 		Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempNugetWrapperDir -Force
-		Copy-Item -Path $azureIconPath -Destination $tempNugetWrapperDir -Force
+		Copy-Item -Path $packageIconPath -Destination $tempNugetWrapperDir -Force
 
 		# Build the project
 		foreach ($platformDirectory in $platformDirectories) {
@@ -109,7 +119,7 @@ try {
 			New-Item -ItemType Directory -Force -Path $platformToolDir | Out-Null
 
 			Copy-Item -Path "$platformDirectory/dist/*" -Destination $platformToolDir -Recurse -Force
-			Copy-Item -Path $azureIconPath -Destination $tempPlatformDir -Force
+			Copy-Item -Path $packageIconPath -Destination $tempPlatformDir -Force
 			Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempPlatformDir -Force
 			Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempPlatformDir -Force
 			$platformToolEntryPoint = (

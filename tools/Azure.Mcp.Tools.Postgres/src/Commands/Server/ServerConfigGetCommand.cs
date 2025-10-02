@@ -11,7 +11,7 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logger) : BaseServerCommand<ServerConfigGetOptions>(logger)
 {
     private const string CommandTitle = "Get PostgreSQL Server Configuration";
-    public override string Name => "config";
+    public override string Name => "get";
     public override string Description =>
         "Retrieve the configuration of a PostgreSQL server.";
 

@@ -8,6 +8,22 @@ public static class ParseResultExtensions
     public static bool TryGetValue<T>(this ParseResult parseResult, Option<T> option, out T? value)
         => parseResult.CommandResult.TryGetValue(option, out value);
 
+    public static bool TryGetValue<T>(this ParseResult parseResult, string optionName, out T? value)
+    {
+        // Find the option by name in the command
+        var command = parseResult.CommandResult.Command;
+        var option = command.Options.OfType<Option<T>>()
+            .FirstOrDefault(o => o.Name == optionName || o.Aliases.Contains(optionName));
+
+        if (option != null)
+        {
+            return parseResult.CommandResult.TryGetValue(option, out value);
+        }
+
+        value = default;
+        return false;
+    }
+
     public static T? GetValueOrDefault<T>(this ParseResult parseResult, Option<T> option)
         => parseResult.CommandResult.GetValueOrDefault(option);
 

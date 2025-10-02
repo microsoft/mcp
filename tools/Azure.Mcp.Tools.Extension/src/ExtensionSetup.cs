@@ -23,7 +23,6 @@ public sealed class ExtensionSetup : IAreaSetup
 
         // Azure CLI and Azure Developer CLI tools are hidden
         // extension.AddCommand("az", new AzCommand(loggerFactory.CreateLogger<AzCommand>()));
-        // extension.AddCommand("azd", new AzdCommand(loggerFactory.CreateLogger<AzdCommand>()));
         var azqr = serviceProvider.GetRequiredService<AzqrCommand>();
         extension.AddCommand(azqr.Name, azqr);
 
