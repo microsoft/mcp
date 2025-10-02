@@ -42,6 +42,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `Azure.ResourceManager.Grafana` [[628](https://github.com/microsoft/mcp/pull/622)]
 
 - Updated the description of Redis commands to increase selection accuracy by LLMs: [[#655](https://github.com/microsoft/mcp/pull/655)]
+- Updated the description of Storage commands to decrease ambiguity and increase selection accuracy by LLMs: [[#650](https://github.com/microsoft/mcp/pull/650)]
 
 ## 0.8.3 (2025-09-30)
 
