@@ -362,7 +362,7 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **30+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **40+ Azure service areas**:
 
 - 🧮 **Azure AI Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
