@@ -21,11 +21,13 @@
 
     <!-- dnx/nuget settings -->
     <DnxPackageId>Microsoft.Fabric.Mcp</DnxPackageId>
-    <DnxPackageTags>fabric,mcp</DnxPackageTags>
     <DnxToolCommandName>$(CliName)</DnxToolCommandName>
+    <DnxPackageTags>fabric,mcp</DnxPackageTags>
 
     <!-- vsix settings -->
-    <VsixPackagePrefix></VsixPackagePrefix>
+    <VsixPackagePrefix>vscode-fabric-mcp</VsixPackagePrefix>
+    <VsixDescription></VsixDescription>
+    <VsixPublisher>ms-azuretools</VsixPublisher>
   </PropertyGroup>
 
   <PropertyGroup>

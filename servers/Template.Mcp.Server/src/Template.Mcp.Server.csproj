@@ -7,11 +7,17 @@
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Template.Mcp.Server#readme</ReadmeUrl>
     <ReadmePath>$(RepoRoot)/servers/Template.Mcp.Server/README.md</ReadmePath>
 
+    <!--
+    Defaults to the microsoft logo if not specified.
+    <PackageIcon>$(RepoRoot)/servers/Fabric.Mcp.Server/fabric_icon.png</PackageIcon>
+    -->
+
     <!-- npm settings -->
     <NpmPackageName>@azure/mcp-template</NpmPackageName>
     <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>
 
     <!-- docker settings -->
+    <DockerImageName></DockerImageName>
 
     <!-- dnx/nuget settings -->
     <DnxPackageId>Microsoft.Template.Mcp</DnxPackageId>
@@ -19,7 +25,9 @@
     <DnxPackageTags>template,mcp</DnxPackageTags>
 
     <!-- vsix settings -->
-    <VsixPackagePrefix></VsixPackagePrefix>
+    <VsixPackagePrefix>vscode-template-mcp</VsixPackagePrefix>
+    <VsixDescription></VsixDescription>
+    <VsixPublisher>ms-azuretools</VsixPublisher>
   </PropertyGroup>
 
   <PropertyGroup>
