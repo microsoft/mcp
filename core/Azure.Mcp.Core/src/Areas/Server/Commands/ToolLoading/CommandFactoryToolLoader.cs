@@ -62,7 +62,7 @@ public sealed class CommandFactoryToolLoader(
     public ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
         var visibleCommands = CommandFactory.GetVisibleCommands(_toolCommands);
-        
+
         // Filter by specific tools if provided
         if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
         {
@@ -104,7 +104,7 @@ public sealed class CommandFactoryToolLoader(
         }
 
         var toolName = request.Params.Name;
-        
+
         // Check if tool filtering is enabled and validate the requested tool
         if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
         {
@@ -122,7 +122,7 @@ public sealed class CommandFactoryToolLoader(
                 };
             }
         }
-        
+
         var command = _toolCommands.GetValueOrDefault(toolName);
         if (command == null)
         {

@@ -105,7 +105,7 @@ public class CommandFactoryToolLoaderTests
         // Arrange
         var (_, commandFactory) = CreateToolLoader();
         var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
-        
+
         // Skip test if no commands are available
         if (!availableCommands.Any())
         {
@@ -151,7 +151,7 @@ public class CommandFactoryToolLoaderTests
         // Arrange
         var (_, commandFactory) = CreateToolLoader();
         var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
-        
+
         // Skip test if no commands are available
         if (!availableCommands.Any())
         {
@@ -759,7 +759,7 @@ public class CommandFactoryToolLoaderTests
         // Arrange
         var (_, commandFactory) = CreateToolLoader();
         var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
-        
+
         // Skip test if no commands are available
         if (!availableCommands.Any())
         {
@@ -801,7 +801,7 @@ public class CommandFactoryToolLoaderTests
         // Arrange
         var (_, commandFactory) = CreateToolLoader();
         var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
-        
+
         // Skip test if fewer than 2 commands are available
         if (availableCommands.Count < 2)
         {
@@ -841,7 +841,7 @@ public class CommandFactoryToolLoaderTests
         // Arrange
         var (_, commandFactory) = CreateToolLoader();
         var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
-        
+
         // Skip test if no commands are available
         if (!availableCommands.Any())
         {
@@ -903,7 +903,7 @@ public class CommandFactoryToolLoaderTests
         // Arrange
         var (toolLoader, commandFactory) = CreateToolLoader();
         var allCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands);
-        
+
         // Skip test if we don't have at least 2 commands
         if (allCommands.Count() < 2)
         {
