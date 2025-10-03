@@ -18,6 +18,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_foundry_models_deployments_list | Show me all AI Foundry model deployments |
 | azmcp_foundry_models_list | List all AI Foundry models |
 | azmcp_foundry_models_list | Show me the available AI Foundry models |
+| azmcp_foundry_openai_create-completion | Create a completion with the prompt "What is Azure?"|
 
 ## Azure AI Search
 
@@ -54,12 +55,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_appconfig_account_list | Show me the App Configuration stores in my subscription |
 | azmcp_appconfig_account_list | Show me my App Configuration stores |
 | azmcp_appconfig_kv_delete | Delete the key <key_name> in App Configuration store <app_config_store_name> |
-| azmcp_appconfig_kv_list | List all key-value settings in App Configuration store <app_config_store_name> |
-| azmcp_appconfig_kv_list | Show me the key-value settings in App Configuration store <app_config_store_name> |
+| azmcp_appconfig_kv_get | List all key-value settings in App Configuration store <app_config_store_name> |
+| azmcp_appconfig_kv_get | Show me the key-value settings in App Configuration store <app_config_store_name> |
+| azmcp_appconfig_kv_get | List all key-value settings with key name starting with 'prod-' in App Configuration store <app_config_store_name> |
+| azmcp_appconfig_kv_get | Show the content for the key <key_name> in App Configuration store <app_config_store_name> |
 | azmcp_appconfig_kv_lock_set | Lock the key <key_name> in App Configuration store <app_config_store_name> |
 | azmcp_appconfig_kv_lock_set | Unlock the key <key_name> in App Configuration store <app_config_store_name> |
 | azmcp_appconfig_kv_set | Set the key <key_name> in App Configuration store <app_config_store_name> to \<value> |
-| azmcp_appconfig_kv_show | Show the content for the key <key_name> in App Configuration store <app_config_store_name> |
 
 ## Azure App Lens
 
@@ -182,6 +184,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_eventgrid_events_publish | Publish an event to Event Grid topic <topic_name> using <event_schema> with the following data <event_data> |
+| azmcp_eventgrid_events_publish | Publish event to my Event Grid topic <topic_name> with the following events <event_data> |
+| azmcp_eventgrid_events_publish | Send an event to Event Grid topic <topic_name> in resource group <resource_group_name> with <event_data> |
 | azmcp_eventgrid_topic_list | List all Event Grid topics in my subscription |
 | azmcp_eventgrid_topic_list | Show me the Event Grid topics in my subscription |
 | azmcp_eventgrid_topic_list | List all Event Grid topics in subscription <subscription> |
@@ -193,9 +198,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_eventgrid_subscription_list | List all Event Grid subscriptions in subscription <subscription> |
 | azmcp_eventgrid_subscription_list | Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription> |
 | azmcp_eventgrid_subscription_list | List Event Grid subscriptions for subscription <subscription> in location <location> |
-| azmcp_eventgrid_events_publish | Publish an event to Event Grid topic <topic_name> using <event_schema> with the following data <event_data> |
-| azmcp_eventgrid_events_publish | Publish event to my Event Grid topic <topic_name> with the following events <event_data> |
-| azmcp_eventgrid_events_publish | Send an event to Event Grid topic <topic_name> in resource group <resource_group_name> with <event_data> |
+
+## Azure Event Hubs
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_eventhubs_namespace_get | List all Event Hubs namespaces in my subscription |
+| azmcp_eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> |
 
 ## Azure Function App
 
@@ -222,22 +231,58 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_keyvault_admin_settings_get | Show me the account settings for managed HSM keyvault <key_vault_account_name> |
 | azmcp_keyvault_admin_settings_get | What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name> |
 | azmcp_keyvault_certificate_create | Create a new certificate called <certificate_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_create | Generate a certificate named <certificate_name> in key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_create | Request creation of certificate <certificate_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_create | Provision a new key vault certificate <certificate_name> in vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_create | Issue a certificate <certificate_name> in key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_get | Show me the certificate <certificate_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_get | Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_get | Get the certificate <certificate_name> from vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_get | Display the certificate details for <certificate_name> in vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_get | Retrieve certificate metadata for <certificate_name> in vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_import | Import the certificate in file <file_path> into the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_import | Import a certificate into the key vault <key_vault_account_name> using the name <certificate_name> |
+| azmcp_keyvault_certificate_import | Upload certificate file <file_path> to key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_import | Load certificate <certificate_name> from file <file_path> into vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_import | Add existing certificate file <file_path> to the key vault <key_vault_account_name> with name <certificate_name> |
 | azmcp_keyvault_certificate_list | List all certificates in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_list | Show me the certificates in the key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_list | What certificates are in the key vault <key_vault_account_name>? |
+| azmcp_keyvault_certificate_list | List certificate names in vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_list | Enumerate certificates in key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_list | Show certificate names in the key vault <key_vault_account_name> |
 | azmcp_keyvault_key_create | Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name> |
+| azmcp_keyvault_key_create | Generate a key <key_name> with type <key_type> in vault <key_vault_account_name> |
+| azmcp_keyvault_key_create | Create an oct key in the vault <key_vault_account_name> |
+| azmcp_keyvault_key_create | Create an RSA key in the vault <key_vault_account_name> with name <key_name> |
+| azmcp_keyvault_key_create | Create an EC key with name <key_name> in the vault <key_vault_account_name> |
 | azmcp_keyvault_key_get | Show me the key <key_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_key_get | Show me the details of the key <key_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_key_get | Get the key <key_name> from vault <key_vault_account_name> |
+| azmcp_keyvault_key_get | Display the key details for <key_name> in vault <key_vault_account_name> |
+| azmcp_keyvault_key_get | Retrieve key metadata for <key_name> in vault <key_vault_account_name> |
 | azmcp_keyvault_key_list | List all keys in the key vault <key_vault_account_name> |
 | azmcp_keyvault_key_list | Show me the keys in the key vault <key_vault_account_name> |
+| azmcp_keyvault_key_list | What keys are in the key vault <key_vault_account_name>? |
+| azmcp_keyvault_key_list | List key names in vault <key_vault_account_name> |
+| azmcp_keyvault_key_list | Enumerate keys in key vault <key_vault_account_name> |
+| azmcp_keyvault_key_list | Show key names in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_create | Create a new secret called <secret_name> with value <secret_value> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_create | Set a secret named <secret_name> with value <secret_value> in key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_create | Store secret <secret_name> value <secret_value> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_create | Add a new version of secret <secret_name> with value <secret_value> in vault <key_vault_account_name> |
+| azmcp_keyvault_secret_create | Update secret <secret_name> to value <secret_value> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_get | Show me the secret <secret_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_get | Show me the details of the secret <secret_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_get | Get the secret <secret_name> from vault <key_vault_account_name> |
+| azmcp_keyvault_secret_get | Display the secret details for <secret_name> in vault <key_vault_account_name> |
+| azmcp_keyvault_secret_get | Retrieve secret metadata for <secret_name> in vault <key_vault_account_name> |
 | azmcp_keyvault_secret_list | List all secrets in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_list | Show me the secrets in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_list | What secrets are in the key vault <key_vault_account_name>? |
+| azmcp_keyvault_secret_list | List secrets names in vault <key_vault_account_name> |
+| azmcp_keyvault_secret_list | Enumerate secrets in key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_list | Show secrets names in the key vault <key_vault_account_name> |
 
 ## Azure Kubernetes Service (AKS)
 
@@ -297,16 +342,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_bestpractices_get | Get the latest Azure code generation best practices |
-| azmcp_bestpractices_get | Get the latest Azure deployment best practices |
-| azmcp_bestpractices_get | Get the latest Azure best practices |
-| azmcp_bestpractices_get | Get the latest Azure Functions code generation best practices |
-| azmcp_bestpractices_get | Get the latest Azure Functions deployment best practices|
-| azmcp_bestpractices_get | Get the latest Azure Functions best practices |
-| azmcp_bestpractices_get | Get the latest Azure Static Web Apps best practices |
-| azmcp_bestpractices_get | What are azure function best practices? |
-| azmcp_bestpractices_get | Create the plan for creating a simple HTTP-triggered function app in javascript that returns a random compliment from a predefined list in a JSON response. And deploy it to azure eventually. But don't create any code until I confirm. |
-| azmcp_bestpractices_get | Create the plan for creating a to-do list app. And deploy it to azure as a container app. But don't create any code until I confirm. |
+| azmcp_get_bestpractices_get | Get the latest Azure code generation best practices |
+| azmcp_get_bestpractices_get | Get the latest Azure deployment best practices |
+| azmcp_get_bestpractices_get | Get the latest Azure best practices |
+| azmcp_get_bestpractices_get | Get the latest Azure Functions code generation best practices |
+| azmcp_get_bestpractices_get | Get the latest Azure Functions deployment best practices|
+| azmcp_get_bestpractices_get | Get the latest Azure Functions best practices |
+| azmcp_get_bestpractices_get | Get the latest Azure Static Web Apps best practices |
+| azmcp_get_bestpractices_get | What are azure function best practices? |
 
 ## Azure Monitor
 
@@ -342,7 +385,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 ## Azure Quick Review CLI
 
 | Tool Name | Test Prompt |
-| --------- | ----------- |
+|:----------|:----------|
 | azmcp_extension_azqr | Check my Azure subscription for any compliance issues or recommendations |
 | azmcp_extension_azqr | Provide compliance recommendations for my current Azure subscription |
 | azmcp_extension_azqr | Scan my Azure subscription for compliance recommendations |

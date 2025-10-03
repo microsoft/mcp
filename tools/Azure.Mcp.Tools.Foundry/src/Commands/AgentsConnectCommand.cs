@@ -17,8 +17,7 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
 
     public override string Description =>
         """
-        Connect to a specific Azure AI Agent and run a query.
-        Returns the agent's response along with thread and run IDs for potential evaluation.
+        Query an Azure AI Foundry agent and get the response as is (no query and evaluate). Use for one-off interaction or to capture run/thread IDs before calling evaluation tools. Do not use this tool for combined answer-plus-score workflows — instead, use agents_query-and-evaluate or agents_evaluate.
         """;
 
     public override ToolMetadata Metadata => new()

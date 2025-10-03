@@ -1,5 +1,106 @@
 # Release History
 
+## 0.8.4 (2025-10-02)
+
+### Added
+
+- Added support to return metadata when using the `azmcp_tool_list` command. [[#564](https://github.com/microsoft/mcp/issues/564)]
+- Added support for returning a list of tool namespaces instead of individual tools when using the `azmcp_tool_list` command with the `--namespaces` option. [[#496](https://github.com/microsoft/mcp/issues/496)]
+
+### Changed
+
+- Merged `azmcp_appconfig_kv_list` and `azmcp_appconfig_kv_show` into `azmcp_appconfig_kv_get` which can handle both listing and filtering key-values and getting a specific key-value. [[#505](https://github.com/microsoft/mcp/pull/505)]
+- Refactored tool implementation to use Azure Resource Graph queries instead of direct ARM API calls:
+  - Grafana [[#628](https://github.com/microsoft/mcp/pull/628)]
+- Updated the description of the following commands to increase selection accuracy by LLMs:
+  - App Deployment: `azmcp_deploy_app_logs_get` [[#640](https://github.com/microsoft/mcp/pull/640)]
+  - Kusto: [[#666](https://github.com/microsoft/mcp/pull/666)]
+    - `azmcp_kusto_cluster_get`
+    - `azmcp_kusto_cluster_list`
+    - `azmcp_kusto_database_list`
+    - `azmcp_kusto_query`
+    - `azmcp_kusto_sample`
+    - `azmcp_kusto_table_list`
+    - `azmcp_kusto_table_schema`
+  - Redis: [[#655](https://github.com/microsoft/mcp/pull/655)]
+    - `azmcp_redis_cache_list`
+    - `azmcp_redis_cluster_list`
+  - Service Bus: `azmcp_servicebus_topic_details` [[#642](https://github.com/microsoft/mcp/pull/642)]
+
+### Fixed
+
+- Fixed the name of the Key Vault Managed HSM settings get command from `azmcp_keyvault_admin_get` to `azmcp_keyvault_admin_settings_get`. [[#643](https://github.com/microsoft/mcp/issues/643)]
+- Removed redundant DI instantiation of MCP server providers, as these are expected to be instantiated by the MCP server discovery mechanism. [[#644](https://github.com/microsoft/mcp/pull/644)]
+- Fixed App Lens having a runtime error for reflection-based serialization when using native AoT MCP build. [[#639](https://github.com/microsoft/mcp/pull/639)]
+- Added validation for the PostgreSQL database query command `azmcp_postgres_database_query`. [[#518](https://github.com/microsoft/mcp/pull/518)]
+
+## 0.8.3 (2025-09-30)
+
+### Added
+
+- Added support for Azure Developer CLI (azd) MCP tools when azd CLI is installed locally - [[#566](https://github.com/microsoft/mcp/issues/566)]
+- Added support to proxy MCP capabilities when child servers leverage sampling or elicitation. [[#581](https://github.com/microsoft/mcp/pull/581)]
+- Added support for publishing custom events to Event Grid topics via the command `azmcp_eventgrid_events_publish`. [[#514](https://github.com/microsoft/mcp/pull/514)]
+- Added support for generating text completions using deployed Azure OpenAI models in AI Foundry via the command `azmcp_foundry_openai_create-completion`. [[#54](https://github.com/microsoft/mcp/pull/54)]
+- Added support for speech recognition from an audio file with Azure AI Services Speech via the command `azmcp_speech_stt_recognize`. [[#436](https://github.com/microsoft/mcp/pull/436)]
+- Added support for getting the details of an Azure Event Hubs namespace via the command `azmcp_eventhubs_namespace_get`. [[#105](https://github.com/microsoft/mcp/pull/105)]
+
+### Changed
+
+- Refactored Authorization implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[#607](https://github.com/microsoft/mcp/pull/607)]
+- Refactored AppConfig implementation to use Azure Resource Graph queries instead of direct ARM API calls. [[#606](https://github.com/microsoft/mcp/pull/606)]
+- Fixed the names of the following MySQL and Postgres commands: [[#614](https://github.com/microsoft/mcp/pull/614)]
+  - `azmcp_mysql_server_config_config`    → `azmcp_mysql_server_config_get`
+  - `azmcp_mysql_server_param_param`      → `azmcp_mysql_server_param_get`
+  - `azmcp_mysql_table_schema_schema`     → `azmcp_mysql_table_schema_get`
+  - `azmcp_postgres_server_config_config` → `azmcp_postgres_server_config_get`
+  - `azmcp_postgres_server_param_param`   → `azmcp_postgres_server_param_get`
+  - `azmcp_postgres_table_schema_schema`  → `azmcp_postgres_table_schema_get`
+- Updated the description of the following commands to increase selection accuracy by LLMs:
+  - AI Foundry: [[#599](https://github.com/microsoft/mcp/pull/599)]
+    - `azmcp_foundry_agents_connect`
+    - `azmcp_foundry_models_deploy`
+    - `azmcp_foundry_models_deployments_list`
+  - App Lens: `azmcp_applens_resource_diagnose` [[#556](https://github.com/microsoft/mcp/pull/556)]
+  - Cloud Architect: `azmcp_cloudarchitect_design` [[#587](https://github.com/microsoft/mcp/pull/587)]
+  - Cosmos DB: `azmcp_cosmos_database_container_item_query` [[#625](https://github.com/microsoft/mcp/pull/625)]
+  - Event Grid: [[#552](https://github.com/microsoft/mcp/pull/552)] 
+    - `azmcp_eventgrid_subscription_list`
+    - `azmcp_eventgrid_topic_list`
+  - Key Vault: [[#608](https://github.com/microsoft/mcp/pull/608)]
+    - `azmcp_keyvault_certificate_create`
+    - `azmcp_keyvault_certificate_import`
+    - `azmcp_keyvault_certificate_get`
+    - `azmcp_keyvault_certificate_list`
+    - `azmcp_keyvault_key_create`
+    - `azmcp_keyvault_key_get`
+    - `azmcp_keyvault_key_list`
+    - `azmcp_keyvault_secret_create`
+    - `azmcp_keyvault_secret_get`
+    - `azmcp_keyvault_secret_list`
+  - MySQL: [[#614](https://github.com/microsoft/mcp/pull/614)]
+    - `azmcp_mysql_server_param_set`
+  - Postgres: [[#562](https://github.com/microsoft/mcp/pull/562)]
+    - `azmcp_postgres_database_query`
+    - `azmcp_postgres_server_param_set`
+  - Resource Health: [[#588](https://github.com/microsoft/mcp/pull/588)]
+    - `azmcp_resourcehealth_availability-status_get`
+    - `azmcp_resourcehealth_service-health-events_list`
+  - SQL: [[#594](https://github.com/microsoft/mcp/pull/594)]
+    - `azmcp_sql_db_delete`
+    - `azmcp_sql_db_update`
+    - `azmcp_sql_server_delete`
+  - Subscriptions: `azmcp_subscription_list` [[#559](https://github.com/microsoft/mcp/pull/559)]
+
+### Fixed
+
+- Fixed an issue with the help option (`--help`) and enabled it across all commands and command groups. [[#583](https://github.com/microsoft/mcp/pull/583)]
+- Fixed the following issues with Kusto commands:
+  - `azmcp_kusto_cluster_list` and `azmcp_kusto_cluster_get` now accept the correct parameters expected by the service. [[#589](https://github.com/microsoft/mcp/issues/589)]
+  - `azmcp_kusto_table_schema` now returns the correct table schema. [[#530](https://github.com/microsoft/mcp/issues/530)]
+  - `azmcp_kusto_query` does not fail when the subscription id in the input query is enclosed in double quotes anymore. [[#152](https://github.com/microsoft/mcp/issues/152)]
+  - All commands now return enough details in error messages when input parameters are invalid or missing. [[#575](https://github.com/microsoft/mcp/issues/575)]
+
 ## 0.8.2 (2025-09-25)
 
 ### Fixed
@@ -18,7 +119,7 @@
   - `azmcp_foundry_agents_evaluate`: Evaluate a response from an agent by passing query and response inline
   - `azmcp_foundry_agents_query_and_evaluate`: Connect to an agent in an AI Foundry project, query it, and evaluate the response in one step
 - Enhanced AKS managed cluster information with comprehensive properties. [[#490](https://github.com/microsoft/mcp/pull/490)]
-- Added support retrieving Key Vault Managed HSM account settings via the command `azmcp-keyvault-admin-settings-get`. [[358](https://github.com/microsoft/mcp/pull/358)]
+- Added support retrieving Key Vault Managed HSM account settings via the command `azmcp-keyvault-admin-settings-get`. [[#358](https://github.com/microsoft/mcp/pull/358)]
 
 ### Changed
 
@@ -282,7 +383,7 @@
   - `azmcp-virtualdesktop-sessionhost-list` - List all session hosts in a host pool
   - `azmcp-virtualdesktop-sessionhost-usersession-list` - List all user sessions on a specific session host
 - Added support for creating and publishing DevDeviceId in telemetry. [[#810](https://github.com/Azure/azure-mcp/pull/810/)]
-- Added caching for Cosmos DB databases and containers. [[813](https://github.com/Azure/azure-mcp/pull/813)]
+- Added caching for Cosmos DB databases and containers. [[#813](https://github.com/Azure/azure-mcp/pull/813)]
 
 ### Changed
 
