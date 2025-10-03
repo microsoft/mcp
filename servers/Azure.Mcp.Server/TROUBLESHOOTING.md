@@ -17,7 +17,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
     - [VS Code only shows a subset of tools available](#vs-code-only-shows-a-subset-of-tools-available)
     - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
     - [VS Code Cache Problems](#vs-code-cache-problems)
-    - [Elicitation Not Work In VS Code](#elicitation-not-work-in-vs-code)
+    - [MCP Tools That Require Additional Input Fail Silently](#mcp-tools-that-require-additional-input-fail-silently)
   - [Remote MCP Server](#remote-mcp-server)
       - [SSE Transport](#sse-transport)
       - [Streamable HTTP Transport](#streamable-http-transport)
