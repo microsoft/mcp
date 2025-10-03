@@ -17,6 +17,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
     - [VS Code only shows a subset of tools available](#vs-code-only-shows-a-subset-of-tools-available)
     - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
     - [VS Code Cache Problems](#vs-code-cache-problems)
+    - [Why Doesn't Elicitation Work?](#why-doesnt-elicitation-work)
   - [Remote MCP Server](#remote-mcp-server)
       - [SSE Transport](#sse-transport)
       - [Streamable HTTP Transport](#streamable-http-transport)
@@ -211,6 +212,33 @@ If the issue persists, you can take a more aggressive approach by clearing the f
 Clear Node Modules Cache
 
 - npm cache clean --force
+
+### Why Doesn't Elicitation Work?
+
+**Elicitation** feature is supported in VS Code that allows MCP tools to request additional information from users through interactive prompts during tool execution. If tools requiring elicitation fail with an error indicating that the client does not support elicitation, updating VS Code may resolve the issue.
+
+#### Requirements
+Elicitation requires **VS Code version 1.102 or newer** (released June 2025 or later).
+
+#### Symptoms
+- MCP tools that require additional input fail silently
+- No interactive prompts appear when tools need more information
+- Tools return errors about client does not support elicitation
+
+#### Solution
+Update VS Code to version 1.102 or newer:
+
+1. Open VS Code
+2. Go to **Help** > **Check for Updates**
+3. Install the latest version if available
+4. Restart VS Code after updating
+
+To verify your VS Code version:
+- Go to **Help** > **About** (or **Code** > **About Visual Studio Code** on macOS)
+- Check that the version number is 1.102.0 or higher
+
+> [!NOTE]
+> If you're using VS Code Insiders, elicitation support is included in versions from June 2025 onwards.
 
 ## Authentication
 
