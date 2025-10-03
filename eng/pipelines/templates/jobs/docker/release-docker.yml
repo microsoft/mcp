@@ -43,21 +43,27 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        $buildInfo = Get-Content -Raw -Path "$(Pipeline.Workspace)/build_info/buildInfo.json" | ConvertFrom-Json
-        $serverInfo = $buildInfo.Servers | Where-Object { $_.Name -eq $env:SERVER_NAME } | Select-Object -First 1
+        $buildInfo = Get-Content -Raw -Path "$(Pipeline.Workspace)/build_info/build_info.json" | ConvertFrom-Json
+        $serverInfo = $buildInfo.servers | Where-Object { $_.Name -eq $env:SERVER_NAME } | Select-Object -First 1
 
         if (-not $serverInfo) {
             Write-Error "Server with name '$env:SERVER_NAME' not found in buildInfo.json"
             exit 1
         }
 
-        $imageName = $serverInfo.DockerImageName
+        $imageName = $serverInfo.dockerImageName
         Write-Host "Setting variable DockerImageName to $imageName"
         Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$imageName"
 
-        $version = $serverInfo.Version
+        $version = $serverInfo.version
         Write-Host "Setting variable DockerImageVersion to $version"
         Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version"
+
+        $cliName = $serverInfo.cliName
+        $extension = $serverInfo.extension
+        $executableName = "$cliName$extension"
+        Write-Host "Setting variable DockerExecutableName to $executableName"
+        Write-Host "##vso[task.setvariable variable=DockerExecutableName]$executableName"
     env:
       SERVER_NAME: ${{ parameters.ServerName }}
 
@@ -74,9 +80,10 @@ jobs:
   - task: 1ES.BuildContainerImage@1
     displayName: Build Docker Image
     inputs:
-      path: '$(Pipeline.Workspace)/docker_staged'
+      path: '$(Pipeline.Workspace)/docker_staged/${{ parameters.ServerName }}/linux-x64'
       image: image:tag
-      buildArguments: |
-        --build-arg PUBLISH_DIR="${{ parameters.ServerName }}/linux-x64/dist"
+      buildArguments: >
+        --build-arg PUBLISH_DIR="dist"
+        --build-arg EXECUTABLE_NAME="$(DockerExecutableName)"
       enableNetwork: true
       useBuildKit: true

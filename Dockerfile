@@ -18,6 +18,8 @@ WORKDIR /server
 # List the contents of the current directory
 RUN ls -la
 
+ENV EXECUTABLE_NAME=${EXECUTABLE_NAME}
+
 RUN if [ ! -f "$EXECUTABLE_NAME" ]; then \
     echo "ERROR: $EXECUTABLE_NAME executable does not exist" && exit 1; \
     fi

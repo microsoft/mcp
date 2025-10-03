@@ -67,64 +67,45 @@ if($exitCode -ne 0) {
 
 function ExportServerJson {
     param(
-        [ValidateNotNullOrWhiteSpace()]
-        [string] $OutputPath,
-        [ValidateNotNullOrWhiteSpace()]
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $Description,
-        [ValidateNotNullOrWhiteSpace()]
-        [string] $ServerName,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $CommandName,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $PackageId,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $Version,
-        [ValidateNotNullOrWhiteSpace()]
-        [string] $RepositoryUrl
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $RepositoryUrl,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $OutputPath
     )
 
-    if (!$OutputPath) {
-        throw "Output path is required for ExportServerJson"
-    }
-
-    if (!$Description) {
-        throw "Description is required for ExportServerJson"
-    }
-
-    if (!$ServerName) {
-        throw "Server name is required for ExportServerJson"
-    }
-
-    if (!$PackageId) {
-        throw "DNX Package ID is required for ExportServerJson"
-    }
-
-    if (!$Version) {
-        throw "Version is required for ExportServerJson"
-    }
-
-    if (!$RepositoryUrl) {
-        throw "Repository URL is required for ExportServerJson"
-    }
-
-    $output = @{
+    $output = [ordered]@{
         '$schema' = "https://modelcontextprotocol.io/schemas/draft/2025-07-09/server.json"
         description = $Description
-        name = "io.github.microsoft/mcp/$ServerName"
+        name = "io.github.microsoft/mcp/$CommandName"
         packages = @(
-            @{
+            [ordered]@{
                 registry_name = "nuget"
                 name = $PackageId
                 version = $Version
                 package_arguments = @(
-                    @{ type = "positional"; value = "server"; value_hint = "server" },
-                    @{ type = "positional"; value = "start"; value_hint = "start" }
+                    [ordered]@{ type = "positional"; value = "server"; value_hint = "server" },
+                    [ordered]@{ type = "positional"; value = "start"; value_hint = "start" }
                 )
             }
         )
-        repository = @{
+        repository = [ordered]@{
             url = $RepositoryUrl
             source = "github"
         }
-        version_detail = @{
+        version_detail = [ordered]@{
             version = $Version
         }
     }
@@ -138,13 +119,17 @@ function ExportServerJson {
 
 function ExportWrapperToolSettings {
     param(
-        [ValidateNotNullOrWhiteSpace()]
-        [string] $OutputPath,
-        [ValidateNotNullOrWhiteSpace()]
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $CommandName,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $RuntimeIdentifier,
-        [hashtable] $PlatformReferences
+
+        [parameter(Mandatory)]
+        [hashtable] $PlatformReferences,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $OutputPath
     )
 
     $xml = New-Object System.Xml.XmlDocument
@@ -175,26 +160,41 @@ function ExportWrapperToolSettings {
 
 function ExportWrapperPackageNuspec {
     param(
-        [ValidateNotNullOrWhiteSpace()]
-        [string] $OutputPath,
-        [ValidateNotNullOrWhiteSpace()]
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $PackageId,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $ServerName,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $Version,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $Description,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string[]] $Tags,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $RepositoryUrl,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $ReleaseTag,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $Branch,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $CommitSha,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $SharedTargetFramework,
-        [ValidateNotNullOrWhiteSpace()]
-        [string] $PackageIcon
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $PackageIcon,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $OutputPath
     )
 
     $xml = New-Object System.Xml.XmlDocument
@@ -273,12 +273,14 @@ function ExportWrapperPackageNuspec {
 
 function ExportPlatformToolSettings {
     param(
-        [ValidateNotNullOrWhiteSpace()]
-        [string] $OutputPath,
-        [ValidateNotNullOrWhiteSpace()]
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $CommandName,
-        [ValidateNotNullOrWhiteSpace()]
-        [string] $EntryPoint
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $EntryPoint,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $OutputPath
     )
 
     $xml = New-Object System.Xml.XmlDocument
@@ -302,30 +304,41 @@ function ExportPlatformToolSettings {
 
 function ExportPlatformPackageNuspec {
     param(
-        [ValidateNotNullOrWhiteSpace()]
-        [string] $OutputPath,
-        [ValidateNotNullOrWhiteSpace()]
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $PackageId,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $ServerName,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $Version,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $Description,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string[]] $Tags,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $RepositoryUrl,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $ReleaseTag,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $Branch,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $CommitSha,
-        [ValidateNotNullOrWhiteSpace()]
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
         [string] $SharedTargetFramework,
-        [ValidateNotNullOrWhiteSpace()]
-        [string] $PackageIcon
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $PackageIcon,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $OutputPath
     )
 
     $xml = New-Object System.Xml.XmlDocument
@@ -445,8 +458,6 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempDirectory -Force
         Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempDirectory -Force
 
-        $platformToolEntryPoint = "$($server.cliName)$($platform.extension)"
-
         ExportPlatformPackageNuspec `
             -PackageId $platformPackageId `
             -ServerName $server.name `
@@ -458,13 +469,12 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
             -Branch $buildInfo.branch `
             -CommitSha $buildInfo.commitSha `
             -SharedTargetFramework $sharedTargetFramework `
-            -ToolEntryPoint $platformToolEntryPoint `
             -PackageIcon $iconFileName `
             -OutputPath $platformNuspecFile
 
         ExportPlatformToolSettings `
             -CommandName $server.cliName `
-            -EntryPoint $platformToolEntryPoint `
+            -EntryPoint "$($server.cliName)$($platform.extension)" `
             -OutputPath "$platformToolDir/DotnetToolSettings.xml"
 
         $platformRefs[$platformOsArch] = $platformPackageId
@@ -498,7 +508,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
     # Export ServerJson
     ExportServerJson `
         -Description $description `
-        -ServerName $server.name `
+        -CommandName $server.cliName `
         -PackageId $packageId `
         -Version $server.version `
         -RepositoryUrl $buildInfo.repositoryUrl `
@@ -508,6 +518,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
     ExportWrapperPackageNuspec `
         -PackageId $packageId `
         -Version $server.version `
+        -ServerName $server.name `
         -Description $description `
         -Tags $server.dnxPackageTags `
         -RepositoryUrl $buildInfo.repositoryUrl `
@@ -526,9 +537,9 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
 
     Extract-PackageSpecificReadMe `
         -InputReadMePath "$RepoRoot/$($server.readmePath)" `
-        -OutputDirectory $tempFolder `
         -PackageType "nuget" `
-        -InsertPayload @{ ToolTitle = '.NET Tool' }
+        -InsertPayload @{ ToolTitle = '.NET Tool' } `
+        -OutputDirectory $tempFolder
 
     LogInfo "Creating Nuget Package from $wrapperToolNuspec"
     Invoke-LoggedCommand "nuget pack '$wrapperToolNuspec' -OutputDirectory '$wrapperOutputPath'" -GroupOutput

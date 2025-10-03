@@ -90,7 +90,10 @@ try {
         Write-Host "Copying server icon from $($server.packageIcon) to $tempPath/resources/package-icon.png"
         Copy-Item -Path "$RepoRoot/$($server.packageIcon)" -Destination "$tempPath/resources/package-icon.png" -Force
 
-        foreach ($platform in $server.platforms) {
+        # Skip native platforms for now
+        $filteredPlatforms = $server.platforms | Where-Object { -not $_.native }
+
+        foreach ($platform in $filteredPlatforms) {
             $platformDirectory = "$ArtifactsPath/$($platform.artifactPath)"
 
             if(!(Test-Path $platformDirectory)) {

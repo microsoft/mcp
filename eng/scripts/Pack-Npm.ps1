@@ -234,9 +234,11 @@ Push-Location $RepoRoot
 try {
     foreach($server in $buildInfo.servers) {
         BuildServerPackages $server -native $false
-        if($server.platforms | Where-Object { $_.native }) {
-            BuildServerPackages $server -native $true
-        }
+
+        # Until we want to ship native packages, we won't build them.
+        # if($server.platforms | Where-Object { $_.native }) {
+        #     BuildServerPackages $server -native $true
+        # }
     }
 
     Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
