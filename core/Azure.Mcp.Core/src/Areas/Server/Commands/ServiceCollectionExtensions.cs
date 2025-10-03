@@ -13,6 +13,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
 
+// touch this file, it should trigger both mcp - pullrequest - live and mcp - pullrequest
+
 namespace Azure.Mcp.Core.Areas.Server.Commands;
 
 // This is intentionally placed after the namespace declaration to avoid
