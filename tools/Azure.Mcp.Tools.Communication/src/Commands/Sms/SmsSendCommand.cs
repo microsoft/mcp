@@ -35,10 +35,10 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
     {
         Destructive = false,
         ReadOnly = false,
-        OpenWorld = false,
+        OpenWorld = true,
         Idempotent = true,
         Secret = true,
-        LocalRequired = true
+        LocalRequired = false
     };
 
     protected override void RegisterOptions(Command command)
