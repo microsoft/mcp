@@ -3,7 +3,6 @@
 
 using System.CommandLine;
 using System.CommandLine.Parsing;
-using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
@@ -45,93 +44,9 @@ public sealed class AppTraceListCommand(ILogger<AppTraceListCommand> logger) : S
 
     public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, LocalRequired = false, OpenWorld = false, Secret = false, ReadOnly = true };
 
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(ResourceName);
-        command.Options.Add(ResourceId);
-        command.Options.Add(Table);
-        command.Options.Add(Filters);
-        command.Options.Add(StartTime);
-        command.Options.Add(EndTime);
-    }
-
-    private ValidationResult OnExecuting(CommandResult commandResult, CommandResponse? commandResponse = null)
-    {
-        ValidationResult result = new();
-
-        // Either resourceName or resourceId must be provided
-        string? resourceName = commandResult.GetValueOrDefault(ResourceName);
-        string? resourceId = commandResult.GetValueOrDefault(ResourceId);
-        if (string.IsNullOrEmpty(resourceName) && string.IsNullOrEmpty(resourceId))
-        {
-            result.Errors.Add($"Either --{ResourceNameName} or --{ResourceIdName} must be provided.");
-        }
-
-        // Validate time range
-        if (!DateTime.TryParse(commandResult.GetValueOrDefault(StartTime), out DateTime startTime) ||
-            !DateTime.TryParse(commandResult.GetValueOrDefault(EndTime), out DateTime endTime) ||
-            startTime >= endTime)
-        {
-            result.Errors.Add($"Invalid time range specified. Ensure that --{StartTimeName} is before --{EndTimeName} and that both are valid dates in ISO format.");
-        }
-
-        // Validate table name
-        string? table = commandResult.GetValueOrDefault(Table);
-
-        if (!string.Equals(table, "exceptions", StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(table, "dependencies", StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(table, "availabilityResults", StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(table, "requests", StringComparison.OrdinalIgnoreCase))
-        {
-            result.Errors.Add($"Invalid table specified. Valid options are: exceptions, dependencies, availabilityResults, requests.");
-        }
-
-        if (!result.IsValid && commandResponse != null)
-        {
-            commandResponse.Status = HttpStatusCode.BadRequest;
-            commandResponse.Message = string.Join('\n', result.Errors);
-        }
-
-        return result;
-    }
-
-    protected override AppTraceListOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
-
-        options.ResourceName ??= parseResult.GetValueOrDefault(ResourceName);
-        options.ResourceId ??= parseResult.GetValueOrDefault(ResourceId);
-
-        options.Table = parseResult.GetValue(Table);
-        options.Filters = parseResult.GetValueOrDefault(Filters) ?? [];
-
-        string? startRaw = parseResult.GetValueOrDefault(StartTime);
-        string? endRaw = parseResult.GetValueOrDefault(EndTime);
-
-        if (DateTime.TryParse(startRaw, out DateTime startUtc))
-        {
-            options.StartTimeUtc = startUtc.ToUniversalTime();
-        }
-
-        if (DateTime.TryParse(endRaw, out DateTime endUtc))
-        {
-            options.EndTimeUtc = endUtc.ToUniversalTime();
-        }
-
-        return options;
-    }
-
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
-        {
-            return context.Response;
-        }
-
-        if (!OnExecuting(parseResult.CommandResult, context.Response).IsValid)
         {
             return context.Response;
         }
@@ -166,6 +81,84 @@ public sealed class AppTraceListCommand(ILogger<AppTraceListCommand> logger) : S
         }
 
         return context.Response;
+    }
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(ResourceName);
+        command.Options.Add(ResourceId);
+        command.Options.Add(Table);
+        command.Options.Add(Filters);
+        command.Options.Add(StartTime);
+        command.Options.Add(EndTime);
+
+        command.Validators.Add(ResourceNameOrIdRequired);
+        command.Validators.Add(TimeRangeValid);
+        command.Validators.Add(TableNameValid);
+    }
+
+    protected override AppTraceListOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+
+        options.ResourceName ??= parseResult.GetValueOrDefault(ResourceName);
+        options.ResourceId ??= parseResult.GetValueOrDefault(ResourceId);
+
+        options.Table = parseResult.GetValue(Table);
+        options.Filters = parseResult.GetValueOrDefault(Filters) ?? [];
+
+        string? startRaw = parseResult.GetValueOrDefault(StartTime);
+        string? endRaw = parseResult.GetValueOrDefault(EndTime);
+
+        if (DateTime.TryParse(startRaw, out DateTime startUtc))
+        {
+            options.StartTimeUtc = startUtc.ToUniversalTime();
+        }
+
+        if (DateTime.TryParse(endRaw, out DateTime endUtc))
+        {
+            options.EndTimeUtc = endUtc.ToUniversalTime();
+        }
+
+        return options;
+    }
+
+    private void ResourceNameOrIdRequired(CommandResult result)
+    {
+        // Either resourceName or resourceId must be provided
+        string? resourceName = result.GetValueOrDefault(ResourceName);
+        string? resourceId = result.GetValueOrDefault(ResourceId);
+
+        if (string.IsNullOrEmpty(resourceName) && string.IsNullOrEmpty(resourceId))
+        {
+            result.AddError($"Either --{ResourceNameName} or --{ResourceIdName} must be provided.");
+        }
+    }
+
+    private void TimeRangeValid(CommandResult result)
+    {
+        if (!DateTime.TryParse(result.GetValueOrDefault(StartTime), out DateTime startTime) ||
+            !DateTime.TryParse(result.GetValueOrDefault(EndTime), out DateTime endTime) ||
+            startTime >= endTime)
+        {
+            result.AddError($"Invalid time range specified. Ensure that --{StartTimeName} is before --{EndTimeName} and that both are valid dates in ISO format.");
+        }
+    }
+
+    private void TableNameValid(CommandResult result)
+    {
+        string? table = result.GetValueOrDefault(Table);
+
+        if (!string.Equals(table, "exceptions", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(table, "dependencies", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(table, "availabilityResults", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(table, "requests", StringComparison.OrdinalIgnoreCase))
+        {
+            result.AddError($"Invalid table specified. Valid options are: exceptions, dependencies, availabilityResults, requests.");
+        }
     }
 
     internal record AppTraceListCommandResult(AppListTraceResult? Traces);
