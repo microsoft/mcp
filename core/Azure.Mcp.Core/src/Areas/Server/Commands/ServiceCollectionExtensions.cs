@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+// Build trigger: no functional change (test copilot triggered builds)
 
 using System.Reflection;
 using System.Text;
