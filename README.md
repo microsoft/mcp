@@ -175,6 +175,17 @@ Check out the [Azure Developer CLI (azd) templates](https://azure.github.io/awes
 - [MCP SDKs and Building Blocks](https://modelcontextprotocol.io/sdk)
 - [MCP Specification](https://spec.modelcontextprotocol.io/specification/)
 
+## 👥 Contributor Recognition
+
+We automatically recognize and thank all contributors in our [CHANGELOG.md](./CHANGELOG.md) for each release! The system:
+
+- ✨ **Automatically extracts contributors** from commits and co-author tags
+- 🚀 **Updates CHANGELOG.md** with contributor recognition for each release
+- 🎯 **Supports conventional commits** for organized change categorization
+- 📝 **Provides manual changelog generation** using git-cliff
+
+Learn more about how contributor recognition works in our [Contributor Recognition Guide](./docs/CONTRIBUTOR_RECOGNITION.md).
+
 ## Contributing
 
 This project welcomes contributions and suggestions. Most contributions require you to agree to a
