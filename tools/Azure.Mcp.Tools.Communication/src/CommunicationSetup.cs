@@ -18,6 +18,7 @@ public class CommunicationSetup : IAreaSetup
     {
         services.AddSingleton<ICommunicationService, CommunicationService>();
         services.AddSingleton<SmsSendCommand>();
+        services.AddSingleton<EmailSendCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -32,6 +33,10 @@ public class CommunicationSetup : IAreaSetup
         var smsSend = serviceProvider.GetRequiredService<SmsSendCommand>();
         sms.AddCommand(smsSend.Name, smsSend);
 
+        var email = new CommandGroup("email", "Email messaging operations - sending email messages to one or more recipients using Azure Communication Services.");
+        communication.AddSubGroup(email);
+        var emailSend = serviceProvider.GetRequiredService<EmailSendCommand>();
+        email.AddCommand(emailSend.Name, emailSend);
         return communication;
     }
 }
