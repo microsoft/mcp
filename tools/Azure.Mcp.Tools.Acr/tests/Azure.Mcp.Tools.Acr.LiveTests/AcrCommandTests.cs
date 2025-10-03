@@ -64,7 +64,8 @@ public class AcrCommandTests(ITestOutputHelper output)
             var nameProp = item.AssertProperty("name");
             var objName = nameProp.GetString();
             Assert.False(string.IsNullOrWhiteSpace(objName));
-            Assert.Matches("^[a-zA-Z0-9]{5,50}$", objName!); // Basic ACR naming pattern (alphanumeric, 5-50 chars)
+            Assert.True(objName!.Length is >= 5 and <= 50, $"Registry name '{objName}' must be between 5 and 50 characters.");
+            Assert.False(objName.Any(static ch => !(char.IsLetterOrDigit(ch) || ch == '-')), $"Registry name '{objName}' must consist of letters, digits, or hyphens only.");
             if (item.TryGetProperty("location", out var locationProp))
             {
                 Assert.False(string.IsNullOrWhiteSpace(locationProp.GetString()));
