@@ -389,7 +389,8 @@ try {
     $unitTestMatrix = Get-TestMatrix $pathsToTest -TestType 'Unit'
     $liveTestMatrix = Get-TestMatrix $pathsToTest -TestType 'Live'
 
-    $branch = $isPipelineRun ? (CheckVariable 'BUILD_SOURCEBRANCHNAME') : (git rev-parse --abbrev-ref HEAD)
+    # spellchecker: ignore SOURCEVERSION
+    $branch = $isPipelineRun ? (CheckVariable 'BUILD_SOURCEBRANCH') : (git rev-parse --abbrev-ref HEAD)
     $commitSha = $isPipelineRun ? (CheckVariable 'BUILD_SOURCEVERSION') : (git rev-parse HEAD)
 
     $buildInfo = [ordered]@{

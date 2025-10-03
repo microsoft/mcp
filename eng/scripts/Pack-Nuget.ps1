@@ -144,13 +144,11 @@ function ExportWrapperToolSettings {
         [string] $CommandName,
         [ValidateNotNullOrWhiteSpace()]
         [string] $RuntimeIdentifier,
-        [ValidateNotNullOrWhiteSpace()]
-        [string] $Id,
         [hashtable] $PlatformReferences
     )
 
     $xml = New-Object System.Xml.XmlDocument
-    $xml.AppendChild($xml.CreateXmlDeclaration("1.0", "UTF-8", $null)) | Out-Null
+    $xml.AppendChild($xml.CreateXmlDeclaration("1.0", "utf-8", $null)) | Out-Null
 
     $dotnetCliTool = $xml.AppendChild($xml.CreateElement("DotNetCliTool"))
     $dotnetCliTool.SetAttribute("Version", "2")
@@ -160,11 +158,8 @@ function ExportWrapperToolSettings {
     $command.SetAttribute("Name", $CommandName)
 
     $ridPackages = $dotnetCliTool.AppendChild($xml.CreateElement("RuntimeIdentifierPackages"))
-    $ridPackage = $ridPackages.AppendChild($xml.CreateElement("RuntimeIdentifierPackage"))
-    $ridPackage.SetAttribute("RuntimeIdentifier", $RuntimeIdentifier)
-    $ridPackage.SetAttribute("Id", $Id)
 
-    foreach ($key in $PlatformReferences.Keys) {
+    foreach ($key in $PlatformReferences.Keys | Sort-Object) {
         $platformRef = $ridPackages.AppendChild($xml.CreateElement("RuntimeIdentifierPackage"))
         $platformRef.SetAttribute("RuntimeIdentifier", $key)
         $platformRef.SetAttribute("Id", $PlatformReferences[$key])
@@ -287,14 +282,14 @@ function ExportPlatformToolSettings {
     )
 
     $xml = New-Object System.Xml.XmlDocument
-    $xml.AppendChild($xml.CreateXmlDeclaration("1.0", "UTF-8", $null)) | Out-Null
+    $xml.AppendChild($xml.CreateXmlDeclaration("1.0", "utf-8", $null)) | Out-Null
 
     $dotnetCliTool = $xml.AppendChild($xml.CreateElement("DotNetCliTool"))
     $dotnetCliTool.SetAttribute("Version", "2")
 
     $commands = $dotnetCliTool.AppendChild($xml.CreateElement("Commands"))
     $command = $commands.AppendChild($xml.CreateElement("Command"))
-    $command.SetAttribute("Name", $CliName)
+    $command.SetAttribute("Name", $CommandName)
     $command.SetAttribute("EntryPoint", $EntryPoint)
     $command.SetAttribute("Runner", "executable")
 
@@ -311,6 +306,8 @@ function ExportPlatformPackageNuspec {
         [string] $OutputPath,
         [ValidateNotNullOrWhiteSpace()]
         [string] $PackageId,
+        [ValidateNotNullOrWhiteSpace()]
+        [string] $ServerName,
         [ValidateNotNullOrWhiteSpace()]
         [string] $Version,
         [ValidateNotNullOrWhiteSpace()]
@@ -448,14 +445,11 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempDirectory -Force
         Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempDirectory -Force
 
-        $platformToolEntryPoint = (
-            Get-ChildItem -Path $platformToolDir -Filter "$($server.cliName)*" -Recurse |
-            Where-Object { $_.PSIsContainer -eq $false -and ($_.Extension -eq ".exe" -or $_.Extension -eq "") } |
-            Select-Object -First 1
-        ).Name
+        $platformToolEntryPoint = "$($server.cliName)$($platform.extension)"
 
         ExportPlatformPackageNuspec `
             -PackageId $platformPackageId `
+            -ServerName $server.name `
             -Version $server.version `
             -Description $platformDescription `
             -Tags $server.dnxPackageTags `
@@ -525,9 +519,8 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         -OutputPath $wrapperToolNuspec
 
     ExportWrapperToolSettings `
-        -CliName $server.cliName `
+        -CommandName $server.cliName `
         -RuntimeIdentifier $sharedTargetFramework `
-        -Id $packageId `
         -PlatformReferences $platformRefs `
         -OutputPath "$tempFolder/tools/$sharedTargetFramework/any/DotnetToolSettings.xml"
 

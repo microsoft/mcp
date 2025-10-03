@@ -41,9 +41,6 @@ jobs:
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
-        -RepoUrl '$(Build.Repository.Uri)'
-        -CommitSha '$(Build.SourceVersion)'
-        -Branch '$(Build.SourceBranch)'
 
   - task: EsrpCodeSigning@5
     displayName: 'CodeSign Nuget Packages'

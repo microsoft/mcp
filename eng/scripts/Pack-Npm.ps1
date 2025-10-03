@@ -129,7 +129,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         $platformPackageName = "$packageName-$nodeOs-$arch"
 
         $extension = $platform.extension
-        $binPath = "./dist/$cliName$extension"
+        $binPath = "dist/$cliName$extension"
 
         Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
         New-Item -ItemType Directory -Force -Path $tempFolder | Out-Null
