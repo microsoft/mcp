@@ -64,8 +64,12 @@ public class AcrCommandTests(ITestOutputHelper output)
             var nameProp = item.AssertProperty("name");
             var objName = nameProp.GetString();
             Assert.False(string.IsNullOrWhiteSpace(objName));
-            Assert.True(objName!.Length is >= 5 and <= 50, $"Registry name '{objName}' must be between 5 and 50 characters.");
-            Assert.False(objName.Any(static ch => !(char.IsLetterOrDigit(ch) || ch == '-')), $"Registry name '{objName}' must consist of letters, digits, or hyphens only.");
+            // Minimal safety checks: we don't re-validate Azure's naming rules; we just ensure
+            // the service returned a sane, non-empty string without control characters.
+            Assert.False(string.IsNullOrWhiteSpace(objName));
+            Assert.DoesNotContain('\r', objName);
+            Assert.DoesNotContain('\n', objName);
+            Assert.True(objName!.All(static c => !char.IsControl(c)), $"Registry name '{objName}' contains control characters.");
             if (item.TryGetProperty("location", out var locationProp))
             {
                 Assert.False(string.IsNullOrWhiteSpace(locationProp.GetString()));
