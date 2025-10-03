@@ -39,28 +39,7 @@ public sealed class AppTraceListCommand(ILogger<AppTraceListCommand> logger) : S
         Filter to dependency failures
         "table": "dependencies",
         "filters": ["success=\"false\""]
-
-        Filter to request failures with 500 code
-        "table": "requests",
-        "filters": ["success=\"false\"", "resultCode=\"500\""]
-
-        Filter to requests slower than 95th percentile (use start and end time filters to filter to the duration spike). Any percentile is valid (e.g. 99p is also valid)
-        "table": "requests",
-        "filters": ["duration=\"95p\""],
-        "start-time":"start of spike (ISO date)",
-        "end-time":"end of spike (ISO date)"
-
-        Use this tool for investigating issues with Application Insights resources.
-        Required options:
-        - {{ResourceName.Name}}: {{ResourceName.Description}} or {{ResourceId.Name}}: {{ResourceId.Description}}
-        - {{Table.Name}}: {{Table.Description}}
-        Optional options:
-        - {{Filters.Name}}: {{Filters.Description}}
-        - {{OptionDefinitions.Common.ResourceGroup.Name}}: {{OptionDefinitions.Common.ResourceGroup.Description}}
-        - {{StartTime.Name}}: {{StartTime.Description}}
-        - {{EndTime.Name}}: {{EndTime.Description}}
         """;
-
 
     public override string Title => CommandTitle;
 
