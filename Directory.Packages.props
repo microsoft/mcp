@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Azure.Containers.ContainerRegistry" Version="1.2.0" />
+    <PackageVersion Include="Azure.Communication.Sms" Version="1.0.2" />
     <PackageVersion Include="Azure.AI.Projects" Version="1.0.0-beta.9" />
     <PackageVersion Include="Azure.AI.Agents.Persistent" Version="1.2.0-beta.4" />
     <PackageVersion Include="Azure.AI.OpenAI" Version="2.3.0-beta.2" />

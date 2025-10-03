@@ -107,6 +107,19 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_acr_registry_repository_list | List repositories in the container registry <registry_name> |
 | azmcp_acr_registry_repository_list | Show me the repositories in the container registry <registry_name> |
 
+## Azure Communication Services
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_communication_sms_send | Send an SMS message to +1234567890 saying "Hello" |
+| azmcp_communication_sms_send | Send SMS to +1234567890 from +1234567891 with message "Test message" |
+| azmcp_communication_sms_send | Send SMS to multiple recipients: +1234567890, +1234567891 |
+| azmcp_communication_sms_send | Send SMS with delivery reporting enabled |
+| azmcp_communication_sms_send | Send SMS message with custom tracking tag "campaign1" |
+| azmcp_communication_sms_send | Send broadcast SMS to +1234567890 and +1234567891 saying "Urgent notification" |
+| azmcp_communication_sms_send | Send SMS from my communication service to +1234567890 |
+| azmcp_communication_sms_send | Send an SMS with delivery receipt tracking |
+
 ## Azure Cosmos DB
 
 | Tool Name | Test Prompt |
