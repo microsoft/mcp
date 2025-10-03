@@ -66,7 +66,6 @@ public class AcrCommandTests(ITestOutputHelper output)
             Assert.False(string.IsNullOrWhiteSpace(objName));
             // Minimal safety checks: we don't re-validate Azure's naming rules; we just ensure
             // the service returned a sane, non-empty string without control characters.
-            Assert.False(string.IsNullOrWhiteSpace(objName));
             Assert.DoesNotContain('\r', objName);
             Assert.DoesNotContain('\n', objName);
             Assert.True(objName!.All(static c => !char.IsControl(c)), $"Registry name '{objName}' contains control characters.");
