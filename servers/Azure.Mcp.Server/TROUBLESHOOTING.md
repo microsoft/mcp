@@ -213,17 +213,18 @@ Clear Node Modules Cache
 
 - npm cache clean --force
 
-### Elicitation Not Work In VS Code
+### MCP Tools That Require Additional Input Fail Silently
 
-**Elicitation** feature is supported in VS Code that allows MCP tools to request additional information from users through interactive prompts during tool execution. If tools requiring elicitation fail with an error indicating that the client does not support elicitation, updating VS Code may resolve the issue.
+The **Elicitation** feature in VS Code lets MCP tools request user input through interactive prompts during execution. If elicitation is not supported, affected tools may fail without showing prompts or may return errors about client compatibility. Updating VS Code usually resolves the issue.
 
 #### Requirements
-Elicitation requires **VS Code version 1.102 or newer** (released June 2025 or later).
+Elicitation is supported starting with **VS Code version 1.102 or newer** (released June 2025).
 
 #### Symptoms
-- MCP tools that require additional input fail silently
-- No interactive prompts appear when tools need more information
-- Tools return errors about client does not support elicitation
+When elicitation isn't supported, you may experience:
+- MCP tools that need user input fail without explanation
+- Missing interactive prompts when tools request additional information
+- Error messages indicating elicitation is unsupported by the client
 
 #### Solution
 Update VS Code to version 1.102 or newer:
