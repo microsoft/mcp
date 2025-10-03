@@ -6,14 +6,14 @@ using System.Text;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure.Resource;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Tools.Monitor.Services;
 using Azure.ResourceManager.Resources;
 using NSubstitute;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Monitor.UnitTests.Metrics;
+namespace Azure.Mcp.Core.UnitTests.Services.Azure;
 
 public class ResourceResolverServiceTests
 {

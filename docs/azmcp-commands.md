@@ -283,7 +283,7 @@ azmcp appconfig kv get --subscription <subscription> \
                        [--key-filter <key-filter>] \
                        [--label-filter <label-filter>]
 
-# Lock (make it read-only) or unlock (remove read-only) a key-value setting 
+# Lock (make it read-only) or unlock (remove read-only) a key-value setting
 azmcp appconfig kv lock set --subscription <subscription> \
                             --account <account> \
                             --key <key> \
@@ -320,6 +320,36 @@ azmcp applicationinsights recommendation list --subscription <subscription>
 # Scope to a specific resource group
 azmcp applicationinsights recommendation list --subscription <subscription> \
                                               --resource-group <resource-group>
+```
+
+#### Distributed Trace
+
+List distributed trace metadata (request/exception/dependency/availability) for a specific Application Insights component. This returns a summarized set of rows containing timestamps, operation/span identifiers, and table source information that you can use to further drill into telemetry.
+
+```bash
+# List request trace metadata for an Application Insights component by resource name
+azmcp applicationinsights apptrace list --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --resource-name <app-insights-name> \
+                                        --table requests \
+                                        --start-time 2025-01-01T00:00:00Z \
+                                        --end-time 2025-01-01T01:00:00Z
+
+# Same query using a full resource ID and the exceptions table
+azmcp applicationinsights apptrace list --subscription <subscription> \
+                                        --resource-id /subscriptions/<sub>/resourceGroups/<rg>/providers/microsoft.insights/components/<name> \
+                                        --table exceptions
+
+# List availability result traces with an optional filter (multiple --filters allowed)
+azmcp applicationinsights apptrace list --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --resource-name <app-insights-name> \
+                                        --table availabilityResults \
+                                        --filters "durationMs > 1000"
+```
+
+Supported tables: `requests`, `exceptions`, `dependencies`, `availabilityResults`.
+
 ### Azure App Service Operations
 
 ```bash
@@ -790,7 +820,7 @@ azmcp keyvault key list --subscription <subscription> \
 Tools that handle sensitive data such as secrets require user consent before execution through a security mechanism called **elicitation**. When you run commands that access sensitive information, the MCP client will prompt you to confirm the operation before proceeding.
 
 > **🛡️ Elicitation (user confirmation) Security Feature:**
-> 
+>
 > Elicitation prompts appear when tools may expose sensitive information like:
 > - Key Vault secrets
 > - Connection strings and passwords
@@ -1213,7 +1243,7 @@ azmcp sql db delete --subscription <subscription> \
 azmcp sql db list --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name>
-                  
+
 # Rename an existing SQL database to a new name within the same server
 azmcp sql db rename --subscription <subscription> \
                     --resource-group <resource-group> \

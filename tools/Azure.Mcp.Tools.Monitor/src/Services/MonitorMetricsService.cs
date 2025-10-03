@@ -4,6 +4,7 @@
 using System.Xml;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Resource;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Monitor.Query;
 using Azure.Monitor.Query.Models;
