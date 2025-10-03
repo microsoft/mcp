@@ -200,7 +200,7 @@ internal sealed class KQLQueryBuilder : IKQLQueryBuilder
         }
         else
         {
-            return "2d"; // 1d interval for longer ranges
+            return "2d"; // 2d interval for longer ranges
         }
     }
 }

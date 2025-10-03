@@ -6,6 +6,7 @@ using System.Reflection;
 using Azure.Core;
 using Azure.Mcp.Tools.ApplicationInsights.Models;
 using Azure.Monitor.Query;
+using Azure.Monitor.Query.Models;
 
 namespace Azure.Mcp.Tools.ApplicationInsights.Services;
 
@@ -15,7 +16,7 @@ public class AppLogsQueryClient(LogsQueryClient logsQueryClient) : IAppLogsQuery
 
     public async Task<IReadOnlyList<AppLogsQueryRow<T>>> QueryResourceAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] T>(ResourceIdentifier resourceId, string kql, QueryTimeRange timeRange) where T : new()
     {
-        var response = await _logsQueryClient.QueryResourceAsync(
+        Response<LogsQueryResult> response = await _logsQueryClient.QueryResourceAsync(
             resourceId,
             kql,
             timeRange);
@@ -23,8 +24,8 @@ public class AppLogsQueryClient(LogsQueryClient logsQueryClient) : IAppLogsQuery
         PropertyInfo[] destinationProperties = typeof(T).GetProperties();
         // Convert data into T
         // First we need to know the column indices relevant for conversion and the destination property indices they convert to
-        Dictionary<int, int> conversionMap = new Dictionary<int, int>();
-        var columns = response.Value.Table.Columns;
+        Dictionary<int, int> conversionMap = [];
+        IReadOnlyList<LogsTableColumn> columns = response.Value.Table.Columns;
         for (int i = 0; i < columns.Count; i++)
         {
             var column = columns[i];
@@ -40,9 +41,6 @@ public class AppLogsQueryClient(LogsQueryClient logsQueryClient) : IAppLogsQuery
         }
 
         // Now we can generate the final data
-
-
-
         var rows = response.Value.Table.Rows.Select(row =>
         {
             Dictionary<string, object?> otherColumns = new Dictionary<string, object?>();

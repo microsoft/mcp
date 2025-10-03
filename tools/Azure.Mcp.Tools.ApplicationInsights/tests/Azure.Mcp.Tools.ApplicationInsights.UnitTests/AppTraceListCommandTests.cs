@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Nodes; // kept for potential future parsing
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.ApplicationInsights.Commands.AppTrace;
