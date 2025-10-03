@@ -19,7 +19,6 @@ public sealed class CommandGroupDiscoveryStrategy(CommandFactory commandFactory,
 {
     private readonly CommandFactory _commandFactory = commandFactory;
     private readonly IOptions<ServiceStartOptions> _options = options;
-    private static readonly List<string> IgnoreCommandGroups = ["extension", "server", "tools"];
 
     /// <summary>
     /// Gets or sets the entry point to use for the command group servers.
@@ -34,7 +33,7 @@ public sealed class CommandGroupDiscoveryStrategy(CommandFactory commandFactory,
     public override Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync()
     {
         var providers = _commandFactory.RootGroup.SubGroup
-            .Where(group => !IgnoreCommandGroups.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
+            .Where(group => !DiscoveryConstants.IgnoredCommandGroups.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
             .Where(group => _options.Value.Namespace == null ||
                            _options.Value.Namespace.Length == 0 ||
                            _options.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
