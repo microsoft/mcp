@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Postgres.Services;
 using NSubstitute;
 using Xunit;
@@ -15,12 +16,14 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services;
 public class PostgresServiceParameterizedQueryTests
 {
     private readonly IResourceGroupService _resourceGroupService;
+    private readonly ICacheService _cacheService;
     private readonly PostgresService _postgresService;
 
     public PostgresServiceParameterizedQueryTests()
     {
         _resourceGroupService = Substitute.For<IResourceGroupService>();
-        _postgresService = new PostgresService(_resourceGroupService);
+        _cacheService = Substitute.For<ICacheService>();
+        _postgresService = new PostgresService(_resourceGroupService, _cacheService);
     }
 
     [Theory]

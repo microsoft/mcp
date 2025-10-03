@@ -7,6 +7,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
 
@@ -220,5 +221,53 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
             throw new ArgumentException(
                 $"Required parameter{(missingParams.Length > 1 ? "s are" : " is")} null or empty: {string.Join(", ", missingParams)}");
         }
+    }
+
+    /// <summary>
+    /// Gets a cached Entra ID token or fetches a new one if not cached or expired.
+    /// All Azure tokens come from Entra ID, so we use a consistent "entra-token" prefix.
+    /// </summary>
+    /// <param name="cacheService">The cache service to use for storing tokens</param>
+    /// <param name="cacheGroup">The cache group (e.g., "mysql", "postgres", "marketplace")</param>
+    /// <param name="tokenScope">The token scope (e.g., "https://management.azure.com/.default")</param>
+    /// <param name="tenant">Optional tenant ID for multi-tenant scenarios</param>
+    /// <returns>The cached or newly fetched token</returns>
+    protected async Task<string> GetEntraIdAccessTokenAsync(
+        ICacheService cacheService,
+        string cacheGroup, 
+        string tokenScope, 
+        string? tenant = null)
+    {
+        const string tokenCacheKeyPrefix = "entra-token";
+        
+        var cacheKey = string.IsNullOrEmpty(tenant) 
+            ? tokenCacheKeyPrefix 
+            : $"{tokenCacheKeyPrefix}_{tenant}";
+
+        // Try to get from cache first
+        var cachedToken = await cacheService.GetAsync<string>(cacheGroup, cacheKey);
+        if (cachedToken != null)
+        {
+            return cachedToken;
+        }
+
+        // Fetch new token
+        var tokenRequestContext = new TokenRequestContext([tokenScope]);
+        var tokenCredential = await GetCredential(tenant);
+        var accessToken = await tokenCredential
+            .GetTokenAsync(tokenRequestContext, CancellationToken.None)
+            .ConfigureAwait(false);
+
+        // Calculate cache duration with 60-second safety buffer
+        var expiryTime = accessToken.ExpiresOn.AddSeconds(-60);
+        var cacheDuration = expiryTime - DateTimeOffset.UtcNow;
+        
+        // Only cache if there's meaningful time left
+        if (cacheDuration > TimeSpan.Zero)
+        {
+            await cacheService.SetAsync(cacheGroup, cacheKey, accessToken.Token, cacheDuration);
+        }
+
+        return accessToken.Token;
     }
 }

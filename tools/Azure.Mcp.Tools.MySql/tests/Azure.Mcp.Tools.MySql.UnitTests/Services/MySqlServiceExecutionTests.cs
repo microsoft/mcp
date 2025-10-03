@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -14,6 +15,7 @@ public class MySqlServiceExecutionTests
 {
     private readonly IResourceGroupService _resourceGroupService;
     private readonly ITenantService _tenantService;
+    private readonly ICacheService _cacheService;
     private readonly ILogger<MySqlService> _logger;
     private readonly MySqlService _mysqlService;
 
@@ -21,9 +23,10 @@ public class MySqlServiceExecutionTests
     {
         _resourceGroupService = Substitute.For<IResourceGroupService>();
         _tenantService = Substitute.For<ITenantService>();
+        _cacheService = Substitute.For<ICacheService>();
         _logger = Substitute.For<ILogger<MySqlService>>();
 
-        _mysqlService = new MySqlService(_resourceGroupService, _tenantService, _logger);
+        _mysqlService = new MySqlService(_resourceGroupService, _tenantService, _cacheService, _logger);
     }
 
     [Fact]

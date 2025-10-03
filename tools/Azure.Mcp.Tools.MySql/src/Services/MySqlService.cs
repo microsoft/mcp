@@ -6,6 +6,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.MySql.Commands;
 using Azure.ResourceManager.MySql.FlexibleServers;
 using Microsoft.Extensions.Logging;
@@ -13,13 +14,13 @@ using MySqlConnector;
 
 namespace Azure.Mcp.Tools.MySql.Services;
 
-public class MySqlService(IResourceGroupService resourceGroupService, ITenantService tenantService, ILogger<MySqlService> logger) : BaseAzureService(tenantService), IMySqlService
+public class MySqlService(IResourceGroupService resourceGroupService, ITenantService tenantService, ICacheService cacheService, ILogger<MySqlService> logger) : BaseAzureService(tenantService), IMySqlService
 {
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
+    private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ILogger<MySqlService> _logger = logger;
-    private string? _cachedEntraIdAccessToken;
-    private DateTime _tokenExpiryTime;
-    private readonly object _tokenLock = new object();
+
+    private const string CacheGroup = "mysql";
 
     // Maximum number of items to return to prevent DoS attacks and performance issues
     private const int MaxResultLimit = 10000;
@@ -67,29 +68,13 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         "ENCODE(", "DECODE(", "PASSWORD(", "OLD_PASSWORD("
     ];
 
-    private async Task<string> GetEntraIdAccessTokenAsync()
+    private async Task<string> GetEntraIdAccessTokenAsync(string? tenant = null)
     {
-        lock (_tokenLock)
-        {
-            if (_cachedEntraIdAccessToken != null && DateTime.UtcNow < _tokenExpiryTime)
-            {
-                return _cachedEntraIdAccessToken;
-            }
-        }
-
-        var tokenRequestContext = new TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"]);
-        var tokenCredential = await GetCredential();
-        var accessToken = await tokenCredential
-            .GetTokenAsync(tokenRequestContext, CancellationToken.None)
-            .ConfigureAwait(false);
-
-        lock (_tokenLock)
-        {
-            _cachedEntraIdAccessToken = accessToken.Token;
-            _tokenExpiryTime = accessToken.ExpiresOn.UtcDateTime.AddSeconds(-60); // Subtract 60 seconds as a buffer.
-        }
-
-        return _cachedEntraIdAccessToken;
+        return await GetEntraIdAccessTokenAsync(
+            _cacheService, 
+            CacheGroup, 
+            "https://ossrdbms-aad.database.windows.net/.default", 
+            tenant);
     }
 
     private static string NormalizeServerName(string server)
@@ -101,9 +86,9 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         return server;
     }
 
-    private async Task<string> BuildConnectionStringAsync(string server, string user, string database)
+    private async Task<string> BuildConnectionStringAsync(string server, string user, string database, string? tenant = null)
     {
-        var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
+        var entraIdAccessToken = await GetEntraIdAccessTokenAsync(tenant);
         var host = NormalizeServerName(server);
         return $"Server={host};Database={database};User ID={user};Password={entraIdAccessToken};SSL Mode=Required;";
     }

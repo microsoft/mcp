@@ -4,6 +4,7 @@
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Npgsql;
 
@@ -12,30 +13,23 @@ namespace Azure.Mcp.Tools.Postgres.Services;
 public class PostgresService : BaseAzureService, IPostgresService
 {
     private readonly IResourceGroupService _resourceGroupService;
-    private string? _cachedEntraIdAccessToken;
-    private DateTime _tokenExpiryTime;
+    private readonly ICacheService _cacheService;
 
-    public PostgresService(IResourceGroupService resourceGroupService)
+    private const string CacheGroup = "postgres";
+
+    public PostgresService(IResourceGroupService resourceGroupService, ICacheService cacheService) 
     {
         _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
+        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     }
 
-    private async Task<string> GetEntraIdAccessTokenAsync()
+    private async Task<string> GetEntraIdAccessTokenAsync(string? tenant = null)
     {
-        if (_cachedEntraIdAccessToken != null && DateTime.UtcNow < _tokenExpiryTime)
-        {
-            return _cachedEntraIdAccessToken;
-        }
-
-        var tokenRequestContext = new TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"]);
-        var tokenCredential = await GetCredential();
-        var accessToken = await tokenCredential
-            .GetTokenAsync(tokenRequestContext, CancellationToken.None)
-            .ConfigureAwait(false);
-        _cachedEntraIdAccessToken = accessToken.Token;
-        _tokenExpiryTime = accessToken.ExpiresOn.UtcDateTime.AddSeconds(-60); // Subtract 60 seconds as a buffer.
-
-        return _cachedEntraIdAccessToken;
+        return await GetEntraIdAccessTokenAsync(
+            _cacheService, 
+            CacheGroup, 
+            "https://ossrdbms-aad.database.windows.net/.default", 
+            tenant);
     }
 
     private static string NormalizeServerName(string server)
