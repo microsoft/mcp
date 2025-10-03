@@ -34,7 +34,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 
 # Overview
 
-**Azure MCP Server** supercharges your agents with Azure context across **30+ different Azure services**.
+**Azure MCP Server** supercharges your agents with Azure context across **40+ different Azure services**.
 
 # Installation
 
