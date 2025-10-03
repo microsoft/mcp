@@ -15,16 +15,18 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
     private readonly ILogger<ResourceLogQueryCommand> _logger = logger;
 
     public override string Name => "query";
-
     public override string Description =>
-        $"""
-        Queries logs from Log Analytics for a specific Azure resource using Kusto Query Language (KQL). Use this tool to retrieve logs for individual resources such as storage accounts, virtual machines, app services, or any resource that emits logs to Log Analytics. You can also query by resource ID to investigate diagnostics, errors, and activity logs.  
-        - Use the {ResourceLogQueryOptionDefinitions.ResourceIdName} parameter to specify the full Azure Resource ID (/subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/myaccount).
-        - The {MonitorOptionDefinitions.TableNameName} parameter specifies the Log Analytics table to query.
-        - The {MonitorOptionDefinitions.QueryTextName} parameter accepts a KQL query or a predefined query name.
-        - Optional parameters: {MonitorOptionDefinitions.HoursName} (default: {MonitorOptionDefinitions.Hours.GetDefaultValue()}) to set the time range, and {MonitorOptionDefinitions.LimitName} (default: {MonitorOptionDefinitions.Limit.GetDefaultValue()}) to limit the number of results.
-        Do not use this to query logs from a Log Analytics workspace - instead use monitor_workspace_log_query.
-        """;
+    $"""
+    Query diagnostic and activity logs for a SPECIFIC Azure resource in a Log Analytics workspace using Kusto Query Language (KQL). 
+    Use this tool when the user mentions a specific resource name or Resource ID in their request (e.g., "show logs for resource app-monitor"). 
+    This tool filters logs to only show data from the specified resource.
+    
+    When to use: User asks for logs from a specific resource by name or ID.
+    When NOT to use: User asks for general workspace-wide logs without mentioning a specific resource.
+
+    Required arguments: resource ID or resource name, table name, KQL query
+    Optional: {MonitorOptionDefinitions.HoursName}, {MonitorOptionDefinitions.LimitName}
+    """;
 
     public override string Title => CommandTitle;
 
