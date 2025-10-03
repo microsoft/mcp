@@ -2,13 +2,24 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
+## 0.8.5 (Unreleased)
+
+### Features Added
+
+- Added support for sending SMS messages via Azure Communication Services with the command `azmcp_communication_sms_send`. Supports single and multiple recipients, delivery reporting, and custom message tracking tags. [[#473](https://github.com/microsoft/mcp/pull/473)]
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
 ## 0.8.4 (2025-10-02)
 
 ### Features Added
 
 - Added support to return metadata when using the `azmcp_tool_list` command. [[#564](https://github.com/microsoft/mcp/issues/564)]
 - Added support for returning a list of tool namespaces instead of individual tools when using the `azmcp_tool_list` command with the `--namespaces` option. [[#496](https://github.com/microsoft/mcp/issues/496)]
-- Added support for sending SMS messages via Azure Communication Services with the command `azmcp_communication_sms_send`. Supports single and multiple recipients, delivery reporting, and custom message tracking tags. [[#473](https://github.com/microsoft/mcp/pull/473)]
 
 ### Breaking Changes
 
@@ -19,7 +30,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Fixed the name of the Key Vault Managed HSM settings get command from `azmcp_keyvault_admin_get` to `azmcp_keyvault_admin_settings_get`. [[#643](https://github.com/microsoft/mcp/issues/643)]
 - Removed redundant DI instantiation of MCP server providers, as these are expected to be instantiated by the MCP server discovery mechanism. [[#644](https://github.com/microsoft/mcp/pull/644)]
 - Fixed App Lens having a runtime error for reflection-based serialization when using native AoT MCP build. [[#639](https://github.com/microsoft/mcp/pull/639)]
-- Added validation for the PostgreSQL database query command `azmcp_postgres_database_query`. [[#518](https://github.com/microsoft/mcp/pull/518)]
+- Added validation for the PostgreSQL database query command `azmcp_postgres_database_query`.[[#518](https://github.com/microsoft/mcp/pull/518)]
+- Added validation for the Cosmos query command `azmcp_cosmos_database_container_item_query`.[[#524](https://github.com/microsoft/mcp/pull/524)]
+- Fixed the construction of Azure Resource Graph queries for App Configuration in the `FindAppConfigStore` method. The name filter is now correctly passed via the `additionalFilter` parameter instead of `tableName`, resolving "ExactlyOneStartingOperatorRequired" and "BadRequest" errors when setting key-value pairs. [(#670)[https://github.com/microsoft/mcp/pull/670]]
 
 ### Other Changes
 
