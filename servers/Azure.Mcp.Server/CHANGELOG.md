@@ -12,6 +12,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Added more deployment related best practices [[#698](https://github.com/microsoft/mcp/issues/698)]
+
 ## 0.8.4 (2025-10-02)
 
 ### Features Added
