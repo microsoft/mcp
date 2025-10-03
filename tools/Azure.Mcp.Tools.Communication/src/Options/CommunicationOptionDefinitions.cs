@@ -61,4 +61,60 @@ public static class CommunicationOptionDefinitions
         Description = "Optional custom tag to apply to the SMS message for tracking purposes.",
         Required = false
     };
+
+    /// <summary>
+/// The endpoint URI for the Azure Communication Services resource.
+/// </summary>
+public static readonly OptionDefinition Endpoint = new(
+    "--endpoint",
+    "The endpoint URI for the Azure Communication Services resource (e.g., https://resourcename.communication.azure.com)");
+
+/// <summary>
+/// The email address to send from.
+/// </summary>
+public static readonly OptionDefinition Sender = new(
+    "--sender",
+    "The email address to send from (must be from a verified domain)");
+
+/// <summary>
+/// The display name of the sender.
+/// </summary>
+public static readonly OptionDefinition SenderName = new(
+    "--sender-name",
+    "The display name of the sender");
+
+/// <summary>
+/// The email subject.
+/// </summary>
+public static readonly OptionDefinition Subject = new(
+    "--subject",
+    "The email subject");
+
+/// <summary>
+/// Flag indicating whether the message content is HTML.
+/// </summary>
+public static readonly OptionDefinition IsHtml = new(
+    "--is-html",
+    "Flag indicating whether the message content is HTML");
+
+/// <summary>
+/// CC recipient email addresses.
+/// </summary>
+public static readonly OptionDefinition Cc = new(
+    "--cc",
+    "CC recipient email addresses");
+
+/// <summary>
+/// BCC recipient email addresses.
+/// </summary>
+public static readonly OptionDefinition Bcc = new(
+    "--bcc",
+    "BCC recipient email addresses");
+
+/// <summary>
+/// Reply-to email addresses.
+/// </summary>
+public static readonly OptionDefinition ReplyTo = new(
+    "--reply-to",
+    "Reply-to email addresses");
 }

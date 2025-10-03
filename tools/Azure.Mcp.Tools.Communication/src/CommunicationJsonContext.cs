@@ -6,8 +6,10 @@ using Azure.Mcp.Tools.Communication.Models;
 
 namespace Azure.Mcp.Tools.Communication;
 
-[JsonSerializable(typeof(Azure.Mcp.Tools.Communication.Models.SmsResult))]
-[JsonSerializable(typeof(Azure.Mcp.Tools.Communication.Models.SmsSendCommandResult))]
+[JsonSerializable(typeof(SmsResult))]
+[JsonSerializable(typeof(SmsSendCommandResult))]
+[JsonSerializable(typeof(EmailSendCommand.EmailSendCommandResult))]
+[JsonSerializable(typeof(EmailSendResult))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     GenerationMode = JsonSourceGenerationMode.Metadata)]
