@@ -770,8 +770,8 @@ public class CommandFactoryToolLoaderTests
         var toolOptions = new ToolLoaderOptions { Tool = [specificToolName] };
         var (toolLoader, _) = CreateToolLoader(toolOptions);
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -813,8 +813,8 @@ public class CommandFactoryToolLoaderTests
         var toolOptions = new ToolLoaderOptions { Tool = [specificToolName] };
         var (toolLoader, _) = CreateToolLoader(toolOptions);
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -852,8 +852,8 @@ public class CommandFactoryToolLoaderTests
         var toolOptions = new ToolLoaderOptions { Tool = [specificToolName.ToUpperInvariant()] }; // Set filter to uppercase
         var (toolLoader, _) = CreateToolLoader(toolOptions);
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
