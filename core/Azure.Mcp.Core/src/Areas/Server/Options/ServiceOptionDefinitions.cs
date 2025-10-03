@@ -8,6 +8,7 @@ public static class ServiceOptionDefinitions
     public const string TransportName = "transport";
     public const string NamespaceName = "namespace";
     public const string ModeName = "mode";
+    public const string ToolName = "tool";
     public const string ReadOnlyName = "read-only";
     public const string DebugName = "debug";
     public const string EnableInsecureTransportsName = "enable-insecure-transports";
@@ -39,6 +40,17 @@ public static class ServiceOptionDefinitions
         Required = false,
         Arity = ArgumentArity.ZeroOrOne,
         DefaultValueFactory = _ => (string?)ModeTypes.NamespaceProxy
+    };
+
+    public static readonly Option<string[]?> Tool = new Option<string[]?>(
+        $"--{ToolName}"
+    )
+    {
+        Description = "Filter to expose only specific tools by name (e.g., 'azmcp storage account list'). Can be specified multiple times.",
+        Required = false,
+        Arity = ArgumentArity.OneOrMore,
+        AllowMultipleArgumentsPerToken = true,
+        DefaultValueFactory = _ => null
     };
 
     public static readonly Option<bool?> ReadOnly = new(

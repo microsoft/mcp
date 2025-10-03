@@ -48,6 +48,7 @@ public static class AzureMcpServiceCollectionExtensions
             Namespace = serviceStartOptions.Namespace,
             ReadOnly = serviceStartOptions.ReadOnly ?? false,
             InsecureDisableElicitation = serviceStartOptions.InsecureDisableElicitation,
+            Tool = serviceStartOptions.Tool,
         };
 
         if (serviceStartOptions.Mode == ModeTypes.NamespaceProxy)

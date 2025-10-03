@@ -88,6 +88,59 @@ public class ServiceStartCommandTests
         Assert.True(hasInsecureDisableElicitationOption, "InsecureDisableElicitation option should be registered");
     }
 
+    [Fact]
+    public void AllOptionsRegistered_IncludesTool()
+    {
+        // Arrange & Act
+        var command = _command.GetCommand();
+
+        // Assert
+        var hasToolOption = command.Options.Any(o =>
+            o.Name == ServiceOptionDefinitions.Tool.Name);
+        Assert.True(hasToolOption, "Tool option should be registered");
+    }
+
+    [Theory]
+    [InlineData("azmcp_storage_account_list")]
+    [InlineData("azmcp_keyvault_secret_get")]
+    [InlineData(null)]
+    public void ToolOption_ParsesCorrectly(string? expectedTool)
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithTool(expectedTool != null ? [expectedTool] : null);
+
+        // Act
+        var actualTools = parseResult.GetValue(ServiceOptionDefinitions.Tool);
+
+        // Assert
+        if (expectedTool == null)
+        {
+            Assert.True(actualTools == null || actualTools.Length == 0);
+        }
+        else
+        {
+            Assert.NotNull(actualTools);
+            Assert.Single(actualTools);
+            Assert.Equal(expectedTool, actualTools[0]);
+        }
+    }
+
+    [Fact]
+    public void ToolOption_ParsesMultipleToolsCorrectly()
+    {
+        // Arrange
+        var expectedTools = new[] { "azmcp_storage_account_list", "azmcp_keyvault_secret_get" };
+        var parseResult = CreateParseResultWithTool(expectedTools);
+
+        // Act
+        var actualTools = parseResult.GetValue(ServiceOptionDefinitions.Tool);
+
+        // Assert
+        Assert.NotNull(actualTools);
+        Assert.Equal(expectedTools.Length, actualTools.Length);
+        Assert.Equal(expectedTools, actualTools);
+    }
+
     [Theory]
     [InlineData("sse")]
     [InlineData("websocket")]
@@ -168,6 +221,24 @@ public class ServiceStartCommandTests
         Assert.True(options.Debug);
         Assert.False(options.EnableInsecureTransports);
         Assert.True(options.InsecureDisableElicitation);
+    }
+
+    [Fact]
+    public void BindOptions_WithTool_ReturnsCorrectlyConfiguredOptions()
+    {
+        // Arrange
+        var expectedTool = "azmcp_storage_account_list";
+        var parseResult = CreateParseResultWithTool([expectedTool]);
+
+        // Act
+        var options = GetBoundOptions(parseResult);
+
+        // Assert
+        Assert.NotNull(options.Tool);
+        Assert.Single(options.Tool);
+        Assert.Equal(expectedTool, options.Tool[0]);
+        Assert.Equal("stdio", options.Transport);
+        Assert.Equal("all", options.Mode);
     }
 
     [Fact]
@@ -454,6 +525,26 @@ public class ServiceStartCommandTests
             "--debug",
             "--insecure-disable-elicitation"
         };
+
+        return _command.GetCommand().Parse([.. args]);
+    }
+
+    private ParseResult CreateParseResultWithTool(string[]? tools)
+    {
+        var args = new List<string>
+        {
+            "--transport", "stdio",
+            "--mode", "all"
+        };
+
+        if (tools is not null)
+        {
+            foreach (var tool in tools)
+            {
+                args.Add("--tool");
+                args.Add(tool);
+            }
+        }
 
         return _command.GetCommand().Parse([.. args]);
     }
