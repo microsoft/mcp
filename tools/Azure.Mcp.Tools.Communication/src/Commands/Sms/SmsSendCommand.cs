@@ -34,7 +34,7 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        ReadOnly = false,
+        ReadOnly = true,
         OpenWorld = true,
         Idempotent = true,
         Secret = false,
