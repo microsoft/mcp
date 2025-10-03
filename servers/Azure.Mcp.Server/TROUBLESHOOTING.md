@@ -17,7 +17,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
     - [VS Code only shows a subset of tools available](#vs-code-only-shows-a-subset-of-tools-available)
     - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
     - [VS Code Cache Problems](#vs-code-cache-problems)
-    - [Why Doesn't Elicitation Work?](#why-doesnt-elicitation-work)
+    - [Elicitation Not Work In VS Code](#elicitation-not-work-in-vs-code)
   - [Remote MCP Server](#remote-mcp-server)
       - [SSE Transport](#sse-transport)
       - [Streamable HTTP Transport](#streamable-http-transport)
@@ -213,7 +213,7 @@ Clear Node Modules Cache
 
 - npm cache clean --force
 
-### Why Doesn't Elicitation Work?
+### Elicitation Not Work In VS Code
 
 **Elicitation** feature is supported in VS Code that allows MCP tools to request additional information from users through interactive prompts during tool execution. If tools requiring elicitation fail with an error indicating that the client does not support elicitation, updating VS Code may resolve the issue.
 
