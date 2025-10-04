@@ -3,29 +3,27 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Threading.Tasks;
-using Azure.Mcp.Commands;
+using Azure.Mcp.Core.Models.Commands;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tools.Communication.Commands.Email;
 using Azure.Mcp.Tools.Communication.Models;
 using Azure.Mcp.Tools.Communication.Options;
 using Azure.Mcp.Tools.Communication.Services;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.UnitTests.Email;
 
 public class EmailSendCommandTests
 {
-    private readonly Mock<ICommunicationService> _mockCommunicationService;
-    private readonly Mock<ILogger<EmailSendCommand>> _mockLogger;
+    private readonly ILogger<EmailSendCommand> _mockLogger;
     private readonly EmailSendCommand _command;
 
     public EmailSendCommandTests()
     {
-        _mockCommunicationService = new Mock<ICommunicationService>();
-        _mockLogger = new Mock<ILogger<EmailSendCommand>>();
-        _command = new EmailSendCommand(_mockCommunicationService.Object, _mockLogger.Object);
+        _mockLogger = Substitute.For<ILogger<EmailSendCommand>>();
+        _command = new EmailSendCommand(_mockLogger);
     }
 
     [Fact]
@@ -42,11 +40,11 @@ public class EmailSendCommandTests
     {
         // Arrange
         var rootCommand = new Command("test");
-        
+
         // Act
         var command = _command.GetCommand();
         rootCommand.AddCommand(command);
-        
+
         // Assert
         Assert.Contains(command.Options, o => o.Name == CommunicationOptionDefinitions.Endpoint.Name);
         Assert.Contains(command.Options, o => o.Name == CommunicationOptionDefinitions.Sender.Name);
@@ -54,7 +52,7 @@ public class EmailSendCommandTests
         Assert.Contains(command.Options, o => o.Name == CommunicationOptionDefinitions.Subject.Name);
         Assert.Contains(command.Options, o => o.Name == CommunicationOptionDefinitions.Message.Name);
         Assert.Contains(command.Options, o => o.Name == OptionDefinitions.Common.Subscription.Name);
-        
+
         // Verify optional options
         Assert.Contains(command.Options, o => o.Name == CommunicationOptionDefinitions.SenderName.Name);
         Assert.Contains(command.Options, o => o.Name == CommunicationOptionDefinitions.Cc.Name);
@@ -82,13 +80,13 @@ public class EmailSendCommandTests
             "--subscription", "test-subscription",
             "--resource-group", "test-rg"
         );
-        
+
         // Act
         var options = TestHelpers.InvokeNonPublicMethod<EmailSendCommand, Options.Email.EmailSendOptions>(
-            _command, 
-            "BindOptions", 
+            _command,
+            "BindOptions",
             parseResult);
-        
+
         // Assert
         Assert.Equal("https://example.communication.azure.com", options.Endpoint);
         Assert.Equal("sender@example.com", options.Sender);
@@ -131,11 +129,11 @@ public class EmailSendCommandTests
                 "--message", "Test Message"
             );
         }
-        
+
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ValidationException>(
             () => _command.ExecuteAsync(context, parseResult));
-        
+
         Assert.Contains("endpoint", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -151,13 +149,13 @@ public class EmailSendCommandTests
             "--subject", "Test Subject",
             "--message", "Test Message"
         );
-        
-        var expectedResult = new EmailSendResult 
-        { 
+
+        var expectedResult = new EmailSendResult
+        {
             MessageId = "test-message-id",
             Status = "Queued"
         };
-        
+
         _mockCommunicationService
             .Setup(s => s.SendEmailAsync(
                 It.IsAny<string>(),
@@ -174,10 +172,10 @@ public class EmailSendCommandTests
                 It.IsAny<string>(),
                 It.IsAny<RetryPolicyOptions>()))
             .ReturnsAsync(expectedResult);
-        
+
         // Act
         var result = await _command.ExecuteAsync(context, parseResult);
-        
+
         // Assert
         Assert.Equal(0, result);
         _mockCommunicationService.Verify(s => s.SendEmailAsync(
@@ -209,7 +207,7 @@ public class EmailSendCommandTests
             "--subject", "Test Subject",
             "--message", "Test Message"
         );
-        
+
         var expectedException = new RequestFailedException("Test error message");
         _mockCommunicationService
             .Setup(s => s.SendEmailAsync(
@@ -227,10 +225,10 @@ public class EmailSendCommandTests
                 It.IsAny<string>(),
                 It.IsAny<RetryPolicyOptions>()))
             .ThrowsAsync(expectedException);
-        
+
         // Act
         await _command.ExecuteAsync(context, parseResult);
-        
+
         // Assert
         Assert.NotNull(context.Response.Error);
         Assert.Equal(expectedException.Message, context.Response.Error.Message);
@@ -255,13 +253,13 @@ public class EmailSendCommandTests
             "--subscription", "test-subscription",
             "--resource-group", "test-rg"
         );
-        
-        var expectedResult = new EmailSendResult 
-        { 
+
+        var expectedResult = new EmailSendResult
+        {
             MessageId = "test-message-id",
             Status = "Queued"
         };
-        
+
         _mockCommunicationService
             .Setup(s => s.SendEmailAsync(
                 It.IsAny<string>(),
@@ -278,10 +276,10 @@ public class EmailSendCommandTests
                 It.IsAny<string>(),
                 It.IsAny<RetryPolicyOptions>()))
             .ReturnsAsync(expectedResult);
-        
+
         // Act
         var result = await _command.ExecuteAsync(context, parseResult);
-        
+
         // Assert
         Assert.Equal(0, result);
         _mockCommunicationService.Verify(s => s.SendEmailAsync(
@@ -313,13 +311,13 @@ public class EmailSendCommandTests
             "--subject", "Test Subject",
             "--message", "Test Message"
         );
-        
-        var expectedResult = new EmailSendResult 
-        { 
+
+        var expectedResult = new EmailSendResult
+        {
             MessageId = "test-message-id",
             Status = "Queued"
         };
-        
+
         _mockCommunicationService
             .Setup(s => s.SendEmailAsync(
                 It.IsAny<string>(),
@@ -336,14 +334,14 @@ public class EmailSendCommandTests
                 It.IsAny<string>(),
                 It.IsAny<RetryPolicyOptions>()))
             .ReturnsAsync(expectedResult);
-        
+
         // Act
         var result = await _command.ExecuteAsync(context, parseResult);
-        
+
         // Assert
         Assert.Equal(0, result);
         Assert.NotNull(context.Response.Results);
-        
+
         // Verify the JSON can be properly deserialized
         var json = context.Response.Results.Value.ToString();
         Assert.Contains("test-message-id", json);
