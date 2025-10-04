@@ -11,9 +11,8 @@ namespace Azure.Mcp.Tools.AppConfig.Commands;
 
 [JsonSerializable(typeof(AccountListCommand.AccountListCommandResult))]
 [JsonSerializable(typeof(KeyValueDeleteCommand.KeyValueDeleteCommandResult))]
-[JsonSerializable(typeof(KeyValueListCommand.KeyValueListCommandResult))]
+[JsonSerializable(typeof(KeyValueGetCommand.KeyValueGetCommandResult))]
 [JsonSerializable(typeof(KeyValueLockSetCommand.KeyValueLockSetCommandResult))]
-[JsonSerializable(typeof(KeyValueShowCommand.KeyValueShowResult))]
 [JsonSerializable(typeof(KeyValueSetCommand.KeyValueSetCommandResult))]
 [JsonSerializable(typeof(AppConfigurationStoreData))]
 [JsonSourceGenerationOptions(
