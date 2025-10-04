@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.Communication.Commands.Email;
 using Azure.Mcp.Tools.Communication.Commands.Sms;
 using Azure.Mcp.Tools.Communication.Services;
 using Microsoft.Extensions.DependencyInjection;
