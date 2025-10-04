@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
+using Azure.Mcp.Tools.Communication.Commands.Email;
 using Azure.Mcp.Tools.Communication.Models;
 
 namespace Azure.Mcp.Tools.Communication;

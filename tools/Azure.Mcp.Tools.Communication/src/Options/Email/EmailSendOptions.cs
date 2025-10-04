@@ -1,18 +1,13 @@
 // Copyright (c) Microsoft Corporation
-using Azure.Mcp.Options;
+using Azure.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Communication.Options;
 
 /// <summary>
 /// Options for the Email Send command.
 /// </summary>
-public class EmailSendOptions : BaseResourceOptions
+public class EmailSendOptions : BaseCommunicationOptions
 {
-    /// <summary>
-    /// The endpoint URI for the Azure Communication Services resource.
-    /// </summary>
-    public string? Endpoint { get; set; }
-    
     /// <summary>
     /// The email address to send from (must be from a verified domain).
     /// </summary>
