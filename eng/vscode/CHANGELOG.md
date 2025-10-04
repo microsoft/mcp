@@ -119,6 +119,7 @@
   - `azmcp_foundry_agents_evaluate`: Evaluate a response from an agent by passing query and response inline
   - `azmcp_foundry_agents_query_and_evaluate`: Connect to an agent in an AI Foundry project, query it, and evaluate the response in one step
 - Enhanced AKS managed cluster information with comprehensive properties. [[#490](https://github.com/microsoft/mcp/pull/490)]
+- Improved description of Load Test commands [[#92](https://github.com/microsoft/mcp/pull/92)] 
 - Added support retrieving Key Vault Managed HSM account settings via the command `azmcp-keyvault-admin-settings-get`. [[#358](https://github.com/microsoft/mcp/pull/358)]
 
 ### Changed
@@ -134,8 +135,6 @@
   - `azmcp_storage_share_file_list`
   - `azmcp_storage_table_list`
 - **Breaking:** Updated the `OpenWorld` and `Destructive` hints for all tools. [[#510](https://github.com/microsoft/mcp/pull/510)]
-
-### Fixed
 
 - Fixed MCP server hanging on invalid transport arguments. Server now exits gracefully with clear error messages instead of hanging indefinitely. [[#511](https://github.com/microsoft/mcp/pull/511)]
 
