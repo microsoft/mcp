@@ -1063,15 +1063,22 @@ azmcp monitor metrics query --subscription <subscription> \
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 azmcp azuremanagedlustre filesystem list --subscription <subscription> \
-                                      --resource-group <resource-group>
-
-# Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
-azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \
-                                      --sku <azure-managed-lustre-sku> \
-                                      --size <filesystem-size-in-tib>
+                                         --resource-group <resource-group> 
 
 azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
                                             --location <location>
+
+# Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
+azmcp azuremanagedlustre filesystem subnetsize ask --subscription <subscription> \
+                                                   --sku <azure-managed-lustre-sku> \
+                                                   --size <filesystem-size-in-tib>
+
+# Checks if a subnet has enough available IP addresses for the specified Azure Managed Lustre SKU and filesystem size
+azmcp azuremanagedlustre filesystem subnetsize validate --subscription <subscription> \
+                                                        --subnet-id <subnet-resource-id> \
+                                                        --sku <azure-managed-lustre-sku> \
+                                                        --size <filesystem-size-in-tib> \
+                                                        --location <filesystem-location>
 ```
 
 ### Azure Native ISV Operations
