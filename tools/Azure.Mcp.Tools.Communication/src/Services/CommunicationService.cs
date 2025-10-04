@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Communication.Sms;
+using Azure.Communication.Email;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
@@ -9,6 +10,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Communication.Models;
 using Microsoft.Extensions.Logging;
+using System.Net.Sockets;
 
 namespace Azure.Mcp.Tools.Communication.Services;
 
@@ -81,6 +83,87 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to send SMS from {From} to {ToCount} recipient(s)", from, to.Length);
+            throw;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<Models.EmailSendResult> SendEmailAsync(
+        string endpoint,
+        string sender,
+        string? senderName,
+        string[] to,
+        string subject,
+        string message,
+        bool isHtml = false,
+        string[]? cc = null,
+        string[]? bcc = null,
+        string[]? replyTo = null,
+        string? subscription = null,
+        string? resourceGroup = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        try
+        {
+            // Create email client with credential from base class
+            var credential = await GetCredential(null);
+            var emailClient = new EmailClient(new Uri(endpoint), credential);
+
+            // Create the email content
+            var emailContent = new EmailContent(subject);
+
+            if (isHtml)
+            {
+                emailContent.Html = message;
+            }
+            else
+            {
+                emailContent.PlainText = message;
+            }
+
+            // Create the recipient list
+            var recipientList = to.Select(address => new EmailAddress(address)).ToList();
+            var recipientCc = cc?.Select(address => new EmailAddress(address)).ToList();
+            var recipientBcc = bcc?.Select(address => new EmailAddress(address)).ToList();
+            // Create the email message
+            var emailMessage = new EmailMessage(
+                senderAddress: sender,
+                content: emailContent,
+                recipients: new EmailRecipients(recipientList, recipientCc, recipientBcc));
+
+            // Add reply-to addresses if provided
+            if (replyTo != null && replyTo.Length > 0)
+            {
+                foreach (var address in replyTo)
+                {
+                    emailMessage.ReplyTo.Add(new EmailAddress(address));
+                }
+            }
+
+            _logger.LogInformation("Sending email from {Sender} to {ToCount} recipient(s), CC: {CcCount}, BCC: {BccCount}", 
+                sender, to.Length, cc?.Length ?? 0, bcc?.Length ?? 0);
+
+            // Send the email
+            var response = await emailClient.SendAsync(
+                WaitUntil.Completed,
+                emailMessage,
+                CancellationToken.None);
+
+            // Get the operation result
+            var operationResult = response.Value;
+
+            _logger.LogInformation("Email sent successfully. MessageId={MessageId}, Status={Status}", 
+                response.Id, operationResult.Status);
+
+            return new Models.EmailSendResult
+            {
+                MessageId = response.Id,
+                Status = operationResult.Status.ToString()
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send email from {Sender} to {ToCount} recipient(s)", sender, to.Length);
             throw;
         }
     }

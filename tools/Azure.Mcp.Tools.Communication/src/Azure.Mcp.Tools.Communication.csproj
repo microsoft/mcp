@@ -11,6 +11,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Azure.Communication.Sms" />
+    <PackageReference Include="Azure.Communication.Email" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
