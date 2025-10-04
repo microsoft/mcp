@@ -3,30 +3,30 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Communication.Email;
-using Azure.Communication.Email.Models;
 using Azure.Core;
-using Azure.Mcp.Services;
+using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Communication.Models;
 using Azure.Mcp.Tools.Communication.Services;
 using Microsoft.Extensions.Logging;
-using Moq;
+using NSubstitute;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.UnitTests.Services;
 
 public class CommunicationServiceTests
 {
-    private readonly Mock<ISubscriptionService> _mockSubscriptionService;
-    private readonly Mock<ILogger<CommunicationService>> _mockLogger;
-    private readonly Mock<TokenCredential> _mockCredential;
+    private readonly ISubscriptionService _mockSubscriptionService;
+    private readonly ITenantService _mockTenantService;
+    private readonly ILogger<CommunicationService> _mockLogger;
     private readonly CommunicationService _service;
 
     public CommunicationServiceTests()
     {
-        _mockSubscriptionService = new Mock<ISubscriptionService>();
-        _mockLogger = new Mock<ILogger<CommunicationService>>();
-        _mockCredential = new Mock<TokenCredential>();
-        _service = new CommunicationService(_mockSubscriptionService.Object, _mockLogger.Object);
+        _mockSubscriptionService = Substitute.For<ISubscriptionService>();
+        _mockTenantService = Substitute.For<ITenantService>();
+        _mockLogger = Substitute.For<ILogger<CommunicationService>>();
+        _service = new CommunicationService(_mockSubscriptionService, _mockTenantService, _mockLogger);
     }
 
     [Fact]
