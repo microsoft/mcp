@@ -473,9 +473,10 @@ public class FoundryService(
 
         // Note: Usage information might not be available in the current SDK version
         // Using placeholder values for now
+        var splitInput = inputText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var usageInfo = new EmbeddingUsageInfo(
-            inputText.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length, // Approximate token count
-            inputText.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length);
+            splitInput.Length, // Approximate token count
+            splitInput.Length);
 
         return new EmbeddingResult(
             "list",
