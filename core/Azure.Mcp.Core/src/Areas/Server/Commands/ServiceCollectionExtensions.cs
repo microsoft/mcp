@@ -121,7 +121,8 @@ public static class AzureMcpServiceCollectionExtensions
                 var utilityToolLoaderOptions = new ToolLoaderOptions(
                     Namespace: Discovery.DiscoveryConstants.UtilityNamespaces,
                     ReadOnly: defaultToolLoaderOptions.ReadOnly,
-                    InsecureDisableElicitation: defaultToolLoaderOptions.InsecureDisableElicitation
+                    InsecureDisableElicitation: defaultToolLoaderOptions.InsecureDisableElicitation,
+                    Tool: defaultToolLoaderOptions.Tool
                 );
 
                 toolLoaders.Add(new CommandFactoryToolLoader(

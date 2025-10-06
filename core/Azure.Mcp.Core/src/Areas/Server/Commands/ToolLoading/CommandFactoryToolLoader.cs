@@ -66,7 +66,11 @@ public sealed class CommandFactoryToolLoader(
         // Filter by specific tools if provided
         if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
         {
-            visibleCommands = visibleCommands.Where(kvp => _options.Value.Tool.Contains(kvp.Key, StringComparer.OrdinalIgnoreCase));
+            visibleCommands = visibleCommands.Where(kvp =>
+            {
+                var toolKey = kvp.Key;
+                return _options.Value.Tool.Any(tool => tool.Contains(toolKey, StringComparison.OrdinalIgnoreCase));
+            });
         }
 
         var tools = visibleCommands
