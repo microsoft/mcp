@@ -441,6 +441,21 @@ azmcp communication sms send \
 -   `--enable-delivery-report`: Enable delivery reporting for the SMS message (optional)
 -   `--tag`: Custom tag for message tracking (optional)
 
+
+### Azure Confidential Ledger Operations
+
+```bash
+# Append a tamper-proof entry to a Confidential Ledger
+azmcp confidentialledger entries append --ledger <ledger-name> \
+                                        --content <json-or-text-data> \
+                                        [--collection-id <collection-id>]
+```
+
+**Options:**
+-   `--ledger`: Confidential Ledger name (required)
+-   `--content`: JSON or text data to insert into the ledger (required)
+-   `--collection-id`: Collection ID to store the data with (optional)
+
 ### Azure Container Registry (ACR) Operations
 
 ```bash
@@ -1063,15 +1078,22 @@ azmcp monitor metrics query --subscription <subscription> \
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 azmcp azuremanagedlustre filesystem list --subscription <subscription> \
-                                      --resource-group <resource-group>
-
-# Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
-azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \
-                                      --sku <azure-managed-lustre-sku> \
-                                      --size <filesystem-size-in-tib>
+                                         --resource-group <resource-group> 
 
 azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
                                             --location <location>
+
+# Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
+azmcp azuremanagedlustre filesystem subnetsize ask --subscription <subscription> \
+                                                   --sku <azure-managed-lustre-sku> \
+                                                   --size <filesystem-size-in-tib>
+
+# Checks if a subnet has enough available IP addresses for the specified Azure Managed Lustre SKU and filesystem size
+azmcp azuremanagedlustre filesystem subnetsize validate --subscription <subscription> \
+                                                        --subnet-id <subnet-resource-id> \
+                                                        --sku <azure-managed-lustre-sku> \
+                                                        --size <filesystem-size-in-tib> \
+                                                        --location <filesystem-location>
 ```
 
 ### Azure Native ISV Operations

@@ -330,6 +330,7 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 * "List the Azure Managed Lustre clusters in resource group 'my-resource-group'"
 * "How many IP Addresses I need to create a 128 TiB cluster of AMLFS 500?"
+* "Check if 'my-subnet-id' can host an Azure Managed Lustre with 'my-size' TiB and 'my-sku' in 'my-region'
 
 ### 📊 Azure Monitor
 
@@ -379,6 +380,7 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 📦 **Azure Container Apps** - Container hosting
 - 📞  **Azure Communication Services** - SMS messaging and communication
+- 🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
