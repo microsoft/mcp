@@ -7,6 +7,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Added support for sending SMS messages via Azure Communication Services with the command `azmcp_communication_sms_send`. Supports single and multiple recipients, delivery reporting, and custom message tracking tags. [[#473](https://github.com/microsoft/mcp/pull/473)]
+- Added the following Azure Managed Lustre commands:
+  - `azmcp_azuremanagedlustre_filesystem_subnetsize_validate`: Check if the subnet can host the target Azure Managed Lustre SKU and size [[#110](https://github.com/microsoft/mcp/issues/110)].
 
 ### Breaking Changes
 
@@ -17,6 +19,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Fixed the construction of Azure Resource Graph queries for App Configuration in the `FindAppConfigStore` method. The name filter is now correctly passed via the `additionalFilter` parameter instead of `tableName`, resolving "ExactlyOneStartingOperatorRequired" and "BadRequest" errors when setting key-value pairs. [[#670](https://github.com/microsoft/mcp/pull/670)]
 
 ### Other Changes
+
+- Renamed `azmcp_azuremanagedlustre_filesystem_required-subnet-size` to `azmcp_azuremanagedlustre_filesystem_subnetsize_ask`
 
 #### Dependency updates
 

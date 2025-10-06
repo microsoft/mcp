@@ -18,7 +18,8 @@ public class AzureManagedLustreSetup : IAreaSetup
         services.AddSingleton<IAzureManagedLustreService, AzureManagedLustreService>();
 
         services.AddSingleton<FileSystemListCommand>();
-        services.AddSingleton<FileSystemSubnetSizeCommand>();
+        services.AddSingleton<SubnetSizeAskCommand>();
+        services.AddSingleton<SubnetSizeValidateCommand>();
         services.AddSingleton<SkuGetCommand>();
     }
 
@@ -33,8 +34,14 @@ public class AzureManagedLustreSetup : IAreaSetup
         var list = serviceProvider.GetRequiredService<FileSystemListCommand>();
         fileSystem.AddCommand(list.Name, list);
 
-        var subnetSize = serviceProvider.GetRequiredService<FileSystemSubnetSizeCommand>();
-        fileSystem.AddCommand(subnetSize.Name, subnetSize);
+        var subnetSize = new CommandGroup("subnetsize", "Subnet size planning and validation operations for Azure Managed Lustre.");
+        fileSystem.AddSubGroup(subnetSize);
+
+        var subnetSizeAsk = serviceProvider.GetRequiredService<SubnetSizeAskCommand>();
+        subnetSize.AddCommand(subnetSizeAsk.Name, subnetSizeAsk);
+
+        var subnetSizeValidate = serviceProvider.GetRequiredService<SubnetSizeValidateCommand>();
+        subnetSize.AddCommand(subnetSizeValidate.Name, subnetSizeValidate);
 
         var sku = new CommandGroup("sku", "This group provides commands to discover and retrieve information about available Azure Managed Lustre SKUs, including supported tiers, performance characteristics, and regional availability. Use these commands to validate SKU options prior to provisioning or updating a filesystem.");
         fileSystem.AddSubGroup(sku);
