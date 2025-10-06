@@ -97,7 +97,6 @@ public sealed class NamespaceToolLoader : BaseToolLoader
         }
 
         var toolName = request.Params.Name;
-        var args = request.Params.Arguments;
 
         // Validate namespace exists
         if (!_namespaceNames.Contains(toolName, StringComparer.OrdinalIgnoreCase))
@@ -112,17 +111,11 @@ public sealed class NamespaceToolLoader : BaseToolLoader
             };
         }
 
-        // Parse hierarchical structure from tool arguments
-        var parsedArgs = request.Params.Arguments as IReadOnlyDictionary<string, JsonElement>;
-        if (parsedArgs == null && request.Params.Arguments != null)
-        {
-            // Convert from Dictionary<string, object?> if needed
-            parsedArgs = ConvertToJsonElements(request.Params.Arguments as Dictionary<string, object?>);
-        }
-
-        var (intent, command, parameters, learn) = ParseHierarchicalCall(parsedArgs);        // Auto-learn if intent provided but no command specified
+        var args = request.Params.Arguments;
+        var (intent, command, parameters, learn) = ParseHierarchicalCall(args);
         if (!learn && !string.IsNullOrEmpty(intent) && string.IsNullOrEmpty(command))
         {
+            // Auto-learn if intent provided but no command specified
             learn = true;
         }
 
@@ -512,58 +505,6 @@ public sealed class NamespaceToolLoader : BaseToolLoader
         }
 
         return (intent, command, parameters, learn);
-    }
-
-    /// <summary>
-    /// Converts Dictionary<string, object?> to Dictionary<string, JsonElement> for command parsing.
-    /// </summary>
-    private static IReadOnlyDictionary<string, JsonElement> ConvertToJsonElements(Dictionary<string, object?>? dict)
-    {
-        if (dict == null || dict.Count == 0)
-        {
-            return new Dictionary<string, JsonElement>();
-        }
-
-        var result = new Dictionary<string, JsonElement>();
-        foreach (var kvp in dict)
-        {
-            if (kvp.Value == null)
-            {
-                result[kvp.Key] = JsonDocument.Parse("null").RootElement;
-            }
-            else if (kvp.Value is JsonElement elem)
-            {
-                result[kvp.Key] = elem;
-            }
-            else if (kvp.Value is string str)
-            {
-                result[kvp.Key] = JsonDocument.Parse($"\"{str}\"").RootElement;
-            }
-            else if (kvp.Value is bool b)
-            {
-                result[kvp.Key] = JsonDocument.Parse(b.ToString().ToLower()).RootElement;
-            }
-            else if (kvp.Value is int or long or double or float or decimal)
-            {
-                result[kvp.Key] = JsonDocument.Parse(kvp.Value.ToString() ?? "null").RootElement;
-            }
-            else
-            {
-                // For complex objects, use JsonElement.ValueKind if possible
-                // Otherwise convert to string representation
-                try
-                {
-                    var jsonString = JsonSerializer.SerializeToElement(kvp.Value, ServerJsonContext.Default.Object).GetRawText();
-                    result[kvp.Key] = JsonDocument.Parse(jsonString).RootElement;
-                }
-                catch
-                {
-                    // Fallback to string representation
-                    result[kvp.Key] = JsonDocument.Parse($"\"{kvp.Value}\"").RootElement;
-                }
-            }
-        }
-        return result;
     }
 
     private static bool IsRawMcpToolInputOption(Option option)
