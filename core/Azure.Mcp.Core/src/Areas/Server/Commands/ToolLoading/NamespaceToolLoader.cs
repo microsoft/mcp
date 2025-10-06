@@ -33,13 +33,6 @@ public sealed class NamespaceToolLoader : BaseToolLoader
     private readonly ConcurrentDictionary<string, IReadOnlyDictionary<string, IBaseCommand>> _commandsByNamespace = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, List<Tool>> _cachedLearnToolsByNamespace = new(StringComparer.OrdinalIgnoreCase);
 
-    private static readonly Lazy<JsonElement> HierarchicalSchemaCache = new(CreateHierarchicalSchema);
-    private const string HierarchicalToolDescription =
-        "This tool is a hierarchical MCP command router.\n" +
-        "Sub commands are routed to MCP servers that require specific fields inside the \"parameters\" object.\n" +
-        "To invoke a command, set \"command\" and wrap its args in \"parameters\".\n" +
-        "Set \"learn=true\" to discover available sub commands.";
-
     private const string ToolCallProxySchema = """
         {
           "type": "object",
@@ -57,6 +50,33 @@ public sealed class NamespaceToolLoader : BaseToolLoader
         }
         """;
 
+    private static readonly JsonElement ToolSchema = JsonSerializer.Deserialize("""
+        {
+            "type": "object",
+            "properties": {
+            "intent": {
+                "type": "string",
+                "description": "The intent of the azure operation to perform."
+            },
+            "command": {
+                "type": "string",
+                "description": "The command to execute against the specified tool."
+            },
+            "parameters": {
+                "type": "object",
+                "description": "The parameters to pass to the tool command."
+            },
+            "learn": {
+                "type": "boolean",
+                "description": "To learn about the tool and its supported child tools and parameters.",
+                "default": false
+            }
+            },
+            "required": ["intent"],
+            "additionalProperties": false
+        }
+        """, ServerJsonContext.Default.JsonElement);
+
     public NamespaceToolLoader(
         CommandFactory commandFactory,
         IOptions<ServiceStartOptions> options,
@@ -70,7 +90,7 @@ public sealed class NamespaceToolLoader : BaseToolLoader
         _namespaceNames = GetFilteredNamespaceNames();
         _cachedNamespaceTools = new Lazy<List<Tool>>(() =>
             _namespaceNames
-                .Select(ns => CreateNamespaceTool(ns, GetNamespaceDescription(ns)))
+                .Select(ns => CreateNamespaceTool(ns))
                 .ToList());
     }
 
@@ -79,7 +99,6 @@ public sealed class NamespaceToolLoader : BaseToolLoader
         CancellationToken cancellationToken)
     {
         var tools = _cachedNamespaceTools.Value;
-        _logger.LogInformation("Listing {Count} namespace tools.", tools.Count);
         return ValueTask.FromResult(new ListToolsResult { Tools = tools });
     }
 
@@ -187,12 +206,8 @@ public sealed class NamespaceToolLoader : BaseToolLoader
             .Select(kvp => CreateToolFromCommand(kvp.Key, kvp.Value))
             .ToList();
 
-        // Cache for future requests
+        // Cache tools for future learn requests
         _cachedLearnToolsByNamespace[nameSpace] = tools;
-
-        var toolsJson = JsonSerializer.Serialize(tools, ServerJsonContext.Default.ListTool);
-
-        var learnResponse = CreateLearnResponse(nameSpace, toolsJson);
 
         // If client supports sampling and intent is provided, try to infer command
         if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
@@ -206,7 +221,8 @@ public sealed class NamespaceToolLoader : BaseToolLoader
             }
         }
 
-        return learnResponse;
+        var toolsJson = JsonSerializer.Serialize(tools, ServerJsonContext.Default.ListTool);
+        return CreateLearnResponse(nameSpace, toolsJson);
     }
 
     /// <summary>
@@ -235,7 +251,6 @@ public sealed class NamespaceToolLoader : BaseToolLoader
                     return await HandleLearnRequest(request, intent, nameSpace, cancellationToken);
                 }
 
-                // Try to infer command from intent
                 var tools = _cachedLearnToolsByNamespace.GetValueOrDefault(nameSpace)
                     ?? GetToolsForNamespace(nameSpace);
 
@@ -344,7 +359,16 @@ public sealed class NamespaceToolLoader : BaseToolLoader
     }
 
     /// <summary>
-    /// Gets filtered namespace names at construction time (lightweight operation).
+    /// Gets or lazily loads commands for a specific namespace.
+    /// Commands are only loaded when first accessed, improving startup time and memory usage.
+    /// </summary>
+    private IReadOnlyDictionary<string, IBaseCommand> GetOrLoadNamespaceCommands(string nameSpace)
+    {
+        return _commandsByNamespace.GetOrAdd(nameSpace, ns => _commandFactory.GroupCommands([ns]));
+    }
+
+    /// <summary>
+    /// Gets filtered namespace names.
     /// </summary>
     private IReadOnlyList<string> GetFilteredNamespaceNames()
     {
@@ -358,60 +382,25 @@ public sealed class NamespaceToolLoader : BaseToolLoader
     }
 
     /// <summary>
-    /// Gets or lazily loads commands for a specific namespace.
-    /// Commands are only loaded when first accessed, improving startup time and memory usage.
-    /// </summary>
-    private IReadOnlyDictionary<string, IBaseCommand> GetOrLoadNamespaceCommands(string nameSpace)
-    {
-        return _commandsByNamespace.GetOrAdd(nameSpace, ns => _commandFactory.GroupCommands([ns]));
-    }
-
-    /// <summary>
     /// Creates a hierarchical namespace tool with learn capabilities.
-    /// Uses cached hierarchical schema to avoid repeated JSON serialization.
     /// </summary>
-    private static Tool CreateNamespaceTool(string nameSpace, string description)
+    private Tool CreateNamespaceTool(string nameSpace)
     {
+        var group = _commandFactory.RootGroup.SubGroup
+            .First(g => string.Equals(g.Name, nameSpace, StringComparison.OrdinalIgnoreCase));
+        var description = group.Description;
+
         return new Tool
         {
             Name = nameSpace,
-            Description = $"{description}\n{HierarchicalToolDescription}",
-            InputSchema = HierarchicalSchemaCache.Value
+            Description = description + """
+                This tool is a hierarchical MCP command router.
+                Sub commands are routed to MCP servers that require specific fields inside the "parameters" object.
+                To invoke a command, set "command" and wrap its args in "parameters".
+                Set "learn=true" to discover available sub commands.
+                """,
+            InputSchema = ToolSchema
         };
-    }
-
-    /// <summary>
-    /// Creates the hierarchical input schema used by all namespace tools.
-    /// This schema is shared across all instances and cached statically.
-    /// </summary>
-    private static JsonElement CreateHierarchicalSchema()
-    {
-        return JsonSerializer.Deserialize("""
-            {
-                "type": "object",
-                "properties": {
-                "intent": {
-                    "type": "string",
-                    "description": "The intent of the azure operation to perform."
-                },
-                "command": {
-                    "type": "string",
-                    "description": "The command to execute against the specified tool."
-                },
-                "parameters": {
-                    "type": "object",
-                    "description": "The parameters to pass to the tool command."
-                },
-                "learn": {
-                    "type": "boolean",
-                    "description": "To learn about the tool and its supported child tools and parameters.",
-                    "default": false
-                }
-                },
-                "required": ["intent"],
-                "additionalProperties": false
-            }
-            """, ServerJsonContext.Default.JsonElement);
     }
 
     /// <summary>
@@ -552,14 +541,6 @@ public sealed class NamespaceToolLoader : BaseToolLoader
             ?? GetToolsForNamespace(nameSpace);
 
         return tools.First(t => string.Equals(t.Name, commandName, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private string GetNamespaceDescription(string nameSpace)
-    {
-        var group = _commandFactory.RootGroup.SubGroup
-            .FirstOrDefault(g => string.Equals(g.Name, nameSpace, StringComparison.OrdinalIgnoreCase));
-
-        return group?.Description ?? $"Azure {nameSpace} operations";
     }
 
     private static bool SupportsSampling(McpServer server)
