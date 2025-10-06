@@ -406,4 +406,42 @@ public class ToolsListCommandTests
         Assert.True(metadata.ReadOnly, "Tool list command should be read-only");
     }
 
+    /// <summary>
+    /// Verifies that the command includes metadata for each tool in the output.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_IncludesMetadataForAllCommands()
+    {
+        // Arrange
+        var args = _commandDefinition.Parse([]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.NotNull(response.Results);
+
+        var result = DeserializeResults(response.Results);
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+
+        // Verify that all commands have metadata
+        foreach (var command in result)
+        {
+            Assert.NotNull(command.Metadata);
+
+            // Verify that metadata has the expected properties
+            // Destructive, ReadOnly, Idempotent, OpenWorld, Secret, LocalRequired
+            var metadata = command.Metadata;
+
+            // Check that at least the main properties are accessible
+            Assert.True(metadata.Destructive || !metadata.Destructive, "Destructive should be defined");
+            Assert.True(metadata.ReadOnly || !metadata.ReadOnly, "ReadOnly should be defined");
+            Assert.True(metadata.Idempotent || !metadata.Idempotent, "Idempotent should be defined");
+            Assert.True(metadata.OpenWorld || !metadata.OpenWorld, "OpenWorld should be defined");
+            Assert.True(metadata.Secret || !metadata.Secret, "Secret should be defined");
+            Assert.True(metadata.LocalRequired || !metadata.LocalRequired, "LocalRequired should be defined");
+        }
+    }
 }

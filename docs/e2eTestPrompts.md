@@ -55,12 +55,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_appconfig_account_list | Show me the App Configuration stores in my subscription |
 | azmcp_appconfig_account_list | Show me my App Configuration stores |
 | azmcp_appconfig_kv_delete | Delete the key <key_name> in App Configuration store <app_config_store_name> |
-| azmcp_appconfig_kv_list | List all key-value settings in App Configuration store <app_config_store_name> |
-| azmcp_appconfig_kv_list | Show me the key-value settings in App Configuration store <app_config_store_name> |
+| azmcp_appconfig_kv_get | List all key-value settings in App Configuration store <app_config_store_name> |
+| azmcp_appconfig_kv_get | Show me the key-value settings in App Configuration store <app_config_store_name> |
+| azmcp_appconfig_kv_get | List all key-value settings with key name starting with 'prod-' in App Configuration store <app_config_store_name> |
+| azmcp_appconfig_kv_get | Show the content for the key <key_name> in App Configuration store <app_config_store_name> |
 | azmcp_appconfig_kv_lock_set | Lock the key <key_name> in App Configuration store <app_config_store_name> |
 | azmcp_appconfig_kv_lock_set | Unlock the key <key_name> in App Configuration store <app_config_store_name> |
 | azmcp_appconfig_kv_set | Set the key <key_name> in App Configuration store <app_config_store_name> to \<value> |
-| azmcp_appconfig_kv_show | Show the content for the key <key_name> in App Configuration store <app_config_store_name> |
 
 ## Azure App Lens
 
@@ -105,6 +106,19 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_acr_registry_repository_list | Show me my container registry repositories |
 | azmcp_acr_registry_repository_list | List repositories in the container registry <registry_name> |
 | azmcp_acr_registry_repository_list | Show me the repositories in the container registry <registry_name> |
+
+## Azure Communication Services
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_communication_sms_send | Send an SMS message to +1234567890 saying "Hello" |
+| azmcp_communication_sms_send | Send SMS to +1234567890 from +1234567891 with message "Test message" |
+| azmcp_communication_sms_send | Send SMS to multiple recipients: +1234567890, +1234567891 |
+| azmcp_communication_sms_send | Send SMS with delivery reporting enabled |
+| azmcp_communication_sms_send | Send SMS message with custom tracking tag "campaign1" |
+| azmcp_communication_sms_send | Send broadcast SMS to +1234567890 and +1234567891 saying "Urgent notification" |
+| azmcp_communication_sms_send | Send SMS from my communication service to +1234567890 |
+| azmcp_communication_sms_send | Send an SMS with delivery receipt tracking |
 
 ## Azure Cosmos DB
 
@@ -326,8 +340,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azmcp_azuremanagedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> |
 | azmcp_azuremanagedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> |
-| azmcp_azuremanagedlustre_filesystem_required-subnet-size | Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku> |
 | azmcp_azuremanagedlustre_filesystem_sku_get | List the Azure Managed Lustre SKUs available in <location> |
+| azmcp_azuremanagedlustre_filesystem_subnetsize_ask | Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku> |
+| azmcp_azuremanagedlustre_filesystem_subnetsize_validate | Validate if <subnet_id> can host <filesystem_size> of <amlfs_sku> |
 
 ## Azure Marketplace
 
@@ -384,7 +399,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 ## Azure Quick Review CLI
 
 | Tool Name | Test Prompt |
-| --------- | ----------- |
+|:----------|:----------|
 | azmcp_extension_azqr | Check my Azure subscription for any compliance issues or recommendations |
 | azmcp_extension_azqr | Provide compliance recommendations for my current Azure subscription |
 | azmcp_extension_azqr | Scan my Azure subscription for compliance recommendations |

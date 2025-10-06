@@ -107,4 +107,54 @@ public class DatabaseQueryCommandTests
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
     }
+
+    [Theory]
+    [InlineData("DELETE FROM users;")]
+    [InlineData("SELECT * FROM users; DROP TABLE users;")]
+    [InlineData("SELECT * FROM users -- comment")] // inline comment
+    [InlineData("SELECT * FROM users /* block comment */")] // block comment
+    [InlineData("SELECT * FROM users; SELECT * FROM other;")] // stacked
+    [InlineData("UPDATE accounts SET balance=0;")]
+    public async Task ExecuteAsync_InvalidQuery_ValidationError(string badQuery)
+    {
+        var command = new DatabaseQueryCommand(_logger);
+        var args = command.GetCommand().Parse([
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--user", "user1",
+            "--server", "server1",
+            "--database", "db123",
+            "--query", badQuery
+        ]);
+
+        var context = new CommandContext(_serviceProvider);
+        var response = await command.ExecuteAsync(context, args);
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status); // CommandValidationException => 400
+        // Service should never be called for invalid queries.
+        await _postgresService.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_LongQuery_ValidationError()
+    {
+        var longSelect = "SELECT " + new string('a', 6000) + " FROM test"; // exceeds max length
+        var command = new DatabaseQueryCommand(_logger);
+        var args = command.GetCommand().Parse([
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--user", "user1",
+            "--server", "server1",
+            "--database", "db123",
+            "--query", longSelect
+        ]);
+
+        var context = new CommandContext(_serviceProvider);
+        var response = await command.ExecuteAsync(context, args);
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        await _postgresService.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
+    }
 }
