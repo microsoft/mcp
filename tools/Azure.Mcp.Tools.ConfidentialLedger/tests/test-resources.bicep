@@ -16,7 +16,9 @@ param testApplicationOid string
 
 // Confidential Ledger requires a globally unique name
 // Use a hash-based suffix to ensure uniqueness
-var ledgerName = take('${baseName}acl', 24)
+@description('A seed value used to calculate the unique string to append to the ledger name. Defaults to utcNow().')
+param suffixSeed string = utcNow()
+var ledgerName = take('mcptestacl${uniqueString(suffixSeed)}', 24)
 
 resource confidentialLedger 'Microsoft.ConfidentialLedger/ledgers@2023-01-26-preview' = {
   name: ledgerName
