@@ -380,7 +380,7 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 - 📦 **Azure Container Apps** - Container hosting
 - 📞  **Azure Communication Services** - SMS messaging and communication
 - � **Azure Confidential Ledger** - Tamper-proof ledger operations
-- �📦 **Azure Container Registry (ACR)** - Container registry management
+- 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
