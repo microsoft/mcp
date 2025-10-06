@@ -3,7 +3,7 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Threading.Tasks;
-using Azure.Mcp.Core.Models.Commands;
+using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tools.Communication.Commands.Email;
 using Azure.Mcp.Tools.Communication.Models;
