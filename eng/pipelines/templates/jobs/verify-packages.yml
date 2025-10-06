@@ -1,11 +1,17 @@
 parameters:
 # required matrix parameters
+- name: UsePlatformContainer
+  type: boolean
 - name: OSName
   type: string
 - name: Matrix
   type: object
 - name: DependsOn
   type: string
+- name: CloudConfig
+  type: object
+- name: TestTimeoutInMinutes
+  type: number
 - name: ServerName
   type: string
 

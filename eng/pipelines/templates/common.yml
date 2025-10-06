@@ -120,6 +120,7 @@ extends:
             SparseCheckout: false
             JobTemplatePath: /eng/pipelines/templates/jobs/verify-packages.yml
             AdditionalParameters:
+              TestTimeoutInMinutes: 10
               ServerName: ${{ parameters.ServerName }}
             MatrixConfigs:
               - Name: build_matrix
