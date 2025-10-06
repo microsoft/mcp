@@ -24,10 +24,4 @@
     <PackageReference Include="ModelContextProtocol.AspNetCore" />
     <PackageReference Include="System.Linq.Async" />
   </ItemGroup>
-
-  <ItemGroup>
-    <None Include="..\..\..\docs\azmcp-commands.md" />
-    <None Include="..\..\..\docs\e2eTestPrompts.md" />
-    <None Include="..\..\..\docs\new-command.md" />
-  </ItemGroup>
 </Project>
