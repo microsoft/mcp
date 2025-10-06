@@ -16,9 +16,7 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
     public override string Name => CommandName;
     public override string Description =>
     $"""
-    Retrieve the health status of an entity defined in an Azure Monitor Health Model within a Log Analytics workspace. 
-    Use this tool whenever an 'entity' is provided and the user asks for health status, availability state, or health events of a Monitor entity — even if a specific resource or Resource ID is mentioned. 
-    This tool returns entity-level Monitor health details, including availability state, health events, and event timestamps.  
+    Retrieve the health status of an entity within a custom Azure Monitor Health Model in a Log Analytics workspace. Use this tool ONLY when the user mentions a specific health model name and asks for health status, health events. This provides application-level health monitoring with custom health models, not basic Azure resource availability. For basic Azure resource availability status, use Resource Health tool instead. For workspace log queries or resource log queries, use Monitor query tools instead.
     Required arguments:
         - {MonitorOptionDefinitions.Health.Entity.Name}: The entity to get health for
         - {MonitorOptionDefinitions.Health.HealthModel.Name}: The health model name
