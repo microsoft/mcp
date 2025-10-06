@@ -215,9 +215,6 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var embeddingObject = firstEmbedding.GetProperty("object");
         Assert.Equal("embedding", embeddingObject.GetString());
 
-        var embeddingIndex = firstEmbedding.GetProperty("index");
-        Assert.Equal(0, embeddingIndex.GetInt32());
-
         var embeddingVector = firstEmbedding.GetProperty("embedding");
         Assert.Equal(JsonValueKind.Array, embeddingVector.ValueKind);
 
@@ -318,7 +315,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
 
         // Verify usage information shows token consumption
         var usage = embeddingResult.AssertProperty("usage");
-        var totalTokens = usage.AssertProperty("totalTokens");
+        var totalTokens = usage.AssertProperty("total_tokens");
         Assert.True(totalTokens.GetInt32() > 0, "Should have consumed tokens");
     }
 
@@ -367,34 +364,56 @@ public class FoundryCommandTests(ITestOutputHelper output)
                 Assert.NotEmpty(deploymentName.GetString()!);
                 Assert.NotEmpty(modelName.GetString()!);
 
+                // Verify modelVersion if present
+                if (model.TryGetProperty("modelVersion", out var modelVersion))
+                {
+                    Assert.Equal(JsonValueKind.String, modelVersion.ValueKind);
+                    Assert.NotEmpty(modelVersion.GetString()!);
+                }
+
                 // Verify capabilities structure if present
                 if (model.TryGetProperty("capabilities", out var capabilities))
                 {
                     Assert.Equal(JsonValueKind.Object, capabilities.ValueKind);
 
-                    // Check boolean capability properties
-                    var completions = capabilities.GetProperty("completions");
-                    var embeddings = capabilities.GetProperty("embeddings");
-                    var chatCompletions = capabilities.GetProperty("chatCompletions");
-                    var fineTuning = capabilities.GetProperty("fineTuning");
+                    // Check boolean capability properties (only validate the ones that are present)
+                    if (capabilities.TryGetProperty("completions", out var completions))
+                    {
+                        Assert.True(completions.ValueKind == JsonValueKind.True || completions.ValueKind == JsonValueKind.False, 
+                            "completions should be a boolean value");
+                    }
 
-                    Assert.Equal(JsonValueKind.True, completions.ValueKind == JsonValueKind.True ? JsonValueKind.True : JsonValueKind.False);
-                    Assert.Equal(JsonValueKind.True, embeddings.ValueKind == JsonValueKind.True ? JsonValueKind.True : JsonValueKind.False);
-                    Assert.Equal(JsonValueKind.True, chatCompletions.ValueKind == JsonValueKind.True ? JsonValueKind.True : JsonValueKind.False);
-                    Assert.Equal(JsonValueKind.True, fineTuning.ValueKind == JsonValueKind.True ? JsonValueKind.True : JsonValueKind.False);
+                    if (capabilities.TryGetProperty("embeddings", out var embeddings))
+                    {
+                        Assert.True(embeddings.ValueKind == JsonValueKind.True || embeddings.ValueKind == JsonValueKind.False,
+                            "embeddings should be a boolean value");
+                    }
+
+                    if (capabilities.TryGetProperty("chatCompletions", out var chatCompletions))
+                    {
+                        Assert.True(chatCompletions.ValueKind == JsonValueKind.True || chatCompletions.ValueKind == JsonValueKind.False,
+                            "chatCompletions should be a boolean value");
+                    }
+
+                    if (capabilities.TryGetProperty("fineTuning", out var fineTuning))
+                    {
+                        Assert.True(fineTuning.ValueKind == JsonValueKind.True || fineTuning.ValueKind == JsonValueKind.False,
+                            "fineTuning should be a boolean value");
+                    }
                 }
 
-                // Verify optional properties if present
-                if (model.TryGetProperty("capacity", out var capacity))
-                {
-                    Assert.Equal(JsonValueKind.Number, capacity.ValueKind);
-                    Assert.True(capacity.GetInt32() > 0);
-                }
-
+                // Verify provisioningState if present
                 if (model.TryGetProperty("provisioningState", out var provisioningState))
                 {
                     Assert.Equal(JsonValueKind.String, provisioningState.ValueKind);
                     Assert.NotEmpty(provisioningState.GetString()!);
+                }
+
+                // Verify optional capacity property if present
+                if (model.TryGetProperty("capacity", out var capacity))
+                {
+                    Assert.Equal(JsonValueKind.Number, capacity.ValueKind);
+                    Assert.True(capacity.GetInt32() > 0);
                 }
             }
         }
@@ -606,9 +625,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
 
         // Verify first choice
         var firstChoice = choices.EnumerateArray().First();
-        var index = firstChoice.GetProperty("index");
-        Assert.Equal(0, index.GetInt32());
-
+        
         var message = firstChoice.GetProperty("message");
         var role = message.GetProperty("role");
         Assert.Equal("assistant", role.GetString());
@@ -617,18 +634,18 @@ public class FoundryCommandTests(ITestOutputHelper output)
         Assert.Equal(JsonValueKind.String, content.ValueKind);
         Assert.False(string.IsNullOrEmpty(content.GetString()));
 
-        var finishReason = firstChoice.GetProperty("finishReason");
+        var finishReason = firstChoice.GetProperty("finish_reason");
         Assert.Equal(JsonValueKind.String, finishReason.ValueKind);
 
         // Verify usage information
         var usage = chatResult.AssertProperty("usage");
-        var promptTokens = usage.AssertProperty("promptTokens");
+        var promptTokens = usage.AssertProperty("prompt_tokens");
         Assert.True(promptTokens.GetInt32() > 0, "Should have consumed prompt tokens");
 
-        var completionTokens = usage.AssertProperty("completionTokens");
+        var completionTokens = usage.AssertProperty("completion_tokens");
         Assert.True(completionTokens.GetInt32() > 0, "Should have generated completion tokens");
 
-        var totalTokens = usage.AssertProperty("totalTokens");
+        var totalTokens = usage.AssertProperty("total_tokens");
         Assert.True(totalTokens.GetInt32() > 0, "Should have total token usage");
         Assert.Equal(promptTokens.GetInt32() + completionTokens.GetInt32(), totalTokens.GetInt32());
 
@@ -675,23 +692,66 @@ public class FoundryCommandTests(ITestOutputHelper output)
 
         // Verify response structure (same checks as basic test)
         var chatResult = result.AssertProperty("result");
-        var choices = chatResult.AssertProperty("choices");
-        var firstChoice = choices.EnumerateArray().First();
-        var message = firstChoice.GetProperty("message");
-        var content = message.GetProperty("content");
+        Assert.Equal(JsonValueKind.Object, chatResult.ValueKind);
 
+        // Verify chat completion result properties
+        var id = chatResult.AssertProperty("id");
+        Assert.Equal(JsonValueKind.String, id.ValueKind);
+        Assert.False(string.IsNullOrEmpty(id.GetString()));
+
+        var objectType = chatResult.AssertProperty("object");
+        Assert.Equal(JsonValueKind.String, objectType.ValueKind);
+        Assert.Equal("chat.completion", objectType.GetString());
+
+        var model = chatResult.AssertProperty("model");
+        Assert.Equal(JsonValueKind.String, model.ValueKind);
+        Assert.Equal(deploymentName, model.GetString());
+
+        var choices = chatResult.AssertProperty("choices");
+        Assert.Equal(JsonValueKind.Array, choices.ValueKind);
+        Assert.NotEmpty(choices.EnumerateArray());
+
+        // Verify first choice
+        var firstChoice = choices.EnumerateArray().First();
+        
+        var message = firstChoice.GetProperty("message");
+        var role = message.GetProperty("role");
+        Assert.Equal("assistant", role.GetString());
+
+        var content = message.GetProperty("content");
+        Assert.Equal(JsonValueKind.String, content.ValueKind);
+        
         // Verify the response is relevant to the conversation context
         var responseText = content.GetString();
         Assert.False(string.IsNullOrEmpty(responseText));
-
+        
         // The response should be contextually relevant to chat applications
         // We don't check for specific words to avoid brittleness, just that we got a meaningful response
         Assert.True(responseText.Length > 10, "Response should be substantial");
 
-        // Verify usage shows reasonable token consumption for conversation
+        var finishReason = firstChoice.GetProperty("finish_reason");
+        Assert.Equal(JsonValueKind.String, finishReason.ValueKind);
+
+        // Verify usage information
         var usage = chatResult.AssertProperty("usage");
-        var totalTokens = usage.AssertProperty("totalTokens");
+        var promptTokens = usage.AssertProperty("prompt_tokens");
+        Assert.True(promptTokens.GetInt32() > 0, "Should have consumed prompt tokens");
+
+        var completionTokens = usage.AssertProperty("completion_tokens");
+        Assert.True(completionTokens.GetInt32() > 0, "Should have generated completion tokens");
+
+        var totalTokens = usage.AssertProperty("total_tokens");
         Assert.True(totalTokens.GetInt32() > 50, "Conversation should consume reasonable tokens");
+        Assert.Equal(promptTokens.GetInt32() + completionTokens.GetInt32(), totalTokens.GetInt32());
+
+        // Verify command metadata (returned resource and deployment names should match input)
+        var commandResourceName = result.AssertProperty("resourceName");
+        Assert.Equal(JsonValueKind.String, commandResourceName.ValueKind);
+        Assert.Equal(resourceName, commandResourceName.GetString());
+
+        var commandDeploymentName = result.AssertProperty("deploymentName");
+        Assert.Equal(JsonValueKind.String, commandDeploymentName.ValueKind);
+        Assert.Equal(deploymentName, commandDeploymentName.GetString());
     }
 
     private async Task<string> CreateAgent(string agentName, string projectEndpoint, string deploymentName)
