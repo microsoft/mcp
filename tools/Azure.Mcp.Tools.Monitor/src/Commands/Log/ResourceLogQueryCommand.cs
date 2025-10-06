@@ -18,7 +18,7 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
     public override string Description =>
     $"""
     Query diagnostic and activity logs for a SPECIFIC Azure resource in a Log Analytics workspace using Kusto Query Language (KQL). 
-    Use this tool when the user mentions a specific resource name or Resource ID in their request (e.g., "show logs for resource app-monitor"). 
+    Use this tool when the user mentions a specific resource name or Resource ID in their request (e.g., "show logs for resource 'app-monitor'"). 
     This tool filters logs to only show data from the specified resource.
     
     When to use: User asks for logs from a specific resource by name or ID.
