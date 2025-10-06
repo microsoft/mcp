@@ -6,7 +6,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-- Added --tool option to start Azure MCP server with a list of specific tools [[#685](https://github.com/microsoft/mcp/issues/685)]
+- Added `--tool` option to start Azure MCP server with only specific tools by name, providing fine-grained control over tool exposure. This option works in all server modes (namespace, single, all) and can be combined with `--namespace` filtering for maximum flexibility. [[#685](https://github.com/microsoft/mcp/issues/685)]
 
 ### Breaking Changes
 

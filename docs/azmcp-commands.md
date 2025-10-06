@@ -18,6 +18,21 @@ The following options are available for all commands:
 | `--retry-mode` | No | 'exponential' | Retry strategy ('fixed' or 'exponential') |
 | `--retry-network-timeout` | No | 100 | Network operation timeout (seconds) |
 
+## Server-Specific Options
+
+The following options are available when starting the Azure MCP Server:
+
+| Option | Required | Default | Description |
+|-----------|----------|---------|-------------|
+| `--transport` | No | 'stdio' | Transport mechanism ('stdio' or 'sse') |
+| `--namespace` | No | All namespaces | Filter to specific Azure service namespaces (e.g., 'storage', 'keyvault') |
+| `--mode` | No | 'namespace' | Server mode ('namespace', 'single', or 'all') |
+| `--tool` | No | All tools | Filter to specific tools by name (e.g., 'azmcp_storage_account_get') |
+| `--read-only` | No | false | Enable read-only mode (only read operations allowed) |
+| `--debug` | No | false | Enable debug mode with verbose logging |
+| `--enable-insecure-transports` | No | false | Enable insecure transport mechanisms |
+| `--insecure-disable-elicitation` | No | false | Disable user confirmation for high-risk operations |
+
 ## Available Commands
 
 ### Server Operations
@@ -82,6 +97,36 @@ azmcp server start \
     --namespace storage \
     --namespace keyvault \
     --mode all \
+    [--transport <transport>] \
+    [--read-only]
+```
+
+#### Specific Tool Filtering
+
+Exposes only specific tools by name, providing the finest level of granularity. Use multiple `--tool` parameters to include multiple tools.
+
+```bash
+# Start MCP Server with namespace mode and only subscription and resource group tools
+azmcp server start \
+    --tool azmcp_subscription_list \
+    --tool azmcp_group_list \
+    [--transport <transport>] \
+    [--read-only]
+
+# Start MCP Server with all mode and essential storage management tools
+azmcp server start \
+    --mode all \
+    --tool azmcp_storage_account_get \
+    --tool azmcp_storage_account_create \
+    --tool azmcp_storage_blob_get \
+    [--transport <transport>] \
+    [--read-only]
+
+# Combine namespace and tool filtering
+azmcp server start \
+    --namespace storage \
+    --tool azmcp_storage_account_get \
+    --tool azmcp_storage_blob_get \
     [--transport <transport>] \
     [--read-only]
 ```

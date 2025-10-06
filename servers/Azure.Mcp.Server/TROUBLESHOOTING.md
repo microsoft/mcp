@@ -44,7 +44,10 @@ By default, Azure MCP Server communicates with MCP Clients via standard I/O. Any
 
 ### Can I select what tools to load in the MCP server?
 
-Yes, you can enable multiple MCP servers that only load the services you need. In this example, two MCP servers are registered that only expose `storage` and `keyvault` tools:
+Yes, you can control which tools are exposed using several approaches:
+
+#### Option 1: Filter by Service Namespace
+Use the `--namespace` option to expose only tools for specific Azure services:
 
 ```json
 {
@@ -67,6 +70,70 @@ Yes, you can enable multiple MCP servers that only load the services you need. I
         "start",
         "--namespace",
         "keyvault"
+      ]
+    }
+  }
+}
+```
+
+#### Option 2: Filter by Specific Tools
+Use the `--tool` option to expose only specific tools by name. This provides the most granular control:
+
+```json
+{
+  "servers": {
+    "Azure Storage Accounts Only": {
+      "type": "stdio",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "args": [
+        "server",
+        "start",
+        "--mode",
+        "all",
+        "--tool",
+        "azmcp_storage_account_get",
+        "--tool",
+        "azmcp_storage_account_create"
+      ]
+    },
+    "Essential Azure Tools": {
+      "type": "stdio",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "args": [
+        "server",
+        "start",
+        "--mode",
+        "all",
+        "--tool",
+        "azmcp_subscription_list",
+        "--tool",
+        "azmcp_group_list",
+        "--tool",
+        "azmcp_storage_account_get"
+      ]
+    }
+  }
+}
+```
+
+#### Option 3: Combine Namespace and Tool Filtering
+You can combine both approaches - namespace filtering works first, then tool filtering is applied to the remaining tools:
+
+```json
+{
+  "servers": {
+    "Limited Storage Tools": {
+      "type": "stdio",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "args": [
+        "server",
+        "start",
+        "--namespace",
+        "storage",
+        "--tool",
+        "azmcp_storage_account_get",
+        "--tool",
+        "azmcp_storage_blob_get"
       ]
     }
   }
