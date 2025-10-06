@@ -30,7 +30,7 @@ public class LedgerEntryAppendCommandTests
 
         var command = new LedgerEntryAppendCommand(service, logger);
         var context = new CommandContext(provider);
-        var parse = command.GetCommand().Parse(["--ledger","ledger1","--entry-data","data"]);
+        var parse = command.GetCommand().Parse(["--ledger", "ledger1", "--entry-data", "data"]);
         var response = await command.ExecuteAsync(context, parse);
 
         Assert.NotNull(response.Results);
