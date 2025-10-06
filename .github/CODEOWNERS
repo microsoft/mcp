@@ -222,3 +222,10 @@
 
 # ServiceLabel: %tools-Workbooks
 # ServiceOwners:                       @matteing
+
+
+# PRLabel: %tools-ConfidentialLedger
+/tools/Azure.Mcp.Tools.ConfidentialLedger/          @taicchoumsft @ivarprudnikov @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ConfidentialLedger
+# ServiceOwners:                       @taicchoumsft @ivarprudnikov

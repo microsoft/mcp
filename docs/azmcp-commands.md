@@ -441,6 +441,21 @@ azmcp communication sms send \
 -   `--enable-delivery-report`: Enable delivery reporting for the SMS message (optional)
 -   `--tag`: Custom tag for message tracking (optional)
 
+
+### Azure Confidential Ledger Operations
+
+```bash
+# Append a tamper-proof entry to a Confidential Ledger
+azmcp confidentialledger entries append --ledger <ledger-name> \
+                                        --content <json-or-text-data> \
+                                        [--collection-id <collection-id>]
+```
+
+**Options:**
+-   `--ledger`: Confidential Ledger name (required)
+-   `--content`: JSON or text data to insert into the ledger (required)
+-   `--collection-id`: Collection ID to store the data with (optional)
+
 ### Azure Container Registry (ACR) Operations
 
 ```bash
