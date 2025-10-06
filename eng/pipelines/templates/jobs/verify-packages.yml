@@ -1,0 +1,60 @@
+parameters:
+# required matrix parameters
+- name: OSName
+  type: string
+- name: Matrix
+  type: object
+- name: DependsOn
+  type: string
+- name: ServerName
+  type: string
+
+jobs:
+- job: Verify_Packages_${{ parameters.OSName }}
+  displayName: "Verify Packages"
+  dependsOn:
+  - ${{ parameters.DependsOn }}
+  strategy:
+    matrix: $[ ${{ parameters.Matrix }} ]
+  pool:
+    name: $(Pool)
+    ${{ if eq(parameters.OSName, 'macOS') }}:
+      vmImage: $(OSVmImage)
+    ${{ else }}:
+      image: $(OSVmImage)
+    os: ${{ parameters.OSName }}
+
+  steps:
+  - checkout: self
+
+  - download: current
+    displayName: Download artifacts
+
+  - task: UseDotNet@2
+    displayName: "Use .NET SDK from global.json"
+    retryCountOnTaskFailure: 3
+    inputs:
+      useGlobalJson: true
+
+  - task: UseDotNet@2
+    displayName: "Use .NET SDK 9.0.x"
+    retryCountOnTaskFailure: 3
+    inputs:
+      packageType: sdk
+      version: 9.0.x
+
+  - task: NodeTool@0
+    displayName: "Use Node.js 20.x"
+    inputs:
+      versionSpec: 20.x
+
+  - pwsh: |
+      # Verify the packages created in the sign and pack stage
+      . $(Build.SourcesDirectory)/eng/scripts/McpServerSmokeTests.ps1
+      $hasFailures = Validate-Nuget-Packages -ServerName ${{ parameters.ServerName }} -ArtifactsPath "$(Pipeline.Workspace)/packages_nuget_signed"
+      $hasFailures = $hasFailures -or (Validate-Npm-Packages -ArtifactsPath "$(Pipeline.Workspace)/packages_npm" -TargetOs ${{ parameters.OSName }} -TargetArch $(Architecture) -WorkingDirectory $WorkingDirectory)
+      if ($hasFailures) {
+        exit 1
+      }
+    displayName: 'Verify npm and nuget packages'
+    condition: succeededOrFailed()
