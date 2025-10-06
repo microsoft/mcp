@@ -34,16 +34,16 @@ public class ConfidentialLedgerCommandTests(ITestOutputHelper output) : CommandT
 
         // Assert
         Assert.NotNull(result);
-        
+
         var transactionId = result.Value.AssertProperty("transactionId");
         Assert.Equal(JsonValueKind.String, transactionId.ValueKind);
         Assert.NotNull(transactionId.GetString());
         Assert.NotEmpty(transactionId.GetString()!);
-        
+
         // Transaction ID should be in format "major.minor" (e.g., "2.199")
         var transactionIdStr = transactionId.GetString();
         Assert.Contains(".", transactionIdStr);
-        
+
         var state = result.Value.AssertProperty("state");
         Assert.Equal(JsonValueKind.String, state.ValueKind);
         Assert.Equal("Committed", state.GetString());
