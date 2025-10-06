@@ -32,7 +32,7 @@ public sealed class AksService(
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription, resourceGroup);
+        ValidateRequiredParameters(subscription);
 
         if (string.IsNullOrEmpty(clusterName))
         {
