@@ -132,26 +132,26 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
         }
     }
 
-    public async Task<List<KnowledgeAgentInfo>> ListKnowledgeAgents(
+    public async Task<List<KnowledgeBaseInfo>> ListKnowledgeBases(
         string serviceName,
         RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters((nameof(serviceName), serviceName));
 
-        var agents = new List<KnowledgeAgentInfo>();
+        var bases = new List<KnowledgeBaseInfo>();
 
         try
         {
             var searchClient = await GetSearchIndexClient(serviceName, retryPolicy);
             await foreach (var agent in searchClient.GetKnowledgeAgentsAsync())
             {
-                agents.Add(new KnowledgeAgentInfo(agent.Name, agent.Description, [.. agent.KnowledgeSources.Select(ks => ks.Name)]));
+                bases.Add(new KnowledgeBaseInfo(agent.Name, agent.Description, [.. agent.KnowledgeSources.Select(ks => ks.Name)]));
             }
-            return agents;
+            return bases;
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving Search knowledge agents: {ex.Message}", ex);
+            throw new Exception($"Error retrieving Search knowledge bases: {ex.Message}", ex);
         }
     }
 
@@ -192,14 +192,14 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
         }
     }
 
-    public async Task<string> RetrieveFromKnowledgeAgent(
+    public async Task<string> RetrieveFromKnowledgeBase(
         string serviceName,
-        string agentName,
+        string baseName,
         string? query,
         IEnumerable<(string role, string message)>? messages,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters((nameof(serviceName), serviceName), (nameof(agentName), agentName));
+        ValidateRequiredParameters((nameof(serviceName), serviceName), (nameof(baseName), baseName));
 
         try
         {
@@ -208,7 +208,7 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
             var clientOptions = AddDefaultPolicies(new SearchClientOptions());
             ConfigureRetryPolicy(clientOptions, retryPolicy);
 
-            var knowledgeAgentClient = new KnowledgeAgentRetrievalClient(searchClient.Endpoint, agentName, await GetCredential(), clientOptions);
+            var knowledgeAgentClient = new KnowledgeAgentRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(), clientOptions);
 
             var request = new KnowledgeAgentRetrievalRequest(
                 messages != null ?
@@ -221,7 +221,7 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
         }
         catch (Exception ex)
         {
-            throw new Exception($"Error retrieving data from knowledge agent: {ex.Message}", ex);
+            throw new Exception($"Error retrieving data from knowledge base: {ex.Message}", ex);
         }
     }
 

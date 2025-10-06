@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Search.Options;
@@ -9,11 +10,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
 
-public sealed class KnowledgeAgentRunRetrievalCommand(ILogger<KnowledgeAgentRunRetrievalCommand> logger) : GlobalCommand<BaseSearchOptions>()
+public sealed class KnowledgeBaseRunRetrievalCommand(ILogger<KnowledgeBaseRunRetrievalCommand> logger) : GlobalCommand<BaseSearchOptions>()
 {
-    private readonly ILogger<KnowledgeAgentRunRetrievalCommand> _logger = logger;
+    private readonly ILogger<KnowledgeBaseRunRetrievalCommand> _logger = logger;
     private readonly Option<string> _serviceOption = SearchOptionDefinitions.Service;
-    private readonly Option<string> _agentOption = SearchOptionDefinitions.Agent;
+    private readonly Option<string> _baseOption = SearchOptionDefinitions.Agent;
     private readonly Option<string> _queryOption = SearchOptionDefinitions.OptionalQuery;
     private readonly Option<string[]> _messagesOption = SearchOptionDefinitions.Messages;
 
@@ -46,7 +47,7 @@ public sealed class KnowledgeAgentRunRetrievalCommand(ILogger<KnowledgeAgentRunR
     {
         base.RegisterOptions(command);
         command.Options.Add(_serviceOption);
-        command.Options.Add(_agentOption);
+        command.Options.Add(_baseOption);
         command.Options.Add(_queryOption);
         command.Options.Add(_messagesOption);
     }
@@ -67,13 +68,13 @@ public sealed class KnowledgeAgentRunRetrievalCommand(ILogger<KnowledgeAgentRunR
 
         var options = BindOptions(parseResult);
 
-        var agentName = parseResult.GetValueOrDefault(_agentOption);
+        var baseName = parseResult.GetValueOrDefault(_baseOption);
         var query = parseResult.GetValueOrDefault(_queryOption);
         var messages = parseResult.GetValueOrDefault(_messagesOption) ?? [];
 
         if (string.IsNullOrEmpty(query) && messages.Length == 0)
         {
-            context.Response.Status = 400;
+            context.Response.Status = HttpStatusCode.BadRequest;
             context.Response.Message = "Either --query or at least one --messages entry must be provided.";
             return context.Response;
         }
@@ -87,7 +88,7 @@ public sealed class KnowledgeAgentRunRetrievalCommand(ILogger<KnowledgeAgentRunR
                 var idx = msg.IndexOf(':');
                 if (idx <= 0 || idx == msg.Length - 1)
                 {
-                    context.Response.Status = 400;
+                    context.Response.Status = HttpStatusCode.BadRequest;
                     context.Response.Message = $"Invalid message format '{msg}'. Expected role:content.";
                     return context.Response;
                 }
@@ -95,7 +96,7 @@ public sealed class KnowledgeAgentRunRetrievalCommand(ILogger<KnowledgeAgentRunR
                 var content = msg[(idx + 1)..].Trim();
                 if (string.IsNullOrEmpty(role) || string.IsNullOrEmpty(content))
                 {
-                    context.Response.Status = 400;
+                    context.Response.Status = HttpStatusCode.BadRequest;
                     context.Response.Message = $"Invalid message format '{msg}'. Role and content required.";
                     return context.Response;
                 }
@@ -106,8 +107,8 @@ public sealed class KnowledgeAgentRunRetrievalCommand(ILogger<KnowledgeAgentRunR
         try
         {
             var searchService = context.GetService<ISearchService>();
-            var result = await searchService.RetrieveFromKnowledgeAgent(options.Service!, agentName!, query, parsedMessages, options.RetryPolicy);
-            context.Response.Results = ResponseResult.Create(new KnowledgeAgentRunRetrievalCommandResult(result), SearchJsonContext.Default.KnowledgeAgentRunRetrievalCommandResult);
+            var result = await searchService.RetrieveFromKnowledgeBase(options.Service!, baseName!, query, parsedMessages, options.RetryPolicy);
+            context.Response.Results = ResponseResult.Create(new KnowledgeBaseRunRetrievalCommandResult(result), SearchJsonContext.Default.KnowledgeBaseRunRetrievalCommandResult);
         }
         catch (Exception ex)
         {
@@ -118,5 +119,5 @@ public sealed class KnowledgeAgentRunRetrievalCommand(ILogger<KnowledgeAgentRunR
         return context.Response;
     }
 
-    internal sealed record KnowledgeAgentRunRetrievalCommandResult(string RetrievalResult);
+    internal sealed record KnowledgeBaseRunRetrievalCommandResult(string RetrievalResult);
 }

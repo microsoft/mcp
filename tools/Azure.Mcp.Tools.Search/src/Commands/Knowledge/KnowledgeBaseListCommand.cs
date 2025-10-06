@@ -9,20 +9,19 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Search.Commands.Knowledge;
 
-public sealed class KnowledgeSourceListCommand(ILogger<KnowledgeSourceListCommand> logger) : GlobalCommand<BaseSearchOptions>()
+public sealed class KnowledgeBaseListCommand(ILogger<KnowledgeBaseListCommand> logger) : GlobalCommand<BaseSearchOptions>()
 {
-    private readonly ILogger<KnowledgeSourceListCommand> _logger = logger;
+    private readonly ILogger<KnowledgeBaseListCommand> _logger = logger;
     private readonly Option<string> _serviceOption = SearchOptionDefinitions.Service;
 
     public override string Name => "list";
 
-    public override string Title => "List Azure AI Search knowledge sources";
+    public override string Title => "List Azure AI Search knowledge bases";
 
     public override string Description =>
         """
-        List all knowledge sources defined in an Azure AI Search service. A knowledge source may point directly at an
-        existing Azure AI Search index, or may represent external data (e.g. a blob storage container) that has been
-        indexed in Azure AI Search internally. These knowledge sources are used by knowledge bases during retrieval.
+        List all knowledge bases defined in an Azure AI Search service. Knowledge bases encapsulate retrieval and reasoning
+        capabilities over one or more knowledge sources or indexes.
 
         Required arguments:
         - service
@@ -55,19 +54,19 @@ public sealed class KnowledgeSourceListCommand(ILogger<KnowledgeSourceListComman
         try
         {
             var searchService = context.GetService<ISearchService>();
-            var sources = await searchService.ListKnowledgeSources(options.Service!, options.RetryPolicy);
-            context.Response.Results = sources.Count > 0
-                ? ResponseResult.Create(new KnowledgeSourceListCommandResult(sources), SearchJsonContext.Default.KnowledgeSourceListCommandResult)
+            var bases = await searchService.ListKnowledgeBases(options.Service!, options.RetryPolicy);
+            context.Response.Results = bases.Count > 0
+                ? ResponseResult.Create(new KnowledgeBaseListCommandResult(bases), SearchJsonContext.Default.KnowledgeBaseListCommandResult)
                 : null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing knowledge sources");
+            _logger.LogError(ex, "Error listing knowledge bases");
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal sealed record KnowledgeSourceListCommandResult(List<Models.KnowledgeSourceInfo> KnowledgeSources);
+    internal sealed record KnowledgeBaseListCommandResult(List<Models.KnowledgeBaseInfo> KnowledgeBases);
 }

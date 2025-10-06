@@ -22,7 +22,7 @@ public interface ISearchService
         string serviceName,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<KnowledgeAgentInfo>> ListKnowledgeAgents(
+    Task<List<KnowledgeBaseInfo>> ListKnowledgeBases(
         string serviceName,
         RetryPolicyOptions? retryPolicy = null);
 
@@ -32,9 +32,9 @@ public interface ISearchService
         string searchText,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<string> RetrieveFromKnowledgeAgent(
+    Task<string> RetrieveFromKnowledgeBase(
         string serviceName,
-        string agentName,
+        string baseName,
         string? query,
         IEnumerable<(string role, string message)>? messages,
         RetryPolicyOptions? retryPolicy = null);

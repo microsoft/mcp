@@ -15,8 +15,8 @@ namespace Azure.Mcp.Tools.Search.Commands;
 [JsonSerializable(typeof(List<JsonElement>))]
 [JsonSerializable(typeof(ServiceListCommand.ServiceListCommandResult))]
 [JsonSerializable(typeof(KnowledgeSourceListCommand.KnowledgeSourceListCommandResult))]
-[JsonSerializable(typeof(KnowledgeAgentListCommand.KnowledgeAgentListCommandResult))]
-[JsonSerializable(typeof(KnowledgeAgentRunRetrievalCommand.KnowledgeAgentRunRetrievalCommandResult))]
+[JsonSerializable(typeof(KnowledgeBaseListCommand.KnowledgeBaseListCommandResult))]
+[JsonSerializable(typeof(KnowledgeBaseRunRetrievalCommand.KnowledgeBaseRunRetrievalCommandResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal sealed partial class SearchJsonContext : JsonSerializerContext
 {

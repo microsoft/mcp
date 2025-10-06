@@ -3,4 +3,4 @@
 
 namespace Azure.Mcp.Tools.Search.Models;
 
-public sealed record KnowledgeAgentInfo(string Name, string Description, List<string> KnowledgeSources);
+public sealed record KnowledgeBaseInfo(string Name, string Description, List<string> KnowledgeSources);

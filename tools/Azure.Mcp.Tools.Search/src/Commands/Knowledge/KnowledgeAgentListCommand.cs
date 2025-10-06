@@ -16,11 +16,11 @@ public sealed class KnowledgeAgentListCommand(ILogger<KnowledgeAgentListCommand>
 
     public override string Name => "list";
 
-    public override string Title => "List Azure AI Search knowledge agents";
+    public override string Title => "List Azure AI Search knowledge bases";
 
     public override string Description =>
         """
-        List all knowledge agents defined in an Azure AI Search service. Knowledge agents encapsulate retrieval and reasoning
+        List all knowledge bases defined in an Azure AI Search service. Knowledge bases encapsulate retrieval and reasoning
         capabilities over one or more knowledge sources or indexes.
 
         Required arguments:
@@ -61,7 +61,7 @@ public sealed class KnowledgeAgentListCommand(ILogger<KnowledgeAgentListCommand>
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing knowledge agents");
+            _logger.LogError(ex, "Error listing knowledge bases");
             HandleException(context, ex);
         }
 

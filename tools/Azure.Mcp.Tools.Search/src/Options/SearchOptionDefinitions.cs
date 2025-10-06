@@ -39,7 +39,7 @@ public static class SearchOptionDefinitions
         $"--{AgentName}"
     )
     {
-        Description = "The name of the knowledge agent within the Azure AI Search service.",
+        Description = "The name of the knowledge base within the Azure AI Search service.",
         Required = true
     };
 
@@ -54,7 +54,7 @@ public static class SearchOptionDefinitions
     public static readonly Option<string[]> Messages = new(
         $"--{MessagesName}")
     {
-        Description = "Optional conversation history messages passed to the knowledge agent. Specify multiple --messages entries. Each entry formatted as role:content, where role is `user` or `assistant` (e.g., user:How many docs?).",
+        Description = "Optional conversation history messages passed to the knowledge base. Specify multiple --messages entries. Each entry formatted as role:content, where role is `user` or `assistant` (e.g., user:How many docs?).",
         Arity = ArgumentArity.ZeroOrMore,
         AllowMultipleArgumentsPerToken = true
     };

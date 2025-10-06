@@ -16,16 +16,16 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Search.UnitTests.Knowledge;
 
-public class KnowledgeAgentListCommandTests
+public class KnowledgeBaseListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ISearchService _searchService;
-    private readonly ILogger<KnowledgeAgentListCommand> _logger;
+    private readonly ILogger<KnowledgeBaseListCommand> _logger;
 
-    public KnowledgeAgentListCommandTests()
+    public KnowledgeBaseListCommandTests()
     {
         _searchService = Substitute.For<ISearchService>();
-        _logger = Substitute.For<ILogger<KnowledgeAgentListCommand>>();
+        _logger = Substitute.For<ILogger<KnowledgeBaseListCommand>>();
 
         var collection = new ServiceCollection();
         collection.AddSingleton(_searchService);
@@ -34,18 +34,18 @@ public class KnowledgeAgentListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsKnowledgeAgents_WhenAgentsExist()
+    public async Task ExecuteAsync_ReturnsKnowledgeBases_WhenBasesExist()
     {
-        var expectedAgents = new List<KnowledgeAgentInfo>
+        var expectedBases = new List<KnowledgeBaseInfo>
         {
-            new("agent1", "First agent", new List<string> { "source1" }),
-            new("agent2", "Second agent", new List<string> { "source2", "source3" })
+            new("base1", "First base", new List<string> { "source1" }),
+            new("base2", "Second base", new List<string> { "source2", "source3" })
         };
 
-        _searchService.ListKnowledgeAgents(Arg.Is("service123"), Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedAgents);
+        _searchService.ListKnowledgeBases(Arg.Is("service123"), Arg.Any<RetryPolicyOptions>())
+            .Returns(expectedBases);
 
-        var command = new KnowledgeAgentListCommand(_logger);
+        var command = new KnowledgeBaseListCommand(_logger);
 
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
@@ -61,24 +61,24 @@ public class KnowledgeAgentListCommandTests
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
-        var result = JsonSerializer.Deserialize<KnowledgeAgentListResult>(json, options);
+        var result = JsonSerializer.Deserialize<KnowledgeBaseListResult>(json, options);
         Assert.NotNull(result);
-        Assert.Equal(expectedAgents.Count, result.KnowledgeAgents.Count);
-        for (int i = 0; i < expectedAgents.Count; i++)
+        Assert.Equal(expectedBases.Count, result.KnowledgeBases.Count);
+        for (int i = 0; i < expectedBases.Count; i++)
         {
-            Assert.Equal(expectedAgents[i].Name, result.KnowledgeAgents[i].Name);
-            Assert.Equal(expectedAgents[i].Description, result.KnowledgeAgents[i].Description);
-            Assert.Equal(expectedAgents[i].KnowledgeSources, result.KnowledgeAgents[i].KnowledgeSources);
+            Assert.Equal(expectedBases[i].Name, result.KnowledgeBases[i].Name);
+            Assert.Equal(expectedBases[i].Description, result.KnowledgeBases[i].Description);
+            Assert.Equal(expectedBases[i].KnowledgeSources, result.KnowledgeBases[i].KnowledgeSources);
         }
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoAgents()
+    public async Task ExecuteAsync_ReturnsNull_WhenNoBases()
     {
-        _searchService.ListKnowledgeAgents(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<KnowledgeAgentInfo>());
+        _searchService.ListKnowledgeBases(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .Returns(new List<KnowledgeBaseInfo>());
 
-        var command = new KnowledgeAgentListCommand(_logger);
+        var command = new KnowledgeBaseListCommand(_logger);
 
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
@@ -95,10 +95,10 @@ public class KnowledgeAgentListCommandTests
         var expectedError = "Test error";
         var serviceName = "service123";
 
-        _searchService.ListKnowledgeAgents(Arg.Is(serviceName), Arg.Any<RetryPolicyOptions>())
+        _searchService.ListKnowledgeBases(Arg.Is(serviceName), Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception(expectedError));
 
-        var command = new KnowledgeAgentListCommand(_logger);
+        var command = new KnowledgeBaseListCommand(_logger);
 
         var args = command.GetCommand().Parse($"--service {serviceName}");
         var context = new CommandContext(_serviceProvider);
@@ -110,9 +110,9 @@ public class KnowledgeAgentListCommandTests
         Assert.StartsWith(expectedError, response.Message);
     }
 
-    private class KnowledgeAgentListResult
+    private class KnowledgeBaseListResult
     {
-        [JsonPropertyName("knowledgeAgents")]
-        public List<KnowledgeAgentInfo> KnowledgeAgents { get; set; } = [];
+        [JsonPropertyName("knowledgeBases")]
+        public List<KnowledgeBaseInfo> KnowledgeBases { get; set; } = [];
     }
 }

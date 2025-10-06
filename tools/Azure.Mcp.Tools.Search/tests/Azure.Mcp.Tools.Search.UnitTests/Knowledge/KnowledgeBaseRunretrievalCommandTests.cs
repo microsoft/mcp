@@ -13,16 +13,16 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Search.UnitTests.Knowledge;
 
-public class KnowledgeAgentRunRetrievalCommandTests
+public class KnowledgeBaseRunRetrievalCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ISearchService _searchService;
-    private readonly ILogger<KnowledgeAgentRunRetrievalCommand> _logger;
+    private readonly ILogger<KnowledgeBaseRunRetrievalCommand> _logger;
 
-    public KnowledgeAgentRunRetrievalCommandTests()
+    public KnowledgeBaseRunRetrievalCommandTests()
     {
         _searchService = Substitute.For<ISearchService>();
-        _logger = Substitute.For<ILogger<KnowledgeAgentRunRetrievalCommand>>();
+        _logger = Substitute.For<ILogger<KnowledgeBaseRunRetrievalCommand>>();
 
         var collection = new ServiceCollection();
         collection.AddSingleton(_searchService);
@@ -34,16 +34,16 @@ public class KnowledgeAgentRunRetrievalCommandTests
     public async Task ExecuteAsync_ReturnsResult_WhenSuccessful_WithQuery()
     {
         var json = "{\"answer\":\"42\"}";
-        _searchService.RetrieveFromKnowledgeAgent(
+        _searchService.RetrieveFromKnowledgeBase(
             Arg.Is("svc"),
-            Arg.Is("agent1"),
+            Arg.Is("base1"),
             Arg.Is("life"),
             Arg.Is<List<(string role, string message)>?>(m => m == null),
             Arg.Any<RetryPolicyOptions>())
             .Returns(json);
 
-        var command = new KnowledgeAgentRunRetrievalCommand(_logger);
-        var args = command.GetCommand().Parse("--service svc --agent agent1 --query life");
+        var command = new KnowledgeBaseRunRetrievalCommand(_logger);
+        var args = command.GetCommand().Parse("--service svc --agent base1 --query life");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -56,16 +56,16 @@ public class KnowledgeAgentRunRetrievalCommandTests
     public async Task ExecuteAsync_ReturnsResult_WhenSuccessful_WithMessages()
     {
         var json = "{\"conversation\":true}";
-        _searchService.RetrieveFromKnowledgeAgent(
+        _searchService.RetrieveFromKnowledgeBase(
             Arg.Is("svc"),
-            Arg.Is("agent1"),
+            Arg.Is("base1"),
             Arg.Is<string?>(q => q == null),
             Arg.Is<List<(string role, string message)>?>(m => m != null && m.Count == 1 && m[0].role == "user"),
             Arg.Any<RetryPolicyOptions>())
             .Returns(json);
 
-        var command = new KnowledgeAgentRunRetrievalCommand(_logger);
-        var args = command.GetCommand().Parse("--service svc --agent agent1 --messages user:Hello");
+        var command = new KnowledgeBaseRunRetrievalCommand(_logger);
+        var args = command.GetCommand().Parse("--service svc --agent base1 --messages user:Hello");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -77,8 +77,8 @@ public class KnowledgeAgentRunRetrievalCommandTests
     [Fact]
     public async Task ExecuteAsync_Returns400_WhenMissingQueryAndMessages()
     {
-        var command = new KnowledgeAgentRunRetrievalCommand(_logger);
-        var args = command.GetCommand().Parse("--service svc --agent agent1");
+        var command = new KnowledgeBaseRunRetrievalCommand(_logger);
+        var args = command.GetCommand().Parse("--service svc --agent base1");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -89,8 +89,8 @@ public class KnowledgeAgentRunRetrievalCommandTests
     [Fact]
     public async Task ExecuteAsync_Returns400_WhenMessageFormatInvalid()
     {
-        var command = new KnowledgeAgentRunRetrievalCommand(_logger);
-        var args = command.GetCommand().Parse("--service svc --agent agent1 --messages badformat");
+        var command = new KnowledgeBaseRunRetrievalCommand(_logger);
+        var args = command.GetCommand().Parse("--service svc --agent base1 --messages badformat");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
         Assert.Equal(400, response.Status);
@@ -100,7 +100,7 @@ public class KnowledgeAgentRunRetrievalCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesException()
     {
-        _searchService.RetrieveFromKnowledgeAgent(
+        _searchService.RetrieveFromKnowledgeBase(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -108,8 +108,8 @@ public class KnowledgeAgentRunRetrievalCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception("Test failure"));
 
-        var command = new KnowledgeAgentRunRetrievalCommand(_logger);
-        var args = command.GetCommand().Parse("--service svc --agent agent1 --query hi");
+        var command = new KnowledgeBaseRunRetrievalCommand(_logger);
+        var args = command.GetCommand().Parse("--service svc --agent base1 --query hi");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
         Assert.Equal(500, response.Status);

@@ -23,8 +23,8 @@ public class SearchSetup : IAreaSetup
         services.AddSingleton<IndexGetCommand>();
         services.AddSingleton<IndexQueryCommand>();
         services.AddSingleton<KnowledgeSourceListCommand>();
-        services.AddSingleton<KnowledgeAgentListCommand>();
-        services.AddSingleton<KnowledgeAgentRunRetrievalCommand>();
+        services.AddSingleton<KnowledgeBaseListCommand>();
+        services.AddSingleton<KnowledgeBaseRunRetrievalCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -32,10 +32,10 @@ public class SearchSetup : IAreaSetup
         var search = new CommandGroup(Name,
         """
         Search operations - Commands for Azure AI Search (formerly known as \"Azure Cognitive Search\") services,
-        search indexes, knowledge sources and knowledge agents. Use this tool when you need to retrieve knowledge,
-        search indexes, or introspect search services and their components. You can use knowledge agents for 
+        search indexes, knowledge sources and knowledge bases. Use this tool when you need to retrieve knowledge,
+        search indexes, or introspect search services and their components. You can use knowledge bases for 
         in-depth agentic retrieval, or just execute searches against search indexes for fast single-shot search. 
-        There are also commands for listing indexes, knowledge sources and knowledge agents, and to describe 
+        There are also commands for listing indexes, knowledge sources and knowledge bases, and to describe 
         schemas. This tool supports  enterprise search, document search, and knowledge mining workloads. Do not 
         use this tool for database queries, Azure Monitor log searches, general web search, or simple string 
         matching operations - this tool is specifically designed for Azure AI Search service management and 
@@ -61,7 +61,7 @@ public class SearchSetup : IAreaSetup
         var indexQuery = serviceProvider.GetRequiredService<IndexQueryCommand>();
         index.AddCommand(indexQuery.Name, indexQuery);
 
-        var knowledge = new CommandGroup("knowledge", "Azure AI Search knowledge operations - Commands for listing knowledge sources and agents in a search service.");
+        var knowledge = new CommandGroup("knowledge", "Azure AI Search knowledge operations - Commands for listing knowledge sources and bases in a search service.");
         search.AddSubGroup(knowledge);
 
         var knowledgeSource = new CommandGroup("source", "Knowledge source operations - list knowledge sources associated with a service.");
@@ -69,12 +69,13 @@ public class SearchSetup : IAreaSetup
         var knowledgeSourceList = serviceProvider.GetRequiredService<KnowledgeSourceListCommand>();
         knowledgeSource.AddCommand(knowledgeSourceList.Name, knowledgeSourceList);
 
-        var knowledgeAgent = new CommandGroup("agent", "Knowledge agent operations - list knowledge agents associated with a service.");
-        knowledge.AddSubGroup(knowledgeAgent);
-        var knowledgeAgentList = serviceProvider.GetRequiredService<KnowledgeAgentListCommand>();
-        knowledgeAgent.AddCommand(knowledgeAgentList.Name, knowledgeAgentList);
-        var knowledgeAgentRunRetrieval = serviceProvider.GetRequiredService<KnowledgeAgentRunRetrievalCommand>();
-        knowledgeAgent.AddCommand(knowledgeAgentRunRetrieval.Name, knowledgeAgentRunRetrieval);
+        var knowledgeBase = new CommandGroup("base", "Knowledge base operations - list knowledge bases associated with a service.");
+        knowledge.AddSubGroup(knowledgeBase);
+
+        var knowledgeBaseList = serviceProvider.GetRequiredService<KnowledgeBaseListCommand>();
+        knowledgeBase.AddCommand(knowledgeBaseList.Name, knowledgeBaseList);
+        var knowledgeBaseRunretrieval = serviceProvider.GetRequiredService<KnowledgeBaseRunRetrievalCommand>();
+        knowledgeBase.AddCommand(knowledgeBaseRunretrieval.Name, knowledgeBaseRunretrieval);
 
         return search;
     }
