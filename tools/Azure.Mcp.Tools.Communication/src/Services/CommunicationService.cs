@@ -4,6 +4,7 @@
 using Azure.Communication.Sms;
 using Azure.Communication.Email;
 using Azure.Core;
+using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -105,6 +106,35 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
     {
         try
         {
+            // Validate required parameters
+            if (string.IsNullOrWhiteSpace(endpoint))
+            {
+                throw new CommandValidationException("Endpoint is required and cannot be empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(sender))
+            {
+                throw new CommandValidationException("Sender email address is required and cannot be empty.");
+            }
+
+            if (to == null || to.Length == 0 || to.Any(string.IsNullOrWhiteSpace))
+            {
+                throw new CommandValidationException("At least one valid recipient email address is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(subject))
+            {
+                throw new CommandValidationException("Subject is required and cannot be empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                throw new CommandValidationException("Message content is required and cannot be empty.");
+            }
+
+            _logger.LogInformation("Sending email from {Sender} to {Recipients} with subject '{Subject}'",
+                sender, string.Join(", ", to), subject);
+
             // Create email client with credential from base class
             var credential = await GetCredential(null);
             var emailClient = new EmailClient(new Uri(endpoint), credential);

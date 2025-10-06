@@ -1,9 +1,13 @@
-// Copyright (c) Microsoft Corporation
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Communication.Email;
 using Azure.Core;
+using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Communication.Models;
@@ -30,7 +34,7 @@ public class CommunicationServiceTests
     }
 
     [Fact]
-    public async Task SendEmailAsync_CreatesEmailClientAndSendsEmail()
+    public void SendEmailAsync_CreatesEmailClientAndSendsEmail()
     {
         // This test can't use Moq to mock the Email client directly since it's not using interfaces
         // We'd need to use a wrapper or dependency injection. For now, we'll test the other functionalities
@@ -49,7 +53,7 @@ public class CommunicationServiceTests
         string message = "Test Message";
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ValidationException>(
+        var exception = await Assert.ThrowsAsync<CommandValidationException>(
             () => _service.SendEmailAsync(endpoint!, sender, null, to, subject, message));
         
         Assert.Contains("endpoint", exception.Message, StringComparison.OrdinalIgnoreCase);
