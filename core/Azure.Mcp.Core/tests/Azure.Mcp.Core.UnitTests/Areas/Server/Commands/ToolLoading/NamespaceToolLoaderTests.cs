@@ -232,7 +232,6 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var textContent = result.Content[0] as TextContentBlock;
         Assert.NotNull(textContent);
         Assert.Contains("not found", textContent.Text, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Available namespaces", textContent.Text, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
